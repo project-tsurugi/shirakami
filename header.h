@@ -1,0 +1,41 @@
+#pragma once
+
+#include <cstdlib>
+#include <unistd.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <fcntl.h>
+#include <math.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
+#include <string.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <errno.h>
+#include <assert.h>
+#include <netinet/tcp.h>
+#include <string.h>
+#include <dirent.h>
+
+#include <list>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+#include <future>
