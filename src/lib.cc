@@ -8,6 +8,8 @@
 #define MAX_KEY_LEN (8)
 #define MAX_VALUE_LEN (8)
 extern std::vector<Record> DataBase;
+extern char *gen_key_string(void);
+extern char *gen_value_string(void);
 
 extern Record
 get_new_row(void)

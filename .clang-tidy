@@ -1,0 +1,38 @@
+---
+Checks: "-*,\
+abseil-*,\
+boost-*,\
+bugprone-*,\
+cert-*,\
+cppcoreguidelines-*,\
+-cppcoreguidelines-pro-type-const-cast,\
+fuchsia-*,\
+-fuchsia-default-arguments,\
+-fuchsia-overloaded-operator,\
+google-*,\
+-google-build-using-namespace,\
+-google-readability-namespace-comments,\
+-google-readability-todo,\
+-google-runtime-references,\
+hicpp-*,\
+-hicpp-braces-around-statements,\
+-hicpp-no-array-decay,\
+-hicpp-noexcept-move,\
+llvm-*,\
+-llvm-include-order,\
+-llvm-header-guard,\
+-llvm-namespace-comment,\
+misc-*,\
+-misc-unused-parameters,\
+modernize-*,\
+performance-*,\
+-performance-noexcept-move-constructor,\
+readability-*,\
+-readability-braces-around-statements,\
+-readability-named-parameter,\
+"
+CheckOptions:
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: 1
+HeaderFilterRegex: '.*/(include|src|examples)/.*\.h$'
+...

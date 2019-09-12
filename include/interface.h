@@ -1,5 +1,19 @@
 //extern uint get_token(void);
+
+/**
+ * @file
+ * @brief transaction engine interface
+ */
+
+/**
+ * @brief initialize kvs environment
+ */
 extern void kvs_init(void);
+
+/**
+ * @brief enter session
+ * @return token
+ */
 extern uint kvs_enter();
 extern bool kvs_leave(uint token);
 extern bool kvs_commit(const int token);
