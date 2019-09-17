@@ -1,4 +1,5 @@
 #pragma once
+#include "scheme.h"
 
 //extern uint get_token(void);
 
