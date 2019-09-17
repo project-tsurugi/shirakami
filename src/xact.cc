@@ -1,8 +1,8 @@
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 #include "tsc.hpp"
 #include "xact.h"
-#include "interface.h"
+#include "kvs/interface.h"
 
 namespace kvs {
 

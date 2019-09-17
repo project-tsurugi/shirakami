@@ -1,9 +1,9 @@
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 #include "port.h"
 #include <cstdint>
 #include "kvs.h"
-#include "interface.h"
+#include "kvs/interface.h"
 
 namespace kvs {
 
