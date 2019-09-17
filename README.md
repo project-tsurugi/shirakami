@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* CMake `>= 3.5`
+* CMake `>= 3.10`
 * C++ Compiler `>= C++17`
 * build related libararies - on Ubuntu, you can install with following command:
 
