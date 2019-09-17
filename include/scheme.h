@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <cstdlib>
 #include <errno.h>
@@ -12,7 +14,6 @@
 #include <assert.h>
 #include <vector>
 #include "debug.h"
-using namespace std;
 
 typedef enum {
   SEARCH, UPDATE, INSERT, DELETE, UPSERT,
