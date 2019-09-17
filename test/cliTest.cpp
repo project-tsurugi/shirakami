@@ -22,6 +22,9 @@
 #include "interface.h"
 //const int Nthread = 1;
 #include "test_param.h"
+
+using namespace kvs;
+
 std::vector<Tuple*> DataList[Nthread+1];
 std::vector<Tuple*> CommonDataList;
 

@@ -1,6 +1,8 @@
 #pragma once
 #include "scheme.h"
 
+namespace kvs {
+
 //extern uint get_token(void);
 
 /**
@@ -36,3 +38,5 @@ extern std::vector<Tuple*> kvs_scan_key(uint token, char *lkey, uint len_lkey, c
 //extern Tuple* make_tuple(char *key, uint len_key);
 
 extern void debug_print_key(void);
+
+}  // namespace kvs

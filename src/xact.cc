@@ -4,6 +4,8 @@
 #include "xact.h"
 #include "interface.h"
 
+namespace kvs {
+
 std::vector<LogShell> LogList;
 std::vector<Record*> DataBase;
 std::vector<ThreadInfo*> ThreadTable;
@@ -560,3 +562,5 @@ debug_print_key(void)
 		;
 	}
 }
+
+}  // namespace kvs

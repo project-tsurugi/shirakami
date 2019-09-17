@@ -5,6 +5,8 @@
 #include "kvs.h"
 #include "interface.h"
 
+namespace kvs {
+
 pthread_t EpochThread;
 pthread_t LogThread;
 uint64_t GlobalEpoch;
@@ -49,3 +51,5 @@ kvs_init(void)
   init_mutex();
   invoke_core_thread();
 }
+
+}  // namespace kvs

@@ -5,6 +5,8 @@
 //#include "kvs.h"
 #include "interface.h"
 
+namespace kvs {
+
 #define MAX_KEY_LEN (8)
 #define MAX_VALUE_LEN (8)
 extern std::vector<Record> DataBase;
@@ -105,3 +107,5 @@ make_tuple(char *key, uint len_key)
   return tuple;
 }
 */
+
+}  // namespace kvs

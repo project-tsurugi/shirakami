@@ -15,6 +15,8 @@
 #include <vector>
 #include "debug.h"
 
+namespace kvs {
+
 typedef enum {
   SEARCH, UPDATE, INSERT, DELETE, UPSERT,
   BEGIN, COMMIT, ABORT} OP_TYPE;
@@ -215,3 +217,6 @@ void print_result(struct timeval begin, struct timeval end, int nthread);
 void task(int rowid);
 void lock(int rowid);
 void unlock(int rowid);
+
+}  // namespace kvs
+

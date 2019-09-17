@@ -2,6 +2,8 @@
 #include "common.hpp"
 //#include "../../../include/inline.hpp"
 
+namespace kvs {
+
 INLINE uint64_t_64byte
 loadAcquireGE()
 {
@@ -20,3 +22,4 @@ atomicAddGE()
 	}
 }
 
+}  // namespace kvs

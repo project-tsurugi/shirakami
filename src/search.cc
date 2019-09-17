@@ -1,6 +1,8 @@
 #include "kernel.h"
 #include "parameters.h"
 
+namespace kvs {
+
 using namespace std;
 
 /***********************************************
@@ -16,8 +18,7 @@ extern void delTuple(TUPLE *t);
  * 
  * Functions
  *
- ***********************************************/
-extern DATA_TYPE
+ ***********************************************/ extern DATA_TYPE
 getDataType4AS(list<ATR> atr, string relNam, string atrNam) 
 {
   list<ATR>::iterator ita;
@@ -190,3 +191,5 @@ doSearch()
     doRunSelection(n, t);
   }
 }
+
+}  // namespace kvs
