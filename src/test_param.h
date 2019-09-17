@@ -1,3 +1,7 @@
+#pragma once
+
+namespace kvs {
+
 // How many threads would you like to spawn?
 const int Nthread = 1;
 
@@ -9,3 +13,5 @@ const int Len_key = 20;
 
 // The length of value
 const int Len_val = 2;
+
+}  // namespace kvs

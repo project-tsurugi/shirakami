@@ -1,9 +1,11 @@
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 //#include "port.h"
 #include <cstdint>
 //#include "kvs.h"
-#include "interface.h"
+#include "kvs/interface.h"
+
+namespace kvs {
 
 #define MAX_KEY_LEN (8)
 #define MAX_VALUE_LEN (8)
@@ -105,3 +107,5 @@ make_tuple(char *key, uint len_key)
   return tuple;
 }
 */
+
+}  // namespace kvs

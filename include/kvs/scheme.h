@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <cstdlib>
 #include <errno.h>
@@ -12,7 +14,8 @@
 #include <assert.h>
 #include <vector>
 #include "debug.h"
-using namespace std;
+
+namespace kvs {
 
 typedef enum {
   SEARCH, UPDATE, INSERT, DELETE, UPSERT,
@@ -214,3 +217,6 @@ void print_result(struct timeval begin, struct timeval end, int nthread);
 void task(int rowid);
 void lock(int rowid);
 void unlock(int rowid);
+
+}  // namespace kvs
+

@@ -1,8 +1,10 @@
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 #include "tsc.hpp"
 #include "xact.h"
-#include "interface.h"
+#include "kvs/interface.h"
+
+namespace kvs {
 
 std::vector<LogShell> LogList;
 std::vector<Record*> DataBase;
@@ -560,3 +562,5 @@ debug_print_key(void)
 		;
 	}
 }
+
+}  // namespace kvs

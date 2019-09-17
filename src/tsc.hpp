@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+namespace kvs {
 
 static uint64_t rdtsc() {
 	uint64_t rax;
@@ -12,3 +13,5 @@ static uint64_t rdtsc() {
 
 	return (rdx << 32) | rax;
 }
+
+}  // namespace kvs

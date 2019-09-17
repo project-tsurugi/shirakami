@@ -1,9 +1,11 @@
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 #include "port.h"
 #include <cstdint>
 #include "kvs.h"
-#include "interface.h"
+#include "kvs/interface.h"
+
+namespace kvs {
 
 pthread_t EpochThread;
 pthread_t LogThread;
@@ -49,3 +51,5 @@ kvs_init(void)
   init_mutex();
   invoke_core_thread();
 }
+
+}  // namespace kvs

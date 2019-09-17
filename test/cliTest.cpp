@@ -17,11 +17,14 @@
 #include "gtest/gtest.h"
 
 #include "kernel.h"
-#include "debug.h"
+#include "kvs/debug.h"
 #include <cstdint>
-#include "interface.h"
+#include "kvs/interface.h"
 //const int Nthread = 1;
 #include "test_param.h"
+
+using namespace kvs;
+
 std::vector<Tuple*> DataList[Nthread+1];
 std::vector<Tuple*> CommonDataList;
 

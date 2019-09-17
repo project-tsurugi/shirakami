@@ -1,6 +1,8 @@
 #include "kernel.h"
 #include "parameters.h"
 
+namespace kvs {
+
 using namespace std;
 
 /***********************************************
@@ -190,3 +192,5 @@ doSearch()
     doRunSelection(n, t);
   }
 }
+
+}  // namespace kvs
