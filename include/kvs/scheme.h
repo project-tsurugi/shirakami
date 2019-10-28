@@ -92,6 +92,8 @@ public:
   }
 
   ~Record () {
+    free(this->tuple.key);
+    free(this->tuple.val);
   }
 };
 

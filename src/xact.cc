@@ -13,8 +13,16 @@ std::vector<ThreadInfo*> ThreadTable;
 void lock_mutex(pthread_mutex_t *mutex);
 void unlock_mutex(pthread_mutex_t *mutex);
 
+extern void
+kvs_delete_database()
+{
+  for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
+    delete *itr;
+  }
+}
+
 uint64_t
-loadAcquireGE()
+load_acquire_ge()
 {
   return __atomic_load_n(&(GlobalEpoch), __ATOMIC_ACQUIRE);
 }
@@ -22,7 +30,7 @@ loadAcquireGE()
 void
 atomicAddGE()
 {
-	uint64_t expected = loadAcquireGE();
+	uint64_t expected = load_acquire_ge();
   for (;;) {
     uint64_t desired = expected + 1;
     if (__atomic_compare_exchange_n(&(GlobalEpoch), &(expected), desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
@@ -45,7 +53,7 @@ locked_by_me(Tuple tuple, std::vector<WriteSetObj> writeSet)
 }
 
 static void
-unlockWriteSet(std::vector<WriteSetObj> lockList)
+unlock_write_set(std::vector<WriteSetObj> lockList)
 {
 	TidWord expected, desired;
   
@@ -136,7 +144,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 	}
 
 	//ERR;
-  unlockWriteSet(lockList);
+  unlock_write_set(lockList);
 	lockList.clear();
 	ti->readSet.clear();
 	ti->writeSet.clear();
@@ -155,7 +163,7 @@ checkClockSpan(uint64_t &start, uint64_t &stop, uint64_t threshold)
 static bool
 checkEpochLoaded(void)
 {
-  uint64_t curEpoch = loadAcquireGE();
+  uint64_t curEpoch = load_acquire_ge();
 
   lock_mutex(&MutexThreadTable);
   for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++){
@@ -177,7 +185,7 @@ logger(void *arg)
 {
   int fd = open(LOG_FILE, O_APPEND|O_CREAT, 0644);
   while (true) {
-    uint64_t curEpoch = loadAcquireGE();
+    uint64_t curEpoch = load_acquire_ge();
     pthread_mutex_lock(&MutexLogList);
     for (auto itr = LogList.begin(); itr != LogList.end(); itr++) {
       if (itr->epoch < curEpoch) {
@@ -302,21 +310,21 @@ kvs_commit(const int token)
 {
   ThreadInfo *ti = get_thread_info(token);
   TidWord max_rset, max_wset;
-  std::vector<WriteSetObj> lockList;
+  std::vector<WriteSetObj> lock_list(ti->writeSet.size());
 
 	//DDD((int)ti->readSet.size());
 	//DDD((int)ti->writeSet.size());
 
   // Phase 1: Sort lock list;
-  copy(ti->writeSet.begin(), ti->writeSet.end(), back_inserter(lockList));
-  lockList.erase(std::unique(lockList.begin(), lockList.end()), lockList.end());
-  std::sort(lockList.begin(), lockList.end());
+  copy(ti->writeSet.begin(), ti->writeSet.end(), lock_list.begin());
+  std::sort(lock_list.begin(), lock_list.end());
+  lock_list.erase(std::unique(lock_list.begin(), lock_list.end()), lock_list.end());
 
 
   // Phase 2: Lock write set;
   TidWord expected, desired;
-	//DDD((int)lockList.size());
-  for (auto itr = lockList.begin(); itr != lockList.end(); itr++) {
+	//DDD((int)lock_list.size());
+  for (auto itr = lock_list.begin(); itr != lock_list.end(); ++itr) {
 		//Record *record = itr->rec_ptr;
 		expected.obj = __atomic_load_n(&(itr->rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
     for (;;) {
@@ -333,7 +341,7 @@ kvs_commit(const int token)
 
   // Serialization point
   asm volatile("" ::: "memory");
-	__atomic_store_n(&ti->epoch, loadAcquireGE(), __ATOMIC_RELEASE);
+	__atomic_store_n(&ti->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
   asm volatile("" ::: "memory");
 
   // Phase 3: Validation
@@ -343,8 +351,8 @@ kvs_commit(const int token)
 		Record* rec_ptr = itr->rec_ptr;
     check.obj = __atomic_load_n(&(rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
     if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
-      unlockWriteSet(lockList); 
-      lockList.clear(); 
+      unlock_write_set(lock_list); 
+      lock_list.clear(); 
       ti->readSet.clear(); 
       ti->writeSet.clear();
       return false;
@@ -352,8 +360,8 @@ kvs_commit(const int token)
     // Condition 3 (Cond. 2 is omitted since it is needless)
     if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, ti->writeSet))) {
 			ERR;
-      unlockWriteSet(lockList); 
-      lockList.clear(); 
+      unlock_write_set(lock_list); 
+      lock_list.clear(); 
       ti->readSet.clear(); 
       ti->writeSet.clear();
       return false;
@@ -365,7 +373,7 @@ kvs_commit(const int token)
 
   //exec_logging(writeSet, myid);
 
-	write_phase(ti, max_rset, max_wset, lockList);
+	write_phase(ti, max_rset, max_wset, lock_list);
 
   return true;
 }
@@ -404,7 +412,9 @@ kvs_leave(uint token)
   pthread_mutex_lock(&MutexThreadTable);
   for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++) {
     if ((*itr)->token == token) {
-      itr = ThreadTable.erase(itr);
+      ThreadInfo *del_target = (*itr);
+      ThreadTable.erase(itr);
+      delete del_target;
 			pthread_mutex_unlock(&MutexThreadTable);
 			return true;
     }
