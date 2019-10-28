@@ -63,6 +63,11 @@ public:
     this->visible = true;
   }
 
+  ~Tuple() {
+    free(this->key);
+    free(this->val);
+  }
+
   Tuple(char *key, const uint len_key, char *val, const uint len_val) {
     this->len_key = len_key;
     this->len_val = len_val;
@@ -89,11 +94,6 @@ public:
 		if (!(this->tuple.val = (char *)calloc(len_val, sizeof(char)))) ERR;
 		memcpy(this->tuple.key, key, len_key);
 		memcpy(this->tuple.val, val, len_val);
-  }
-
-  ~Record () {
-    free(this->tuple.key);
-    free(this->tuple.val);
   }
 };
 

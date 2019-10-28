@@ -28,6 +28,20 @@ using namespace kvs;
 std::vector<Tuple*> DataList[Nthread+1];
 std::vector<Tuple*> CommonDataList;
 
+/**
+ * @brief delete DataList object.
+ * @return void
+ */
+static void
+delete_DataList()
+{
+  for (int i = 0; i < Nthread + 1; ++i) {
+    for (auto itr = DataList[i].begin(); itr != DataList[i].end(); ++itr) {
+      delete *itr;
+    }
+  }
+}
+
 static char *
 make_string(uint len)
 {
@@ -48,6 +62,8 @@ exec_insert(uint token)
         Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
         DataList[token].push_back(tuple);
         kvs_insert(token, key, Len_key, val, Len_val);
+        free(key);
+        free(val);
     }
 
     // Commit;
@@ -124,8 +140,6 @@ static void
 delete_common_data_list(void)
 {
   for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); ++itr) {
-    free((*itr)->key);
-    free((*itr)->val);
     delete *itr;
   }
 }
@@ -218,7 +232,7 @@ test_delete(const int token)
 static void
 test_single_operation(const int token)
 {
-    //test_insert(token);
+    test_insert(token);
     //test_search(token);
     //test_scan(token);
     //test_update(token);
@@ -252,7 +266,6 @@ test(void)
 {
     create_common_data_list();
 
-  /*
     pthread_t th[Nthread];
     for (int i = 0; i < Nthread; i++) {
         th[i] = thread_create();
@@ -261,10 +274,10 @@ test(void)
     for (int i = 0; i < Nthread; i++) {
         pthread_join(th[i], NULL);
     }
-    */
 
-    delete_common_data_list();
     kvs_delete_database();
+    delete_common_data_list();
+    delete_DataList();
 }
 
 namespace kvs_charkey::testing {
