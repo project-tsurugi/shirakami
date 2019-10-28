@@ -272,6 +272,7 @@ insert_normal_phase(char *key, uint len_key, char *val, uint len_val)
 
   Record* rec_ptr = new Record(key, len_key, val, len_val);
   rec_ptr->tuple.visible = false;
+  //printf("%s\n", rec_ptr->tuple.key);
   lock_mutex(&MutexDB);
   DataBase.push_back(rec_ptr);
   unlock_mutex(&MutexDB);
@@ -456,9 +457,9 @@ kvs_search_key(uint token, char *key, uint len_key)
 
 	//SSS(key);
 	//DDD(len_key);	
-  for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
-		//SSS(itr->tuple.key);
-		//DDD(itr->tuple.len_key);		
+  for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
+		SSS((*itr)->tuple.key);
+		DDD((*itr)->tuple.len_key);		
     if ((*itr)->tuple.len_key == len_key &&
 				memcmp((*itr)->tuple.key, key, len_key) == 0 &&
 				(*itr)->tuple.visible == true) {

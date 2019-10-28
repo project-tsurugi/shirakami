@@ -72,8 +72,10 @@ public:
     this->len_key = len_key;
     this->len_val = len_val;
     this->visible = true;
-    this->key = (char *)calloc(1, len_key); if (!this->key) ERR;
-    this->val = (char *)calloc(1, len_val); if (!this->val) ERR;
+    this->key = (char *)calloc(1, len_key);
+    if (!this->key) ERR;
+    this->val = (char *)calloc(1, len_val);
+    if (!this->val) ERR;
     memcpy(this->key, key, len_key);
     memcpy(this->val, val, len_val);
   }
@@ -90,8 +92,9 @@ public:
 	Record(char *key, uint len_key, char *val, uint len_val) {
 		this->tuple.len_key = len_key;
 		this->tuple.len_val = len_val;
-		if (!(this->tuple.key = (char *)calloc(len_key, sizeof(char)))) ERR;
-		if (!(this->tuple.val = (char *)calloc(len_val, sizeof(char)))) ERR;
+    this->tuple.key = (char *)malloc(len_key);
+    if (!this->tuple.key) ERR;
+		if (!(this->tuple.val = (char *)calloc(1, len_val))) ERR;
 		memcpy(this->tuple.key, key, len_key);
 		memcpy(this->tuple.val, val, len_val);
   }

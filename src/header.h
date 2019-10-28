@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>

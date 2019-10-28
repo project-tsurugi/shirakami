@@ -46,10 +46,14 @@ static char *
 make_string(uint len)
 {
     char *string = (char *)calloc(len, sizeof(char));
-    for (uint i = 0; i < len; i++) {
+    for (uint i = 0; i < len-1; i++) {
         string[i] = rand() % 24 + 'a';
     }
+    string[len-1] = '\0';
 
+    // if you use printf function with %s format later,
+    // the end of aray must be null chara.
+ 
     return string;
 }
 
