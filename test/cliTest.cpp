@@ -102,17 +102,32 @@ exec_update(const uint token)
 static void
 create_common_data_list(void)
 {
-    for (int i = 0; i < Max_insert; i++) {
-        char *key = make_string(Len_key);
-        char *val = make_string(Len_val);
-        Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
-        CommonDataList.push_back(tuple);
-    }
-    int token = kvs_enter();
-    for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
-        kvs_insert(token, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
-    } kvs_commit(token);
-    kvs_leave(token);
+  for (int i = 0; i < Max_insert; ++i) {
+    char *key = make_string(Len_key);
+    char *val = make_string(Len_val);
+    Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
+    CommonDataList.push_back(tuple);
+    free(key);
+    free(val);
+  }
+
+  int token = kvs_enter();
+  for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
+    kvs_insert(token, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
+  }
+
+  kvs_commit(token);
+  kvs_leave(token);
+}
+
+static void
+delete_common_data_list(void)
+{
+  for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); ++itr) {
+    free((*itr)->key);
+    free((*itr)->val);
+    delete *itr;
+  }
 }
 
 static void
@@ -203,8 +218,8 @@ test_delete(const int token)
 static void
 test_single_operation(const int token)
 {
-    test_insert(token);
-    test_search(token);
+    //test_insert(token);
+    //test_search(token);
     //test_scan(token);
     //test_update(token);
     //test_delete(token);
@@ -237,6 +252,7 @@ test(void)
 {
     create_common_data_list();
 
+  /*
     pthread_t th[Nthread];
     for (int i = 0; i < Nthread; i++) {
         th[i] = thread_create();
@@ -245,6 +261,10 @@ test(void)
     for (int i = 0; i < Nthread; i++) {
         pthread_join(th[i], NULL);
     }
+    */
+
+    delete_common_data_list();
+    kvs_delete_database();
 }
 
 namespace kvs_charkey::testing {

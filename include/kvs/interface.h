@@ -26,6 +26,7 @@ extern bool kvs_commit(const int token);
 //extern char *gen_value_string(void);
 extern void kvs_upsert(uint token, char *key, uint len_key, char *val, uint len_val);
 extern void kvs_delete(const uint token, char *key, uint len_key);
+extern void kvs_delete_database();
 extern bool kvs_insert(const uint token, char *key, uint len_key, char *val, uint len_val);
 extern bool kvs_update(uint token, char *key, uint len_key, char *val, uint len_val);
 extern Tuple* kvs_search_key(uint token, char *key, uint len_key);
