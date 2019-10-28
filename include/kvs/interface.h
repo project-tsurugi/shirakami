@@ -19,13 +19,31 @@ extern void kvs_init(void);
  * @brief enter session
  * @return token
  */
+
 extern uint kvs_enter();
+
+/**
+ * @brief one thread starts handling kvs.
+ * @return token number
+ */
 extern bool kvs_leave(uint token);
+
+/**
+ * @brief silo's(SOSP2013) validation protocol.
+ * @return bool (success or fail)
+ */
 extern bool kvs_commit(const int token);
+
 //extern char *gen_key_string(void);
 //extern char *gen_value_string(void);
+
 extern void kvs_upsert(uint token, char *key, uint len_key, char *val, uint len_val);
 extern void kvs_delete(const uint token, char *key, uint len_key);
+
+/**
+ * @brief delete std::vector<Record*> DataBase at kvs_charkey/src/xact.cc
+ * @return void
+ */
 extern void kvs_delete_database();
 extern bool kvs_insert(const uint token, char *key, uint len_key, char *val, uint len_val);
 extern bool kvs_update(uint token, char *key, uint len_key, char *val, uint len_val);
