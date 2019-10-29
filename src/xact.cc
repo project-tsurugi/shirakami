@@ -455,23 +455,11 @@ kvs_search_key(uint token, char *key, uint len_key)
   ThreadInfo* ti = get_thread_info(token);
   Tuple *tuple = nullptr;
 
-	//SSS(key);
-	//DDD(len_key);	
   for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
-		SSS((*itr)->tuple.key);
-		DDD((*itr)->tuple.len_key);		
     if ((*itr)->tuple.len_key == len_key &&
 				memcmp((*itr)->tuple.key, key, len_key) == 0 &&
 				(*itr)->tuple.visible == true) {
-		//if (itr->tuple.len_key == len_key && memcmp(itr->tuple.key, key, len_key) == 0) {
-			//ERR;
-      ReadSetObj rso;
-			rso.rec_read = *(*itr);
-			rso.rec_ptr = *itr;
-			assert(rso.rec_ptr != NULL);
-			assert(rso.rec_ptr != nullptr);
-
-      ti->readSet.push_back(rso);
+      ti->readSet.emplace_back(ReadSetObj(*itr));
       tuple = new Tuple((*itr)->tuple.key, (*itr)->tuple.len_key, (*itr)->tuple.val, (*itr)->tuple.len_val);
       break;
     }

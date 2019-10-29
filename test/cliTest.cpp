@@ -79,10 +79,11 @@ static void
 exec_search_key(uint token)
 {
     //std::cout << "-------------Search-------------" << std::endl;
-    for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
+    for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
         Tuple* tuple = kvs_search_key(token, (*itr)->key, (*itr)->len_key);
         if (!tuple) std::cout << "No such key" << std::endl;
-        else printf("%s:%s\n", tuple->key, tuple->val);
+        // else printf("%s:%s\n", tuple->key, tuple->val);
+        delete tuple;
     }
     bool ok = kvs_commit(token);
     ASSERT_TRUE(ok);
@@ -237,7 +238,7 @@ static void
 test_single_operation(const int token)
 {
     test_insert(token);
-    //test_search(token);
+    test_search(token);
     //test_scan(token);
     //test_update(token);
     //test_delete(token);

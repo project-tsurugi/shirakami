@@ -72,12 +72,22 @@ public:
     this->len_key = len_key;
     this->len_val = len_val;
     this->visible = true;
-    this->key = (char *)calloc(1, len_key);
-    if (!this->key) ERR;
-    this->val = (char *)calloc(1, len_val);
-    if (!this->val) ERR;
+    if (!(this->key = (char *)malloc(len_key))) ERR;
+    if (!(this->val = (char *)malloc(len_val))) ERR;
     memcpy(this->key, key, len_key);
     memcpy(this->val, val, len_val);
+  }
+
+  Tuple& operator=(const Tuple& rhs) {
+    this->len_key = rhs.len_key;
+    this->len_val = rhs.len_val;
+    this->visible = rhs.visible;
+    if (!(this->key = (char *)malloc(this->len_key))) ERR;
+    if (!(this->val = (char *)malloc(this->len_val))) ERR;
+    memcpy(this->key, rhs.key, this->len_key);
+    memcpy(this->val, rhs.val, this->len_val);
+    
+    return *this;
   }
 };
 
@@ -92,11 +102,17 @@ public:
 	Record(char *key, uint len_key, char *val, uint len_val) {
 		this->tuple.len_key = len_key;
 		this->tuple.len_val = len_val;
-    this->tuple.key = (char *)malloc(len_key);
-    if (!this->tuple.key) ERR;
-		if (!(this->tuple.val = (char *)calloc(1, len_val))) ERR;
+    if (!(this->tuple.key = (char *)malloc(len_key))) ERR;
+		if (!(this->tuple.val = (char *)malloc(len_val))) ERR;
 		memcpy(this->tuple.key, key, len_key);
 		memcpy(this->tuple.val, val, len_val);
+  }
+
+  Record& operator=(const Record& rhs) {
+    this->tidw = rhs.tidw;
+    this->tuple = rhs.tuple;
+
+    return *this;
   }
 };
 
@@ -167,6 +183,19 @@ class ReadSetObj {
 	ReadSetObj(void) {
 		this->rec_ptr = nullptr;
 	}
+
+  ReadSetObj(Record* rec_ptr) {
+    this->rec_read = *rec_ptr;
+    this->rec_ptr = rec_ptr;
+  }
+
+  /**
+   * @brief copy constructor
+   */
+  ReadSetObj(const ReadSetObj &src) {
+    this->rec_read = src.rec_read;
+    this->rec_ptr = src.rec_ptr;
+  }
 };
 
 class LogBody {
