@@ -255,7 +255,7 @@ update_normal_phase(char *val, uint len_val, Record* rec_ptr)
   WriteSetObj wso;
 
   wso.update_len_val = len_val;
-	if (!(wso.update_val = (char *)calloc(len_val, sizeof(char)))) ERR;
+	if (!(wso.update_val = (char *)malloc(len_val))) ERR;
 	memcpy(wso.update_val, val, len_val);
   wso.op = UPDATE;
 	wso.rec_ptr = rec_ptr;
