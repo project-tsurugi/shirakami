@@ -92,20 +92,18 @@ exec_search_key(uint token)
 static void
 exec_scan_key(uint token)
 {
-    //std::cout << "-------------Scan-------------" << std::endl;
-    while (true) {
-        std::vector<Tuple*> result = kvs_scan_key(token, (char*)"a", 1, (char*)"z", 1);
-        for (auto itr = result.begin(); itr != result.end(); itr++) {
-            if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
-            else {
-                ;
-                //printf("%s:%s\n", itr->key, itr->val);
-            }
-        }
-        bool ok = kvs_commit(token);
-        result.clear();
-        if (ok) break;
-    }
+  //std::cout << "-------------Scan-------------" << std::endl;
+  while (true) {
+      std::vector<Tuple*> result = kvs_scan_key(token, (char*)"a", 1, (char*)"z", 1);
+      for (auto itr = result.begin(); itr != result.end(); itr++) {
+          if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
+          else printf("%s:%s\n", (*itr)->key, (*itr)->val);
+          delete (*itr);
+      }
+      bool ok = kvs_commit(token);
+      result.clear();
+      if (ok) break;
+  }
 }
 
 static void
@@ -239,7 +237,7 @@ test_single_operation(const int token)
 {
     test_insert(token);
     test_search(token);
-    //test_scan(token);
+    test_scan(token);
     //test_update(token);
     //test_delete(token);
 }

@@ -435,13 +435,9 @@ kvs_scan_key(uint token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
     if ((memcmp((*itr)->tuple.key, lkey, len_lkey) >= 0) &&
         (memcmp((*itr)->tuple.key, rkey, len_rkey) <= 0) &&
 				((*itr)->tuple.visible == true)) {
-			//SSS((*itr)->tuple.key);
-      ReadSetObj rso;
-			rso.rec_read = *(*itr);
-			rso.rec_ptr = *itr;
 			Tuple* tuple = new Tuple((*itr)->tuple.key, (*itr)->tuple.len_key, (*itr)->tuple.val, (*itr)->tuple.len_val);
       result.push_back(tuple);
-      ti->readSet.push_back(rso);
+      ti->readSet.push_back(ReadSetObj(*itr));
     }
   }
   unlock_mutex(&MutexDB);
