@@ -239,7 +239,7 @@ test_single_operation(const int token)
     test_search(token);
     test_scan(token);
     test_update(token);
-    //test_delete(token);
+    test_delete(token);
 }
 
 static void *
