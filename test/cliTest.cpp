@@ -58,7 +58,7 @@ make_string(uint len)
 }
 
 static void
-exec_insert(uint token)
+exec_insert(Token token)
 {
     for (int i = 0; i < Max_insert; i++) {
         char* key = make_string(Len_key);
@@ -71,12 +71,12 @@ exec_insert(uint token)
     }
 
     // Commit;
-    bool ok = kvs_commit(token);
-    if (!ok) ERR;
+    Status result = commit(token);
+    ASSERT_TRUE(result == Status::OK);
 }
 
 static void
-exec_search_key(uint token)
+exec_search_key(Token token)
 {
     //std::cout << "-------------Search-------------" << std::endl;
     for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
@@ -85,37 +85,38 @@ exec_search_key(uint token)
         // else printf("%s:%s\n", tuple->key, tuple->val);
         delete tuple;
     }
-    bool ok = kvs_commit(token);
-    ASSERT_TRUE(ok);
+    Status result = commit(token);
+    ASSERT_TRUE(result == Status::OK);
 }
 
 static void
-exec_scan_key(uint token)
+exec_scan_key(Token token)
 {
   //std::cout << "-------------Scan-------------" << std::endl;
   while (true) {
-      std::vector<Tuple*> result = kvs_scan_key(token, (char*)"a", 1, (char*)"z", 1);
-      for (auto itr = result.begin(); itr != result.end(); itr++) {
-          if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
-          else printf("%s:%s\n", (*itr)->key, (*itr)->val);
-          delete (*itr);
-      }
-      bool ok = kvs_commit(token);
-      result.clear();
-      if (ok) break;
+    std::vector<Tuple*> result = kvs_scan_key(token, (char*)"a", 1, (char*)"z", 1);
+    for (auto itr = result.begin(); itr != result.end(); itr++) {
+      if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
+        //else printf("%s:%s\n", (*itr)->key, (*itr)->val);
+        delete (*itr);
+    }
+    Status commit_result = commit(token);
+    ASSERT_TRUE(commit_result == Status::OK);
+    result.clear();
+    if (commit_result == Status::OK) break;
   }
 }
 
 static void
-exec_update(const uint token)
+exec_update(const Token token)
 {
     //std::cout << "-------------Update-------------" << std::endl;
     //for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
     for (auto itr = DataList[0].begin(); itr != DataList[0].end(); itr++) {
         kvs_update(token, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
     }
-    bool ok = kvs_commit(token);
-    assert(ok == true);
+    Status result = commit(token);
+    ASSERT_TRUE(result == Status::OK);
 }
 
 static void
@@ -130,13 +131,17 @@ create_common_data_list(void)
     free(val);
   }
 
-  int token = kvs_enter();
+  Token token;
+  Status enter_result = enter(token);
+  if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) exit(1);
+
   for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
     kvs_insert(token, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
   }
 
-  kvs_commit(token);
-  kvs_leave(token);
+  Status result = commit(token);
+  ASSERT_TRUE(result == Status::OK);
+  leave(token);
 }
 
 static void
@@ -148,39 +153,15 @@ delete_common_data_list(void)
 }
 
 static void
-exec_rmw(const uint token)
+exec_delete(const Token token)
 {
-    while (true) {
-        std::vector<Tuple*> vec_tuple;
-        for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
-            Tuple* tuple = kvs_search_key(token, (*itr)->key, (*itr)->len_key);
-            if (tuple->len_key == 0) ERR;
-            vec_tuple.push_back(tuple);
-        }
-        for (auto itr = vec_tuple.begin(); itr != vec_tuple.end(); itr++) {
-            kvs_update(token, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
-        }
-
-        bool ok = kvs_commit(token);
-        vec_tuple.clear();
-        if (ok == true) break;
-        printf("[%d] abort\n", token);
-        usleep(1000);
-    }
-    //assert(ok == true);
-    //ERR;
-}
-
-static void
-exec_delete(const uint token)
-{
-    //std::cout << "-------------Delete-------------" << std::endl;
-    for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
-        //SSS(itr->key);
-        kvs_delete(token, (*itr)->key, (*itr)->len_key);
-    }
-    bool ok = kvs_commit(token);
-    assert(ok == true);
+  //std::cout << "-------------Delete-------------" << std::endl;
+  for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
+    //SSS(itr->key);
+    kvs_delete(token, (*itr)->key, (*itr)->len_key);
+  }
+  Status result = commit(token);
+  ASSERT_TRUE(result == Status::OK);
 }
 
 static void
@@ -198,14 +179,6 @@ test_update(const int token)
     printf("[%d] update begin\n", token);
     exec_update(token);
     printf("[%d] update done\n", token);
-}
-
-static void
-test_rmw(const int token)
-{
-    printf("[%d] RMW begin\n", token);
-    exec_rmw(token);
-    printf("[%d] RMW done\n", token);
 }
 
 static void
@@ -245,14 +218,14 @@ test_single_operation(const int token)
 static void *
 worker(void *a)
 {
-    uint token = kvs_enter();
+  Token token;
+  Status enter_result = enter(token);
+  if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) ERR;
 
-    test_single_operation(token);
-    //test_rmw(token);
+  test_single_operation(token);
 
-    kvs_leave(token);
-
-    return nullptr;
+  leave(token);
+  return nullptr;
 }
 
 static pthread_t
@@ -289,8 +262,8 @@ class cliTest : public ::testing::Test {
 };
 
 TEST_F(cliTest, simple_test) {
-    kvs_init();
-    test();
+  init();
+  test();
 }
 
 }  // namespace kvs_charkey::testing

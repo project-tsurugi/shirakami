@@ -7,10 +7,10 @@ using namespace std;
 
 namespace kvs {
 
-extern uint64_t GlobalEpoch;
-extern pthread_mutex_t MutexThreadTable;
-extern pthread_mutex_t MutexLogList;
-extern pthread_mutex_t MutexDB;
-extern pthread_mutex_t MutexToken;
+extern uint64_t kGlobalEpoch;
+extern pthread_mutex_t kMutexThreadTable;
+extern pthread_mutex_t kMutexLogList;
+extern pthread_mutex_t kMutexDB;
+extern pthread_mutex_t kMutexToken;
 
 }  // namespace kvs

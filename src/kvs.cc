@@ -9,11 +9,11 @@ namespace kvs {
 
 pthread_t EpochThread;
 pthread_t LogThread;
-uint64_t GlobalEpoch;
-pthread_mutex_t MutexLogList;
-pthread_mutex_t MutexDB;
-pthread_mutex_t MutexToken;
-pthread_mutex_t MutexThreadTable;
+uint64_t kGlobalEpoch;
+pthread_mutex_t kMutexLogList;
+pthread_mutex_t kMutexDB;
+pthread_mutex_t kMutexToken;
+pthread_mutex_t kMutexThreadTable;
 
 void
 invoke_logger(void)
@@ -32,21 +32,21 @@ invoke_epocher(void)
 static void
 init_mutex(void)
 {
-  //pthread_mutex_init(&MutexLogList, nullptr);
-  pthread_mutex_init(&MutexThreadTable, nullptr);
-  pthread_mutex_init(&MutexDB, nullptr);
-	pthread_mutex_init(&MutexToken, nullptr);
+  //pthread_mutex_init(&kMutexLogList, nullptr);
+  pthread_mutex_init(&kMutexThreadTable, nullptr);
+  pthread_mutex_init(&kMutexDB, nullptr);
+	pthread_mutex_init(&kMutexToken, nullptr);
 }
 
 static void
 invoke_core_thread(void)
 {
-  invoke_epocher();
+  //invoke_epocher();
   //invoke_logger();
 }
 
 extern void
-kvs_init(void)
+init()
 {
   init_mutex();
   invoke_core_thread();

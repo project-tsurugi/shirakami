@@ -8,7 +8,9 @@ namespace kvs {
 
 std::vector<LogShell> LogList;
 std::vector<Record*> DataBase;
-std::vector<ThreadInfo*> ThreadTable;
+
+/* This variable has informations about worker thread. */
+std::vector<ThreadInfo*> kThreadTable;
 
 void lock_mutex(pthread_mutex_t *mutex);
 void unlock_mutex(pthread_mutex_t *mutex);
@@ -24,16 +26,16 @@ kvs_delete_database()
 uint64_t
 load_acquire_ge()
 {
-  return __atomic_load_n(&(GlobalEpoch), __ATOMIC_ACQUIRE);
+  return __atomic_load_n(&(kGlobalEpoch), __ATOMIC_ACQUIRE);
 }
 
 void
-atomicAddGE()
+atomic_add_global_epoch()
 {
 	uint64_t expected = load_acquire_ge();
   for (;;) {
     uint64_t desired = expected + 1;
-    if (__atomic_compare_exchange_n(&(GlobalEpoch), &(expected), desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+    if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
 			break;
 		}
   }
@@ -67,19 +69,19 @@ unlock_write_set(std::vector<WriteSetObj> lockList)
 }
 
 static ThreadInfo*
-get_thread_info(const uint token)
+get_thread_info(const Token token)
 {
   ThreadInfo *ti;
 
-  pthread_mutex_lock(&MutexThreadTable);
-  for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++) {
+  pthread_mutex_lock(&kMutexThreadTable);
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); itr++) {
     if ((*itr)->token == token) {
-      pthread_mutex_unlock(&MutexThreadTable);
+      pthread_mutex_unlock(&kMutexThreadTable);
       ti = *itr;
       return ti;
     }
   }
-  pthread_mutex_unlock(&MutexThreadTable);
+  pthread_mutex_unlock(&kMutexThreadTable);
 
 	// should not arrive here
   ERR;
@@ -152,7 +154,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 }
 
 bool
-checkClockSpan(uint64_t &start, uint64_t &stop, uint64_t threshold)
+check_clock_span(uint64_t &start, uint64_t &stop, uint64_t threshold)
 {
   uint64_t diff = 0;
   diff = stop - start;
@@ -161,20 +163,18 @@ checkClockSpan(uint64_t &start, uint64_t &stop, uint64_t threshold)
 }
 
 static bool
-checkEpochLoaded(void)
+check_epoch_loaded(void)
 {
   uint64_t curEpoch = load_acquire_ge();
 
-  lock_mutex(&MutexThreadTable);
-  for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++){
-		assert(*itr != NULL);
-		assert(*itr != nullptr);
+  lock_mutex(&kMutexThreadTable);
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr){
     if (__atomic_load_n(&(*itr)->epoch, __ATOMIC_ACQUIRE) != curEpoch) {
-      unlock_mutex(&MutexThreadTable);
+      unlock_mutex(&kMutexThreadTable);
       return false;
     }
   }
-  unlock_mutex(&MutexThreadTable);
+  unlock_mutex(&kMutexThreadTable);
 
   return true;
 }
@@ -186,7 +186,7 @@ logger(void *arg)
   int fd = open(LOG_FILE, O_APPEND|O_CREAT, 0644);
   while (true) {
     uint64_t curEpoch = load_acquire_ge();
-    pthread_mutex_lock(&MutexLogList);
+    pthread_mutex_lock(&kMutexLogList);
     for (auto itr = LogList.begin(); itr != LogList.end(); itr++) {
       if (itr->epoch < curEpoch) {
         write(fd, itr->body, sizeof(LogBody) * itr->counter);
@@ -195,7 +195,7 @@ logger(void *arg)
       }
     }
     fsync(fd);
-    pthread_mutex_unlock(&MutexLogList);
+    pthread_mutex_unlock(&kMutexLogList);
     usleep(10);
   }
 }
@@ -208,18 +208,18 @@ epocher(void *arg)
   // To increment it, 
   // all the worker-threads need to read the latest one.
   
-	uint64_t EpochTimerStart, EpochTimerStop;
+	uint64_t start, stop;
 
-	EpochTimerStart = rdtsc();
+	start = rdtsc();
 	for (;;) {
 		usleep(1);
-		EpochTimerStop = rdtsc();
+		stop = rdtsc();
 		// chkEpochLoaded checks whether the 
     // latest global epoch is read by all the threads
-		if (checkClockSpan(EpochTimerStart, EpochTimerStop, EPOCH_TIME * CLOCK_PER_US * 1000) &&
-				checkEpochLoaded()) {
-			atomicAddGE();
-			EpochTimerStart = EpochTimerStop;
+		if (check_clock_span(start, stop, EPOCH_TIME * CLOCK_PER_US * 1000) &&
+				check_epoch_loaded()) {
+			atomic_add_global_epoch();
+			start = stop;
 		}
 	}
 	//----------
@@ -243,9 +243,9 @@ exec_logging(std::vector<Record> writeSet, const int myid)
   ls.body = lb;
   ls.counter = counter;
 
-  pthread_mutex_lock(&MutexLogList);
+  pthread_mutex_lock(&kMutexLogList);
   LogList.push_back(ls);
-  pthread_mutex_unlock(&MutexLogList);
+  pthread_mutex_unlock(&kMutexLogList);
 }
 #endif
 
@@ -273,9 +273,9 @@ insert_normal_phase(char *key, uint len_key, char *val, uint len_val)
   Record* rec_ptr = new Record(key, len_key, val, len_val);
   rec_ptr->tuple.visible = false;
   //printf("%s\n", rec_ptr->tuple.key);
-  lock_mutex(&MutexDB);
+  lock_mutex(&kMutexDB);
   DataBase.push_back(rec_ptr);
-  unlock_mutex(&MutexDB);
+  unlock_mutex(&kMutexDB);
 	wso.rec_ptr = rec_ptr;
 	
   return wso;
@@ -287,14 +287,14 @@ delete_normal_phase(char *key, const uint len_key)
   WriteSetObj wso;
   wso.op = DELETE;
 
-	lock_mutex(&MutexDB);
+	lock_mutex(&kMutexDB);
 	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
 		if ((*itr)->tuple.len_key == len_key && memcmp((*itr)->tuple.key, key, len_key) == 0) {
 			wso.rec_ptr = *itr;
 			break;
 		}
 	}		
-	unlock_mutex(&MutexDB);
+	unlock_mutex(&kMutexDB);
 	
   return wso;
 }
@@ -306,8 +306,8 @@ is_locked(TidWord check)
   return false;
 }
 
-extern bool
-kvs_commit(const int token)
+extern Status
+commit(Token token)
 {
   ThreadInfo *ti = get_thread_info(token);
   TidWord max_rset, max_wset;
@@ -356,16 +356,15 @@ kvs_commit(const int token)
       lock_list.clear(); 
       ti->readSet.clear(); 
       ti->writeSet.clear();
-      return false;
+      return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
     if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, ti->writeSet))) {
-			ERR;
       unlock_write_set(lock_list); 
       lock_list.clear(); 
       ti->readSet.clear(); 
       ti->writeSet.clear();
-      return false;
+      return Status::ERR_VALIDATION;
     }
     max_rset = max(max_rset, check);
   }
@@ -376,61 +375,82 @@ kvs_commit(const int token)
 
 	write_phase(ti, max_rset, max_wset, lock_list);
 
-  return true;
+  return Status::OK;
 }
 
-static uint
-get_token(void)
+/**
+ * @brief Check wheter the session is already started. This function is not thread safe. But this function can be used only after taking mutex.
+ */
+static Status
+chck_session_started(const Token token)
 {
-  static int token = 0;
-  int latest_token;
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
+    if ((*itr)->token == token) return Status::WARN_ALREADY_IN_A_SESSION;
+  }
 
-  pthread_mutex_lock(&MutexToken);
+  return Status::OK;
+}
+
+static Token
+get_token()
+{
+  static Token token = 0;
+  Token latest_token;
+
+  pthread_mutex_lock(&kMutexToken);
   latest_token = token;
 	token++;
-	pthread_mutex_unlock(&MutexToken);
+	pthread_mutex_unlock(&kMutexToken);
   
   return latest_token;
 }
 
-extern uint
-kvs_enter(void)
+extern Status
+enter(Token& token)
 {
-  uint token = get_token();  
+  token = get_token();  
   ThreadInfo* ti = new ThreadInfo(token);
 	
   //ti->token = token;
-  lock_mutex(&MutexThreadTable);
-  ThreadTable.push_back(ti);
-	unlock_mutex(&MutexThreadTable);
+  lock_mutex(&kMutexThreadTable);
+  Status chk_status = chck_session_started(token);
 
-  return token;
+  if (chk_status == Status::OK) {
+    kThreadTable.emplace_back(ti);
+	  unlock_mutex(&kMutexThreadTable);
+  } else if (chk_status == Status::WARN_ALREADY_IN_A_SESSION) {
+	  unlock_mutex(&kMutexThreadTable);
+  } else {
+    ERR;
+  }
+
+  return chk_status;
 }
 
-extern bool
-kvs_leave(uint token)
+extern Status
+leave(Token token)
 {
-  pthread_mutex_lock(&MutexThreadTable);
-  for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++) {
+  pthread_mutex_lock(&kMutexThreadTable);
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if ((*itr)->token == token) {
       ThreadInfo *del_target = (*itr);
-      ThreadTable.erase(itr);
+      kThreadTable.erase(itr);
       delete del_target;
-			pthread_mutex_unlock(&MutexThreadTable);
-			return true;
+			pthread_mutex_unlock(&kMutexThreadTable);
+			return Status::OK;
     }
   }
 
-	return false; // failure
+	return Status::WARN_NOT_IN_A_SESSION;
 }
 
 extern std::vector<Tuple*>
-kvs_scan_key(uint token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
+kvs_scan_key(Token token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
 {
   ThreadInfo* ti = get_thread_info(token);
   std::vector<Tuple*> result;
 
-  lock_mutex(&MutexDB);
+  lock_mutex(&kMutexDB);
 	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {  
     if ((memcmp((*itr)->tuple.key, lkey, len_lkey) >= 0) &&
         (memcmp((*itr)->tuple.key, rkey, len_rkey) <= 0) &&
@@ -440,13 +460,13 @@ kvs_scan_key(uint token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
       ti->readSet.push_back(ReadSetObj(*itr));
     }
   }
-  unlock_mutex(&MutexDB);
+  unlock_mutex(&kMutexDB);
 
   return result;
 }
 
 extern Tuple*
-kvs_search_key(uint token, char *key, uint len_key)
+kvs_search_key(Token token, char *key, uint len_key)
 {
   ThreadInfo* ti = get_thread_info(token);
   Tuple *tuple = nullptr;
@@ -479,7 +499,7 @@ find_record(char *key, uint len_key)
 }
 		
 extern bool
-kvs_update(uint token, char *key, uint len_key, char *val, uint len_val)
+kvs_update(Token token, char *key, uint len_key, char *val, uint len_val)
 {
   //Tuple tuple = make_tuple(key, len_key, val, len_val);
 
@@ -501,7 +521,7 @@ kvs_update(uint token, char *key, uint len_key, char *val, uint len_val)
 }
 
 extern bool
-kvs_insert(const uint token, char *key, uint len_key, char *val, uint len_val)
+kvs_insert(const Token token, char *key, uint len_key, char *val, uint len_val)
 {
   ThreadInfo* ti = get_thread_info(token);
 
@@ -510,9 +530,9 @@ kvs_insert(const uint token, char *key, uint len_key, char *val, uint len_val)
 	ti->writeSet.push_back(wso);
 
 	/*
-  for (auto itr = ThreadTable.begin(); itr != ThreadTable.end(); itr++) {
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); itr++) {
     if ((*itr)->token == token) {
-			ThreadTable* ti = *itr;
+			kThreadTable* ti = *itr;
       return true;
     }
   }
@@ -522,7 +542,7 @@ kvs_insert(const uint token, char *key, uint len_key, char *val, uint len_val)
 }
 
 extern void
-kvs_delete(const uint token, char *key, uint len_key)
+kvs_delete(const Token token, char *key, uint len_key)
 {
   WriteSetObj wso = delete_normal_phase(key, len_key);
   ThreadInfo* ti = get_thread_info(token);
@@ -530,7 +550,7 @@ kvs_delete(const uint token, char *key, uint len_key)
 }
 
 extern void
-kvs_upsert(uint token, char *key, uint len_key, char *val, uint len_val)
+kvs_upsert(Token token, char *key, uint len_key, char *val, uint len_val)
 {
   WriteSetObj wso;
   

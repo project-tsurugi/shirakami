@@ -13,9 +13,33 @@
 #include <algorithm>
 #include <assert.h>
 #include <vector>
+
 #include "debug.h"
 
 namespace kvs {
+
+/**
+ * @brief Session token
+ */
+using Token = std::uint64_t;
+
+/**
+ * @brief Storage Handle
+ */
+using Storage = std::uint64_t;
+
+enum class Status : std::int32_t {
+  // example of status code - remove/add more
+  WARN_ALREADY_IN_A_SESSION = 2,
+  WARN_NOT_IN_A_SESSION = 1,
+  OK = 0,
+  ERR_UNKNOWN = -1,
+  ERR_NOT_FOUND = -2,
+  ERR_ALREADY_EXISTS = -3,
+  ERR_INVALID_ARGS = -4,
+  ERR_ILLEGAL_STATE = -5,
+  ERR_VALIDATION = -6,
+};
 
 typedef enum {
   SEARCH, UPDATE, INSERT, DELETE, UPSERT,
@@ -231,14 +255,14 @@ class OprObj { // Operations for retry by abort
 
 class ThreadInfo {
  public:
-  uint token;
+  Token token;
   uint64_t epoch;
 	bool visible;
   std::vector<ReadSetObj> readSet;
   std::vector<WriteSetObj> writeSet;
   std::vector<OprObj> oprSet;
 
-  ThreadInfo(const uint token) {
+  ThreadInfo(const Token token) {
     this->token = token;
   }
 
