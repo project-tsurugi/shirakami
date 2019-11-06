@@ -92,7 +92,7 @@ pipeline {
                 enabledForFailure: true
             publishCoverage adapters: [coberturaAdapter('build/gcovr-xml/kvs_charkey-gcovr.xml')], sourceFileResolver: sourceFiles('STORE_ALL_BUILD')
             archiveArtifacts allowEmptyArchive: true, artifacts: 'build/kvs_charkey-coverage-report.zip, build/kvs_charkey-doxygen.zip', onlyIfSuccessful: true
-            notifySlack('tsurugi-dev')
+            notifySlack('kvs-dev', 'next-oltp', '7fb92c62-9c08-4c76-a64c-fac01404f4f3')
         }
     }
 }
