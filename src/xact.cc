@@ -16,7 +16,7 @@ void lock_mutex(pthread_mutex_t *mutex);
 void unlock_mutex(pthread_mutex_t *mutex);
 
 extern void
-kvs_delete_database()
+delete_database()
 {
   for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
     delete *itr;
@@ -250,7 +250,7 @@ exec_logging(std::vector<Record> writeSet, const int myid)
 #endif
 
 WriteSetObj
-update_normal_phase(char *val, uint len_val, Record* rec_ptr)
+update_normal_phase(char const *val, std::size_t len_val, Record* rec_ptr)
 {
   WriteSetObj wso;
 
@@ -264,7 +264,7 @@ update_normal_phase(char *val, uint len_val, Record* rec_ptr)
 }
 
 static WriteSetObj
-insert_normal_phase(char *key, uint len_key, char *val, uint len_val)
+insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   // insert temporal object
 	WriteSetObj wso;
@@ -282,7 +282,7 @@ insert_normal_phase(char *key, uint len_key, char *val, uint len_val)
 }
 
 WriteSetObj
-delete_normal_phase(char *key, const uint len_key)
+delete_normal_phase(char const *key, const std::size_t len_key)
 {
   WriteSetObj wso;
   wso.op = DELETE;
@@ -444,11 +444,13 @@ leave(Token token)
 	return Status::WARN_NOT_IN_A_SESSION;
 }
 
-extern std::vector<Tuple*>
-kvs_scan_key(Token token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
+extern Status
+scan_key(Token token, Storage storage,
+    char const *lkey, std::size_t len_lkey, bool l_exclusive,
+    char const *rkey, std::size_t len_rkey, bool r_exclusive,
+    std::vector<Tuple*>& result)
 {
   ThreadInfo* ti = get_thread_info(token);
-  std::vector<Tuple*> result;
 
   lock_mutex(&kMutexDB);
 	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {  
@@ -462,30 +464,29 @@ kvs_scan_key(Token token, char *lkey, uint len_lkey, char *rkey, uint len_rkey)
   }
   unlock_mutex(&kMutexDB);
 
-  return result;
+  return Status::OK;
 }
 
-extern Tuple*
-kvs_search_key(Token token, char *key, uint len_key)
+extern Status
+search_key(Token token, Storage storage, char const *key, std::size_t len_key, Tuple** tuple)
 {
   ThreadInfo* ti = get_thread_info(token);
-  Tuple *tuple = nullptr;
 
   for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
     if ((*itr)->tuple.len_key == len_key &&
 				memcmp((*itr)->tuple.key, key, len_key) == 0 &&
 				(*itr)->tuple.visible == true) {
       ti->readSet.emplace_back(ReadSetObj(*itr));
-      tuple = new Tuple((*itr)->tuple.key, (*itr)->tuple.len_key, (*itr)->tuple.val, (*itr)->tuple.len_val);
+      *tuple = &((*itr)->tuple);
       break;
     }
   }
 
-  return tuple;
+  return Status::OK;
 }
 
 Record*
-find_record(char *key, uint len_key)
+find_record(char const *key, std::size_t len_key)
 {
 	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
 		if ((*itr)->tuple.len_key == len_key &&
@@ -498,18 +499,15 @@ find_record(char *key, uint len_key)
 	return nullptr;
 }
 		
-extern bool
-kvs_update(Token token, char *key, uint len_key, char *val, uint len_val)
+extern Status
+update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   //Tuple tuple = make_tuple(key, len_key, val, len_val);
 
 	//NNN;
 	Record* record = find_record(key, len_key);
 	if (!record) {
-		//SSS(key);
-		//sleep(1);
-		ERR;
-		return false;
+		return Status::ERR_NOT_FOUND;
 	}
 
   WriteSetObj wso = update_normal_phase(val, len_val, record);
@@ -517,11 +515,11 @@ kvs_update(Token token, char *key, uint len_key, char *val, uint len_val)
 	//NNN;
   ti->writeSet.push_back(wso);
 	
-  return true;
+  return Status::OK;
 }
 
-extern bool
-kvs_insert(const Token token, char *key, uint len_key, char *val, uint len_val)
+extern Status
+insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   ThreadInfo* ti = get_thread_info(token);
 
@@ -538,19 +536,21 @@ kvs_insert(const Token token, char *key, uint len_key, char *val, uint len_val)
   }
 	*/
 	
-  return true;
+  return Status::OK;
 }
 
-extern void
-kvs_delete(const Token token, char *key, uint len_key)
+extern Status
+delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
 {
   WriteSetObj wso = delete_normal_phase(key, len_key);
   ThreadInfo* ti = get_thread_info(token);
   ti->writeSet.push_back(wso);
+
+  return Status::OK;
 }
 
-extern void
-kvs_upsert(Token token, char *key, uint len_key, char *val, uint len_val)
+extern Status
+upsert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   WriteSetObj wso;
   
@@ -566,6 +566,8 @@ kvs_upsert(Token token, char *key, uint len_key, char *val, uint len_val)
 		wso = insert_normal_phase(key, len_key, val, len_val);
 	}
   ti->writeSet.push_back(wso);
+
+  return Status::OK;
 }
 
 extern void

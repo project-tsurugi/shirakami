@@ -79,8 +79,8 @@ class Tuple {
 public:
   char *key = nullptr;
   char *val = nullptr;
-  uint len_key;
-  uint len_val;
+  std::size_t len_key;
+  std::size_t len_val;
   bool visible; // for delete, search
 
   Tuple() {
@@ -92,7 +92,7 @@ public:
     free(this->val);
   }
 
-  Tuple(char *key, const uint len_key, char *val, const uint len_val) {
+  Tuple(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->len_key = len_key;
     this->len_val = len_val;
     this->visible = true;
@@ -123,7 +123,7 @@ public:
 	Record () {
 	}
 
-	Record(char *key, uint len_key, char *val, uint len_val) {
+	Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
 		this->tuple.len_key = len_key;
 		this->tuple.len_val = len_val;
     if (!(this->tuple.key = (char *)malloc(len_key))) ERR;

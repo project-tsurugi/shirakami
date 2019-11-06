@@ -65,7 +65,8 @@ exec_insert(Token token)
         char* val = make_string(Len_val);
         Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
         DataList[token].push_back(tuple);
-        kvs_insert(token, key, Len_key, val, Len_val);
+        Storage storage;
+        insert(token, storage, key, Len_key, val, Len_val);
         free(key);
         free(val);
     }
@@ -80,10 +81,11 @@ exec_search_key(Token token)
 {
     //std::cout << "-------------Search-------------" << std::endl;
     for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
-        Tuple* tuple = kvs_search_key(token, (*itr)->key, (*itr)->len_key);
-        if (!tuple) std::cout << "No such key" << std::endl;
-        // else printf("%s:%s\n", tuple->key, tuple->val);
-        delete tuple;
+        Tuple* tuple;
+        Storage storage;
+        Status search_result = search_key(token, storage, (*itr)->key, (*itr)->len_key, &tuple);
+        if (search_result == Status::ERR_NOT_FOUND) std::cout << "No such key" << std::endl;
+        else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
     }
     Status result = commit(token);
     ASSERT_TRUE(result == Status::OK);
@@ -94,7 +96,12 @@ exec_scan_key(Token token)
 {
   //std::cout << "-------------Scan-------------" << std::endl;
   while (true) {
-    std::vector<Tuple*> result = kvs_scan_key(token, (char*)"a", 1, (char*)"z", 1);
+    std::vector<Tuple*> result;
+    Storage storage;
+    scan_key(token, storage,
+        (char*)"a", 1, false,
+        (char*)"z", 1, false,
+        result);
     for (auto itr = result.begin(); itr != result.end(); itr++) {
       if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
         //else printf("%s:%s\n", (*itr)->key, (*itr)->val);
@@ -108,15 +115,16 @@ exec_scan_key(Token token)
 }
 
 static void
-exec_update(const Token token)
+exec_update(Token token)
 {
-    //std::cout << "-------------Update-------------" << std::endl;
-    //for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
-    for (auto itr = DataList[0].begin(); itr != DataList[0].end(); itr++) {
-        kvs_update(token, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
-    }
-    Status result = commit(token);
-    ASSERT_TRUE(result == Status::OK);
+  //std::cout << "-------------Update-------------" << std::endl;
+  //for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
+  for (auto itr = DataList[0].begin(); itr != DataList[0].end(); itr++) {
+    Storage storage;
+    Status update_result = update(token, storage, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
+  }
+  Status result = commit(token);
+  ASSERT_TRUE(result == Status::OK);
 }
 
 static void
@@ -136,7 +144,8 @@ create_common_data_list(void)
   if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) exit(1);
 
   for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
-    kvs_insert(token, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
+    Storage storage;
+    insert(token, storage, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
   }
 
   Status result = commit(token);
@@ -155,10 +164,12 @@ delete_common_data_list(void)
 static void
 exec_delete(const Token token)
 {
+  Storage storage;
+
   //std::cout << "-------------Delete-------------" << std::endl;
   for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
     //SSS(itr->key);
-    kvs_delete(token, (*itr)->key, (*itr)->len_key);
+    delete_record(token, storage, (*itr)->key, (*itr)->len_key);
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
@@ -251,7 +262,7 @@ test(void)
         pthread_join(th[i], NULL);
     }
 
-    kvs_delete_database();
+    delete_database();
     delete_common_data_list();
     delete_DataList();
 }
