@@ -32,6 +32,13 @@ pipeline {
                 '''
             }
         }
+        stage ('Build masstree') {
+            steps {
+                sh '''
+                    ./bootstrap.sh
+                '''
+            }
+        }
         stage ('Build') {
             steps {
                 sh '''
