@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+#include "include/kernel.h"
+#include "include/test_param.h"
+
+#include <cstdint>
+
 #include "gtest/gtest.h"
 
-#include "kernel.h"
 #include "kvs/debug.h"
-#include <cstdint>
 #include "kvs/interface.h"
 //const int Nthread = 1;
-#include "test_param.h"
 
 using namespace kvs;
 

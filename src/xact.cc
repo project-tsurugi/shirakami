@@ -1,11 +1,11 @@
-#include "kernel.h"
-#include "tsc.hpp"
-#include "xact.h"
+
+#include "include/kernel.h"
+#include "include/scheme.h"
+#include "include/tsc.hpp"
+#include "include/xact.h"
 
 #include "kvs/debug.h"
 #include "kvs/interface.h"
-
-#include "include/scheme.h"
 
 namespace kvs {
 
