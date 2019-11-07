@@ -13,6 +13,8 @@ apt update -y && apt install -y git build-essential cmake ninja-build doxygen
 ```sh
 # retrieve third party modules
 git submodule update --init --recursive
+# build third_party/masstree-beta
+./bootstrap.sh
 ```
 
 ## How to build
