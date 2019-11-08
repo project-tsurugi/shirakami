@@ -191,9 +191,9 @@ class ThreadInfo {
   Token token;
   uint64_t epoch;
 	bool visible;
-  std::vector<ReadSetObj> readSet;
-  std::vector<WriteSetObj> writeSet;
-  std::vector<OprObj> oprSet;
+  std::vector<ReadSetObj> read_set;
+  std::vector<WriteSetObj> write_set;
+  std::vector<OprObj> opr_set;
 
   ThreadInfo(const Token token) {
     this->token = token;

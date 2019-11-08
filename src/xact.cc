@@ -12,7 +12,6 @@
 namespace kvs {
 
 std::vector<LogShell> LogList;
-std::vector<Record*> DataBase;
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
 /* This variable has informations about worker thread. */
@@ -24,9 +23,6 @@ void unlock_mutex(pthread_mutex_t *mutex);
 extern void
 delete_database()
 {
-  for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
-    delete *itr;
-  }
 }
 
 uint64_t
@@ -48,9 +44,9 @@ atomic_add_global_epoch()
 }
 
 bool
-locked_by_me(Tuple tuple, std::vector<WriteSetObj> writeSet)
+locked_by_me(Tuple tuple, std::vector<WriteSetObj> write_set)
 {
-	for (auto iws = writeSet.begin(); iws != writeSet.end(); ++iws) {
+	for (auto iws = write_set.begin(); iws != write_set.end(); ++iws) {
 		if (iws->rec_ptr->tuple.len_key == tuple.len_key &&
 				memcmp(iws->rec_ptr->tuple.key, tuple.key, tuple.len_key) == 0) {
       return true;
@@ -107,7 +103,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 
 	/* 
 	 * calculates (a) 
-	 * about readSet
+	 * about read_set
 	 */
 	tid_a = max(max_wset, max_rset);
 	tid_a.tid++;
@@ -128,8 +124,8 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 	maxtid.latest = 1;
 	mrctid = maxtid;
 
-	//DDD((int)ti->writeSet.size());
-	for (auto iws = ti->writeSet.begin(); iws != ti->writeSet.end(); ++iws) {
+	//DDD((int)ti->write_set.size());
+	for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
 		switch (iws->op) {
 			case UPDATE:
 				free(iws->rec_ptr->tuple.val);
@@ -154,8 +150,8 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 	//ERR;
   unlock_write_set(lockList);
 	lockList.clear();
-	ti->readSet.clear();
-	ti->writeSet.clear();
+	ti->read_set.clear();
+	ti->write_set.clear();
 	//ERR;
 }
 
@@ -235,11 +231,11 @@ epocher(void *arg)
 
 #ifdef WAL
 static void
-exec_logging(std::vector<Record> writeSet, const int myid)
+exec_logging(std::vector<Record> write_set, const int myid)
 {
-  LogBody *lb = (LogBody *)calloc(writeSet.size(), sizeof(LogBody)); if (!lb) ERR;
+  LogBody *lb = (LogBody *)calloc(write_set.size(), sizeof(LogBody)); if (!lb) ERR;
   uint counter = 0;
-  for (auto itr = writeSet.begin(); itr != writeSet.end(); itr++) {
+  for (auto itr = write_set.begin(); itr != write_set.end(); itr++) {
     lb[counter].tidw = itr->tidw.obj;
     lb[counter].tuple = itr->tuple;
     ++counter;
@@ -278,10 +274,7 @@ insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::
 
   Record* rec_ptr = new Record(key, len_key, val, len_val);
   rec_ptr->tuple.visible = false;
-  //printf("%s\n", rec_ptr->tuple.key);
-  lock_mutex(&kMutexDB);
-  DataBase.push_back(rec_ptr);
-  unlock_mutex(&kMutexDB);
+  MTDB.insert_value(key, rec_ptr);
 	wso.rec_ptr = rec_ptr;
 	
   return wso;
@@ -293,14 +286,7 @@ delete_normal_phase(char const *key, const std::size_t len_key)
   WriteSetObj wso;
   wso.op = DELETE;
 
-	lock_mutex(&kMutexDB);
-	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
-		if ((*itr)->tuple.len_key == len_key && memcmp((*itr)->tuple.key, key, len_key) == 0) {
-			wso.rec_ptr = *itr;
-			break;
-		}
-	}		
-	unlock_mutex(&kMutexDB);
+  wso.rec_ptr = MTDB.get_value(key);
 	
   return wso;
 }
@@ -317,13 +303,13 @@ commit(Token token)
 {
   ThreadInfo *ti = get_thread_info(token);
   TidWord max_rset, max_wset;
-  std::vector<WriteSetObj> lock_list(ti->writeSet.size());
+  std::vector<WriteSetObj> lock_list(ti->write_set.size());
 
-	//DDD((int)ti->readSet.size());
-	//DDD((int)ti->writeSet.size());
+	//DDD((int)ti->read_set.size());
+	//DDD((int)ti->write_set.size());
 
   // Phase 1: Sort lock list;
-  copy(ti->writeSet.begin(), ti->writeSet.end(), lock_list.begin());
+  copy(ti->write_set.begin(), ti->write_set.end(), lock_list.begin());
   std::sort(lock_list.begin(), lock_list.end());
   lock_list.erase(std::unique(lock_list.begin(), lock_list.end()), lock_list.end());
 
@@ -353,23 +339,23 @@ commit(Token token)
 
   // Phase 3: Validation
   TidWord check;
-  for (auto itr = ti->readSet.begin(); itr != ti->readSet.end(); itr++) {
+  for (auto itr = ti->read_set.begin(); itr != ti->read_set.end(); itr++) {
     // Condition 1
 		Record* rec_ptr = itr->rec_ptr;
     check.obj = __atomic_load_n(&(rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
     if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
       unlock_write_set(lock_list); 
       lock_list.clear(); 
-      ti->readSet.clear(); 
-      ti->writeSet.clear();
+      ti->read_set.clear(); 
+      ti->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
-    if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, ti->writeSet))) {
+    if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, ti->write_set))) {
       unlock_write_set(lock_list); 
       lock_list.clear(); 
-      ti->readSet.clear(); 
-      ti->writeSet.clear();
+      ti->read_set.clear(); 
+      ti->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     max_rset = max(max_rset, check);
@@ -377,7 +363,7 @@ commit(Token token)
 
   // Phase 4: Write & Unlock
 
-  //exec_logging(writeSet, myid);
+  //exec_logging(write_set, myid);
 
 	write_phase(ti, max_rset, max_wset, lock_list);
 
@@ -417,13 +403,13 @@ enter(Token& token)
   token = get_token();  
   ThreadInfo* ti = new ThreadInfo(token);
 	
-  //ti->token = token;
   lock_mutex(&kMutexThreadTable);
   Status chk_status = chck_session_started(token);
 
   if (chk_status == Status::OK) {
     kThreadTable.emplace_back(ti);
 	  unlock_mutex(&kMutexThreadTable);
+    MasstreeWrapper<Record>::thread_init(token);
   } else if (chk_status == Status::WARN_ALREADY_IN_A_SESSION) {
 	  unlock_mutex(&kMutexThreadTable);
   } else {
@@ -458,6 +444,7 @@ scan_key(Token token, Storage storage,
 {
   ThreadInfo* ti = get_thread_info(token);
 
+  /*
   lock_mutex(&kMutexDB);
 	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {  
     if ((memcmp((*itr)->tuple.key, lkey, len_lkey) >= 0) &&
@@ -465,10 +452,11 @@ scan_key(Token token, Storage storage,
 				((*itr)->tuple.visible == true)) {
 			Tuple* tuple = new Tuple((*itr)->tuple.key, (*itr)->tuple.len_key, (*itr)->tuple.val, (*itr)->tuple.len_val);
       result.push_back(tuple);
-      ti->readSet.push_back(ReadSetObj(*itr));
+      ti->read_set.push_back(ReadSetObj(*itr));
     }
   }
   unlock_mutex(&kMutexDB);
+  */
 
   return Status::OK;
 }
@@ -478,40 +466,20 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
 {
   ThreadInfo* ti = get_thread_info(token);
 
-  for (auto itr = DataBase.begin(); itr != DataBase.end(); ++itr) {
-    if ((*itr)->tuple.len_key == len_key &&
-				memcmp((*itr)->tuple.key, key, len_key) == 0 &&
-				(*itr)->tuple.visible == true) {
-      ti->readSet.emplace_back(ReadSetObj(*itr));
-      *tuple = &((*itr)->tuple);
-      break;
-    }
-  }
+  Record* record = MTDB.get_value(key);
+  cout << record << endl;
+  always_assert(record, "keys must exist"); 
 
   return Status::OK;
 }
 
-Record*
-find_record(char const *key, std::size_t len_key)
-{
-	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
-		if ((*itr)->tuple.len_key == len_key &&
-				memcmp((*itr)->tuple.key, key, len_key) == 0 &&
-				(*itr)->tuple.visible == true) {
-			return *itr;
-		}
-	}
-
-	return nullptr;
-}
-		
 extern Status
 update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   //Tuple tuple = make_tuple(key, len_key, val, len_val);
 
 	//NNN;
-	Record* record = find_record(key, len_key);
+	Record* record = MTDB.get_value(key);
 	if (!record) {
 		return Status::ERR_NOT_FOUND;
 	}
@@ -519,7 +487,7 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   WriteSetObj wso = update_normal_phase(val, len_val, record);
   ThreadInfo* ti = get_thread_info(token);
 	//NNN;
-  ti->writeSet.push_back(wso);
+  ti->write_set.push_back(wso);
 	
   return Status::OK;
 }
@@ -528,20 +496,9 @@ extern Status
 insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   ThreadInfo* ti = get_thread_info(token);
-
-	//Tuple tuple = make_tuple(key, len_key, val, len_val);
+  always_assert(!MTDB.get_value(key), "keys shoudl all be unique");
 	WriteSetObj wso = insert_normal_phase(key, len_key, val, len_val);
-	ti->writeSet.push_back(wso);
-
-	/*
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); itr++) {
-    if ((*itr)->token == token) {
-			kThreadTable* ti = *itr;
-      return true;
-    }
-  }
-	*/
-	
+	ti->write_set.push_back(wso);
   return Status::OK;
 }
 
@@ -550,7 +507,7 @@ delete_record(Token token, Storage storage, char const *key, std::size_t len_key
 {
   WriteSetObj wso = delete_normal_phase(key, len_key);
   ThreadInfo* ti = get_thread_info(token);
-  ti->writeSet.push_back(wso);
+  ti->write_set.push_back(wso);
 
   return Status::OK;
 }
@@ -564,14 +521,14 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   //Tuple tuple = make_tuple(key, len_key, val, len_val);
 	Record* record;
 
-	record = find_record(key, len_key);
+	record = MTDB.get_value(key);
 	if (record != nullptr) {
 		wso = update_normal_phase(val, len_val, record);
 	}
   else {
 		wso = insert_normal_phase(key, len_key, val, len_val);
 	}
-  ti->writeSet.push_back(wso);
+  ti->write_set.push_back(wso);
 
   return Status::OK;
 }
@@ -579,11 +536,9 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 extern void
 debug_print_key(void)
 {
-	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
+//	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
 		//std::cout << itr->tuple.key << ":" << itr->tuple.visible << std::endl;
 		//PPP(*itr);
-		;
-	}
 }
 
 }  // namespace kvs

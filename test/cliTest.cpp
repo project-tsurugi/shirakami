@@ -221,11 +221,11 @@ test_delete(const int token)
 static void
 test_single_operation(const int token)
 {
-    test_insert(token);
-    test_search(token);
-    test_scan(token);
-    test_update(token);
-    test_delete(token);
+  test_insert(token);
+  //test_search(token);
+  //test_scan(token);
+  //test_update(token);
+  //test_delete(token);
 }
 
 static void *
@@ -253,20 +253,20 @@ thread_create(void)
 static void
 test(void)
 {
-    create_common_data_list();
+  create_common_data_list();
 
-    pthread_t th[Nthread];
-    for (int i = 0; i < Nthread; i++) {
-        th[i] = thread_create();
-    }
+  pthread_t th[Nthread];
+  for (int i = 0; i < Nthread; i++) {
+    th[i] = thread_create();
+  }
 
-    for (int i = 0; i < Nthread; i++) {
-        pthread_join(th[i], NULL);
-    }
+  for (int i = 0; i < Nthread; i++) {
+    pthread_join(th[i], NULL);
+  }
 
-    delete_database();
-    delete_common_data_list();
-    delete_DataList();
+  delete_database();
+  delete_common_data_list();
+  delete_DataList();
 }
 
 namespace kvs_charkey::testing {

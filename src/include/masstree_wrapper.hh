@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
+#include "header.h"
+
+#include "kvs/scheme.h"
+
 /* if you use formatter, following 2 lines may be exchange.
  * but there is a dependency relation, so teh order is restricted config -> compiler.
  * To depend exchanging 2 lines, insert empty line. */
@@ -89,12 +93,12 @@ class MasstreeWrapper {
 
   /**
    * @brief insert value to masstree
-   * @param key This must be a type of uint64_t or const char*.
+   * @param key This must be a type of const char*.
    */
-  template <typename T2>
-  void insert_value(T2 key, T* value) {
+  void insert_value(const char* key, T* value) {
     Str mtkey;
-    mtkey = make_key(key);
+    std::string buf(key);
+    mtkey = make_key(key, buf);
     cursor_type lp(table_, mtkey);
     bool found = lp.find_insert(*ti);
     always_assert(!found, "keys should all be unique");
@@ -103,13 +107,24 @@ class MasstreeWrapper {
     lp.finish(1, *ti);
   }
 
-  template <typename T2>
-  T* get_value(T2 key) {
+  void remove_value(const char* key) {
     Str mtkey;
-    mtkey = make_key(key);
+    std::string buf(key);
+    mtkey = make_key(key, buf);
+    cursor_type lp(table_, mtkey);
+    bool found = lp.find_insert(*ti);
+    always_assert(found, "keys must all exist");
+    lp.finish(-1, *ti);
+  }
+
+  T* get_value(const char* key) {
+    Str mtkey;
+    std::string buf(key);
+    mtkey = make_key(key, buf);
     unlocked_cursor_type lp(table_, key);
     bool found = lp.find_unlocked(*ti);
-    return lp.value();
+    if (found) return lp.value();
+    else return nullptr;
   }
 
   static bool stopping;
@@ -119,14 +134,9 @@ class MasstreeWrapper {
   table_type table_;
   uint64_t key_gen_;
 
-  static inline Str make_key(uint64_t& int_key) {
-    uint64_t key_buf = __builtin_bswap64(int_key);
-    int_key = key_buf;
-    return Str((const char*)&int_key, sizeof(int_key));
-  }
-
-  static inline Str make_key(const char* char_key) {
-    return Str(char_key);
+  static inline Str make_key(const char* char_key, std::string& buf) {
+    std::reverse(buf.begin(), buf.end());   
+    return Str(buf);
   }
 };
 
