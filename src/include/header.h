@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdlib>
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -35,8 +34,10 @@
 #include <string.h>
 #include <dirent.h>
 
-#include <list>
-#include <vector>
 #include <algorithm>
-#include <iostream>
+#include <cstdlib>
 #include <future>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <vector>

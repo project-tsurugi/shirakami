@@ -1,5 +1,7 @@
 
+#include "include/cache_line_size.hh"
 #include "include/kernel.h"
+#include "include/masstree_wrapper.hh"
 #include "include/scheme.h"
 #include "include/tsc.hpp"
 #include "include/xact.h"
@@ -11,6 +13,7 @@ namespace kvs {
 
 std::vector<LogShell> LogList;
 std::vector<Record*> DataBase;
+alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
 /* This variable has informations about worker thread. */
 std::vector<ThreadInfo*> kThreadTable;

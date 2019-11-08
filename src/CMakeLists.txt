@@ -2,6 +2,11 @@ file(GLOB SOURCES
         "kvs.cc"
         "xact.cc"
         "lib.cc"
+        "../third_party/masstree-beta/compiler.o"
+        "../third_party/masstree-beta/kvthread.o"
+        "../third_party/masstree-beta/misc.o"
+        "../third_party/masstree-beta/clp.o"
+        "../third_party/masstree-beta/libjson.a"
 )
 
 add_library(kvs_charkey
