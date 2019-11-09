@@ -18,34 +18,39 @@
 
 namespace kvs {
 
+/**
+ * @file
+ * @brief private scheme of transaction engine
+ */
+
 class TidWord {
 public:
-	union {
-		uint64_t obj;
-		struct {
-			bool lock:1;
-			bool latest:1;
-			bool absent:1;
-			uint64_t tid:29;
-			uint64_t epoch:32;
-		};
-	};
+  union {
+    uint64_t obj;
+    struct {
+      bool lock:1;
+      bool latest:1;
+      bool absent:1;
+      uint64_t tid:29;
+      uint64_t epoch:32;
+    };
+  };
 
-	TidWord() {
-		obj = 0;
-	}
+  TidWord() {
+    obj = 0;
+  }
 
-	bool operator==(const TidWord& right) const {
-		return obj == right.obj;
-	}
+  bool operator==(const TidWord& right) const {
+    return obj == right.obj;
+  }
 
-	bool operator!=(const TidWord& right) const {
-		return !operator==(right);
-	}
+  bool operator!=(const TidWord& right) const {
+    return !operator==(right);
+  }
 
-	bool operator<(const TidWord& right) const {
-		return this->obj < right.obj;
-	}
+  bool operator<(const TidWord& right) const {
+    return this->obj < right.obj;
+  }
 };
 
 class Record {
@@ -53,16 +58,16 @@ public:
   TidWord tidw;
   Tuple tuple;
 
-	Record () {
-	}
+  Record () {
+  }
 
-	Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
-		this->tuple.len_key = len_key;
-		this->tuple.len_val = len_val;
+  Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
+    this->tuple.len_key = len_key;
+    this->tuple.len_val = len_val;
     if (!(this->tuple.key = (char *)malloc(len_key))) ERR;
-		if (!(this->tuple.val = (char *)malloc(len_val))) ERR;
-		memcpy(this->tuple.key, key, len_key);
-		memcpy(this->tuple.val, val, len_val);
+    if (!(this->tuple.val = (char *)malloc(len_val))) ERR;
+    memcpy(this->tuple.key, key, len_key);
+    memcpy(this->tuple.val, val, len_val);
     tuple.visible = false;
   }
 
@@ -74,6 +79,11 @@ public:
   }
 };
 
+/**
+ * @brief element of write set.
+ * @detail copy constructor/assign operator can't be used in this class 
+ * in terms of performance.
+ */
 class WriteSetObj {
  public:
   //Tuple tuple; // new tuple used ONLY for UPDATE
@@ -91,60 +101,33 @@ class WriteSetObj {
     this->op = op;
   }
 
-  WriteSetObj(const WriteSetObj& right) {
-    update_val_ptr = std::make_unique<char[]>(right.update_len_val);
-    memcpy(update_val_ptr.get(), right.update_val_ptr.get(), right.update_len_val);
-    update_len_val = right.update_len_val;
-    rec_ptr = right.rec_ptr;
-    op = right.op;
-  }
+  WriteSetObj(const WriteSetObj& right) = delete;
+  WriteSetObj(WriteSetObj&& right) = default;
+  WriteSetObj& operator=(const WriteSetObj& right) = delete;
+  WriteSetObj& operator=(WriteSetObj&& right) = default;
 
-  WriteSetObj(WriteSetObj&& right) {
-    update_val_ptr = std::move(right.update_val_ptr);
-    update_len_val = right.update_len_val;
-    rec_ptr = right.rec_ptr;
-    op = right.op;
-  }
-
-  WriteSetObj& operator=(const WriteSetObj& right) {
-    update_val_ptr = std::make_unique<char[]>(right.update_len_val);
-    memcpy(update_val_ptr.get(), right.update_val_ptr.get(), right.update_len_val);
-    update_len_val = right.update_len_val;
-    rec_ptr = right.rec_ptr;
-    op = right.op;
-    return *this;
-  }
-
-  WriteSetObj& operator=(WriteSetObj&& right) {
-    update_val_ptr = std::move(right.update_val_ptr);
-    update_len_val = right.update_len_val;
-    rec_ptr = right.rec_ptr;
-    op = right.op;
-    return *this;
-  }
-
-	bool operator==(const WriteSetObj& right) const {
+  bool operator==(const WriteSetObj& right) const {
     bool judge = false;
 
     if (rec_ptr->tuple.len_key == right.rec_ptr->tuple.len_key &&
-				memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) == 0) {
+        memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) == 0) {
       judge = true;
     }
-		return judge;
-	}
+    return judge;
+  }
 
-	bool operator!=(const WriteSetObj& right) const {
+  bool operator!=(const WriteSetObj& right) const {
     bool judge = false;
 
-		if (rec_ptr->tuple.len_key != right.rec_ptr->tuple.len_key ||
-				memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) != 0) {
+    if (rec_ptr->tuple.len_key != right.rec_ptr->tuple.len_key ||
+        memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) != 0) {
       judge = true;
     }
 
-		return judge;
-	}
+    return judge;
+  }
 
-	bool operator<(const WriteSetObj& right) const {
+  bool operator<(const WriteSetObj& right) const {
     bool judge = false;
     uint len_this = rec_ptr->tuple.len_key;
     uint len_right = right.rec_ptr->tuple.len_key;
@@ -164,24 +147,24 @@ class WriteSetObj {
       if (ret > 0) judge = false;
       else if (ret < 0) judge = true;
       else if (ret == 0) {
-				//SSS(this->tuple.key);
-				//SSS(right.tuple.key);
+        //SSS(this->tuple.key);
+        //SSS(right.tuple.key);
         ERR; // Unique key is not allowed now.
       }
     }
 
-		return judge;
-	}
+    return judge;
+  }
 };
 
 class ReadSetObj {
  public:
   Record rec_read;
-	Record* rec_ptr; // ptr to database
+  Record* rec_ptr; // ptr to database
 
-	ReadSetObj(void) {
-		this->rec_ptr = nullptr;
-	}
+  ReadSetObj(void) {
+    this->rec_ptr = nullptr;
+  }
 
   ReadSetObj(Record* rec_ptr) {
     this->rec_read = *rec_ptr;
@@ -232,7 +215,7 @@ class ThreadInfo {
  public:
   Token token;
   uint64_t epoch;
-	bool visible;
+  bool visible;
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
@@ -241,7 +224,7 @@ class ThreadInfo {
     this->token = token;
   }
 
-	ThreadInfo() {
+  ThreadInfo() {
     this->visible = false;
   }
 };

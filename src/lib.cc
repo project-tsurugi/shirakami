@@ -28,17 +28,17 @@ get_new_row(void)
 void
 lock_mutex(pthread_mutex_t *mutex)
 {
-	int ret;
-	ret = pthread_mutex_lock(mutex);
-	if (ret != 0) ERR;
+  int ret;
+  ret = pthread_mutex_lock(mutex);
+  if (ret != 0) ERR;
 }
 
 void
 unlock_mutex(pthread_mutex_t *mutex)
 {
-	int ret;
-	ret = pthread_mutex_unlock(mutex);
-	if (ret != 0) ERR;
+  int ret;
+  ret = pthread_mutex_unlock(mutex);
+  if (ret != 0) ERR;
 }
 
 extern char *

@@ -37,7 +37,7 @@ init_mutex(void)
   //pthread_mutex_init(&kMutexLogList, nullptr);
   pthread_mutex_init(&kMutexThreadTable, nullptr);
   pthread_mutex_init(&kMutexDB, nullptr);
-	pthread_mutex_init(&kMutexToken, nullptr);
+  pthread_mutex_init(&kMutexToken, nullptr);
 }
 
 static void
