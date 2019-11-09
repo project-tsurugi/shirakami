@@ -63,6 +63,7 @@ public:
 		if (!(this->tuple.val = (char *)malloc(len_val))) ERR;
 		memcpy(this->tuple.key, key, len_key);
 		memcpy(this->tuple.val, val, len_val);
+    tuple.visible = false;
   }
 
   Record& operator=(const Record& rhs) {
@@ -76,10 +77,51 @@ public:
 class WriteSetObj {
  public:
   //Tuple tuple; // new tuple used ONLY for UPDATE
-	char *update_val;
-	uint update_len_val;
-  Record* rec_ptr; // ptr to database
+  std::unique_ptr<char[]> update_val_ptr;
+  std::size_t update_len_val;
   OP_TYPE op;
+  Record* rec_ptr; // ptr to database
+
+  WriteSetObj() {}
+
+  WriteSetObj(char const *val, std::size_t len_val, OP_TYPE op) {
+    update_len_val = len_val;
+    update_val_ptr = std::make_unique<char[]>(len_val);
+    memcpy(update_val_ptr.get(), val, len_val);
+    this->op = op;
+  }
+
+  WriteSetObj(const WriteSetObj& right) {
+    update_val_ptr = std::make_unique<char[]>(right.update_len_val);
+    memcpy(update_val_ptr.get(), right.update_val_ptr.get(), right.update_len_val);
+    update_len_val = right.update_len_val;
+    rec_ptr = right.rec_ptr;
+    op = right.op;
+  }
+
+  WriteSetObj(WriteSetObj&& right) {
+    update_val_ptr = std::move(right.update_val_ptr);
+    update_len_val = right.update_len_val;
+    rec_ptr = right.rec_ptr;
+    op = right.op;
+  }
+
+  WriteSetObj& operator=(const WriteSetObj& right) {
+    update_val_ptr = std::make_unique<char[]>(right.update_len_val);
+    memcpy(update_val_ptr.get(), right.update_val_ptr.get(), right.update_len_val);
+    update_len_val = right.update_len_val;
+    rec_ptr = right.rec_ptr;
+    op = right.op;
+    return *this;
+  }
+
+  WriteSetObj& operator=(WriteSetObj&& right) {
+    update_val_ptr = std::move(right.update_val_ptr);
+    update_len_val = right.update_len_val;
+    rec_ptr = right.rec_ptr;
+    op = right.op;
+    return *this;
+  }
 
 	bool operator==(const WriteSetObj& right) const {
     bool judge = false;

@@ -167,6 +167,4 @@ extern Status scan_key(Token token, Storage storage,
     char const *rkey, std::size_t len_rkey, bool r_exclusive,
     std::vector<Tuple*>& result);
 
-extern void debug_print_key(void);
-
 }  // namespace kvs

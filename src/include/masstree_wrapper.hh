@@ -74,7 +74,6 @@ class MasstreeWrapper {
     // printf("masstree table_init()\n");
     if (ti == nullptr) ti = threadinfo::make(threadinfo::TI_MAIN, -1);
     table_.initialize(*ti);
-    key_gen_ = 0;
     stopping = false;
     printing = 0;
   }
@@ -127,15 +126,22 @@ class MasstreeWrapper {
     else return nullptr;
   }
 
+  void print_table() {
+    // future work.
+    /*table_.print(stdout);
+    fflush(stdout);
+    fprintf(stdout, "Stats: %s\n",
+        Masstree::json_stats(table_, ti).unparse(lcdf::Json::indent_depth(1000)).c_str());*/
+  }
+
   static bool stopping;
   static uint32_t printing;
 
  private:
   table_type table_;
-  uint64_t key_gen_;
 
   static inline Str make_key(const char* char_key, std::string& buf) {
-    std::reverse(buf.begin(), buf.end());   
+    //std::reverse(buf.begin(), buf.end());   
     return Str(buf);
   }
 };

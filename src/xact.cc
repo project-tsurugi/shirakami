@@ -132,7 +132,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset, std::vector<Writ
 				//DDD(iws->rec_ptr->tuple.len_val);
 				//DDD(iws->update_len_val);
 				if (!(iws->rec_ptr->tuple.val = (char *)calloc(iws->update_len_val, sizeof(char)))) ERR;
-				memcpy(iws->rec_ptr->tuple.val, iws->update_val, iws->update_len_val);
+				memcpy(iws->rec_ptr->tuple.val, iws->update_val_ptr.get(), iws->update_len_val);
 				iws->rec_ptr->tuple.len_val = iws->update_len_val;
 
 				break;
@@ -257,27 +257,20 @@ update_normal_phase(char const *val, std::size_t len_val, Record* rec_ptr)
   WriteSetObj wso;
 
   wso.update_len_val = len_val;
-	if (!(wso.update_val = (char *)malloc(len_val))) ERR;
-	memcpy(wso.update_val, val, len_val);
+  wso.update_val_ptr = std::make_unique<char[]>(len_val);
+	memcpy(wso.update_val_ptr.get(), val, len_val);
   wso.op = UPDATE;
 	wso.rec_ptr = rec_ptr;
 	
   return wso;
 }
 
-static WriteSetObj
-insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val)
+static void
+insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val, WriteSetObj& wso)
 {
-  // insert temporal object
-	WriteSetObj wso;
-  wso.op = INSERT;
-
   Record* rec_ptr = new Record(key, len_key, val, len_val);
-  rec_ptr->tuple.visible = false;
-  MTDB.insert_value(key, rec_ptr);
 	wso.rec_ptr = rec_ptr;
-	
-  return wso;
+  MTDB.insert_value(key, rec_ptr);
 }
 
 WriteSetObj
@@ -467,7 +460,6 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   ThreadInfo* ti = get_thread_info(token);
 
   Record* record = MTDB.get_value(key);
-  cout << record << endl;
   always_assert(record, "keys must exist"); 
 
   return Status::OK;
@@ -476,9 +468,6 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
 extern Status
 update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
-  //Tuple tuple = make_tuple(key, len_key, val, len_val);
-
-	//NNN;
 	Record* record = MTDB.get_value(key);
 	if (!record) {
 		return Status::ERR_NOT_FOUND;
@@ -497,8 +486,9 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 {
   ThreadInfo* ti = get_thread_info(token);
   always_assert(!MTDB.get_value(key), "keys shoudl all be unique");
-	WriteSetObj wso = insert_normal_phase(key, len_key, val, len_val);
-	ti->write_set.push_back(wso);
+	WriteSetObj wso(val, len_val, INSERT);
+  insert_normal_phase(key, len_key, val, len_val, wso);
+	ti->write_set.emplace_back(wso);
   return Status::OK;
 }
 
@@ -526,7 +516,7 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 		wso = update_normal_phase(val, len_val, record);
 	}
   else {
-		wso = insert_normal_phase(key, len_key, val, len_val);
+		insert_normal_phase(key, len_key, val, len_val, wso);
 	}
   ti->write_set.push_back(wso);
 
@@ -534,11 +524,10 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 }
 
 extern void
-debug_print_key(void)
+print_MTDB(void)
 {
-//	for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {
-		//std::cout << itr->tuple.key << ":" << itr->tuple.visible << std::endl;
-		//PPP(*itr);
+  // Future work.
+  // MTDB.print_table();
 }
 
-}  // namespace kvs
+} //  namespace kvs

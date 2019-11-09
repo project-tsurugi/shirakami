@@ -16,6 +16,7 @@
 
 #include "include/kernel.h"
 #include "include/test_param.h"
+#include "include/xact.h"
 
 #include <cstdint>
 
@@ -85,9 +86,10 @@ exec_search_key(Token token)
     for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
         Tuple* tuple;
         Storage storage;
+        cout << (*itr)->key << endl;
         Status search_result = search_key(token, storage, (*itr)->key, (*itr)->len_key, &tuple);
         if (search_result == Status::ERR_NOT_FOUND) std::cout << "No such key" << std::endl;
-        else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
+        // else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
     }
     Status result = commit(token);
     ASSERT_TRUE(result == Status::OK);
@@ -120,8 +122,7 @@ static void
 exec_update(Token token)
 {
   //std::cout << "-------------Update-------------" << std::endl;
-  //for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
-  for (auto itr = DataList[0].begin(); itr != DataList[0].end(); itr++) {
+  for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
     Storage storage;
     Status update_result = update(token, storage, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
   }
@@ -183,7 +184,7 @@ test_insert(const int token)
     printf("[%d] insert begin\n", token);
     exec_insert(token);
     printf("[%d] insert done\n", token);
-    debug_print_key();
+    print_MTDB();
 }
 
 static void
@@ -222,10 +223,10 @@ static void
 test_single_operation(const int token)
 {
   test_insert(token);
-  //test_search(token);
-  //test_scan(token);
-  //test_update(token);
+  test_search(token);
+  test_update(token);
   //test_delete(token);
+  //test_scan(token);
 }
 
 static void *
