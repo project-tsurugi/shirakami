@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
+#include "./include/test_param.h"
+
+// kvs_charkey/src/
 #include "include/kernel.h"
-#include "include/test_param.h"
 #include "include/xact.h"
 
 #include <cstdint>
 
 #include "gtest/gtest.h"
 
+// kvs_charkey/include/
 #include "kvs/debug.h"
 #include "kvs/interface.h"
-//const int Nthread = 1;
 
+using namespace single_thread_test;
 using namespace kvs;
 
 std::vector<Tuple*> DataList[Nthread];
@@ -231,7 +234,7 @@ namespace kvs_charkey::testing {
 class cliTest : public ::testing::Test {
 };
 
-TEST_F(cliTest, simple_test) {
+TEST_F(cliTest, single_thread_test) {
   init();
   test();
 }

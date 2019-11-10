@@ -1,6 +1,9 @@
 #pragma once
 
-namespace kvs {
+// kvs_charkey/src/
+#include "include/header.h"
+
+namespace single_thread_test {
 
 // How many threads would you like to spawn?
 const std::size_t Nthread = 1;

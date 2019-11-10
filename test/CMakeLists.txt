@@ -13,6 +13,7 @@
 # limitations under the License.
 file(GLOB TEST_SOURCES
     "*.cpp"
+    "*.cc"
 )
 
 register_tests(

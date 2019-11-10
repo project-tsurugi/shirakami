@@ -19,6 +19,7 @@ STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@ \
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@ \
                          @TARGET_INCLUDES@ \
                          @PROJECT_SOURCE_DIR@/src \
+                         @PROJECT_SOURCE_DIR@/test \
                          @PROJECT_SOURCE_DIR@/src/include \
                          @PROJECT_SOURCE_DIR@/docs
 FILE_PATTERNS          = *.h *.md
