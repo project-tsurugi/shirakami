@@ -214,8 +214,6 @@ thread_create(void)
 static void
 test(void)
 {
-  //create_common_data_list();
-
   pthread_t th[Nthread];
   for (int i = 0; i < Nthread; i++) {
     th[i] = thread_create();
@@ -225,8 +223,6 @@ test(void)
     pthread_join(th[i], NULL);
   }
 
-  delete_database();
-  //delete_common_data_list();
   delete_DataList();
 }
 

@@ -14,7 +14,9 @@
 #include <assert.h>
 #include <vector>
 
-#include "../../include/kvs/debug.h"
+// kvs_charkey/include/
+#include "kvs/debug.h"
+#include "kvs/scheme.h"
 
 namespace kvs {
 
@@ -243,6 +245,21 @@ class ThreadInfo {
   ThreadInfo() {
     this->visible = false;
   }
+
+  /**
+   * @brief check whether it already executed search operation.
+   */
+  ReadSetObj* search_read_set(const char* key, std::size_t len_key);
+
+  /**
+   * @brief check whether it already executed write operation.
+   */
+  WriteSetObj* search_write_set(const char* key, std::size_t len_key);
+  /**
+   * @brief check whether it already executed write operation.
+   * @param op identify update or insert.
+   */
+  WriteSetObj* search_write_set(const char* key, std::size_t len_key, OP_TYPE op);
 };
 
 void print_result(struct timeval begin, struct timeval end, int nthread);

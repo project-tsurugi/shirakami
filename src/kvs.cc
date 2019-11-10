@@ -13,7 +13,6 @@ pthread_t EpochThread;
 pthread_t LogThread;
 uint64_t kGlobalEpoch;
 pthread_mutex_t kMutexLogList;
-pthread_mutex_t kMutexDB;
 pthread_mutex_t kMutexToken;
 pthread_mutex_t kMutexThreadTable;
 
@@ -36,14 +35,13 @@ init_mutex(void)
 {
   //pthread_mutex_init(&kMutexLogList, nullptr);
   pthread_mutex_init(&kMutexThreadTable, nullptr);
-  pthread_mutex_init(&kMutexDB, nullptr);
   pthread_mutex_init(&kMutexToken, nullptr);
 }
 
 static void
 invoke_core_thread(void)
 {
-  //invoke_epocher();
+  invoke_epocher();
   //invoke_logger();
 }
 
