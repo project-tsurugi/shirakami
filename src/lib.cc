@@ -15,6 +15,7 @@ extern std::vector<Record> DataBase;
 extern char *gen_key_string(void);
 extern char *gen_value_string(void);
 
+/*
 extern Record
 get_new_row(void)
 {
@@ -24,6 +25,7 @@ get_new_row(void)
 
   return rec;
 }
+*/
 
 void
 lock_mutex(pthread_mutex_t *mutex)
@@ -41,6 +43,7 @@ unlock_mutex(pthread_mutex_t *mutex)
   if (ret != 0) ERR;
 }
 
+/*
 extern char *
 gen_string(const uint max_len)
 {
@@ -76,7 +79,7 @@ gen_value_string(void)
 
   return str;
 }
-
+*/
 /*
 extern Tuple*
 make_tuple(char *key, uint len_key, char *val, uint len_val)

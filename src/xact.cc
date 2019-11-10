@@ -48,7 +48,7 @@ locked_by_me(Tuple tuple, std::vector<WriteSetObj>& write_set)
 {
   for (auto iws = write_set.begin(); iws != write_set.end(); ++iws) {
     if (iws->rec_ptr->tuple.len_key == tuple.len_key &&
-        memcmp(iws->rec_ptr->tuple.key, tuple.key, tuple.len_key) == 0) {
+        memcmp(iws->rec_ptr->tuple.key.get(), tuple.key.get(), tuple.len_key) == 0) {
       return true;
     }
   }
@@ -124,15 +124,11 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   maxtid.latest = 1;
   mrctid = maxtid;
 
-  //DDD((int)ti->write_set.size());
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     switch (iws->op) {
       case UPDATE:
-        free(iws->rec_ptr->tuple.val);
-        //DDD(iws->rec_ptr->tuple.len_val);
-        //DDD(iws->update_len_val);
-        if (!(iws->rec_ptr->tuple.val = (char *)calloc(iws->update_len_val, sizeof(char)))) ERR;
-        memcpy(iws->rec_ptr->tuple.val, iws->update_val_ptr.get(), iws->update_len_val);
+        iws->rec_ptr->tuple.val.reset();
+        iws->rec_ptr->tuple.val = std::move(iws->update_val_ptr);
         iws->rec_ptr->tuple.len_val = iws->update_len_val;
 
         break;
@@ -248,26 +244,14 @@ exec_logging(std::vector<Record> write_set, const int myid)
 }
 #endif
 
-WriteSetObj
-update_normal_phase(char const *val, std::size_t len_val, Record* rec_ptr)
-{
-  WriteSetObj wso;
-
-  wso.update_len_val = len_val;
-  wso.update_val_ptr = std::make_unique<char[]>(len_val);
-  memcpy(wso.update_val_ptr.get(), val, len_val);
-  wso.op = UPDATE;
-  wso.rec_ptr = rec_ptr;
-  
-  return wso;
-}
-
 static void
 insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val, WriteSetObj& wso)
 {
   Record* rec_ptr = new Record(key, len_key, val, len_val);
-  wso.rec_ptr = rec_ptr;
   MTDB.insert_value(key, rec_ptr);
+  wso.rec_ptr = rec_ptr;
+  wso.update_len_val = len_val;
+  wso.op = INSERT;
 }
 
 WriteSetObj
@@ -448,7 +432,9 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   ThreadInfo* ti = get_thread_info(token);
 
   Record* record = MTDB.get_value(key);
-  always_assert(record, "keys must exist"); 
+  always_assert(record, "keys must exist");
+  ti->read_set.emplace_back(ReadSetObj(record));
+  *tuple = &record->tuple;
 
   return Status::OK;
 }
@@ -461,9 +447,8 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
     return Status::ERR_NOT_FOUND;
   }
 
-  WriteSetObj wso = update_normal_phase(val, len_val, record);
+  WriteSetObj wso(val, len_val, UPDATE, record);
   ThreadInfo* ti = get_thread_info(token);
-  //NNN;
   ti->write_set.emplace_back(std::move(wso));
   
   return Status::OK;
@@ -474,7 +459,7 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 {
   ThreadInfo* ti = get_thread_info(token);
   always_assert(!MTDB.get_value(key), "keys shoudl all be unique");
-  WriteSetObj wso(val, len_val, INSERT);
+  WriteSetObj wso;
   insert_normal_phase(key, len_key, val, len_val, wso);
   ti->write_set.emplace_back(std::move(wso));
   return Status::OK;
@@ -493,15 +478,12 @@ delete_record(Token token, Storage storage, char const *key, std::size_t len_key
 extern Status
 upsert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
+  ThreadInfo* ti = get_thread_info(token);
+  Record* record = MTDB.get_value(key);
   WriteSetObj wso;
   
-  ThreadInfo* ti = get_thread_info(token);
-  //Tuple tuple = make_tuple(key, len_key, val, len_val);
-  Record* record;
-
-  record = MTDB.get_value(key);
   if (record != nullptr) {
-    wso = update_normal_phase(val, len_val, record);
+    wso.reset(val, len_val, UPDATE, record);
   }
   else {
     insert_normal_phase(key, len_key, val, len_val, wso);

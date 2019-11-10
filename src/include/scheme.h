@@ -53,30 +53,33 @@ public:
   }
 };
 
+/**
+ * @brief element of write set.
+ * @detail copy constructor/assign operator can't be used in this class 
+ * in terms of performance.
+ */
 class Record {
 public:
   TidWord tidw;
   Tuple tuple;
 
-  Record () {
-  }
+  Record () {}
 
   Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->tuple.len_key = len_key;
     this->tuple.len_val = len_val;
-    if (!(this->tuple.key = (char *)malloc(len_key))) ERR;
-    if (!(this->tuple.val = (char *)malloc(len_val))) ERR;
-    memcpy(this->tuple.key, key, len_key);
-    memcpy(this->tuple.val, val, len_val);
+    this->tuple.key = std::make_unique<char[]>(len_key);
+    this->tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(this->tuple.key.get(), key, len_key);
+    memcpy(this->tuple.val.get(), val, len_val);
     tuple.visible = false;
   }
 
-  Record& operator=(const Record& rhs) {
-    this->tidw = rhs.tidw;
-    this->tuple = rhs.tuple;
+  Record(const Record& right) = default;
+  Record(Record&& right) = default;
+  Record& operator=(const Record& right) = default;
+  Record& operator=(Record&& right) = default;
 
-    return *this;
-  }
 };
 
 /**
@@ -101,6 +104,14 @@ class WriteSetObj {
     this->op = op;
   }
 
+  WriteSetObj(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
+    update_len_val = len_val;
+    update_val_ptr = std::make_unique<char[]>(len_val);
+    memcpy(update_val_ptr.get(), val, len_val);
+    this->op = op;
+    this->rec_ptr = rec_ptr;
+  }
+
   WriteSetObj(const WriteSetObj& right) = delete;
   WriteSetObj(WriteSetObj&& right) = default;
   WriteSetObj& operator=(const WriteSetObj& right) = delete;
@@ -110,7 +121,7 @@ class WriteSetObj {
     bool judge = false;
 
     if (rec_ptr->tuple.len_key == right.rec_ptr->tuple.len_key &&
-        memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) == 0) {
+        memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), rec_ptr->tuple.len_key) == 0) {
       judge = true;
     }
     return judge;
@@ -120,7 +131,7 @@ class WriteSetObj {
     bool judge = false;
 
     if (rec_ptr->tuple.len_key != right.rec_ptr->tuple.len_key ||
-        memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, rec_ptr->tuple.len_key) != 0) {
+        memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), rec_ptr->tuple.len_key) != 0) {
       judge = true;
     }
 
@@ -133,17 +144,17 @@ class WriteSetObj {
     uint len_right = right.rec_ptr->tuple.len_key;
 
     if (len_this < len_right) {
-      int ret = memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, len_this);
+      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_this);
       if (ret > 0) judge = false;
       else if (ret <= 0) judge = true;
     }
     else if (len_this > len_right) {
-      int ret = memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, len_right);
+      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right);
       if (ret >= 0) judge = false;
       else if (ret < 0) judge = true;
     }
     else { // same length
-      int ret = memcmp(rec_ptr->tuple.key, right.rec_ptr->tuple.key, len_right);      
+      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right);      
       if (ret > 0) judge = false;
       else if (ret < 0) judge = true;
       else if (ret == 0) {
@@ -154,6 +165,14 @@ class WriteSetObj {
     }
 
     return judge;
+  }
+
+  void reset(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
+    update_len_val = len_val;
+    update_val_ptr = std::make_unique<char[]>(len_val);
+    memcpy(update_val_ptr.get(), val, len_val);
+    this->op = op;
+    this->rec_ptr = rec_ptr;
   }
 };
 
@@ -171,13 +190,10 @@ class ReadSetObj {
     this->rec_ptr = rec_ptr;
   }
 
-  /**
-   * @brief copy constructor
-   */
-  ReadSetObj(const ReadSetObj &src) {
-    this->rec_read = src.rec_read;
-    this->rec_ptr = src.rec_ptr;
-  }
+  ReadSetObj(const ReadSetObj& right) = delete;
+  ReadSetObj(ReadSetObj&& right) = default;
+  ReadSetObj& operator=(const ReadSetObj& right) = delete;
+  ReadSetObj& operator=(ReadSetObj&& right) = default;
 };
 
 class LogBody {

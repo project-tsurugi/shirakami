@@ -28,8 +28,7 @@
 
 using namespace kvs;
 
-std::vector<Tuple*> DataList[Nthread+1];
-std::vector<Tuple*> CommonDataList;
+std::vector<Tuple*> DataList[Nthread];
 
 /**
  * @brief delete DataList object.
@@ -38,56 +37,51 @@ std::vector<Tuple*> CommonDataList;
 static void
 delete_DataList()
 {
-  for (int i = 0; i < Nthread + 1; ++i) {
+  for (int i = 0; i < Nthread; ++i) {
     for (auto itr = DataList[i].begin(); itr != DataList[i].end(); ++itr) {
       delete *itr;
     }
   }
 }
 
-static char *
-make_string(uint len)
+static void
+make_string(char* string, std::size_t len)
 {
-    char *string = (char *)calloc(len, sizeof(char));
     for (uint i = 0; i < len-1; i++) {
         string[i] = rand() % 24 + 'a';
     }
-    string[len-1] = '\0';
-
     // if you use printf function with %s format later,
     // the end of aray must be null chara.
- 
-    return string;
+    string[len-1] = '\0';
 }
 
 static void
 exec_insert(Token token)
 {
-    for (int i = 0; i < Max_insert; i++) {
-        char* key = make_string(Len_key);
-        char* val = make_string(Len_val);
-        Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
-        DataList[token].push_back(tuple);
-        Storage storage;
-        insert(token, storage, key, Len_key, val, Len_val);
-        free(key);
-        free(val);
-    }
-
-    // Commit;
-    Status result = commit(token);
-    ASSERT_TRUE(result == Status::OK);
+  std::cout << "-------------Insert-------------" << std::endl;
+  for (int i = 0; i < Max_insert; i++) {
+    std::unique_ptr<char[]> key = std::make_unique<char[]>(Len_key);
+    make_string(key.get(), Len_key);
+    std::unique_ptr<char[]> val = std::make_unique<char[]>(Len_val);
+    make_string(val.get(), Len_val);
+    Tuple* tuple = new Tuple(key.get(), Len_key, val.get(), Len_val);
+    DataList[token].push_back(tuple);
+    Storage storage;
+    insert(token, storage, key.get(), Len_key, val.get(), Len_val);
+  }
+  // Commit;
+  Status result = commit(token);
+  ASSERT_TRUE(result == Status::OK);
 }
 
 static void
 exec_search_key(Token token)
 {
-    //std::cout << "-------------Search-------------" << std::endl;
+    std::cout << "-------------Search-------------" << std::endl;
     for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
         Tuple* tuple;
         Storage storage;
-        cout << (*itr)->key << endl;
-        Status search_result = search_key(token, storage, (*itr)->key, (*itr)->len_key, &tuple);
+        Status search_result = search_key(token, storage, (*itr)->key.get(), (*itr)->len_key, &tuple);
         if (search_result == Status::ERR_NOT_FOUND) std::cout << "No such key" << std::endl;
         // else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
     }
@@ -121,47 +115,13 @@ exec_scan_key(Token token)
 static void
 exec_update(Token token)
 {
-  //std::cout << "-------------Update-------------" << std::endl;
+  std::cout << "-------------Update-------------" << std::endl;
   for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
     Storage storage;
-    Status update_result = update(token, storage, (*itr)->key, (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
+    Status update_result = update(token, storage, (*itr)->key.get(), (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
-}
-
-static void
-create_common_data_list(void)
-{
-  for (int i = 0; i < Max_insert; ++i) {
-    char *key = make_string(Len_key);
-    char *val = make_string(Len_val);
-    Tuple* tuple = new Tuple(key, Len_key, val, Len_val);
-    CommonDataList.push_back(tuple);
-    free(key);
-    free(val);
-  }
-
-  Token token;
-  Status enter_result = enter(token);
-  if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) exit(1);
-
-  for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); itr++) {
-    Storage storage;
-    insert(token, storage, (*itr)->key, (*itr)->len_key, (*itr)->val, (*itr)->len_val);
-  }
-
-  Status result = commit(token);
-  ASSERT_TRUE(result == Status::OK);
-  leave(token);
-}
-
-static void
-delete_common_data_list(void)
-{
-  for (auto itr = CommonDataList.begin(); itr != CommonDataList.end(); ++itr) {
-    delete *itr;
-  }
 }
 
 static void
@@ -169,10 +129,10 @@ exec_delete(const Token token)
 {
   Storage storage;
 
-  //std::cout << "-------------Delete-------------" << std::endl;
+  std::cout << "-------------Delete-------------" << std::endl;
   for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
     //SSS(itr->key);
-    delete_record(token, storage, (*itr)->key, (*itr)->len_key);
+    delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
@@ -225,7 +185,7 @@ test_single_operation(const int token)
   test_insert(token);
   test_search(token);
   test_update(token);
-  //test_delete(token);
+  test_delete(token);
   //test_scan(token);
 }
 
@@ -254,7 +214,7 @@ thread_create(void)
 static void
 test(void)
 {
-  create_common_data_list();
+  //create_common_data_list();
 
   pthread_t th[Nthread];
   for (int i = 0; i < Nthread; i++) {
@@ -266,7 +226,7 @@ test(void)
   }
 
   delete_database();
-  delete_common_data_list();
+  //delete_common_data_list();
   delete_DataList();
 }
 

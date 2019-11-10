@@ -16,6 +16,8 @@
 
 #include "debug.h"
 
+#include "include/header.h"
+
 namespace kvs {
 
 /**
@@ -47,39 +49,43 @@ typedef enum {
 
 class Tuple {
 public:
-  char *key = nullptr;
-  char *val = nullptr;
+  std::unique_ptr<char[]> key;
+  std::unique_ptr<char[]> val;
   std::size_t len_key;
   std::size_t len_val;
-  bool visible; // for delete, search
+  bool visible = true; // for delete, search
 
-  Tuple() {
-    this->visible = true;
-  }
-
-  ~Tuple() {
-    free(this->key);
-    free(this->val);
-  }
+  Tuple() = default;
+  ~Tuple() = default;
 
   Tuple(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->len_key = len_key;
     this->len_val = len_val;
     this->visible = true;
-    if (!(this->key = (char *)malloc(len_key))) ERR;
-    if (!(this->val = (char *)malloc(len_val))) ERR;
-    memcpy(this->key, key, len_key);
-    memcpy(this->val, val, len_val);
+    this->key = std::make_unique<char[]>(len_key);
+    this->val = std::make_unique<char[]>(len_val);
+    memcpy(this->key.get(), key, len_key);
+    memcpy(this->val.get(), val, len_val);
   }
 
-  Tuple& operator=(const Tuple& rhs) {
-    this->len_key = rhs.len_key;
-    this->len_val = rhs.len_val;
-    this->visible = rhs.visible;
-    if (!(this->key = (char *)malloc(this->len_key))) ERR;
-    if (!(this->val = (char *)malloc(this->len_val))) ERR;
-    memcpy(this->key, rhs.key, this->len_key);
-    memcpy(this->val, rhs.val, this->len_val);
+  Tuple(const Tuple& right) {
+    this->len_key = right.len_key;
+    this->len_val = right.len_val;
+    this->visible = right.visible;
+    this->key = std::make_unique<char[]>(right.len_key);
+    this->val = std::make_unique<char[]>(right.len_val);
+    memcpy(this->key.get(), right.key.get(), right.len_key);
+    memcpy(this->val.get(), right.val.get(), right.len_val);
+  }
+
+  Tuple& operator=(const Tuple& right) {
+    this->len_key = right.len_key;
+    this->len_val = right.len_val;
+    this->visible = right.visible;
+    this->key = std::make_unique<char[]>(right.len_key);
+    this->val = std::make_unique<char[]>(right.len_val);
+    memcpy(this->key.get(), right.key.get(), right.len_key);
+    memcpy(this->val.get(), right.val.get(), right.len_val);
     
     return *this;
   }
