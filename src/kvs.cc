@@ -13,7 +13,6 @@ pthread_t EpochThread;
 pthread_t LogThread;
 uint64_t kGlobalEpoch;
 pthread_mutex_t kMutexLogList;
-pthread_mutex_t kMutexToken;
 pthread_mutex_t kMutexThreadTable;
 
 void
@@ -35,7 +34,6 @@ init_mutex(void)
 {
   //pthread_mutex_init(&kMutexLogList, nullptr);
   pthread_mutex_init(&kMutexThreadTable, nullptr);
-  pthread_mutex_init(&kMutexToken, nullptr);
 }
 
 static void

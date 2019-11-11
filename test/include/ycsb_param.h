@@ -22,7 +22,7 @@ const std::size_t kValLength = 8;
 /**
  * @brief number of records.
  */
-const std::size_t kCardinality = 10000;
+const std::size_t kCardinality = 10;
 
 /**
  * @brief number of operations in one transaction.

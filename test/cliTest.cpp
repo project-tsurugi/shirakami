@@ -18,7 +18,7 @@
 
 // kvs_charkey/src/
 #include "include/kernel.h"
-#include "include/xact.h"
+#include "include/xact.hh"
 
 #include <cstdint>
 
@@ -195,7 +195,7 @@ test_single_operation(const int token)
 static void *
 worker(void *a)
 {
-  Token token;
+  Token token = TokenForExp::GetToken();
   Status enter_result = enter(token);
   if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) ERR;
 

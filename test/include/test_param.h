@@ -3,6 +3,8 @@
 // kvs_charkey/src/
 #include "include/header.h"
 
+#define DECLARE_ENTITY_TOKEN_FOR_EXP
+
 namespace single_thread_test {
 
 // How many threads would you like to spawn?

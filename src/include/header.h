@@ -35,6 +35,7 @@
 #include <dirent.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <future>
 #include <iostream>

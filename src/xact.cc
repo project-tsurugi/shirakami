@@ -4,7 +4,7 @@
 #include "include/masstree_wrapper.hh"
 #include "include/scheme.h"
 #include "include/tsc.hpp"
-#include "include/xact.h"
+#include "include/xact.hh"
 
 #include "kvs/debug.h"
 #include "kvs/interface.h"
@@ -16,7 +16,7 @@ alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
 /* This variable has informations about worker thread. */
 std::vector<ThreadInfo*> kThreadTable;
-__thread ThreadInfo* kti = nullptr;
+__thread ThreadInfo* kTI = nullptr;
 
 void lock_mutex(pthread_mutex_t *mutex);
 void unlock_mutex(pthread_mutex_t *mutex);
@@ -63,6 +63,7 @@ unlock_write_set(std::vector<WriteSetObj>& write_set)
   TidWord expected, desired;
   
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    if ((*itr).op == DELETE) continue;
     Record *record = itr->rec_ptr;
     expected.obj = __atomic_load_n(&(record->tidw.obj), __ATOMIC_ACQUIRE);
     desired = expected;
@@ -117,7 +118,7 @@ write_phase(TidWord max_rset, TidWord max_wset)
   tid_b.tid++;
 
   /* calculates (c) */
-  tid_c.epoch = kti->epoch;
+  tid_c.epoch = kTI->epoch;
 
   /* compare a, b, c */
   TidWord maxtid = max({tid_a, tid_b, tid_c});
@@ -125,7 +126,7 @@ write_phase(TidWord max_rset, TidWord max_wset)
   maxtid.latest = 1;
   mrctid = maxtid;
 
-  for (auto iws = kti->write_set.begin(); iws != kti->write_set.end(); ++iws) {
+  for (auto iws = kTI->write_set.begin(); iws != kTI->write_set.end(); ++iws) {
     switch (iws->op) {
       case UPDATE:
         iws->rec_ptr->tuple.val.reset();
@@ -138,15 +139,18 @@ write_phase(TidWord max_rset, TidWord max_wset)
         break;
       case DELETE:
         iws->rec_ptr->tuple.visible = false;
+        MTDB.remove_value(iws->rec_ptr->tuple.key.get());
+        delete iws->rec_ptr;
         break;
       default: ERR; break;
     }
-    __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
+    if (iws->op != DELETE)
+      __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
   }
 
-  unlock_write_set(kti->write_set);
-  kti->read_set.clear();
-  kti->write_set.clear();
+  unlock_write_set(kTI->write_set);
+  kTI->read_set.clear();
+  kTI->write_set.clear();
 }
 
 bool
@@ -255,17 +259,6 @@ insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::
   wso.op = INSERT;
 }
 
-WriteSetObj
-delete_normal_phase(char const *key, const std::size_t len_key)
-{
-  WriteSetObj wso;
-  wso.op = DELETE;
-
-  wso.rec_ptr = MTDB.get_value(key);
-  
-  return wso;
-}
-
 bool
 is_locked(TidWord check)
 {
@@ -279,12 +272,12 @@ commit(Token token)
   TidWord max_rset, max_wset;
 
   // Phase 1: Sort lock list;
-  std::sort(kti->write_set.begin(), kti->write_set.end());
+  std::sort(kTI->write_set.begin(), kTI->write_set.end());
 
 
   // Phase 2: Lock write set;
   TidWord expected, desired;
-  for (auto itr = kti->write_set.begin(); itr != kti->write_set.end(); ++itr) {
+  for (auto itr = kTI->write_set.begin(); itr != kTI->write_set.end(); ++itr) {
     //Record *record = itr->rec_ptr;
     expected.obj = __atomic_load_n(&(itr->rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
     for (;;) {
@@ -301,26 +294,26 @@ commit(Token token)
 
   // Serialization point
   asm volatile("" ::: "memory");
-  __atomic_store_n(&kti->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
+  __atomic_store_n(&kTI->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
   asm volatile("" ::: "memory");
 
   // Phase 3: Validation
   TidWord check;
-  for (auto itr = kti->read_set.begin(); itr != kti->read_set.end(); itr++) {
+  for (auto itr = kTI->read_set.begin(); itr != kTI->read_set.end(); itr++) {
     // Condition 1
     Record* rec_ptr = itr->rec_ptr;
     check.obj = __atomic_load_n(&(rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
     if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
-      unlock_write_set(kti->write_set); 
-      kti->read_set.clear(); 
-      kti->write_set.clear();
+      unlock_write_set(kTI->write_set); 
+      kTI->read_set.clear(); 
+      kTI->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
-    if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, kti->write_set))) {
-      unlock_write_set(kti->write_set); 
-      kti->read_set.clear(); 
-      kti->write_set.clear();
+    if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, kTI->write_set))) {
+      unlock_write_set(kTI->write_set); 
+      kTI->read_set.clear(); 
+      kTI->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     max_rset = max(max_rset, check);
@@ -348,27 +341,12 @@ chck_session_started(const Token token)
   return Status::OK;
 }
 
-static Token
-get_token()
-{
-  static Token token = 0;
-  Token latest_token;
-
-  pthread_mutex_lock(&kMutexToken);
-  latest_token = token;
-  token++;
-  pthread_mutex_unlock(&kMutexToken);
-  
-  return latest_token;
-}
-
 extern Status
 enter(Token& token)
 {
-  token = get_token();  
   ThreadInfo* ti = new ThreadInfo(token);
   //printf("enter: gen threadinfo %p\n", ti);
-  kti = ti;
+  kTI = ti;
   
   lock_mutex(&kMutexThreadTable);
   Status chk_status = chck_session_started(token);
@@ -396,7 +374,7 @@ leave(Token token)
       kThreadTable.erase(itr);
       delete del_target;
       pthread_mutex_unlock(&kMutexThreadTable);
-      kti = nullptr;
+      kTI = nullptr;
       return Status::OK;
     }
   }
@@ -430,14 +408,14 @@ scan_key(Token token, Storage storage,
 extern Status
 search_key(Token token, Storage storage, char const *key, std::size_t len_key, Tuple** tuple)
 {
-  WriteSetObj* inws = kti->search_write_set(key, len_key);
+  WriteSetObj* inws = kTI->search_write_set(key, len_key);
   if (inws != nullptr) return Status::OK;
-  ReadSetObj* inrs = kti->search_read_set(key, len_key);
+  ReadSetObj* inrs = kTI->search_read_set(key, len_key);
   if (inrs != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key);
   always_assert(record, "keys must exist");
-  kti->read_set.emplace_back(ReadSetObj(record));
+  kTI->read_set.emplace_back(ReadSetObj(record));
   *tuple = &record->tuple;
 
   return Status::OK;
@@ -446,7 +424,7 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
 extern Status
 update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
-  WriteSetObj* inws = kti->search_write_set(key, len_key, UPDATE);
+  WriteSetObj* inws = kTI->search_write_set(key, len_key, UPDATE);
   if (inws != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key);
@@ -455,7 +433,7 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   }
 
   WriteSetObj wso(val, len_val, UPDATE, record);
-  kti->write_set.emplace_back(std::move(wso));
+  kTI->write_set.emplace_back(std::move(wso));
   
   return Status::OK;
 }
@@ -464,22 +442,25 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
 extern Status
 insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
-  //printf("insert: threadinfo %p\n", kti);
-  WriteSetObj* inws = kti->search_write_set(key, len_key, INSERT);
+  //printf("insert: threadinfo %p\n", kTI);
+  WriteSetObj* inws = kTI->search_write_set(key, len_key, INSERT);
   if (inws != nullptr) return Status::OK;
-  if (MTDB.get_value(key) != nullptr) return Status::ERR_ALREADY_EXISTS;
+  if (MTDB.get_value(key) != nullptr) {
+    NNN;
+    return Status::ERR_ALREADY_EXISTS;
+  }
 
   WriteSetObj wso;
   insert_normal_phase(key, len_key, val, len_val, wso);
-  kti->write_set.emplace_back(std::move(wso));
+  kTI->write_set.emplace_back(std::move(wso));
   return Status::OK;
 }
 
 extern Status
 delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
 {
-  WriteSetObj wso = delete_normal_phase(key, len_key);
-  kti->write_set.emplace_back(std::move(wso));
+  WriteSetObj wso(DELETE, MTDB.get_value(key));
+  kTI->write_set.emplace_back(std::move(wso));
 
   return Status::OK;
 }
@@ -496,7 +477,7 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   else {
     insert_normal_phase(key, len_key, val, len_val, wso);
   }
-  kti->write_set.emplace_back(std::move(wso));
+  kTI->write_set.emplace_back(std::move(wso));
 
   return Status::OK;
 }

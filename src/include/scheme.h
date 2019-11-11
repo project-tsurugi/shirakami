@@ -99,6 +99,11 @@ class WriteSetObj {
 
   WriteSetObj() {}
 
+  WriteSetObj(OP_TYPE op, Record* rec_ptr) {
+    this->op = op;
+    this->rec_ptr = rec_ptr;
+  }
+
   WriteSetObj(char const *val, std::size_t len_val, OP_TYPE op) {
     update_len_val = len_val;
     update_val_ptr = std::make_unique<char[]>(len_val);
