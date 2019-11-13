@@ -17,7 +17,6 @@
 #include "./include/test_param.h"
 
 // kvs_charkey/src/
-#include "include/kernel.h"
 #include "include/xact.hh"
 
 #include <cstdint>

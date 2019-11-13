@@ -1,5 +1,4 @@
 
-#include "include/kernel.h"
 #include "include/kvs.h"
 #include "include/port.h"
 

@@ -1,6 +1,5 @@
 
 #include "include/cache_line_size.hh"
-#include "include/kernel.h"
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
 #include "include/scheme.h"
