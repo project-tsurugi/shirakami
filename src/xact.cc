@@ -3,7 +3,7 @@
 #include "include/kernel.h"
 #include "include/masstree_wrapper.hh"
 #include "include/scheme.h"
-#include "include/tsc.hpp"
+#include "include/tsc.hh"
 #include "include/xact.hh"
 
 #include "kvs/debug.h"
