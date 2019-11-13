@@ -7,9 +7,18 @@ static uint64_t rdtsc() {
   uint64_t rax;
   uint64_t rdx;
 
-  asm volatile("" ::: "memory");
+  asm volatile("cpuid" ::: "rax", "rbx", "rcx", "rdx");
   asm volatile("rdtsc" : "=a"(rax), "=d"(rdx));
-  asm volatile("" ::: "memory");
+
+  return (rdx << 32) | rax;
+}
+
+static uint64_t rdtscp() {
+  uint64_t rax;
+  uint64_t rdx;
+  uint64_t aux;
+
+  asm volatile("rdtscp" : "=a"(rax), "=d"(rdx), "=c"(aux)::);
 
   return (rdx << 32) | rax;
 }
