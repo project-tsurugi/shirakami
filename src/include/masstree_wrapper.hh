@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
-#include "header.h"
+#include "header.hh"
 
 #include "kvs/scheme.h"
 

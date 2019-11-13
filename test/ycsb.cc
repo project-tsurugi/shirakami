@@ -16,7 +16,7 @@
 
 #include "./include/ycsb_param.h"
 
-#include "include/header.h"
+#include "include/header.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/scheme.h"
 #include "include/xact.hh"
@@ -69,6 +69,7 @@ protected:
   ycsb() {
     init();
     build_mtdb();
+    invoke_leader();
   }
   
   ~ycsb() {
@@ -77,6 +78,7 @@ protected:
 
   void build_mtdb();
   void delete_mtdb();
+  void invoke_leader();
 }; // end of declaration of class ycsb.
 
 TEST_F(ycsb, ycsb_a) {
@@ -176,6 +178,11 @@ ycsb::delete_mtdb()
     thv.emplace_back(parallel_delete_mtdb, i);
 
   for (auto &th : thv) th.join();
+}
+
+void
+ycsb::invoke_leader()
+{
 }
 
 }  // namespace kvs_charkey::testing

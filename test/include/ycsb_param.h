@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "include/header.h"
+#include "include/header.hh"
 
 namespace ycsb_param {
 

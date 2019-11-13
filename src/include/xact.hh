@@ -1,6 +1,7 @@
 #pragma once
 
-#include "include/header.h"
+#include "include/header.hh"
+
 #include "kvs/scheme.h"
 
 using namespace std;
