@@ -17,6 +17,7 @@
 #include "./include/test_param.h"
 
 // kvs_charkey/src/
+#include "include/debug.h"
 #include "include/xact.hh"
 
 #include <cstdint>
@@ -24,7 +25,6 @@
 #include "gtest/gtest.h"
 
 // kvs_charkey/include/
-#include "kvs/debug.h"
 #include "kvs/interface.h"
 
 using namespace single_thread_test;

@@ -1,21 +1,23 @@
 #pragma once
 
+#include <assert.h>
+#include <errno.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <errno.h>
 #include <cstring>
-#include <sys/time.h>
-#include <pthread.h>
 #include <iostream>
-#include <unistd.h>
-#include <time.h>
 #include <iostream>
-#include <algorithm>
-#include <assert.h>
 #include <vector>
 
+#include "debug.h"
+
 // kvs_charkey/include/
-#include "kvs/debug.h"
 #include "kvs/scheme.h"
 
 namespace kvs {

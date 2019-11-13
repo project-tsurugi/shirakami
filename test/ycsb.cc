@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "include/debug.h"
+
 #include "./include/ycsb_param.h"
 
 #include "include/header.hh"
@@ -26,7 +28,6 @@
 
 #include "gtest/gtest.h"
 
-#include "kvs/debug.h"
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 

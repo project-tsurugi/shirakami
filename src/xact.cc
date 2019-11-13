@@ -1,12 +1,12 @@
 
 #include "include/cache_line_size.hh"
+#include "include/debug.h"
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
 #include "include/scheme.h"
 #include "include/tsc.hh"
 #include "include/xact.hh"
 
-#include "kvs/debug.h"
 #include "kvs/interface.h"
 
 namespace kvs {

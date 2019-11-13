@@ -1,8 +1,8 @@
 #pragma once
 
-#include "include/header.hh"
+#include "debug.h"
 
-#include "kvs/debug.h"
+#include "header.hh"
 
 namespace kvs {
 
