@@ -10,3 +10,9 @@ check_clock_span(uint64_t &start, uint64_t &stop, uint64_t threshold)
   if (diff > threshold) return true;
   else return false;
 }
+
+static void
+sleepMs(size_t ms)
+{
+  std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}

@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-#include "include/debug.h"
-
+// kvs_charkey/test
 #include "./include/ycsb_param.h"
 
+// kvs_charkey/src/
+#include "include/atomic_wrapper.hh"
+#include "include/cache_line_size.hh"
+#include "include/clock.hh"
+#define Linux
+#include "include/cpu.hh"
+#include "include/debug.h"
 #include "include/header.hh"
 #include "include/masstree_wrapper.hh"
+#include "include/random.hh"
+#include "include/result.hh"
 #include "include/scheme.h"
 #include "include/xact.hh"
 #include "include/ycsb_param.h"
+#include "include/zipf.hh"
 
-#include <cstdint>
-
-#include "gtest/gtest.h"
-
+// kvs_charkey/include/
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
+
+#include "gtest/gtest.h"
 
 using namespace kvs;
 using namespace ycsb_param;
@@ -48,21 +56,6 @@ make_string(char* string, std::size_t len)
     string[len-1] = '\0';
 }
 
-static void
-ycsb_a()
-{
-}
-
-static void
-ycsb_b()
-{
-}
-
-static void
-ycsb_c()
-{
-}
-
 namespace kvs_charkey::testing {
 
 class ycsb : public ::testing::Test {
@@ -70,7 +63,6 @@ protected:
   ycsb() {
     init();
     build_mtdb();
-    invoke_leader();
   }
   
   ~ycsb() {
@@ -82,16 +74,8 @@ protected:
   void invoke_leader();
 }; // end of declaration of class ycsb.
 
-TEST_F(ycsb, ycsb_a) {
-  ycsb_a();
-}
-
-TEST_F(ycsb, ycsb_b) {
-  ycsb_b();
-}
-
-TEST_F(ycsb, ycsb_c) {
-  ycsb_c();
+TEST_F(ycsb, ycsb_exe) {
+  invoke_leader();
 }
 
 static size_t
@@ -181,9 +165,60 @@ ycsb::delete_mtdb()
   for (auto &th : thv) th.join();
 }
 
+static bool 
+isReady(const std::vector<char>& readys)
+{
+  for (const char &b : readys) {
+    if (!loadAcquire(b)) return false;
+  }
+  return true;
+}
+
+static void
+waitForReady(const std::vector<char>& readys)
+{
+  while (!isReady(readys)) { _mm_pause(); }
+}
+
+static void
+worker(const size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res)
+{
+  // init work
+  Xoroshiro128Plus rnd;
+  rnd.init();
+  FastZipf zipf(&rnd, kZipfSkew, kCardinality);
+
+  // this function can be used in Linux environment only.
+  setThreadAffinity(thid);
+
+  storeRelease(ready, 1);
+  while (!loadAcquire(start)) _mm_pause();
+  while (!loadAcquire(quit)) {}
+}
+
 void
 ycsb::invoke_leader()
 {
+  alignas(CACHE_LINE_SIZE) bool start = false;
+  alignas(CACHE_LINE_SIZE) bool quit = false;
+  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);
+
+  std::vector<char> readys(kNthread);
+  std::vector<std::thread> thv;
+  for (size_t i = 0; i < kNthread; ++i)
+    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
+  waitForReady(readys);
+  storeRelease(start, true);
+  for (size_t i = 0; i < kExecTime; ++i) {
+    sleepMs(1000);
+  }
+  storeRelease(quit, true);
+  for (auto& th : thv) th.join();
+
+  for (auto i = 0; i < kNthread; ++i) {
+    res[0].addLocalAllResult(res[i]);
+  }
+  res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
 }
 
 }  // namespace kvs_charkey::testing

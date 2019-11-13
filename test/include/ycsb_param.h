@@ -47,6 +47,6 @@ const std::size_t kCPUMHz = 2496;
 /**
  * @brief experimental time.
  */
-const std::size_t kExecTime = 3;
+const std::size_t kExecTime = 1;
 
 } // end of namespace ycsb_param
