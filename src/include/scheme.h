@@ -55,6 +55,8 @@ public:
   bool operator<(const TidWord& right) const {
     return this->obj < right.obj;
   }
+
+  bool is_locked() { return lock; }
 };
 
 /**

@@ -1,5 +1,6 @@
 
 #include "include/cache_line_size.hh"
+#include "include/clock.hh"
 #include "include/debug.h"
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
@@ -153,15 +154,6 @@ write_phase(TidWord max_rset, TidWord max_wset)
   kTI->write_set.clear();
 }
 
-bool
-check_clock_span(uint64_t &start, uint64_t &stop, uint64_t threshold)
-{
-  uint64_t diff = 0;
-  diff = stop - start;
-  if (diff > threshold) return true;
-  else return false;
-}
-
 static bool
 check_epoch_loaded(void)
 {
@@ -259,13 +251,6 @@ insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::
   wso.op = INSERT;
 }
 
-bool
-is_locked(TidWord check)
-{
-  if (check.lock) return true;
-  return false;
-}
-
 extern Status
 commit(Token token)
 {
@@ -310,7 +295,7 @@ commit(Token token)
       return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
-    if (is_locked(check) && (!locked_by_me((*itr).rec_read.tuple, kTI->write_set))) {
+    if (check.is_locked() && (!locked_by_me((*itr).rec_read.tuple, kTI->write_set))) {
       unlock_write_set(kTI->write_set); 
       kTI->read_set.clear(); 
       kTI->write_set.clear();
