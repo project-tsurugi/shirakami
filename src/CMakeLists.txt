@@ -1,7 +1,6 @@
 file(GLOB SOURCES
         "kvs.cc"
         "xact.cc"
-        "lib.cc"
         "scheme.cc"
         "../third_party/masstree-beta/compiler.o"
         "../third_party/masstree-beta/kvthread.o"
