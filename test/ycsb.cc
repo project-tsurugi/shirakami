@@ -21,7 +21,6 @@
 #include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
-#define Linux
 #include "include/cpu.hh"
 #include "include/debug.h"
 #include "include/header.hh"
@@ -189,7 +188,9 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   FastZipf zipf(&rnd, kZipfSkew, kCardinality);
 
   // this function can be used in Linux environment only.
+#ifdef Linux
   setThreadAffinity(thid);
+#endif
 
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
