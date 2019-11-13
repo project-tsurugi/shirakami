@@ -223,19 +223,28 @@ class LogShell {
 class OprObj { // Operations for retry by abort
  public:
   OP_TYPE type;
-  char *key;
-  char *value;
+  std::unique_ptr<char[]> key;
+  std::unique_ptr<char[]> val;
+  std::size_t len_key;
+  std::size_t len_val;
 
-  OprObj() {
-    this->key = nullptr;
-    this->value = nullptr;
-  }
+  OprObj() = default;
+  ~OprObj() = default;
 
-  OprObj(char *key, char *value, OP_TYPE type) {
-    this->key = key;
-    this->value = value;
+  OprObj(OP_TYPE type, char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->type = type;
+    this->len_key = len_key;
+    this->len_val = len_val;
+    this->key = std::make_unique<char[]>(len_key);
+    this->val = std::make_unique<char[]>(len_val);
+    memcpy(this->key.get(), key, len_key);
+    memcpy(this->val.get(), val, len_val);
   }
+
+  OprObj(const OprObj& right) = delete;
+  OprObj(OprObj&& right) = default;
+  OprObj& operator=(const OprObj& right) = delete;
+  OprObj& operator=(OprObj&& right) = default;
 }; 
 
 class ThreadInfo {

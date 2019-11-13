@@ -140,7 +140,7 @@ write_phase(TidWord max_rset, TidWord max_wset)
         break;
       case DELETE:
         iws->rec_ptr->tuple.visible = false;
-        MTDB.remove_value(iws->rec_ptr->tuple.key.get());
+        MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
         delete iws->rec_ptr;
         break;
       default: ERR; break;
@@ -245,7 +245,8 @@ static void
 insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val, WriteSetObj& wso)
 {
   Record* rec_ptr = new Record(key, len_key, val, len_val);
-  MTDB.insert_value(key, rec_ptr);
+  MTDB.insert_value(key, len_key, rec_ptr);
+  cout << key << endl;
   wso.rec_ptr = rec_ptr;
   wso.update_len_val = len_val;
   wso.op = INSERT;
@@ -398,7 +399,8 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   ReadSetObj* inrs = kTI->search_read_set(key, len_key);
   if (inrs != nullptr) return Status::OK;
 
-  Record* record = MTDB.get_value(key);
+  Record* record = MTDB.get_value(key, len_key);
+  cout << key << endl;
   always_assert(record, "keys must exist");
   kTI->read_set.emplace_back(ReadSetObj(record));
   *tuple = &record->tuple;
@@ -412,7 +414,7 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   WriteSetObj* inws = kTI->search_write_set(key, len_key, UPDATE);
   if (inws != nullptr) return Status::OK;
 
-  Record* record = MTDB.get_value(key);
+  Record* record = MTDB.get_value(key, len_key);
   if (!record) {
     return Status::ERR_NOT_FOUND;
   }
@@ -430,7 +432,7 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   //printf("insert: threadinfo %p\n", kTI);
   WriteSetObj* inws = kTI->search_write_set(key, len_key, INSERT);
   if (inws != nullptr) return Status::OK;
-  if (MTDB.get_value(key) != nullptr) {
+  if (MTDB.get_value(key, len_key) != nullptr) {
     NNN;
     return Status::ERR_ALREADY_EXISTS;
   }
@@ -444,7 +446,7 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 extern Status
 delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
 {
-  WriteSetObj wso(DELETE, MTDB.get_value(key));
+  WriteSetObj wso(DELETE, MTDB.get_value(key, len_key));
   kTI->write_set.emplace_back(std::move(wso));
 
   return Status::OK;
@@ -453,7 +455,7 @@ delete_record(Token token, Storage storage, char const *key, std::size_t len_key
 extern Status
 upsert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
-  Record* record = MTDB.get_value(key);
+  Record* record = MTDB.get_value(key, len_key);
   WriteSetObj wso;
   
   if (record != nullptr) {

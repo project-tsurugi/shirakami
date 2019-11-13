@@ -93,11 +93,13 @@ class MasstreeWrapper {
   /**
    * @brief insert value to masstree
    * @param key This must be a type of const char*.
+   * @detail future work, we try to delete making temporary
+   * object std::string buf(key). But now, if we try to do 
+   * without making temporary object, it fails by masstree.
    */
-  void insert_value(const char* key, T* value) {
-    Str mtkey;
+  void insert_value(const char* key, std::size_t len_key, T* value) {
     std::string buf(key);
-    mtkey = make_key(key, buf);
+    Str mtkey(buf);
     cursor_type lp(table_, mtkey);
     bool found = lp.find_insert(*ti);
     always_assert(!found, "keys should all be unique");
@@ -106,20 +108,18 @@ class MasstreeWrapper {
     lp.finish(1, *ti);
   }
 
-  void remove_value(const char* key) {
-    Str mtkey;
+  void remove_value(const char* key, std::size_t len_key) {
     std::string buf(key);
-    mtkey = make_key(key, buf);
+    Str mtkey(buf);
     cursor_type lp(table_, mtkey);
     bool found = lp.find_insert(*ti);
     always_assert(found, "keys must all exist");
     lp.finish(-1, *ti);
   }
 
-  T* get_value(const char* key) {
-    Str mtkey;
+  T* get_value(const char* key, std::size_t len_key) {
     std::string buf(key);
-    mtkey = make_key(key, buf);
+    Str mtkey(buf);
     unlocked_cursor_type lp(table_, key);
     bool found = lp.find_unlocked(*ti);
     if (found) return lp.value();
@@ -141,7 +141,6 @@ class MasstreeWrapper {
   table_type table_;
 
   static inline Str make_key(const char* char_key, std::string& buf) {
-    //std::reverse(buf.begin(), buf.end());   
     return Str(buf);
   }
 };

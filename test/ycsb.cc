@@ -194,7 +194,12 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
 
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
-  while (!loadAcquire(quit)) {}
+
+  Token token(thid);
+  enter(token);
+  while (!loadAcquire(quit)) {
+  }
+  leave(token);
 }
 
 void

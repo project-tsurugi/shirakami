@@ -35,6 +35,11 @@ const std::size_t kNops = 10;
 const std::size_t kNthread = 1;
 
 /**
+ * @brief ratio of read. 0 - 100[%]
+ */
+const std::size_t kRRatio = 100;
+
+/**
  * @brief zipf skew.
  */
 const double kZipfSkew = 0;
