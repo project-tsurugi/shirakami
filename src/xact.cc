@@ -2,6 +2,7 @@
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
 #include "include/debug.h"
+#include "include/epoch.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
 #include "include/scheme.h"
@@ -12,37 +13,15 @@
 
 namespace kvs {
 
-std::vector<LogShell> LogList;
+alignas(CACHE_LINE_SIZE) std::vector<LogShell> kLogList;
+alignas(CACHE_LINE_SIZE) std::vector<ThreadInfo*> kThreadTable;
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
-
 /* This variable has informations about worker thread. */
-std::vector<ThreadInfo*> kThreadTable;
-__thread ThreadInfo* kTI = nullptr;
-
-void lock_mutex(pthread_mutex_t *mutex);
-void unlock_mutex(pthread_mutex_t *mutex);
+alignas(CACHE_LINE_SIZE) __thread ThreadInfo* kTI = nullptr;
 
 extern void
 delete_database()
 {
-}
-
-uint64_t
-load_acquire_ge()
-{
-  return __atomic_load_n(&(kGlobalEpoch), __ATOMIC_ACQUIRE);
-}
-
-void
-atomic_add_global_epoch()
-{
-  uint64_t expected = load_acquire_ge();
-  for (;;) {
-    uint64_t desired = expected + 1;
-    if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
-      break;
-    }
-  }
 }
 
 bool
@@ -154,6 +133,16 @@ write_phase(TidWord max_rset, TidWord max_wset)
   kTI->write_set.clear();
 }
 
+extern Status
+abort(Token token)
+{
+  unlock_write_set(kTI->write_set);
+  kTI->read_set.clear();
+  kTI->write_set.clear();
+
+  return Status::OK;
+}
+
 static bool
 check_epoch_loaded(void)
 {
@@ -179,10 +168,10 @@ logger(void *arg)
   while (true) {
     uint64_t curEpoch = load_acquire_ge();
     pthread_mutex_lock(&kMutexLogList);
-    for (auto itr = LogList.begin(); itr != LogList.end(); itr++) {
+    for (auto itr = kLogList.begin(); itr != kLogList.end(); itr++) {
       if (itr->epoch < curEpoch) {
         write(fd, itr->body, sizeof(LogBody) * itr->counter);
-        LogList.erase(itr);
+        kLogList.erase(itr);
         itr--;
       }
     }
@@ -236,7 +225,7 @@ exec_logging(std::vector<Record> write_set, const int myid)
   ls.counter = counter;
 
   pthread_mutex_lock(&kMutexLogList);
-  LogList.push_back(ls);
+  kLogList.push_back(ls);
   pthread_mutex_unlock(&kMutexLogList);
 }
 #endif

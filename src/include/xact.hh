@@ -12,9 +12,8 @@ using namespace std;
 
 namespace kvs {
 
-extern uint64_t kGlobalEpoch;
-extern pthread_mutex_t kMutexThreadTable;
 extern pthread_mutex_t kMutexLogList;
+extern pthread_mutex_t kMutexThreadTable;
 
 extern void print_MTDB(void); 
 

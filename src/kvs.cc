@@ -8,11 +8,11 @@
 
 namespace kvs {
 
+pthread_mutex_t kMutexLogList;
+pthread_mutex_t kMutexThreadTable;
 pthread_t EpochThread;
 pthread_t LogThread;
 uint64_t kGlobalEpoch;
-pthread_mutex_t kMutexLogList;
-pthread_mutex_t kMutexThreadTable;
 
 void
 invoke_logger(void)

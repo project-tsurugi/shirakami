@@ -198,6 +198,9 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   Token token(thid);
   enter(token);
   while (!loadAcquire(quit)) {
+    for (auto i = 0; i < kNops; ++i) {
+
+    }
   }
   leave(token);
 }
