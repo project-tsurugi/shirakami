@@ -99,6 +99,9 @@ class MasstreeWrapper {
    */
   void insert_value(const char* key, std::size_t len_key, T* value) {
     std::string buf(key);
+    //std::string buf;
+    //buf.reserve(len_key);
+    //memcpy(buf.data(), key, len_key);
     Str mtkey(buf);
     cursor_type lp(table_, mtkey);
     bool found = lp.find_insert(*ti);

@@ -15,6 +15,9 @@
  */
 
 // kvs_charkey/test
+#include "./include/gen_tx.hh"
+#include "./include/string.hh"
+#include "./include/ycsb.hh"
 #include "./include/ycsb_param.h"
 
 // kvs_charkey/src/
@@ -43,17 +46,6 @@ using namespace ycsb_param;
 using std::cout, std::endl;
 
 std::vector<Tuple*> InsertedList[kNthread];
-
-static void
-make_string(char* string, std::size_t len)
-{
-    for (uint i = 0; i < len-1; i++) {
-        string[i] = rand() % 24 + 'a';
-    }
-    // if you use printf function with %s format later,
-    // the end of aray must be null chara.
-    string[len-1] = '\0';
-}
 
 namespace kvs_charkey::testing {
 
@@ -102,12 +94,14 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
   for (auto i = start; i <= end; ++i) {
     std::unique_ptr<char[]> key = std::make_unique<char[]>(kKeyLength);
     memcpy(key.get(), (std::to_string(i)).c_str(), kKeyLength);
+    //uint64_t keybs = __builtin_bswap64(i);
+    //std::unique_ptr<char[]> key = std::make_unique<char[]>(sizeof(uint64_t));
     std::unique_ptr<char[]> val = std::make_unique<char[]>(kValLength);
     make_string(val.get(), kValLength);
     Tuple *tuple = new Tuple(key.get(), kKeyLength, val.get(), kValLength);
-    InsertedList[thid].push_back(tuple);
     Storage storage;
     insert(thid, storage, key.get(), kKeyLength, val.get(), kValLength);
+    InsertedList[thid].push_back(tuple);
   }
   Status result = commit(thid);
   ASSERT_TRUE(result == Status::OK);
@@ -196,11 +190,17 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   while (!loadAcquire(start)) _mm_pause();
 
   Token token(thid);
+  Storage storage;
   enter(token);
   while (!loadAcquire(quit)) {
-    for (auto i = 0; i < kNops; ++i) {
-
+    gen_tx_rw(kTI->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
+    for (auto itr = kTI->opr_set.begin(); itr != kTI->opr_set.end(); ++itr) {
+      if ((*itr).type == SEARCH) {
+        Tuple *tuple;
+        Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);
+      }
     }
+    if (commit(token) != Status::OK) abort(token);
   }
   leave(token);
 }

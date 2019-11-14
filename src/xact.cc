@@ -235,7 +235,6 @@ insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::
 {
   Record* rec_ptr = new Record(key, len_key, val, len_val);
   MTDB.insert_value(key, len_key, rec_ptr);
-  cout << key << endl;
   wso.rec_ptr = rec_ptr;
   wso.update_len_val = len_val;
   wso.op = INSERT;
@@ -389,7 +388,6 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   if (inrs != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key, len_key);
-  cout << key << endl;
   always_assert(record, "keys must exist");
   kTI->read_set.emplace_back(ReadSetObj(record));
   *tuple = &record->tuple;
@@ -419,6 +417,7 @@ extern Status
 insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   //printf("insert: threadinfo %p\n", kTI);
+  //cout << key << endl;
   WriteSetObj* inws = kTI->search_write_set(key, len_key, INSERT);
   if (inws != nullptr) return Status::OK;
   if (MTDB.get_value(key, len_key) != nullptr) {
