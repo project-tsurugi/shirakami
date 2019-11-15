@@ -22,7 +22,7 @@ const std::size_t kValLength = 8;
 /**
  * @brief number of records.
  */
-const std::size_t kCardinality = 40;
+const std::size_t kCardinality = 50;
 
 /**
  * @brief number of operations in one transaction.
@@ -37,7 +37,7 @@ const std::size_t kNthread = 2;
 /**
  * @brief ratio of read. 0 - 100[%]
  */
-const std::size_t kRRatio = 100;
+const std::size_t kRRatio = 50;
 
 /**
  * @brief zipf skew.

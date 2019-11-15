@@ -1,4 +1,5 @@
 
+#include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
 #include "include/debug.h"
@@ -28,9 +29,12 @@ alignas(CACHE_LINE_SIZE) __thread ThreadInfo* kTI = nullptr;
 extern void
 delete_database()
 {
-  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i)
-    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr)
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr) {
       delete *itr;
+    }
+    kGarbageRecords[i].clear();
+  }
 }
 
 extern void
@@ -119,6 +123,7 @@ write_phase(TidWord max_rset, TidWord max_wset)
   TidWord maxtid = max({tid_a, tid_b, tid_c});
   maxtid.lock = 0;
   maxtid.latest = 1;
+  maxtid.epoch = kTI->epoch;
   mrctid = maxtid;
 
   for (auto iws = kTI->write_set.begin(); iws != kTI->write_set.end(); ++iws) {
@@ -155,6 +160,7 @@ write_phase(TidWord max_rset, TidWord max_wset)
   unlock_write_set(kTI->write_set);
   kTI->read_set.clear();
   kTI->write_set.clear();
+  gc_records();
 }
 
 extern Status
@@ -163,7 +169,7 @@ abort(Token token)
   unlock_write_set(kTI->write_set);
   kTI->read_set.clear();
   kTI->write_set.clear();
-
+  gc_records();
   return Status::OK;
 }
 
@@ -223,9 +229,29 @@ epocher(void *arg)
     }
 
     atomic_add_global_epoch();
+    storeRelease(kReclamationEpoch, loadAcquire(kGlobalEpoch) - 2);
   }
 
   return nullptr;
+}
+
+static void
+gc_records()
+{
+  int core_pos = sched_getcpu();
+  if (core_pos == -1) ERR;
+  std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
+  mutex_for_gclist.lock();
+  auto itr = kGarbageRecords[core_pos].begin();
+  while (itr != kGarbageRecords[core_pos].end()) {
+    if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch) && (*itr)->tuple.visible == false) {
+      delete *itr;
+      itr = kGarbageRecords[core_pos].erase(itr);
+    } else {
+      break;
+    }
+  }
+  mutex_for_gclist.unlock();
 }
 
 #ifdef WAL
@@ -273,22 +299,23 @@ commit(Token token)
   TidWord expected, desired;
   for (auto itr = kTI->write_set.begin(); itr != kTI->write_set.end(); ++itr) {
     //Record *record = itr->rec_ptr;
-    expected.obj = __atomic_load_n(&(itr->rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
+    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
     for (;;) {
       if (expected.lock) {
-        expected.obj = __atomic_load_n(&(itr->rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
+        expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
       } else {
         desired = expected;
         desired.lock = 1;
         if (__atomic_compare_exchange_n(&(itr->rec_ptr->tidw.obj), &(expected.obj), desired.obj, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
       }
     }
+    max_wset = max(max_wset, expected);
   }
 
 
   // Serialization point
   asm volatile("" ::: "memory");
-  __atomic_store_n(&kTI->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
+  storeRelease(kTI->epoch, load_acquire_ge());
   asm volatile("" ::: "memory");
 
   // Phase 3: Validation
@@ -296,18 +323,12 @@ commit(Token token)
   for (auto itr = kTI->read_set.begin(); itr != kTI->read_set.end(); itr++) {
     // Condition 1
     Record* rec_ptr = itr->rec_ptr;
-    check.obj = __atomic_load_n(&(rec_ptr->tidw.obj), __ATOMIC_ACQUIRE);
+    check.obj = loadAcquire(rec_ptr->tidw.obj);
     if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
-      unlock_write_set(kTI->write_set); 
-      kTI->read_set.clear(); 
-      kTI->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
     if (check.is_locked() && (!locked_by_me((*itr).rec_read.tuple, kTI->write_set))) {
-      unlock_write_set(kTI->write_set); 
-      kTI->read_set.clear(); 
-      kTI->write_set.clear();
       return Status::ERR_VALIDATION;
     }
     max_rset = max(max_rset, check);
@@ -372,7 +393,7 @@ leave(Token token)
       return Status::OK;
     }
   }
-
+  pthread_mutex_unlock(&kMutexThreadTable);
   return Status::WARN_NOT_IN_A_SESSION;
 }
 
@@ -424,9 +445,7 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   if (inws != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key, len_key);
-  if (!record) {
-    return Status::ERR_NOT_FOUND;
-  }
+  if (record == nullptr) return Status::ERR_NOT_FOUND;
 
   WriteSetObj wso(val, len_val, UPDATE, record);
   kTI->write_set.emplace_back(std::move(wso));

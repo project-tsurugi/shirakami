@@ -12,7 +12,7 @@ pthread_mutex_t kMutexLogList;
 pthread_mutex_t kMutexThreadTable;
 pthread_t EpochThread;
 pthread_t LogThread;
-uint64_t kGlobalEpoch(0);
+uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
 
 void

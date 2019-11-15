@@ -16,6 +16,8 @@ extern pthread_mutex_t kMutexThreadTable;
 
 extern void print_MTDB(void); 
 
+static void gc_records();
+
 class TokenForExp {
   static std::atomic<Token> token_;
 
