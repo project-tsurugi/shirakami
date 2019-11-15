@@ -16,6 +16,7 @@
 
 // kvs_charkey/test
 #include "./include/gen_tx.hh"
+#include "./include/result.hh"
 #include "./include/string.hh"
 #include "./include/ycsb.hh"
 #include "./include/ycsb_param.h"
@@ -29,7 +30,6 @@
 #include "include/header.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/random.hh"
-#include "include/result.hh"
 #include "include/scheme.h"
 #include "include/xact.hh"
 #include "include/ycsb_param.h"
@@ -180,6 +180,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   Xoroshiro128Plus rnd;
   rnd.init();
   FastZipf zipf(&rnd, kZipfSkew, kCardinality);
+  Result& myres = std::ref(res[thid]);
 
   // this function can be used in Linux environment only.
 #ifdef Linux
@@ -200,7 +201,12 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
         Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);
       }
     }
-    if (commit(token) != Status::OK) abort(token);
+    if (commit(token) == Status::OK) {
+      ++myres.local_commit_counts_;
+    } else {
+      ++myres.local_abort_counts_;
+      abort(token);
+    }
   }
   leave(token);
 }

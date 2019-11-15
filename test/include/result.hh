@@ -4,7 +4,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include "./cache_line_size.hh"
+// kvs_charkey/src/
+#include "include/cache_line_size.hh"
 
 class Result {
  public:

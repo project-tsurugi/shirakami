@@ -231,6 +231,13 @@ class OprObj { // Operations for retry by abort
   OprObj() = default;
   ~OprObj() = default;
 
+  OprObj(OP_TYPE type, char const *key, std::size_t len_key) {
+    this->type = type;
+    this->len_key = len_key;
+    this->key = std::make_unique<char[]>(len_key);
+    memcpy(this->key.get(), key, len_key);
+  }
+
   OprObj(OP_TYPE type, char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->type = type;
     this->len_key = len_key;

@@ -17,6 +17,7 @@
 #include "./include/test_param.h"
 
 // kvs_charkey/src/
+#include "include/cpu.hh"
 #include "include/debug.h"
 #include "include/xact.hh"
 
@@ -184,6 +185,10 @@ test_delete(const int token)
 static void
 test_single_operation(const int token)
 {
+#ifdef Linux
+  setThreadAffinity(0);
+  cout << sched_getcpu() << endl;
+#endif
   test_insert(token);
   test_search(token);
   test_update(token);
@@ -226,6 +231,7 @@ test(void)
   }
 
   delete_DataList();
+  delete_database();
 }
 
 namespace kvs_charkey::testing {

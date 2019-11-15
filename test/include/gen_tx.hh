@@ -25,11 +25,11 @@ gen_tx_rw(std::vector<OprObj>& opr_set, std::size_t tpnm, std::size_t opnm, std:
     uint64_t keynm = zipf() % tpnm;
     std::unique_ptr<char[]> key = std::make_unique<char[]>(kKeyLength);
     memcpy(key.get(), (std::to_string(keynm)).c_str(), kKeyLength);
-    std::unique_ptr<char[]> val = std::make_unique<char[]>(kValLength);
-    make_string(val.get(), kValLength);
     if ((rnd.next() % 100) < rratio) {
-      opr_set.emplace_back(SEARCH, key.get(), kKeyLength, val.get(), kValLength);
+      opr_set.emplace_back(SEARCH, key.get(), kKeyLength);
     } else {
+      std::unique_ptr<char[]> val = std::make_unique<char[]>(kValLength);
+      make_string(val.get(), kValLength);
       opr_set.emplace_back(UPDATE, key.get(), kKeyLength, val.get(), kValLength);
     }
   }

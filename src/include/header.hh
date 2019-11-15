@@ -42,6 +42,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <typeinfo>
 #include <vector>

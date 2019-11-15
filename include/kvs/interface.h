@@ -30,6 +30,11 @@ extern Status enter(Token& token);
 extern Status leave(Token token);
 
 /**
+ * @brief processing of beginning transaction
+ */
+extern void tbegin();
+
+/**
  * @brief silo's(SOSP2013) validation protocol.
  * @param the token retrieved by enter()
  * @return Status reporting success or fail

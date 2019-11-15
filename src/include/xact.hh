@@ -6,9 +6,8 @@
 
 using namespace std;
 
-#define EPOCH_TIME (40) // ms
-#define CLOCK_PER_US (1000)
 #define LOG_FILE "/tmp/LogFile"
+#define KVS_EPOCH_TIME 40 // ms
 
 namespace kvs {
 

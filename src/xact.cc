@@ -15,6 +15,12 @@ namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::vector<LogShell> kLogList;
 alignas(CACHE_LINE_SIZE) std::vector<ThreadInfo*> kThreadTable;
+/* kGarbageRecords is a list of garbage records.
+ * Theoretically, each worker thread has own list.
+ * But in this kvs, the position of core at which worker is may change.
+ * This is problem. It prepare enough list for experiments as pending solution.*/
+alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
+alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 /* This variable has informations about worker thread. */
 alignas(CACHE_LINE_SIZE) __thread ThreadInfo* kTI = nullptr;
@@ -22,6 +28,15 @@ alignas(CACHE_LINE_SIZE) __thread ThreadInfo* kTI = nullptr;
 extern void
 delete_database()
 {
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i)
+    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr)
+      delete *itr;
+}
+
+extern void
+tbegin()
+{
+  __atomic_store_n(&kTI->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
 }
 
 bool
@@ -118,11 +133,20 @@ write_phase(TidWord max_rset, TidWord max_wset)
         iws->rec_ptr->tuple.visible = true;
         break;
       case DELETE:
+        {
         iws->rec_ptr->tuple.visible = false;
         MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
-        delete iws->rec_ptr;
+        int core_pos = sched_getcpu();
+        if (core_pos == -1) ERR;
+        std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
+        mutex_for_gclist.lock();
+        kGarbageRecords[core_pos].emplace_back(iws->rec_ptr);
+        mutex_for_gclist.unlock();
         break;
-      default: ERR; break;
+        }
+      default:
+        ERR;
+        break;
     }
     if (iws->op != DELETE)
       __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
@@ -189,21 +213,17 @@ epocher(void *arg)
   // To increment it, 
   // all the worker-threads need to read the latest one.
   
-  uint64_t start, stop;
-
-  start = rdtsc();
   for (;;) {
-    usleep(1);
-    stop = rdtsc();
-    // chkEpochLoaded checks whether the 
+    sleepMs(KVS_EPOCH_TIME);
+
+    // check_epoch_loaded() checks whether the 
     // latest global epoch is read by all the threads
-    if (check_clock_span(start, stop, EPOCH_TIME * CLOCK_PER_US * 1000) &&
-        check_epoch_loaded()) {
-      atomic_add_global_epoch();
-      start = stop;
+    while (!check_epoch_loaded) { 
+      _mm_pause(); 
     }
+
+    atomic_add_global_epoch();
   }
-  //----------
 
   return nullptr;
 }
@@ -388,8 +408,10 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   if (inrs != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key, len_key);
+  if (record == nullptr) return Status::ERR_NOT_FOUND;
+
   always_assert(record, "keys must exist");
-  kTI->read_set.emplace_back(ReadSetObj(record));
+  kTI->read_set.emplace_back(record);
   *tuple = &record->tuple;
 
   return Status::OK;

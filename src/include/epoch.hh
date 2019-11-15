@@ -6,6 +6,7 @@
 namespace kvs {
 
 extern uint64_t kGlobalEpoch;
+extern uint64_t kReclamationEpoch;
 
 static inline uint64_t
 load_acquire_ge()
