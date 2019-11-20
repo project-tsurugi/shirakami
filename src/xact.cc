@@ -280,6 +280,7 @@ static void
 insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val, WriteSetObj& wso)
 {
   Record* rec_ptr = new Record(key, len_key, val, len_val);
+  //cout << "xact.cc : insert_normal_phase : rec_ptr : " << rec_ptr << endl;
   MTDB.insert_value(key, len_key, rec_ptr);
   wso.rec_ptr = rec_ptr;
   wso.update_len_val = len_val;
@@ -403,19 +404,17 @@ scan_key(Token token, Storage storage,
     char const *rkey, std::size_t len_rkey, bool r_exclusive,
     std::vector<Tuple*>& result)
 {
-  /*
-  lock_mutex(&kMutexDB);
-  for (auto itr = DataBase.begin(); itr != DataBase.end(); itr++) {  
-    if ((memcmp((*itr)->tuple.key, lkey, len_lkey) >= 0) &&
-        (memcmp((*itr)->tuple.key, rkey, len_rkey) <= 0) &&
-        ((*itr)->tuple.visible == true)) {
-      Tuple* tuple = new Tuple((*itr)->tuple.key, (*itr)->tuple.len_key, (*itr)->tuple.val, (*itr)->tuple.len_val);
-      result.push_back(tuple);
-      ti->read_set.push_back(ReadSetObj(*itr));
-    }
+  // as a precaution
+  result.clear();
+
+  std::vector<Record*> scan_res;
+  MTDB.scan(lkey, rkey, &scan_res);
+
+  //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
+  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
+    kTI->read_set.emplace_back(*itr);
+    result.emplace_back(&(*itr)->tuple);
   }
-  unlock_mutex(&kMutexDB);
-  */
 
   return Status::OK;
 }

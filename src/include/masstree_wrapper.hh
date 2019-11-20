@@ -4,6 +4,7 @@
 #include <iostream>
 #include <random>
 #include <thread>
+#include <typeinfo>
 #include <vector>
 
 #include <pthread.h>
@@ -31,10 +32,40 @@
 #include "../../third_party/masstree-beta/masstree_tcursor.hh"
 #include "../../third_party/masstree-beta/string.hh"
 
+using std::cout;
+using std::endl;
+
 class key_unparse_unsigned {
  public:
   static int unparse_key(Masstree::key<uint64_t> key, char* buf, int buflen) {
     return snprintf(buf, buflen, "%" PRIu64, key.ikey());
+  }
+};
+
+template <typename T>
+class SearchRangeScanner {
+public:
+  typedef Masstree::Str Str;
+  const char * const rkey_;
+  std::vector<T*>* scan_buffer_;
+
+  SearchRangeScanner(const char * const rkey, std::vector<T*>* scan_buffer) : rkey_(rkey), scan_buffer_(scan_buffer) {
+  }
+
+  template <typename SS, typename K>
+  void visit_leaf(const SS&, const K&, threadinfo&) {}
+
+  bool visit_value(const Str key, T* val, threadinfo&) {
+    if (strcmp(rkey_, key.s) > 0) {
+      scan_buffer_->emplace_back(val);
+      //cout << "typeinfo : " << typeid(val).name() << endl;
+      //cout << "masstree_wrapper : val : " << val << endl;
+      //cout << key.s << endl;
+      //cout << val->tuple.key.get() << endl;
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 
@@ -118,6 +149,12 @@ class MasstreeWrapper {
     bool found = lp.find_unlocked(*ti);
     if (found) return lp.value();
     else return nullptr;
+  }
+
+  void scan(const char * const lkey, const char * const rkey, std::vector<T*>* res) {
+    SearchRangeScanner<T> scanner(rkey, res);
+    int r = table_.scan(Str(lkey), true, scanner, *ti);
+    printf("scan result : %d\n", r);
   }
 
   void print_table() {
