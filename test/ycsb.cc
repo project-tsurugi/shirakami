@@ -91,17 +91,14 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
   MasstreeWrapper<Record>::thread_init(thid);
   enter(thid);
 
-  for (auto i = start; i <= end; ++i) {
-    std::unique_ptr<char[]> key = std::make_unique<char[]>(kKeyLength);
-    memcpy(key.get(), (std::to_string(i)).c_str(), kKeyLength);
-    //uint64_t keybs = __builtin_bswap64(i);
-    //std::unique_ptr<char[]> key = std::make_unique<char[]>(sizeof(uint64_t));
+  for (uint64_t i = start; i <= end; ++i) {
+    uint64_t keybs = __builtin_bswap64(i);
     std::unique_ptr<char[]> val = std::make_unique<char[]>(kValLength);
     make_string(val.get(), kValLength);
-    Tuple *tuple = new Tuple(key.get(), kKeyLength, val.get(), kValLength);
+    Tuple *tuple = new Tuple((char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
     Storage storage;
-    insert(thid, storage, key.get(), kKeyLength, val.get(), kValLength);
-    InsertedList[thid].push_back(tuple);
+    insert(thid, storage, (char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
+    InsertedList[thid].emplace_back(tuple);
   }
   Status result = commit(thid);
   ASSERT_TRUE(result == Status::OK);

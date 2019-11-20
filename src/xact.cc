@@ -429,7 +429,10 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   if (inrs != nullptr) return Status::OK;
 
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr) return Status::ERR_NOT_FOUND;
+  if (record == nullptr) {
+    *tuple = nullptr;
+    return Status::ERR_NOT_FOUND;
+  }
 
   always_assert(record, "keys must exist");
   kTI->read_set.emplace_back(record);
@@ -475,6 +478,9 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 extern Status
 delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
 {
+  Record* record = MTDB.get_value(key, len_key);
+  if (record == nullptr) return Status::ERR_NOT_FOUND;
+
   WriteSetObj wso(DELETE, MTDB.get_value(key, len_key));
   kTI->write_set.emplace_back(std::move(wso));
 
@@ -487,11 +493,11 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   Record* record = MTDB.get_value(key, len_key);
   WriteSetObj wso;
   
-  if (record != nullptr) {
-    wso.reset(val, len_val, UPDATE, record);
+  if (record == nullptr) {
+    insert_normal_phase(key, len_key, val, len_val, wso);
   }
   else {
-    insert_normal_phase(key, len_key, val, len_val, wso);
+    wso.reset(val, len_val, UPDATE, record);
   }
   kTI->write_set.emplace_back(std::move(wso));
 

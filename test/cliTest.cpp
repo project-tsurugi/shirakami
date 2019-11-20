@@ -48,9 +48,9 @@ delete_DataList()
 }
 
 static void
-make_string(char* string, std::size_t len)
+make_string(char* string, const std::size_t len)
 {
-    for (uint i = 0; i < len-1; i++) {
+    for (auto i = 0; i < len-1; ++i) {
         string[i] = rand() % 24 + 'a';
     }
     // if you use printf function with %s format later,

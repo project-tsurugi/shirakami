@@ -12,7 +12,7 @@ namespace ycsb_param {
 /**
  * @brief size of key.
  */
-const std::size_t kKeyLength = 16;
+const std::size_t kKeyLength = 8;
 
 /**
  * @brief size of payload.
@@ -32,7 +32,7 @@ const std::size_t kNops = 10;
 /**
  * @biref number of worker threads.
  */
-const std::size_t kNthread = 2;
+const std::size_t kNthread = 1;
 
 /**
  * @brief ratio of read. 0 - 100[%]
@@ -52,6 +52,6 @@ const std::size_t kCPUMHz = 2496;
 /**
  * @brief experimental time.
  */
-const std::size_t kExecTime = 3;
+const std::size_t kExecTime = 1;
 
 } // end of namespace ycsb_param
