@@ -280,7 +280,6 @@ static void
 insert_normal_phase(char const *key, std::size_t len_key, char const *val, std::size_t len_val, WriteSetObj& wso)
 {
   Record* rec_ptr = new Record(key, len_key, val, len_val);
-  //cout << "xact.cc : insert_normal_phase : rec_ptr : " << rec_ptr << endl;
   MTDB.insert_value(key, len_key, rec_ptr);
   wso.rec_ptr = rec_ptr;
   wso.update_len_val = len_val;
@@ -466,7 +465,6 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   WriteSetObj* inws = kTI->search_write_set(key, len_key, INSERT);
   if (inws != nullptr) return Status::OK;
   if (MTDB.get_value(key, len_key) != nullptr) {
-    NNN;
     return Status::ERR_ALREADY_EXISTS;
   }
 

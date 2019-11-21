@@ -46,6 +46,93 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(SimpleTest, update) {
+  std::string k("aaa");
+  std::string v("aaa");
+  std::string v2("bbb");
+  Token s{};
+  Storage st{};
+  ASSERT_EQ(Status::OK, enter(s));
+  ASSERT_EQ(Status::ERR_NOT_FOUND, update(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  Tuple *tuple;
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  cout << "SimpleTest : update : "
+    << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, update(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  cout << "SimpleTest : update : "
+    << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, search) {
+  std::string k("aaa");
+  std::string v("bbb");
+  Token s{};
+  Storage st{};
+  Tuple *tuple;
+  ASSERT_EQ(Status::OK, enter(s));
+  ASSERT_EQ(Status::ERR_NOT_FOUND, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, upsert) {
+  std::string k("aaa");
+  std::string v("aaa");
+  std::string v2("bbb");
+  Token s{};
+  Storage st{};
+  Tuple *tuple;
+  ASSERT_EQ(Status::OK, enter(s));
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::ERR_ALREADY_EXISTS, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, commit(s));
+  cout << "SimpleTest : upsert : "
+    << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, delete_) {
+  std::string k("aaa");
+  std::string v("aaa");
+  std::string v2("bbb");
+  Token s{};
+  Storage st{};
+  ASSERT_EQ(Status::OK, enter(s));
+  ASSERT_EQ(Status::ERR_NOT_FOUND, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::ERR_NOT_FOUND, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(SimpleTest, scan) {
   std::string k("aaa");
   std::string k2("aab");
