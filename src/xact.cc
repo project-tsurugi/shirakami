@@ -351,7 +351,10 @@ static Status
 chck_session_started(const Token token)
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if ((*itr)->token == token) return Status::WARN_ALREADY_IN_A_SESSION;
+    if ((*itr)->token == token) {
+      kTI = (*itr);
+      return Status::WARN_ALREADY_IN_A_SESSION;
+    }
   }
 
   return Status::OK;
@@ -360,17 +363,18 @@ chck_session_started(const Token token)
 extern Status
 enter(Token& token)
 {
-  ThreadInfo* ti = new ThreadInfo(token);
-  //printf("enter: gen threadinfo %p\n", ti);
-  kTI = ti;
-  
+  // initialize thread unique info.
+  // if it is already stored, it's noproblem.
+  // because it will check whether it has info.
+  MasstreeWrapper<Record>::thread_init(token);
+
   lock_mutex(&kMutexThreadTable);
   Status chk_status = chck_session_started(token);
 
   if (chk_status == Status::OK) {
-    kThreadTable.emplace_back(ti);
+    kTI = new ThreadInfo(token);
+    kThreadTable.emplace_back(kTI);
     unlock_mutex(&kMutexThreadTable);
-    MasstreeWrapper<Record>::thread_init(token);
   } else if (chk_status == Status::WARN_ALREADY_IN_A_SESSION) {
     unlock_mutex(&kMutexThreadTable);
   } else {
@@ -408,7 +412,7 @@ scan_key(Token token, Storage storage,
   result.clear();
 
   std::vector<Record*> scan_res;
-  MTDB.scan(lkey, rkey, &scan_res);
+  MTDB.scan(lkey, l_exclusive, rkey, r_exclusive, &scan_res);
 
   //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
@@ -459,8 +463,6 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
 extern Status
 insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
-  //printf("insert: threadinfo %p\n", kTI);
-  //cout << key << endl;
   WriteSetObj* inws = kTI->search_write_set(key, len_key, INSERT);
   if (inws != nullptr) return Status::OK;
   if (MTDB.get_value(key, len_key) != nullptr) {
