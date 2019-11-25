@@ -57,6 +57,11 @@ public:
   void visit_leaf(const SS&, const K&, threadinfo&) {}
 
   bool visit_value(const Str key, T* val, threadinfo&) {
+    if (rkey_ == nullptr) {
+      scan_buffer_->emplace_back(val);
+      return true;
+    }
+
     const int res_strcmp = strcmp(rkey_, key.s);
     if (res_strcmp > 0
         || res_strcmp == 0 && !r_exclusive_) {
@@ -151,8 +156,18 @@ class MasstreeWrapper {
   }
 
   void scan(const char * const lkey, const  bool l_exclusive, const char * const rkey, const bool r_exclusive, std::vector<T*>* res) {
+    Str mtkey;
+    std::unique_ptr<char[]> tmplkey;
+    if (lkey == nullptr) {
+      tmplkey = std::make_unique<char[]>(1);
+      tmplkey.get()[0] = 0;
+      mtkey = Str(tmplkey.get(), 1);
+    } else {
+      mtkey = Str(lkey);
+    }
+
     SearchRangeScanner<T> scanner(rkey, r_exclusive, res);
-    int r = table_.scan(Str(lkey), !l_exclusive, scanner, *ti);
+    int r = table_.scan(mtkey, !l_exclusive, scanner, *ti);
   }
 
   void print_table() {

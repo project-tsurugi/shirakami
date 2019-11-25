@@ -205,6 +205,48 @@ TEST_F(SimpleTest, scan) {
       << output << endl;
   }
   ASSERT_EQ(Status::OK, commit(s));
+  cout << "SimpleTest : start : scan nullptr"
+    << " - " << k3.data()
+    << " l_exclusive == false, "
+    << "r_exclusive == false" << endl;
+  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, k3.data(), k3.size(), false, records));
+  cout << "SimpleTest : records.size() " << records.size() << endl;
+  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+    std::string output((*itr)->key.get(), (*itr)->len_key);
+    cout << "SimpleTest : records["
+      << records.end() - itr
+      << "] : "
+      << output << endl;
+  }
+  ASSERT_EQ(Status::OK, commit(s));
+  cout << "SimpleTest : start : scan "
+    << k.data() << " - nullptr"
+    << " l_exclusive == false, "
+    << "r_exclusive == false" << endl;
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, nullptr, k3.size(), false, records));
+  cout << "SimpleTest : records.size() " << records.size() << endl;
+  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+    std::string output((*itr)->key.get(), (*itr)->len_key);
+    cout << "SimpleTest : records["
+      << records.end() - itr
+      << "] : "
+      << output << endl;
+  }
+  ASSERT_EQ(Status::OK, commit(s));
+  cout << "SimpleTest : start : scan "
+    << "nullptr - nullptr"
+    << " l_exclusive == false, "
+    << "r_exclusive == false" << endl;
+  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, nullptr, k3.size(), false, records));
+  cout << "SimpleTest : records.size() " << records.size() << endl;
+  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+    std::string output((*itr)->key.get(), (*itr)->len_key);
+    cout << "SimpleTest : records["
+      << records.end() - itr
+      << "] : "
+      << output << endl;
+  }
+  ASSERT_EQ(Status::OK, commit(s));
   delete_record(s, st, k.data(), k.size());
   delete_record(s, st, k2.data(), k2.size());
   delete_record(s, st, k3.data(), k3.size());
