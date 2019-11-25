@@ -143,7 +143,9 @@ extern Status update(Token token, Storage storage, char const *key, std::size_t 
  * @param storage the storage handle retrieved by register_storage() or get_storage()
  * @param key the search key
  * @param len_key indicate the key length
- * @param result output parameter to pass the found Tuple pointer.
+ * @param tuple output parameter to pass the found Tuple pointer.
+ * The ownership of the address which is pointed by the tuple is in kvs.
+ * So upper layer from kvs don't have to be care.
  * nullptr when nothing is found for the given key.
  * TODO describe until when the returned tuple pointer is valid.
  * @return Status OK if successful
