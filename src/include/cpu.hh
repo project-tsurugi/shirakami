@@ -26,7 +26,7 @@
     if (CPU < 0) CPU = 0;                                           \
   }
 
-#ifdef Linux
+#ifdef KVS_Linux
 static void setThreadAffinity(const int myid) {
   pid_t pid = syscall(SYS_gettid);
   cpu_set_t cpu_set;
@@ -39,4 +39,4 @@ static void setThreadAffinity(const int myid) {
   // printf("thread affinity (id==%d) [ok]\n", myid);
   return;
 }
-#endif  // Linux
+#endif  // KVS_Linux

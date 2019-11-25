@@ -52,7 +52,7 @@ function(register_tests)
 
             add_executable(${test_name} ${src} ${TESTS_COMMON_SOURCES})
 
-            if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+            if(CMAKE_SYSTEM_NAME MATCHES "KVS_Linux")
               add_definitions(-DLinux)
             endif()
 

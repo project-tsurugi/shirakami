@@ -185,7 +185,7 @@ test_delete(const int token)
 static void
 test_single_operation(const int token)
 {
-#ifdef Linux
+#ifdef KVS_Linux
   setThreadAffinity(0);
   cout << sched_getcpu() << endl;
 #endif
