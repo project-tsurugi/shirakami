@@ -31,6 +31,7 @@ target_link_libraries(kvs_charkey
 set_compile_options(kvs_charkey)
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
+add_definitions(-DKVS_MAX_PARALLEL_THREADS=10000)
 
 install_custom(kvs_charkey ${export_name})
 

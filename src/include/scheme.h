@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <vector>
 
+#include "cache_line_size.hh"
 #include "debug.h"
 
 // kvs_charkey/include/
@@ -256,9 +258,10 @@ class OprObj { // Operations for retry by abort
 
 class ThreadInfo {
  public:
-  Token token;
+  alignas(CACHE_LINE_SIZE)
+    Token token;
   uint64_t epoch;
-  bool visible;
+  std::atomic<bool> visible;
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
@@ -268,7 +271,7 @@ class ThreadInfo {
   }
 
   ThreadInfo() {
-    this->visible = false;
+    this->visible.store(false, std::memory_order_release);
   }
 
   /**

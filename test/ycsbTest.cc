@@ -89,7 +89,8 @@ decideParallelBuildNumber()
 void
 parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
   MasstreeWrapper<Record>::thread_init(thid);
-  enter(thid);
+  Token token;
+  enter(token);
 
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
@@ -97,13 +98,13 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
     make_string(val.get(), kValLength);
     Tuple *tuple = new Tuple((char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
     Storage storage;
-    insert(thid, storage, (char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
+    insert(token, storage, (char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
     InsertedList[thid].emplace_back(tuple);
   }
-  Status result = commit(thid);
+  Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
 
-  leave(thid);
+  leave(token);
 }
 
 void 
@@ -128,14 +129,15 @@ ycsb::build_mtdb()
 static void
 parallel_delete_mtdb(std::size_t thid)
 {
-  enter(thid);
+  Token token;
+  enter(token);
   for (auto itr = InsertedList[thid].begin(); itr != InsertedList[thid].end(); ++itr) {
     Storage storage;
-    delete_record(thid, storage, (*itr)->key.get(), (*itr)->len_key);
-    commit(thid);
+    delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
+    commit(token);
     delete *itr;
   }
-  leave(thid);
+  leave(token);
 
   InsertedList[thid].clear();
 }
@@ -187,12 +189,13 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
-  Token token(thid);
+  Token token;
   Storage storage;
   enter(token);
+  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   while (!loadAcquire(quit)) {
-    gen_tx_rw(kTI->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
-    for (auto itr = kTI->opr_set.begin(); itr != kTI->opr_set.end(); ++itr) {
+    gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
+    for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
       if ((*itr).type == SEARCH) {
         Tuple *tuple;
         Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);

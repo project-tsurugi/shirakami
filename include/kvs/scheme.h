@@ -20,7 +20,7 @@ namespace kvs {
 /**
  * @brief Session token
  */
-using Token = std::uint64_t;
+using Token = void*;
 
 /**
  * @brief Storage Handle

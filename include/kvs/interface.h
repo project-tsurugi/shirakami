@@ -32,7 +32,7 @@ extern Status leave(Token token);
 /**
  * @brief processing of beginning transaction
  */
-extern void tbegin();
+extern void tbegin(Token token);
 
 /**
  * @brief silo's(SOSP2013) validation protocol.

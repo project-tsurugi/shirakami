@@ -1,10 +1,17 @@
 
+#include "include/cache_line_size.hh"
+#include "include/cpu.hh"
 #include "include/debug.h"
+#include "include/header.hh"
 #include "include/kvs.h"
 #include "include/port.h"
+#include "include/scheme.h"
 
 #include <cstdint>
 #include "kvs/interface.h"
+
+using std::cout;
+using std::endl;
 
 namespace kvs {
 
@@ -14,6 +21,7 @@ pthread_t EpochThread;
 pthread_t LogThread;
 uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
+extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 
 void
 invoke_logger(void)
@@ -43,10 +51,21 @@ invoke_core_thread(void)
   //invoke_logger();
 }
 
+static void
+init_kThreadTable()
+{
+  cout << "init_kThreadTable : kThreadTable.size() : "
+    << kThreadTable.size() << endl;
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
+    itr->visible.store(false, std::memory_order_release);
+  }
+}
+
 extern void
 init()
 {
   init_mutex();
+  init_kThreadTable();
   invoke_core_thread();
 }
 

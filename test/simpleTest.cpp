@@ -20,10 +20,11 @@ protected:
 };
 
 TEST_F(SimpleTest, enter) {
-  Token s{};
-  ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::WARN_ALREADY_IN_A_SESSION, enter(s));
-  ASSERT_EQ(Status::OK, leave(s));
+  Token s[] = {nullptr, nullptr};
+  ASSERT_EQ(Status::OK, enter(s[0]));
+  ASSERT_EQ(Status::OK, enter(s[1]));
+  ASSERT_EQ(Status::OK, leave(s[0]));
+  ASSERT_EQ(Status::OK, leave(s[1]));
 }
 
 TEST_F(SimpleTest, leave) {
@@ -31,6 +32,7 @@ TEST_F(SimpleTest, leave) {
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::OK, leave(s));
   ASSERT_EQ(Status::WARN_NOT_IN_A_SESSION, leave(s));
+  ASSERT_EQ(Status::ERR_INVALID_ARGS, leave(nullptr));
 }
 
 TEST_F(SimpleTest, insert) {

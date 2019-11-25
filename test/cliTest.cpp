@@ -19,6 +19,7 @@
 // kvs_charkey/src/
 #include "include/cpu.hh"
 #include "include/debug.h"
+#include "include/header.hh"
 #include "include/xact.hh"
 
 #include <cstdint>
@@ -59,7 +60,7 @@ make_string(char* string, const std::size_t len)
 }
 
 static void
-exec_insert(Token token)
+exec_insert(Token token, std::size_t thnm)
 {
   std::cout << "-------------Insert-------------" << std::endl;
   for (int i = 0; i < Max_insert; i++) {
@@ -68,7 +69,7 @@ exec_insert(Token token)
     std::unique_ptr<char[]> val = std::make_unique<char[]>(Len_val);
     make_string(val.get(), Len_val);
     Tuple* tuple = new Tuple(key.get(), Len_key, val.get(), Len_val);
-    DataList[token].push_back(tuple);
+    DataList[thnm].push_back(tuple);
     Storage storage;
     insert(token, storage, key.get(), Len_key, val.get(), Len_val);
   }
@@ -78,10 +79,10 @@ exec_insert(Token token)
 }
 
 static void
-exec_search_key(Token token)
+exec_search_key(Token token, std::size_t thnm)
 {
     std::cout << "-------------Search-------------" << std::endl;
-    for (auto itr = DataList[token].begin(); itr != DataList[token].end(); ++itr) {
+    for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); ++itr) {
         Tuple* tuple;
         Storage storage;
         Status search_result = search_key(token, storage, (*itr)->key.get(), (*itr)->len_key, &tuple);
@@ -93,7 +94,7 @@ exec_search_key(Token token)
 }
 
 static void
-exec_scan_key(Token token)
+exec_scan_key(Token token, std::size_t thnm)
 {
   //std::cout << "-------------Scan-------------" << std::endl;
   while (true) {
@@ -116,10 +117,10 @@ exec_scan_key(Token token)
 }
 
 static void
-exec_update(Token token)
+exec_update(Token token, std::size_t thnm)
 {
   std::cout << "-------------Update-------------" << std::endl;
-  for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
+  for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     Storage storage;
     Status update_result = update(token, storage, (*itr)->key.get(), (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
   }
@@ -128,12 +129,12 @@ exec_update(Token token)
 }
 
 static void
-exec_delete(const Token token)
+exec_delete(const Token token, std::size_t thnm)
 {
   Storage storage;
 
   std::cout << "-------------Delete-------------" << std::endl;
-  for (auto itr = DataList[token].begin(); itr != DataList[token].end(); itr++) {
+  for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     //SSS(itr->key);
     delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
   }
@@ -142,93 +143,80 @@ exec_delete(const Token token)
 }
 
 static void
-test_insert(const int token)
+test_insert(Token token, std::size_t thnm)
 {
-    printf("[%d] insert begin\n", token);
-    exec_insert(token);
-    printf("[%d] insert done\n", token);
+    printf("[%p] insert begin\n", token);
+    exec_insert(token, thnm);
+    printf("[%p] insert done\n", token);
     print_MTDB();
 }
 
 static void
-test_update(const int token)
+test_update(Token token, std::size_t thnm)
 {
-    printf("[%d] update begin\n", token);
-    exec_update(token);
-    printf("[%d] update done\n", token);
+    printf("[%p] update begin\n", token);
+    exec_update(token, thnm);
+    printf("[%p] update done\n", token);
 }
 
 static void
-test_search(const int token)
+test_search(Token token, std::size_t thnm)
 {
-    printf("[%d] search begin\n", token);
-    exec_search_key(token);
-    printf("[%d] search done\n", token);
+    printf("[%p] search begin\n", token);
+    exec_search_key(token, thnm);
+    printf("[%p] search done\n", token);
 }
 
 static void
-test_scan(const int token)
+test_scan(Token token, std::size_t thnm)
 {
-    printf("[%d] scan begin\n", token);
-    exec_scan_key(token);
-    printf("[%d] scan done\n", token);
+    printf("[%p] scan begin\n", token);
+    exec_scan_key(token, thnm);
+    printf("[%p] scan done\n", token);
 }
 
 static void
-test_delete(const int token)
+test_delete(Token token, std::size_t thnm)
 {
-    printf("[%d] delete begin\n", token);
-    exec_delete(token);
-    printf("[%d] delete done\n", token);
+    printf("[%p] delete begin\n", token);
+    exec_delete(token, thnm);
+    printf("[%p] delete done\n", token);
 }
 
 static void
-test_single_operation(const int token)
+test_single_operation(Token token, std::size_t thnm)
 {
 #ifdef KVS_Linux
   setThreadAffinity(0);
   cout << sched_getcpu() << endl;
 #endif
-  test_insert(token);
-  test_search(token);
-  test_update(token);
-  test_delete(token);
+  test_insert(token, thnm);
+  test_search(token, thnm);
+  test_update(token, thnm);
+  test_delete(token, thnm);
   //test_scan(token);
 }
 
-static void *
-worker(void *a)
+static void
+worker(const size_t thid)
 {
-  Token token = TokenForExp::GetToken();
+  Token token;
   Status enter_result = enter(token);
   if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) ERR;
 
-  test_single_operation(token);
+  test_single_operation(token, thid);
 
   leave(token);
-  return nullptr;
-}
-
-static pthread_t
-thread_create(void)
-{
-    pthread_t t;
-    if (pthread_create(&t, NULL, worker, (void *)NULL)) ERR;
-
-    return t;
 }
 
 static void
 test(void)
 {
-  pthread_t th[Nthread];
-  for (int i = 0; i < Nthread; i++) {
-    th[i] = thread_create();
-  }
+  std::vector<std::thread> thv;
+  for (std::size_t i = 0; i < Nthread; ++i)
+    thv.emplace_back(worker, i);
 
-  for (int i = 0; i < Nthread; i++) {
-    pthread_join(th[i], NULL);
-  }
+  for (auto& th : thv) th.join();
 
   delete_DataList();
   delete_database();
