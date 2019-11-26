@@ -65,7 +65,8 @@ public:
 
     const int res_memcmp = memcmp(rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
     if (res_memcmp > 0
-        || res_memcmp == 0 && !r_exclusive_) {
+        || res_memcmp == 0 && 
+        (!r_exclusive_ && len_rkey_ == key.len || len_rkey_ > key.len)) {
       scan_buffer_->emplace_back(val);
       return true;
     } else {
@@ -158,11 +159,8 @@ class MasstreeWrapper {
 
   void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* res) {
     Str mtkey;
-    std::unique_ptr<char[]> tmplkey;
     if (lkey == nullptr) {
-      tmplkey = std::make_unique<char[]>(1);
-      tmplkey.get()[0] = 0;
-      mtkey = Str(tmplkey.get(), 1);
+      mtkey = Str(static_cast<const unsigned char*>(nullptr), static_cast<int>(0));
     } else {
       mtkey = Str(lkey, len_lkey);
     }
