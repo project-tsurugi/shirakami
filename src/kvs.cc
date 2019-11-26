@@ -54,8 +54,6 @@ invoke_core_thread(void)
 static void
 init_kThreadTable()
 {
-  cout << "init_kThreadTable : kThreadTable.size() : "
-    << kThreadTable.size() << endl;
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
   }

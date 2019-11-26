@@ -47,10 +47,11 @@ class SearchRangeScanner {
 public:
   typedef Masstree::Str Str;
   const char * const rkey_;
+  const std::size_t len_rkey_;
   const bool r_exclusive_;
   std::vector<T*>* scan_buffer_;
 
-  SearchRangeScanner(const char * const rkey, const bool r_exclusive, std::vector<T*>* scan_buffer) : rkey_(rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer) {
+  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* scan_buffer) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer) {
   }
 
   template <typename SS, typename K>
@@ -62,9 +63,9 @@ public:
       return true;
     }
 
-    const int res_strcmp = strcmp(rkey_, key.s);
-    if (res_strcmp > 0
-        || res_strcmp == 0 && !r_exclusive_) {
+    const int res_memcmp = memcmp(rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
+    if (res_memcmp > 0
+        || res_memcmp == 0 && !r_exclusive_) {
       scan_buffer_->emplace_back(val);
       return true;
     } else {
@@ -155,7 +156,7 @@ class MasstreeWrapper {
     else return nullptr;
   }
 
-  void scan(const char * const lkey, const  bool l_exclusive, const char * const rkey, const bool r_exclusive, std::vector<T*>* res) {
+  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* res) {
     Str mtkey;
     std::unique_ptr<char[]> tmplkey;
     if (lkey == nullptr) {
@@ -163,10 +164,10 @@ class MasstreeWrapper {
       tmplkey.get()[0] = 0;
       mtkey = Str(tmplkey.get(), 1);
     } else {
-      mtkey = Str(lkey);
+      mtkey = Str(lkey, len_lkey);
     }
 
-    SearchRangeScanner<T> scanner(rkey, r_exclusive, res);
+    SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res);
     int r = table_.scan(mtkey, !l_exclusive, scanner, *ti);
   }
 

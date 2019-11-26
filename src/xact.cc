@@ -387,7 +387,7 @@ scan_key(Token token, Storage storage,
   result.clear();
 
   std::vector<Record*> scan_res;
-  MTDB.scan(lkey, l_exclusive, rkey, r_exclusive, &scan_res);
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res);
 
   //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
