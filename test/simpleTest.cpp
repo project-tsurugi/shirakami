@@ -45,14 +45,22 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  char k2 = 0;
-  ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
-  ASSERT_EQ(Status::OK, commit(s));
+  {
+    Tuple *tuple;
+    char k2 = 0;
+    ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
+    ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0); 
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, delete_record(s, st, &k2, 1));
+    ASSERT_EQ(Status::OK, commit(s));
+  }
   Tuple *tuple;
-  ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0); 
+  ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, &k2, 1));
+  ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0); 
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
