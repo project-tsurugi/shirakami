@@ -160,7 +160,7 @@ class MasstreeWrapper {
   void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* res) {
     Str mtkey;
     if (lkey == nullptr) {
-      mtkey = Str(static_cast<const unsigned char*>(nullptr), static_cast<int>(0));
+      mtkey = Str();
     } else {
       mtkey = Str(lkey, len_lkey);
     }
@@ -171,10 +171,6 @@ class MasstreeWrapper {
 
   void print_table() {
     // future work.
-    /*table_.print(stdout);
-    fflush(stdout);
-    fprintf(stdout, "Stats: %s\n",
-        Masstree::json_stats(table_, ti).unparse(lcdf::Json::indent_depth(1000)).c_str());*/
   }
 
   static bool stopping;
