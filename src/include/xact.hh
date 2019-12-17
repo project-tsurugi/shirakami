@@ -1,6 +1,13 @@
+
+/**
+ * @file
+ * @brief private transaction engine interface
+ */
+
 #pragma once
 
 #include "include/header.hh"
+#include "include/scheme.h"
 
 #include "kvs/scheme.h"
 
@@ -16,6 +23,14 @@ extern pthread_mutex_t kMutexThreadTable;
 
 extern void print_MTDB(void); 
 
+/**
+ * @brief read record by using dest given by caller and store read info to res given by caller.
+ * @param [out] res it is stored read info.
+ * @param [in] dest read record pointed by this dest.
+ * @pre the dest wasn't read in the same transaction.
+ * @return void
+ */
+static void read_record(Record& res, Record* dest);
 static void gc_records();
 
 class TokenForExp {

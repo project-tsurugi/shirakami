@@ -15,6 +15,8 @@
 #include <memory>
 #include <vector>
 
+#include "include/debug.h"
+
 namespace kvs {
 
 /**
@@ -79,6 +81,8 @@ public:
     this->len_key = right.len_key;
     this->len_val = right.len_val;
     this->visible = right.visible;
+    this->key.reset();
+    this->val.reset();
     this->key = std::make_unique<char[]>(right.len_key);
     this->val = std::make_unique<char[]>(right.len_val);
     memcpy(this->key.get(), right.key.get(), right.len_key);

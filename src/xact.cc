@@ -1,4 +1,9 @@
 
+/**
+ * @file
+ * @brief impl around transaction engine interface
+ */
+
 #include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
@@ -11,6 +16,10 @@
 #include "include/xact.hh"
 
 #include "kvs/interface.h"
+
+// for output debug. finally, it should delete these.
+using std::cout;
+using std::endl;
 
 namespace kvs {
 
@@ -375,6 +384,27 @@ leave(Token token)
   return Status::ERR_INVALID_ARGS;
 }
 
+static void
+read_record(Record& res, Record* dest)
+{
+  TidWord f_check, s_check; // first_check, second_check for occ
+
+  f_check.obj = loadAcquire(dest->tidw.obj);
+
+  for (;;) {
+    while (f_check.lock)
+      f_check.obj = loadAcquire(dest->tidw.obj);
+
+    res.tuple = dest->tuple; // execute copy assign.
+
+    s_check.obj = loadAcquire(dest->tidw.obj);
+    if (f_check == s_check) break;
+    f_check = s_check;
+  }
+
+  res.tidw = f_check;
+}
+
 extern Status
 scan_key(Token token, Storage storage,
     char const *lkey, std::size_t len_lkey, bool l_exclusive,
@@ -391,7 +421,24 @@ scan_key(Token token, Storage storage,
 
   //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    ti->read_set.emplace_back(*itr);
+    WriteSetObj* inws = ti->search_write_set(*itr);
+    if (inws != nullptr) {
+      result.emplace_back(&(*itr)->tuple);
+      continue;
+    }
+    ReadSetObj* inrs = ti->search_read_set(*itr);
+    if (inrs != nullptr) {
+      result.emplace_back(&(*itr)->tuple);
+      continue;
+    }
+    // if the record was already read/update/insert in the same transaction, 
+    // the result which is record pointer is notified to caller but
+    // don't execute re-read (read_record function).
+    // Because in herbrand semantics, the read reads last update even if the update is own.
+
+    ReadSetObj rsob(*itr);
+    read_record(rsob.rec_read, *itr);
+    ti->read_set.emplace_back(std::move(rsob));
     result.emplace_back(&(*itr)->tuple);
   }
 
@@ -415,8 +462,10 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   }
 
   always_assert(record, "keys must exist");
-  ti->read_set.emplace_back(record);
-  *tuple = &record->tuple;
+  ReadSetObj rsob(record);
+  read_record(rsob.rec_read, record);
+  ti->read_set.emplace_back(std::move(rsob));
+  *tuple = &ti->read_set.back().rec_read.tuple;
 
   return Status::OK;
 }

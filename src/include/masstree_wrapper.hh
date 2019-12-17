@@ -134,13 +134,15 @@ class MasstreeWrapper {
    * object std::string buf(key). But now, if we try to do 
    * without making temporary object, it fails by masstree.
    */
-  void insert_value(const char* key, std::size_t len_key, T* value) {
+  kvs::Status insert_value(const char* key, std::size_t len_key, T* value) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
-    always_assert(!found, "keys should all be unique");
+    // always_assert(!found, "keys should all be unique");
+    if (found) return kvs::Status::ERR_ALREADY_EXISTS;
     lp.value() = value;
     fence();
     lp.finish(1, *ti);
+    return kvs::Status::OK;
   }
 
   void remove_value(const char* key, std::size_t len_key) {

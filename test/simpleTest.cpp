@@ -127,7 +127,6 @@ TEST_F(SimpleTest, upsert) {
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(Status::OK, commit(s));
   cout << "SimpleTest : upsert : "
     << std::string(tuple->val.get(), tuple->len_val) << endl;
   ASSERT_EQ(Status::OK, commit(s));

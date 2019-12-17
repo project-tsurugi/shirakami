@@ -171,8 +171,6 @@ class WriteSetObj {
       if (ret > 0) judge = false;
       else if (ret < 0) judge = true;
       else if (ret == 0) {
-        //SSS(this->tuple.key);
-        //SSS(right.tuple.key);
         ERR; // Unique key is not allowed now.
       }
     }
@@ -199,7 +197,6 @@ class ReadSetObj {
   }
 
   ReadSetObj(Record* rec_ptr) {
-    this->rec_read = *rec_ptr;
     this->rec_ptr = rec_ptr;
   }
 
@@ -276,21 +273,46 @@ class ThreadInfo {
 
   /**
    * @brief check whether it already executed search operation.
+   * @param [in] key the key of record.
+   * @param [in] len_key the key length of records.
+   * @return the pointer of element. If it is nullptr, it is not found.
    */
   ReadSetObj* search_read_set(const char* key, std::size_t len_key);
 
   /**
-   * @brief check whether it already executed write operation.
+   * @brief check whether it already executed search operation.
+   * @param [in] rec_ptr the pointer of record.
+   * @return the pointer of element. If it is nullptr, it is not found.
    */
-  WriteSetObj* search_write_set(const char* key, std::size_t len_key);
+  ReadSetObj* search_read_set(Record* rec_ptr);
+
   /**
    * @brief check whether it already executed write operation.
-   * @param op identify update or insert.
+   * @param [in] key the key of record.
+   * @param [in] len_key the key length of records.
+   * @return the pointer of element. If it is nullptr, it is not found.
+   */
+  WriteSetObj* search_write_set(const char* key, std::size_t len_key);
+
+  /**
+   * @brief check whether it already executed update/insert operation.
+   * @param [in] rec_ptr the pointer of record.
+   * @return the pointer of element. If it is nullptr, it is not found.
+   */
+  WriteSetObj* search_write_set(Record* rec_ptr);
+
+  /**
+   * @brief check whether it already executed write operation.
+   * @param [in] key the key of record.
+   * @param [in] len_key the key length of records.
+   * @param [in] op identify update or insert.
+   * @return the pointer of element. If it is nullptr, it is not found.
    */
   WriteSetObj* search_write_set(const char* key, std::size_t len_key, OP_TYPE op);
 };
 
 void print_result(struct timeval begin, struct timeval end, int nthread);
+void print_status(Status status);
 void task(int rowid);
 void lock(int rowid);
 void unlock(int rowid);

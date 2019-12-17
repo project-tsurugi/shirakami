@@ -90,6 +90,7 @@ exec_search_key(Token token, std::size_t thnm)
         // else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
     }
     Status result = commit(token);
+    print_status(result);
     ASSERT_TRUE(result == Status::OK);
 }
 
