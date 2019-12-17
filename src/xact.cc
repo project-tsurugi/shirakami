@@ -453,7 +453,10 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) return Status::OK;
   ReadSetObj* inrs = ti->search_read_set(key, len_key);
-  if (inrs != nullptr) return Status::OK;
+  if (inrs != nullptr) {
+    *tuple = &inrs->rec_read.tuple;
+    return Status::OK;
+  }
 
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) {

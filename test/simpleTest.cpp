@@ -315,7 +315,73 @@ TEST_F(SimpleTest, scan) {
   delete_record(s, st, k.data(), k.size());
   delete_record(s, st, k2.data(), k2.size());
   delete_record(s, st, k3.data(), k3.size());
+  delete_record(s, st, k6.data(), k6.size());
   commit(s);
   leave(s);
+}
+
+TEST_F(SimpleTest, scan_with_null_char) {
+  std::string k("a\0a", 3);
+  std::string k2("a\0a/", 4);
+  std::string k3("a\0a/c", 5);
+  std::string k4("a\0ab", 4);
+  std::string k5("a\0a0", 4);
+  ASSERT_EQ(3, k.size());
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k2.data(), k2.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k3.data(), k3.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k4.data(), k4.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  std::vector<Tuple*> records{};
+  ASSERT_EQ(Status::OK, scan_key(s, st, k2.data(), k2.size(), false, k5.data(), k5.size(), true, records));
+  EXPECT_EQ(2, records.size());
+  ASSERT_EQ(Status::OK, commit(s));
+  delete_record(s, st, k.data(), k.size());
+  delete_record(s, st, k2.data(), k2.size());
+  delete_record(s, st, k3.data(), k3.size());
+  delete_record(s, st, k4.data(), k4.size());
+  ASSERT_EQ(Status::OK, commit(s));
+}
+
+TEST_F(SimpleTest, scan_key_then_search_key) {
+  std::string k("a");
+  std::string k2("a/");
+  std::string k3("a/c");
+  std::string k4("b");
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  std::vector<Tuple*> records{};
+  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
+  ASSERT_EQ(Status::OK, commit(s));
+  cout << "records.size(): " << records.size() << endl;
+  for (auto itr = records.begin(); itr != records.end(); ++itr)
+    cout << std::string((*itr)->key.get(), (*itr)->len_key) << endl;
+  records.clear();
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k2.data(), k2.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k3.data(), k3.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k4.data(), k4.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(), k4.size(), true, records));
+  EXPECT_EQ(2, records.size());
+  
+  Tuple* tuple{};
+  ASSERT_EQ(Status::OK, search_key(s, st, k2.data(), k2.size(), &tuple));
+  EXPECT_NE(nullptr, tuple);
+  delete_record(s, st, k2.data(), k2.size());
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(), k4.size(), true, records));
+  EXPECT_EQ(1, records.size());
+  ASSERT_EQ(Status::OK, commit(s));
+  delete_record(s, st, k.data(), k.size());
+  delete_record(s, st, k3.data(), k3.size());
+  delete_record(s, st, k4.data(), k4.size());
+  ASSERT_EQ(Status::OK, commit(s));
 }
 }
