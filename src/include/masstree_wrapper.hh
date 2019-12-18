@@ -147,7 +147,7 @@ class MasstreeWrapper {
 
   void remove_value(const char* key, std::size_t len_key) {
     cursor_type lp(table_, key, len_key);
-    bool found = lp.find_insert(*ti);
+    bool found = lp.find_locked(*ti);
     always_assert(found, "keys must all exist");
     lp.finish(-1, *ti);
   }

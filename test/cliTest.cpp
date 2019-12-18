@@ -62,7 +62,6 @@ make_string(char* string, const std::size_t len)
 static void
 exec_insert(Token token, std::size_t thnm)
 {
-  std::cout << "-------------Insert-------------" << std::endl;
   for (int i = 0; i < Max_insert; i++) {
     std::unique_ptr<char[]> key = std::make_unique<char[]>(Len_key);
     make_string(key.get(), Len_key);
@@ -81,13 +80,10 @@ exec_insert(Token token, std::size_t thnm)
 static void
 exec_search_key(Token token, std::size_t thnm)
 {
-    std::cout << "-------------Search-------------" << std::endl;
     for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); ++itr) {
         Tuple* tuple;
         Storage storage;
         Status search_result = search_key(token, storage, (*itr)->key.get(), (*itr)->len_key, &tuple);
-        if (search_result == Status::ERR_NOT_FOUND) std::cout << "No such key" << std::endl;
-        // else if (search_result == Status::OK) printf("%s:%s\n", tuple->key, tuple->val);
     }
     Status result = commit(token);
     print_status(result);
@@ -97,7 +93,6 @@ exec_search_key(Token token, std::size_t thnm)
 static void
 exec_scan_key(Token token, std::size_t thnm)
 {
-  //std::cout << "-------------Scan-------------" << std::endl;
   while (true) {
     std::vector<Tuple*> result;
     Storage storage;
@@ -106,8 +101,6 @@ exec_scan_key(Token token, std::size_t thnm)
         (char*)"z", 1, false,
         result);
     for (auto itr = result.begin(); itr != result.end(); itr++) {
-      if ((*itr)->len_key == 0) std::cout << "No such key" << std::endl;
-        //else printf("%s:%s\n", (*itr)->key, (*itr)->val);
         delete (*itr);
     }
     Status commit_result = commit(token);
@@ -120,7 +113,6 @@ exec_scan_key(Token token, std::size_t thnm)
 static void
 exec_update(Token token, std::size_t thnm)
 {
-  std::cout << "-------------Update-------------" << std::endl;
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     Storage storage;
     Status update_result = update(token, storage, (*itr)->key.get(), (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
@@ -134,7 +126,6 @@ exec_delete(const Token token, std::size_t thnm)
 {
   Storage storage;
 
-  std::cout << "-------------Delete-------------" << std::endl;
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     //SSS(itr->key);
     delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
@@ -146,42 +137,32 @@ exec_delete(const Token token, std::size_t thnm)
 static void
 test_insert(Token token, std::size_t thnm)
 {
-    printf("[%p] insert begin\n", token);
     exec_insert(token, thnm);
-    printf("[%p] insert done\n", token);
     print_MTDB();
 }
 
 static void
 test_update(Token token, std::size_t thnm)
 {
-    printf("[%p] update begin\n", token);
     exec_update(token, thnm);
-    printf("[%p] update done\n", token);
 }
 
 static void
 test_search(Token token, std::size_t thnm)
 {
-    printf("[%p] search begin\n", token);
     exec_search_key(token, thnm);
-    printf("[%p] search done\n", token);
 }
 
 static void
 test_scan(Token token, std::size_t thnm)
 {
-    printf("[%p] scan begin\n", token);
     exec_scan_key(token, thnm);
-    printf("[%p] scan done\n", token);
 }
 
 static void
 test_delete(Token token, std::size_t thnm)
 {
-    printf("[%p] delete begin\n", token);
     exec_delete(token, thnm);
-    printf("[%p] delete done\n", token);
 }
 
 static void

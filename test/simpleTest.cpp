@@ -359,7 +359,6 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   std::vector<Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "records.size(): " << records.size() << endl;
   for (auto itr = records.begin(); itr != records.end(); ++itr)
     cout << std::string((*itr)->key.get(), (*itr)->len_key) << endl;
   records.clear();
@@ -384,4 +383,28 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   delete_record(s, st, k4.data(), k4.size());
   ASSERT_EQ(Status::OK, commit(s));
 }
+
+TEST_F(SimpleTest, insert_delete_with_16chars) { 
+  std::string k("testing_a0123456");
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  std::vector<Tuple*> records{};
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(), k.size(), false, records));
+  EXPECT_EQ(1, records.size());
+  for (auto* t : records) {
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+  }
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
+  for (auto* t : records) {
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+    NNN;
+  }
+  ASSERT_EQ(Status::OK, commit(s));
+}
+
 }
