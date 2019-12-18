@@ -319,10 +319,12 @@ commit(Token token)
     Record* rec_ptr = itr->rec_ptr;
     check.obj = loadAcquire(rec_ptr->tidw.obj);
     if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
+      abort(token);
       return Status::ERR_VALIDATION;
     }
     // Condition 3 (Cond. 2 is omitted since it is needless)
     if (check.is_locked() && (!locked_by_me((*itr).rec_read.tuple, ti->write_set))) {
+      abort(token);
       return Status::ERR_VALIDATION;
     }
     max_rset = max(max_rset, check);
