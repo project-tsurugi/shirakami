@@ -79,15 +79,13 @@ TEST_F(SimpleTest, update) {
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple;
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  cout << "SimpleTest : update : "
-       << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), tuple->len_val), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
             update(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  cout << "SimpleTest : update : "
-       << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
@@ -130,8 +128,7 @@ TEST_F(SimpleTest, upsert) {
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  cout << "SimpleTest : upsert : "
-       << std::string(tuple->val.get(), tuple->len_val) << endl;
+  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
@@ -168,8 +165,7 @@ TEST_F(SimpleTest, scan) {
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  cout << static_cast<int>(insert(s, st, nullptr, 0, v.data(), v.size()))
-       << endl;
+  ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK,
             insert(s, st, k2.data(), k2.size(), v.data(), v.size()));
@@ -179,127 +175,146 @@ TEST_F(SimpleTest, scan) {
             insert(s, st, k6.data(), k6.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<Tuple*> records{};
-  cout << "SimpleTest : typeinfo : typeid(Record).name() : "
-       << typeid(Record).name() << endl;
-  cout << "SimpleTest : typeinfo : typeid(Record*).name() : "
-       << typeid(Record*).name() << endl;
-  cout << "SimpleTest : start : scan " << k.data() << " l_exclusive == false"
-       << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k4.data(),
                                  k4.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  uint64_t ctr(0);
+  ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan " << k.data() << " l_exclusive == true"
-       << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(),
                                  k4.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan " << k.data() << " - " << k3.data()
-       << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k3.data(),
                                  k3.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan " << k.data() << " - " << k3.data()
-       << " l_exclusive == false, "
-       << "r_exclusive == true" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k3.data(),
                                  k3.size(), true, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan nullptr"
-       << " - " << k3.data() << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, k3.data(),
                                  k3.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 3)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 4)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan nullptr"
-       << " - " << k6.data() << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, k6.data(), k6.size(),
                                  false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan nullptr"
-       << " - " << k6.data() << " l_exclusive == false, "
-       << "r_exclusive == true" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, k6.data(), k6.size(),
                                  true, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 1);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan " << k.data() << " - nullptr"
-       << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, nullptr,
                                  k3.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan "
-       << "nullptr - nullptr"
-       << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, nullptr,
                                  k3.size(), false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 3)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 4)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  cout << "SimpleTest : start : scan "
-       << "nullptr - " << k5.data() << " l_exclusive == false, "
-       << "r_exclusive == false" << endl;
   ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, k5.data(), k5.size(),
                                  false, records));
-  cout << "SimpleTest : records.size() " << records.size() << endl;
+  ctr = 0;
+  ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    std::string output((*itr)->key.get(), (*itr)->len_key);
-    cout << "SimpleTest : records[" << records.end() - itr << "] : " << output
-         << endl;
+    if (ctr == 0)
+      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    else if (ctr == 1)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+    else if (ctr == 2)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    else if (ctr == 3)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+    else if (ctr == 4)
+      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+    ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
   delete_record(s, st, nullptr, 0);
@@ -436,7 +451,6 @@ TEST_F(SimpleTest, concurrent_updates) {
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
       ASSERT_NE(nullptr, t);
       v = *reinterpret_cast<std::int64_t*>(t->val.get());
-      std::cerr << "v : " << v << std::endl;
       v++;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       ASSERT_EQ(Status::OK,
@@ -471,7 +485,6 @@ TEST_F(SimpleTest, concurrent_updates) {
       S::run(rc);
       if (!rc) {
         --i;
-        std::cerr << "commit failed. retrying" << std::endl;
         continue;
       }
     }
@@ -482,7 +495,6 @@ TEST_F(SimpleTest, concurrent_updates) {
     S::run(rc);
     if (!rc) {
       --i;
-      std::cerr << "commit failed. retrying" << std::endl;
       continue;
     }
   }
@@ -500,6 +512,27 @@ TEST_F(SimpleTest, read_local_write) {
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, read_write_read) {
+  std::string k("aaa");
+  std::string v("bbb");
+  std::string v2("ccc");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  Tuple* tuple{};
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
