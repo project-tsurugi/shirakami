@@ -481,7 +481,13 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key, UPDATE);
-  if (inws != nullptr) return Status::OK;
+  if (inws != nullptr) {
+    inws->update_len_val = len_val;
+    inws->update_val_ptr.reset();
+    inws->update_val_ptr = std::make_unique<char[]>(len_val);
+    memcpy(inws->update_val_ptr.get(), val, len_val);
+    return Status::OK;
+  }
 
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) return Status::ERR_NOT_FOUND;
