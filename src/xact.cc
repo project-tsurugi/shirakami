@@ -466,7 +466,7 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr) {
+  if (unlikely(record == nullptr)) {
     *tuple = nullptr;
     return Status::ERR_NOT_FOUND;
   }
@@ -492,7 +492,7 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr) return Status::ERR_NOT_FOUND;
+  if (unlikely(record == nullptr)) return Status::ERR_NOT_FOUND;
 
   WriteSetObj wso(val, len_val, UPDATE, record);
   ti->write_set.emplace_back(std::move(wso));

@@ -25,6 +25,7 @@
 #include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
+#include "include/compiler.hh"
 #include "include/cpu.hh"
 #include "include/debug.h"
 #include "include/header.hh"
@@ -49,23 +50,23 @@ std::vector<Tuple*> InsertedList[kNthread];
 
 namespace kvs_charkey::testing {
 
-class ycsb : public ::testing::Test {
+class ycsbTest : public ::testing::Test {
 protected:
-  ycsb() {
+  ycsbTest() {
     init();
     build_mtdb();
   }
   
-  ~ycsb() {
+  ~ycsbTest() {
     delete_mtdb();
   }
 
   void build_mtdb();
   void delete_mtdb();
   void invoke_leader();
-}; // end of declaration of class ycsb.
+}; // end of declaration of class ycsbTest.
 
-TEST_F(ycsb, ycsb_exe) {
+TEST_F(ycsbTest, ycsb_exe) {
   invoke_leader();
 }
 
@@ -108,7 +109,7 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
 }
 
 void 
-ycsb::build_mtdb()
+ycsbTest::build_mtdb()
 {
   printf("ycsb::build_mtdb\n");
   std::vector<std::thread> thv;
@@ -143,7 +144,7 @@ parallel_delete_mtdb(std::size_t thid)
 }
 
 void
-ycsb::delete_mtdb()
+ycsbTest::delete_mtdb()
 {
   printf("ycsb::delete_mtdb\n");
   std::vector<std::thread> thv;
@@ -193,7 +194,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   Storage storage;
   enter(token);
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  while (!loadAcquire(quit)) {
+  while (likely(!loadAcquire(quit))) {
     tbegin(token);
     gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
     for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
@@ -215,7 +216,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
 }
 
 void
-ycsb::invoke_leader()
+ycsbTest::invoke_leader()
 {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
