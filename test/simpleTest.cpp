@@ -232,8 +232,8 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0);
+      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
     else if (ctr == 1)
       ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
@@ -250,8 +250,8 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0);
+      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
     else if (ctr == 1)
       ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
     ++ctr;
@@ -285,8 +285,8 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0);
+      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
     else if (ctr == 1)
       ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
@@ -303,8 +303,8 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0);
+      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
     else if (ctr == 1)
       ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
@@ -476,7 +476,6 @@ TEST_F(SimpleTest, concurrent_updates) {
     }
   };
 
-  std::atomic<bool> sub_thread_end(false);
   S::prepare();
   auto r1 = std::async(std::launch::async, [&] {
     for (std::size_t i = 0U; i < 5U; ++i) {
@@ -487,7 +486,6 @@ TEST_F(SimpleTest, concurrent_updates) {
         continue;
       }
     }
-    sub_thread_end.store(true, std::memory_order_release);
   });
   for (std::size_t i = 0U; i < 5U; ++i) {
     bool rc = false;
@@ -497,8 +495,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       continue;
     }
   }
-  while (!sub_thread_end.load(std::memory_order_acquire))
-    ;
+  r1.wait();
   S::verify();
 }
 
