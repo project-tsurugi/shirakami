@@ -151,6 +151,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   unlock_write_set(ti->write_set);
   ti->read_set.clear();
   ti->write_set.clear();
+  ti->notify_local_write.clear();
   gc_records();
 }
 
@@ -161,6 +162,7 @@ abort(Token token)
   unlock_write_set(ti->write_set);
   ti->read_set.clear();
   ti->write_set.clear();
+  ti->notify_local_write.clear();
   gc_records();
   return Status::OK;
 }
@@ -453,7 +455,11 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
-  if (inws != nullptr) return Status::OK;
+  if (inws != nullptr) {
+    ti->notify_local_write.emplace_back(key, len_key, inws->update_val_ptr.get(), inws->update_len_val);
+    return Status::OK;
+  }
+
   ReadSetObj* inrs = ti->search_read_set(key, len_key);
   if (inrs != nullptr) {
     *tuple = &inrs->rec_read.tuple;

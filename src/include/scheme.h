@@ -261,6 +261,12 @@ class ThreadInfo {
   std::atomic<bool> visible;
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
+  /**
+   * @brief store temporary information when 
+   * a read operation reads the value from own last update operation.
+   * It is needed because the write set doesn't have Tuple class member.
+   */
+  std::vector<Tuple> notify_local_write;
   std::vector<OprObj> opr_set;
 
   ThreadInfo(const Token token) {
