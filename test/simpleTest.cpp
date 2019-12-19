@@ -444,6 +444,7 @@ TEST_F(SimpleTest, concurrent_updates) {
                        sizeof(std::int64_t)));
       rc = Status::ERR_VALIDATION != commit(s);
       //            ASSERT_EQ(Status::OK, leave(s));
+      leave(s);
     }
     static void verify() {
       std::string k("aa");
@@ -487,6 +488,22 @@ TEST_F(SimpleTest, concurrent_updates) {
   }
   while (!sub_thread_end.load(std::memory_order_acquire));
   S::verify();
+}
+
+TEST_F(SimpleTest, read_local_write) {
+  std::string k("aaa");
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  Tuple* tuple{};
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, all_deletes) {

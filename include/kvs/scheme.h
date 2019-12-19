@@ -31,7 +31,8 @@ using Storage = std::uint64_t;
 
 enum class Status : std::int32_t {
   // example of status code - remove/add more
-  WARN_ALREADY_IN_A_SESSION = 2,
+  WARN_ALREADY_IN_A_SESSION = 3,
+  WARN_ALREADY_INSERT = 2,
   WARN_NOT_IN_A_SESSION = 1,
   OK = 0,
   ERR_UNKNOWN = -1,
