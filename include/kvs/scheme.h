@@ -15,8 +15,6 @@
 #include <memory>
 #include <vector>
 
-#include "include/debug.h"
-
 namespace kvs {
 
 /**
