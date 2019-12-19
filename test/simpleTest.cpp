@@ -262,8 +262,7 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 1);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0) ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -498,7 +497,8 @@ TEST_F(SimpleTest, concurrent_updates) {
       continue;
     }
   }
-  while (!sub_thread_end.load(std::memory_order_acquire));
+  while (!sub_thread_end.load(std::memory_order_acquire))
+    ;
   S::verify();
 }
 
@@ -530,9 +530,52 @@ TEST_F(SimpleTest, read_write_read) {
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
-  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK,
+            upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, double_write) {
+  std::string k("aaa");
+  std::string v("bbb");
+  std::string v2("ccc");
+  std::string v3("ddd");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  Tuple* tuple{};
+  ASSERT_EQ(Status::OK,
+            upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK,
+            upsert(s, st, k.data(), k.size(), v3.data(), v3.size()));
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v3.data(), v3.size()), 0);
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, double_read) {
+  std::string k("aaa");
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  Tuple* tuple{};
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));

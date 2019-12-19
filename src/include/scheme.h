@@ -178,6 +178,13 @@ class WriteSetObj {
     return judge;
   }
 
+  void reset(char const *val, std::size_t len_val) {
+    update_len_val = len_val;
+    update_val_ptr.reset();
+    update_val_ptr = std::make_unique<char[]>(len_val);
+    memcpy(update_val_ptr.get(), val, len_val);
+  }
+
   void reset(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
     update_len_val = len_val;
     update_val_ptr.reset();
