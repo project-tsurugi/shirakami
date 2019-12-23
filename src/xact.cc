@@ -218,7 +218,7 @@ epocher(void *arg)
 
     // check_epoch_loaded() checks whether the 
     // latest global epoch is read by all the threads
-    while (!check_epoch_loaded) { 
+    while (!check_epoch_loaded()) { 
       _mm_pause(); 
     }
 
