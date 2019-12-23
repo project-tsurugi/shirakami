@@ -46,28 +46,92 @@ using namespace kvs;
 using namespace ycsb_param;
 using std::cout, std::endl;
 
-std::vector<Tuple*> InsertedList[kNthread];
-
-namespace kvs_charkey::testing {
-
 class ycsbTest : public ::testing::Test {
 protected:
   ycsbTest() {
     init();
-    build_mtdb();
   }
   
   ~ycsbTest() {
-    delete_mtdb();
   }
 
-  void build_mtdb();
-  void delete_mtdb();
+  void build_mtdb(std::vector<Tuple*> *insertedList);
+  void delete_mtdb(std::vector<Tuple*> *insertedList);
   void invoke_leader();
 }; // end of declaration of class ycsbTest.
 
+static bool
+update_parameters(std::vector<std::string> &argvs) {
+  std::istringstream ss;
+  auto itr = argvs.begin();
+  for (itr; itr != argvs.end(); ++itr) {
+    if (memcmp((*itr).data(), "--use_options", 13) == 0) {
+      ++itr;
+      break;
+    }
+  }
+
+  for (; itr != argvs.end(); ++itr) {
+    try {
+      if (memcmp((*itr).data(), "-thread", strlen("-thread")) == 0) {
+        ++itr;
+        cout << "# threads is set to " << *itr << endl;
+        kNthread = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-record", strlen("-record")) == 0) {
+        ++itr;
+        cout << "# records is set to " << *itr << endl;
+        kCardinality = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-key_length", strlen("-key_length")) == 0) {
+        ++itr;
+        cout << "# length of key is set to " << *itr << endl;
+        kKeyLength = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-val_length", strlen("-val_length")) == 0) {
+        ++itr;
+        cout << "# length of val is set to " << *itr << endl;
+        kValLength = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-ops", strlen("-ops")) == 0) {
+        ++itr;
+        cout << "# operations is set to " << *itr << endl;
+        kNops = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-rratio", strlen("-rratio")) == 0) {
+        ++itr;
+        cout << "# read ratio is set to " << *itr << endl;
+        kRRatio = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-skew", strlen("-skew")) == 0) {
+        ++itr;
+        cout << "# skew is set to " << *itr << endl;
+        kZipfSkew = stod(*itr);
+      } else if (memcmp((*itr).data(), "-cpumhz", strlen("-cpumhz")) == 0) {
+        ++itr;
+        cout << "# cpuMHz is set to " << *itr << endl;
+        kCPUMHz = stoi(*itr);
+      } else if (memcmp((*itr).data(), "-exe_time", strlen("-exe_time")) == 0) {
+        ++itr;
+        cout << "# execution time is set to " << *itr << endl;
+        kExecTime = stoi(*itr);
+      } else {
+        cout << *itr << "is an an invalid option." << endl;
+        throw;
+      }
+    } catch (...) {
+      cout << "update_parameters, catch exception." << endl;
+      cout << "Usable options are -thread, -record, -key_length, -val_length -ops, -rratio, -skew, -cpumhz, -exe_time, after --use_options" << endl;
+      cout << "After an option must be valid number." << endl;
+      exit(1);
+    } 
+  }
+
+  return true;
+}
+
 TEST_F(ycsbTest, ycsb_exe) {
+  std::vector<std::string> argvs = testing::internal::GetArgvs();
+  update_parameters(argvs);
+  std::vector<Tuple*> insertedList[kNthread];
+
+  ycsbTest::build_mtdb(insertedList);
   invoke_leader();
+  ycsbTest::delete_mtdb(insertedList);
 }
 
 static size_t
@@ -88,7 +152,7 @@ decideParallelBuildNumber()
 }
 
 void
-parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
+parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::vector<Tuple*> *insertedList) {
   MasstreeWrapper<Record>::thread_init(thid);
   Token token;
   enter(token);
@@ -100,7 +164,7 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
     Tuple *tuple = new Tuple((char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
     Storage storage;
     insert(token, storage, (char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
-    InsertedList[thid].emplace_back(tuple);
+    insertedList->emplace_back(tuple);
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
@@ -109,7 +173,7 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end) {
 }
 
 void 
-ycsbTest::build_mtdb()
+ycsbTest::build_mtdb(std::vector<Tuple*> *insertedList)
 {
   printf("ycsb::build_mtdb\n");
   std::vector<std::thread> thv;
@@ -118,7 +182,7 @@ ycsbTest::build_mtdb()
   printf("start parallel_build_mtdb with %zu threads.\n", maxthread);
   fflush(stdout);
   for (size_t i = 0; i < maxthread; ++i)
-    thv.emplace_back(parallel_build_mtdb, i, i*(kCardinality / maxthread), (i+1)*(kCardinality / maxthread) - 1);
+    thv.emplace_back(parallel_build_mtdb, i, i*(kCardinality / maxthread), (i+1)*(kCardinality / maxthread) - 1, &insertedList[i]);
 
   for (auto &th : thv) th.join();
 }
@@ -128,11 +192,11 @@ ycsbTest::build_mtdb()
  * @return void
  */
 static void
-parallel_delete_mtdb(std::size_t thid)
+parallel_delete_mtdb(std::size_t thid, std::vector<Tuple*> *insertedList)
 {
   Token token;
   enter(token);
-  for (auto itr = InsertedList[thid].begin(); itr != InsertedList[thid].end(); ++itr) {
+  for (auto itr = insertedList->begin(); itr != insertedList->end(); ++itr) {
     Storage storage;
     delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
     commit(token);
@@ -140,11 +204,11 @@ parallel_delete_mtdb(std::size_t thid)
   }
   leave(token);
 
-  InsertedList[thid].clear();
+  insertedList->clear();
 }
 
 void
-ycsbTest::delete_mtdb()
+ycsbTest::delete_mtdb(std::vector<Tuple*> *insertedList)
 {
   printf("ycsb::delete_mtdb\n");
   std::vector<std::thread> thv;
@@ -153,7 +217,7 @@ ycsbTest::delete_mtdb()
   printf("start parallel_delete_mtdb with %zu threads.\n", maxthread);
   fflush(stdout);
   for (size_t i = 0; i < maxthread; ++i)
-    thv.emplace_back(parallel_delete_mtdb, i);
+    thv.emplace_back(parallel_delete_mtdb, i, &insertedList[i]);
 
   for (auto &th : thv) th.join();
 }
@@ -239,5 +303,3 @@ ycsbTest::invoke_leader()
   }
   res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
 }
-
-}  // namespace kvs_charkey::testing
