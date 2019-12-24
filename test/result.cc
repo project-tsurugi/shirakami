@@ -4,7 +4,7 @@
 #include <iostream>
 
 // kvs_charkey/src/
-#include "./include/debug.h"
+#include "./include/debug.hh"
 #include "./include/memory.hh"
 #include "./include/result.hh"
 

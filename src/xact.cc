@@ -7,7 +7,8 @@
 #include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
-#include "include/debug.h"
+#include "include/cpu.hh"
+#include "include/debug.hh"
 #include "include/epoch.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
@@ -134,6 +135,9 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
         MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
         int core_pos = sched_getcpu();
         if (core_pos == -1) ERR;
+#ifdef KVS_Linux
+        setThreadAffinity(core_pos);
+#endif
         std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
         mutex_for_gclist.lock();
         kGarbageRecords[core_pos].emplace_back(iws->rec_ptr);
@@ -212,7 +216,11 @@ epocher(void *arg)
   // Increment global epoch in each 40ms.
   // To increment it, 
   // all the worker-threads need to read the latest one.
-  
+ 
+#ifdef KVS_Linux
+  setThreadAffinity(static_cast<int>(CorePosition::EPOCHER));
+#endif
+
   for (;;) {
     sleepMs(KVS_EPOCH_TIME);
 
@@ -229,23 +237,39 @@ epocher(void *arg)
   return nullptr;
 }
 
+extern void
+forced_gc_all_records()
+{
+  for (uint i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    auto itr = kGarbageRecords[i].begin();
+    while (itr != kGarbageRecords[i].end()) {
+      delete *itr;
+      itr = kGarbageRecords[i].erase(itr);
+    }
+  }
+}
+
 static void
 gc_records()
 {
   int core_pos = sched_getcpu();
   if (core_pos == -1) ERR;
+#ifdef KVS_Linux
+  setThreadAffinity(core_pos);
+#endif
   std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
-  mutex_for_gclist.lock();
-  auto itr = kGarbageRecords[core_pos].begin();
-  while (itr != kGarbageRecords[core_pos].end()) {
-    if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch) && (*itr)->tuple.visible == false) {
-      delete *itr;
-      itr = kGarbageRecords[core_pos].erase(itr);
-    } else {
-      break;
+  if (mutex_for_gclist.try_lock()) {
+    auto itr = kGarbageRecords[core_pos].begin();
+    while (itr != kGarbageRecords[core_pos].end()) {
+      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch) && (*itr)->tuple.visible == false) {
+        delete *itr;
+        itr = kGarbageRecords[core_pos].erase(itr);
+      } else {
+        break;
+      }
     }
+    mutex_for_gclist.unlock();
   }
-  mutex_for_gclist.unlock();
 }
 
 #ifdef WAL

@@ -41,6 +41,10 @@ if(ENABLE_COVERAGE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  add_definitions(-DKVS_Linux)
+endif()
+
 function(set_compile_options target_name)
 #    target_compile_options(${target_name}
 #        PRIVATE -Wall -Wextra -Werror)

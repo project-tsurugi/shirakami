@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "cache_line_size.hh"
-#include "debug.h"
+#include "debug.hh"
 
 // kvs_charkey/include/
 #include "kvs/scheme.h"

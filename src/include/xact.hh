@@ -43,6 +43,9 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, char
  * @return void
  */
 static void read_record(Record& res, Record* dest);
+
+extern void forced_gc_all_records();
+
 static void gc_records();
 
 class TokenForExp {

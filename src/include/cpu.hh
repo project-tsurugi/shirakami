@@ -1,11 +1,14 @@
 #pragma once
 
 #include <cpuid.h>
+#include <sched.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "debug.h"
+#include <cstdint>
+
+#include "debug.hh"
 
 #define CPUID(INFO, LEAF, SUBLEAF) \
   __cpuid_count(LEAF, SUBLEAF, INFO[0], INFO[1], INFO[2], INFO[3])
@@ -39,4 +42,8 @@ static void setThreadAffinity(const int myid) {
   // printf("thread affinity (id==%d) [ok]\n", myid);
   return;
 }
+
+enum class CorePosition : std::int32_t {
+  EPOCHER = 0,
+};
 #endif  // KVS_Linux

@@ -1,7 +1,7 @@
 
 #include "include/cache_line_size.hh"
 #include "include/cpu.hh"
-#include "include/debug.h"
+#include "include/debug.hh"
 #include "include/header.hh"
 #include "include/kvs.h"
 #include "include/port.h"

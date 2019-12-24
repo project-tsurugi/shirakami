@@ -18,7 +18,7 @@
 
 // kvs_charkey/src/
 #include "include/cpu.hh"
-#include "include/debug.h"
+#include "include/debug.hh"
 #include "include/header.hh"
 #include "include/xact.hh"
 

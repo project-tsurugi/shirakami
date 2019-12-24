@@ -27,7 +27,7 @@
 #include "include/clock.hh"
 #include "include/compiler.hh"
 #include "include/cpu.hh"
-#include "include/debug.h"
+#include "include/debug.hh"
 #include "include/header.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/random.hh"

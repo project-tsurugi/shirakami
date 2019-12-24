@@ -5,6 +5,7 @@
 
 #include "include/header.hh"
 #include "include/scheme.h"
+#include "include/xact.hh"
 
 using namespace kvs;
 using std::cout;
@@ -592,6 +593,7 @@ TEST_F(SimpleTest, all_deletes) {
     ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
   }
   ASSERT_EQ(Status::OK, commit(s));
+  forced_gc_all_records();
   leave(s);
 }
 
