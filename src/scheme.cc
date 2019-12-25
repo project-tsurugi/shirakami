@@ -6,6 +6,19 @@ using std::endl;
 
 namespace kvs{
 
+Status ThreadInfo::check_delete_after_upsert(const char* key, const std::size_t len_key)
+{
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    if ((*itr).rec_ptr->tuple.len_key == len_key
+        && memcmp((*itr).rec_ptr->tuple.key.get(), key, len_key) == 0) {
+      write_set.erase(itr);
+      return Status::WARN_CANCEL_PREVIOUS_OPERATION;
+    }
+  }
+
+  return Status::OK;
+}
+
 ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {

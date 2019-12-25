@@ -23,7 +23,11 @@ TEST_F(SimpleTest, tidword) {
   tidword.epoch = 1;
   tidword.lock = 1;
   uint64_t res = tidword.obj;
-  cout << std::bitset<64>(res) << endl;
+  //cout << std::bitset<64>(res) << endl;
+}
+
+TEST_F(SimpleTest, optype) {
+  //cout << static_cast<int>(OP_TYPE::DELETE) << endl;
 }
 
 TEST_F(SimpleTest, enter) {
@@ -395,7 +399,7 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   EXPECT_EQ(2, records.size());
 
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, search_key(s, st, k2.data(), k2.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k2.data(), k2.size(), &tuple));
   EXPECT_NE(nullptr, tuple);
   delete_record(s, st, k2.data(), k2.size());
   ASSERT_EQ(Status::OK, commit(s));
@@ -516,7 +520,7 @@ TEST_F(SimpleTest, read_local_write) {
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
@@ -538,7 +542,7 @@ TEST_F(SimpleTest, read_write_read) {
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK,
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
@@ -561,7 +565,7 @@ TEST_F(SimpleTest, double_write) {
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK,
             upsert(s, st, k.data(), k.size(), v3.data(), v3.size()));
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v3.data(), v3.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
@@ -580,7 +584,7 @@ TEST_F(SimpleTest, double_read) {
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));

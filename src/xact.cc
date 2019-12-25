@@ -106,16 +106,16 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
 
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     switch (iws->op) {
-      case UPDATE:
+      case OP_TYPE::UPDATE:
         iws->rec_ptr->tuple.val.reset();
         iws->rec_ptr->tuple.val = std::move(iws->update_val_ptr);
         iws->rec_ptr->tuple.len_val = iws->update_len_val;
         __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
         break;
-      case INSERT:
+      case OP_TYPE::INSERT:
         __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
         break;
-      case DELETE:
+      case OP_TYPE::DELETE:
         {
           TidWord deletetid = maxtid;
           deletetid.absent = 1;
@@ -466,6 +466,7 @@ scan_key(Token token, Storage storage,
 
     ReadSetObj rsob(*itr);
     if (Status::OK != read_record(rsob.rec_read, *itr)) {
+      abort(token);
       return Status::ERR_ILLEGAL_STATE;
     }
     ti->read_set.emplace_back(std::move(rsob));
@@ -482,26 +483,30 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
+    if (inws->op == OP_TYPE::DELETE) {
+      return Status::WARN_ALREADY_DELETE;
+    }
     ti->notify_local_write.push_back(Tuple(key, len_key, inws->update_val_ptr.get(), inws->update_len_val));
     *tuple = &ti->notify_local_write.back();
-    return Status::OK;
+    return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   ReadSetObj* inrs = ti->search_read_set(key, len_key);
   if (inrs != nullptr) {
     *tuple = &inrs->rec_read.tuple;
-    return Status::OK;
+    return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   Record* record = MTDB.get_value(key, len_key);
   if (unlikely(record == nullptr)) {
     *tuple = nullptr;
+    abort(token);
     return Status::ERR_NOT_FOUND;
   }
 
-  always_assert(record, "keys must exist");
   ReadSetObj rsob(record);
   if (Status::OK != read_record(rsob.rec_read, record)) {
+    abort(token);
     return Status::ERR_ILLEGAL_STATE;
   }
   ti->read_set.emplace_back(std::move(rsob));
@@ -515,16 +520,19 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  WriteSetObj* inws = ti->search_write_set(key, len_key, UPDATE);
+  WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
-    return Status::OK;
+    return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (unlikely(record == nullptr)) return Status::ERR_NOT_FOUND;
+  if (unlikely(record == nullptr)) {
+    abort(token);
+    return Status::ERR_NOT_FOUND;
+  }
 
-  WriteSetObj wso(val, len_val, UPDATE, record);
+  WriteSetObj wso(val, len_val, OP_TYPE::UPDATE, record);
   ti->write_set.emplace_back(std::move(wso));
   
   return Status::OK;
@@ -535,7 +543,7 @@ extern Status
 insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  WriteSetObj* inws = ti->search_write_set(key, len_key, INSERT);
+  WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
   if (inws != nullptr) return Status::WARN_ALREADY_INSERT;
 
   if (find_record_from_masstree(key, len_key) != nullptr) {
@@ -545,7 +553,7 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 
   Record *record;
   insert_record_to_masstree(key, len_key, val, len_val, &record);
-  ti->write_set.emplace_back(val, len_val, INSERT, record);
+  ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
   return Status::OK;
 }
 
@@ -553,16 +561,19 @@ extern Status
 delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  Status check = ti->check_delete_after_upsert(key, len_key);
+
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) {
+    abort(token);
     return Status::ERR_NOT_FOUND;
   };
 
-  WriteSetObj wso(DELETE, record);
+  WriteSetObj wso(OP_TYPE::DELETE, record);
   ti->write_set.emplace_back(std::move(wso));
 
-  return Status::OK;
+  return check;
 }
 
 static Record*
@@ -585,10 +596,10 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 
   if (record == nullptr) {
     insert_record_to_masstree(key, len_key, val, len_val, &record);
-    ti->write_set.emplace_back(val, len_val, INSERT, record);
+    ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
   }
   else {
-    ti->write_set.emplace_back(val, len_val, UPDATE, record);
+    ti->write_set.emplace_back(val, len_val, OP_TYPE::UPDATE, record);
   }
 
   return Status::OK;

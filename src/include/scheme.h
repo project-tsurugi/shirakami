@@ -292,6 +292,16 @@ class ThreadInfo {
   }
 
   /**
+   * @brief check whether it already executed update or insert operation.
+   * @param [in] key the key of record.
+   * @param [in] len_key the key length of records.
+   * @pre this function is only executed in delete_record operation.
+   * @return Status::OK no update/insert before this delete_record operation.
+   * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this delete_record operation.
+   */
+  Status check_delete_after_upsert(const char* key, const std::size_t len_key);
+
+  /**
    * @brief check whether it already executed search operation.
    * @param [in] key the key of record.
    * @param [in] len_key the key length of records.

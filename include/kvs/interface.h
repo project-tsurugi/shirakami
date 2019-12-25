@@ -97,9 +97,11 @@ extern Status upsert(Token token, Storage storage, char const *key, std::size_t 
  * @param storage the storage handle retrieved by register_storage() or get_storage()
  * @param key the key of the record for deletion
  * @param len_key indicate the key length
- * @return Status ERR_NOT_FOUND if the record doesn't exist for the key
- * @return Status OK if successful
- * @return error otherwise
+ * @pre it already executed enter.
+ * @post nothing. This function never do abort.
+ * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
+ * @return Status::OK if successful
+ * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion.
  */
 extern Status delete_record(Token token, Storage storage, char const *key, std::size_t len_key);
 
@@ -131,9 +133,9 @@ extern Status insert(Token token, Storage storage, char const *key, std::size_t 
  * @param len_key indicate the key length
  * @param val the value of the updated record
  * @param len_val indicate the value length
- * @return Status OK if successful
- * @return Status ERR_NOT_FOUND if the record does not exist for the given key
- * @return error otherwise
+ * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
+ * @return Status::OK if successful
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  */
 extern Status update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val);
 
@@ -148,8 +150,10 @@ extern Status update(Token token, Storage storage, char const *key, std::size_t 
  * So upper layer from kvs don't have to be care.
  * nullptr when nothing is found for the given key.
  * TODO describe until when the returned tuple pointer is valid.
- * @return Status OK if successful
- * @return error otherwise
+ * @return Status::ERR_ILLEGAL_STATE it read the record which is inserted or deleted concurrently. it executed abort, so retry the transaction please.
+ * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
+ * @return Status::OK if successful
+ * @return Status::WARN_ALREADY_DELETE it already executed delete operation.
  */
 extern Status search_key(Token token, Storage storage, char const *key, std::size_t len_key, Tuple** tuple);
 
@@ -167,7 +171,8 @@ extern Status search_key(Token token, Storage storage, char const *key, std::siz
  * @param result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid untill commit/abort.
- * @return Status OK if successful
+ * @return Status::ERR_ILLEGAL_STATE it read the record which is inserted or deleted concurrently. it executed abort, so retry the transaction please.
+ * @return Status::OK if successful
  */
 extern Status scan_key(Token token, Storage storage,
     char const *lkey, std::size_t len_lkey, bool l_exclusive,

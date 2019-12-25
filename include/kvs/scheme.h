@@ -27,23 +27,45 @@ using Token = void*;
  */
 using Storage = std::uint64_t;
 
+/**
+ * @brief the status which is after some function.
+ *
+ * Warn is no problem for progressing.
+ * ERR is problem for progressing.
+ */
 enum class Status : std::int32_t {
   // example of status code - remove/add more
-  WARN_ALREADY_IN_A_SESSION = 3,
-  WARN_ALREADY_INSERT = 2,
-  WARN_NOT_IN_A_SESSION = 1,
-  OK = 0,
-  ERR_UNKNOWN = -1,
-  ERR_NOT_FOUND = -2,
-  ERR_ALREADY_EXISTS = -3,
-  ERR_INVALID_ARGS = -4,
-  ERR_ILLEGAL_STATE = -5,
-  ERR_VALIDATION = -6,
+  WARN_ALREADY_DELETE,
+  WARN_ALREADY_IN_A_SESSION,
+  WARN_ALREADY_INSERT,
+  // warning
+  /** this warning mean it canceled some previous operation. */
+  WARN_CANCEL_PREVIOUS_OPERATION,
+  WARN_NOT_FOUND,
+  WARN_NOT_IN_A_SESSION,
+  // warning
+  /** this warning mean it read from local read/write set. */
+  WARN_READ_FROM_OWN_OPERATION,
+  WARN_WRITE_TO_LOCAL_WRITE,
+  OK,
+  ERR_ALREADY_EXISTS,
+  ERR_ILLEGAL_STATE,
+  ERR_INVALID_ARGS,
+  ERR_NOT_FOUND,
+  ERR_UNKNOWN,
+  ERR_VALIDATION,
 };
 
-typedef enum {
-  SEARCH, UPDATE, INSERT, DELETE, UPSERT,
-  BEGIN, COMMIT, ABORT} OP_TYPE;
+enum class OP_TYPE : std::int32_t {
+  SEARCH,
+  UPDATE,
+  INSERT,
+  DELETE,
+  UPSERT,
+  BEGIN,
+  COMMIT,
+  ABORT,
+};
 
 class Tuple {
 public:
