@@ -38,9 +38,23 @@ static void setThreadAffinity(const int myid) {
   CPU_SET(myid % sysconf(_SC_NPROCESSORS_CONF), &cpu_set);
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) ERR;
-
-  // printf("thread affinity (id==%d) [ok]\n", myid);
   return;
+}
+
+static void setThreadAffinity(const cpu_set_t id) {
+  pid_t pid = syscall(SYS_gettid);
+
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) ERR;
+  return;
+}
+
+static cpu_set_t getThreadAffinity() {
+  pid_t pid = syscall(SYS_gettid);
+  cpu_set_t result;
+
+  if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) ERR;
+
+  return result;
 }
 
 enum class CorePosition : std::int32_t {

@@ -53,19 +53,6 @@ tbegin(Token token)
   __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
 }
 
-bool
-locked_by_me(Tuple tuple, std::vector<WriteSetObj>& write_set)
-{
-  for (auto iws = write_set.begin(); iws != write_set.end(); ++iws) {
-    if (iws->rec_ptr->tuple.len_key == tuple.len_key &&
-        memcmp(iws->rec_ptr->tuple.key.get(), tuple.key.get(), tuple.len_key) == 0) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 static void
 unlock_write_set(std::vector<WriteSetObj>& write_set)
 {
@@ -92,7 +79,6 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
    * and (C) in the current global epoch.
    */
   TidWord tid_a, tid_b, tid_c;
-  TidWord mrctid;
 
   /* 
    * calculates (a) 
@@ -105,7 +91,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
    * calculates (b)
    * larger than the worker's most recently chosen TID,
    */
-  tid_b = mrctid;
+  tid_b = ti->mrctid;
   tid_b.tid++;
 
   /* calculates (c) */
@@ -114,9 +100,10 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   /* compare a, b, c */
   TidWord maxtid = max({tid_a, tid_b, tid_c});
   maxtid.lock = 0;
+  maxtid.absent = 0;
   maxtid.latest = 1;
   maxtid.epoch = ti->epoch;
-  mrctid = maxtid;
+  ti->mrctid = maxtid;
 
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     switch (iws->op) {
@@ -124,32 +111,36 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
         iws->rec_ptr->tuple.val.reset();
         iws->rec_ptr->tuple.val = std::move(iws->update_val_ptr);
         iws->rec_ptr->tuple.len_val = iws->update_len_val;
-
+        __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
         break;
       case INSERT:
-        iws->rec_ptr->tuple.visible = true;
+        __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
         break;
       case DELETE:
         {
-        iws->rec_ptr->tuple.visible = false;
-        MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
-        int core_pos = sched_getcpu();
-        if (core_pos == -1) ERR;
+          TidWord deletetid = maxtid;
+          deletetid.absent = 1;
+          MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
 #ifdef KVS_Linux
-        setThreadAffinity(core_pos);
+          int core_pos = sched_getcpu();
+          if (core_pos == -1) ERR;
+          cpu_set_t current_mask = getThreadAffinity();
+          setThreadAffinity(core_pos);
 #endif
-        std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
-        mutex_for_gclist.lock();
-        kGarbageRecords[core_pos].emplace_back(iws->rec_ptr);
-        mutex_for_gclist.unlock();
-        break;
+          std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
+          mutex_for_gclist.lock();
+          kGarbageRecords[core_pos].emplace_back(iws->rec_ptr);
+          mutex_for_gclist.unlock();
+#ifdef KVS_Linux
+          setThreadAffinity(current_mask);
+#endif
+          __atomic_store_n(&(iws->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
+          break;
         }
       default:
         ERR;
         break;
     }
-    if (iws->op != DELETE)
-      __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
   }
 
   unlock_write_set(ti->write_set);
@@ -252,16 +243,17 @@ forced_gc_all_records()
 static void
 gc_records()
 {
+#ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) ERR;
-#ifdef KVS_Linux
+  cpu_set_t current_mask = getThreadAffinity();
   setThreadAffinity(core_pos);
 #endif
   std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
   if (mutex_for_gclist.try_lock()) {
     auto itr = kGarbageRecords[core_pos].begin();
     while (itr != kGarbageRecords[core_pos].end()) {
-      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch) && (*itr)->tuple.visible == false) {
+      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch)) {
         delete *itr;
         itr = kGarbageRecords[core_pos].erase(itr);
       } else {
@@ -270,6 +262,9 @@ gc_records()
     }
     mutex_for_gclist.unlock();
   }
+#ifdef KVS_Linux
+  setThreadAffinity(current_mask);
+#endif
 }
 
 #ifdef WAL
@@ -339,15 +334,11 @@ commit(Token token)
   // Phase 3: Validation
   TidWord check;
   for (auto itr = ti->read_set.begin(); itr != ti->read_set.end(); itr++) {
-    // Condition 1
     Record* rec_ptr = itr->rec_ptr;
     check.obj = loadAcquire(rec_ptr->tidw.obj);
-    if ((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid) {
-      abort(token);
-      return Status::ERR_VALIDATION;
-    }
-    // Condition 3 (Cond. 2 is omitted since it is needless)
-    if (check.is_locked() && (!locked_by_me((*itr).rec_read.tuple, ti->write_set))) {
+    if (((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid)
+        || (check.absent == 1) // check whether it was deleted.
+        || (check.lock && (ti->search_write_set((*itr).rec_ptr) == nullptr))) {
       abort(token);
       return Status::ERR_VALIDATION;
     }
@@ -410,16 +401,28 @@ leave(Token token)
   return Status::ERR_INVALID_ARGS;
 }
 
-static void
+static Status
 read_record(Record& res, Record* dest)
 {
   TidWord f_check, s_check; // first_check, second_check for occ
 
   f_check.obj = loadAcquire(dest->tidw.obj);
+  if (f_check.absent == true) {
+    return Status::ERR_ILLEGAL_STATE;
+    // other thread is inserting this record concurrently,
+    // but it is't committed yet.
+  }
 
   for (;;) {
     while (f_check.lock)
       f_check.obj = loadAcquire(dest->tidw.obj);
+
+    if (f_check.absent == true) {
+      return Status::ERR_ILLEGAL_STATE;
+      // other thread is inserting this record concurrently,
+      // but it is't committed yet.
+    }
+
 
     res.tuple = dest->tuple; // execute copy assign.
 
@@ -429,6 +432,7 @@ read_record(Record& res, Record* dest)
   }
 
   res.tidw = f_check;
+  return Status::OK;
 }
 
 extern Status
@@ -463,7 +467,9 @@ scan_key(Token token, Storage storage,
     // Because in herbrand semantics, the read reads last update even if the update is own.
 
     ReadSetObj rsob(*itr);
-    read_record(rsob.rec_read, *itr);
+    if (Status::OK != read_record(rsob.rec_read, *itr)) {
+      return Status::ERR_ILLEGAL_STATE;
+    }
     ti->read_set.emplace_back(std::move(rsob));
     result.emplace_back(&(*itr)->tuple);
   }
@@ -497,7 +503,9 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
 
   always_assert(record, "keys must exist");
   ReadSetObj rsob(record);
-  read_record(rsob.rec_read, record);
+  if (Status::OK != read_record(rsob.rec_read, record)) {
+    return Status::ERR_ILLEGAL_STATE;
+  }
   ti->read_set.emplace_back(std::move(rsob));
   *tuple = &ti->read_set.back().rec_read.tuple;
 
@@ -533,6 +541,7 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   if (inws != nullptr) return Status::WARN_ALREADY_INSERT;
 
   if (find_record_from_masstree(key, len_key) != nullptr) {
+    abort(token);
     return Status::ERR_ALREADY_EXISTS;
   }
 
@@ -548,9 +557,11 @@ delete_record(Token token, Storage storage, char const *key, std::size_t len_key
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr) return Status::ERR_NOT_FOUND;
+  if (record == nullptr) {
+    return Status::ERR_NOT_FOUND;
+  };
 
-  WriteSetObj wso(DELETE, MTDB.get_value(key, len_key));
+  WriteSetObj wso(DELETE, record);
   ti->write_set.emplace_back(std::move(wso));
 
   return Status::OK;

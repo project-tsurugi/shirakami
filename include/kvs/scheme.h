@@ -51,7 +51,6 @@ public:
   std::unique_ptr<char[]> val;
   std::size_t len_key;
   std::size_t len_val;
-  bool visible = true; // for delete, search
 
   Tuple() = default;
   ~Tuple() = default;
@@ -59,7 +58,6 @@ public:
   Tuple(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
     this->len_key = len_key;
     this->len_val = len_val;
-    this->visible = true;
     this->key = std::make_unique<char[]>(len_key);
     this->val = std::make_unique<char[]>(len_val);
     memcpy(this->key.get(), key, len_key);
@@ -69,7 +67,6 @@ public:
   Tuple(const Tuple& right) {
     this->len_key = right.len_key;
     this->len_val = right.len_val;
-    this->visible = right.visible;
     this->key = std::make_unique<char[]>(right.len_key);
     this->val = std::make_unique<char[]>(right.len_val);
     memcpy(this->key.get(), right.key.get(), right.len_key);
@@ -79,7 +76,6 @@ public:
   Tuple& operator=(const Tuple& right) {
     this->len_key = right.len_key;
     this->len_val = right.len_val;
-    this->visible = right.visible;
     this->key.reset();
     this->val.reset();
     this->key = std::make_unique<char[]>(right.len_key);

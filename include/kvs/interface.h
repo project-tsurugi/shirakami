@@ -166,12 +166,18 @@ extern Status search_key(Token token, Storage storage, char const *key, std::siz
  * @param r_exclusive indicate whether the rkey is exclusive
  * @param result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
- * TODO describe until when the returned tuple pointers are valid.
+ * Returned tuple pointers are valid untill commit/abort.
  * @return Status OK if successful
  */
 extern Status scan_key(Token token, Storage storage,
     char const *lkey, std::size_t len_lkey, bool l_exclusive,
     char const *rkey, std::size_t len_rkey, bool r_exclusive,
     std::vector<Tuple*>& result);
+
+/**
+ * @brief This function do gc all records in all containers for gc.
+ * @pre This function isn't thread safe.
+ */
+extern void forced_gc_all_records();
 
 }  // namespace kvs

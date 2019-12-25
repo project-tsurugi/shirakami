@@ -17,6 +17,14 @@ class SimpleTest : public ::testing::Test {
  protected:
   SimpleTest() { kvs::init(); }
 };
+TEST_F(SimpleTest, tidword) {
+  // check the alignment of union
+  TidWord tidword;
+  tidword.epoch = 1;
+  tidword.lock = 1;
+  uint64_t res = tidword.obj;
+  cout << std::bitset<64>(res) << endl;
+}
 
 TEST_F(SimpleTest, enter) {
   Token s[] = {nullptr, nullptr};

@@ -45,6 +45,7 @@ pipeline {
                     mkdir build
                     cd build
                     cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_SANITIZER=OFF ..
+                    make clean
                     make all -j${BUILD_PARALLEL_NUM}
                 '''
             }

@@ -40,11 +40,11 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, char
  * @pre the dest wasn't already read by itself.
  * @param [out] res it is stored read info.
  * @param [in] dest read record pointed by this dest.
- * @return void
+ * @return Status::OK, it was ended correctly.
+ * @return Status::ERR_ILLEGAL_STATE, other thread is inserting this record concurrently, 
+ * but it isn't committed yet.
  */
-static void read_record(Record& res, Record* dest);
-
-extern void forced_gc_all_records();
+static Status read_record(Record& res, Record* dest);
 
 static void gc_records();
 

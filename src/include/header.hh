@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bitset>
 #include <cstdlib>
 #include <future>
 #include <iostream>

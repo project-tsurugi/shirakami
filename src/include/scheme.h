@@ -42,9 +42,8 @@ public:
     };
   };
 
-  TidWord() {
-    obj = 0;
-  }
+  TidWord() { obj = 0; }
+  TidWord(uint64_t obj) { obj = obj; }
 
   bool operator==(const TidWord& right) const {
     return obj == right.obj;
@@ -59,6 +58,8 @@ public:
   }
 
   bool is_locked() { return lock; }
+
+  void reset() { obj = 0; }
 };
 
 /**
@@ -80,7 +81,9 @@ public:
     this->tuple.val = std::make_unique<char[]>(len_val);
     memcpy(this->tuple.key.get(), key, len_key);
     memcpy(this->tuple.val.get(), val, len_val);
-    tuple.visible = false;
+
+    tidw = TidWord();
+    tidw.absent = true;
   }
 
   Record(const Record& right) = default;
@@ -266,6 +269,7 @@ class ThreadInfo {
   alignas(CACHE_LINE_SIZE)
     Token token;
   uint64_t epoch;
+  TidWord mrctid; // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible;
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
@@ -279,10 +283,12 @@ class ThreadInfo {
 
   ThreadInfo(const Token token) {
     this->token = token;
+    mrctid.reset();
   }
 
   ThreadInfo() {
     this->visible.store(false, std::memory_order_release);
+    mrctid.reset();
   }
 
   /**
