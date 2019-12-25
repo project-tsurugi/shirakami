@@ -9,20 +9,24 @@ namespace kvs {
 
 /**
  * @brief initialize kvs environment
+ *
+ * When it starts to use this system, in other words, it starts to build database, it must be executed first.
  */
 extern void init();
 
 /**
  * @brief enter session
- * @param token output parameter to return the token
- * @return Status::OK if successful
- * @return Status::WARN_ALREADY_IN_A_SESSION if the session is already started. 
- * Existing token is assigned to token parameter.
+ * @param [out] token output parameter to return the token
+ * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.
+ * @post When it ends this session, do leave(Token token).
+ * @return Status::OK
  */
 extern Status enter(Token& token);
 
 /**
  * @brief leave session
+ *
+ * It return the objects which was got at enter function to kThreadTable.
  * @parm the token retrieved by enter()
  * @return Status::OK if successful
  * @return Status::WARN_NOT_IN_A_SESSION if the session is already ended.
@@ -30,21 +34,32 @@ extern Status enter(Token& token);
 extern Status leave(Token token);
 
 /**
- * @brief processing of beginning transaction
+ * @brief Processing of beginning transaction.
+ *
+ * It is need to decide the value of kReclamationEpoch.
+ * If it isn't used correctly, garbage collection don't work correctly, then system will fail.
+ *
  */
 extern void tbegin(Token token);
 
 /**
  * @brief silo's(SOSP2013) validation protocol.
  * @param the token retrieved by enter()
- * @return Status reporting success or fail
+ * @pre executed enter -> tbegin -> transaction operation.
+ * @post execute leave to leave the session or tbegin to start next transaction.
+ * @return Status::ERR_VALIDATION This means read validation failure and it already executed abort(). After this, do tbegin to start next transaction or leave to leave the session.
+ * @return Status::OK It commited correctly.
  */
 extern Status commit(Token token);
 
 /**
- * @brief abort and end the transaction
+ * @brief abort and end the transaction.
+ *
+ * do local set clear, try gc.
  * @param token the token retrieved by enter()
- * @return Status reporting success or fail
+ * @pre it did enter -> ... -> tbegin -> some access operation(update/insert/search/delete) or no operation
+ * @post execute leave to leave the session or tbegin to start next transaction.
+ * @return Status::OK It work correctly.
  */
 extern Status abort(Token token);
 
@@ -181,7 +196,8 @@ extern Status scan_key(Token token, Storage storage,
 
 /**
  * @brief This function do gc all records in all containers for gc.
- * @pre This function isn't thread safe.
+ *
+ * This function isn't thread safe.
  */
 extern void forced_gc_all_records();
 
