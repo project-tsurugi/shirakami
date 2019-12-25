@@ -59,7 +59,6 @@ unlock_write_set(std::vector<WriteSetObj>& write_set)
   TidWord expected, desired;
   
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if ((*itr).op == DELETE) continue;
     Record *record = itr->rec_ptr;
     expected.obj = __atomic_load_n(&(record->tidw.obj), __ATOMIC_ACQUIRE);
     desired = expected;
@@ -143,7 +142,6 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
     }
   }
 
-  unlock_write_set(ti->write_set);
   ti->read_set.clear();
   ti->write_set.clear();
   ti->notify_local_write.clear();
@@ -154,7 +152,6 @@ extern Status
 abort(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  unlock_write_set(ti->write_set);
   ti->read_set.clear();
   ti->write_set.clear();
   ti->notify_local_write.clear();
@@ -339,6 +336,7 @@ commit(Token token)
     if (((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid)
         || (check.absent == 1) // check whether it was deleted.
         || (check.lock && (ti->search_write_set((*itr).rec_ptr) == nullptr))) {
+      unlock_write_set(ti->write_set);
       abort(token);
       return Status::ERR_VALIDATION;
     }
