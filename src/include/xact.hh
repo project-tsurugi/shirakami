@@ -46,6 +46,15 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, char
  */
 static Status read_record(Record& res, Record* dest);
 
+/**
+ * @brief unlock records in write set.
+ * This function unlocked all records in write set absolutely.
+ * So it has a pre-condition.
+ * @pre It has locked all records in write set.
+ * @return void
+ */
+static void unlock_write_set(std::vector<WriteSetObj>& write_set);
+
 static void gc_records();
 
 class TokenForExp {
