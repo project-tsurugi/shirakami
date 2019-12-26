@@ -3,7 +3,7 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/header.hh"
-#include "include/kvs.h"
+#include "include/kvs.hh"
 #include "include/port.h"
 #include "include/scheme.h"
 
@@ -15,20 +15,21 @@ using std::endl;
 
 namespace kvs {
 
-pthread_t EpochThread;
+std::thread kEpochThread;
+std::atomic<bool> kEpochThreadEnd;
 uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 
-void
-invoke_epocher(void)
+static void
+invoke_epocher()
 {
-  int ret = pthread_create(&EpochThread, nullptr, epocher, nullptr);      
-  if (ret < 0) ERR;
+  kEpochThreadEnd.store(false, std::memory_order_release);
+  kEpochThread = std::thread(epocher);
 }
 
 static void
-invoke_core_thread(void)
+invoke_core_thread()
 {
   invoke_epocher();
 }
@@ -46,6 +47,13 @@ init()
 {
   init_kThreadTable();
   invoke_core_thread();
+}
+
+extern void
+fin()
+{
+  kEpochThreadEnd.store(true, std::memory_order_release);
+  kEpochThread.join();
 }
 
 }  // namespace kvs

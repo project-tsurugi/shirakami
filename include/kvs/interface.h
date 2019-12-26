@@ -15,6 +15,13 @@ namespace kvs {
 extern void init();
 
 /**
+ * @brief join core threads.
+ * @pre It already did init() and invoked core threads.
+ * @details init() did invoking core threads detached. So it is good to join those threads. This function surves that joining.
+ */
+extern void fin();
+
+/**
  * @brief enter session
  * @param [out] token output parameter to return the token
  * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.

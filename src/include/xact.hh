@@ -18,7 +18,11 @@ using namespace std;
 
 namespace kvs {
 
-extern void print_MTDB(void); 
+/**
+ * @brief epoch thread
+ * @pre this function is called by invoke_core_thread function.
+ */
+void epocher();
 
 /**
  * @brief find record from masstree by using args informations.
@@ -72,4 +76,7 @@ public:
 #ifdef DECLARE_ENTITY_TOKEN_FOR_EXP
 std::atomic<Token> TokenForExp::token_(0);
 #endif
+
+extern std::atomic<bool> kEpochThreadEnd;
+
 }  // namespace kvs

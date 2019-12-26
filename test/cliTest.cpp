@@ -86,7 +86,6 @@ exec_search_key(Token token, std::size_t thnm)
         Status search_result = search_key(token, storage, (*itr)->key.get(), (*itr)->len_key, &tuple);
     }
     Status result = commit(token);
-    print_status(result);
     ASSERT_TRUE(result == Status::OK);
 }
 
@@ -138,7 +137,6 @@ static void
 test_insert(Token token, std::size_t thnm)
 {
     exec_insert(token, thnm);
-    print_MTDB();
 }
 
 static void
@@ -170,7 +168,6 @@ test_single_operation(Token token, std::size_t thnm)
 {
 #ifdef KVS_Linux
   setThreadAffinity(0);
-  cout << sched_getcpu() << endl;
 #endif
   test_insert(token, thnm);
   test_search(token, thnm);
@@ -212,6 +209,7 @@ class cliTest : public ::testing::Test {
 TEST_F(cliTest, single_thread_test) {
   init();
   test();
+  fin();
 }
 
 }  // namespace kvs_charkey::testing

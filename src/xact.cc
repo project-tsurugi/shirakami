@@ -193,9 +193,8 @@ logger(void *arg)
   }
 }
 
-// Epoch thread
-void *
-epocher(void *arg) 
+void
+epocher() 
 {
   // Increment global epoch in each 40ms.
   // To increment it, 
@@ -205,7 +204,7 @@ epocher(void *arg)
   setThreadAffinity(static_cast<int>(CorePosition::EPOCHER));
 #endif
 
-  for (;;) {
+  while (likely(kEpochThreadEnd.load(std::memory_order_acquire) == false)) {
     sleepMs(KVS_EPOCH_TIME);
 
     // check_epoch_loaded() checks whether the 
@@ -217,8 +216,6 @@ epocher(void *arg)
     atomic_add_global_epoch();
     storeRelease(kReclamationEpoch, loadAcquire(kGlobalEpoch) - 2);
   }
-
-  return nullptr;
 }
 
 extern void
@@ -602,13 +599,6 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   }
 
   return Status::OK;
-}
-
-extern void
-print_MTDB(void)
-{
-  // Future work.
-  // MTDB.print_table();
 }
 
 } //  namespace kvs

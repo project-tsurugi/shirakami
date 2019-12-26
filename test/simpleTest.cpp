@@ -16,7 +16,9 @@ namespace kvs_charkey::testing {
 class SimpleTest : public ::testing::Test {
  protected:
   SimpleTest() { kvs::init(); }
+  ~SimpleTest() { kvs::fin(); }
 };
+
 TEST_F(SimpleTest, tidword) {
   // check the alignment of union
   TidWord tidword;
@@ -24,10 +26,6 @@ TEST_F(SimpleTest, tidword) {
   tidword.lock = 1;
   uint64_t res = tidword.obj;
   //cout << std::bitset<64>(res) << endl;
-}
-
-TEST_F(SimpleTest, optype) {
-  //cout << static_cast<int>(OP_TYPE::DELETE) << endl;
 }
 
 TEST_F(SimpleTest, enter) {

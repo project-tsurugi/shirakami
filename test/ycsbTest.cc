@@ -53,6 +53,7 @@ protected:
   }
   
   ~ycsbTest() {
+    fin();
   }
 
   void build_mtdb(std::vector<Tuple*> *insertedList);
