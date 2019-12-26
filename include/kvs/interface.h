@@ -134,8 +134,9 @@ extern void delete_database();
  * @param len_key indicate the key length
  * @param val the value of the inserted record
  * @param len_val indicate the value length
- * @return Status OK if successful
- * @return Status ERR_ALREADY_EXISTS if the record already exists for the given key
+ * @return Status::ERR_ALREADY_EXISTS if the record already exists for the given key
+ * @return Status::OK success
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  * @return error otherwise
  */
 extern Status insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val);
@@ -164,7 +165,6 @@ extern Status update(Token token, Storage storage, char const *key, std::size_t 
  * The ownership of the address which is pointed by the tuple is in kvs.
  * So upper layer from kvs don't have to be care.
  * nullptr when nothing is found for the given key.
- * TODO describe until when the returned tuple pointer is valid.
  * @return Status::ERR_ILLEGAL_STATE it read the record which is inserted or deleted concurrently. it executed abort, so retry the transaction please.
  * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
  * @return Status::OK if successful

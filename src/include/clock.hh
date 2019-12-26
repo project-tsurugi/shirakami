@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file
+ * @biref functions about clock.
+ */
+
 #include "header.hh"
 
 static bool

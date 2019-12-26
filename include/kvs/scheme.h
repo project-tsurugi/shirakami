@@ -34,7 +34,6 @@ using Storage = std::uint64_t;
  * ERR is problem for progressing.
  */
 enum class Status : std::int32_t {
-  // example of status code - remove/add more
   WARN_ALREADY_DELETE,
   WARN_ALREADY_IN_A_SESSION,
   WARN_ALREADY_INSERT,
@@ -46,13 +45,21 @@ enum class Status : std::int32_t {
   // warning
   /** this warning mean it read from local read/write set. */
   WARN_READ_FROM_OWN_OPERATION,
+  // warning
+  /** WRITE of this warning includes insert/update/upsert */
   WARN_WRITE_TO_LOCAL_WRITE,
   OK,
   ERR_ALREADY_EXISTS,
+  // error
+  /** It read absent (inserting/deleting) of a version. */
   ERR_ILLEGAL_STATE,
+  // error
+  /** It is used at leave function. It means that leave function recieved invalid token. */
   ERR_INVALID_ARGS,
   ERR_NOT_FOUND,
   ERR_UNKNOWN,
+  // error
+  /** read validation failure */
   ERR_VALIDATION,
 };
 
@@ -69,9 +76,13 @@ enum class OP_TYPE : std::int32_t {
 
 class Tuple {
 public:
+  /** key string of db. */
   std::unique_ptr<char[]> key;
+  /** val string of db. */
   std::unique_ptr<char[]> val;
+  /** length of key string of db. */
   std::size_t len_key;
+  /** length of val string of db. */
   std::size_t len_val;
 
   Tuple() = default;

@@ -544,7 +544,10 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
-  if (inws != nullptr) return Status::WARN_ALREADY_INSERT;
+  if (inws != nullptr) {
+    inws->reset(val, len_val); 
+    return Status::WARN_WRITE_TO_LOCAL_WRITE;
+  }
 
   if (find_record_from_masstree(key, len_key) != nullptr) {
     abort(token);
@@ -591,7 +594,7 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
-    return Status::OK;
+    return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
   if (record == nullptr) {
