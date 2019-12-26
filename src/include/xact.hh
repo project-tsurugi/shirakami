@@ -18,8 +18,6 @@ using namespace std;
 
 namespace kvs {
 
-extern pthread_mutex_t kMutexLogList;
-extern pthread_mutex_t kMutexThreadTable;
 extern void print_MTDB(void); 
 
 /**

@@ -164,14 +164,12 @@ check_epoch_loaded(void)
 {
   uint64_t curEpoch = load_acquire_ge();
 
-  lock_mutex(&kMutexThreadTable);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr){
-    if (loadAcquire(itr->epoch) != curEpoch) {
-      unlock_mutex(&kMutexThreadTable);
+    if (itr->visible.load(std::memory_order_acquire) == true 
+        && loadAcquire(itr->epoch) != curEpoch) {
       return false;
     }
   }
-  unlock_mutex(&kMutexThreadTable);
 
   return true;
 }
@@ -183,7 +181,6 @@ logger(void *arg)
   int fd = open(LOG_FILE, O_APPEND|O_CREAT, 0644);
   while (true) {
     uint64_t curEpoch = load_acquire_ge();
-    pthread_mutex_lock(&kMutexLogList);
     for (auto itr = kLogList.begin(); itr != kLogList.end(); itr++) {
       if (itr->epoch < curEpoch) {
         write(fd, itr->body, sizeof(LogBody) * itr->counter);
@@ -192,7 +189,6 @@ logger(void *arg)
       }
     }
     fsync(fd);
-    pthread_mutex_unlock(&kMutexLogList);
     usleep(10);
   }
 }

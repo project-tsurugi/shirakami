@@ -15,20 +15,10 @@ using std::endl;
 
 namespace kvs {
 
-pthread_mutex_t kMutexLogList;
-pthread_mutex_t kMutexThreadTable;
 pthread_t EpochThread;
-pthread_t LogThread;
 uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
-
-void
-invoke_logger(void)
-{
-  int ret = pthread_create(&LogThread, nullptr, logger, nullptr);      
-  if (ret < 0) ERR;
-}
 
 void
 invoke_epocher(void)
@@ -38,17 +28,9 @@ invoke_epocher(void)
 }
 
 static void
-init_mutex(void)
-{
-  //pthread_mutex_init(&kMutexLogList, nullptr);
-  pthread_mutex_init(&kMutexThreadTable, nullptr);
-}
-
-static void
 invoke_core_thread(void)
 {
   invoke_epocher();
-  //invoke_logger();
 }
 
 static void
@@ -62,7 +44,6 @@ init_kThreadTable()
 extern void
 init()
 {
-  init_mutex();
   init_kThreadTable();
   invoke_core_thread();
 }

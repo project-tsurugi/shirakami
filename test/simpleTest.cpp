@@ -468,8 +468,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       ASSERT_EQ(Status::OK,
                 upsert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),
                        sizeof(std::int64_t)));
-      rc = Status::ERR_VALIDATION != commit(s);
-      //            ASSERT_EQ(Status::OK, leave(s));
+      rc = (Status::OK == commit(s));
       leave(s);
     }
     static void verify() {
@@ -563,7 +562,7 @@ TEST_F(SimpleTest, double_write) {
   Tuple* tuple{};
   ASSERT_EQ(Status::OK,
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
-  ASSERT_EQ(Status::OK,
+  ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE,
             upsert(s, st, k.data(), k.size(), v3.data(), v3.size()));
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v3.data(), v3.size()), 0);
