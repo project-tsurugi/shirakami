@@ -13,17 +13,20 @@
 # limitations under the License.
 
 file(GLOB SOURCES
-    "*.cc"
-    "../test/result.cc"
+  "*.cc"
+  "../test/result.cc"
 )
 
 add_executable(ycsb
-    ${SOURCES}
+  ${SOURCES}
 )
 
+find_package(Threads REQUIRED)
+
 target_link_libraries(ycsb
-  PRIVATE kvs_charkey
-  PRIVATE kvs_charkey-impl
+  PUBLIC kvs_charkey
+  PUBLIC kvs_charkey-impl
+  PRIVATE Threads::Threads
 )
 
 target_include_directories(ycsb
