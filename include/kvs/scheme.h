@@ -61,6 +61,9 @@ enum class Status : std::int32_t {
   // error
   /** read validation failure */
   ERR_VALIDATION,
+  // error
+  /** write to deleted record. */
+  ERR_WRITE_TO_DELETED_RECORD,
 };
 
 enum class OP_TYPE : std::int32_t {

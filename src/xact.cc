@@ -53,20 +53,6 @@ tbegin(Token token)
   __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
 }
 
-static void
-unlock_write_set(std::vector<WriteSetObj>& write_set)
-{
-  TidWord expected, desired;
-  
-  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    Record *record = itr->rec_ptr;
-    expected.obj = __atomic_load_n(&(record->tidw.obj), __ATOMIC_ACQUIRE);
-    desired = expected;
-    desired.lock = 0;
-    __atomic_store_n(&(record->tidw.obj), desired.obj, __ATOMIC_RELEASE);
-  }
-}
-
 static void 
 write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
 {
@@ -312,6 +298,12 @@ commit(Token token)
         if (__atomic_compare_exchange_n(&(itr->rec_ptr->tidw.obj), &(expected.obj), desired.obj, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
       }
     }
+    if (itr->op == OP_TYPE::UPDATE && itr->rec_ptr->tidw.absent == true) {
+      ti->unlock_write_set(ti->write_set.begin(), itr);
+      abort(token);
+      return Status::ERR_WRITE_TO_DELETED_RECORD;
+    }
+
     max_wset = max(max_wset, expected);
   }
 
@@ -329,7 +321,7 @@ commit(Token token)
     if (((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid)
         || (check.absent == 1) // check whether it was deleted.
         || (check.lock && (ti->search_write_set((*itr).rec_ptr) == nullptr))) {
-      unlock_write_set(ti->write_set);
+      ti->unlock_write_set();
       abort(token);
       return Status::ERR_VALIDATION;
     }

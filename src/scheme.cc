@@ -1,4 +1,5 @@
 
+#include "include/atomic_wrapper.hh"
 #include "include/scheme.h"
 
 using std::cout;
@@ -67,6 +68,28 @@ WriteSetObj* ThreadInfo::search_write_set(Record* rec_ptr)
     if ((*itr).rec_ptr == rec_ptr) return &(*itr);
 
   return nullptr;
+}
+
+void ThreadInfo::unlock_write_set() {
+  TidWord expected, desired;
+
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+    desired = expected;
+    desired.lock = 0;
+    storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
+  }
+}
+
+void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std::vector<WriteSetObj>::iterator end) {
+  TidWord expected, desired;
+
+  for (auto itr = begin; itr != end; ++itr) {
+    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+    desired = expected;
+    desired.lock = 0;
+    storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
+  }
 }
 
 void print_status(Status status)

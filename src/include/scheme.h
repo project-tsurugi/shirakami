@@ -339,6 +339,25 @@ class ThreadInfo {
    * @return the pointer of element. If it is nullptr, it is not found.
    */
   WriteSetObj* search_write_set(const char* key, std::size_t len_key, OP_TYPE op);
+
+  /**
+   * @brief unlock records in write set.
+   *
+   * This function unlocked all records in write set absolutely.
+   * So it has a pre-condition.
+   * @pre It has locked all records in write set.
+   * @return void
+   */
+  void unlock_write_set();
+
+  /**
+   * @brief unlock write set object between @a begin and @a end.
+   * @param [in] begin Starting points.
+   * @param [in] end Ending points.
+   * @pre It already locked write set between @a begin and @a end.
+   * @return void
+   */
+  void unlock_write_set(std::vector<WriteSetObj>::iterator begin, std::vector<WriteSetObj>::iterator end);
 };
 
 void print_result(struct timeval begin, struct timeval end, int nthread);
