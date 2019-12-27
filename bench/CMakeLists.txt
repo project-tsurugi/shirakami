@@ -24,8 +24,8 @@ add_executable(ycsb
 find_package(Threads REQUIRED)
 
 target_link_libraries(ycsb
-  PUBLIC kvs_charkey
-  PUBLIC kvs_charkey-impl
+  PRIVATE kvs_charkey
+  PRIVATE kvs_charkey-impl
   PRIVATE Threads::Threads
 )
 
