@@ -57,6 +57,13 @@ enum class Status : std::int32_t {
   /** It is used at leave function. It means that leave function recieved invalid token. */
   ERR_INVALID_ARGS,
   ERR_NOT_FOUND,
+  /**
+   * @brief error
+   * @pre It did enter function.
+   * @details It did enter function, however, the maxmum number of session is working. So it can't get session.
+   * @post Try enter till success.
+   */
+  ERR_SESSION_LIMIT,
   ERR_UNKNOWN,
   // error
   /** read validation failure */

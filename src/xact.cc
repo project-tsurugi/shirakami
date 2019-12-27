@@ -344,18 +344,15 @@ static Status
 decide_token(Token& token)
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if (itr->visible.load(std::memory_order_acquire) == true) {
-      continue;
-    } else {
+    if (itr->visible.load(std::memory_order_acquire) == false) {
       bool expected(false);
       bool desired(true);
       if (itr->visible.compare_exchange_strong(expected, desired, std::memory_order_acq_rel)) {
         token = static_cast<void*>(&(*itr));
         break;
-      } else {
-        continue;
       }
     }
+    if (itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
   }
   return Status::OK;
 }
@@ -364,8 +361,7 @@ extern Status
 enter(Token& token)
 {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  decide_token(token);
-  return Status::OK;
+  return decide_token(token);
 }
 
 extern Status
