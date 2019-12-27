@@ -40,26 +40,9 @@
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
-#include "gtest/gtest.h"
-
 using namespace kvs;
 using namespace ycsb_param;
 using std::cout, std::endl;
-
-class ycsbTest : public ::testing::Test {
-protected:
-  ycsbTest() {
-    init();
-  }
-  
-  ~ycsbTest() {
-    fin();
-  }
-
-  void build_mtdb(std::vector<Tuple*> *insertedList);
-  void delete_mtdb(std::vector<Tuple*> *insertedList);
-  void invoke_leader();
-}; // end of declaration of class ycsbTest.
 
 static bool
 update_parameters(std::vector<std::string> &argvs) {
@@ -125,14 +108,16 @@ update_parameters(std::vector<std::string> &argvs) {
   return true;
 }
 
-TEST_F(ycsbTest, ycsb_exe) {
-  std::vector<std::string> argvs = testing::internal::GetArgvs();
-  update_parameters(argvs);
+int main(int argc, char* argv[]) {
+  init();
+  //std::vector<std::string> argvs = testing::internal::GetArgvs();
+  //update_parameters(argvs);
   std::vector<Tuple*> insertedList[kNthread];
 
-  ycsbTest::build_mtdb(insertedList);
+  build_mtdb(insertedList);
   invoke_leader();
-  ycsbTest::delete_mtdb(insertedList);
+  delete_mtdb(insertedList);
+  fin();
 }
 
 static size_t
@@ -152,7 +137,7 @@ decideParallelBuildNumber()
   return 1;
 }
 
-void
+static void
 parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::vector<Tuple*> *insertedList) {
   MasstreeWrapper<Record>::thread_init(thid);
   Token token;
@@ -167,14 +152,12 @@ parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::v
     insert(token, storage, (char *)&keybs, sizeof(uint64_t), val.get(), kValLength);
     insertedList->emplace_back(tuple);
   }
-  Status result = commit(token);
-  ASSERT_TRUE(result == Status::OK);
-
+  commit(token);
   leave(token);
 }
 
-void 
-ycsbTest::build_mtdb(std::vector<Tuple*> *insertedList)
+static void 
+build_mtdb(std::vector<Tuple*> *insertedList)
 {
   printf("ycsb::build_mtdb\n");
   std::vector<std::thread> thv;
@@ -188,10 +171,6 @@ ycsbTest::build_mtdb(std::vector<Tuple*> *insertedList)
   for (auto &th : thv) th.join();
 }
 
-/**
- * @brief delete InsertedList object.
- * @return void
- */
 static void
 parallel_delete_mtdb(std::size_t thid, std::vector<Tuple*> *insertedList)
 {
@@ -208,8 +187,8 @@ parallel_delete_mtdb(std::size_t thid, std::vector<Tuple*> *insertedList)
   insertedList->clear();
 }
 
-void
-ycsbTest::delete_mtdb(std::vector<Tuple*> *insertedList)
+static void
+delete_mtdb(std::vector<Tuple*> *insertedList)
 {
   printf("ycsb::delete_mtdb\n");
   std::vector<std::thread> thv;
@@ -238,7 +217,7 @@ waitForReady(const std::vector<char>& readys)
   while (!isReady(readys)) { _mm_pause(); }
 }
 
-static void
+void
 worker(const size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res)
 {
   // init work
@@ -280,8 +259,8 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   leave(token);
 }
 
-void
-ycsbTest::invoke_leader()
+static void
+invoke_leader()
 {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;

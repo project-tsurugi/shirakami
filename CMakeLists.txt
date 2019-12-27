@@ -37,6 +37,7 @@ include(CMakePackageConfigHelpers)
 include(CompileOptions)
 include(InstallOptions)
 include(Tests)
+
 if (BUILD_TESTS)
     enable_testing()
 endif()
@@ -82,6 +83,7 @@ install(
 )
 
 add_subdirectory(src)
+add_subdirectory(bench)
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
