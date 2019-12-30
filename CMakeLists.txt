@@ -31,6 +31,8 @@ option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
+find_package(gflags REQUIRED)
+find_package(glog REQUIRED)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
