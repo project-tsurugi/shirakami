@@ -25,6 +25,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if ((*itr).op == OP_TYPE::INSERT) {
       MTDB.remove_value((*itr).rec_ptr->tuple.key.get(), (*itr).rec_ptr->tuple.len_key);
+      delete (*itr).rec_ptr;
     }
   }
 }

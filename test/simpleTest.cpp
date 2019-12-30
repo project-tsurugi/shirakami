@@ -51,6 +51,8 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, abort(s));
+  ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
