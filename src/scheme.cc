@@ -1,6 +1,6 @@
 
 #include "include/atomic_wrapper.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 
 using std::cout;
 using std::endl;
@@ -18,6 +18,15 @@ Status ThreadInfo::check_delete_after_upsert(const char* key, const std::size_t 
   }
 
   return Status::OK;
+}
+
+void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
+{
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    if ((*itr).op == OP_TYPE::INSERT) {
+      MTDB.remove_value((*itr).rec_ptr->tuple.key.get(), (*itr).rec_ptr->tuple.len_key);
+    }
+  }
 }
 
 ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)

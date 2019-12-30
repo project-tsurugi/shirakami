@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief private scheme of transaction engine
+ */
+
 #pragma once
 
 #include <assert.h>
@@ -18,16 +23,17 @@
 
 #include "cache_line_size.hh"
 #include "debug.hh"
+#include "masstree_wrapper.hh"
+#include "scheme.hh"
 
 // kvs_charkey/include/
 #include "kvs/scheme.h"
 
 namespace kvs {
 
-/**
- * @file
- * @brief private scheme of transaction engine
- */
+// This declaration is prototype for directly below description.
+class Record;
+extern MasstreeWrapper<Record> MTDB;
 
 class TidWord {
 public:
@@ -302,6 +308,16 @@ class ThreadInfo {
   Status check_delete_after_upsert(const char* key, const std::size_t len_key);
 
   /**
+   * @brief Remove inserted records of write set from masstree.
+   *
+   * Insert operation inserts records to masstree in read phase. 
+   * If the transaction is aborted, the records exists for ever with absent state.
+   * So it needs to remove the inserted records of write set from masstree at abort.
+   * @pre This function is called at abort.
+   */
+  void remove_inserted_records_of_write_set_from_masstree();
+
+  /**
    * @brief check whether it already executed search operation.
    * @param [in] key the key of record.
    * @param [in] len_key the key length of records.
@@ -362,9 +378,6 @@ class ThreadInfo {
 
 void print_result(struct timeval begin, struct timeval end, int nthread);
 void print_status(Status status);
-void task(int rowid);
-void lock(int rowid);
-void unlock(int rowid);
 
 }  // namespace kvs
 

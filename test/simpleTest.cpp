@@ -4,7 +4,7 @@
 #include "kvs/interface.h"
 
 #include "include/header.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 #include "include/xact.hh"
 
 using namespace kvs;

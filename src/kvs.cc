@@ -5,7 +5,7 @@
 #include "include/header.hh"
 #include "include/kvs.hh"
 #include "include/port.h"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 
 #include <cstdint>
 #include "kvs/interface.h"

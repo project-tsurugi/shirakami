@@ -31,7 +31,7 @@
 #include "include/header.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/random.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 #include "include/xact.hh"
 #include "include/ycsb_param.h"
 #include "include/zipf.hh"

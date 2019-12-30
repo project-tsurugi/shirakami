@@ -193,6 +193,12 @@ template <typename T>
 bool MasstreeWrapper<T>::stopping = false;
 template <typename T>
 uint32_t MasstreeWrapper<T>::printing = 0;
+#ifdef GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 volatile mrcu_epoch_type active_epoch = 1;
 volatile uint64_t globalepoch = 1;
 volatile bool recovering = false;
+#else
+extern volatile mrcu_epoch_type active_epoch;
+extern volatile uint64_t globalepoch;
+extern volatile bool recovering;
+#endif

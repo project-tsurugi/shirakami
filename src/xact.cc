@@ -10,9 +10,10 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/epoch.hh"
+#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/masstree_wrapper.hh"
 #include "include/mutex.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 #include "include/tsc.hh"
 #include "include/xact.hh"
 
@@ -139,6 +140,7 @@ abort(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   ti->read_set.clear();
+  ti->remove_inserted_records_of_write_set_from_masstree();
   ti->write_set.clear();
   ti->notify_local_write.clear();
   gc_records();
@@ -266,12 +268,19 @@ exec_logging(std::vector<Record> write_set, const int myid)
 #endif
 
 static void
-insert_record_to_masstree(char const *key, std::size_t len_key, char const *val, std::size_t len_val, Record** record)
+insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
 {
+#ifdef KVS_Linux
+  int core_pos = sched_getcpu();
+  if (core_pos == -1) ERR;
+  cpu_set_t current_mask = getThreadAffinity();
+  setThreadAffinity(core_pos);
+#endif
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  Record* rec_ptr = new Record(key, len_key, val, len_val);
-  MTDB.insert_value(key, len_key, rec_ptr);
-  *record = rec_ptr;
+  MTDB.insert_value(key, len_key, record);
+#ifdef KVS_Linux
+  setThreadAffinity(current_mask);
+#endif
 }
 
 extern Status
@@ -535,8 +544,8 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
     return Status::ERR_ALREADY_EXISTS;
   }
 
-  Record *record;
-  insert_record_to_masstree(key, len_key, val, len_val, &record);
+  Record* record = new Record(key, len_key, val, len_val);
+  insert_record_to_masstree(key, len_key, record);
   ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
   return Status::OK;
 }
@@ -579,7 +588,8 @@ upsert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   }
 
   if (record == nullptr) {
-    insert_record_to_masstree(key, len_key, val, len_val, &record);
+    record = new Record(key, len_key, val, len_val);
+    insert_record_to_masstree(key, len_key, record);
     ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
   }
   else {

@@ -10,7 +10,7 @@
 
 // kvs_charkey/src/
 #include "include/random.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 #include "include/zipf.hh"
 
 using namespace kvs;

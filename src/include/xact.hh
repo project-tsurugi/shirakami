@@ -7,7 +7,7 @@
 #pragma once
 
 #include "include/header.hh"
-#include "include/scheme.h"
+#include "include/scheme.hh"
 
 #include "kvs/scheme.h"
 
@@ -33,9 +33,9 @@ static Record* find_record_from_masstree(char const *key, std::size_t len_key);
 /**
  * @brief insert record to masstree by using args informations.
  * @pre the record which has the same key as the key of args have never been inserted.
- * @param record it is used for notifing the inserted pointer.
+ * @param record It inserts this pointer to masstree database.
  */
-static void insert_record_to_masstree(char const *key, std::size_t len_key, char const *val, std::size_t len_val, Record** record);
+static void insert_record_to_masstree(char const *key, std::size_t len_key, Record* record);
 
 /**
  * @brief read record by using dest given by caller and store read info to res given by caller.
