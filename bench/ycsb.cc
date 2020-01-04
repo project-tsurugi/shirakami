@@ -15,8 +15,10 @@
  */
 
 // kvs_charkey/test
+#include "include/result.hh"
+
+// kvs_charkey/bench
 #include "./include/gen_tx.hh"
-#include "./include/result.hh"
 #include "./include/string.hh"
 #include "./include/ycsb.hh"
 #include "./include/ycsb_param.h"
@@ -40,78 +42,91 @@
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+
 using namespace kvs;
 using namespace ycsb_param;
-using std::cout, std::endl;
+using std::cout, std::endl, std::cerr;
 
-static bool
-update_parameters(std::vector<std::string> &argvs) {
-  std::istringstream ss;
-  auto itr = argvs.begin();
-  for (itr; itr != argvs.end(); ++itr) {
-    if (memcmp((*itr).data(), "--use_options", 13) == 0) {
-      ++itr;
-      break;
-    }
+DEFINE_uint64(thread, 1, "# worker threads.");
+DEFINE_uint64(record, 1000, "# database records(tuples).");
+DEFINE_uint64(key_length, 8, "# length of key.");
+DEFINE_uint64(val_length, 8, "# length of value(payload).");
+DEFINE_uint64(ops, 10, "# operations per a transaction.");
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");
+DEFINE_double(skew, 0.0, "access skew of transaction.");
+DEFINE_uint64(cpumhz, 2000, "# cpu MHz of execution environment. It is used measuring some time.");
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
+
+static void
+load_flags()
+{
+  if (FLAGS_thread >= 1) {
+    kNthread = FLAGS_thread;
+  } else {
+    cerr << "Number of threads must be larger than 0." << std::endl;
+    exit(1);
   }
-
-  for (; itr != argvs.end(); ++itr) {
-    try {
-      if (memcmp((*itr).data(), "-thread", strlen("-thread")) == 0) {
-        ++itr;
-        cout << "# threads is set to " << *itr << endl;
-        kNthread = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-record", strlen("-record")) == 0) {
-        ++itr;
-        cout << "# records is set to " << *itr << endl;
-        kCardinality = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-key_length", strlen("-key_length")) == 0) {
-        ++itr;
-        cout << "# length of key is set to " << *itr << endl;
-        kKeyLength = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-val_length", strlen("-val_length")) == 0) {
-        ++itr;
-        cout << "# length of val is set to " << *itr << endl;
-        kValLength = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-ops", strlen("-ops")) == 0) {
-        ++itr;
-        cout << "# operations is set to " << *itr << endl;
-        kNops = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-rratio", strlen("-rratio")) == 0) {
-        ++itr;
-        cout << "# read ratio is set to " << *itr << endl;
-        kRRatio = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-skew", strlen("-skew")) == 0) {
-        ++itr;
-        cout << "# skew is set to " << *itr << endl;
-        kZipfSkew = stod(*itr);
-      } else if (memcmp((*itr).data(), "-cpumhz", strlen("-cpumhz")) == 0) {
-        ++itr;
-        cout << "# cpuMHz is set to " << *itr << endl;
-        kCPUMHz = stoi(*itr);
-      } else if (memcmp((*itr).data(), "-exe_time", strlen("-exe_time")) == 0) {
-        ++itr;
-        cout << "# execution time is set to " << *itr << endl;
-        kExecTime = stoi(*itr);
-      } else {
-        cout << *itr << "is an an invalid option." << endl;
-        throw;
-      }
-    } catch (...) {
-      cout << "update_parameters, catch exception." << endl;
-      cout << "Usable options are -thread, -record, -key_length, -val_length -ops, -rratio, -skew, -cpumhz, -exe_time, after --use_options" << endl;
-      cout << "After an option must be valid number." << endl;
-      exit(1);
-    } 
+  if (FLAGS_record > 1) {
+    kCardinality = FLAGS_record;
+  } else {
+    cerr << "Number of database records(tuples) must be large than 0." << endl;
+    exit(1);
   }
-
-  return true;
+  if (FLAGS_key_length > 1 && FLAGS_key_length % 8 == 0) {
+    kKeyLength = FLAGS_key_length;
+  } else {
+    cerr << "Length of key must be larger than 0 and be divisible by 8." << endl;
+    exit(1);
+  }
+  if (FLAGS_val_length > 1) {
+    kValLength = FLAGS_val_length;
+  } else {
+    cerr << "Length of val must be larger than 0." << endl;
+    exit(1);
+  }
+  if (FLAGS_ops > 1) {
+    kNops = FLAGS_ops;
+  } else {
+    cerr << "Number of operations in a transaction must be larger than 0." << endl;
+    exit(1);
+  }
+  if (FLAGS_rratio >= 0 && FLAGS_rratio <= 100) {
+    kRRatio = FLAGS_rratio;
+  } else {
+    cerr << "Rate of reads in a transaction must be in the range 0 to 100." << endl;
+    exit(1);
+  }
+  if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
+    kZipfSkew = FLAGS_skew;
+  } else {
+    cerr << "Access skew of transaction must be in the range 0 to 0.999... ." << endl;
+    exit(1);
+  }
+  if (FLAGS_cpumhz > 1) {
+    kCPUMHz = FLAGS_cpumhz;
+  } else {
+    cerr << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0." << endl;
+    exit(1);
+  }
+  if (FLAGS_duration >= 1) {
+    kExecTime = FLAGS_duration;
+  } else {
+    cerr << "Duration of benchmark in seconds must be larger than 0." << endl;
+    exit(1);
+  }
 }
 
-int main(int argc, char* argv[]) {
+
+int 
+main(int argc, char* argv[]) 
+{
+  gflags::SetUsageMessage("YCSB benchmark for kvs_charkey");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  load_flags();
+
   init();
-  //std::vector<std::string> argvs = testing::internal::GetArgvs();
-  //update_parameters(argvs);
   std::vector<Tuple*> insertedList[kNthread];
 
   build_mtdb(insertedList);

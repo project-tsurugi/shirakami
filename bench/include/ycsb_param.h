@@ -28,7 +28,7 @@ alignas(CACHE_LINE_SIZE) std::size_t kCardinality = 50;
 /**
  * @brief number of operations in one transaction.
  */
-alignas(CACHE_LINE_SIZE) std::size_t kNops = 10;
+alignas(CACHE_LINE_SIZE) std::size_t kNops = 1;
 
 /**
  * @biref number of worker threads.
@@ -38,7 +38,7 @@ alignas(CACHE_LINE_SIZE) std::size_t kNthread = 1;
 /**
  * @brief ratio of read. 0 - 100[%]
  */
-alignas(CACHE_LINE_SIZE) std::size_t kRRatio = 50;
+alignas(CACHE_LINE_SIZE) std::size_t kRRatio = 100;
 
 /**
  * @brief zipf skew.

@@ -31,7 +31,8 @@ target_link_libraries(ycsb
 target_include_directories(ycsb
   PRIVATE .
   PRIVATE ./../include
+  PRIVATE ./../bench/
+  PRIVATE ./../src/
   PRIVATE ./../test/
-  PRIVATE ./../src
   PRIVATE ${gflags_INCLUDE_DIR}
 )
