@@ -19,3 +19,11 @@ plot \
        "result_ycsbA_tuple1m.dat" using 1:5 w lp title "YCSB-A", \
        "result_ycsbB_tuple1m.dat" using 1:5 w lp title "YCSB-B", \
        "result_ycsbC_tuple1m.dat" using 1:5 w lp title "YCSB-C", \
+
+set ylabel "Cache-Miss Rate"
+set output "ycsb_cr.pdf"
+plot \
+       "result_ycsbA_tuple1m.dat" using 1:8 w lp title "YCSB-A", \
+       "result_ycsbB_tuple1m.dat" using 1:8 w lp title "YCSB-B", \
+       "result_ycsbC_tuple1m.dat" using 1:8 w lp title "YCSB-C", \
+
