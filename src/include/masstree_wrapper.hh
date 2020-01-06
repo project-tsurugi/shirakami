@@ -145,6 +145,30 @@ class MasstreeWrapper {
     return kvs::Status::OK;
   }
 
+  kvs::Status put_value(const char* key, std::size_t len_key, T* value) {
+    cursor_type lp(table_, key, len_key);
+    bool found = lp.find_locked(*ti);
+    if (found) {
+      lp.value() = value;
+      fence();
+      lp.finish(0, *ti);
+      return kvs::Status::OK;
+    } else if (!found) {
+      fence();
+      lp.finish(0, *ti);
+      /**
+       * Look project_root/third_party/masstree/masstree_get.hh:98 and 100.
+       * If the node wasn't found, the lock was acquired.
+       * So it needs to release, then released at the line 155 of this source.
+       */
+      return kvs::Status::WARN_NOT_FOUND;
+    } else {
+      // Bool value of found show the value neither 0 and 1.
+      return kvs::Status::ERR_ILLEGAL_STATE;
+    }
+
+  }
+
   void remove_value(const char* key, std::size_t len_key) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);

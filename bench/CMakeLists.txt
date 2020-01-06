@@ -12,14 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-file(GLOB SOURCES
-  "*.cc"
+file(GLOB YCSB_SOURCES
+  "ycsb.cc"
+  "masstree_build.cc"
+  "../test/result.cc"
+)
+
+file(GLOB MASSTREE_SOURCES
+  "masstree.cc"
+  "masstree_build.cc"
   "../test/result.cc"
 )
 
 add_executable(ycsb
-  ${SOURCES}
+  ${YCSB_SOURCES}
 )
+
+add_executable(masstree
+  ${MASSTREE_SOURCES}
+)
+
 
 target_link_libraries(ycsb
   PRIVATE kvs_charkey
@@ -29,6 +41,21 @@ target_link_libraries(ycsb
 )
 
 target_include_directories(ycsb
+  PRIVATE .
+  PRIVATE ./../include
+  PRIVATE ./../bench/
+  PRIVATE ./../src/
+  PRIVATE ./../test/
+  PRIVATE ${gflags_INCLUDE_DIR}
+)
+target_link_libraries(masstree
+  PRIVATE kvs_charkey
+  PRIVATE kvs_charkey-impl
+  PRIVATE Threads::Threads
+  PRIVATE gflags::gflags
+)
+
+target_include_directories(masstree
   PRIVATE .
   PRIVATE ./../include
   PRIVATE ./../bench/

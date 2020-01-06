@@ -34,7 +34,7 @@ ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
     if ((*itr).rec_ptr->tuple.len_key == len_key
-        && memcmp((*itr).rec_ptr->tuple.key.get(), key, len_key) == 0) {
+        && memcmp((*itr).rec_read.tuple.key.get(), key, len_key) == 0) {
       return &(*itr);
     }
   }

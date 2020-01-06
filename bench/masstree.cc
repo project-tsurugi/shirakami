@@ -18,11 +18,8 @@
 #include "include/result.hh"
 
 // kvs_charkey/bench
-#include "./include/gen_tx.hh"
 #include "./include/masstree_build.hh"
 #include "./include/string.hh"
-#include "./include/ycsb.hh"
-#include "./include/ycsb_param.h"
 
 // kvs_charkey/src/
 #include "include/atomic_wrapper.hh"
@@ -32,6 +29,7 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/header.hh"
+#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/masstree_wrapper.hh"
 #include "include/random.hh"
 #include "include/scheme.hh"
@@ -54,86 +52,43 @@ DEFINE_uint64(thread, 1, "# worker threads.");
 DEFINE_uint64(record, 1000, "# database records(tuples).");
 DEFINE_uint64(key_length, 8, "# length of key.");
 DEFINE_uint64(val_length, 8, "# length of value(payload).");
-DEFINE_uint64(ops, 10, "# operations per a transaction.");
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");
-DEFINE_double(skew, 0.0, "access skew of transaction.");
-DEFINE_uint64(cpumhz, 2000, "# cpu MHz of execution environment. It is used measuring some time.");
+DEFINE_uint64(cpumhz, 2100, "# cpu MHz of execution environment. It is used measuring some time.");
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
+DEFINE_string(instruction, "insert", "insert or put or get. The default is insert.");
 
 static void
 load_flags()
 {
-  if (FLAGS_thread >= 1) {
-    kNthread = FLAGS_thread;
-  } else {
+  if (FLAGS_thread == 0) {
     cerr << "Number of threads must be larger than 0." << std::endl;
     exit(1);
   }
-  if (FLAGS_record > 1) {
-    kCardinality = FLAGS_record;
-  } else {
+  if (FLAGS_record == 0) {
     cerr << "Number of database records(tuples) must be large than 0." << endl;
     exit(1);
   }
-  if (FLAGS_key_length > 1 && FLAGS_key_length % 8 == 0) {
-    kKeyLength = FLAGS_key_length;
-  } else {
+  if (FLAGS_key_length == 0 || FLAGS_key_length % 8 == 0) {
     cerr << "Length of key must be larger than 0 and be divisible by 8." << endl;
     exit(1);
   }
-  if (FLAGS_val_length > 1) {
-    kValLength = FLAGS_val_length;
-  } else {
+  if (FLAGS_val_length == 0) {
     cerr << "Length of val must be larger than 0." << endl;
     exit(1);
   }
-  if (FLAGS_ops > 1) {
-    kNops = FLAGS_ops;
-  } else {
-    cerr << "Number of operations in a transaction must be larger than 0." << endl;
-    exit(1);
-  }
-  if (FLAGS_rratio >= 0 && FLAGS_rratio <= 100) {
-    kRRatio = FLAGS_rratio;
-  } else {
-    cerr << "Rate of reads in a transaction must be in the range 0 to 100." << endl;
-    exit(1);
-  }
-  if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
-    kZipfSkew = FLAGS_skew;
-  } else {
-    cerr << "Access skew of transaction must be in the range 0 to 0.999... ." << endl;
-    exit(1);
-  }
-  if (FLAGS_cpumhz > 1) {
-    kCPUMHz = FLAGS_cpumhz;
-  } else {
+  if (FLAGS_cpumhz == 0) {
     cerr << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0." << endl;
     exit(1);
   }
-  if (FLAGS_duration >= 1) {
-    kExecTime = FLAGS_duration;
-  } else {
+  if (FLAGS_duration == 0) {
     cerr << "Duration of benchmark in seconds must be larger than 0." << endl;
     exit(1);
   }
-}
-
-
-int 
-main(int argc, char* argv[]) 
-{
-  gflags::SetUsageMessage("YCSB benchmark for kvs_charkey");
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
-  load_flags();
-
-  init();
-  std::vector<Tuple*> insertedList[kNthread];
-
-  build_mtdb(kCardinality, kNthread, kValLength, insertedList);
-  invoke_leader();
-  delete_mtdb(kCardinality, kNthread, insertedList);
-  fin();
+  if (FLAGS_instruction == "insert" || FLAGS_instruction == "put" || FLAGS_instruction == "get") {
+    //ok
+  } else {
+    cerr << "The instruction option must be insert or put or get. The default is insert." << endl;
+    exit(1);
+  }
 }
 
 static bool 
@@ -165,29 +120,42 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   setThreadAffinity(thid);
 #endif
 
+  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
   Token token;
+  Record myrecord;
   Storage storage;
   enter(token);
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   while (likely(!loadAcquire(quit))) {
-    tbegin(token);
-    gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
-    for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
-      if ((*itr).type == OP_TYPE::SEARCH) {
-        Tuple *tuple;
-        Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);
-      } else if ((*itr).type == OP_TYPE::UPDATE) {
-        Status op_rs = update(token, storage, (*itr).key.get(), (*itr).len_key, (*itr).val.get(), (*itr).len_val);
+    if (FLAGS_instruction == "insert") {
+      std::size_t start(UINT64_MAX/FLAGS_thread*thid), end(UINT64_MAX/FLAGS_thread*(thid+1));
+      std::vector<Tuple*> localInsertedList;
+      for (auto i = start; i < end; ++i) {
+        tbegin(token);
+        uint64_t keybs = __builtin_bswap64(i);
+        std::unique_ptr<char[]> val = std::make_unique<char[]>(FLAGS_val_length);
+        make_string(val.get(), FLAGS_val_length);
+        Tuple *tuple = new Tuple((char*)&keybs, sizeof(uint64_t), val.get(), FLAGS_val_length);
+        insert(token, storage, (char*)&keybs, sizeof(uint64_t), val.get(), FLAGS_val_length);
+        localInsertedList.emplace_back(tuple);
+        commit(token);
+        ++myres.local_commit_counts_;
+        if (unlikely(loadAcquire(quit))) {
+          tbegin(token);
+          for (auto itr = localInsertedList.begin(); itr != localInsertedList.end(); ++itr) {
+            delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
+          }
+          if (Status::OK != commit(token)) ERR;
+          break;
+        }
       }
-    }
-    if (commit(token) == Status::OK) {
+    } else if (FLAGS_instruction == "put") {
       ++myres.local_commit_counts_;
-    } else {
-      ++myres.local_abort_counts_;
-      abort(token);
+    } else if (FLAGS_instruction == "get") {
+      ++myres.local_commit_counts_;
     }
   }
   leave(token);
@@ -198,22 +166,43 @@ invoke_leader()
 {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
-  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);
+  alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);
 
-  std::vector<char> readys(kNthread);
+  init();
+  std::vector<Tuple*> insertedList[kNthread];
+  if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
+    build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length, insertedList);
+  }
+
+  std::vector<char> readys(FLAGS_thread);
   std::vector<std::thread> thv;
-  for (size_t i = 0; i < kNthread; ++i)
+  for (size_t i = 0; i < FLAGS_thread; ++i)
     thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
   waitForReady(readys);
   storeRelease(start, true);
-  for (size_t i = 0; i < kExecTime; ++i) {
+  for (size_t i = 0; i < FLAGS_duration; ++i) {
     sleepMs(1000);
   }
   storeRelease(quit, true);
   for (auto& th : thv) th.join();
 
-  for (auto i = 0; i < kNthread; ++i) {
+  for (auto i = 0; i < FLAGS_thread; ++i) {
     res[0].addLocalAllResult(res[i]);
   }
-  res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+  res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
+
+  if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
+    delete_mtdb(FLAGS_record, FLAGS_thread, insertedList);
+  }
+  fin();
 }
+
+int 
+main(int argc, char* argv[]) 
+{
+  gflags::SetUsageMessage("YCSB benchmark for kvs_charkey");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  load_flags();
+  invoke_leader();
+}
+
