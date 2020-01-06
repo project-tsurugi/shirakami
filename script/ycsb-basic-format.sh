@@ -1,5 +1,5 @@
 cpumhz=2100
-duration=3
+duration=10
 key_length=8
 ops=10
 record=1000000
@@ -97,6 +97,6 @@ do
     echo "maxTH: $maxTH, maxAR: $maxAR, maxCA: $maxCA"
     echo "minTH: $minTH, minAR: $minAR, minCA: $minCA"
     echo ""
-    echo "$tuple $avgTH $minTH $maxTH $avgAR $minAR $maxAR $avgCA $minCA $maxCA" >> $result
+    echo "$thread $avgTH $minTH $maxTH $avgAR $minAR $maxAR $avgCA $minCA $maxCA" >> $result
   done
 done

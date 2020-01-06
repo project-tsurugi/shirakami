@@ -7,7 +7,7 @@
 * build related libararies - on Ubuntu, you can install with following command:
 
 ```
-apt update -y && apt install -y git build-essential cmake ninja-build doxygen libgflags-dev libgoogle-glog-dev
+apt update -y && apt install -y git build-essential cmake ninja-build doxygen libgflags-dev libgoogle-glog-dev gnuplot
 ```
 
 ```sh
