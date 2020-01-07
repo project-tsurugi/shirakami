@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
+#include "debug.hh"
 #include "header.hh"
 
 #include "kvs/scheme.h"
@@ -145,10 +146,13 @@ class MasstreeWrapper {
     return kvs::Status::OK;
   }
 
-  kvs::Status put_value(const char* key, std::size_t len_key, T* value) {
+  // for bench.
+  kvs::Status put_value(const char* key, std::size_t len_key, T* value, T** record) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
+      *record = lp.value();
+      *value = **record;
       lp.value() = value;
       fence();
       lp.finish(0, *ti);

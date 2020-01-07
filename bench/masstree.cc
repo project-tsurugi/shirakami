@@ -34,7 +34,6 @@
 #include "include/random.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
-#include "include/ycsb_param.h"
 #include "include/zipf.hh"
 
 // kvs_charkey/include/
@@ -45,7 +44,6 @@
 #include "glog/logging.h"
 
 using namespace kvs;
-using namespace ycsb_param;
 using std::cout, std::endl, std::cerr;
 
 DEFINE_uint64(thread, 1, "# worker threads.");
@@ -55,6 +53,7 @@ DEFINE_uint64(val_length, 8, "# length of value(payload).");
 DEFINE_uint64(cpumhz, 2100, "# cpu MHz of execution environment. It is used measuring some time.");
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
 DEFINE_string(instruction, "insert", "insert or put or get. The default is insert.");
+DEFINE_double(skew, 0.0, "access skew of transaction.");
 
 static void
 load_flags()
@@ -67,7 +66,7 @@ load_flags()
     cerr << "Number of database records(tuples) must be large than 0." << endl;
     exit(1);
   }
-  if (FLAGS_key_length == 0 || FLAGS_key_length % 8 == 0) {
+  if (FLAGS_key_length == 0 || FLAGS_key_length % 8 != 0) {
     cerr << "Length of key must be larger than 0 and be divisible by 8." << endl;
     exit(1);
   }
@@ -87,6 +86,12 @@ load_flags()
     //ok
   } else {
     cerr << "The instruction option must be insert or put or get. The default is insert." << endl;
+    exit(1);
+  }
+  if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
+    //ok
+  } else {
+    cerr << "access skew of transaction must be in the range 0 to 0.999..." << endl;
     exit(1);
   }
 }
@@ -112,7 +117,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   // init work
   Xoroshiro128Plus rnd;
   rnd.init();
-  FastZipf zipf(&rnd, kZipfSkew, kCardinality);
+  FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
   Result& myres = std::ref(res[thid]);
 
   // this function can be used in Linux environment only.
@@ -120,13 +125,13 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   setThreadAffinity(thid);
 #endif
 
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  MasstreeWrapper<kvs::Record>::thread_init(sched_getcpu());
 
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
   Token token;
-  Record myrecord;
+  kvs::Record myrecord;
   Storage storage;
   enter(token);
   while (likely(!loadAcquire(quit))) {
@@ -153,8 +158,21 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
         }
       }
     } else if (FLAGS_instruction == "put") {
+      // future work : If it defines that the record number is divisible by 2, it can use mask and "and computation"  instead of "surplus computation".
+      // Then, it will be faster than now.
+      kvs::Record* record;
+      kvs::Record* newrecord = new kvs::Record();
+      uint64_t keynm = zipf() % FLAGS_record;
+      uint64_t keybs = __builtin_bswap64(keynm);
+      if (kvs::Status::OK != MTDB.put_value((char*)&keybs, sizeof(uint64_t), newrecord, &record)) ERR;
+      delete record;
       ++myres.local_commit_counts_;
     } else if (FLAGS_instruction == "get") {
+      uint64_t keynm = zipf() % FLAGS_record;
+      uint64_t keybs = __builtin_bswap64(keynm);
+      kvs::Record* record;
+      record = MTDB.get_value((char*)&keybs, sizeof(uint64_t));
+      if (record == nullptr) ERR;
       ++myres.local_commit_counts_;
     }
   }
@@ -169,7 +187,7 @@ invoke_leader()
   alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);
 
   init();
-  std::vector<Tuple*> insertedList[kNthread];
+  std::vector<Tuple*> insertedList[FLAGS_thread];
   if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
     build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length, insertedList);
   }
