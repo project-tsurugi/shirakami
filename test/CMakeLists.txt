@@ -16,6 +16,8 @@ file(GLOB TEST_SOURCES
     "*.cc"
 )
 
+add_definitions(-DPROJECT_ROOT=${PROJECT_ROOT})
+
 register_tests(
     TARGET kvs_charkey
     DEPENDS kvs_charkey-impl

@@ -3,6 +3,7 @@
 
 #include "kvs/interface.h"
 
+#include "include/compiler.hh"
 #include "include/header.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
@@ -18,6 +19,13 @@ class SimpleTest : public ::testing::Test {
   SimpleTest() { kvs::init(); }
   ~SimpleTest() { kvs::fin(); }
 };
+
+TEST_F(SimpleTest, project_root) {
+  cout << MAC2STR(PROJECT_ROOT) << endl;
+  std::string str(MAC2STR(PROJECT_ROOT));
+  str.append("/log/");
+  cout << str << endl;
+}
 
 TEST_F(SimpleTest, tidword) {
   // check the alignment of union

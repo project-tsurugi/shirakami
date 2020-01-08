@@ -54,6 +54,7 @@ target_include_directories(api
 
 set(export_name "kvs_charkey")
 set(package_name "kvs_charkey")
+set(PROJECT_ROOT ${PROJECT_SOURCE_DIR})
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in

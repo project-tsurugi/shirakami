@@ -7,6 +7,11 @@
 
 namespace kvs {
 
+extern std::thread kEpochThread;
+extern std::atomic<bool> kEpochThreadEnd;
+extern uint64_t kGlobalEpoch;
+extern uint64_t kReclamationEpoch;
+
 extern void epocher();
 
 extern void init();
