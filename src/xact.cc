@@ -12,6 +12,8 @@
 #include "include/epoch.hh"
 #define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/masstree_wrapper.hh"
+#include "include/key.hh"
+#include "include/kvs.hh"
 #include "include/mutex.hh"
 #include "include/scheme.hh"
 #include "include/tsc.hh"
@@ -27,16 +29,11 @@ namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::vector<LogShell> kLogList;
 alignas(CACHE_LINE_SIZE) std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
-/* kGarbageRecords is a list of garbage records.
- * Theoretically, each worker thread has own list.
- * But in this kvs, the position of core at which worker is may change.
- * This is problem. It prepare enough list for experiments as pending solution.*/
 alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
-/* This variable has informations about worker thread. */
 
-extern void
+void
 delete_database()
 {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
@@ -47,7 +44,7 @@ delete_database()
   }
 }
 
-extern void
+void
 tbegin(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
@@ -135,7 +132,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   gc_records();
 }
 
-extern Status
+Status
 abort(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
@@ -206,7 +203,7 @@ epocher()
   }
 }
 
-extern void
+void
 forced_gc_all_records()
 {
   for (uint i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
@@ -283,7 +280,7 @@ insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
 #endif
 }
 
-extern Status
+Status
 commit(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
@@ -366,14 +363,14 @@ decide_token(Token& token)
   return Status::OK;
 }
 
-extern Status
+Status
 enter(Token& token)
 {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return decide_token(token);
 }
 
-extern Status
+Status
 leave(Token token)
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
@@ -423,12 +420,16 @@ read_record(Record& res, Record* dest)
   return Status::OK;
 }
 
-extern Status
+Status
 scan_key(Token token, Storage storage,
-    char const *lkey, std::size_t len_lkey, bool l_exclusive,
-    char const *rkey, std::size_t len_rkey, bool r_exclusive,
+    char *lkey, std::size_t len_lkey, bool l_exclusive,
+    char *rkey, std::size_t len_rkey, bool r_exclusive,
     std::vector<Tuple*>& result)
 {
+  std::string newlkey, newrkey;
+  process_key(&lkey, len_lkey, newlkey);
+  process_key(&rkey, len_rkey, newrkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
@@ -466,9 +467,12 @@ scan_key(Token token, Storage storage,
   return Status::OK;
 }
 
-extern Status
-search_key(Token token, Storage storage, char const *key, std::size_t len_key, Tuple** tuple)
+Status
+search_key(Token token, Storage storage, char *key, std::size_t len_key, Tuple** tuple)
 {
+  std::string newkey;
+  process_key(&key, len_key, newkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -505,9 +509,12 @@ search_key(Token token, Storage storage, char const *key, std::size_t len_key, T
   return Status::OK;
 }
 
-extern Status
-update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
+Status
+update(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
+  std::string newkey;
+  process_key(&key, len_key, newkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -529,9 +536,12 @@ update(Token token, Storage storage, char const *key, std::size_t len_key, char 
 }
 
 
-extern Status
-insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
+Status
+insert(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t len_val)
 {
+  std::string newkey;
+  process_key(&key, len_key, newkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
   if (inws != nullptr) {
@@ -550,9 +560,12 @@ insert(Token token, Storage storage, char const *key, std::size_t len_key, char 
   return Status::OK;
 }
 
-extern Status
-delete_record(Token token, Storage storage, char const *key, std::size_t len_key)
+Status
+delete_record(Token token, Storage storage, char *key, std::size_t len_key)
 {
+  std::string newkey;
+  process_key(&key, len_key, newkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   Status check = ti->check_delete_after_upsert(key, len_key);
 
@@ -576,9 +589,12 @@ find_record_from_masstree(char const *key, std::size_t len_key)
   return MTDB.get_value(key, len_key);
 }
 
-extern Status
-upsert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val)
+Status
+upsert(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t const len_val)
 {
+  std::string newkey;
+  process_key(&key, len_key, newkey);
+
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   Record *record = find_record_from_masstree(key, len_key);
   WriteSetObj* inws = ti->search_write_set(key, len_key);

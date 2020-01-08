@@ -6,6 +6,7 @@
 #include "include/kvs.hh"
 #include "include/port.h"
 #include "include/scheme.hh"
+#include "include/xact.hh"
 
 #include <cstdint>
 #include "kvs/interface.h"
@@ -19,7 +20,6 @@ std::thread kEpochThread;
 std::atomic<bool> kEpochThreadEnd;
 uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
-extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 
 static void
 invoke_epocher()
@@ -42,14 +42,14 @@ init_kThreadTable()
   }
 }
 
-extern void
+void
 init()
 {
   init_kThreadTable();
   invoke_core_thread();
 }
 
-extern void
+void
 fin()
 {
   kEpochThreadEnd.store(true, std::memory_order_release);

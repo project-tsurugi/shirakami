@@ -111,7 +111,7 @@ extern Status delete_storage(Storage storage);
  * @return Status OK if successful
  * @return error otherwise
  */
-extern Status upsert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val);
+extern Status upsert(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t const len_val);
 
 /**
  * @brief delete the record for the given key
@@ -125,7 +125,7 @@ extern Status upsert(Token token, Storage storage, char const *key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion.
  */
-extern Status delete_record(Token token, Storage storage, char const *key, std::size_t len_key);
+extern Status delete_record(Token token, Storage storage, char *key, std::size_t len_key);
 
 /**
  * @brief delete std::vector<Record*> DataBase at kvs_charkey/src/xact.cc
@@ -146,7 +146,7 @@ extern void delete_database();
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  * @return error otherwise
  */
-extern Status insert(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val);
+extern Status insert(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t len_val);
 
 /**
  * @brief update the record for the given key
@@ -160,7 +160,7 @@ extern Status insert(Token token, Storage storage, char const *key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  */
-extern Status update(Token token, Storage storage, char const *key, std::size_t len_key, char const *val, std::size_t len_val);
+extern Status update(Token token, Storage storage, char *key, std::size_t len_key, char const *val, std::size_t len_val);
 
 /**
  * @brief search with the given key and return the found tuple
@@ -177,7 +177,7 @@ extern Status update(Token token, Storage storage, char const *key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_ALREADY_DELETE it already executed delete operation.
  */
-extern Status search_key(Token token, Storage storage, char const *key, std::size_t len_key, Tuple** tuple);
+extern Status search_key(Token token, Storage storage, char *key, std::size_t len_key, Tuple** tuple);
 
 /**
  * @brief search with the given key range and return the found tuples
@@ -197,8 +197,8 @@ extern Status search_key(Token token, Storage storage, char const *key, std::siz
  * @return Status::OK if successful
  */
 extern Status scan_key(Token token, Storage storage,
-    char const *lkey, std::size_t len_lkey, bool l_exclusive,
-    char const *rkey, std::size_t len_rkey, bool r_exclusive,
+    char *lkey, std::size_t len_lkey, bool l_exclusive,
+    char *rkey, std::size_t len_rkey, bool r_exclusive,
     std::vector<Tuple*>& result);
 
 /**

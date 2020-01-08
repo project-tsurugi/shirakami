@@ -18,6 +18,16 @@ using namespace std;
 
 namespace kvs {
 
+extern std::vector<LogShell> kLogList;
+extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
+/* kGarbageRecords is a list of garbage records.
+ * Theoretically, each worker thread has own list.
+ * But in this kvs, the position of core at which worker is may change.
+ * This is problem. It prepare enough list for experiments as pending solution.*/
+extern std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
+extern std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
+extern MasstreeWrapper<Record> MTDB;
+
 /**
  * @brief epoch thread
  * @pre this function is called by invoke_core_thread function.
@@ -49,25 +59,5 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, Reco
 static Status read_record(Record& res, Record* dest);
 
 static void gc_records();
-
-class TokenForExp {
-  static std::atomic<Token> token_;
-
-public:
-
-  static Token GetToken() {
-    return token_.fetch_add(1);
-  }
-
-  static void ResetToken() {
-    token_.store(0, std::memory_order_release);
-  }
-};
-
-#ifdef DECLARE_ENTITY_TOKEN_FOR_EXP
-std::atomic<Token> TokenForExp::token_(0);
-#endif
-
-extern std::atomic<bool> kEpochThreadEnd;
 
 }  // namespace kvs

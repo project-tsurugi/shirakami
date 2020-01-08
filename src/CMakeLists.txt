@@ -2,6 +2,7 @@ file(GLOB SOURCES
         "kvs.cc"
         "xact.cc"
         "scheme.cc"
+        "*.cc"
         "../third_party/masstree-beta/clp.o"
         "../third_party/masstree-beta/compiler.o"
         "../third_party/masstree-beta/kvthread.o"
@@ -32,12 +33,6 @@ target_link_libraries(kvs_charkey
 )
 
 set_compile_options(kvs_charkey)
-cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
-add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
-add_definitions(-DKVS_MAX_PARALLEL_THREADS=10000)
-add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
-add_definitions(-DPROJECT_ROOT=${PROJECT_ROOT})
-
 install_custom(kvs_charkey ${export_name})
 
 # for tests
