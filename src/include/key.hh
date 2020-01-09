@@ -8,4 +8,4 @@
 
 #include "include/header.hh"
 
-extern void process_key(char** key, std::size_t& len_key, std::string& newkey);
+extern void process_key(char** const key, std::size_t& len_key, std::string& newkey);
