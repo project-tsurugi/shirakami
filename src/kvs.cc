@@ -37,8 +37,13 @@ invoke_core_thread()
 static void
 init_kThreadTable()
 {
+  uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
+    itr->log_dir_.assign(MAC2STR(PROJECT_ROOT));
+    itr->log_dir_.append("/log/log");
+    itr->log_dir_.append(std::to_string(ctr));
+    ++ctr;
   }
 }
 

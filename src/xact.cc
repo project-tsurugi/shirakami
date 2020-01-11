@@ -34,7 +34,7 @@ alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_C
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
 void
-delete_database()
+delete_all_garbage_records()
 {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
     for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr) {

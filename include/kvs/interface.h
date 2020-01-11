@@ -128,10 +128,17 @@ extern Status upsert(Token token, Storage storage, const char* key, std::size_t 
 extern Status delete_record(Token token, Storage storage, const char* key, std::size_t len_key);
 
 /**
- * @brief delete std::vector<Record*> DataBase at kvs_charkey/src/xact.cc
+ * @brief Delete the all records.
+ * @pre This function is called by a single thread and does't allow moving of other threads.
+ * @return Status
+ */
+extern Status delete_all_records();
+
+/**
+ * @brief delete std::vector<Record*> kGarbageRecords at kvs_charkey/src/xact.cc
  * @return void
  */
-extern void delete_database();
+extern void delete_all_garbage_records();
 
 /**
  * @brief insert the record with given key/value

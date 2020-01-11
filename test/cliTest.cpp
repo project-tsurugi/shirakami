@@ -198,7 +198,7 @@ test(void)
   for (auto& th : thv) th.join();
 
   delete_DataList();
-  delete_database();
+  delete_all_garbage_records();
 }
 
 namespace kvs_charkey::testing {

@@ -343,7 +343,7 @@ TEST_F(SimpleTest, scan) {
   delete_record(s, st, k3.data(), k3.size());
   delete_record(s, st, k6.data(), k6.size());
   commit(s);
-  leave(s);
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, scan_with_null_char) {
@@ -375,7 +375,7 @@ TEST_F(SimpleTest, scan_with_null_char) {
   delete_record(s, st, k3.data(), k3.size());
   delete_record(s, st, k4.data(), k4.size());
   ASSERT_EQ(Status::OK, commit(s));
-  leave(s);
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, scan_key_then_search_key) {
@@ -419,7 +419,7 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   delete_record(s, st, k3.data(), k3.size());
   delete_record(s, st, k4.data(), k4.size());
   ASSERT_EQ(Status::OK, commit(s));
-  leave(s);
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, insert_delete_with_16chars) {
@@ -438,7 +438,26 @@ TEST_F(SimpleTest, insert_delete_with_16chars) {
     ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
   }
   ASSERT_EQ(Status::OK, commit(s));
-  leave(s);
+  ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(SimpleTest, insert_delete_with_10chars) {
+  std::string k("testing_a0");
+  std::string v("bbb");
+  Token s{};
+  ASSERT_EQ(Status::OK, enter(s));
+  Storage st{};
+  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  std::vector<Tuple*> records{};
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
+                                 k.size(), false, records));
+  EXPECT_EQ(1, records.size());
+  for (auto* t : records) {
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+  }
+  ASSERT_EQ(Status::OK, commit(s));
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, concurrent_updates) {
@@ -477,7 +496,7 @@ TEST_F(SimpleTest, concurrent_updates) {
                 upsert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),
                        sizeof(std::int64_t)));
       rc = (Status::OK == commit(s));
-      leave(s);
+      ASSERT_EQ(Status::OK, leave(s));
     }
     static void verify() {
       std::string k("aa");
@@ -613,7 +632,7 @@ TEST_F(SimpleTest, all_deletes) {
   }
   ASSERT_EQ(Status::OK, commit(s));
   forced_gc_all_records();
-  leave(s);
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 }  // namespace kvs_charkey::testing

@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "cache_line_size.hh"
+#include "compiler.hh"
 #include "debug.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
@@ -286,6 +287,7 @@ class ThreadInfo {
    */
   std::vector<Tuple> notify_local_write;
   std::vector<OprObj> opr_set;
+  std::string log_dir_;
 
   ThreadInfo(const Token token) {
     this->token = token;
@@ -295,6 +297,7 @@ class ThreadInfo {
   ThreadInfo() {
     this->visible.store(false, std::memory_order_release);
     mrctid.reset();
+    log_dir_.assign(MAC2STR(PROJECT_ROOT));
   }
 
   /**
