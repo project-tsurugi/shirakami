@@ -111,7 +111,7 @@ extern Status delete_storage(Storage storage);
  * @return Status OK if successful
  * @return error otherwise
  */
-extern Status upsert(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val);
+extern Status upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
 /**
  * @brief delete the record for the given key
@@ -125,7 +125,7 @@ extern Status upsert(Token token, Storage storage, const char* key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion.
  */
-extern Status delete_record(Token token, Storage storage, const char* key, std::size_t len_key);
+extern Status delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key);
 
 /**
  * @brief Delete the all records.
@@ -153,7 +153,7 @@ extern void delete_all_garbage_records();
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  * @return error otherwise
  */
-extern Status insert(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val);
+extern Status insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
 /**
  * @brief update the record for the given key
@@ -167,7 +167,7 @@ extern Status insert(Token token, Storage storage, const char* key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  */
-extern Status update(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val);
+extern Status update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
 /**
  * @brief search with the given key and return the found tuple
@@ -184,7 +184,7 @@ extern Status update(Token token, Storage storage, const char* key, std::size_t 
  * @return Status::OK if successful
  * @return Status::WARN_ALREADY_DELETE it already executed delete operation.
  */
-extern Status search_key(Token token, Storage storage, const char* key, std::size_t len_key, Tuple** const tuple);
+extern Status search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple);
 
 /**
  * @brief search with the given key range and return the found tuples
@@ -204,8 +204,8 @@ extern Status search_key(Token token, Storage storage, const char* key, std::siz
  * @return Status::OK if successful
  */
 extern Status scan_key(Token token, Storage storage,
-    const char* lkey, std::size_t len_lkey, const bool l_exclusive,
-    const char* rkey, std::size_t len_rkey, const bool r_exclusive,
+    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
+    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
     std::vector<Tuple*>& result);
 
 /**

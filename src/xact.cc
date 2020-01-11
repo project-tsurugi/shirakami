@@ -422,14 +422,10 @@ read_record(Record& res, Record* dest)
 
 Status
 scan_key(Token token, Storage storage,
-    const char* lkey, std::size_t len_lkey, const bool l_exclusive,
-    const char* rkey, std::size_t len_rkey, const bool r_exclusive,
+    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
+    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
     std::vector<Tuple*>& result)
 {
-  std::string newlkey, newrkey;
-  process_key(const_cast<char**>(&lkey), len_lkey, newlkey);
-  process_key(const_cast<char**>(&rkey), len_rkey, newrkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
@@ -468,11 +464,8 @@ scan_key(Token token, Storage storage,
 }
 
 Status
-search_key(Token token, Storage storage, const char* key, std::size_t len_key, Tuple** const tuple)
+search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple)
 {
-  std::string newkey;
-  process_key(const_cast<char**>(&key), len_key, newkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -510,11 +503,8 @@ search_key(Token token, Storage storage, const char* key, std::size_t len_key, T
 }
 
 Status
-update(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val)
+update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
-  std::string newkey;
-  process_key(const_cast<char**>(&key), len_key, newkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -537,11 +527,8 @@ update(Token token, Storage storage, const char* key, std::size_t len_key, const
 
 
 Status
-insert(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val)
+insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
-  std::string newkey;
-  process_key(const_cast<char**>(&key), len_key, newkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
   if (inws != nullptr) {
@@ -561,11 +548,8 @@ insert(Token token, Storage storage, const char* key, std::size_t len_key, const
 }
 
 Status
-delete_record(Token token, Storage storage, const char* key, std::size_t len_key)
+delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key)
 {
-  std::string newkey;
-  process_key(const_cast<char**>(&key), len_key, newkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   Status check = ti->check_delete_after_upsert(key, len_key);
 
@@ -590,11 +574,8 @@ find_record_from_masstree(char const *key, std::size_t len_key)
 }
 
 Status
-upsert(Token token, Storage storage, const char* key, std::size_t len_key, const char* const val, std::size_t const len_val)
+upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
-  std::string newkey;
-  process_key(const_cast<char**>(&key), len_key, newkey);
-
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   Record *record = find_record_from_masstree(key, len_key);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
