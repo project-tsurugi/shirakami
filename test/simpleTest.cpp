@@ -17,7 +17,12 @@ namespace kvs_charkey::testing {
 class SimpleTest : public ::testing::Test {
  protected:
   SimpleTest() { kvs::init(); }
-  ~SimpleTest() { kvs::fin(); }
+  ~SimpleTest() { 
+    kvs::fin(); 
+    kvs::delete_all_records();
+    kvs::delete_all_garbage_records();
+    //kvs::MTDB.destroy();
+  }
 };
 
 TEST_F(SimpleTest, project_root) {
@@ -62,8 +67,6 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
-  ASSERT_EQ(Status::OK, commit(s));
   {
     Tuple* tuple;
     char k2 = 0;
@@ -72,16 +75,12 @@ TEST_F(SimpleTest, insert) {
     ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
     ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, delete_record(s, st, &k2, 1));
-    ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple;
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, nullptr, 0));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -108,8 +107,6 @@ TEST_F(SimpleTest, update) {
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
-  ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -126,8 +123,6 @@ TEST_F(SimpleTest, search) {
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -150,8 +145,6 @@ TEST_F(SimpleTest, upsert) {
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -337,12 +330,6 @@ TEST_F(SimpleTest, scan) {
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  delete_record(s, st, nullptr, 0);
-  delete_record(s, st, k.data(), k.size());
-  delete_record(s, st, k2.data(), k2.size());
-  delete_record(s, st, k3.data(), k3.size());
-  delete_record(s, st, k6.data(), k6.size());
-  commit(s);
   ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -369,11 +356,6 @@ TEST_F(SimpleTest, scan_with_null_char) {
   ASSERT_EQ(Status::OK, scan_key(s, st, k2.data(), k2.size(), false, k5.data(),
                                  k5.size(), true, records));
   EXPECT_EQ(2, records.size());
-  ASSERT_EQ(Status::OK, commit(s));
-  delete_record(s, st, k.data(), k.size());
-  delete_record(s, st, k2.data(), k2.size());
-  delete_record(s, st, k3.data(), k3.size());
-  delete_record(s, st, k4.data(), k4.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -414,10 +396,6 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(),
                                  k4.size(), true, records));
   EXPECT_EQ(1, records.size());
-  ASSERT_EQ(Status::OK, commit(s));
-  delete_record(s, st, k.data(), k.size());
-  delete_record(s, st, k3.data(), k3.size());
-  delete_record(s, st, k4.data(), k4.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -549,8 +527,6 @@ TEST_F(SimpleTest, read_local_write) {
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
-  ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -570,8 +546,6 @@ TEST_F(SimpleTest, read_write_read) {
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -594,8 +568,6 @@ TEST_F(SimpleTest, double_write) {
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v3.data(), v3.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
-  ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -612,8 +584,6 @@ TEST_F(SimpleTest, double_read) {
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }

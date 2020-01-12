@@ -131,6 +131,9 @@ extern Status delete_record(Token token, Storage storage, const char* const key,
  * @brief Delete the all records.
  * @pre This function is called by a single thread and does't allow moving of other threads.
  * @return Status
+ * @detail This function executes tbegin(Token token) internaly, so it doesn't need to call tbegin(Token token).
+ * Also it doesn't need to call enter/leave around calling this function.
+ * Because this function calls enter/leave appropriately.
  */
 extern Status delete_all_records();
 

@@ -464,6 +464,27 @@ scan_key(Token token, Storage storage,
 }
 
 Status
+delete_all_records()
+{
+  Token s{};
+  Storage st{};
+  while (Status::OK != enter(s)) _mm_pause();
+  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+
+  std::vector<Record*> scan_res;
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
+
+  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
+    tbegin(s);
+    delete_record(s, st, (*itr)->tuple.key.get(), (*itr)->tuple.len_key);
+    if (Status::OK != commit(s)) return Status::ERR_UNKNOWN;
+  }
+
+  leave(s);
+  return Status::OK;
+}
+
+Status
 search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
