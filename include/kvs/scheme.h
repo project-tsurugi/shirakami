@@ -86,19 +86,19 @@ enum class OP_TYPE : std::int32_t {
 
 class Tuple {
 public:
-  /** key string of db. */
-  std::unique_ptr<char[]> key;
-  /** val string of db. */
-  std::unique_ptr<char[]> val;
   /** length of key string of db. */
   std::size_t len_key;
   /** length of val string of db. */
   std::size_t len_val;
+  /** key string of db. */
+  std::unique_ptr<char[]> key;
+  /** val string of db. */
+  std::unique_ptr<char[]> val;
 
   Tuple() = default;
   ~Tuple() = default;
 
-  Tuple(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
+  Tuple(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val) {
     this->len_key = len_key;
     this->len_val = len_val;
     this->key = std::make_unique<char[]>(len_key);
@@ -116,17 +116,33 @@ public:
     memcpy(this->val.get(), right.val.get(), right.len_val);
   }
 
+  Tuple(Tuple&& right) {
+    this->len_key = right.len_key;
+    this->len_val = right.len_val;
+    this->key = std::move(right.key);
+    this->val = std::move(right.val);
+  }
+
   Tuple& operator=(const Tuple& right) {
     this->len_key = right.len_key;
     this->len_val = right.len_val;
     this->key.reset();
-    this->val.reset();
     this->key = std::make_unique<char[]>(right.len_key);
+    this->val.reset();
     this->val = std::make_unique<char[]>(right.len_val);
     memcpy(this->key.get(), right.key.get(), right.len_key);
     memcpy(this->val.get(), right.val.get(), right.len_val);
     
     return *this;
+  }
+
+  Tuple& operator=(Tuple&& right) {
+    this->len_key = right.len_key;
+    this->len_val = right.len_val;
+    this->key = std::move(right.key);
+    right.key.reset();
+    this->val = std::move(right.val);
+    right.val.reset();
   }
 };
 }  // namespace kvs

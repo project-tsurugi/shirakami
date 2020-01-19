@@ -11,47 +11,71 @@
 
 #include <cstdint>
 
-#define LOGLIST_SIZE 31
+#include "kvs/scheme.h"
+
+using namespace kvs;
 
 class LogHeader {
  public:
-  int chkSum = 0;
-  unsigned int logRecNum = 0;
-  // 8 bytes
+  int chkSum_ = 0;
+  unsigned int logRecNum_ = 0;
 
   void init() {
-    chkSum = 0;
-    logRecNum = 0;
+    chkSum_ = 0;
+    logRecNum_ = 0;
   }
 
   void convertChkSumIntoComplementOnTwo() {
-    chkSum ^= 0xffffffff;
-    ++chkSum;
+    chkSum_ ^= 0xffffffff;
+    ++chkSum_;
   }
 };
 
 class LogRecord {
  public:
-  uint64_t tid;
-  unsigned int key;
-  char val[VAL_SIZE];
-  // 16 bytes
-  //
-  LogRecord() : tid(0), key(0) {}
+  uint64_t tid_;
+  Tuple tuple_;
 
-  LogRecord(uint64_t tid, unsigned int key, char *val) {
-    this->tid = tid;
-    this->key = key;
-    memcpy(this->val, val, VAL_SIZE);
+  LogRecord() : tid_(0), tuple_() {}
+
+  LogRecord(const uint64_t tid, const Tuple& tuple) {
+    this->tid_ = tid;
+    this->tuple_ = tuple; // copy
   }
 
   int computeChkSum() {
     // compute checksum
     int chkSum = 0;
-    int *itr = (int *)this;
-    for (unsigned int i = 0; i < sizeof(LogRecord) / sizeof(int); ++i) {
-      chkSum += (*itr);
-      ++itr;
+    int* intitr = (int *)this;
+    for (unsigned int i = 0; i < sizeof(uint64_t) / sizeof(unsigned int); ++i) {
+      chkSum += (*intitr);
+      ++intitr;
+    }
+
+    // len_key
+    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
+      chkSum += (*intitr);
+      ++intitr;
+    }
+
+    // len_val
+    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
+      chkSum += (*intitr);
+      ++intitr;
+    }
+
+    // key
+    char* charitr = (char*) tuple_.key.get();
+    for (unsigned char i = 0; i < tuple_.len_key; ++i) {
+      chkSum += (*charitr);
+      ++charitr;
+    }
+
+    // val
+    charitr = (char*) tuple_.val.get();
+    for (unsigned char i = 0; i < tuple_.len_val; ++i) {
+      chkSum += (*charitr);
+      ++charitr;
     }
 
     return chkSum;

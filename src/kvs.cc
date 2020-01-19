@@ -40,10 +40,14 @@ init_kThreadTable()
   uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
+#ifdef WAL
     itr->log_dir_.assign(MAC2STR(PROJECT_ROOT));
     itr->log_dir_.append("/log/log");
     itr->log_dir_.append(std::to_string(ctr));
     ++ctr;
+    itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+    //itr->logfile_.ftruncate(10^9); // if it want to be high performance in experiments, this line is used.
+#endif
   }
 }
 

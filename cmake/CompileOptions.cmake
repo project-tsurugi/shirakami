@@ -46,9 +46,15 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
-add_definitions(-DKVS_MAX_PARALLEL_THREADS=10000)
+add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
 add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
+add_definitions(-DKVS_LOG_GC_THRESHOLD=1)
 add_definitions(-DPROJECT_ROOT=${PROJECT_ROOT})
+
+option(WAL "Write ahead logging" OFF)
+if(WAL)
+  add_definitions(-DWAL)
+endif()
 
 function(set_compile_options target_name)
 #    target_compile_options(${target_name}

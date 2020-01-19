@@ -24,6 +24,8 @@
 #include "cache_line_size.hh"
 #include "compiler.hh"
 #include "debug.hh"
+#include "fileio.hh"
+#include "log.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 
@@ -34,7 +36,6 @@ namespace kvs {
 
 // This declaration is prototype for directly below description.
 class Record;
-extern MasstreeWrapper<Record> MTDB;
 
 class TidWord {
 public:
@@ -107,9 +108,7 @@ public:
  */
 class WriteSetObj {
  public:
-  //Tuple tuple; // new tuple used ONLY for UPDATE
-  std::unique_ptr<char[]> update_val_ptr;
-  std::size_t update_len_val;
+  Tuple tuple;  // for update
   OP_TYPE op;
   Record* rec_ptr; // ptr to database
 
@@ -120,17 +119,32 @@ class WriteSetObj {
     this->rec_ptr = rec_ptr;
   }
 
-  WriteSetObj(char const *val, std::size_t len_val, OP_TYPE op) {
-    update_len_val = len_val;
-    update_val_ptr = std::make_unique<char[]>(len_val);
-    memcpy(update_val_ptr.get(), val, len_val);
+  // for delete operation
+  WriteSetObj(const char* const key, const std::size_t len_key, const OP_TYPE op, Record* const rec_ptr) {
+    tuple.len_key = len_key;
+    tuple.key = std::make_unique<char[]>(len_key);
+    memcpy(tuple.key.get(), key, len_key);
+    this->op = op;
+    this->rec_ptr = rec_ptr;
+  }
+
+  WriteSetObj(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val, const OP_TYPE op) {
+    tuple.len_key = len_key;
+    tuple.key = std::make_unique<char[]>(len_key);
+    memcpy(tuple.key.get(), key, len_key);
+    tuple.len_val = len_val;
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
   }
 
-  WriteSetObj(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
-    update_len_val = len_val;
-    update_val_ptr = std::make_unique<char[]>(len_val);
-    memcpy(update_val_ptr.get(), val, len_val);
+  WriteSetObj(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val, const OP_TYPE op, Record* const rec_ptr) {
+    tuple.len_key = len_key;
+    tuple.key = std::make_unique<char[]>(len_key);
+    memcpy(tuple.key.get(), key, len_key);
+    tuple.len_val = len_val;
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
     this->rec_ptr = rec_ptr;
   }
@@ -141,65 +155,62 @@ class WriteSetObj {
   WriteSetObj& operator=(WriteSetObj&& right) = default;
 
   bool operator==(const WriteSetObj& right) const {
-    bool judge = false;
-
-    if (rec_ptr->tuple.len_key == right.rec_ptr->tuple.len_key &&
-        memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), rec_ptr->tuple.len_key) == 0) {
-      judge = true;
+    if (tuple.len_key == right.tuple.len_key &&
+        memcmp(tuple.key.get(), right.tuple.key.get(), tuple.len_key) == 0) {
+      return true;
     }
-    return judge;
+    return false;
   }
 
   bool operator!=(const WriteSetObj& right) const {
-    bool judge = false;
-
-    if (rec_ptr->tuple.len_key != right.rec_ptr->tuple.len_key ||
-        memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), rec_ptr->tuple.len_key) != 0) {
-      judge = true;
+    if (tuple.len_key != right.tuple.len_key ||
+        memcmp(tuple.key.get(), right.tuple.key.get(), tuple.len_key) != 0) {
+      return true;
     }
-
-    return judge;
+    return false;
   }
 
   bool operator<(const WriteSetObj& right) const {
     bool judge = false;
-    uint len_this = rec_ptr->tuple.len_key;
-    uint len_right = right.rec_ptr->tuple.len_key;
+    uint len_this = tuple.len_key;
+    uint len_right = right.tuple.len_key;
 
     if (len_this < len_right) {
-      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_this);
-      if (ret > 0) judge = false;
-      else if (ret <= 0) judge = true;
+      if (memcmp(tuple.key.get(), right.tuple.key.get(), len_this) <= 0) {
+        return true;
+      } else {
+        return false;
+      }
     }
     else if (len_this > len_right) {
-      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right);
-      if (ret >= 0) judge = false;
-      else if (ret < 0) judge = true;
+      if (memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right) < 0) {
+        return true;
+      } else {
+        return false;
+      }
     }
     else { // same length
       int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right);      
-      if (ret > 0) judge = false;
-      else if (ret < 0) judge = true;
+      if (ret < 0) return true;
+      else if (ret > 0) return false;
       else if (ret == 0) {
         ERR; // Unique key is not allowed now.
       }
     }
-
-    return judge;
   }
 
   void reset(char const *val, std::size_t len_val) {
-    update_len_val = len_val;
-    update_val_ptr.reset();
-    update_val_ptr = std::make_unique<char[]>(len_val);
-    memcpy(update_val_ptr.get(), val, len_val);
+    tuple.len_val = len_val;
+    tuple.val.reset();
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
   }
 
   void reset(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
-    update_len_val = len_val;
-    update_val_ptr.reset();
-    update_val_ptr = std::make_unique<char[]>(len_val);
-    memcpy(update_val_ptr.get(), val, len_val);
+    tuple.len_val = len_val;
+    tuple.val.reset();
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
     this->rec_ptr = rec_ptr;
   }
@@ -222,19 +233,6 @@ class ReadSetObj {
   ReadSetObj(ReadSetObj&& right) = default;
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
   ReadSetObj& operator=(ReadSetObj&& right) = default;
-};
-
-class LogBody {
- public:
-  uint64_t tidw; // tidword
-  Tuple tuple;  
-};
-
-class LogShell {
- public:
-  uint64_t epoch;
-  LogBody *body;
-  uint counter;
 };
 
 class OprObj { // Operations for retry by abort
@@ -280,15 +278,12 @@ class ThreadInfo {
   std::atomic<bool> visible;
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
-  /**
-   * @brief store temporary information when 
-   * a read operation reads the value from own last update operation.
-   * It is needed because the write set doesn't have Tuple class member.
-   */
-  std::vector<Tuple> notify_local_write;
   std::vector<OprObj> opr_set;
   std::string log_dir_;
+  File logfile_;
 
+  LogHeader latest_log_header_;
+  std::vector<LogRecord> log_set_;
   ThreadInfo(const Token token) {
     this->token = token;
     mrctid.reset();
@@ -377,10 +372,17 @@ class ThreadInfo {
    * @return void
    */
   void unlock_write_set(std::vector<WriteSetObj>::iterator begin, std::vector<WriteSetObj>::iterator end);
+
+  /**
+   * @brief write-ahead logging
+   * @param [in] ctid commit tid.
+   * @return void
+   */
+  void wal(uint64_t ctid);
 };
 
-void print_result(struct timeval begin, struct timeval end, int nthread);
-void print_status(Status status);
+extern void print_result(struct timeval begin, struct timeval end, int nthread);
+extern void print_status(Status status);
 
 }  // namespace kvs
 

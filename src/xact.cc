@@ -27,7 +27,6 @@ using std::endl;
 
 namespace kvs {
 
-alignas(CACHE_LINE_SIZE) std::vector<LogShell> kLogList;
 alignas(CACHE_LINE_SIZE) std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
@@ -88,12 +87,16 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   maxtid.epoch = ti->epoch;
   ti->mrctid = maxtid;
 
+#ifdef WAL
+  ti->wal(maxtid.obj);
+#endif
+
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     switch (iws->op) {
       case OP_TYPE::UPDATE:
         iws->rec_ptr->tuple.val.reset();
-        iws->rec_ptr->tuple.val = std::move(iws->update_val_ptr);
-        iws->rec_ptr->tuple.len_val = iws->update_len_val;
+        iws->rec_ptr->tuple.val = std::move(iws->tuple.val);
+        iws->rec_ptr->tuple.len_val = iws->tuple.len_val;
         __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
         break;
       case OP_TYPE::INSERT:
@@ -128,7 +131,6 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
 
   ti->read_set.clear();
   ti->write_set.clear();
-  ti->notify_local_write.clear();
   gc_records();
 }
 
@@ -139,7 +141,6 @@ abort(Token token)
   ti->read_set.clear();
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->write_set.clear();
-  ti->notify_local_write.clear();
   gc_records();
   return Status::OK;
 }
@@ -157,25 +158,6 @@ check_epoch_loaded(void)
   }
 
   return true;
-}
-
-// Logging thread, not yet implemented
-void *
-logger(void *arg) 
-{
-  int fd = open(LOG_FILE, O_APPEND|O_CREAT, 0644);
-  while (true) {
-    uint64_t curEpoch = load_acquire_ge();
-    for (auto itr = kLogList.begin(); itr != kLogList.end(); itr++) {
-      if (itr->epoch < curEpoch) {
-        write(fd, itr->body, sizeof(LogBody) * itr->counter);
-        kLogList.erase(itr);
-        itr--;
-      }
-    }
-    fsync(fd);
-    usleep(10);
-  }
 }
 
 void
@@ -241,28 +223,6 @@ gc_records()
   setThreadAffinity(current_mask);
 #endif
 }
-
-#ifdef WAL
-static void
-exec_logging(std::vector<Record> write_set, const int myid)
-{
-  LogBody *lb = (LogBody *)calloc(write_set.size(), sizeof(LogBody)); if (!lb) ERR;
-  uint counter = 0;
-  for (auto itr = write_set.begin(); itr != write_set.end(); itr++) {
-    lb[counter].tidw = itr->tidw.obj;
-    lb[counter].tuple = itr->tuple;
-    ++counter;
-  }
-  LogShell ls;
-  ls.epoch = ThLocalEpoch[myid];
-  ls.body = lb;
-  ls.counter = counter;
-
-  pthread_mutex_lock(&kMutexLogList);
-  kLogList.push_back(ls);
-  pthread_mutex_unlock(&kMutexLogList);
-}
-#endif
 
 static void
 insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
@@ -494,8 +454,7 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
     if (inws->op == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
     }
-    ti->notify_local_write.push_back(Tuple(key, len_key, inws->update_val_ptr.get(), inws->update_len_val));
-    *tuple = &ti->notify_local_write.back();
+    *tuple = &inws->tuple;
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
@@ -540,7 +499,7 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
     return Status::ERR_NOT_FOUND;
   }
 
-  WriteSetObj wso(val, len_val, OP_TYPE::UPDATE, record);
+  WriteSetObj wso(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
   ti->write_set.emplace_back(std::move(wso));
   
   return Status::OK;
@@ -564,7 +523,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
 
   Record* record = new Record(key, len_key, val, len_val);
   insert_record_to_masstree(key, len_key, record);
-  ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
+  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::INSERT, record);
   return Status::OK;
 }
 
@@ -581,9 +540,7 @@ delete_record(Token token, Storage storage, const char* const key, const std::si
     return Status::ERR_NOT_FOUND;
   };
 
-  WriteSetObj wso(OP_TYPE::DELETE, record);
-  ti->write_set.emplace_back(std::move(wso));
-
+  ti->write_set.emplace_back(key, len_key, OP_TYPE::DELETE, record);
   return check;
 }
 
@@ -608,10 +565,10 @@ upsert(Token token, Storage storage, const char* const key, const std::size_t le
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
     insert_record_to_masstree(key, len_key, record);
-    ti->write_set.emplace_back(val, len_val, OP_TYPE::INSERT, record);
+    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::INSERT, record);
   }
   else {
-    ti->write_set.emplace_back(val, len_val, OP_TYPE::UPDATE, record);
+    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
   }
 
   return Status::OK;

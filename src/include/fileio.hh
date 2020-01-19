@@ -20,7 +20,7 @@
 #include <string>
 
 #include "debug.hh"
-#include "util.hh"
+#include "error.hh"
 
 #ifdef KVS_Linux
 #include <linux/fs.h>

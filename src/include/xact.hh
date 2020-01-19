@@ -13,12 +13,10 @@
 
 using namespace std;
 
-#define LOG_FILE "/tmp/LogFile"
 #define KVS_EPOCH_TIME 40 // ms
 
 namespace kvs {
 
-extern std::vector<LogShell> kLogList;
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 /* kGarbageRecords is a list of garbage records.
  * Theoretically, each worker thread has own list.
@@ -32,7 +30,7 @@ extern MasstreeWrapper<Record> MTDB;
  * @brief epoch thread
  * @pre this function is called by invoke_core_thread function.
  */
-void epocher();
+extern void epocher();
 
 /**
  * @brief find record from masstree by using args informations.

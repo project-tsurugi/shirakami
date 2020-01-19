@@ -1,9 +1,11 @@
-#pragma once
-
 /**
  * @file
  * @brief core work about kvs.
  */
+
+#pragma once
+
+#include "include/xact.hh"
 
 namespace kvs {
 
@@ -11,8 +13,6 @@ extern std::thread kEpochThread;
 extern std::atomic<bool> kEpochThreadEnd;
 extern uint64_t kGlobalEpoch;
 extern uint64_t kReclamationEpoch;
-
-extern void epocher();
 
 extern void init();
 extern void fin();

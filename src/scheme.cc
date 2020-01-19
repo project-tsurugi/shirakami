@@ -1,6 +1,8 @@
 
 #include "include/atomic_wrapper.hh"
+#include "include/log.hh"
 #include "include/scheme.hh"
+#include "include/xact.hh"
 
 using std::cout;
 using std::endl;
@@ -80,7 +82,8 @@ WriteSetObj* ThreadInfo::search_write_set(Record* rec_ptr)
   return nullptr;
 }
 
-void ThreadInfo::unlock_write_set() {
+void ThreadInfo::unlock_write_set() 
+{
   TidWord expected, desired;
 
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
@@ -91,7 +94,8 @@ void ThreadInfo::unlock_write_set() {
   }
 }
 
-void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std::vector<WriteSetObj>::iterator end) {
+void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std::vector<WriteSetObj>::iterator end) 
+{
   TidWord expected, desired;
 
   for (auto itr = begin; itr != end; ++itr) {
@@ -100,6 +104,39 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
     desired.lock = 0;
     storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
   }
+}
+
+void ThreadInfo::wal(uint64_t ctid)
+{
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    LogRecord log(ctid, (*itr).tuple);
+    log_set_.emplace_back(log);
+    latest_log_header_.chkSum_ += log.computeChkSum();
+    ++latest_log_header_.logRecNum_;
+  }
+  
+  if (log_set_.size() > KVS_LOG_GC_THRESHOLD) {
+    // prepare write header
+    latest_log_header_.convertChkSumIntoComplementOnTwo();
+
+    // write header
+    logfile_.write((void*)&latest_log_header_, sizeof(LogHeader));
+
+    // write log record
+    for (auto itr = log_set_.begin(); itr != log_set_.end(); ++itr) {
+      // write tx id, length of key, length of val
+      logfile_.write((void*)&(*itr), sizeof((*itr).tid_) + sizeof((*itr).tuple_.len_key) + sizeof((*itr).tuple_.len_val));
+
+      // write key body
+      logfile_.write((void*)(*itr).tuple_.key.get(), (*itr).tuple_.len_key);
+
+      // write val body
+      logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
+    }
+  }
+
+  latest_log_header_.init();
+  log_set_.clear();
 }
 
 void print_status(Status status)
