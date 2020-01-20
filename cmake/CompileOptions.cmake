@@ -49,7 +49,7 @@ add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
 add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
 add_definitions(-DKVS_LOG_GC_THRESHOLD=1)
-add_definitions(-DPROJECT_ROOT=${PROJECT_ROOT})
+add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
 option(WAL "Write ahead logging" OFF)
 if(WAL)

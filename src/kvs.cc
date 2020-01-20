@@ -45,7 +45,9 @@ init_kThreadTable()
     itr->log_dir_.append("/log/log");
     itr->log_dir_.append(std::to_string(ctr));
     ++ctr;
-    itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+    if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
+      ERR;
+    }
     //itr->logfile_.ftruncate(10^9); // if it want to be high performance in experiments, this line is used.
 #endif
   }
