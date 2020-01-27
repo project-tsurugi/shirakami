@@ -34,14 +34,12 @@ class LogHeader {
 class LogRecord {
  public:
   uint64_t tid_;
+  OP_TYPE op_;
   Tuple tuple_;
 
   LogRecord() : tid_(0), tuple_() {}
 
-  LogRecord(const uint64_t tid, const Tuple& tuple) {
-    this->tid_ = tid;
-    this->tuple_ = tuple; // copy
-  }
+  LogRecord(const uint64_t tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 
   int computeChkSum() {
     // compute checksum
@@ -51,6 +49,8 @@ class LogRecord {
       chkSum += (*intitr);
       ++intitr;
     }
+
+    chkSum += static_cast<int32_t>(op_);
 
     // len_key
     for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {

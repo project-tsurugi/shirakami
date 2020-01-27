@@ -44,12 +44,18 @@ class File {
   bool open(const std::string& filePath, int flags) {
     fd_ = ::open(filePath.c_str(), flags);
     autoClose_ = true;
+    if (fd_ == -1) {
+      throw LibcError(errno);
+    }
     return fd_ >= 0;
   }
 
   bool open(const std::string& filePath, int flags, mode_t mode) {
     fd_ = ::open(filePath.c_str(), flags, mode);
     autoClose_ = true;
+    if (fd_ == -1) {
+      throw LibcError(errno);
+    }
     return fd_ >= 0;
   }
 

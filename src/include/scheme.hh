@@ -123,6 +123,7 @@ class WriteSetObj {
   WriteSetObj(const char* const key, const std::size_t len_key, const OP_TYPE op, Record* const rec_ptr) {
     tuple.len_key = len_key;
     tuple.key = std::make_unique<char[]>(len_key);
+    tuple.len_val = 0;
     memcpy(tuple.key.get(), key, len_key);
     this->op = op;
     this->rec_ptr = rec_ptr;
@@ -199,21 +200,9 @@ class WriteSetObj {
     }
   }
 
-  void reset(char const *val, std::size_t len_val) {
-    tuple.len_val = len_val;
-    tuple.val.reset();
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
-  }
-
-  void reset(char const *val, std::size_t len_val, OP_TYPE op, Record* rec_ptr) {
-    tuple.len_val = len_val;
-    tuple.val.reset();
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
-    this->op = op;
-    this->rec_ptr = rec_ptr;
-  }
+  void display();
+  void reset(char const* val, std::size_t len_val);
+  void reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr);
 };
 
 class ReadSetObj {
@@ -304,6 +293,8 @@ class ThreadInfo {
    * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this delete_record operation.
    */
   Status check_delete_after_upsert(const char* key, const std::size_t len_key);
+
+  void display_write_set();
 
   /**
    * @brief Remove inserted records of write set from masstree.

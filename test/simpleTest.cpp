@@ -62,23 +62,29 @@ TEST_F(SimpleTest, insert) {
   std::string v("bbb");
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
+  tbegin(s);
   Storage st{};
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, abort(s));
+  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   {
     Tuple* tuple;
     char k2 = 0;
+  tbegin(s);
     ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
     ASSERT_EQ(Status::OK, commit(s));
+  tbegin(s);
     ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
     ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple;
+  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
+  tbegin(s);
   ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
   ASSERT_EQ(Status::OK, commit(s));

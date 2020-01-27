@@ -53,6 +53,16 @@ init_kThreadTable()
   }
 }
 
+static void
+fin_kThreadTable()
+{
+  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
+#ifdef WAL
+    itr->logfile_.close();
+#endif
+  }
+}
+
 void
 init()
 {
@@ -65,6 +75,7 @@ fin()
 {
   kEpochThreadEnd.store(true, std::memory_order_release);
   kEpochThread.join();
+  fin_kThreadTable();
 }
 
 }  // namespace kvs

@@ -22,6 +22,16 @@ Status ThreadInfo::check_delete_after_upsert(const char* key, const std::size_t 
   return Status::OK;
 }
 
+void ThreadInfo::display_write_set()
+{
+  cout << "ThreadInfo::display_write_set() : write set size " 
+    << write_set.size() << endl;
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    (*itr).display();
+  }
+}
+
+
 void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
@@ -109,9 +119,9 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
 void ThreadInfo::wal(uint64_t ctid)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    LogRecord log(ctid, (*itr).tuple);
-    log_set_.emplace_back(log);
+    LogRecord log(ctid, (*itr).op, (*itr).tuple);
     latest_log_header_.chkSum_ += log.computeChkSum();
+    log_set_.emplace_back(std::move(log));
     ++latest_log_header_.logRecNum_;
   }
   
@@ -124,19 +134,51 @@ void ThreadInfo::wal(uint64_t ctid)
 
     // write log record
     for (auto itr = log_set_.begin(); itr != log_set_.end(); ++itr) {
-      // write tx id, length of key, length of val
-      logfile_.write((void*)&(*itr), sizeof((*itr).tid_) + sizeof((*itr).tuple_.len_key) + sizeof((*itr).tuple_.len_val));
+      // write tx id, op(operation type), length of key, length of val
+      logfile_.write((void*)&(*itr), sizeof((*itr).tid_) + sizeof((*itr).op_) + sizeof((*itr).tuple_.len_key) + sizeof((*itr).tuple_.len_val));
 
       // write key body
       logfile_.write((void*)(*itr).tuple_.key.get(), (*itr).tuple_.len_key);
 
       // write val body
-      logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
+      if ((*itr).op_ != OP_TYPE::DELETE)
+        logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
     }
   }
 
   latest_log_header_.init();
   log_set_.clear();
+}
+
+void WriteSetObj::display()
+{
+  cout << "WriteSetObj::display()" << endl;
+  cout << "tuple.len_key : " << tuple.len_key << endl;
+  cout << "tuple.lenval : " << tuple.len_val << endl;
+  /*
+  cout << "tuple.key : " << tuple.key.get() << endl;
+  cout << "tuple.val : " << tuple.val.get() << endl;
+  */
+  cout << "op : " << static_cast<int32_t>(op) << endl;
+  cout << "rec_ptr : " << rec_ptr << endl;
+}
+
+void WriteSetObj::reset(char const *val, std::size_t len_val)
+{
+    tuple.len_val = len_val;
+    tuple.val.reset();
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
+}
+
+void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr)
+{
+    tuple.len_val = len_val;
+    tuple.val.reset();
+    tuple.val = std::make_unique<char[]>(len_val);
+    memcpy(tuple.val.get(), val, len_val);
+    this->op = op;
+    this->rec_ptr = rec_ptr;
 }
 
 void print_status(Status status)
