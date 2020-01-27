@@ -125,6 +125,12 @@ void ThreadInfo::wal(uint64_t ctid)
     ++latest_log_header_.logRecNum_;
   }
   
+  /**
+   * This part includes many write system call.
+   * Future work: if this degrades the system performance, it should prepare
+   * some buffer (like char*) and do memcpy instead of write system call
+   * and do write system call in a batch.
+   */
   if (log_set_.size() > KVS_LOG_GC_THRESHOLD) {
     // prepare write header
     latest_log_header_.convertChkSumIntoComplementOnTwo();
