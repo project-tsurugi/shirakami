@@ -215,6 +215,7 @@ extern Status scan_key(Token token, Storage storage,
  * @brief This function is almost same to scan_key function.
  * Difference is that this function executes a read opertion for the head of result only.
  * @return The return value of search operation about the head of result.
+ * If WARN_NOT_FOUND is returned, the scan couldn't find any records.
  */
 extern Status scan_one(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,

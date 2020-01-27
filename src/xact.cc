@@ -437,7 +437,13 @@ scan_one(Token token, Storage storage,
 
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &ti->scan_cache_);
 
-  return search_key(token, storage, ti->scan_cache_[ti->scan_cache_index_]->tuple.key.get(), ti->scan_cache_[ti->scan_cache_index_]->tuple.len_key, tuple);
+  if (ti->scan_cache_.size() > 0) {
+    ++ti->scan_cache_index_;
+    return search_key(token, storage, ti->scan_cache_[ti->scan_cache_index_]->tuple.key.get(), ti->scan_cache_[ti->scan_cache_index_]->tuple.len_key, tuple);
+  }
+  else {
+    return Status::WARN_NOT_FOUND;
+  }
 }
 
 void
