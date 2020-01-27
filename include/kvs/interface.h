@@ -212,6 +212,24 @@ extern Status scan_key(Token token, Storage storage,
     std::vector<Tuple*>& result);
 
 /**
+ * @brief This function is almost same to scan_key function.
+ * Difference is that this function executes a read opertion for the head of result only.
+ * @return The return value of search operation about the head of result.
+ */
+extern Status scan_one(Token token, Storage storage,
+    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
+    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
+    Tuple** const tuple);
+
+/**
+ * @brief This function reads the @numbers records from the scan_cache 
+ * which was created at scan_one function.
+ * @pram result [out] output parmeter to pass the found Tuple pointers.
+ * @return void. The numbers of success read records is the size of @result.
+ */
+extern void read_from_prescan(Token token, Storage storage, const std::size_t numbers, std::vector<Tuple*>& result);
+
+/**
  * @brief This function do gc all records in all containers for gc.
  *
  * This function isn't thread safe.
