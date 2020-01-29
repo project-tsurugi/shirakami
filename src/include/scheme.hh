@@ -27,79 +27,14 @@
 #include "fileio.hh"
 #include "log.hh"
 #include "masstree_wrapper.hh"
+#include "record.hh"
 #include "scheme.hh"
+#include "tid.hh"
 
 // kvs_charkey/include/
 #include "kvs/scheme.h"
 
 namespace kvs {
-
-// This declaration is prototype for directly below description.
-class Record;
-
-class TidWord {
-public:
-  union {
-    uint64_t obj;
-    struct {
-      bool lock:1;
-      bool latest:1;
-      bool absent:1;
-      uint64_t tid:29;
-      uint64_t epoch:32;
-    };
-  };
-
-  TidWord() { obj = 0; }
-  TidWord(uint64_t obj) { obj = obj; }
-
-  bool operator==(const TidWord& right) const {
-    return obj == right.obj;
-  }
-
-  bool operator!=(const TidWord& right) const {
-    return !operator==(right);
-  }
-
-  bool operator<(const TidWord& right) const {
-    return this->obj < right.obj;
-  }
-
-  bool is_locked() { return lock; }
-
-  void reset() { obj = 0; }
-};
-
-/**
- * @brief element of write set.
- * @detail copy constructor/assign operator can't be used in this class 
- * in terms of performance.
- */
-class Record {
-public:
-  TidWord tidw;
-  Tuple tuple;
-
-  Record () {}
-
-  Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
-    this->tuple.len_key = len_key;
-    this->tuple.len_val = len_val;
-    this->tuple.key = std::make_unique<char[]>(len_key);
-    this->tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(this->tuple.key.get(), key, len_key);
-    memcpy(this->tuple.val.get(), val, len_val);
-
-    tidw = TidWord();
-    tidw.absent = true;
-  }
-
-  Record(const Record& right) = default;
-  Record(Record&& right) = default;
-  Record& operator=(const Record& right) = default;
-  Record& operator=(Record&& right) = default;
-
-};
 
 /**
  * @brief element of write set.

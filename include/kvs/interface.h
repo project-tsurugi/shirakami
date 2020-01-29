@@ -231,6 +231,12 @@ extern Status scan_one(Token token, Storage storage,
 extern void read_from_prescan(Token token, Storage storage, const std::size_t numbers, std::vector<Tuple*>& result);
 
 /**
+ * @brief Recovery by single thread.
+ * @pre This function is called by single thread and doesn't allow other worker to do any action concurrently.
+ */
+extern void single_recovery_from_log();
+
+/**
  * @brief This function do gc all records in all containers for gc.
  *
  * This function isn't thread safe.

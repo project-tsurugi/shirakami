@@ -11,9 +11,12 @@
 
 #include <cstdint>
 
+#include "tid.hh"
 #include "kvs/scheme.h"
 
 using namespace kvs;
+
+namespace kvs {
 
 class LogHeader {
  public:
@@ -33,19 +36,35 @@ class LogHeader {
 
 class LogRecord {
  public:
-  uint64_t tid_;
+  TidWord tid_;
   OP_TYPE op_;
   Tuple tuple_;
 
   LogRecord() : tid_(0), tuple_() {}
 
-  LogRecord(const uint64_t tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
+  LogRecord(const TidWord tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
+
+  LogRecord(LogRecord&& right) {
+    this->tid_ = right.tid_;
+    this->op_ = right.op_;
+    this->tuple_ = std::move(right.tuple_);
+  }
+
+  LogRecord& operator=(LogRecord&& right) {
+    this->tid_ = right.tid_;
+    this->op_ = right.op_;
+    this->tuple_ = std::move(right.tuple_);
+  }
+
+  bool operator<(const LogRecord& right) {
+    return this->tid_ < right.tid_;
+  }
 
   int computeChkSum() {
     // compute checksum
     int chkSum = 0;
     int* intitr = (int *)this;
-    for (unsigned int i = 0; i < sizeof(uint64_t) / sizeof(unsigned int); ++i) {
+    for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(unsigned int); ++i) {
       chkSum += (*intitr);
       ++intitr;
     }
@@ -81,3 +100,4 @@ class LogRecord {
     return chkSum;
   }
 };
+} // namespace kvs

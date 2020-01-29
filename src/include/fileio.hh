@@ -85,20 +85,25 @@ class File {
     fd_ = -1;
   }
 
+  /**
+   * @brief read some data
+   * @return the volume which is read.
+   */
   size_t readsome(void* data, size_t size) {
     ssize_t r = ::read(fd(), data, size);
     if (r < 0) throw LibcError(errno, "read failed: ");
     return r;
   }
 
-  void read(void* data, size_t size) {
+  size_t read(void* data, size_t size) {
     char* buf = reinterpret_cast<char*>(data);
     size_t s = 0;
     while (s < size) {
       size_t r = readsome(&buf[s], size - s);
-      if (r == 0) ERR;
       s += r;
+      if (size-s != r) return s;
     }
+    return s;
   }
 
   void write(const void* data, size_t size) {

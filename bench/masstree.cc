@@ -32,6 +32,7 @@
 #define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/masstree_wrapper.hh"
 #include "include/random.hh"
+#include "include/record.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
 #include "include/zipf.hh"
