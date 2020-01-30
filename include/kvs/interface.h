@@ -220,7 +220,7 @@ extern Status scan_key(Token token, Storage storage,
 extern Status open_scan(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    std::size_t& handle);
+    ScanHandle& handle);
 
 /**
  * @brief This function reads the @n_read records from the scan_cache 
@@ -232,7 +232,7 @@ extern Status open_scan(Token token, Storage storage,
  * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
  * @return Status::OK it successed.
  */
-extern Status read_from_scan(Token token, Storage storage, const std::size_t handle, const std::size_t n_read, std::vector<Tuple*>& result);
+extern Status read_from_scan(Token token, Storage storage, const ScanHandle handle, const std::size_t n_read, std::vector<Tuple*>& result);
 
 /**
  * @brief close the specified scan_cache
@@ -240,7 +240,7 @@ extern Status read_from_scan(Token token, Storage storage, const std::size_t han
  * @return Status::OK Closing success
  * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
  */
-extern Status close_scan(Token token, Storage storage, const std::size_t handle);
+extern Status close_scan(Token token, Storage storage, const ScanHandle handle);
 
 /**
  * @brief Recovery by single thread.

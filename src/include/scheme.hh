@@ -204,7 +204,7 @@ class ThreadInfo {
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
-  std::map<std::size_t, std::vector<Record*>> scan_cache_;
+  std::map<ScanHandle, std::vector<Record*>> scan_cache_;
   std::string log_dir_;
   File logfile_;
 

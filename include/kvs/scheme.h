@@ -28,6 +28,11 @@ using Token = void*;
 using Storage = std::uint64_t;
 
 /**
+ * @brief Scan Handle
+ */
+using ScanHandle = std::size_t;
+
+/**
  * @brief the status which is after some function.
  *
  * Warn is no problem for progressing.
