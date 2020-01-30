@@ -45,6 +45,11 @@ enum class Status : std::int32_t {
   // warning
   /** this warning mean it read from local read/write set. */
   WARN_READ_FROM_OWN_OPERATION,
+  /**
+   * @brief error
+   * @details the session did open_scan SIZE_MAX times.
+   */
+  WARN_SCAN_LIMIT,
   // warning
   /** WRITE of this warning includes insert/update/upsert */
   WARN_WRITE_TO_LOCAL_WRITE,

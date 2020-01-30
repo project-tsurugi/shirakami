@@ -1,7 +1,9 @@
 file(GLOB SOURCES
+        "key.cc"
         "kvs.cc"
-        "xact.cc"
+        "scan.cc"
         "scheme.cc"
+        "xact.cc"
         "*.cc"
         "../third_party/masstree-beta/clp.o"
         "../third_party/masstree-beta/compiler.o"

@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <iostream>
 #include <iostream>
 #include <vector>
@@ -203,8 +204,7 @@ class ThreadInfo {
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
-  std::vector<Record*> scan_cache_;
-  std::size_t scan_cache_index_;
+  std::map<std::size_t, std::vector<Record*>> scan_cache_;
   std::string log_dir_;
   File logfile_;
 

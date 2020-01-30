@@ -212,23 +212,35 @@ extern Status scan_key(Token token, Storage storage,
     std::vector<Tuple*>& result);
 
 /**
- * @brief This function is almost same to scan_key function.
- * Difference is that this function executes a read opertion for the head of result only.
- * @return The return value of search operation about the head of result.
- * If WARN_NOT_FOUND is returned, the scan couldn't find any records.
+ * @brief This function preserve the specified range of masstree
+ * @param handle [out] the handle to identify scanned result.
+ * @return Status::WARN_NOT_FOUND the scan couldn't find any records.
+ * @return Status::OK the some records was scanned.
  */
-extern Status scan_one(Token token, Storage storage,
+extern Status open_scan(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    Tuple** const tuple);
+    std::size_t& handle);
 
 /**
- * @brief This function reads the @numbers records from the scan_cache 
- * which was created at scan_one function.
+ * @brief This function reads the @n_read records from the scan_cache 
+ * which was created at open_scan function.
+ * The numbers of success read records is the size of @result.
+ * @param handle [in] input parameters to identify the specific scan_cache.
+ * @param n_read [in] input parameters to decide the number of read from the specific scan_cache.
  * @pram result [out] output parmeter to pass the found Tuple pointers.
- * @return void. The numbers of success read records is the size of @result.
+ * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
+ * @return Status::OK it successed.
  */
-extern void read_from_prescan(Token token, Storage storage, const std::size_t numbers, std::vector<Tuple*>& result);
+extern Status read_from_scan(Token token, Storage storage, const std::size_t handle, const std::size_t n_read, std::vector<Tuple*>& result);
+
+/**
+ * @brief close the specified scan_cache
+ * @param handle [in] identify the specific scan_cache.
+ * @return Status::OK Closing success
+ * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
+ */
+extern Status close_scan(Token token, Storage storage, const std::size_t handle);
 
 /**
  * @brief Recovery by single thread.

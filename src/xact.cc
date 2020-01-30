@@ -1,7 +1,7 @@
 
 /**
- * @file
- * @brief impl around transaction engine interface
+ * @file xact.cc
+ * @brief implement about transaction 
  */
 
 #include "include/atomic_wrapper.hh"
@@ -421,42 +421,6 @@ scan_key(Token token, Storage storage,
   }
 
   return Status::OK;
-}
-
-Status
-scan_one(Token token, Storage storage,
-    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
-    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    Tuple** const tuple)
-{
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  // as a precaution
-  ti->scan_cache_index_ = 0;
-  ti->scan_cache_.clear();
-
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &ti->scan_cache_);
-
-  if (ti->scan_cache_.size() > 0) {
-    ++ti->scan_cache_index_;
-    return search_key(token, storage, ti->scan_cache_[ti->scan_cache_index_]->tuple.key.get(), ti->scan_cache_[ti->scan_cache_index_]->tuple.len_key, tuple);
-  }
-  else {
-    return Status::WARN_NOT_FOUND;
-  }
-}
-
-void
-read_from_prescan(Token token, Storage storage, const std::size_t numbers, std::vector<Tuple*>& result)
-{
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  result.clear();
-  for (auto i = ti->scan_cache_index_; i < ti->scan_cache_index_ + numbers && i < ti->scan_cache_.size(); ++i) {
-    Tuple* tuple;
-    search_key(token, storage, ti->scan_cache_[i]->tuple.key.get(), ti->scan_cache_[i]->tuple.len_key, &tuple);
-    result.emplace_back(tuple);
-    ++ti->scan_cache_index_;
-  }
 }
 
 Status
