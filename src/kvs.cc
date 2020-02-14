@@ -20,6 +20,7 @@ std::thread kEpochThread;
 std::atomic<bool> kEpochThreadEnd;
 uint64_t kGlobalEpoch(1);
 uint64_t kReclamationEpoch(0);
+std::string LogDirectory;
 
 static void
 invoke_epocher()
@@ -41,8 +42,8 @@ init_kThreadTable()
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
 #ifdef WAL
-    itr->log_dir_.assign(MAC2STR(PROJECT_ROOT));
-    itr->log_dir_.append("/log/log");
+    itr->log_dir_.assign(LogDirectory);
+    itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
     ++ctr;
     if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
@@ -66,6 +67,12 @@ fin_kThreadTable()
 void
 init()
 {
+  /**
+   * PROJECT_ROOT directory is the default path of wal.
+   */
+  LogDirectory.assign(MAC2STR(PROJECT_ROOT));
+  LogDirectory.append("/log");
+
   init_kThreadTable();
   invoke_core_thread();
 }
@@ -78,16 +85,22 @@ fin()
   fin_kThreadTable();
 }
 
+void 
+change_wal_directory(std::string new_path)
+{
+  LogDirectory.assign(new_path);
+}
+
 void
 single_recovery_from_log()
 {
   std::vector<LogRecord> log_set;
   for (auto i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
     File logfile;
-    std::string filename(MAC2STR(PROJECT_ROOT));
-    filename.append("/log/log");
+    std::string filename(LogDirectory);
+    filename.append("/log");
     filename.append(std::to_string(i));
-    logfile.open(filename, O_RDONLY);
+    if (!logfile.try_open(filename, O_RDONLY)) continue;
 
     LogRecord log;
     LogHeader logheader;

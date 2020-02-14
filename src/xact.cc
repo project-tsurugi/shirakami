@@ -309,17 +309,36 @@ commit(Token token)
 static Status
 decide_token(Token& token)
 {
+  uint64_t index_of_kThreadTable(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if (itr->visible.load(std::memory_order_acquire) == false) {
       bool expected(false);
       bool desired(true);
       if (itr->visible.compare_exchange_strong(expected, desired, std::memory_order_acq_rel)) {
         token = static_cast<void*>(&(*itr));
+
+        std::string now_wal_directory_path(LogDirectory);
+        now_wal_directory_path.append("/log");
+        now_wal_directory_path.append(std::to_string(index_of_kThreadTable));
+
+        if (itr->log_dir_ != now_wal_directory_path) {
+          /**
+           * update wal directory path.
+           */
+          itr->logfile_.close_if_exist();
+          itr->log_dir_.assign(now_wal_directory_path);
+          if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
+            ERR;
+          }
+        }
+
         break;
       }
     }
     if (itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
+    ++index_of_kThreadTable;
   }
+
   return Status::OK;
 }
 

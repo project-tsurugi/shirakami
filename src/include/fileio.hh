@@ -50,6 +50,13 @@ class File {
     return fd_ >= 0;
   }
 
+  bool try_open(const std::string& file_path, int flags) {
+    fd_ = ::open(file_path.c_str(), flags);
+    autoClose_ = true;
+    if (fd_ == -1) return false;
+    else return true;
+  }
+
   bool open(const std::string& filePath, int flags, mode_t mode) {
     fd_ = ::open(filePath.c_str(), flags, mode);
     autoClose_ = true;
@@ -82,6 +89,11 @@ class File {
     if (::close(fd_) < 0) {
       throw LibcError(errno, "close failed: ");
     }
+    fd_ = -1;
+  }
+
+  void close_if_exist() {
+    ::close(fd_);
     fd_ = -1;
   }
 

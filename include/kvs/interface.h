@@ -22,6 +22,14 @@ extern void init();
 extern void fin();
 
 /**
+ * @brief change path of WAL directory.
+ * @details It isn't thread safe.
+ * @param [in] new_name new path of WAL directory.
+ * @return Status::OK
+ */
+extern void change_wal_directory(std::string new_path);
+
+/**
  * @brief enter session
  * @param [out] token output parameter to return the token
  * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.
@@ -244,7 +252,8 @@ extern Status close_scan(Token token, Storage storage, const ScanHandle handle);
 
 /**
  * @brief Recovery by single thread.
- * @pre This function is called by single thread and doesn't allow other worker to do any action concurrently.
+ * @detail This function isn't thread safe.
+ * @pre It must decide correct wal directory name decided by change_wal_directory function before it executes recovery.
  */
 extern void single_recovery_from_log();
 
