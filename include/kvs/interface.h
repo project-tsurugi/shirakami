@@ -24,19 +24,6 @@ extern void init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
  */
 extern void fin();
 
-#if 0
-/**
- * @brief change path of WAL directory.
- * @details It isn't thread safe.
- * @param [in] new_name new path of WAL directory.
- * @return Status::OK
- */
-extern void change_wal_directory(std::string new_path);
-/**
- * Should this function be deleted ?
- */
-#endif
-
 /**
  * @brief enter session
  * @param [out] token output parameter to return the token

@@ -73,6 +73,11 @@ init(std::string log_directory_path)
   LogDirectory.assign(log_directory_path);
   LogDirectory.append("/log");
 
+  /**
+   * If it already exists log files, it recoveries from those.
+   */
+  single_recovery_from_log();
+
   init_kThreadTable();
   invoke_core_thread();
 }
@@ -84,17 +89,6 @@ fin()
   kEpochThread.join();
   fin_kThreadTable();
 }
-
-#if 0
-/**
- * Should this function be deleted ?
- */
-void 
-change_wal_directory(std::string new_path)
-{
-  LogDirectory.assign(new_path);
-}
-#endif
 
 void
 single_recovery_from_log()
@@ -134,6 +128,11 @@ single_recovery_from_log()
 
     logfile.close();
   }
+
+  /**
+   * If no log files exist, it return.
+   */
+  if (log_set.size() == 0) return;
 
   sort(log_set.begin(), log_set.end());
   const std::size_t recovery_epoch = log_set.back().tid_.epoch - 2;
