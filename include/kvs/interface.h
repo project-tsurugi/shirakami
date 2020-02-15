@@ -1,6 +1,9 @@
 #pragma once
 #include "scheme.h"
 
+#define STRING(macro) #macro
+#define MAC2STR(macro) STRING(macro)
+
 namespace kvs {
 /**
  * @file
@@ -9,10 +12,10 @@ namespace kvs {
 
 /**
  * @brief initialize kvs environment
- *
- * When it starts to use this system, in other words, it starts to build database, it must be executed first.
+ * @detail When it starts to use this system, in other words, it starts to build database, it must be executed first.
+ * @param [in] log_directory path of WAL directory.
  */
-extern void init();
+extern void init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
  * @brief join core threads.
@@ -21,6 +24,7 @@ extern void init();
  */
 extern void fin();
 
+#if 0
 /**
  * @brief change path of WAL directory.
  * @details It isn't thread safe.
@@ -28,6 +32,10 @@ extern void fin();
  * @return Status::OK
  */
 extern void change_wal_directory(std::string new_path);
+/**
+ * Should this function be deleted ?
+ */
+#endif
 
 /**
  * @brief enter session

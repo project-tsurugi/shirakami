@@ -317,6 +317,11 @@ decide_token(Token& token)
       if (itr->visible.compare_exchange_strong(expected, desired, std::memory_order_acq_rel)) {
         token = static_cast<void*>(&(*itr));
 
+#if 0
+        /**
+         * Should this part be deleted?
+         * This part checks whether the LogDirectory variable is changed.
+         */
         std::string now_wal_directory_path(LogDirectory);
         now_wal_directory_path.append("/log");
         now_wal_directory_path.append(std::to_string(index_of_kThreadTable));
@@ -331,6 +336,7 @@ decide_token(Token& token)
             ERR;
           }
         }
+#endif
 
         break;
       }

@@ -65,12 +65,12 @@ fin_kThreadTable()
 }
 
 void
-init()
+init(std::string log_directory_path)
 {
   /**
-   * PROJECT_ROOT directory is the default path of wal.
+   * The default value of log_directory is PROJECT_ROOT.
    */
-  LogDirectory.assign(MAC2STR(PROJECT_ROOT));
+  LogDirectory.assign(log_directory_path);
   LogDirectory.append("/log");
 
   init_kThreadTable();
@@ -85,11 +85,16 @@ fin()
   fin_kThreadTable();
 }
 
+#if 0
+/**
+ * Should this function be deleted ?
+ */
 void 
 change_wal_directory(std::string new_path)
 {
   LogDirectory.assign(new_path);
 }
+#endif
 
 void
 single_recovery_from_log()
