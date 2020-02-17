@@ -309,7 +309,6 @@ commit(Token token)
 static Status
 decide_token(Token& token)
 {
-  uint64_t index_of_kThreadTable(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if (itr->visible.load(std::memory_order_acquire) == false) {
       bool expected(false);
@@ -320,7 +319,6 @@ decide_token(Token& token)
       }
     }
     if (itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
-    ++index_of_kThreadTable;
   }
 
   return Status::OK;
