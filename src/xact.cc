@@ -107,19 +107,15 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
           TidWord deletetid = maxtid;
           deletetid.absent = 1;
           MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
-#ifdef KVS_Linux
-          int core_pos = sched_getcpu();
-          if (core_pos == -1) ERR;
-          cpu_set_t current_mask = getThreadAffinity();
-          setThreadAffinity(core_pos);
-#endif
-          std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
+
+          /**
+           * create information for garbage collection.
+           */
+          std::mutex& mutex_for_gclist = kMutexGarbageRecords[ti->gc_container_index_];
           mutex_for_gclist.lock();
-          kGarbageRecords[core_pos].emplace_back(iws->rec_ptr);
+          ti->gc_container_->emplace_back(iws->rec_ptr);
           mutex_for_gclist.unlock();
-#ifdef KVS_Linux
-          setThreadAffinity(current_mask);
-#endif
+
           __atomic_store_n(&(iws->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
           break;
         }

@@ -201,15 +201,29 @@ class ThreadInfo {
   uint64_t epoch;
   TidWord mrctid; // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible;
+
+  /**
+   * about garbage collection
+   */
+  std::size_t gc_container_index_;
+  std::vector<Record*> *gc_container_;
+
+  /**
+   * about operation.
+   */
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
   std::map<ScanHandle, std::vector<Record*>> scan_cache_;
+
+  /**
+   * about logging.
+   */
   std::string log_dir_;
   File logfile_;
-
   LogHeader latest_log_header_;
   std::vector<LogRecord> log_set_;
+
   ThreadInfo(const Token token) {
     this->token = token;
     mrctid.reset();

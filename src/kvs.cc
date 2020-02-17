@@ -41,16 +41,29 @@ init_kThreadTable()
   uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
+
+    /**
+     * about garbage collection.
+     * note : the length of kGarbageRecords is KVS_NUMBER_OF_LOGICAL_CORES.
+     * So it needs surplus operation.
+     */
+    std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
+    itr->gc_container_ = &kGarbageRecords[gc_index];
+    itr->gc_container_index_ = gc_index;
+
+    /**
+     * about logging.
+     */
 #ifdef WAL
     itr->log_dir_.assign(LogDirectory);
     itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
-    ++ctr;
     if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
       ERR;
     }
     //itr->logfile_.ftruncate(10^9); // if it want to be high performance in experiments, this line is used.
 #endif
+    ++ctr;
   }
 }
 
