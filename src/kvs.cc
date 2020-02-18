@@ -11,6 +11,8 @@
 #include <cstdint>
 #include "kvs/interface.h"
 
+#include "boost/filesystem.hpp"
+
 using std::cout;
 using std::endl;
 
@@ -77,7 +79,7 @@ fin_kThreadTable()
   }
 }
 
-void
+Status
 init(std::string log_directory_path)
 {
   /**
@@ -85,6 +87,25 @@ init(std::string log_directory_path)
    */
   LogDirectory.assign(log_directory_path);
   LogDirectory.append("/log");
+  /**
+   * check whether log_directory_path is filesystem objects.
+   */
+  boost::filesystem::path log_dir(log_directory_path);
+  if (boost::filesystem::exists(log_dir)) {
+    /**
+     * some file exists.
+     * check whether it is directory.
+     */
+    if (!boost::filesystem::is_directory(log_dir)) {
+      return Status::ERR_INVALID_ARGS;
+    }
+  } else {
+    /**
+     * directory which has log_directory_path as a file path doesn't exist.
+     * it can create.
+     */
+    boost::filesystem::create_directories(log_dir);
+  }
 
   /**
    * If it already exists log files, it recoveries from those.
@@ -93,6 +114,8 @@ init(std::string log_directory_path)
 
   init_kThreadTable();
   invoke_core_thread();
+
+  return Status::OK;
 }
 
 void
@@ -112,7 +135,12 @@ single_recovery_from_log()
     std::string filename(LogDirectory);
     filename.append("/log");
     filename.append(std::to_string(i));
-    if (!logfile.try_open(filename, O_RDONLY)) continue;
+    if (!logfile.try_open(filename, O_RDONLY)) {
+      /**
+       * the file doesn't exist.
+       */
+      continue;
+    }
 
     LogRecord log;
     LogHeader logheader;

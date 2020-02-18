@@ -32,6 +32,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(kvs_charkey
         PUBLIC api
         PRIVATE Threads::Threads
+        Boost::filesystem
 )
 
 set_compile_options(kvs_charkey)

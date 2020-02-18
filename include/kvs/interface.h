@@ -14,8 +14,11 @@ namespace kvs {
  * @brief initialize kvs environment
  * @detail When it starts to use this system, in other words, it starts to build database, it must be executed first.
  * @param [in] log_directory path of WAL directory.
+ * @return Status::ERR_INVALID_ARGS the args as a log directory path is invalid. 
+ * Some files which has the same path exist.
+ * @return Status::OK
  */
-extern void init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
+extern Status init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
  * @brief join core threads.
