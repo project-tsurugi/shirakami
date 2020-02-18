@@ -343,7 +343,7 @@ leave(Token token)
   return Status::ERR_INVALID_ARGS;
 }
 
-static Status
+Status
 read_record(Record& res, Record* dest)
 {
   TidWord f_check, s_check; // first_check, second_check for occ

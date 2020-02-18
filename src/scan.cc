@@ -26,7 +26,10 @@ open_scan(Token token, Storage storage,
 
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf);
 
-  if (ti->scan_cache_.size() > 0) {
+  if (scan_buf.size() > 0) {
+    /**
+     * scan could find any records.
+     */
     for (std::size_t i = 0;; ++i) {
       auto itr = ti->scan_cache_.find(i);
       if (itr == ti->scan_cache_.end()) {
@@ -38,34 +41,56 @@ open_scan(Token token, Storage storage,
     return Status::OK;
   }
   else {
+    /**
+     * scan couldn't find any records.
+     */
     return Status::WARN_NOT_FOUND;
   }
 }
 
 Status
-read_from_scan(Token token, Storage storage, const std::size_t handle, const std::size_t n_read, std::vector<Tuple*>& result)
+read_from_scan(Token token, Storage storage, const std::size_t handle, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  result.clear();
+  MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  if (ti->scan_cache_.find(handle) == ti->scan_cache_.end())
+  if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
+    /**
+     * the handle was invalid.
+     */
     return Status::WARN_NOT_FOUND;
-  std::vector<Record*>& scan_buf = ti->scan_cache_[handle];
-
-  std::size_t ctr_read(0);
-  for (auto itr = scan_buf.begin(); itr != scan_buf.end();  ++itr) {
-    Tuple* tuple;
-    search_key(token, storage, (*itr)->tuple.key.get(), (*itr)->tuple.len_key, &tuple);
-    result.emplace_back(tuple);
-    ++ctr_read;
-    if (ctr_read == n_read) {
-      scan_buf.erase(scan_buf.begin(), scan_buf.begin()+ctr_read);
-      return Status::OK;
-    }
   }
 
-  // read all records in scan_buf.
-  scan_buf.clear();
+  std::vector<Record*>& scan_buf = ti->scan_cache_[handle];
+
+  if (scan_buf.size() == 0) {
+    return Status::WARN_SCAN_LIMIT;
+  }
+
+  auto itr = scan_buf.begin();
+  WriteSetObj* inws = ti->search_write_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
+  if (inws != nullptr) {
+    if (inws->op == OP_TYPE::DELETE) {
+      return Status::WARN_ALREADY_DELETE;
+    }
+    *tuple = &inws->tuple;
+    return Status::WARN_READ_FROM_OWN_OPERATION;
+  }
+
+  ReadSetObj* inrs = ti->search_read_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
+  if (inrs != nullptr) {
+    *tuple = &inrs->rec_read.tuple;
+    return Status::WARN_READ_FROM_OWN_OPERATION;
+  }
+
+  ReadSetObj rsob(*itr);
+  if (Status::OK != read_record(rsob.rec_read, *itr)) {
+    abort(token);
+    return Status::ERR_ILLEGAL_STATE;
+  }
+  ti->read_set.emplace_back(std::move(rsob));
+  *tuple = &ti->read_set.back().rec_read.tuple;
+
   return Status::OK;
 }
 

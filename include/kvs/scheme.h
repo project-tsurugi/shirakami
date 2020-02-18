@@ -52,7 +52,9 @@ enum class Status : std::int32_t {
   WARN_READ_FROM_OWN_OPERATION,
   /**
    * @brief error
-   * @details the session did open_scan SIZE_MAX times.
+   * @details 
+   * (open_scan) the session did open_scan SIZE_MAX times.
+   * (read_from_scan) no rest in scan cache.
    */
   WARN_SCAN_LIMIT,
   // warning

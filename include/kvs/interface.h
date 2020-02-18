@@ -235,7 +235,7 @@ extern Status open_scan(Token token, Storage storage,
  * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
  * @return Status::OK it successed.
  */
-extern Status read_from_scan(Token token, Storage storage, const ScanHandle handle, const std::size_t n_read, std::vector<Tuple*>& result);
+extern Status read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const result);
 
 /**
  * @brief close the specified scan_cache
