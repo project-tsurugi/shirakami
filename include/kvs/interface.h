@@ -18,7 +18,7 @@ namespace kvs {
  * Some files which has the same path exist.
  * @return Status::OK
  */
-extern Status init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
+extern Status init(std::string log_directory_path = MAC2STR(PROJECT_ROOT) + "/log");
 
 /**
  * @brief join core threads.

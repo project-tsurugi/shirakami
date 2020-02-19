@@ -86,11 +86,10 @@ init(std::string log_directory_path)
    * The default value of log_directory is PROJECT_ROOT.
    */
   LogDirectory.assign(log_directory_path);
-  LogDirectory.append("/log");
   /**
    * check whether log_directory_path is filesystem objects.
    */
-  boost::filesystem::path log_dir(log_directory_path);
+  boost::filesystem::path log_dir(LogDirectory);
   if (boost::filesystem::exists(log_dir)) {
     /**
      * some file exists.
