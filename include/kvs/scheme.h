@@ -85,6 +85,35 @@ enum class Status : std::int32_t {
   ERR_WRITE_TO_DELETED_RECORD,
 };
 
+inline constexpr std::string_view to_string_view(Status value) noexcept {
+    using namespace std::string_view_literals;
+    switch (value) {
+        case Status::WARN_ALREADY_DELETE: return "WARN_ALREADY_DELETE"sv;
+        case Status::WARN_ALREADY_IN_A_SESSION: return "WARN_ALREADY_IN_A_SESSION"sv;
+        case Status::WARN_ALREADY_INSERT: return "WARN_ALREADY_INSERT"sv;
+        case Status::WARN_CANCEL_PREVIOUS_OPERATION: return "WARN_CANCEL_PREVIOUS_OPERATION"sv;
+        case Status::WARN_NOT_FOUND: return "WARN_NOT_FOUND"sv;
+        case Status::WARN_NOT_IN_A_SESSION: return "WARN_NOT_IN_A_SESSION"sv;
+        case Status::WARN_READ_FROM_OWN_OPERATION: return "WARN_READ_FROM_OWN_OPERATION"sv;
+        case Status::WARN_SCAN_LIMIT: return "WARN_SCAN_LIMIT"sv;
+        case Status::WARN_WRITE_TO_LOCAL_WRITE: return "WARN_WRITE_TO_LOCAL_WRITE"sv;
+        case Status::OK: return "OK"sv;
+        case Status::ERR_ALREADY_EXISTS: return "ERR_ALREADY_EXISTS"sv;
+        case Status::ERR_ILLEGAL_STATE: return "ERR_ILLEGAL_STATE"sv;
+        case Status::ERR_INVALID_ARGS: return "ERR_INVALID_ARGS"sv;
+        case Status::ERR_NOT_FOUND: return "ERR_NOT_FOUND"sv;
+        case Status::ERR_SESSION_LIMIT: return "ERR_SESSION_LIMIT"sv;
+        case Status::ERR_UNKNOWN: return "ERR_UNKNOWN"sv;
+        case Status::ERR_VALIDATION: return "ERR_VALIDATION"sv;
+        case Status::ERR_WRITE_TO_DELETED_RECORD: return "ERR_WRITE_TO_DELETED_RECORD"sv;
+    }
+    std::abort();
+}
+
+inline std::ostream& operator<<(std::ostream& out, Status value) {
+    return out << to_string_view(value);
+}
+
 enum class OP_TYPE : std::int32_t {
   SEARCH,
   UPDATE,
