@@ -611,4 +611,38 @@ TEST_F(SimpleTest, all_deletes) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(SimpleTest, scan_new_api) {
+    std::string k("aaa");
+    std::string k2("aab");
+    std::string k3("aac");
+    std::string k4("aad");
+    std::string k6("aa");
+    std::string v1("bbb");
+    std::string v2("bbb");
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    tbegin(s);
+    ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v1.data(), v1.size()));
+    ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v1.data(), v1.size()));
+    ASSERT_EQ(Status::OK, insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
+    ASSERT_EQ(Status::OK, insert(s, st, k3.data(), k3.size(), v1.data(), v1.size()));
+    ASSERT_EQ(Status::OK, insert(s, st, k6.data(), k6.size(), v2.data(), v2.size()));
+    ASSERT_EQ(Status::OK, commit(s));
+
+    ScanHandle handle{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
+    Tuple* tuple{};
+    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+    EXPECT_EQ(memcmp(tuple->key.get(), k.data(), k.size()), 0);
+    EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+    EXPECT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
+    EXPECT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+    EXPECT_EQ(memcmp(tuple->key.get(), k3.data(), k3.size()), 0);
+    EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+    EXPECT_EQ(Status::ERR_NOT_FOUND, read_from_scan(s, st, handle, &tuple));
+}
+
 }  // namespace kvs_charkey::testing
