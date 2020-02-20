@@ -26,3 +26,4 @@ HTML/
 *.a
 *.o
 src/kvs
+/log
