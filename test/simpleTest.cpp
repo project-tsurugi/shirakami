@@ -659,7 +659,7 @@ TEST_F(SimpleTest, scan_new_api) {
     EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
     EXPECT_EQ(memcmp(tuple->key.get(), k3.data(), k3.size()), 0);
     EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
-    EXPECT_EQ(Status::ERR_NOT_FOUND, read_from_scan(s, st, handle, &tuple));
+    EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
 }
 
 }  // namespace kvs_charkey::testing

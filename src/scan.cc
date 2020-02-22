@@ -14,6 +14,8 @@
 
 using namespace kvs;
 
+namespace kvs {
+
 Status
 open_scan(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
@@ -71,25 +73,32 @@ read_from_scan(Token token, Storage storage, const std::size_t handle, Tuple** c
   WriteSetObj* inws = ti->search_write_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
   if (inws != nullptr) {
     if (inws->op == OP_TYPE::DELETE) {
+      scan_buf.erase(itr);
       return Status::WARN_ALREADY_DELETE;
     }
     *tuple = &inws->tuple;
+    scan_buf.erase(itr);
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   ReadSetObj* inrs = ti->search_read_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
   if (inrs != nullptr) {
     *tuple = &inrs->rec_read.tuple;
+    scan_buf.erase(itr);
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   ReadSetObj rsob(*itr);
   if (Status::OK != read_record(rsob.rec_read, *itr)) {
     abort(token);
+    /**
+     * todo : should it insert close_scan?
+     */
     return Status::ERR_ILLEGAL_STATE;
   }
   ti->read_set.emplace_back(std::move(rsob));
   *tuple = &ti->read_set.back().rec_read.tuple;
+  scan_buf.erase(itr);
 
   return Status::OK;
 }
@@ -108,3 +117,4 @@ close_scan(Token token, Storage storage, const std::size_t handle)
   return Status::OK;
 }
 
+} // namespace kvs
