@@ -68,6 +68,12 @@ enum class Status : std::int32_t {
   // error
   /** It is used at leave function. It means that leave function recieved invalid token. */
   ERR_INVALID_ARGS,
+  /**
+   * @brief error about invalid handle
+   * @details
+   * (read_from_scan) it is called when read_from_scan is called with invalid handles.
+   */
+  ERR_INVALID_HANDLE,
   ERR_NOT_FOUND,
   /**
    * @brief error

@@ -209,12 +209,17 @@ class ThreadInfo {
   std::vector<Record*> *gc_container_;
 
   /**
-   * about operation.
+   * about holding operation info.
    */
   std::vector<ReadSetObj> read_set;
   std::vector<WriteSetObj> write_set;
   std::vector<OprObj> opr_set;
+
+  /**
+   * about scan operation.
+   */
   std::map<ScanHandle, std::vector<Record*>> scan_cache_;
+  std::map<ScanHandle, std::size_t> scan_cache_itr_;
 
   /**
    * about logging.

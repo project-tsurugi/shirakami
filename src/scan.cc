@@ -20,7 +20,7 @@ Status
 open_scan(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    std::size_t& handle)
+    ScanHandle& handle)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -32,10 +32,12 @@ open_scan(Token token, Storage storage,
     /**
      * scan could find any records.
      */
-    for (std::size_t i = 0;; ++i) {
+    for (ScanHandle i = 0;; ++i) {
       auto itr = ti->scan_cache_.find(i);
       if (itr == ti->scan_cache_.end()) {
         ti->scan_cache_[i] = scan_buf;
+        ti->scan_cache_itr_[i] = 0;
+        handle = i;
         break;
       }
       if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
@@ -51,7 +53,7 @@ open_scan(Token token, Storage storage,
 }
 
 Status
-read_from_scan(Token token, Storage storage, const std::size_t handle, Tuple** const tuple)
+read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -60,31 +62,32 @@ read_from_scan(Token token, Storage storage, const std::size_t handle, Tuple** c
     /**
      * the handle was invalid.
      */
-    return Status::WARN_NOT_FOUND;
+    return Status::ERR_INVALID_HANDLE;
   }
 
   std::vector<Record*>& scan_buf = ti->scan_cache_[handle];
+  ScanHandle& scan_index = ti->scan_cache_itr_[handle];
 
-  if (scan_buf.size() == 0) {
+  if (scan_buf.size() == scan_index) {
     return Status::WARN_SCAN_LIMIT;
   }
 
-  auto itr = scan_buf.begin();
+  auto itr = scan_buf.begin() + scan_index;
   WriteSetObj* inws = ti->search_write_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
   if (inws != nullptr) {
     if (inws->op == OP_TYPE::DELETE) {
-      scan_buf.erase(itr);
+      ++scan_index;
       return Status::WARN_ALREADY_DELETE;
     }
     *tuple = &inws->tuple;
-    scan_buf.erase(itr);
+    ++scan_index;
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   ReadSetObj* inrs = ti->search_read_set((*itr)->tuple.key.get(), (*itr)->tuple.len_key);
   if (inrs != nullptr) {
     *tuple = &inrs->rec_read.tuple;
-    scan_buf.erase(itr);
+    ++scan_index;
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
@@ -98,21 +101,24 @@ read_from_scan(Token token, Storage storage, const std::size_t handle, Tuple** c
   }
   ti->read_set.emplace_back(std::move(rsob));
   *tuple = &ti->read_set.back().rec_read.tuple;
-  scan_buf.erase(itr);
+  ++scan_index;
 
   return Status::OK;
 }
 
 Status
-close_scan(Token token, Storage storage, const std::size_t handle)
+close_scan(Token token, Storage storage, const ScanHandle handle)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
 
   auto itr = ti->scan_cache_.find(handle);
-  if (itr == ti->scan_cache_.end())
-    return Status::WARN_NOT_FOUND;
-  else
+  if (itr == ti->scan_cache_.end()) {
+    return Status::ERR_INVALID_HANDLE;
+  } else {
     ti->scan_cache_.erase(itr);
+    auto index_itr = ti->scan_cache_itr_.find(handle);
+    ti->scan_cache_itr_.erase(index_itr);
+  }
 
   return Status::OK;
 }
