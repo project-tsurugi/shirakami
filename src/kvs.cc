@@ -73,6 +73,23 @@ static void
 fin_kThreadTable()
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
+    /**
+     * about holding operation info.
+     */
+    itr->read_set.clear();
+    itr->write_set.clear();
+    itr->opr_set.clear();
+
+    /**
+     * about scan operation
+     */
+    itr->scan_cache_.clear();
+    itr->scan_cache_itr_.clear();
+
+    /**
+     * about logging
+     */
+    itr->log_set_.clear();
 #ifdef WAL
     itr->logfile_.close();
 #endif
