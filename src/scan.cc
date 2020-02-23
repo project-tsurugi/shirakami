@@ -35,7 +35,7 @@ open_scan(Token token, Storage storage,
     for (ScanHandle i = 0;; ++i) {
       auto itr = ti->scan_cache_.find(i);
       if (itr == ti->scan_cache_.end()) {
-        ti->scan_cache_[i] = scan_buf;
+        ti->scan_cache_[i] = std::move(scan_buf);
         ti->scan_cache_itr_[i] = 0;
         handle = i;
         break;
@@ -62,11 +62,12 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
     /**
      * the handle was invalid.
      */
+    abort(token);
     return Status::ERR_INVALID_HANDLE;
   }
 
   std::vector<Record*>& scan_buf = ti->scan_cache_[handle];
-  ScanHandle& scan_index = ti->scan_cache_itr_[handle];
+  std::size_t& scan_index = ti->scan_cache_itr_[handle];
 
   if (scan_buf.size() == scan_index) {
     return Status::WARN_SCAN_LIMIT;
@@ -110,6 +111,7 @@ close_scan(Token token, Storage storage, const ScanHandle handle)
 
   auto itr = ti->scan_cache_.find(handle);
   if (itr == ti->scan_cache_.end()) {
+    abort(token);
     return Status::ERR_INVALID_HANDLE;
   } else {
     ti->scan_cache_.erase(itr);

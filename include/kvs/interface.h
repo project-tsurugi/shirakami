@@ -69,7 +69,7 @@ extern Status commit(Token token);
  * @brief abort and end the transaction.
  *
  * do local set clear, try gc.
- * @param token the token retrieved by enter()
+ * @param token [in] the token retrieved by enter()
  * @pre it did enter -> ... -> tbegin -> some access operation(update/insert/search/delete) or no operation
  * @post execute leave to leave the session or tbegin to start next transaction.
  * @return Status::OK It work correctly.
@@ -100,7 +100,7 @@ extern Status get_storage(char const* name, std::size_t len_name, Storage& stora
 
 /**
  * @brief delete existing storage and records under the storage.
- * @param storage the storage handle retrieved with register_storage() or get_storage()
+ * @param storage [in] the storage handle retrieved with register_storage() or get_storage()
  * @return Status::OK if successful
  * @return Status::ERR_NOT_FOUND if the storage is not registered with the given name
  */
@@ -108,8 +108,8 @@ extern Status delete_storage(Storage storage);
 
 /**
  * @brief update the record for the given key, or insert the key/value if the record does not exist
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param key the key of the upserted record
  * @param len_key indicate the key length
  * @param val the value of the upserted record
@@ -121,8 +121,8 @@ extern Status upsert(Token token, Storage storage, const char* const key, const 
 
 /**
  * @brief delete the record for the given key
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param key the key of the record for deletion
  * @param len_key indicate the key length
  * @pre it already executed enter.
@@ -151,8 +151,8 @@ extern void delete_all_garbage_records();
 
 /**
  * @brief insert the record with given key/value
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param key the key of the inserted record
  * @param len_key indicate the key length
  * @param val the value of the inserted record
@@ -166,8 +166,8 @@ extern Status insert(Token token, Storage storage, const char* const key, const 
 
 /**
  * @brief update the record for the given key
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param key the key of the updated record
  * @param len_key indicate the key length
  * @param val the value of the updated record
@@ -180,8 +180,8 @@ extern Status update(Token token, Storage storage, const char* const key, const 
 
 /**
  * @brief search with the given key and return the found tuple
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param key the search key
  * @param len_key indicate the key length
  * @param tuple output parameter to pass the found Tuple pointer.
@@ -197,8 +197,8 @@ extern Status search_key(Token token, Storage storage, const char* const key, co
 
 /**
  * @brief search with the given key range and return the found tuples
- * @param token the token retrieved by enter()
- * @param storage the storage handle retrieved by register_storage() or get_storage()
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param lkey the key to indicate the beginning of the range, null if the beginning is open
  * @param lkey_len indicate the lkey length
  * @param l_exclusive indicate whether the lkey is exclusive 
@@ -219,7 +219,10 @@ extern Status scan_key(Token token, Storage storage,
 
 /**
  * @brief This function preserve the specified range of masstree
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [out] the handle to identify scanned result.
+ * @return Status:::WARN_SCAN_LIMIT the scan could find some records but could not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND the scan couldn't find any records.
  * @return Status::OK the some records was scanned.
  */
@@ -229,22 +232,29 @@ extern Status open_scan(Token token, Storage storage,
     ScanHandle& handle);
 
 /**
- * @brief This function reads the @n_read records from the scan_cache 
+ * @brief This function reads the one records from the scan_cache 
  * which was created at open_scan function.
- * The numbers of success read records is the size of @result.
+ * @details The read record is returned by @result.
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [in] input parameters to identify the specific scan_cache.
- * @param n_read [in] input parameters to decide the number of read from the specific scan_cache.
- * @pram result [out] output parmeter to pass the found Tuple pointers.
- * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
- * @return Status::OK it successed.
+ * @pram result [out] output parmeter to pass the read record.
+ * @return Status::ERR_INVALID_HANDLE The @handle is invalid. It do abort(token).
+ * @return Status::ERR_ILLEGAL_STATE The record your are trying to read was deleted by other tx.
+ * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
+ * @return Status::WARN_ALREADY_DELETE the record you are trying to read was deleted by yourself in the same tx.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert) operation in the same tx.
+ * @return Status::OK It succeeded.
  */
 extern Status read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const result);
 
 /**
  * @brief close the specified scan_cache
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [in] identify the specific scan_cache.
- * @return Status::OK Closing success
- * @return Status::WARN_NOT_FOUND it can't find scan_cache by using @handle.
+ * @return Status::ERR_INVALID_HANDLE The @handle is invalid. It do abort(token).
+ * @return Status::OK It succeeded. 
  */
 extern Status close_scan(Token token, Storage storage, const ScanHandle handle);
 

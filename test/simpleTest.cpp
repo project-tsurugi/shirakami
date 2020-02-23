@@ -686,6 +686,8 @@ TEST_F(SimpleTest, read_from_scan) {
   tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   ASSERT_EQ(Status::ERR_INVALID_HANDLE, read_from_scan(s, st, 3, &tuple));
+  tbegin(s);
+  ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
   EXPECT_EQ(memcmp(tuple->key.get(), k.data(), k.size()), 0);
   EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
@@ -721,7 +723,6 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s2));
   EXPECT_EQ(Status::ERR_ILLEGAL_STATE, read_from_scan(s, st, handle, &tuple));
-  ASSERT_EQ(Status::OK, abort(s));
 
   ASSERT_EQ(Status::OK, leave(s));
   ASSERT_EQ(Status::OK, leave(s2));
