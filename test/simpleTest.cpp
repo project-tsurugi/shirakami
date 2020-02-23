@@ -635,10 +635,13 @@ TEST_F(SimpleTest, open_scan_test) {
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{}, handle2{};
+  tbegin(s);
   ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(Status::OK, commit(s));
+  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, commit(s));
+  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(0, handle);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle2));
@@ -667,10 +670,20 @@ TEST_F(SimpleTest, read_from_scan) {
   ScanHandle handle{};
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
+  /**
+   * test
+   * if read_from_scan detects self write(update, insert), it read from owns.
+   */
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(Status::OK, close_scan(s, st, handle));
   ASSERT_EQ(Status::OK, commit(s));
 
+  /**
+   * test
+   * if it calls read_from_scan with invalid handle, it returns Status::ERR_INVALID_HANDLE.
+   * if read_from_scan read all records in cache taken at open_scan, it returns Status::WARN_SCAN_LIMIT.
+   */
+  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   ASSERT_EQ(Status::ERR_INVALID_HANDLE, read_from_scan(s, st, 3, &tuple));
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -683,7 +696,35 @@ TEST_F(SimpleTest, read_from_scan) {
   EXPECT_EQ(memcmp(tuple->key.get(), k3.data(), k3.size()), 0);
   EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
   EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, commit(s));
+
+  /**
+   * test
+   * if read_from_scan detects the record deleted by myself, it function returns Status::WARN_ALREADY_DELETE.
+   */
+  tbegin(s);
+  ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, abort(s));
+
+  /**
+   * test
+   * if read_from_scan detects the record deleted by others between open_scan and read_from_scan,
+   * it function returns Status::ERR_ILLEGAL_STATE which means reading deleted record.
+   */
+  tbegin(s);
+  ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
+  Token s2{};
+  ASSERT_EQ(Status::OK, enter(s2));
+  tbegin(s2);
+  ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, commit(s2));
+  EXPECT_EQ(Status::ERR_ILLEGAL_STATE, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, abort(s));
+
   ASSERT_EQ(Status::OK, leave(s));
+  ASSERT_EQ(Status::OK, leave(s2));
 }
 
 }  // namespace kvs_charkey::testing

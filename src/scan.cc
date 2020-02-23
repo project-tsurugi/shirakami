@@ -94,9 +94,6 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
   ReadSetObj rsob(*itr);
   if (Status::OK != read_record(rsob.rec_read, *itr)) {
     abort(token);
-    /**
-     * todo : should it insert close_scan?
-     */
     return Status::ERR_ILLEGAL_STATE;
   }
   ti->read_set.emplace_back(std::move(rsob));
