@@ -76,15 +76,12 @@ fin_kThreadTable()
     /**
      * about holding operation info.
      */
-    itr->read_set.clear();
-    itr->write_set.clear();
-    itr->opr_set.clear();
+    itr->clean_up_ops_set();
 
     /**
      * about scan operation
      */
-    itr->scan_cache_.clear();
-    itr->scan_cache_itr_.clear();
+    itr->clean_up_scan_caches();
 
     /**
      * about logging

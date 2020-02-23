@@ -125,8 +125,16 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
     }
   }
 
-  ti->read_set.clear();
-  ti->write_set.clear();
+  /**
+   * about holding operation info.
+   */
+  ti->clean_up_ops_set();
+
+  /**
+   * about scan operation.
+   */
+  ti->clean_up_scan_caches();
+
   gc_records();
 }
 
@@ -134,9 +142,9 @@ Status
 abort(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  ti->read_set.clear();
   ti->remove_inserted_records_of_write_set_from_masstree();
-  ti->write_set.clear();
+  ti->clean_up_ops_set();
+  ti->clean_up_scan_caches();
   gc_records();
   return Status::OK;
 }

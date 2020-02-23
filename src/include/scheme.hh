@@ -241,6 +241,16 @@ class ThreadInfo {
   }
 
   /**
+   * @brief clean up about holding operation info.
+   */
+  void clean_up_ops_set();
+
+  /**
+   * @brief clean up about scan operation.
+   */
+  void clean_up_scan_caches();
+
+  /**
    * @brief check whether it already executed update or insert operation.
    * @param [in] key the key of record.
    * @param [in] len_key the key length of records.

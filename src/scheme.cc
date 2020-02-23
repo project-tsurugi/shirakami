@@ -12,6 +12,19 @@ using std::endl;
 
 namespace kvs{
 
+void ThreadInfo::clean_up_ops_set()
+{
+  read_set.clear();
+  write_set.clear();
+  opr_set.clear();
+}
+
+void ThreadInfo::clean_up_scan_caches()
+{
+  scan_cache_.clear();
+  scan_cache_itr_.clear();
+}
+ 
 Status ThreadInfo::check_delete_after_upsert(const char* key, const std::size_t len_key)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
