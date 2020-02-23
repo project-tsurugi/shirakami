@@ -728,4 +728,20 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(SimpleTest, close_scan) {
+  std::string k1("a");
+  std::string v1("0");
+  Token s{};
+  Storage st{};
+  ASSERT_EQ(Status::OK, enter(s));
+  ScanHandle handle{};
+  tbegin(s);
+  ASSERT_EQ(Status::OK, insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
+  ASSERT_EQ(Status::OK, commit(s));
+  tbegin(s);
+  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
+  ASSERT_EQ(Status::OK, close_scan(s, st, handle));
+  ASSERT_EQ(Status::ERR_INVALID_HANDLE, close_scan(s, st, handle));
+  ASSERT_EQ(Status::OK, leave(s));
+}
 }  // namespace kvs_charkey::testing
