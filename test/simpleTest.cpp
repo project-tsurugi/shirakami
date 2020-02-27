@@ -764,9 +764,9 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
     ScanHandle handle{};
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, open_scan(s, st, k1.data(), k1.size(), false, k2.data(), k2.size(), false, handle));
-    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-    EXPECT_EQ(memcmp(tuple->key.get(), k1.data(), k1.size()), 0);
-    EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+    ASSERT_EQ(memcmp(tuple->key.get(), k1.data(), k1.size()), 0);
+    ASSERT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
 
     // record exists
     ASSERT_EQ(Status::OK, search_key(s, st, k4.data(), k4.size(), &tuple));
@@ -775,10 +775,10 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
     // record not exist
     ASSERT_EQ(Status::ERR_NOT_FOUND, search_key(s, st, k3.data(), k3.size(), &tuple));
 
-    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-    EXPECT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
-    EXPECT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
-    EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+    ASSERT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
+    ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
     ASSERT_EQ(Status::OK, commit(s));
 
     ASSERT_EQ(Status::OK, leave(s));
