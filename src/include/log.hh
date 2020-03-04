@@ -85,14 +85,14 @@ class LogRecord {
 
     // key
     char* charitr = (char*) tuple_.key.get();
-    for (unsigned char i = 0; i < tuple_.len_key; ++i) {
+    for (std::size_t i = 0; i < tuple_.len_key; ++i) {
       chkSum += (*charitr);
       ++charitr;
     }
 
     // val
     charitr = (char*) tuple_.val.get();
-    for (unsigned char i = 0; i < tuple_.len_val; ++i) {
+    for (std::size_t i = 0; i < tuple_.len_val; ++i) {
       chkSum += (*charitr);
       ++charitr;
     }

@@ -196,13 +196,13 @@ public:
   Tuple(const Tuple& right) {
     this->len_key = right.len_key;
     this->len_val = right.len_val;
-    if (len_key > 0) {
-      this->key = std::make_unique<char[]>(len_key);
-      memcpy(this->key.get(), right.key.get(), len_key);
+    if (right.len_key > 0) {
+      this->key = std::make_unique<char[]>(right.len_key);
+      memcpy(this->key.get(), right.key.get(), right.len_key);
     }
-    if (len_val > 0) {
-      this->val = std::make_unique<char[]>(len_val);
-      memcpy(this->val.get(), right.val.get(), len_val);
+    if (right.len_val > 0) {
+      this->val = std::make_unique<char[]>(right.len_val);
+      memcpy(this->val.get(), right.val.get(), right.len_val);
     }
   }
 
