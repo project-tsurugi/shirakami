@@ -25,7 +25,7 @@ void ThreadInfo::clean_up_scan_caches()
   scan_cache_itr_.clear();
 }
  
-Status ThreadInfo::check_delete_after_upsert(const char* key, const std::size_t len_key)
+Status ThreadInfo::check_delete_after_write(const char* key, const std::size_t len_key)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if ((*itr).rec_ptr->tuple.len_key == len_key

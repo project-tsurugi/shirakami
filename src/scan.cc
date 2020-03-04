@@ -17,6 +17,48 @@ using namespace kvs;
 namespace kvs {
 
 Status
+scan_key(Token token, Storage storage,
+    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
+    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
+    std::vector<Tuple*>& result)
+{
+  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  // as a precaution
+  result.clear();
+
+  std::vector<Record*> scan_res;
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res);
+
+  //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
+  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
+    WriteSetObj* inws = ti->search_write_set(*itr);
+    if (inws != nullptr) {
+      result.emplace_back(&(*itr)->tuple);
+      continue;
+    }
+    ReadSetObj* inrs = ti->search_read_set(*itr);
+    if (inrs != nullptr) {
+      result.emplace_back(&(*itr)->tuple);
+      continue;
+    }
+    // if the record was already read/update/insert in the same transaction, 
+    // the result which is record pointer is notified to caller but
+    // don't execute re-read (read_record function).
+    // Because in herbrand semantics, the read reads last update even if the update is own.
+
+    ReadSetObj rsob(*itr);
+    if (Status::OK != read_record(rsob.rec_read, *itr)) {
+      return Status::WARN_ALREADY_DELETE;
+    }
+    ti->read_set.emplace_back(std::move(rsob));
+    result.emplace_back(&(*itr)->tuple);
+  }
+
+  return Status::OK;
+}
+
+Status
 open_scan(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
@@ -62,8 +104,7 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
     /**
      * the handle was invalid.
      */
-    abort(token);
-    return Status::ERR_INVALID_HANDLE;
+    return Status::WARN_INVALID_HANDLE;
   }
 
   std::vector<Record*>& scan_buf = ti->scan_cache_[handle];
@@ -94,8 +135,7 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
 
   ReadSetObj rsob(*itr);
   if (Status::OK != read_record(rsob.rec_read, *itr)) {
-    abort(token);
-    return Status::ERR_ILLEGAL_STATE;
+    return Status::WARN_ALREADY_DELETE;
   }
   ti->read_set.emplace_back(std::move(rsob));
   *tuple = &ti->read_set.back().rec_read.tuple;
@@ -111,8 +151,7 @@ close_scan(Token token, Storage storage, const ScanHandle handle)
 
   auto itr = ti->scan_cache_.find(handle);
   if (itr == ti->scan_cache_.end()) {
-    abort(token);
-    return Status::ERR_INVALID_HANDLE;
+    return Status::WARN_INVALID_HANDLE;
   } else {
     ti->scan_cache_.erase(itr);
     auto index_itr = ti->scan_cache_itr_.find(handle);

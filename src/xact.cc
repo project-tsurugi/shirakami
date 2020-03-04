@@ -357,18 +357,13 @@ read_record(Record& res, Record* dest)
   TidWord f_check, s_check; // first_check, second_check for occ
 
   f_check.obj = loadAcquire(dest->tidw.obj);
-  if (f_check.absent == true) {
-    return Status::ERR_ILLEGAL_STATE;
-    // other thread is inserting this record concurrently,
-    // but it is't committed yet.
-  }
 
   for (;;) {
     while (f_check.lock)
       f_check.obj = loadAcquire(dest->tidw.obj);
 
     if (f_check.absent == true) {
-      return Status::ERR_ILLEGAL_STATE;
+      return Status::WARN_ALREADY_DELETE;
       // other thread is inserting this record concurrently,
       // but it is't committed yet.
     }
@@ -386,49 +381,6 @@ read_record(Record& res, Record* dest)
 }
 
 Status
-scan_key(Token token, Storage storage,
-    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
-    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    std::vector<Tuple*>& result)
-{
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  // as a precaution
-  result.clear();
-
-  std::vector<Record*> scan_res;
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res);
-
-  //cout << std::string((*scan_res.begin())->tuple.key.get(), (*scan_res.begin())->tuple.len_key) << endl;
-  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    WriteSetObj* inws = ti->search_write_set(*itr);
-    if (inws != nullptr) {
-      result.emplace_back(&(*itr)->tuple);
-      continue;
-    }
-    ReadSetObj* inrs = ti->search_read_set(*itr);
-    if (inrs != nullptr) {
-      result.emplace_back(&(*itr)->tuple);
-      continue;
-    }
-    // if the record was already read/update/insert in the same transaction, 
-    // the result which is record pointer is notified to caller but
-    // don't execute re-read (read_record function).
-    // Because in herbrand semantics, the read reads last update even if the update is own.
-
-    ReadSetObj rsob(*itr);
-    if (Status::OK != read_record(rsob.rec_read, *itr)) {
-      abort(token);
-      return Status::ERR_ILLEGAL_STATE;
-    }
-    ti->read_set.emplace_back(std::move(rsob));
-    result.emplace_back(&(*itr)->tuple);
-  }
-
-  return Status::OK;
-}
-
-Status
 delete_all_records()
 {
   Token s{};
@@ -442,7 +394,7 @@ delete_all_records()
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     tbegin(s);
     delete_record(s, st, (*itr)->tuple.key.get(), (*itr)->tuple.len_key);
-    if (Status::OK != commit(s)) return Status::ERR_UNKNOWN;
+    if (Status::OK != commit(s)) return Status::WARN_UNKNOWN;
   }
 
   leave(s);
@@ -472,19 +424,16 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
   Record* record = MTDB.get_value(key, len_key);
   if (unlikely(record == nullptr)) {
     *tuple = nullptr;
-    abort(token);
-    return Status::ERR_NOT_FOUND;
+    return Status::WARN_NOT_FOUND;
   }
 
   ReadSetObj rsob(record);
-  if (Status::OK != read_record(rsob.rec_read, record)) {
-    abort(token);
-    return Status::ERR_ILLEGAL_STATE;
+  Status rr = read_record(rsob.rec_read, record);
+  if (rr == Status::OK) {
+    ti->read_set.emplace_back(std::move(rsob));
+    *tuple = &ti->read_set.back().rec_read.tuple;
   }
-  ti->read_set.emplace_back(std::move(rsob));
-  *tuple = &ti->read_set.back().rec_read.tuple;
-
-  return Status::OK;
+  return rr;
 }
 
 Status
@@ -500,8 +449,7 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
 
   Record* record = MTDB.get_value(key, len_key);
   if (unlikely(record == nullptr)) {
-    abort(token);
-    return Status::ERR_NOT_FOUND;
+    return Status::WARN_NOT_FOUND;
   }
 
   WriteSetObj wso(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
@@ -522,8 +470,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
   }
 
   if (find_record_from_masstree(key, len_key) != nullptr) {
-    abort(token);
-    return Status::ERR_ALREADY_EXISTS;
+    return Status::WARN_ALREADY_EXISTS;
   }
 
   Record* record = new Record(key, len_key, val, len_val);
@@ -536,13 +483,12 @@ Status
 delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  Status check = ti->check_delete_after_upsert(key, len_key);
+  Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) {
-    abort(token);
-    return Status::ERR_NOT_FOUND;
+    return Status::WARN_NOT_FOUND;
   };
 
   ti->write_set.emplace_back(key, len_key, OP_TYPE::DELETE, record);

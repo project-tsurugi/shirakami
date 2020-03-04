@@ -258,7 +258,7 @@ class ThreadInfo {
    * @return Status::OK no update/insert before this delete_record operation.
    * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this delete_record operation.
    */
-  Status check_delete_after_upsert(const char* key, const std::size_t len_key);
+  Status check_delete_after_write(const char* key, const std::size_t len_key);
 
   void display_write_set();
 

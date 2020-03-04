@@ -39,34 +39,65 @@ using ScanHandle = std::size_t;
  * ERR is problem for progressing.
  */
 enum class Status : std::int32_t {
+  /**
+   * @brief warning
+   * @details
+   * (read_record) the read record was deleted.
+   */
   WARN_ALREADY_DELETE,
+  WARN_ALREADY_EXISTS,
   WARN_ALREADY_IN_A_SESSION,
   WARN_ALREADY_INSERT,
-  // warning
-  /** this warning mean it canceled some previous operation. */
+  /**
+   * @brief warning
+   * @details This warning mean it canceled some previous operation.
+   */
   WARN_CANCEL_PREVIOUS_OPERATION,
+  /**
+   * @brief error about invalid handle
+   * @details
+   * (read_from_scan) it is called when read_from_scan is called with invalid handles.
+   */
+  WARN_INVALID_HANDLE,
   WARN_NOT_FOUND,
   WARN_NOT_IN_A_SESSION,
-  // warning
-  /** this warning mean it read from local read/write set. */
+  /**
+   * @brief waring
+   * @details This warning mean it read from local read/write set.
+   */
   WARN_READ_FROM_OWN_OPERATION,
   /**
-   * @brief error
+   * @brief warning
    * @details 
    * (open_scan) the session did open_scan SIZE_MAX times.
    * (read_from_scan) no rest in scan cache.
    */
   WARN_SCAN_LIMIT,
+  /**
+   * @brief warning
+   * @details
+   * (delete_all_records) This function was interrupted by someone and did not finish completely.
+   */
+  WARN_UNKNOWN, 
   // warning
-  /** WRITE of this warning includes insert/update/upsert */
+  /**
+   * @brief warning
+   * @details WRITE of this warning includes insert/update/upsert.
+   */
   WARN_WRITE_TO_LOCAL_WRITE,
   OK,
   ERR_ALREADY_EXISTS,
   // error
-  /** It read absent (inserting/deleting) of a version. */
+  /**
+   * @brief error
+   * @details It read absent (inserting/deleting) of a version.
+   */
   ERR_ILLEGAL_STATE,
   // error
-  /** It is used at leave function. It means that leave function recieved invalid token. */
+  /**
+   * @brief error
+   * @details It is used at leave function. It means that leave function recieved invalid token.
+   */
   ERR_INVALID_ARGS,
   /**
    * @brief error about invalid handle
@@ -83,37 +114,45 @@ enum class Status : std::int32_t {
    */
   ERR_SESSION_LIMIT,
   ERR_UNKNOWN,
-  // error
-  /** read validation failure */
+  /**
+   * @brief error
+   * @details read validation failure.
+   */
   ERR_VALIDATION,
-  // error
-  /** write to deleted record. */
+  /**
+   * @brief error
+   * @details write to deleted record.
+   */
   ERR_WRITE_TO_DELETED_RECORD,
 };
 
 inline constexpr std::string_view to_string_view(Status value) noexcept {
-    using namespace std::string_view_literals;
-    switch (value) {
-        case Status::WARN_ALREADY_DELETE: return "WARN_ALREADY_DELETE"sv;
-        case Status::WARN_ALREADY_IN_A_SESSION: return "WARN_ALREADY_IN_A_SESSION"sv;
-        case Status::WARN_ALREADY_INSERT: return "WARN_ALREADY_INSERT"sv;
-        case Status::WARN_CANCEL_PREVIOUS_OPERATION: return "WARN_CANCEL_PREVIOUS_OPERATION"sv;
-        case Status::WARN_NOT_FOUND: return "WARN_NOT_FOUND"sv;
-        case Status::WARN_NOT_IN_A_SESSION: return "WARN_NOT_IN_A_SESSION"sv;
-        case Status::WARN_READ_FROM_OWN_OPERATION: return "WARN_READ_FROM_OWN_OPERATION"sv;
-        case Status::WARN_SCAN_LIMIT: return "WARN_SCAN_LIMIT"sv;
-        case Status::WARN_WRITE_TO_LOCAL_WRITE: return "WARN_WRITE_TO_LOCAL_WRITE"sv;
-        case Status::OK: return "OK"sv;
-        case Status::ERR_ALREADY_EXISTS: return "ERR_ALREADY_EXISTS"sv;
-        case Status::ERR_ILLEGAL_STATE: return "ERR_ILLEGAL_STATE"sv;
-        case Status::ERR_INVALID_ARGS: return "ERR_INVALID_ARGS"sv;
-        case Status::ERR_NOT_FOUND: return "ERR_NOT_FOUND"sv;
-        case Status::ERR_SESSION_LIMIT: return "ERR_SESSION_LIMIT"sv;
-        case Status::ERR_UNKNOWN: return "ERR_UNKNOWN"sv;
-        case Status::ERR_VALIDATION: return "ERR_VALIDATION"sv;
-        case Status::ERR_WRITE_TO_DELETED_RECORD: return "ERR_WRITE_TO_DELETED_RECORD"sv;
-    }
-    std::abort();
+  using namespace std::string_view_literals;
+  switch (value) {
+    case Status::WARN_ALREADY_DELETE: return "WARN_ALREADY_DELETE"sv;
+    case Status::WARN_ALREADY_EXISTS: return "WARN_ALREADY_EXISTS"sv;
+    case Status::WARN_ALREADY_IN_A_SESSION: return "WARN_ALREADY_IN_A_SESSION"sv;
+    case Status::WARN_ALREADY_INSERT: return "WARN_ALREADY_INSERT"sv;
+    case Status::WARN_CANCEL_PREVIOUS_OPERATION: return "WARN_CANCEL_PREVIOUS_OPERATION"sv;
+    case Status::WARN_INVALID_HANDLE: return "WARN_INVALID_HANDLE"sv;
+    case Status::WARN_NOT_FOUND: return "WARN_NOT_FOUND"sv;
+    case Status::WARN_NOT_IN_A_SESSION: return "WARN_NOT_IN_A_SESSION"sv;
+    case Status::WARN_READ_FROM_OWN_OPERATION: return "WARN_READ_FROM_OWN_OPERATION"sv;
+    case Status::WARN_SCAN_LIMIT: return "WARN_SCAN_LIMIT"sv;
+    case Status::WARN_UNKNOWN: return "WARN_UNKNOWN"sv;
+    case Status::WARN_WRITE_TO_LOCAL_WRITE: return "WARN_WRITE_TO_LOCAL_WRITE"sv;
+    case Status::OK: return "OK"sv;
+    case Status::ERR_ALREADY_EXISTS: return "ERR_ALREADY_EXISTS"sv;
+    case Status::ERR_ILLEGAL_STATE: return "ERR_ILLEGAL_STATE"sv;
+    case Status::ERR_INVALID_ARGS: return "ERR_INVALID_ARGS"sv;
+    case Status::ERR_INVALID_HANDLE: return "ERR_INVALID_HANDLE"sv;
+    case Status::ERR_NOT_FOUND: return "ERR_NOT_FOUND"sv;
+    case Status::ERR_SESSION_LIMIT: return "ERR_SESSION_LIMIT"sv;
+    case Status::ERR_UNKNOWN: return "ERR_UNKNOWN"sv;
+    case Status::ERR_VALIDATION: return "ERR_VALIDATION"sv;
+    case Status::ERR_WRITE_TO_DELETED_RECORD: return "ERR_WRITE_TO_DELETED_RECORD"sv;
+  }
+  std::abort();
 }
 
 inline std::ostream& operator<<(std::ostream& out, Status value) {

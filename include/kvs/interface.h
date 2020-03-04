@@ -56,23 +56,24 @@ extern Status leave(Token token);
 extern void tbegin(Token token);
 
 /**
- * @brief silo's(SOSP2013) validation protocol.
+ * @brief silo's(SOSP2013) validation protocol. If this function return ERR_ status, this called abort function.
  * @param the token retrieved by enter()
  * @pre executed enter -> tbegin -> transaction operation.
  * @post execute leave to leave the session or tbegin to start next transaction.
  * @return Status::ERR_VALIDATION This means read validation failure and it already executed abort(). After this, do tbegin to start next transaction or leave to leave the session.
- * @return Status::OK It commited correctly.
+ * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction was interrupted by some delete transaction between read phase and validation phase. So it called abort.
+ * @return Status::OK success.
  */
 extern Status commit(Token token);
 
 /**
  * @brief abort and end the transaction.
  *
- * do local set clear, try gc.
+ * do local set/cache clear, try gc.
  * @param token [in] the token retrieved by enter()
  * @pre it did enter -> ... -> tbegin -> some access operation(update/insert/search/delete) or no operation
  * @post execute leave to leave the session or tbegin to start next transaction.
- * @return Status::OK It work correctly.
+ * @return Status::OK success.
  */
 extern Status abort(Token token);
 
@@ -114,8 +115,8 @@ extern Status delete_storage(Storage storage);
  * @param len_key indicate the key length
  * @param val the value of the upserted record
  * @len_val indicate the value length
- * @return Status OK if successful
- * @return error otherwise
+ * @return Status::OK success
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, so it overwrite its local write set.
  */
 extern Status upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
@@ -127,16 +128,17 @@ extern Status upsert(Token token, Storage storage, const char* const key, const 
  * @param len_key indicate the key length
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
- * @return Status::OK if successful
- * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::OK success.
+ * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion and did delete operation.
  */
 extern Status delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key);
 
 /**
  * @brief Delete the all records.
  * @pre This function is called by a single thread and does't allow moving of other threads.
- * @return Status
+ * @return Status::OK success
+ * @return Status::ERR_UNKNOWN This function could not finish completely. It may be interrupted by something and did abort.
  * @detail This function executes tbegin(Token token) internaly, so it doesn't need to call tbegin(Token token).
  * Also it doesn't need to call enter/leave around calling this function.
  * Because this function calls enter/leave appropriately.
@@ -157,10 +159,9 @@ extern void delete_all_garbage_records();
  * @param len_key indicate the key length
  * @param val the value of the inserted record
  * @param len_val indicate the value length
- * @return Status::ERR_ALREADY_EXISTS if the record already exists for the given key
+ * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @key exists in MTDB, so this function returned immediately.
  * @return Status::OK success
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
- * @return error otherwise
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, so it update the local write set object.
  */
 extern Status insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
@@ -172,8 +173,8 @@ extern Status insert(Token token, Storage storage, const char* const key, const 
  * @param len_key indicate the key length
  * @param val the value of the updated record
  * @param len_val indicate the value length
- * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
  * @return Status::OK if successful
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
  */
 extern Status update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
@@ -188,10 +189,9 @@ extern Status update(Token token, Storage storage, const char* const key, const 
  * The ownership of the address which is pointed by the tuple is in kvs.
  * So upper layer from kvs don't have to be care.
  * nullptr when nothing is found for the given key.
- * @return Status::ERR_ILLEGAL_STATE it read the record which is inserted or deleted concurrently. it executed abort, so retry the transaction please.
- * @return Status::ERR_NOT_FOUND no corresponding record in masstree. It executed abort, so retry the transaction please.
- * @return Status::OK if successful
- * @return Status::WARN_ALREADY_DELETE it already executed delete operation.
+ * @return Status::OK success.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
  */
 extern Status search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple);
 
@@ -209,8 +209,8 @@ extern Status search_key(Token token, Storage storage, const char* const key, co
  * @param result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid untill commit/abort.
- * @return Status::ERR_ILLEGAL_STATE it read the record which is inserted or deleted concurrently. it executed abort, so retry the transaction please.
- * @return Status::OK if successful
+ * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
  */
 extern Status scan_key(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
@@ -221,7 +221,7 @@ extern Status scan_key(Token token, Storage storage,
  * @brief This function preserve the specified range of masstree
  * @param token [in] the token retrieved by enter()
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
- * @param handle [out] the handle to identify scanned result.
+ * @param handle [out] the handle to identify scanned result. This handle will be deleted at abort function.
  * @return Status:::WARN_SCAN_LIMIT the scan could find some records but could not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND the scan couldn't find any records.
  * @return Status::OK the some records was scanned.
@@ -239,11 +239,11 @@ extern Status open_scan(Token token, Storage storage,
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [in] input parameters to identify the specific scan_cache.
  * @pram result [out] output parmeter to pass the read record.
- * @return Status::ERR_INVALID_HANDLE The @handle is invalid. It do abort(token).
- * @return Status::ERR_ILLEGAL_STATE The record your are trying to read was deleted by other tx.
- * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
  * @return Status::WARN_ALREADY_DELETE the record you are trying to read was deleted by yourself in the same tx.
+ * @return Status::WARN_INVALID_HANDLE The @handle is invalid.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert) operation in the same tx.
+ * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
  * @return Status::OK It succeeded.
  */
 extern Status read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const result);
@@ -253,8 +253,8 @@ extern Status read_from_scan(Token token, Storage storage, const ScanHandle hand
  * @param token [in] the token retrieved by enter()
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [in] identify the specific scan_cache.
- * @return Status::ERR_INVALID_HANDLE The @handle is invalid. It do abort(token).
  * @return Status::OK It succeeded. 
+ * @return Status::WARN_INVALID_HANDLE The @handle is invalid.
  */
 extern Status close_scan(Token token, Storage storage, const ScanHandle handle);
 
