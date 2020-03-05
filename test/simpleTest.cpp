@@ -705,7 +705,7 @@ TEST_F(SimpleTest, read_from_scan) {
   tbegin(s2);
   ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s2));
-  EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, st, handle, &tuple));
+  EXPECT_EQ(Status::WARN_CONCURRENT_DELETE, read_from_scan(s, st, handle, &tuple));
 
   ASSERT_EQ(Status::OK, leave(s));
   ASSERT_EQ(Status::OK, leave(s2));

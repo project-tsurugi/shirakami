@@ -59,6 +59,7 @@ enum class Status : std::int32_t {
    * (read_from_scan) it is called when read_from_scan is called with invalid handles.
    */
   WARN_INVALID_HANDLE,
+  WARN_CONCURRENT_DELETE,
   WARN_NOT_FOUND,
   WARN_NOT_IN_A_SESSION,
   /**
@@ -134,6 +135,7 @@ inline constexpr std::string_view to_string_view(Status value) noexcept {
     case Status::WARN_ALREADY_IN_A_SESSION: return "WARN_ALREADY_IN_A_SESSION"sv;
     case Status::WARN_ALREADY_INSERT: return "WARN_ALREADY_INSERT"sv;
     case Status::WARN_CANCEL_PREVIOUS_OPERATION: return "WARN_CANCEL_PREVIOUS_OPERATION"sv;
+    case Status::WARN_CONCURRENT_DELETE: return "WARN_CONCURRENT_DELETE"sv;
     case Status::WARN_INVALID_HANDLE: return "WARN_INVALID_HANDLE"sv;
     case Status::WARN_NOT_FOUND: return "WARN_NOT_FOUND"sv;
     case Status::WARN_NOT_IN_A_SESSION: return "WARN_NOT_IN_A_SESSION"sv;

@@ -363,7 +363,7 @@ read_record(Record& res, Record* dest)
       f_check.obj = loadAcquire(dest->tidw.obj);
 
     if (f_check.absent == true) {
-      return Status::WARN_ALREADY_DELETE;
+      return Status::WARN_CONCURRENT_DELETE;
       // other thread is inserting this record concurrently,
       // but it is't committed yet.
     }

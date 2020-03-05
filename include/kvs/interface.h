@@ -191,8 +191,9 @@ extern Status update(Token token, Storage storage, const char* const key, const 
  * So upper layer from kvs don't have to be care.
  * nullptr when nothing is found for the given key.
  * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation of concurrent transaction.
  */
 extern Status search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple);
 
@@ -211,7 +212,8 @@ extern Status search_key(Token token, Storage storage, const char* const key, co
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid untill commit/abort.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation.
  */
 extern Status scan_key(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
@@ -240,7 +242,8 @@ extern Status open_scan(Token token, Storage storage,
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [in] input parameters to identify the specific scan_cache.
  * @pram result [out] output parmeter to pass the read record.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation.
  * @return Status::WARN_INVALID_HANDLE The @handle is invalid.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert) operation in the same tx.
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.

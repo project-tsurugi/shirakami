@@ -34,6 +34,8 @@ scan_key(Token token, Storage storage,
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     WriteSetObj* inws = ti->search_write_set(*itr);
     if (inws != nullptr) {
+      if (inws->op == OP_TYPE::DELETE)
+        return Status::WARN_ALREADY_DELETE;
       result.emplace_back(&(*itr)->tuple);
       continue;
     }
