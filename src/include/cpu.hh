@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <cpuid.h>
+#include <iostream>
 #include <sched.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -31,11 +33,27 @@
 
 #ifdef KVS_Linux
 static void setThreadAffinity(const int myid) {
+  using namespace std;
+  static std::atomic<int> nprocessors(-1);
+  int local_nprocessors, desired;
+  local_nprocessors = nprocessors.load(memory_order_acquire);
+  for (;;) {
+    if (local_nprocessors != -1) {
+      break;
+    } else {
+      desired = sysconf(_SC_NPROCESSORS_CONF);
+      if (nprocessors.compare_exchange_strong(
+            local_nprocessors, desired, memory_order_acq_rel, memory_order_acquire)) {
+        break;
+      }
+    }
+  }
+
   pid_t pid = syscall(SYS_gettid);
   cpu_set_t cpu_set;
 
   CPU_ZERO(&cpu_set);
-  CPU_SET(myid % sysconf(_SC_NPROCESSORS_CONF), &cpu_set);
+  CPU_SET(myid % local_nprocessors, &cpu_set);
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) ERR;
   return;
