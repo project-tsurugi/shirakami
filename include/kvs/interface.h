@@ -240,7 +240,6 @@ extern Status open_scan(Token token, Storage storage,
  * @param handle [in] input parameters to identify the specific scan_cache.
  * @pram result [out] output parmeter to pass the read record.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation.
- * @return Status::WARN_ALREADY_DELETE the record you are trying to read was deleted by yourself in the same tx.
  * @return Status::WARN_INVALID_HANDLE The @handle is invalid.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert) operation in the same tx.
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.

@@ -48,8 +48,9 @@ scan_key(Token token, Storage storage,
     // Because in herbrand semantics, the read reads last update even if the update is own.
 
     ReadSetObj rsob(*itr);
-    if (Status::OK != read_record(rsob.rec_read, *itr)) {
-      return Status::WARN_ALREADY_DELETE;
+    Status rr = read_record(rsob.rec_read, *itr);
+    if (rr != Status::OK) {
+      return rr;
     }
     ti->read_set.emplace_back(std::move(rsob));
     result.emplace_back(&(*itr)->tuple);
@@ -134,8 +135,9 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
   }
 
   ReadSetObj rsob(*itr);
-  if (Status::OK != read_record(rsob.rec_read, *itr)) {
-    return Status::WARN_ALREADY_DELETE;
+  Status rr = read_record(rsob.rec_read, *itr);
+  if (rr != Status::OK) {
+    return rr;
   }
   ti->read_set.emplace_back(std::move(rsob));
   *tuple = &ti->read_set.back().rec_read.tuple;
