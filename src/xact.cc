@@ -391,10 +391,15 @@ delete_all_records()
   std::vector<Record*> scan_res;
   MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
 
+  if (scan_res.size() == 0) {
+    return Status::WARN_ALREADY_DELETE;
+  }
+
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     tbegin(s);
     delete_record(s, st, (*itr)->tuple.key.get(), (*itr)->tuple.len_key);
-    if (Status::OK != commit(s)) return Status::WARN_UNKNOWN;
+    Status result = commit(s);
+    if (result != Status::OK) return result;
   }
 
   leave(s);
