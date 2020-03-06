@@ -134,12 +134,14 @@ class MasstreeWrapper {
    * @detail future work, we try to delete making temporary
    * object std::string buf(key). But now, if we try to do 
    * without making temporary object, it fails by masstree.
+   * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @key exists in masstree, so this function returned immediately.
+   * @return Status::OK success.
    */
   kvs::Status insert_value(const char* key, std::size_t len_key, T* value) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
     // always_assert(!found, "keys should all be unique");
-    if (found) return kvs::Status::ERR_ALREADY_EXISTS;
+    if (found) return kvs::Status::WARN_ALREADY_EXISTS;
     lp.value() = value;
     fence();
     lp.finish(1, *ti);
@@ -157,7 +159,7 @@ class MasstreeWrapper {
       fence();
       lp.finish(0, *ti);
       return kvs::Status::OK;
-    } else if (!found) {
+    } else {
       fence();
       lp.finish(0, *ti);
       /**
@@ -166,11 +168,7 @@ class MasstreeWrapper {
        * So it needs to release, then released at the line 155 of this source.
        */
       return kvs::Status::WARN_NOT_FOUND;
-    } else {
-      // Bool value of found show the value neither 0 and 1.
-      return kvs::Status::ERR_ILLEGAL_STATE;
     }
-
   }
 
   void remove_value(const char* key, std::size_t len_key) {

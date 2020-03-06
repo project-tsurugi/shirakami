@@ -50,8 +50,8 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, Reco
  * @pre the dest wasn't already read by itself.
  * @param [out] res it is stored read info.
  * @param [in] dest read record pointed by this dest.
+ * @return WARN_CONCURRENT_DELETE No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::OK, it was ended correctly.
- * @return Status::ERR_ILLEGAL_STATE, other thread is inserting this record concurrently, 
  * but it isn't committed yet.
  */
 extern Status read_record(Record& res, Record* dest);

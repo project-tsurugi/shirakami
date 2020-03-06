@@ -206,29 +206,17 @@ void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record
 void print_status(Status status)
 {
   switch (status) {
-    case Status::WARN_ALREADY_IN_A_SESSION:
-      cout << "WARN_ALREADY_IN_A_SESSION" << endl;
-      break;
     case Status::WARN_NOT_IN_A_SESSION:
       cout << "WARN_NOT_IN_A_SESSION" << endl;
       break;
     case Status::OK:
       cout << "OK" << endl;
       break;
-    case Status::ERR_UNKNOWN:
-      cout << "ERR_UNKNOWN" << endl;
-      break;
     case Status::ERR_NOT_FOUND:
       cout << "ERR_NOT_FOUND" << endl;
       break;
-    case Status::ERR_ALREADY_EXISTS:
-      cout << "ERR_ALREADY_EXISTS" << endl;
-      break;
     case Status::ERR_INVALID_ARGS:
       cout << "ERR_INVALID_ARGS" << endl;
-      break;
-    case Status::ERR_ILLEGAL_STATE:
-      cout << "ERR_ILLEGAL_STATE" << endl;
       break;
     case Status::ERR_VALIDATION:
       cout << "ERR_VALIDATION" << endl;

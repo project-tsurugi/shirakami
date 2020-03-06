@@ -14,7 +14,7 @@ namespace kvs {
  * @brief initialize kvs environment
  * @detail When it starts to use this system, in other words, it starts to build database, it must be executed first.
  * @param [in] log_directory path of WAL directory.
- * @return Status::ERR_INVALID_ARGS the args as a log directory path is invalid. 
+ * @return Status::ERR_INVALID_ARGS The args as a log directory path is invalid. 
  * Some files which has the same path exist.
  * @return Status::OK
  */
@@ -33,6 +33,7 @@ extern void fin();
  * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.
  * @post When it ends this session, do leave(Token token).
  * @return Status::OK
+ * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
  */
 extern Status enter(Token& token);
 
@@ -42,7 +43,7 @@ extern Status enter(Token& token);
  * It return the objects which was got at enter function to kThreadTable.
  * @parm the token retrieved by enter()
  * @return Status::OK if successful
- * @return Status::WARN_NOT_IN_A_SESSION if the session is already ended.
+ * @return Status::WARN_NOT_IN_A_SESSION If the session is already ended.
  */
 extern Status leave(Token token);
 
@@ -95,7 +96,7 @@ extern Status register_storage(char const* name, std::size_t len_name, Storage& 
  * @param storage output parameter to pass the storage handle,
  * that is used for the subsequent calls related with the storage.
  * @return Status::OK if successful
- * @return Status::ERR_NOT_FOUND if the storage is not registered with the given name
+ * @return Status::ERR_NOT_FOUND If the storage is not registered with the given name
  */
 extern Status get_storage(char const* name, std::size_t len_name, Storage& storage);
 
@@ -103,7 +104,7 @@ extern Status get_storage(char const* name, std::size_t len_name, Storage& stora
  * @brief delete existing storage and records under the storage.
  * @param storage [in] the storage handle retrieved with register_storage() or get_storage()
  * @return Status::OK if successful
- * @return Status::ERR_NOT_FOUND if the storage is not registered with the given name
+ * @return Status::ERR_NOT_FOUND If the storage is not registered with the given name
  */
 extern Status delete_storage(Storage storage);
 
@@ -128,7 +129,7 @@ extern Status upsert(Token token, Storage storage, const char* const key, const 
  * @param len_key indicate the key length
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_NOT_FOUND No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::OK success.
  * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this fucntion and did delete operation.
  */
@@ -176,7 +177,7 @@ extern Status insert(Token token, Storage storage, const char* const key, const 
  * @param len_val indicate the value length
  * @return Status::OK if successful
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert, so it update the value which is going to be updated.
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, so it update the value which is going to be updated.
  */
 extern Status update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val);
 
@@ -225,8 +226,8 @@ extern Status scan_key(Token token, Storage storage,
  * @param token [in] the token retrieved by enter()
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
  * @param handle [out] the handle to identify scanned result. This handle will be deleted at abort function.
- * @return Status:::WARN_SCAN_LIMIT the scan could find some records but could not preserve result due to capacity limitation.
- * @return Status::WARN_NOT_FOUND the scan couldn't find any records.
+ * @return Status:::WARN_SCAN_LIMIT The scan could find some records but could not preserve result due to capacity limitation.
+ * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  * @return Status::OK the some records was scanned.
  */
 extern Status open_scan(Token token, Storage storage,

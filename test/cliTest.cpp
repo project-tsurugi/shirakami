@@ -181,7 +181,7 @@ worker(const size_t thid)
 {
   Token token;
   Status enter_result = enter(token);
-  if (enter_result == Status::WARN_ALREADY_IN_A_SESSION) ERR;
+  if (enter_result == Status::ERR_SESSION_LIMIT) ERR;
 
   test_single_operation(token, thid);
 
