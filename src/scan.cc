@@ -98,6 +98,23 @@ open_scan(Token token, Storage storage,
 }
 
 Status
+scannable_total_index_size(Token token, Storage storage, ScanHandle& handle, std::size_t& size)
+{
+  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+
+  if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
+    /**
+     * the handle was invalid.
+     */
+    return Status::WARN_INVALID_HANDLE;
+  }
+
+  size = ti->scan_cache_[handle].size();
+  return Status::OK;
+}
+
+Status
 read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);

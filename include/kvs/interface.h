@@ -236,6 +236,17 @@ extern Status open_scan(Token token, Storage storage,
     ScanHandle& handle);
 
 /**
+ * @brief This function checks the size resulted at open_scan with the @handle .
+ * @param token [in] the token retrieved by enter()
+ * @param storage [in] the storage handle retrieved by register_storage() or get_storage()
+ * @param handle [in] the handle to identify scanned result. This handle will be deleted at abort function.
+ * @param size [out] the size resulted at open_scan with the @handle .
+ * @return Status::WARN_INVALID_HANDLE The @handle is invalid.
+ * @return Status::OK success.
+ */
+extern Status scannable_total_index_size(Token token, Storage storage, ScanHandle& handle, std::size_t& size);
+
+/**
  * @brief This function reads the one records from the scan_cache 
  * which was created at open_scan function.
  * @details The read record is returned by @result.
