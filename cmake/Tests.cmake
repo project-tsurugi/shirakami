@@ -48,7 +48,11 @@ function(register_tests)
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
         if(fname MATCHES "Test$")
-            set(test_name "${TESTS_TARGET}-${fname}")
+            if (fname MATCHES "scanPerfTest$")
+                set(test_name "${TESTS_TARGET}-${fname}.exe")
+            else()
+                set(test_name "${TESTS_TARGET}-${fname}")
+            endif()
 
             add_executable(${test_name} ${src} ${TESTS_COMMON_SOURCES})
 
@@ -76,9 +80,11 @@ function(register_tests)
             set_compile_options(${test_name})
 
             if(TESTS_BUILD)
-                add_test(
-                    NAME ${test_name}
-                    COMMAND ${test_name} --gtest_output=xml:${test_name}_gtest_result.xml)
+                if (NOT test_name MATCHES "exe$")
+                    add_test(
+                        NAME ${test_name}
+                        COMMAND ${test_name} --gtest_output=xml:${test_name}_gtest_result.xml)
+                endif()
             else()
                 set_target_properties(${test_name}
                     PROPERTIES EXCLUDE_FROM_ALL ON
