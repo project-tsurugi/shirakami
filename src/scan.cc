@@ -82,6 +82,24 @@ open_scan(Token token, Storage storage,
       if (itr == ti->scan_cache_.end()) {
         ti->scan_cache_[i] = std::move(scan_buf);
         ti->scan_cache_itr_[i] = 0;
+        /**
+         * begin : init about right_end_point_
+         */
+        std::unique_ptr<char[]> tmp_rkey;
+        if (len_rkey > 0) {
+          tmp_rkey = make_unique<char[]>(len_rkey);
+          memcpy(tmp_rkey.get(), rkey, len_rkey); 
+        } else {
+          /**
+           * todo : discuss when len_rkey == 0
+           */
+        }
+        ti->rkey_[i] = std::move(tmp_rkey);
+        ti->len_rkey_[i] = len_rkey;
+        ti->r_exclusive_[i] = r_exclusive;
+        /**
+         * end : init about right_end_point_
+         */
         handle = i;
         break;
       }
@@ -132,7 +150,7 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
 
   if (scan_buf.size() == scan_index) {
     std::vector<Record*> new_scan_buf;
-    MTDB.scan(scan_buf.back()->tuple.key.get(), scan_buf.back()->tuple.len_key, true, nullptr, 0, false, &new_scan_buf, true);
+    MTDB.scan(scan_buf.back()->tuple.key.get(), scan_buf.back()->tuple.len_key, true, ti->rkey_[handle].get(), ti->len_rkey_[handle], ti->r_exclusive_[handle], &new_scan_buf, true);
 
     if (new_scan_buf.size() > 0) {
       /**
@@ -192,6 +210,12 @@ close_scan(Token token, Storage storage, const ScanHandle handle)
     ti->scan_cache_.erase(itr);
     auto index_itr = ti->scan_cache_itr_.find(handle);
     ti->scan_cache_itr_.erase(index_itr);
+    auto rkey_itr = ti->rkey_.find(handle);
+    ti->rkey_.erase(rkey_itr);
+    auto len_rkey_itr = ti->len_rkey_.find(handle);
+    ti->len_rkey_.erase(len_rkey_itr);
+    auto r_exclusive_itr = ti->r_exclusive_.find(handle);
+    ti->r_exclusive_.erase(r_exclusive_itr);
   }
 
   return Status::OK;

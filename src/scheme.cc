@@ -23,6 +23,9 @@ void ThreadInfo::clean_up_scan_caches()
 {
   scan_cache_.clear();
   scan_cache_itr_.clear();
+  rkey_.clear();
+  len_rkey_.clear();
+  r_exclusive_.clear();
 }
  
 Status ThreadInfo::check_delete_after_write(const char* key, const std::size_t len_key)

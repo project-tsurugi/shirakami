@@ -20,6 +20,8 @@
 #include <map>
 #include <iostream>
 #include <iostream>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "cache_line_size.hh"
@@ -220,7 +222,9 @@ class ThreadInfo {
    */
   std::map<ScanHandle, std::vector<Record*>> scan_cache_;
   std::map<ScanHandle, std::size_t> scan_cache_itr_;
-
+  std::map<ScanHandle, std::unique_ptr<char[]>> rkey_;
+  std::map<ScanHandle, std::size_t> len_rkey_;
+  std::map<ScanHandle, bool> r_exclusive_;
   /**
    * about logging.
    */
