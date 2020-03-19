@@ -761,7 +761,7 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
   ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
   ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
-  ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
 
   ASSERT_EQ(Status::OK, leave(s));
