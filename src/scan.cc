@@ -71,7 +71,7 @@ open_scan(Token token, Storage storage,
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<Record*> scan_buf;
 
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf);
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf, true);
 
   if (scan_buf.size() > 0) {
     /**
@@ -131,7 +131,22 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
   std::size_t& scan_index = ti->scan_cache_itr_[handle];
 
   if (scan_buf.size() == scan_index) {
-    return Status::WARN_SCAN_LIMIT;
+    std::vector<Record*> new_scan_buf;
+    MTDB.scan(scan_buf.back()->tuple.key.get(), scan_buf.back()->tuple.len_key, true, nullptr, 0, false, &new_scan_buf, true);
+
+    if (new_scan_buf.size() > 0) {
+      /**
+       * scan could find any records.
+       */
+      scan_buf.assign(new_scan_buf.begin(), new_scan_buf.end());
+      scan_index = 0;
+    }
+    else {
+      /**
+       * scan couldn't find any records.
+       */
+      return Status::WARN_SCAN_LIMIT;
+    }
   }
 
   auto itr = scan_buf.begin() + scan_index;
