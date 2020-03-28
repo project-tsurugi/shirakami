@@ -638,6 +638,7 @@ TEST_F(SimpleTest, read_from_scan) {
   std::string k2("aab");
   std::string k3("aac");
   std::string k4("aad");
+  std::string k5("aae");
   std::string k6("aa");
   std::string v1("bbb");
   std::string v2("bbb");
@@ -649,6 +650,7 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k3.data(), k3.size(), v1.data(), v1.size()));
+  ASSERT_EQ(Status::OK, insert(s, st, k5.data(), k5.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k6.data(), k6.size(), v2.data(), v2.size()));
   ScanHandle handle{};
   Tuple* tuple{};
