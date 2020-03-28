@@ -152,7 +152,12 @@ class MasstreeWrapper {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
     // always_assert(!found, "keys should all be unique");
-    if (found) return kvs::Status::WARN_ALREADY_EXISTS;
+    if (found) {
+      // release lock of existing nodes meaning the first arg equals 0
+      lp.finish(0, *ti);
+      // return
+      return kvs::Status::WARN_ALREADY_EXISTS;
+    }
     lp.value() = value;
     fence();
     lp.finish(1, *ti);
@@ -175,18 +180,26 @@ class MasstreeWrapper {
       lp.finish(0, *ti);
       /**
        * Look project_root/third_party/masstree/masstree_get.hh:98 and 100.
-       * If the node wasn't found, the lock was acquired.
-       * So it needs to release, then released at the line 155 of this source.
+       * If the node wasn't found, the lock was acquired and tcursor::state_ is 0.
+       * So it needs to release.
+       * If state_ == 0, finish function merely release locks of existing nodes.
        */
       return kvs::Status::WARN_NOT_FOUND;
     }
   }
 
-  void remove_value(const char* key, std::size_t len_key) {
+  kvs::Status remove_value(const char* key, std::size_t len_key) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
-    always_assert(found, "keys must all exist");
-    lp.finish(-1, *ti);
+    if (found) {
+      // try finish_remove. If it fails, following processing unlocks nodes.
+      lp.finish(-1, *ti);
+      return kvs::Status::OK;
+    } else {
+      // no nodes
+      lp.finish(-1, *ti);
+      return kvs::Status::WARN_NOT_FOUND;
+    }
   }
 
   T* get_value(const char* key, std::size_t len_key) {
