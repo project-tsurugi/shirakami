@@ -26,6 +26,7 @@ public:
 
     tidw = TidWord();
     tidw.absent = true;
+    tidw.lock = true;
   }
 
   Record(const Record& right) = default;

@@ -257,7 +257,7 @@ commit(Token token)
   // Phase 2: Lock write set;
   TidWord expected, desired;
   for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
-    //Record *record = itr->rec_ptr;
+    if (itr->op == OP_TYPE::INSERT) continue;
     expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
     for (;;) {
       if (expected.lock) {

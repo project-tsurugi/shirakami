@@ -56,7 +56,19 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if ((*itr).op == OP_TYPE::INSERT) {
       MTDB.remove_value((*itr).rec_ptr->tuple.key.get(), (*itr).rec_ptr->tuple.len_key);
-      delete (*itr).rec_ptr;
+      
+      /**
+       * create information for garbage collection.
+       */
+      std::mutex& mutex_for_gclist = kMutexGarbageRecords[gc_container_index_];
+      mutex_for_gclist.lock();
+      gc_container_->emplace_back(itr->rec_ptr);
+      mutex_for_gclist.unlock();
+      TidWord deletetid;
+      deletetid.lock = false;
+      deletetid.absent = false;
+      deletetid.epoch = epoch;
+      __atomic_store_n(&(itr->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
     }
   }
 }
