@@ -43,11 +43,18 @@ delete_all_garbage_records()
   }
 }
 
-void
+Status
 tbegin(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
+  if (ti->txbegan_) {
+    // todo it change to WARN_ALREADY_TX_BEGUN
+    return Status::WARN_NOT_FOUND;
+  } else {
+    ti->txbegan_ = true;
+    __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
+    return Status::OK;
+  }
 }
 
 static void 
@@ -145,6 +152,7 @@ abort(Token token)
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
+  ti->txbegan_ = false;
   gc_records();
   return Status::OK;
 }
@@ -304,6 +312,7 @@ commit(Token token)
 
   write_phase(ti, max_rset, max_wset);
 
+  ti->txbegan_ = false;
   return Status::OK;
 }
 
@@ -410,6 +419,7 @@ Status
 search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -445,6 +455,7 @@ Status
 update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -468,6 +479,7 @@ Status
 insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
@@ -488,6 +500,7 @@ Status
 delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -511,6 +524,7 @@ Status
 upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   Record *record = find_record_from_masstree(key, len_key);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {

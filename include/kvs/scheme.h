@@ -39,6 +39,14 @@ using ScanHandle = std::size_t;
  * ERR is problem for progressing.
  */
 enum class Status : std::int32_t {
+#if 0
+  /**
+   * @brief warning
+   * @details
+   * (tbegin) This tx was already begun.
+   */
+  WARN_ALREADY_TX_BEGUN,
+#endif
   /**
    * @brief warning
    * @details
@@ -150,6 +158,9 @@ enum class Status : std::int32_t {
 inline constexpr std::string_view to_string_view(Status value) noexcept {
   using namespace std::string_view_literals;
   switch (value) {
+#if 0
+    case Status::WARN_ALREADY_TX_BEGUN: return "WARN_ALREADY_TX_BEGUN"sv;
+#endif
     case Status::WARN_ALREADY_DELETE: return "WARN_ALREADY_DELETE"sv;
     case Status::WARN_ALREADY_EXISTS: return "WARN_ALREADY_EXISTS"sv;
     case Status::WARN_CANCEL_PREVIOUS_OPERATION: return "WARN_CANCEL_PREVIOUS_OPERATION"sv;

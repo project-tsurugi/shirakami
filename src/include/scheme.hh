@@ -203,6 +203,7 @@ class ThreadInfo {
   uint64_t epoch;
   TidWord mrctid; // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible;
+  bool txbegan_;
 
   /**
    * about garbage collection

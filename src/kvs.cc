@@ -43,6 +43,7 @@ init_kThreadTable()
   uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->visible.store(false, std::memory_order_release);
+    itr->txbegan_ = false;
 
     /**
      * about garbage collection.
