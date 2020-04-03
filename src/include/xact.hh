@@ -56,6 +56,13 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, Reco
  */
 extern Status read_record(Record& res, Record* dest);
 
+/**
+ * @brief Transaction begins.
+ * @details Get an epoch accessible to this transaction.
+ * @return void
+ */
+extern void tbegin(Token token);
+
 static void gc_records();
 
 }  // namespace kvs

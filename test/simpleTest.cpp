@@ -62,29 +62,23 @@ TEST_F(SimpleTest, insert) {
   std::string v("bbb");
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  tbegin(s);
   Storage st{};
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, abort(s));
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   {
     Tuple* tuple;
     char k2 = 0;
-  tbegin(s);
     ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
     ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
     ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
     ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple;
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
   ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
   ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
   ASSERT_EQ(Status::OK, commit(s));
@@ -452,7 +446,6 @@ TEST_F(SimpleTest, concurrent_updates) {
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
-      tbegin(s);
       Storage st{};
       ASSERT_EQ(Status::OK,
                 insert(s, st, k0.data(), k0.size(), reinterpret_cast<char*>(&v),
@@ -468,7 +461,6 @@ TEST_F(SimpleTest, concurrent_updates) {
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
-      tbegin(s);
       Storage st{};
       Tuple* t{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
@@ -487,7 +479,6 @@ TEST_F(SimpleTest, concurrent_updates) {
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
-      tbegin(s);
       Storage st{};
       Tuple* t{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
@@ -618,13 +609,10 @@ TEST_F(SimpleTest, open_scan_test) {
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{}, handle2{};
-  tbegin(s);
   ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(0, handle);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle2));
@@ -645,7 +633,6 @@ TEST_F(SimpleTest, read_from_scan) {
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
@@ -668,10 +655,8 @@ TEST_F(SimpleTest, read_from_scan) {
    * if it calls read_from_scan with invalid handle, it returns Status::ERR_INVALID_HANDLE.
    * if read_from_scan read all records in cache taken at open_scan, it returns Status::WARN_SCAN_LIMIT.
    */
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, st, 3, &tuple));
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
   EXPECT_EQ(memcmp(tuple->key.get(), k.data(), k.size()), 0);
@@ -689,7 +674,6 @@ TEST_F(SimpleTest, read_from_scan) {
    * test
    * if read_from_scan detects the record deleted by myself, it function returns Status::WARN_ALREADY_DELETE.
    */
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
   EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, st, handle, &tuple));
@@ -700,11 +684,9 @@ TEST_F(SimpleTest, read_from_scan) {
    * if read_from_scan detects the record deleted by others between open_scan and read_from_scan,
    * it function returns Status::ERR_ILLEGAL_STATE which means reading deleted record.
    */
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   Token s2{};
   ASSERT_EQ(Status::OK, enter(s2));
-  tbegin(s2);
   ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s2));
   EXPECT_EQ(Status::WARN_CONCURRENT_DELETE, read_from_scan(s, st, handle, &tuple));
@@ -720,10 +702,8 @@ TEST_F(SimpleTest, close_scan) {
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{};
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(Status::OK, close_scan(s, st, handle));
   ASSERT_EQ(Status::WARN_INVALID_HANDLE, close_scan(s, st, handle));
@@ -740,12 +720,10 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  tbegin(s);
   ASSERT_EQ(Status::OK, insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, insert(s, st, k4.data(), k4.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  tbegin(s);
   ScanHandle handle{};
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, open_scan(s, st, k1.data(), k1.size(), false, k2.data(), k2.size(), false, handle));
@@ -777,7 +755,6 @@ TEST_F(SimpleTest, long_insert) {
   std::string v("b234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  tbegin(s);
   Storage st{};
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));

@@ -23,6 +23,7 @@ scan_key(Token token, Storage storage,
     std::vector<Tuple*>& result)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
@@ -68,6 +69,7 @@ open_scan(Token token, Storage storage,
     ScanHandle& handle)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  if (!ti->txbegan_) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<Record*> scan_buf;
 

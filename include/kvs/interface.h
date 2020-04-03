@@ -48,16 +48,6 @@ extern Status enter(Token& token);
 extern Status leave(Token token);
 
 /**
- * @brief Processing of beginning transaction.
- *
- * It is need to decide the value of kReclamationEpoch.
- * If it isn't used correctly, garbage collection don't work correctly, then system will fail.
- * @return Status::OK
- * @return Status::WARN_ALREADY_TX_BEGUN This tx was already begun.
- */
-extern Status tbegin(Token token);
-
-/**
  * @brief silo's(SOSP2013) validation protocol. If this function return ERR_ status, this called abort function.
  * @param the token retrieved by enter()
  * @pre executed enter -> tbegin -> transaction operation.

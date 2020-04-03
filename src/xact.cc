@@ -43,18 +43,12 @@ delete_all_garbage_records()
   }
 }
 
-Status
+void
 tbegin(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (ti->txbegan_) {
-    // todo it change to WARN_ALREADY_TX_BEGUN
-    return Status::WARN_NOT_FOUND;
-  } else {
-    ti->txbegan_ = true;
-    __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
-    return Status::OK;
-  }
+  ti->txbegan_ = true;
+  __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
 }
 
 static void 
@@ -405,7 +399,6 @@ delete_all_records()
   }
 
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    tbegin(s);
     delete_record(s, st, (*itr)->tuple.key.get(), (*itr)->tuple.len_key);
     Status result = commit(s);
     if (result != Status::OK) return result;
