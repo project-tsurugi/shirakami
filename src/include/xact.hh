@@ -22,12 +22,6 @@ extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 extern MasstreeWrapper<Record> MTDB;
 
 /**
- * @brief epoch thread
- * @pre this function is called by invoke_core_thread function.
- */
-extern void epocher();
-
-/**
  * @brief find record from masstree by using args informations.
  * @return the found record pointer.
  */

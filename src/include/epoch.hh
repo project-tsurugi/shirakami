@@ -1,4 +1,12 @@
+/**
+ * @file epoch.hh
+ * @brief header about epoch
+ */
+
 #pragma once
+
+#include <atomic>
+#include <thread>
 
 // kvs_charkey/src/
 #include "include/header.hh"
@@ -8,22 +16,26 @@ namespace kvs {
 extern uint64_t kGlobalEpoch;
 extern uint64_t kReclamationEpoch;
 
-static inline uint64_t
-load_acquire_ge()
-{
-  return __atomic_load_n(&(kGlobalEpoch), __ATOMIC_ACQUIRE);
-}
+// about epoch thread
+extern std::thread kEpochThread;
+extern std::atomic<bool> kEpochThreadEnd;
 
-static inline void
-atomic_add_global_epoch()
-{
-  uint64_t expected = load_acquire_ge();
-  for (;;) {
-    uint64_t desired = expected + 1;
-    if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
-      break;
-    }
-  }
-}
+extern void atomic_add_global_epoch();
+
+extern bool check_epoch_loaded();
+
+/**
+ * @brief epoch thread
+ * @pre this function is called by invoke_core_thread function.
+ */
+extern void epocher();
+
+/**
+ * @brief invoke epocher thread.
+ * @post invoke fin() to join this thread.
+ */
+extern void invoke_epocher();
+
+extern uint64_t load_acquire_ge();
 
 } // namespace kvs.

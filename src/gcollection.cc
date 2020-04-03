@@ -6,8 +6,8 @@
 //#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/atomic_wrapper.hh"
 #include "include/cpu.hh"
+#include "include/epoch.hh"
 #include "include/gcollection.hh"
-#include "include/kvs.hh"
 
 namespace kvs {
 

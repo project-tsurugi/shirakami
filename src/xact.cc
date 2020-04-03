@@ -149,46 +149,6 @@ abort(Token token)
   return Status::OK;
 }
 
-static bool
-check_epoch_loaded(void)
-{
-  uint64_t curEpoch = load_acquire_ge();
-
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr){
-    if (itr->visible.load(std::memory_order_acquire) == true 
-        && loadAcquire(itr->epoch) != curEpoch) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-void
-epocher() 
-{
-  // Increment global epoch in each 40ms.
-  // To increment it, 
-  // all the worker-threads need to read the latest one.
- 
-#ifdef KVS_Linux
-  setThreadAffinity(static_cast<int>(CorePosition::EPOCHER));
-#endif
-
-  while (likely(kEpochThreadEnd.load(std::memory_order_acquire) == false)) {
-    sleepMs(KVS_EPOCH_TIME);
-
-    // check_epoch_loaded() checks whether the 
-    // latest global epoch is read by all the threads
-    while (!check_epoch_loaded()) { 
-      _mm_pause(); 
-    }
-
-    atomic_add_global_epoch();
-    storeRelease(kReclamationEpoch, loadAcquire(kGlobalEpoch) - 2);
-  }
-}
-
 void
 forced_gc_all_records()
 {

@@ -1,8 +1,7 @@
 /**
- * @file
+ * @file log.hh
  * @brief Log record class.
- * @author Takayuki Tanabe
- * @detail This source is implemented by refering the source https://github.com/thawk105/ccbench whose the author is also Takayuki Tanabe.
+ * @detail This source is implemented by refering the source https://github.com/thawk105/ccbench.
  */
 
 #pragma once
@@ -11,12 +10,18 @@
 
 #include <cstdint>
 
+#include "fileio.hh"
 #include "tid.hh"
+#include "kvs/interface.h"
 #include "kvs/scheme.h"
 
 using namespace kvs;
 
 namespace kvs {
+
+extern std::string LogDirectory;
+
+extern void single_recovery_from_log();
 
 class LogHeader {
  public:
