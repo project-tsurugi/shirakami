@@ -1,17 +1,22 @@
+/**
+ * @file kvs.cc
+ * @brief about entire kvs.
+ */
 
+#include "include/kvs.hh"
+
+#include <cstdint>
+
+#include "boost/filesystem.hpp"
 #include "include/cache_line_size.hh"
 #include "include/cpu.hh"
 #include "include/debug.hh"
+#include "include/gcollection.hh"
 #include "include/header.hh"
-#include "include/kvs.hh"
 #include "include/port.h"
 #include "include/scheme.hh"
 #include "include/xact.hh"
-
-#include <cstdint>
 #include "kvs/interface.h"
-
-#include "boost/filesystem.hpp"
 
 using std::cout;
 using std::endl;

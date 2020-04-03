@@ -4,21 +4,21 @@
  * @brief implement about transaction 
  */
 
+#include "include/xact.hh"
+
 #include "include/atomic_wrapper.hh"
 #include "include/cache_line_size.hh"
 #include "include/clock.hh"
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/epoch.hh"
-#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
+#include "include/gcollection.hh"
 #include "include/masstree_wrapper.hh"
 #include "include/key.hh"
 #include "include/kvs.hh"
 #include "include/mutex.hh"
 #include "include/scheme.hh"
 #include "include/tsc.hh"
-#include "include/xact.hh"
-
 #include "kvs/interface.h"
 
 // for output debug. finally, it should delete these.
@@ -28,8 +28,6 @@ using std::endl;
 namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
-alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
 void
@@ -201,33 +199,6 @@ forced_gc_all_records()
       itr = kGarbageRecords[i].erase(itr);
     }
   }
-}
-
-static void
-gc_records()
-{
-#ifdef KVS_Linux
-  int core_pos = sched_getcpu();
-  if (core_pos == -1) ERR;
-  cpu_set_t current_mask = getThreadAffinity();
-  setThreadAffinity(core_pos);
-#endif
-  std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
-  if (mutex_for_gclist.try_lock()) {
-    auto itr = kGarbageRecords[core_pos].begin();
-    while (itr != kGarbageRecords[core_pos].end()) {
-      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch)) {
-        delete *itr;
-        itr = kGarbageRecords[core_pos].erase(itr);
-      } else {
-        break;
-      }
-    }
-    mutex_for_gclist.unlock();
-  }
-#ifdef KVS_Linux
-  setThreadAffinity(current_mask);
-#endif
 }
 
 static void

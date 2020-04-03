@@ -18,7 +18,6 @@
 
 // kvs_charkey/src/
 #include "include/header.hh"
-#include "include/masstree_wrapper.hh"
 #include "include/scheme.hh"
 
 // kvs_charkey/include/

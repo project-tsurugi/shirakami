@@ -7,6 +7,7 @@
 #pragma once
 
 #include "include/header.hh"
+#include "include/masstree_wrapper.hh"
 #include "include/scheme.hh"
 
 #include "kvs/scheme.h"
@@ -18,12 +19,6 @@ using namespace std;
 namespace kvs {
 
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
-/* kGarbageRecords is a list of garbage records.
- * Theoretically, each worker thread has own list.
- * But in this kvs, the position of core at which worker is may change.
- * This is problem. It prepare enough list for experiments as pending solution.*/
-extern std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-extern std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 extern MasstreeWrapper<Record> MTDB;
 
 /**
@@ -62,7 +57,5 @@ extern Status read_record(Record& res, Record* dest);
  * @return void
  */
 extern void tbegin(Token token);
-
-static void gc_records();
 
 }  // namespace kvs

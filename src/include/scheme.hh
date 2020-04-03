@@ -11,7 +11,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
@@ -29,7 +28,6 @@
 #include "debug.hh"
 #include "fileio.hh"
 #include "log.hh"
-#include "masstree_wrapper.hh"
 #include "record.hh"
 #include "scheme.hh"
 #include "tid.hh"

@@ -28,7 +28,6 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/header.hh"
-#include "include/masstree_wrapper.hh"
 #include "include/random.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
@@ -60,7 +59,6 @@ decideParallelBuildNumber(std::size_t record, std::size_t thread)
 
 void
 parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::size_t len_val, std::vector<Tuple*> *insertedList) {
-  MasstreeWrapper<Record>::thread_init(thid);
   Token token;
   enter(token);
 

@@ -1,14 +1,18 @@
+/**
+ * @file masstreeTest.cpp
+ * @brief test about usage of masstree.
+ */
 
 #include "gtest/gtest.h"
-
-#include "kvs/interface.h"
-
 #include "include/compiler.hh"
 #include "include/header.hh"
-#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
 #include "include/masstree_wrapper.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
+#include "kvs/interface.h"
+
+// to use declaration of entity of global variables.
+#include "./../src/masstree_wrapper.cc"
 
 using namespace kvs;
 using namespace std;

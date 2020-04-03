@@ -29,20 +29,19 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/header.hh"
-#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
-#include "include/masstree_wrapper.hh"
 #include "include/random.hh"
 #include "include/record.hh"
 #include "include/scheme.hh"
-#include "include/xact.hh"
 #include "include/zipf.hh"
 
 // kvs_charkey/include/
 #include "kvs/interface.h"
-#include "kvs/scheme.h"
 
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+
+// to use declaration of entity of global variables.
+#include "./../src/masstree_wrapper.cc"
 
 using namespace kvs;
 using std::cout, std::endl, std::cerr;
@@ -126,8 +125,6 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   setThreadAffinity(thid);
 #endif
 
-  MasstreeWrapper<kvs::Record>::thread_init(sched_getcpu());
-
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
@@ -140,7 +137,6 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
       std::size_t start(UINT64_MAX/FLAGS_thread*thid), end(UINT64_MAX/FLAGS_thread*(thid+1));
       std::vector<Tuple*> localInsertedList;
       for (auto i = start; i < end; ++i) {
-        tbegin(token);
         uint64_t keybs = __builtin_bswap64(i);
         std::unique_ptr<char[]> val = std::make_unique<char[]>(FLAGS_val_length);
         make_string(val.get(), FLAGS_val_length);
@@ -150,7 +146,6 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
         commit(token);
         ++myres.local_commit_counts_;
         if (unlikely(loadAcquire(quit))) {
-          tbegin(token);
           for (auto itr = localInsertedList.begin(); itr != localInsertedList.end(); ++itr) {
             delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
           }
@@ -159,6 +154,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
         }
       }
     } else if (FLAGS_instruction == "put") {
+#if 0
       // future work : If it defines that the record number is divisible by 2, it can use mask and "and computation"  instead of "surplus computation".
       // Then, it will be faster than now.
       kvs::Record* record;
@@ -175,6 +171,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
       record = MTDB.get_value((char*)&keybs, sizeof(uint64_t));
       if (record == nullptr) ERR;
       ++myres.local_commit_counts_;
+#endif
     }
   }
   leave(token);

@@ -1,8 +1,10 @@
 /**
- * @file body of implementation about scheme
+ * @file scheme.cc
+ * @brief about scheme
  */
 
 #include "include/atomic_wrapper.hh"
+#include "include/gcollection.hh"
 #include "include/log.hh"
 #include "include/scheme.hh"
 #include "include/xact.hh"
@@ -216,30 +218,6 @@ void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record
     memcpy(tuple.val.get(), val, len_val);
     this->op = op;
     this->rec_ptr = rec_ptr;
-}
-
-void print_status(Status status)
-{
-  switch (status) {
-    case Status::WARN_NOT_IN_A_SESSION:
-      cout << "WARN_NOT_IN_A_SESSION" << endl;
-      break;
-    case Status::OK:
-      cout << "OK" << endl;
-      break;
-    case Status::ERR_NOT_FOUND:
-      cout << "ERR_NOT_FOUND" << endl;
-      break;
-    case Status::ERR_INVALID_ARGS:
-      cout << "ERR_INVALID_ARGS" << endl;
-      break;
-    case Status::ERR_VALIDATION:
-      cout << "ERR_VALIDATION" << endl;
-      break;
-    default:
-      cout << "UNKNWON_STATUS" << endl;
-      break;
-  }
 }
 
 }

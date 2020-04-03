@@ -5,9 +5,7 @@
 
 #include "include/compiler.hh"
 #include "include/header.hh"
-#include "include/scheme.hh"
 #include "include/tsc.hh"
-#include "include/xact.hh"
 
 using namespace kvs;
 using std::cout;
@@ -22,7 +20,6 @@ class ScanPerfTest : public ::testing::Test {
     kvs::fin(); 
     kvs::delete_all_records();
     kvs::delete_all_garbage_records();
-    //kvs::MTDB.destroy();
   }
 };
 
@@ -37,7 +34,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   Storage st{};
   uint64_t start, end, scan_size;
 
-  tbegin(s);
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -47,7 +43,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   ScanHandle handle{};
   Tuple* tuple{};
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -64,7 +59,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 100; i < 1000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -72,7 +66,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 1K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -89,7 +82,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 1000; i < 10000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -97,7 +89,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 10K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -114,7 +105,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 10000; i < 20000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -122,7 +112,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 20K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -139,7 +128,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 20000; i < 40000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -147,7 +135,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 40K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -164,7 +151,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 40000; i < 80000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -172,7 +158,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 80K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -189,7 +174,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 80000; i < 160000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -197,7 +181,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 160K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
@@ -214,7 +197,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   /**
    * Prepare for next experiments.
    */
-  tbegin(s);
   for (int i = 160000; i < 320000; ++i) {
     ASSERT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
   }
@@ -222,7 +204,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 320K records." << endl;
   start = rdtscp();
-  tbegin(s);
   ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   for (int i = 0; i < 100; ++i) {
     ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));

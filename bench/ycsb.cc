@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <xmmintrin.h>
+
 // kvs_charkey/test
 #include "include/result.hh"
 
@@ -32,11 +34,8 @@
 #include "include/cpu.hh"
 #include "include/debug.hh"
 #include "include/header.hh"
-#include "include/masstree_wrapper.hh"
 #include "include/random.hh"
 #include "include/scheme.hh"
-#include "include/xact.hh"
-#include "include/ycsb_param.h"
 #include "include/zipf.hh"
 
 // kvs_charkey/include/
@@ -173,7 +172,6 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   enter(token);
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   while (likely(!loadAcquire(quit))) {
-    tbegin(token);
     gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
     for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
       if ((*itr).type == OP_TYPE::SEARCH) {
