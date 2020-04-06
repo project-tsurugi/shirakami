@@ -6,6 +6,6 @@
 
 #pragma once
 
-#include "include/header.hh"
+#include "header.hh"
 
 extern void process_key(char** const key, std::size_t& len_key, std::string& newkey);

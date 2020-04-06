@@ -1,7 +1,7 @@
 #pragma once
 
-// kvs_charkey/src/
-#include "include/header.hh"
+// kvs_charkey-impl interface library
+#include "header.hh"
 
 static void
 make_string(char* string, std::size_t len)

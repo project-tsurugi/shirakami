@@ -3,21 +3,21 @@
  * @brief about entire kvs.
  */
 
-#include "include/kvs.hh"
+#include "kvs.hh"
 
 #include <cstdint>
 
 #include "boost/filesystem.hpp"
-#include "include/cache_line_size.hh"
-#include "include/cpu.hh"
-#include "include/debug.hh"
-#include "include/epoch.hh"
-#include "include/gcollection.hh"
-#include "include/header.hh"
-#include "include/log.hh"
-#include "include/port.h"
-#include "include/scheme.hh"
-#include "include/xact.hh"
+#include "cache_line_size.hh"
+#include "cpu.hh"
+#include "debug.hh"
+#include "epoch.hh"
+#include "gcollection.hh"
+#include "header.hh"
+#include "log.hh"
+#include "port.h"
+#include "scheme.hh"
+#include "xact.hh"
 #include "kvs/interface.h"
 
 using std::cout;

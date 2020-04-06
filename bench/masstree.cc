@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-// kvs_charkey/test
-#include "include/result.hh"
+// kvs_charkey/test/include
+#include "result.hh"
 
 // kvs_charkey/bench
 #include "./include/masstree_build.hh"
 #include "./include/string.hh"
 
 // kvs_charkey/src/
-#include "include/atomic_wrapper.hh"
-#include "include/cache_line_size.hh"
-#include "include/clock.hh"
-#include "include/compiler.hh"
-#include "include/cpu.hh"
-#include "include/debug.hh"
-#include "include/header.hh"
-#include "include/random.hh"
-#include "include/record.hh"
-#include "include/scheme.hh"
-#include "include/zipf.hh"
+#include "atomic_wrapper.hh"
+#include "cache_line_size.hh"
+#include "clock.hh"
+#include "compiler.hh"
+#include "cpu.hh"
+#include "debug.hh"
+#include "header.hh"
+#include "random.hh"
+#include "record.hh"
+#include "scheme.hh"
+#include "zipf.hh"
 
 // kvs_charkey/include/
 #include "kvs/interface.h"

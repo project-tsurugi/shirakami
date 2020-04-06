@@ -17,9 +17,9 @@
 #include "./include/test_param.h"
 
 // kvs_charkey/src/
-#include "include/cpu.hh"
-#include "include/debug.hh"
-#include "include/header.hh"
+#include "cpu.hh"
+#include "debug.hh"
+#include "header.hh"
 
 #include <cstdint>
 

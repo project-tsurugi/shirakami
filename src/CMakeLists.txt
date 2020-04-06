@@ -19,7 +19,7 @@ set_target_properties(kvs_charkey
         )
 
 target_include_directories(kvs_charkey
-    PRIVATE .
+    PRIVATE include
 )
 
 find_package(Threads REQUIRED)
@@ -40,6 +40,6 @@ target_link_libraries(kvs_charkey-impl
 )
 
 target_include_directories(kvs_charkey-impl
-    INTERFACE .
+    INTERFACE include
 )
 

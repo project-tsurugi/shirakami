@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "include/xact.hh"
+#include "xact.hh"
 
 namespace kvs {
 

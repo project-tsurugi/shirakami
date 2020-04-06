@@ -244,6 +244,15 @@ class ThreadInfo {
   }
 
   /**
+   * Accessor
+   */
+
+  /**
+   * Getter
+   */
+  bool get_txbegan_() { return txbegan_; }
+
+  /**
    * @brief clean up about holding operation info.
    */
   void clean_up_ops_set();

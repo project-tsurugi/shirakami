@@ -8,8 +8,7 @@
 #include <atomic>
 #include <thread>
 
-// kvs_charkey/src/
-#include "include/header.hh"
+#include "header.hh"
 
 namespace kvs {
 

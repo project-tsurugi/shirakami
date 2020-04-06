@@ -9,9 +9,9 @@
 #include "ycsb_param.h"
 
 // kvs_charkey/src/
-#include "include/random.hh"
-#include "include/scheme.hh"
-#include "include/zipf.hh"
+#include "random.hh"
+#include "scheme.hh"
+#include "zipf.hh"
 
 using namespace kvs;
 using namespace ycsb_param;

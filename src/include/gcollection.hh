@@ -8,7 +8,7 @@
 #include <mutex>
 #include <vector>
 
-#include "include/scheme.hh"
+#include "scheme.hh"
 
 namespace kvs {
 

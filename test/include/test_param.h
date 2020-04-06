@@ -1,7 +1,7 @@
 #pragma once
 
-// kvs_charkey/src/
-#include "include/header.hh"
+// kvs_charkey-impl interface library
+#include "header.hh"
 
 #define DECLARE_ENTITY_TOKEN_FOR_EXP
 

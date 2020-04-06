@@ -3,9 +3,10 @@
 
 #include "kvs/interface.h"
 
-#include "include/compiler.hh"
-#include "include/header.hh"
-#include "include/tsc.hh"
+// kvs_charkey-impl interface library
+#include "compiler.hh"
+#include "header.hh"
+#include "tsc.hh"
 
 using namespace kvs;
 using std::cout;

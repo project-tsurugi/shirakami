@@ -3,9 +3,10 @@
 #include <iomanip>
 #include <iostream>
 
-// kvs_charkey/src/
-#include "./include/debug.hh"
-#include "./include/memory.hh"
+// kvs_charkey-impl interface library
+#include "debug.hh"
+#include "memory.hh"
+
 #include "./include/result.hh"
 
 using std::cout;

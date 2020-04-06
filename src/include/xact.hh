@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "include/header.hh"
-#include "include/masstree_wrapper.hh"
-#include "include/scheme.hh"
+#include "header.hh"
+#include "masstree_wrapper.hh"
+#include "scheme.hh"
 
 #include "kvs/scheme.h"
 

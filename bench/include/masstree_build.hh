@@ -16,9 +16,9 @@
 
 #pragma once
 
-// kvs_charkey/src/
-#include "include/header.hh"
-#include "include/scheme.hh"
+// kvs_charkey/src/include/
+#include "header.hh"
+#include "scheme.hh"
 
 // kvs_charkey/include/
 #include "kvs/scheme.h"

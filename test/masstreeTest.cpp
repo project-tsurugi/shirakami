@@ -4,11 +4,11 @@
  */
 
 #include "gtest/gtest.h"
-#include "include/compiler.hh"
-#include "include/header.hh"
-#include "include/masstree_wrapper.hh"
-#include "include/scheme.hh"
-#include "include/xact.hh"
+#include "compiler.hh"
+#include "header.hh"
+#include "masstree_wrapper.hh"
+#include "scheme.hh"
+#include "xact.hh"
 #include "kvs/interface.h"
 
 // to use declaration of entity of global variables.

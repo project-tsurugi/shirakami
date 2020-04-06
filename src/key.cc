@@ -4,7 +4,7 @@
  * @author takayuki tanabe
  */
 
-#include "include/key.hh"
+#include "key.hh"
 
 void
 process_key(char** const key, std::size_t& len_key, std::string& newkey)

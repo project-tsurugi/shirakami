@@ -3,11 +3,11 @@
  * @brief about scheme
  */
 
-#include "include/atomic_wrapper.hh"
-#include "include/gcollection.hh"
-#include "include/log.hh"
-#include "include/scheme.hh"
-#include "include/xact.hh"
+#include "atomic_wrapper.hh"
+#include "gcollection.hh"
+#include "log.hh"
+#include "scheme.hh"
+#include "xact.hh"
 
 using std::cout;
 using std::endl;

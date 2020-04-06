@@ -5,12 +5,12 @@
 
 #include <xmmintrin.h>
 
-#include "include/atomic_wrapper.hh"
-#include "include/clock.hh"
-#include "include/compiler.hh"
-#include "include/cpu.hh"
-#include "include/epoch.hh"
-#include "include/xact.hh"
+#include "atomic_wrapper.hh"
+#include "clock.hh"
+#include "compiler.hh"
+#include "cpu.hh"
+#include "epoch.hh"
+#include "xact.hh"
 
 namespace kvs {
 

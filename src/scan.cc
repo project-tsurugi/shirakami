@@ -5,9 +5,9 @@
 
 #include <map>
 
-#include "include/masstree_wrapper.hh"
-#include "include/scheme.hh"
-#include "include/xact.hh"
+#include "masstree_wrapper.hh"
+#include "scheme.hh"
+#include "xact.hh"
 
 #include "kvs/interface.h"
 #include "kvs/scheme.h"

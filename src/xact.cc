@@ -4,21 +4,21 @@
  * @brief implement about transaction 
  */
 
-#include "include/xact.hh"
+#include "xact.hh"
 
-#include "include/atomic_wrapper.hh"
-#include "include/cache_line_size.hh"
-#include "include/clock.hh"
-#include "include/cpu.hh"
-#include "include/debug.hh"
-#include "include/epoch.hh"
-#include "include/gcollection.hh"
-#include "include/masstree_wrapper.hh"
-#include "include/key.hh"
-#include "include/kvs.hh"
-#include "include/mutex.hh"
-#include "include/scheme.hh"
-#include "include/tsc.hh"
+#include "atomic_wrapper.hh"
+#include "cache_line_size.hh"
+#include "clock.hh"
+#include "cpu.hh"
+#include "debug.hh"
+#include "epoch.hh"
+#include "gcollection.hh"
+#include "masstree_wrapper.hh"
+#include "key.hh"
+#include "kvs.hh"
+#include "mutex.hh"
+#include "scheme.hh"
+#include "tsc.hh"
 #include "kvs/interface.h"
 
 // for output debug. finally, it should delete these.

@@ -42,10 +42,11 @@ target_link_libraries(ycsb
 
 target_include_directories(ycsb
   PRIVATE .
-  PRIVATE ./../include
+  PRIVATE ./include
   PRIVATE ./../bench/
-  PRIVATE ./../src/
-  PRIVATE ./../test/
+  PRIVATE ./../include
+  PRIVATE ./../src/include
+  PRIVATE ./../test/include
   PRIVATE ${gflags_INCLUDE_DIR}
 )
 target_link_libraries(masstree
@@ -57,9 +58,10 @@ target_link_libraries(masstree
 
 target_include_directories(masstree
   PRIVATE .
-  PRIVATE ./../include
+  PRIVATE ./include
   PRIVATE ./../bench/
-  PRIVATE ./../src/
-  PRIVATE ./../test/
+  PRIVATE ./../include
+  PRIVATE ./../src/include
+  PRIVATE ./../test/include
   PRIVATE ${gflags_INCLUDE_DIR}
 )

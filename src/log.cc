@@ -3,7 +3,7 @@
  * @brief implement about log
  */
 
-#include "include/log.hh"
+#include "log.hh"
 
 namespace kvs {
 
