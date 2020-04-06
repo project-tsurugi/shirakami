@@ -68,6 +68,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
       mutex_for_gclist.unlock();
       TidWord deletetid;
       deletetid.lock = false;
+      deletetid.latest = false;
       deletetid.absent = false;
       deletetid.epoch = epoch;
       __atomic_store_n(&(itr->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
