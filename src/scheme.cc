@@ -181,7 +181,9 @@ void ThreadInfo::wal(uint64_t ctid)
 
       // write val body
       if ((*itr).op_ != OP_TYPE::DELETE)
-        logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
+        if ((*itr).tuple_.len_val != 0) {
+          logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
+        }
     }
   }
 
@@ -206,18 +208,22 @@ void WriteSetObj::reset(char const *val, std::size_t len_val)
 {
     tuple.len_val = len_val;
     tuple.val.reset();
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
+    if (len_val != 0) {
+      tuple.val = std::make_unique<char[]>(len_val);
+      memcpy(tuple.val.get(), val, len_val);
+    }
 }
 
 void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr)
 {
     tuple.len_val = len_val;
     tuple.val.reset();
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
     this->rec_ptr = rec_ptr;
+    if (len_val != 0) {
+      tuple.val = std::make_unique<char[]>(len_val);
+      memcpy(tuple.val.get(), val, len_val);
+    }
 }
 
 }

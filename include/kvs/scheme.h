@@ -234,9 +234,11 @@ public:
     this->key.reset();
     this->val.reset();
     this->key = std::make_unique<char[]>(right.len_key);
-    this->val = std::make_unique<char[]>(right.len_val);
     memcpy(this->key.get(), right.key.get(), right.len_key);
-    memcpy(this->val.get(), right.val.get(), right.len_val);
+    if (right.len_val != 0) {
+      this->val = std::make_unique<char[]>(right.len_val);
+      memcpy(this->val.get(), right.val.get(), right.len_val);
+    }
     
     return *this;
   }

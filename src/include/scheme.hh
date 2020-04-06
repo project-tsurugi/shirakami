@@ -70,9 +70,11 @@ class WriteSetObj {
     tuple.key = std::make_unique<char[]>(len_key);
     memcpy(tuple.key.get(), key, len_key);
     tuple.len_val = len_val;
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
+    if (len_val != 0) {
+      tuple.val = std::make_unique<char[]>(len_val);
+      memcpy(tuple.val.get(), val, len_val);
+    }
   }
 
   WriteSetObj(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val, const OP_TYPE op, Record* const rec_ptr) {
@@ -80,10 +82,12 @@ class WriteSetObj {
     tuple.key = std::make_unique<char[]>(len_key);
     memcpy(tuple.key.get(), key, len_key);
     tuple.len_val = len_val;
-    tuple.val = std::make_unique<char[]>(len_val);
-    memcpy(tuple.val.get(), val, len_val);
     this->op = op;
     this->rec_ptr = rec_ptr;
+    if (len_val != 0) {
+      tuple.val = std::make_unique<char[]>(len_val);
+      memcpy(tuple.val.get(), val, len_val);
+    }
   }
 
   WriteSetObj(const WriteSetObj& right) = delete;

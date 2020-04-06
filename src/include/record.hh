@@ -20,9 +20,11 @@ public:
     this->tuple.len_key = len_key;
     this->tuple.len_val = len_val;
     this->tuple.key = std::make_unique<char[]>(len_key);
-    this->tuple.val = std::make_unique<char[]>(len_val);
     memcpy(this->tuple.key.get(), key, len_key);
-    memcpy(this->tuple.val.get(), val, len_val);
+    if (len_val != 0) {
+      this->tuple.val = std::make_unique<char[]>(len_val);
+      memcpy(this->tuple.val.get(), val, len_val);
+    }
 
     tidw = TidWord();
     tidw.absent = true;
