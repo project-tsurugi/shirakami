@@ -33,6 +33,19 @@ using Storage = std::uint64_t;
 using ScanHandle = std::size_t;
 
 /**
+ * @brief Epoch class
+ * @details
+ * Tidword is composed of union ...
+ * 1bits : lock
+ * 1bits : latest
+ * 1bits : absent
+ * 29bits : tid
+ * 32 bits : epoch.
+ * So Epoch should be uint32_t.
+ */
+using Epoch = std::uint32_t;
+
+/**
  * @brief the status which is after some function.
  *
  * Warn is no problem for progressing.

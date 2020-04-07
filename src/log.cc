@@ -4,6 +4,7 @@
  */
 
 #include "log.hh"
+#include "kvs/scheme.h"
 
 namespace kvs {
 
@@ -59,7 +60,7 @@ single_recovery_from_log()
   if (log_set.size() == 0) return;
 
   sort(log_set.begin(), log_set.end());
-  const std::size_t recovery_epoch = log_set.back().tid_.epoch - 2;
+  const Epoch recovery_epoch = log_set.back().tid_.epoch - 2;
 
   Token s{};
   Storage st{};

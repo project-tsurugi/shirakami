@@ -16,8 +16,8 @@ namespace kvs {
 
 std::thread kEpochThread;
 std::atomic<bool> kEpochThreadEnd;
-uint64_t kGlobalEpoch(1);
-uint64_t kReclamationEpoch(0);
+Epoch kGlobalEpoch(1);
+Epoch kReclamationEpoch(0);
 
 void
 atomic_add_global_epoch()

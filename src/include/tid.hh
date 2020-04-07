@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "kvs/scheme.h"
+
 class TidWord {
 public:
   union {
@@ -16,7 +18,7 @@ public:
       bool latest:1;
       bool absent:1;
       uint64_t tid:29;
-      uint64_t epoch:32;
+      kvs::Epoch epoch:32;
     };
   };
 

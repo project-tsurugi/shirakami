@@ -9,11 +9,12 @@
 #include <thread>
 
 #include "header.hh"
+#include "kvs/scheme.h"
 
 namespace kvs {
 
-extern uint64_t kGlobalEpoch;
-extern uint64_t kReclamationEpoch;
+extern Epoch kGlobalEpoch;
+extern Epoch kReclamationEpoch;
 
 // about epoch thread
 extern std::thread kEpochThread;

@@ -202,7 +202,7 @@ class ThreadInfo {
  public:
   alignas(CACHE_LINE_SIZE)
     Token token;
-  uint64_t epoch;
+  Epoch epoch;
   TidWord mrctid; // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible;
   bool txbegan_;
