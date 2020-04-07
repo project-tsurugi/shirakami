@@ -12,6 +12,7 @@
 namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
+alignas(CACHE_LINE_SIZE) std::vector<> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 
 

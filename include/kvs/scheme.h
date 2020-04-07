@@ -33,19 +33,6 @@ using Storage = std::uint64_t;
 using ScanHandle = std::size_t;
 
 /**
- * @brief Epoch class
- * @details
- * Tidword is composed of union ...
- * 1bits : lock
- * 1bits : latest
- * 1bits : absent
- * 29bits : tid
- * 32 bits : epoch.
- * So Epoch should be uint32_t.
- */
-using Epoch = std::uint32_t;
-
-/**
  * @brief the status which is after some function.
  *
  * Warn is no problem for progressing.
@@ -198,72 +185,5 @@ enum class OP_TYPE : std::int32_t {
   ABORT,
 };
 
-class Tuple {
-public:
-  /** length of key string of db. */
-  std::size_t len_key;
-  /** length of val string of db. */
-  std::size_t len_val;
-  /** key string of db. */
-  std::unique_ptr<char[]> key;
-  /** val string of db. */
-  std::unique_ptr<char[]> val;
-
-  Tuple() = default;
-  ~Tuple() = default;
-
-  Tuple(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val) {
-    this->len_key = len_key;
-    this->len_val = len_val;
-    this->key = std::make_unique<char[]>(len_key);
-    this->val = std::make_unique<char[]>(len_val);
-    memcpy(this->key.get(), key, len_key);
-    memcpy(this->val.get(), val, len_val);
-  }
-
-  Tuple(const Tuple& right) {
-    this->len_key = right.len_key;
-    this->len_val = right.len_val;
-    if (right.len_key > 0) {
-      this->key = std::make_unique<char[]>(right.len_key);
-      memcpy(this->key.get(), right.key.get(), right.len_key);
-    }
-    if (right.len_val > 0) {
-      this->val = std::make_unique<char[]>(right.len_val);
-      memcpy(this->val.get(), right.val.get(), right.len_val);
-    }
-  }
-
-  Tuple(Tuple&& right) {
-    this->len_key = right.len_key;
-    this->len_val = right.len_val;
-    this->key = std::move(right.key);
-    this->val = std::move(right.val);
-  }
-
-  Tuple& operator=(const Tuple& right) {
-    this->len_key = right.len_key;
-    this->len_val = right.len_val;
-    this->key.reset();
-    this->val.reset();
-    this->key = std::make_unique<char[]>(right.len_key);
-    memcpy(this->key.get(), right.key.get(), right.len_key);
-    if (right.len_val != 0) {
-      this->val = std::make_unique<char[]>(right.len_val);
-      memcpy(this->val.get(), right.val.get(), right.len_val);
-    }
-    
-    return *this;
-  }
-
-  Tuple& operator=(Tuple&& right) {
-    this->len_key = right.len_key;
-    this->len_val = right.len_val;
-    this->key = std::move(right.key);
-    right.key.reset();
-    this->val = std::move(right.val);
-    right.val.reset();
-  }
-};
 }  // namespace kvs
 

@@ -227,4 +227,4 @@ void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record
     }
 }
 
-}
+} // namespace kvs
