@@ -1,5 +1,6 @@
 #pragma once
 #include "scheme.h"
+#include "tuple.h"
 
 #define STRING(macro) #macro
 #define MAC2STR(macro) STRING(macro)

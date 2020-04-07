@@ -7,7 +7,9 @@
 
 #include <cstdint>
 
-#include "kvs/scheme.h"
+#include "epoch.hh"
+
+namespace kvs {
 
 class TidWord {
 public:
@@ -18,7 +20,7 @@ public:
       bool latest:1;
       bool absent:1;
       uint64_t tid:29;
-      kvs::Epoch epoch:32;
+      Epoch epoch:32;
     };
   };
 
@@ -41,3 +43,5 @@ public:
 
   void reset() { obj = 0; }
 };
+
+} // namespace kvs

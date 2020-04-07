@@ -7,6 +7,7 @@
 
 #include "tid.hh"
 #include "kvs/scheme.h"
+#include "kvs/tuple.h"
 
 namespace kvs {
 class Record {
@@ -16,16 +17,8 @@ public:
 
   Record () {}
 
-  Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
-    this->tuple.len_key = len_key;
-    this->tuple.len_val = len_val;
-    this->tuple.key = std::make_unique<char[]>(len_key);
-    memcpy(this->tuple.key.get(), key, len_key);
-    if (len_val != 0) {
-      this->tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(this->tuple.val.get(), val, len_val);
-    }
-
+  Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw(), tuple(key_ptr, key_length, value_ptr, value_length) {
+    // init tidw
     tidw = TidWord();
     tidw.absent = true;
     tidw.lock = true;

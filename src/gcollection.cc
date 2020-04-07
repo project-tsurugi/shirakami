@@ -3,8 +3,10 @@
  * @brief about garbage collection.
  */
 
-//#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
+#include <utility>
+
 #include "atomic_wrapper.hh"
+#include "cache_line_size.hh"
 #include "cpu.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
@@ -12,7 +14,7 @@
 namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-alignas(CACHE_LINE_SIZE) std::vector<> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+alignas(CACHE_LINE_SIZE) std::vector<std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 
 
