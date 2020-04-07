@@ -35,18 +35,26 @@ class Tuple::Impl {
 
 Tuple::Impl::Impl(const Impl& right)
 {
+  this->key_ = right.key_;
+  this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
 }
 
 Tuple::Impl::Impl(Impl&& right)
 {
+  this->key_ = std::move(right.key_);
+  *this->pvalue_.load(std::memory_order_acquire) = std::move(*right.pvalue_.load(std::memory_order_acquire));
 }
 
 Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
 {
+  this->key_ = right.key_;
+  this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
 }
 
 Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 {
+  this->key_ = std::move(right.key_);
+  *this->pvalue_.load(std::memory_order_acquire) = std::move(*right.pvalue_.load(std::memory_order_acquire));
 }
 
 std::string_view 
@@ -86,18 +94,24 @@ Tuple::Tuple (const char* key_ptr, const std::size_t key_length, const char* val
 
 Tuple::Tuple(const Tuple& right)
 {
+  pimpl_.reset();
+  pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
 }
 
 Tuple::Tuple(Tuple&& right)
 {
+  pimpl_ = std::move(right.pimpl_);
 }
 
 Tuple& Tuple::operator=(const Tuple& right)
 {
+  this->pimpl_.reset();
+  this->pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
 }
 
 Tuple& Tuple::operator=(Tuple&& right)
 {
+  this->pimpl_ = std::move(right.pimpl_);
 }
 
 Tuple::~Tuple() {};

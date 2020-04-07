@@ -43,106 +43,70 @@ namespace kvs {
  * in terms of performance.
  */
 class WriteSetObj {
- public:
-  Tuple tuple;  // for update
-  OP_TYPE op;
-  Record* rec_ptr; // ptr to database
+  public:
+    WriteSetObj() {}
 
-  WriteSetObj() {}
-
-  WriteSetObj(OP_TYPE op, Record* rec_ptr) {
-    this->op = op;
-    this->rec_ptr = rec_ptr;
-  }
-
-  // for delete operation
-  WriteSetObj(const char* const key, const std::size_t len_key, const OP_TYPE op, Record* const rec_ptr) {
-    tuple.len_key = len_key;
-    tuple.key = std::make_unique<char[]>(len_key);
-    tuple.len_val = 0;
-    memcpy(tuple.key.get(), key, len_key);
-    this->op = op;
-    this->rec_ptr = rec_ptr;
-  }
-
-  WriteSetObj(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val, const OP_TYPE op) {
-    tuple.len_key = len_key;
-    tuple.key = std::make_unique<char[]>(len_key);
-    memcpy(tuple.key.get(), key, len_key);
-    tuple.len_val = len_val;
-    this->op = op;
-    if (len_val != 0) {
-      tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(tuple.val.get(), val, len_val);
+    // for insert/delete operation
+    WriteSetObj(OP_TYPE op, Record* rec_ptr) {
+      this->op = op;
+      this->rec_ptr = rec_ptr;
     }
-  }
 
-  WriteSetObj(const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val, const OP_TYPE op, Record* const rec_ptr) {
-    tuple.len_key = len_key;
-    tuple.key = std::make_unique<char[]>(len_key);
-    memcpy(tuple.key.get(), key, len_key);
-    tuple.len_val = len_val;
-    this->op = op;
-    this->rec_ptr = rec_ptr;
-    if (len_val != 0) {
-      tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(tuple.val.get(), val, len_val);
-    }
-  }
+    // for update/
+    WriteSetObj(const char* const key_ptr, const std::size_t key_length, const char* const val_ptr, const std::size_t val_length, const OP_TYPE op, Record* const rec_ptr) : tuple_(key_ptr, key_length, val_ptr, val_length), op_(op), rec_ptr_(rec_ptr) {}
 
-  WriteSetObj(const WriteSetObj& right) = delete;
-  WriteSetObj(WriteSetObj&& right) = default;
-  WriteSetObj& operator=(const WriteSetObj& right) = delete;
-  WriteSetObj& operator=(WriteSetObj&& right) = default;
+    WriteSetObj(const WriteSetObj& right) = delete;
+    // for std::sort
+    WriteSetObj(WriteSetObj&& right) = default;
+    WriteSetObj& operator=(const WriteSetObj& right) = delete;
+    // for std::sort
+    WriteSetObj& operator=(WriteSetObj&& right) = default;
 
-  bool operator==(const WriteSetObj& right) const {
-    if (tuple.len_key == right.tuple.len_key &&
-        memcmp(tuple.key.get(), right.tuple.key.get(), tuple.len_key) == 0) {
-      return true;
-    }
-    return false;
-  }
+    bool operator<(const WriteSetObj& right) const {
+      Tuple* this_tuple_ptr(this->get_tuple_ptr());
+      Tuple* right_tuple_ptr(right.get_tuple_ptr());
+      char* this_key_ptr(this_tuple_ptr->get_key().data());
+      char* right_key_ptr(right_tuple_ptr->get_key().data());
+      std::size_t this_key_size(this_tuple_ptr->get_key().size());
+      std::size_t right_key_size(right_tuple_ptr->get_key().size());
 
-  bool operator!=(const WriteSetObj& right) const {
-    if (tuple.len_key != right.tuple.len_key ||
-        memcmp(tuple.key.get(), right.tuple.key.get(), tuple.len_key) != 0) {
-      return true;
-    }
-    return false;
-  }
-
-  bool operator<(const WriteSetObj& right) const {
-    bool judge = false;
-    uint len_this = tuple.len_key;
-    uint len_right = right.tuple.len_key;
-
-    if (len_this < len_right) {
-      if (memcmp(tuple.key.get(), right.tuple.key.get(), len_this) <= 0) {
-        return true;
-      } else {
-        return false;
+      bool judge = false;
+      if (this_key_size < right_key_size) {
+        if (memcmp(this_key_ptr, right_key_ptr, this_key_size) <= 0) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (this_key_size > right_key_size) {
+        if (memcmp(this_key_ptr, right_key_ptr right_key_size) < 0) {
+          return true;
+        } else {
+          return false;
+        }
+      } else { // same length
+        int ret = memcmp(this_key_ptr, right_key_ptr, this_key_size);      
+        if (ret < 0) {
+          return true;
+        } else if (ret > 0) {
+          return false;
+        } else {
+          ERR; // Unique key is not allowed now.
+        }
       }
     }
-    else if (len_this > len_right) {
-      if (memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right) < 0) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-    else { // same length
-      int ret = memcmp(rec_ptr->tuple.key.get(), right.rec_ptr->tuple.key.get(), len_right);      
-      if (ret < 0) return true;
-      else if (ret > 0) return false;
-      else if (ret == 0) {
-        ERR; // Unique key is not allowed now.
-      }
-    }
-  }
 
-  void display();
-  void reset(char const* val, std::size_t len_val);
-  void reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr);
+    const Tuple* const get_tuple_ptr();
+    void reset(char const* val, std::size_t len_val);
+    void reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr);
+
+  private:
+    /**
+     * for update : ptr to existing record.
+     * for insert : ptr to new existing record.
+     */
+    Record* rec_ptr_; // ptr to database
+    Tuple tuple_;  // for update
+    OP_TYPE op_;
 };
 
 class ReadSetObj {

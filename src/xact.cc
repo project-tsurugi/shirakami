@@ -392,8 +392,7 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
     return Status::WARN_NOT_FOUND;
   }
 
-  WriteSetObj wso(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
-  ti->write_set.emplace_back(std::move(wso));
+  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
   
   return Status::OK;
 }
@@ -416,7 +415,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
 
   Record* record = new Record(key, len_key, val, len_val);
   insert_record_to_masstree(key, len_key, record);
-  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::INSERT, record);
+  ti->write_set.emplace_back(record, OP_TYPE::INSERT);
   return Status::OK;
 }
 
@@ -459,7 +458,7 @@ upsert(Token token, Storage storage, const char* const key, const std::size_t le
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
     insert_record_to_masstree(key, len_key, record);
-    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::INSERT, record);
+    ti->write_set.emplace_back(record, OP_TYPE::INSERT);
   }
   else {
     ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);

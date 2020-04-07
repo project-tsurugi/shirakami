@@ -28,7 +28,7 @@ public:
 
 private:
   class Impl;
-  std::unique_ptr<Impl> pimpl_{};
+  std::unique_ptr<Impl> pimpl_;
 };
 
 }  // namespace kvs

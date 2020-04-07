@@ -153,9 +153,8 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
 void ThreadInfo::wal(uint64_t ctid)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    LogRecord log(ctid, (*itr).op, (*itr).tuple);
-    latest_log_header_.chkSum_ += log.computeChkSum();
-    log_set_.emplace_back(std::move(log));
+    log_set_.emplace_back(ctid, (*itr).op, (*itr).tuple);
+    latest_log_header_.chkSum_ += log.log_set_.back().computeChkSum();
     ++latest_log_header_.logRecNum_;
   }
   
@@ -192,39 +191,14 @@ void ThreadInfo::wal(uint64_t ctid)
   log_set_.clear();
 }
 
-void WriteSetObj::display()
+const Tuple* const get_tuple_ptr()
 {
-  cout << "WriteSetObj::display()" << endl;
-  cout << "tuple.len_key : " << tuple.len_key << endl;
-  cout << "tuple.lenval : " << tuple.len_val << endl;
-  /*
-  cout << "tuple.key : " << tuple.key.get() << endl;
-  cout << "tuple.val : " << tuple.val.get() << endl;
-  */
-  cout << "op : " << static_cast<int32_t>(op) << endl;
-  cout << "rec_ptr : " << rec_ptr << endl;
-}
-
-void WriteSetObj::reset(char const *val, std::size_t len_val)
-{
-    tuple.len_val = len_val;
-    tuple.val.reset();
-    if (len_val != 0) {
-      tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(tuple.val.get(), val, len_val);
-    }
-}
-
-void WriteSetObj::reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr)
-{
-    tuple.len_val = len_val;
-    tuple.val.reset();
-    this->op = op;
-    this->rec_ptr = rec_ptr;
-    if (len_val != 0) {
-      tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(tuple.val.get(), val, len_val);
-    }
+  if (this->op == OP_TYPE::UPDATE) {
+    return &this->tuple_;
+  } else {
+    // insert/delete
+    return this->rec_ptr_;
+  }
 }
 
 } // namespace kvs

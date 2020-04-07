@@ -41,11 +41,7 @@ class LogHeader {
 
 class LogRecord {
  public:
-  TidWord tid_;
-  OP_TYPE op_;
-  Tuple tuple_;
-
-  LogRecord() : tid_(0), tuple_() {}
+  LogRecord(){}
 
   LogRecord(const TidWord tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 
@@ -76,7 +72,7 @@ class LogRecord {
 
     chkSum += static_cast<int32_t>(op_);
 
-    // len_key
+    // key_length
     for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
       chkSum += (*intitr);
       ++intitr;
@@ -90,7 +86,7 @@ class LogRecord {
 
     // key
     char* charitr = (char*) tuple_.key.get();
-    for (std::size_t i = 0; i < tuple_.len_key; ++i) {
+    for (std::size_t i = 0; i < tuple_.key_length; ++i) {
       chkSum += (*charitr);
       ++charitr;
     }
@@ -104,5 +100,12 @@ class LogRecord {
 
     return chkSum;
   }
+
+  private:
+    TidWord tid_;
+    OP_TYPE op_;
+    std::size_t key_length_, value_length_;
+    char* key_ptr_;
+    char* value_ptr_;
 };
 } // namespace kvs
