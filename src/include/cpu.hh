@@ -32,7 +32,7 @@
   }
 
 #ifdef KVS_Linux
-static void setThreadAffinity(const int myid) {
+[[maybe_unused]] static void setThreadAffinity(const int myid) {
   using namespace std;
   static std::atomic<int> nprocessors(-1);
   int local_nprocessors, desired;
@@ -59,14 +59,14 @@ static void setThreadAffinity(const int myid) {
   return;
 }
 
-static void setThreadAffinity(const cpu_set_t id) {
+[[maybe_unused]] static void setThreadAffinity(const cpu_set_t id) {
   pid_t pid = syscall(SYS_gettid);
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) ERR;
   return;
 }
 
-static cpu_set_t getThreadAffinity() {
+[[maybe_unused]] static cpu_set_t getThreadAffinity() {
   pid_t pid = syscall(SYS_gettid);
   cpu_set_t result;
 

@@ -19,90 +19,100 @@ using namespace kvs;
 
 namespace kvs {
 
-extern std::string LogDirectory;
-
-extern void single_recovery_from_log();
-
 class LogHeader {
- public:
-  int chkSum_ = 0;
-  unsigned int logRecNum_ = 0;
+public:
+  /**
+   * @brief Initialization
+   * @details Initialize members with 0.
+   */
+  void init()&;
 
-  void init() {
-    chkSum_ = 0;
-    logRecNum_ = 0;
+  /**
+   * @brief Computing check sum.
+   * @details Compute the two's complement of the checksum.
+   */
+  void compute_two_complement_of_checksum()&;
+
+  void add_checksum(const int add) & {
+    checksum_ += add;
   }
 
-  void convertChkSumIntoComplementOnTwo() {
-    chkSum_ ^= 0xffffffff;
-    ++chkSum_;
+  int& get_checksum() & { 
+    return checksum_; 
   }
+
+  const int& get_checksum() const  & { 
+    return checksum_; 
+  }
+
+  unsigned int& get_log_rec_num() & { 
+    return log_rec_num_; 
+  }
+
+  const unsigned int& get_log_rec_num() const & { 
+    return log_rec_num_;
+  }
+
+  void inc_log_rec_num() & {
+    ++this->log_rec_num_;
+  }
+
+  void set_checksum(const int checksum) & {
+    this->checksum_ = checksum;
+  }
+
+private:
+  int checksum_{};
+  unsigned int log_rec_num_{};
 };
 
 class LogRecord {
  public:
-  TidWord tid_;
-  OP_TYPE op_;
-  Tuple tuple_;
+  LogRecord(){}
 
-  LogRecord() : tid_(0), tuple_() {}
-
-  LogRecord(const TidWord tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
-
-  LogRecord(LogRecord&& right) {
-    this->tid_ = right.tid_;
-    this->op_ = right.op_;
-    this->tuple_ = std::move(right.tuple_);
-  }
-
-  LogRecord& operator=(LogRecord&& right) {
-    this->tid_ = right.tid_;
-    this->op_ = right.op_;
-    this->tuple_ = std::move(right.tuple_);
-  }
+  LogRecord(const TidWord tid, const OP_TYPE op, const Tuple* const tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 
   bool operator<(const LogRecord& right) {
     return this->tid_ < right.tid_;
   }
 
-  int computeChkSum() {
-    // compute checksum
-    int chkSum = 0;
-    int* intitr = (int *)this;
-    for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(unsigned int); ++i) {
-      chkSum += (*intitr);
-      ++intitr;
-    }
-
-    chkSum += static_cast<int32_t>(op_);
-
-    // len_key
-    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
-      chkSum += (*intitr);
-      ++intitr;
-    }
-
-    // len_val
-    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
-      chkSum += (*intitr);
-      ++intitr;
-    }
-
-    // key
-    char* charitr = (char*) tuple_.key.get();
-    for (std::size_t i = 0; i < tuple_.len_key; ++i) {
-      chkSum += (*charitr);
-      ++charitr;
-    }
-
-    // val
-    charitr = (char*) tuple_.val.get();
-    for (std::size_t i = 0; i < tuple_.len_val; ++i) {
-      chkSum += (*charitr);
-      ++charitr;
-    }
-
-    return chkSum;
+  TidWord& get_tid() & { 
+    return tid_; 
   }
+
+  const TidWord& get_tid() const & { 
+    return tid_; 
+  }
+
+  OP_TYPE& get_op() & { 
+    return op_;
+  }
+
+  const OP_TYPE& get_op() const & { 
+    return op_;
+  }
+
+  const Tuple* get_tuple() const & { 
+    return tuple_;
+  }
+
+  void set_tuple(Tuple* tuple) {
+    this->tuple_ = tuple;
+  }
+
+  /**
+   * @brief Compute checksum.
+   */
+  int compute_checksum()&;
+
+  private:
+    TidWord tid_;
+    OP_TYPE op_;
+    const Tuple* tuple_;
 };
+
+extern std::string kLogDirectory;
+
+extern void single_recovery_from_log();
+
 } // namespace kvs

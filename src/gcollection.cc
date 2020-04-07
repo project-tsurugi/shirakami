@@ -3,43 +3,78 @@
  * @brief about garbage collection.
  */
 
-//#define GLOBAL_VALUE_DEFINE_MASSTREE_WRAPPER
+#include <utility>
+
 #include "atomic_wrapper.hh"
-#include "cpu.hh"
+#include "cache_line_size.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
+#include "scheme.hh"
 
 namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-
+alignas(CACHE_LINE_SIZE) std::vector<std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 
 void
-gc_records()
+delete_all_garbage_records()
 {
-#ifdef KVS_Linux
-  int core_pos = sched_getcpu();
-  if (core_pos == -1) ERR;
-  cpu_set_t current_mask = getThreadAffinity();
-  setThreadAffinity(core_pos);
-#endif
-  std::mutex& mutex_for_gclist = kMutexGarbageRecords[core_pos];
-  if (mutex_for_gclist.try_lock()) {
-    auto itr = kGarbageRecords[core_pos].begin();
-    while (itr != kGarbageRecords[core_pos].end()) {
-      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch)) {
-        delete *itr;
-        itr = kGarbageRecords[core_pos].erase(itr);
-      } else {
-        break;
-      }
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr) {
+      delete *itr;
     }
-    mutex_for_gclist.unlock();
+    kGarbageRecords[i].clear();
   }
-#ifdef KVS_Linux
-  setThreadAffinity(current_mask);
-#endif
+}
+
+void
+delete_all_garbage_values()
+{
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto itr = kGarbageValues[i].begin(); itr != kGarbageValues[i].end(); ++itr) {
+      delete itr->first;
+    }
+    kGarbageValues[i].clear();
+  }
+}
+
+void
+ThreadInfo::gc_records_and_values()
+{
+  // for records
+  {
+    std::mutex& mutex_for_gclist = kMutexGarbageRecords[this->gc_container_index_];
+    if (mutex_for_gclist.try_lock()) {
+      auto itr = this->gc_record_container_->begin();
+      while (itr != this->gc_record_container_->end()) {
+        if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
+          delete *itr;
+          itr = this->gc_record_container_->erase(itr);
+        } else {
+          break;
+        }
+      }
+      mutex_for_gclist.unlock();
+    }
+  }
+  // for values
+  {
+    std::mutex& mutex_for_gclist = kMutexGarbageValues[this->gc_container_index_];
+    if (mutex_for_gclist.try_lock()) {
+      auto itr = this->gc_value_container_->begin();
+      while (itr != this->gc_value_container_->end()) {
+        if (itr->second <= loadAcquire(kReclamationEpoch)) {
+          delete itr->first;
+          itr = this->gc_value_container_->erase(itr);
+        } else {
+          break;
+        }
+      }
+      mutex_for_gclist.unlock();
+    }
+  }
 }
 
 } // namespace kvs

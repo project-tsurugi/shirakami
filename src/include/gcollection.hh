@@ -6,19 +6,21 @@
 #pragma once
 
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
-#include "scheme.hh"
+#include "epoch.hh"
+#include "record.hh"
 
 namespace kvs {
 
-/* kGarbageRecords is a list of garbage records.
- * Theoretically, each worker thread has own list.
- * But in this kvs, the position of core at which worker is may change.
- * This is problem. It prepare enough list for experiments as pending solution.*/
+extern void delete_all_garbage_records();
+extern void delete_all_garbage_values();
+
 extern std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
 extern std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-
-extern void gc_records();
+extern std::vector<std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+extern std::mutex kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 
 } // namespace kvs

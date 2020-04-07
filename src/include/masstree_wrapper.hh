@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iomanip>
-#include <iostream>
 #include <random>
 #include <thread>
 #include <typeinfo>
@@ -11,7 +9,6 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
-#include "debug.hh"
 #include "header.hh"
 
 #include "kvs/scheme.h"
@@ -33,9 +30,6 @@
 #include "../../third_party/masstree-beta/masstree_tcursor.hh"
 #include "../../third_party/masstree-beta/string.hh"
 
-using std::cout;
-using std::endl;
-
 class key_unparse_unsigned {
  public:
   static int unparse_key(Masstree::key<uint64_t> key, char* buf, int buflen) {
@@ -50,11 +44,11 @@ public:
   const char * const rkey_;
   const std::size_t len_rkey_;
   const bool r_exclusive_;
-  std::vector<T*>* scan_buffer_;
+  std::vector<const T*>* scan_buffer_;
   const bool limited_scan_;
   const std::size_t kLimit_ = 1000;
 
-  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* scan_buffer, bool limited_scan = false) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer), limited_scan_(limited_scan) {
+  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* scan_buffer, bool limited_scan = false) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer), limited_scan_(limited_scan) {
     if (limited_scan) {
       scan_buffer->reserve(kLimit_);
     }
@@ -77,8 +71,8 @@ public:
 
     const int res_memcmp = memcmp(rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
     if (res_memcmp > 0
-        || res_memcmp == 0 && 
-        (!r_exclusive_ && len_rkey_ == key.len || len_rkey_ > key.len)) {
+        || (res_memcmp == 0 && 
+        ((!r_exclusive_ && len_rkey_ == static_cast<std::size_t>(key.len)) || len_rkey_ > static_cast<std::size_t>(key.len)))) {
       scan_buffer_->emplace_back(val);
       return true;
     } else {
@@ -209,7 +203,7 @@ class MasstreeWrapper {
     else return nullptr;
   }
 
-  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* res, bool limited_scan = false) {
+  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* res, bool limited_scan = false) {
     Str mtkey;
     if (lkey == nullptr) {
       mtkey = Str();
@@ -218,7 +212,7 @@ class MasstreeWrapper {
     }
 
     SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res, limited_scan);
-    int r = table_.scan(mtkey, !l_exclusive, scanner, *ti);
+    table_.scan(mtkey, !l_exclusive, scanner, *ti);
   }
 
   void print_table() {

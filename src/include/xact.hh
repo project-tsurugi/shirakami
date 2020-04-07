@@ -25,14 +25,14 @@ extern MasstreeWrapper<Record> MTDB;
  * @brief find record from masstree by using args informations.
  * @return the found record pointer.
  */
-static Record* find_record_from_masstree(char const *key, std::size_t len_key);
+extern Record* find_record_from_masstree(char const *key, std::size_t len_key);
 
 /**
  * @brief insert record to masstree by using args informations.
  * @pre the record which has the same key as the key of args have never been inserted.
  * @param record It inserts this pointer to masstree database.
  */
-static void insert_record_to_masstree(char const *key, std::size_t len_key, Record* record);
+extern void insert_record_to_masstree(char const *key, std::size_t len_key, Record* record);
 
 /**
  * @brief read record by using dest given by caller and store read info to res given by caller.
@@ -43,7 +43,7 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, Reco
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-extern Status read_record(Record& res, Record* dest);
+extern Status read_record(Record& res, const Record* const dest);
 
 /**
  * @brief Transaction begins.

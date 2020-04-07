@@ -3,7 +3,7 @@
 #include <stdint.h>
 namespace kvs {
 
-static uint64_t rdtsc() {
+[[maybe_unused]] static uint64_t rdtsc() {
   uint64_t rax;
   uint64_t rdx;
 
@@ -13,7 +13,7 @@ static uint64_t rdtsc() {
   return (rdx << 32) | rax;
 }
 
-static uint64_t rdtscp() {
+[[maybe_unused]] static uint64_t rdtscp() {
   uint64_t rax;
   uint64_t rdx;
   uint64_t aux;

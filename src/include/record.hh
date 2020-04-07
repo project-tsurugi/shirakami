@@ -7,34 +7,57 @@
 
 #include "tid.hh"
 #include "kvs/scheme.h"
+#include "kvs/tuple.h"
 
 namespace kvs {
 class Record {
 public:
-  TidWord tidw;
-  Tuple tuple;
+  Record () : tidw_(), tuple_() {}
 
-  Record () {}
-
-  Record(char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
-    this->tuple.len_key = len_key;
-    this->tuple.len_val = len_val;
-    this->tuple.key = std::make_unique<char[]>(len_key);
-    memcpy(this->tuple.key.get(), key, len_key);
-    if (len_val != 0) {
-      this->tuple.val = std::make_unique<char[]>(len_val);
-      memcpy(this->tuple.val.get(), val, len_val);
-    }
-
-    tidw = TidWord();
-    tidw.absent = true;
-    tidw.lock = true;
+  Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw_(), tuple_(key_ptr, key_length, value_ptr, value_length) {
+    // init tidw
+    tidw_.set_absent(true);
+    tidw_.set_lock(true);
   }
 
   Record(const Record& right) = default;
-  Record(Record&& right) = default;
-  Record& operator=(const Record& right) = default;
-  Record& operator=(Record&& right) = default;
+  Record(Record&& right) {
+    tidw_ = right.tidw_;
+    tuple_ = std::move(right.tuple_);
+  }
 
+  Record& operator=(const Record& right) = default;
+  Record& operator=(Record&& right) {
+    tidw_ = right.tidw_;
+    tuple_ = std::move(right.tuple_);
+
+    return *this;
+  }
+
+
+  TidWord& get_tidw() {
+    return tidw_;
+  }
+
+  const TidWord& get_tidw() const {
+    return tidw_;
+  }
+
+  Tuple& get_tuple(){
+    return tuple_;
+  }
+
+  const Tuple& get_tuple() const {
+    return tuple_;
+  }
+
+  void set_tidw(TidWord tidw) & {
+    tidw_.set_obj(tidw.get_obj());
+  }
+
+private:
+  TidWord tidw_;
+  Tuple tuple_;
 };
+
 } // namespace kvs

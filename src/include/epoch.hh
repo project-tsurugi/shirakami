@@ -8,17 +8,20 @@
 #include <atomic>
 #include <thread>
 
-#include "header.hh"
-#include "kvs/scheme.h"
-
 namespace kvs {
 
-extern Epoch kGlobalEpoch;
-extern Epoch kReclamationEpoch;
-
-// about epoch thread
-extern std::thread kEpochThread;
-extern std::atomic<bool> kEpochThreadEnd;
+/**
+ * @brief Epoch class
+ * @details
+ * Tidword is composed of union ...
+ * 1bits : lock
+ * 1bits : latest
+ * 1bits : absent
+ * 29bits : tid
+ * 32 bits : epoch.
+ * So Epoch should be uint32_t.
+ */
+using Epoch = std::uint32_t;
 
 extern void atomic_add_global_epoch();
 
@@ -37,5 +40,12 @@ extern void epocher();
 extern void invoke_epocher();
 
 extern uint64_t load_acquire_ge();
+
+extern Epoch kGlobalEpoch;
+extern Epoch kReclamationEpoch;
+
+// about epoch thread
+extern std::thread kEpochThread;
+extern std::atomic<bool> kEpochThreadEnd;
 
 } // namespace kvs.

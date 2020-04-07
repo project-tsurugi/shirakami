@@ -147,7 +147,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
         ++myres.local_commit_counts_;
         if (unlikely(loadAcquire(quit))) {
           for (auto itr = localInsertedList.begin(); itr != localInsertedList.end(); ++itr) {
-            delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
+            delete_record(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size());
           }
           if (Status::OK != commit(token)) ERR;
           break;
