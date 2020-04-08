@@ -37,8 +37,9 @@ check_epoch_loaded()
   uint64_t curEpoch = load_acquire_ge();
 
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr){
-    if (itr->visible.load(std::memory_order_acquire) == true 
-        && loadAcquire(itr->epoch) != curEpoch) {
+    if (itr->get_visible() == true 
+        //&& loadAcquire(itr->epoch_) != curEpoch) {
+        && itr->get_epoch() != curEpoch) {
       return false;
     }
   }

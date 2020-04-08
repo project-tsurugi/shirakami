@@ -8,7 +8,71 @@
 
 namespace kvs {
 
-std::string LogDirectory;
+std::string kLogDirectory;
+
+void
+LogHeader::init()
+{
+  checksum_ = 0;
+  log_rec_num_ = 0;
+}
+
+void
+LogHeader::compute_two_complement_of_checksum()
+{
+  checksum_ ^= 0xffffffff;
+  ++checksum_;
+}
+
+int
+LogRecord::compute_checksum()
+{
+  // compute checksum
+  // TidWord
+  int chkSum = 0;
+  int* intitr = (int *)this;
+  for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(unsigned int); ++i) {
+    chkSum += (*intitr);
+    ++intitr;
+  }
+  
+  // OP_TYPE
+  chkSum += static_cast<decltype(chkSum)>(op_);
+
+  // key_length
+  std::string_view key_view = tuple_->get_key();
+  std::size_t&& key_length = key_view.size();
+  intitr = (int*)&(key_length);
+  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
+    chkSum += (*intitr);
+    ++intitr;
+  }
+
+  // key_body
+  const char* charitr = key_view.data();
+  for (std::size_t i = 0; i < key_view.size(); ++i) {
+    chkSum += (*charitr);
+    ++charitr;
+  }
+
+  // value_length
+  std::string_view value_view = tuple_->get_value();
+  std::size_t&& value_length = value_view.size();
+  intitr = (int*)&(value_length);
+  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
+    chkSum += (*intitr);
+    ++intitr;
+  }
+
+  // value_body
+  charitr = value_view.data();
+  for (std::size_t i = 0; i < value_view.size(); ++i) {
+    chkSum += (*charitr);
+    ++charitr;
+  }
+
+  return chkSum;
+}
 
 void
 single_recovery_from_log()
@@ -16,7 +80,7 @@ single_recovery_from_log()
   std::vector<LogRecord> log_set;
   for (auto i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
     File logfile;
-    std::string filename(LogDirectory);
+    std::string filename(kLogDirectory);
     filename.append("/log");
     filename.append(std::to_string(i));
     if (!logfile.try_open(filename, O_RDONLY)) {
@@ -33,7 +97,7 @@ single_recovery_from_log()
     const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE);
     while (sizeof(LogHeader) == logfile.read((void*)&logheader, sizeof(LogHeader))) {
       std::vector<LogRecord> log_tmp_buf;
-      for (auto i = 0; i < logheader.logRecNum_; ++i) {
+      for (auto i = 0; i < logheader.get_log_rec_num(); ++i) {
         if (fix_size != logfile.read((void*)&log, fix_size)) break;
         std::unique_ptr<char[]> key_ptr, value_ptr;
         std::size_t key_length, value_length;
@@ -49,10 +113,10 @@ single_recovery_from_log()
         if (value_length != logfile.read((void*)value_ptr.get(), value_length)) break;
 
         
-        logheader.chkSum_ += log.computeChkSum();
+        logheader.set_checksum(logheader.get_checksum() + log.compute_checksum());
         log_tmp_buf.emplace_back(std::move(log));
       }
-      if (logheader.chkSum_ == 0) {
+      if (logheader.get_checksum() == 0) {
         for (auto itr = log_tmp_buf.begin(); itr != log_tmp_buf.end(); ++itr) {
           log_set.emplace_back(std::move(*itr));
         }
@@ -70,16 +134,16 @@ single_recovery_from_log()
   if (log_set.size() == 0) return;
 
   sort(log_set.begin(), log_set.end());
-  const Epoch recovery_epoch = log_set.back().tid_.epoch - 2;
+  const Epoch recovery_epoch = log_set.back().get_tid().get_epoch() - 2;
 
   Token s{};
   Storage st{};
   enter(s);
   for (auto itr = log_set.begin(); itr != log_set.end(); ++itr) {
-    if ((*itr).op_ == OP_TYPE::UPDATE || (*itr).op_ == OP_TYPE::INSERT) {
-      upsert(s, st, (*itr).tuple_.key.get(), (*itr).tuple_.len_key, (*itr).tuple_.val.get(), (*itr).tuple_.len_val);
-    } else if ((*itr).op_ == OP_TYPE::DELETE) {
-      delete_record(s, st, (*itr).tuple_.key.get(), (*itr).tuple_.len_key);
+    if ((*itr).get_op() == OP_TYPE::UPDATE || (*itr).get_op() == OP_TYPE::INSERT) {
+      upsert(s, st, (*itr).get_tuple()->get_key().data(), (*itr).get_tuple()->get_key().size(), (*itr).get_tuple()->get_value().data(), (*itr).get_tuple()->get_value().size());
+    } else if ((*itr).get_op() == OP_TYPE::DELETE) {
+      delete_record(s, st, (*itr).get_tuple()->get_key().data(), (*itr).get_tuple()->get_key().size());
     }
     commit(s);
   }

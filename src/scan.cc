@@ -23,7 +23,7 @@ scan_key(Token token, Storage storage,
     std::vector<Tuple*>& result)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
@@ -35,7 +35,7 @@ scan_key(Token token, Storage storage,
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     WriteSetObj* inws = ti->search_write_set(*itr);
     if (inws != nullptr) {
-      if (inws->op == OP_TYPE::DELETE)
+      if (inws->get_op() == OP_TYPE::DELETE)
         return Status::WARN_ALREADY_DELETE;
       result.emplace_back(&(*itr)->tuple);
       continue;

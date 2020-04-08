@@ -21,8 +21,8 @@ public:
   Tuple& operator=(Tuple&& right);
   ~Tuple();
 
-  std::string_view get_key();
-  std::string_view get_value();
+  std::string_view get_key() const;
+  std::string_view get_value() const;
   void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
   /**
    * @brief set key of data in local

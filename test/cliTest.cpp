@@ -82,7 +82,7 @@ exec_search_key(Token token, std::size_t thnm)
     for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); ++itr) {
         Tuple* tuple;
         Storage storage;
-        Status search_result = search_key(token, storage, (*itr)->key.get(), (*itr)->len_key, &tuple);
+        Status search_result = search_key(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), &tuple);
     }
     Status result = commit(token);
     ASSERT_TRUE(result == Status::OK);
@@ -113,7 +113,7 @@ exec_update(Token token, std::size_t thnm)
 {
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     Storage storage;
-    Status update_result = update(token, storage, (*itr)->key.get(), (*itr)->len_key, (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
+    Status update_result = update(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
@@ -126,7 +126,7 @@ exec_delete(const Token token, std::size_t thnm)
 
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     //SSS(itr->key);
-    delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
+    delete_record(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size());
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);

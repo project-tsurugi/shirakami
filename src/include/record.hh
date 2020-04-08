@@ -12,16 +12,12 @@
 namespace kvs {
 class Record {
 public:
-  TidWord tidw;
-  Tuple tuple;
-
   Record () {}
 
-  Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw(), tuple(key_ptr, key_length, value_ptr, value_length) {
+  Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw_(), tuple_(key_ptr, key_length, value_ptr, value_length) {
     // init tidw
-    tidw = TidWord();
-    tidw.absent = true;
-    tidw.lock = true;
+    tidw_.set_absent(true);
+    tidw_.set_lock(true);
   }
 
   Record(const Record& right) = default;
@@ -29,5 +25,21 @@ public:
   Record& operator=(const Record& right) = default;
   Record& operator=(Record&& right) = default;
 
+  TidWord get_tidw() const {
+    return tidw_;
+  }
+
+  TidWord* get_tidw_ptr() {
+    return &tidw_;
+  }
+
+  Tuple* get_tuple_ptr() {
+    return &tuple_;
+  }
+
+private:
+  TidWord tidw_;
+  Tuple tuple_;
 };
+
 } // namespace kvs

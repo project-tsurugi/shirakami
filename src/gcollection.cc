@@ -31,7 +31,7 @@ gc_records()
   if (mutex_for_gclist.try_lock()) {
     auto itr = kGarbageRecords[core_pos].begin();
     while (itr != kGarbageRecords[core_pos].end()) {
-      if ((*itr)->tidw.epoch <= loadAcquire(kReclamationEpoch)) {
+      if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
         delete *itr;
         itr = kGarbageRecords[core_pos].erase(itr);
       } else {

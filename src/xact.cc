@@ -45,8 +45,8 @@ void
 tbegin(Token token)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  ti->txbegan_ = true;
-  __atomic_store_n(&ti ->epoch, load_acquire_ge(), __ATOMIC_RELEASE);
+  ti->set_txbegan(true);
+  ti->set_epoch(load_acquire_ge());
 }
 
 static void 

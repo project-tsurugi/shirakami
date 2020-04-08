@@ -47,10 +47,7 @@ class WriteSetObj {
     WriteSetObj() {}
 
     // for insert/delete operation
-    WriteSetObj(OP_TYPE op, Record* rec_ptr) {
-      this->op = op;
-      this->rec_ptr = rec_ptr;
-    }
+    WriteSetObj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
 
     // for update/
     WriteSetObj(const char* const key_ptr, const std::size_t key_length, const char* const val_ptr, const std::size_t val_length, const OP_TYPE op, Record* const rec_ptr) : tuple_(key_ptr, key_length, val_ptr, val_length), op_(op), rec_ptr_(rec_ptr) {}
@@ -63,14 +60,14 @@ class WriteSetObj {
     WriteSetObj& operator=(WriteSetObj&& right) = default;
 
     bool operator<(const WriteSetObj& right) const {
-      Tuple* this_tuple_ptr;
+      const Tuple* this_tuple_ptr;
       if (this->op_ == OP_TYPE::UPDATE) {
         this_tuple_ptr = this->get_tuple_ptr_to_local();
       } else {
         // insert/delete
         this_tuple_ptr = this->get_tuple_ptr_to_db();
       }
-      Tuple* right_tuple_ptr;
+      const Tuple* right_tuple_ptr;
       if (this->op_ == OP_TYPE::UPDATE) {
         right_tuple_ptr = right.get_tuple_ptr_to_local();
       } else {
@@ -78,8 +75,8 @@ class WriteSetObj {
         right_tuple_ptr = right.get_tuple_ptr_to_db();
       }
 
-      char* this_key_ptr(this_tuple_ptr->get_key().data());
-      char* right_key_ptr(right_tuple_ptr->get_key().data());
+      const char* this_key_ptr(this_tuple_ptr->get_key().data());
+      const char* right_key_ptr(right_tuple_ptr->get_key().data());
       std::size_t this_key_size(this_tuple_ptr->get_key().size());
       std::size_t right_key_size(right_tuple_ptr->get_key().size());
 
@@ -91,7 +88,7 @@ class WriteSetObj {
           return false;
         }
       } else if (this_key_size > right_key_size) {
-        if (memcmp(this_key_ptr, right_key_ptr right_key_size) < 0) {
+        if (memcmp(this_key_ptr, right_key_ptr, right_key_size) < 0) {
           return true;
         } else {
           return false;
@@ -108,19 +105,21 @@ class WriteSetObj {
       }
     }
 
-    const Record* get_record_ptr_to_db();
+    Record* get_rec_ptr() ;
     /**
      * @brief get tuple ptr to local write set
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    const Tuple* const get_tuple_ptr_to_local();
+    const Tuple* const get_tuple_ptr_to_local() const;
     /**
      * @brief get tuple ptr to database(global)
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    const Tuple* const get_tuple_ptr_to_db();
+    const Tuple* const get_tuple_ptr_to_db() const;
+
+    const OP_TYPE get_op() { return op_; }
 
     void reset_tuple(const char* const val_ptr, const std::size_t val_length);
 
@@ -189,13 +188,6 @@ class OprObj { // Operations for retry by abort
 
 class ThreadInfo {
  public:
-  alignas(CACHE_LINE_SIZE)
-    Token token;
-  Epoch epoch;
-  TidWord mrctid; // most recently chosen tid, for calculate new tids.
-  std::atomic<bool> visible;
-  bool txbegan_;
-
   /**
    * about garbage collection
    */
@@ -226,13 +218,13 @@ class ThreadInfo {
   std::vector<LogRecord> log_set_;
 
   ThreadInfo(const Token token) {
-    this->token = token;
-    mrctid.reset();
+    this->token_ = token;
+    mrctid_.reset();
   }
 
   ThreadInfo() {
-    this->visible.store(false, std::memory_order_release);
-    mrctid.reset();
+    this->visible_.store(false, std::memory_order_release);
+    mrctid_.reset();
     log_dir_.assign(MAC2STR(PROJECT_ROOT));
   }
 
@@ -264,8 +256,6 @@ class ThreadInfo {
    * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert operation before this delete_record operation.
    */
   Status check_delete_after_write(const char* key, const std::size_t len_key);
-
-  void display_write_set();
 
   /**
    * @brief Remove inserted records of write set from masstree.
@@ -341,6 +331,54 @@ class ThreadInfo {
    * @return void
    */
   void wal(uint64_t ctid);
+
+  Token get_token() const {
+    return token_;
+  }
+
+  Epoch get_epoch() const {
+    return epoch_.load(std::memory_order_acquire);
+  }
+
+  TidWord get_mrctid() const {
+    return mrctid_;
+  }
+
+  bool get_visible() const {
+    return visible_.load(std::memory_order_acquire);
+  }
+
+  bool get_txbegan() const {
+    return txbegan_;
+  }
+
+  void set_token(Token token) {
+    token_ = token;
+  }
+
+  void set_epoch(Epoch epoch) {
+    epoch_.store(epoch, std::memory_order_release);
+  }
+
+  void set_mrctid(TidWord tid) {
+    mrctid_ = tid;
+  }
+
+  void set_visible(bool visible) {
+    visible_.store(visible, std::memory_order_release);
+  }
+  
+  void set_txbegan(bool txbegan) {
+    txbegan_ = txbegan;
+  }
+
+private:
+  alignas(CACHE_LINE_SIZE)
+    Token token_;
+  std::atomic<Epoch> epoch_;
+  TidWord mrctid_; // most recently chosen tid, for calculate new tids.
+  std::atomic<bool> visible_;
+  bool txbegan_;
 };
 
 extern void print_result(struct timeval begin, struct timeval end, int nthread);

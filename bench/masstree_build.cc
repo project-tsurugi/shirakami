@@ -99,7 +99,7 @@ parallel_delete_mtdb(std::size_t thid, std::vector<Tuple*> *insertedList)
   for (auto itr = insertedList->begin(); itr != insertedList->end(); ++itr) {
     tbegin(token);
     Storage storage;
-    delete_record(token, storage, (*itr)->key.get(), (*itr)->len_key);
+    delete_record(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size());
     commit(token);
     delete *itr;
   }

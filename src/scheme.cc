@@ -30,11 +30,11 @@ void ThreadInfo::clean_up_scan_caches()
   r_exclusive_.clear();
 }
  
-Status ThreadInfo::check_delete_after_write(const char* key, const std::size_t len_key)
+Status ThreadInfo::check_delete_after_write(const char* const key_ptr, const std::size_t key_length)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if ((*itr).rec_ptr->tuple.len_key == len_key
-        && memcmp((*itr).rec_ptr->tuple.key.get(), key, len_key) == 0) {
+    if (itr->get_rec_ptr()->get_tuple_ptr()->get_key().size() == key_length
+        && memcmp(itr->get_rec_ptr()->get_tuple_ptr()->get_key().data(), key_ptr, key_length) == 0) {
       write_set.erase(itr);
       return Status::WARN_CANCEL_PREVIOUS_OPERATION;
     }
@@ -43,35 +43,25 @@ Status ThreadInfo::check_delete_after_write(const char* key, const std::size_t l
   return Status::OK;
 }
 
-void ThreadInfo::display_write_set()
-{
-  cout << "ThreadInfo::display_write_set() : write set size " 
-    << write_set.size() << endl;
-  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    (*itr).display();
-  }
-}
-
-
 void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if ((*itr).op == OP_TYPE::INSERT) {
-      MTDB.remove_value((*itr).rec_ptr->tuple.key.get(), (*itr).rec_ptr->tuple.len_key);
+    if (itr->get_op() == OP_TYPE::INSERT) {
+      MTDB.remove_value(itr->get_rec_ptr()->get_tuple_ptr()->get_key().data(), itr->get_rec_ptr()->get_tuple_ptr()->get_key().size());
       
       /**
        * create information for garbage collection.
        */
       std::mutex& mutex_for_gclist = kMutexGarbageRecords[gc_container_index_];
       mutex_for_gclist.lock();
-      gc_container_->emplace_back(itr->rec_ptr);
+      gc_container_->emplace_back(itr->get_rec_ptr());
       mutex_for_gclist.unlock();
       TidWord deletetid;
-      deletetid.lock = false;
-      deletetid.latest = false;
-      deletetid.absent = false;
-      deletetid.epoch = epoch;
-      __atomic_store_n(&(itr->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
+      deletetid.set_lock(false);
+      deletetid.set_latest(false);
+      deletetid.set_absent(false);
+      deletetid.set_epoch(this->get_epoch());
+      __atomic_store_n(itr->get_rec_ptr()->get_tidw_ptr()->get_obj_ptr(), deletetid.get_obj_ptr(), __ATOMIC_RELEASE);
     }
   }
 }
@@ -79,7 +69,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
-    if ((*itr).rec_ptr->tuple.len_key == len_key
+    if (itr->rec_ptr->tuple.len_key == len_key
         && memcmp((*itr).rec_read.tuple.key.get(), key, len_key) == 0) {
       return &(*itr);
     }
@@ -191,14 +181,20 @@ void ThreadInfo::wal(uint64_t ctid)
   log_set_.clear();
 }
 
+Record* 
+WriteSetObj::get_rec_ptr()
+{
+  return this->rec_ptr_;
+}
+
 const Tuple* const 
-WriteSetObj::get_tuple_ptr_to_local()
+WriteSetObj::get_tuple_ptr_to_local() const
 {
   return &this->tuple_;
 }
 
 const Tuple* const 
-WriteSetObj::get_tuple_ptr_to_db()
+WriteSetObj::get_tuple_ptr_to_db() const
 {
   return this->rec_ptr_;
 }
