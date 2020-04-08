@@ -191,17 +191,18 @@ commit(Token token)
   TidWord expected, desired;
   for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
     if (itr->op == OP_TYPE::INSERT) continue;
-    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+    // after this, update/delete
+    expected.obj = loadAcquire(itr->get_tuple_ptr_to_db()->tidw.obj);
     for (;;) {
       if (expected.lock) {
-        expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+        expected.obj = loadAcquire(itr->get_tuple_ptr_to_db()->tidw.obj);
       } else {
         desired = expected;
         desired.lock = 1;
-        if (__atomic_compare_exchange_n(&(itr->rec_ptr->tidw.obj), &(expected.obj), desired.obj, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
+        if (__atomic_compare_exchange_n(&(itr->get_tuple_ptr_to_db()->tidw.obj), &(expected.obj), desired.obj, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
       }
     }
-    if (itr->op == OP_TYPE::UPDATE && itr->rec_ptr->tidw.absent == true) {
+    if (itr->op == OP_TYPE::UPDATE && itr->get_tuple_ptr_to_db()->tidw.absent == true) {
       ti->unlock_write_set(ti->write_set.begin(), itr);
       abort(token);
       return Status::ERR_WRITE_TO_DELETED_RECORD;

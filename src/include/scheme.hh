@@ -108,6 +108,7 @@ class WriteSetObj {
       }
     }
 
+    const Record* get_record_ptr_to_db();
     /**
      * @brief get tuple ptr to local write set
      * @details const prohibits overwriting Tuple * entities.

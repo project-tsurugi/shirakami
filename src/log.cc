@@ -28,17 +28,27 @@ single_recovery_from_log()
 
     LogRecord log;
     LogHeader logheader;
+    std::vector<Tuple> tuple_buffer;
 
-    const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE) + sizeof(std::size_t) + sizeof(std::size_t);
+    const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE);
     while (sizeof(LogHeader) == logfile.read((void*)&logheader, sizeof(LogHeader))) {
       std::vector<LogRecord> log_tmp_buf;
       for (auto i = 0; i < logheader.logRecNum_; ++i) {
         if (fix_size != logfile.read((void*)&log, fix_size)) break;
-        log.tuple_.key = std::make_unique<char[]>(log.tuple_.len_key);
-        log.tuple_.val = std::make_unique<char[]>(log.tuple_.len_val);
-        if ((log.tuple_.len_key != logfile.read((void*)log.tuple_.key.get(), log.tuple_.len_key))
-            || (log.tuple_.len_val != logfile.read((void*)log.tuple_.val.get(), log.tuple_.len_val)))
-          break;
+        std::unique_ptr<char[]> key_ptr, value_ptr;
+        std::size_t key_length, value_length;
+        // read key_length
+        if (sizeof(std::size_t) != logfile.read((void*)&key_length, sizeof(std::size_t))) break;
+        // read key_body
+        key_ptr = std::make_unique<char[]>(key_length);
+        if (key_length != logfile.read((void*)key_ptr.get(), key_length)) break;
+        // read value_length
+        if (sizeof(std::size_t) != logfile.read((void*)&value_length, sizeof(std::size_t))) break;
+        // read value_body
+        value_ptr = std::make_unique<char[]>(value_length);
+        if (value_length != logfile.read((void*)value_ptr.get(), value_length)) break;
+
+        
         logheader.chkSum_ += log.computeChkSum();
         log_tmp_buf.emplace_back(std::move(log));
       }

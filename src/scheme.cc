@@ -118,7 +118,7 @@ WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr, const std::size_t
 WriteSetObj* ThreadInfo::search_write_set(Record* rec_ptr)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr)
-    if ((*itr).rec_ptr == rec_ptr) return &(*itr);
+    if (itr->get_record_ptr_to_db() == rec_ptr) return &(*itr);
 
   return nullptr;
 }
@@ -140,17 +140,20 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
   TidWord expected, desired;
 
   for (auto itr = begin; itr != end; ++itr) {
-    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+    expected.obj = loadAcquire(itr->get_record_ptr_to_db()->tidw.obj);
     desired = expected;
     desired.lock = 0;
-    storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
+    storeRelease(itr->get_record_ptr_to_db()->tidw.obj, desired.obj);
   }
 }
 
 void ThreadInfo::wal(uint64_t ctid)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    log_set_.emplace_back(ctid, (*itr).op, (*itr).tuple);
+    if (itr->op_ == OP_TYPE::UPDATE) {
+      log_set_.emplace_back(ctid, (*itr).op, (*itr).tuple);
+    } else {
+      // insert/delete
     latest_log_header_.chkSum_ += log.log_set_.back().computeChkSum();
     ++latest_log_header_.logRecNum_;
   }

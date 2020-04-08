@@ -43,57 +43,57 @@ class LogRecord {
  public:
   LogRecord(){}
 
-  LogRecord(const TidWord tid, OP_TYPE op, const Tuple& tuple) : tid_(tid), op_(op), tuple_(tuple) {}
-
-  LogRecord(LogRecord&& right) {
-    this->tid_ = right.tid_;
-    this->op_ = right.op_;
-    this->tuple_ = std::move(right.tuple_);
-  }
-
-  LogRecord& operator=(LogRecord&& right) {
-    this->tid_ = right.tid_;
-    this->op_ = right.op_;
-    this->tuple_ = std::move(right.tuple_);
-  }
+  LogRecord(const TidWord tid, const OP_TYPE op, Tuple* const tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 
   bool operator<(const LogRecord& right) {
     return this->tid_ < right.tid_;
   }
 
+  void set_tuple(Tuple* tuple) {
+    tuple_ = tuple;
+  }
+
   int computeChkSum() {
     // compute checksum
+    // TidWord
     int chkSum = 0;
     int* intitr = (int *)this;
     for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(unsigned int); ++i) {
       chkSum += (*intitr);
       ++intitr;
     }
-
-    chkSum += static_cast<int32_t>(op_);
+    
+    // OP_TYPE
+    chkSum += static_cast<decltype(chkSum)>(op_);
 
     // key_length
+    std::string_view key_view = tuple_->get_key();
+    std::size_t&& key_length = key_view.size();
+    intitr = (int*)&(key_length);
     for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
       chkSum += (*intitr);
       ++intitr;
     }
 
-    // len_val
-    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
-      chkSum += (*intitr);
-      ++intitr;
-    }
-
-    // key
-    char* charitr = (char*) tuple_.key.get();
-    for (std::size_t i = 0; i < tuple_.key_length; ++i) {
+    // key_body
+    const char* charitr = key_view.data();
+    for (std::size_t i = 0; i < key_view.size(); ++i) {
       chkSum += (*charitr);
       ++charitr;
     }
 
-    // val
-    charitr = (char*) tuple_.val.get();
-    for (std::size_t i = 0; i < tuple_.len_val; ++i) {
+    // value_length
+    std::string_view value_view = tuple_->get_value();
+    std::size_t&& value_length = value_view.size();
+    intitr = (int*)&(value_length);
+    for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int); ++i) {
+      chkSum += (*intitr);
+      ++intitr;
+    }
+
+    // value_body
+    charitr = value_view.data();
+    for (std::size_t i = 0; i < value_view.size(); ++i) {
       chkSum += (*charitr);
       ++charitr;
     }
@@ -104,8 +104,6 @@ class LogRecord {
   private:
     TidWord tid_;
     OP_TYPE op_;
-    std::size_t key_length_, value_length_;
-    char* key_ptr_;
-    char* value_ptr_;
+    Tuple* tuple_;
 };
 } // namespace kvs
