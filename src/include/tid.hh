@@ -27,6 +27,10 @@ public:
   TidWord() { obj = 0; }
   TidWord(uint64_t obj) { obj = obj; }
 
+  TidWord& operator=(const TidWord& right) {
+    obj = right.obj;
+  }
+
   bool operator==(const TidWord& right) const {
     return obj == right.obj;
   }

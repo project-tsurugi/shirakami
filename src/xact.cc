@@ -361,7 +361,9 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (unlikely(record == nullptr)) {
+  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+    // The second condition checks 
+    // whether the record you want to read should not be read by parallel insert / delete.
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
@@ -388,7 +390,9 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (unlikely(record == nullptr)) {
+  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+    // The second condition checks 
+    // whether the record you want to read should not be read by parallel insert / delete.
     return Status::WARN_NOT_FOUND;
   }
 
@@ -403,7 +407,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->txbegan_) tbegin(token);
-  WriteSetObj* inws = ti->search_write_set(key, len_key, OP_TYPE::INSERT);
+  WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -428,7 +432,9 @@ delete_record(Token token, Storage storage, const char* const key, const std::si
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr) {
+  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+    // The second condition checks 
+    // whether the record you want to read should not be read by parallel insert / delete.
     return Status::WARN_NOT_FOUND;
   };
 
@@ -448,13 +454,13 @@ upsert(Token token, Storage storage, const char* const key, const std::size_t le
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->txbegan_) tbegin(token);
-  Record *record = find_record_from_masstree(key, len_key);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
+  Record *record = find_record_from_masstree(key, len_key);
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
     insert_record_to_masstree(key, len_key, record);

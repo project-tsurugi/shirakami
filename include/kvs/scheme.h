@@ -179,7 +179,6 @@ enum class OP_TYPE : std::int32_t {
   UPDATE,
   INSERT,
   DELETE,
-  UPSERT,
   BEGIN,
   COMMIT,
   ABORT,

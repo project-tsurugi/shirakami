@@ -63,8 +63,21 @@ class WriteSetObj {
     WriteSetObj& operator=(WriteSetObj&& right) = default;
 
     bool operator<(const WriteSetObj& right) const {
-      Tuple* this_tuple_ptr(this->get_tuple_ptr());
-      Tuple* right_tuple_ptr(right.get_tuple_ptr());
+      Tuple* this_tuple_ptr;
+      if (this->op_ == OP_TYPE::UPDATE) {
+        this_tuple_ptr = this->get_tuple_ptr_to_local();
+      } else {
+        // insert/delete
+        this_tuple_ptr = this->get_tuple_ptr_to_db();
+      }
+      Tuple* right_tuple_ptr;
+      if (this->op_ == OP_TYPE::UPDATE) {
+        right_tuple_ptr = right.get_tuple_ptr_to_local();
+      } else {
+        // insert/delete
+        right_tuple_ptr = right.get_tuple_ptr_to_db();
+      }
+
       char* this_key_ptr(this_tuple_ptr->get_key().data());
       char* right_key_ptr(right_tuple_ptr->get_key().data());
       std::size_t this_key_size(this_tuple_ptr->get_key().size());
@@ -95,9 +108,20 @@ class WriteSetObj {
       }
     }
 
-    const Tuple* const get_tuple_ptr();
-    void reset(char const* val, std::size_t len_val);
-    void reset(char const* val, std::size_t len_val, OP_TYPE op, Record* rec_ptr);
+    /**
+     * @brief get tuple ptr to local write set
+     * @details const prohibits overwriting Tuple * entities.
+     * @return const Tuple* const
+     */
+    const Tuple* const get_tuple_ptr_to_local();
+    /**
+     * @brief get tuple ptr to database(global)
+     * @details const prohibits overwriting Tuple * entities.
+     * @return const Tuple* const
+     */
+    const Tuple* const get_tuple_ptr_to_db();
+
+    void reset_tuple(const char* const val_ptr, const std::size_t val_length);
 
   private:
     /**

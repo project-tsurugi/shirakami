@@ -26,6 +26,7 @@ class Tuple::Impl {
     std::string_view get_key();
     std::string_view get_value();
     void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
+    void set_value(const char* value_ptr, const std::size_t value_length);
     void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value);
 
   private:
@@ -82,6 +83,12 @@ Tuple::Impl::set(const char* key_ptr, const std::size_t key_length, const char* 
 }
 
 void
+Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length)
+{
+  pvalue_.load(std::memory_order_acquire)->assign(value_ptr, value_length);
+}
+
+void
 Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)
 {
   *old_value = pvalue_.load(std::memory_order_acquire);
@@ -132,6 +139,12 @@ void
 Tuple::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
 {
   pimpl_.get()->set(key_ptr, key_length, value_ptr, value_length);
+}
+
+void
+Tuple::set_value(const char* value_ptr, const std::size_t value_length)
+{
+  pimpl_.get()->set_value(value_ptr, value_length);
 }
 
 void

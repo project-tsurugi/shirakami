@@ -24,6 +24,16 @@ public:
   std::string_view get_key();
   std::string_view get_value();
   void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
+  /**
+   * @brief set value of data in local
+   * @details The memory area of old local data is released immediately.
+   */
+  void set_value(const char* value_ptr, const std::size_t value_length);
+  /**
+   * @brief set value of data in global
+   * @details The memory area of old local data is managed by GabeColle.
+   * @params [out] old_value Tell the information to pass to GabeColle.
+   */
   void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value);
 
 private:

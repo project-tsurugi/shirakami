@@ -95,23 +95,20 @@ ReadSetObj* ThreadInfo::search_read_set(Record* rec_ptr)
   return nullptr;
 }
 
-WriteSetObj* ThreadInfo::search_write_set(const char* key, std::size_t len_key)
+WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr, const std::size_t key_length)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if ((*itr).rec_ptr->tuple.len_key == len_key
-        && memcmp((*itr).rec_ptr->tuple.key.get(), key, len_key) == 0) {
-      return &(*itr);
+    Tuple* tuple;
+    if (itr->op_ == OP_TYPE::UPDATE) {
+      tuple = itr->get_tuple_ptr_to_local();
+    } else {
+      // insert/delete
+      tuple = itr->get_tuple_ptr_to_db();
     }
-  }
-  return nullptr;
-}
-
-WriteSetObj* ThreadInfo::search_write_set(const char* key, std::size_t len_key, OP_TYPE op)
-{
-  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if ((*itr).rec_ptr->tuple.len_key == len_key
-        && (*itr).op == op
-        && memcmp((*itr).rec_ptr->tuple.key.get(), key, len_key) == 0) {
+    // Rvalue reference suppresses useless copying.
+    std::string_view&& key_view = tuple->get_key();
+    if (key_view.size() == key_length
+        && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       return &(*itr);
     }
   }
@@ -131,7 +128,7 @@ void ThreadInfo::unlock_write_set()
   TidWord expected, desired;
 
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    expected.obj = loadAcquire(itr->rec_ptr->tidw.obj);
+    expected = loadAcquire(itr->get_tuple_ptr()->tidw.obj);
     desired = expected;
     desired.lock = 0;
     storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
@@ -191,13 +188,26 @@ void ThreadInfo::wal(uint64_t ctid)
   log_set_.clear();
 }
 
-const Tuple* const get_tuple_ptr()
+const Tuple* const 
+WriteSetObj::get_tuple_ptr_to_local()
 {
-  if (this->op == OP_TYPE::UPDATE) {
-    return &this->tuple_;
+  return &this->tuple_;
+}
+
+const Tuple* const 
+WriteSetObj::get_tuple_ptr_to_db()
+{
+  return this->rec_ptr_;
+}
+
+void
+WriteSetObj::reset_tuple(const char* const val_ptr, const std::size_t val_length)
+{
+  if (itr->op_ == OP_TYPE::UPDATE) {
+    itr->get_tuple_ptr_to_local()->set(val_ptr, val_length);
   } else {
-    // insert/delete
-    return this->rec_ptr_;
+    // insert
+    tuple = itr->get_tuple_ptr_to_db()->set(val_ptr, val_length);
   }
 }
 
