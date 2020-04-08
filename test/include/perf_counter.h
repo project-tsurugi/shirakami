@@ -86,10 +86,10 @@ class PerfCounter {
     void print(char const * title = "perf result") {
         std::cout << "==== " << title << " ====" << std::endl;
         if (time_enabled == time_running) {
-            std::cout << "time:         " << time_enabled << std::endl;
+          std::cout << "time:         " << time_enabled << std::endl;
         } else {
-            std::cout << "time_enabled: " << time_enabled << std::endl;
-            std::cout << "time_running: " << time_running << std::endl;
+          std::cout << "time_enabled: " << time_enabled << std::endl;
+          std::cout << "time_running: " << time_running << std::endl;
         }
         std::cout << "cpu_cycles:   " << val[0] << std::endl;
         std::cout << "instructions: " << val[1] << std::endl;
@@ -101,6 +101,9 @@ class PerfCounter {
         std::cout << "counter_7:    " << val[7] << std::endl;
         std::cout << "=====================" << std::endl;
     }
+    PerfCounter();
+    ~PerfCounter() = default;
+
     PerfCounter& operator+=(PerfCounter &rhs) {
         time_enabled += rhs.time_enabled;
         time_running += rhs.time_running;
