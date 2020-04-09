@@ -101,9 +101,33 @@ class PerfCounter {
         std::cout << "counter_7:    " << val[7] << std::endl;
         std::cout << "=====================" << std::endl;
     }
-    PerfCounter();
-    ~PerfCounter() = default;
 
+    void init(int exc_kernel = 1);
+    void start() {
+        ioctl(fd[0], PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP);
+    }
+    void stop() {
+        ioctl(fd[0], PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
+        read();
+    }
+    void print(char const * title = "perf result") {
+        std::cout << "==== " << title << " ====" << std::endl;
+        if (time_enabled == time_running) {
+            std::cout << "time:         " << time_enabled << std::endl;
+        } else {
+            std::cout << "time_enabled: " << time_enabled << std::endl;
+            std::cout << "time_running: " << time_running << std::endl;
+        }
+        std::cout << "cpu_cycles:   " << val[0] << std::endl;
+        std::cout << "instructions: " << val[1] << std::endl;
+        std::cout << "counter_2:    " << val[2] << std::endl;
+        std::cout << "counter_3:    " << val[3] << std::endl;
+        std::cout << "counter_4:    " << val[4] << std::endl;
+        std::cout << "counter_5:    " << val[5] << std::endl;
+        std::cout << "counter_6:    " << val[6] << std::endl;
+        std::cout << "counter_7:    " << val[7] << std::endl;
+        std::cout << "=====================" << std::endl;
+    }
     PerfCounter& operator+=(PerfCounter &rhs) {
         time_enabled += rhs.time_enabled;
         time_running += rhs.time_running;

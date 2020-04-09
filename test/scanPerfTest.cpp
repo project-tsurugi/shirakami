@@ -3,21 +3,10 @@
 
 #include "kvs/interface.h"
 
-<<<<<<< HEAD
-// kvs_charkey-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "tsc.hh"
-<<<<<<< HEAD
 #include "include/perf_counter.h"
-=======
-=======
-#include "include/compiler.hh"
-#include "include/header.hh"
-#include "include/tsc.hh"
-#include "include/perf_counter.h"
->>>>>>> add a measurement mechanism with perf_counter
->>>>>>> add a measurement mechanism with perf_counter
 
 using namespace kvs;
 using std::cout;
@@ -56,6 +45,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   Tuple* tuple{};
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -73,6 +65,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -92,6 +85,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -106,6 +101,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 1K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -123,6 +121,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -142,6 +141,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -156,6 +157,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 10K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -173,6 +177,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -192,6 +197,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -206,6 +213,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 20K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -223,6 +233,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -242,6 +253,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -256,6 +269,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 40K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -273,6 +289,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -292,6 +309,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -306,6 +325,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 80K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -323,6 +345,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -342,6 +365,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -356,6 +381,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 160K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -373,6 +401,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -392,6 +421,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -406,6 +437,9 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 320K records." << endl;
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -423,6 +457,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
+<<<<<<< HEAD
   }
 =======
   PerfCounter perf_counter;
@@ -442,6 +477,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
   perf_counter.stop();
   cout << "Result : " << end - start << " [clocks]" << endl;
   perf_counter.print();
+=======
+>>>>>>> do refactoring of perf_counter
   }
 >>>>>>> add a measurement mechanism with perf_counter
 
@@ -451,6 +488,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
 } // namespace kvs_charkey::testing
 
 // perf_counter
+<<<<<<< HEAD
 <<<<<<< HEAD
 #include "include/perf_counter.h"
 =======
@@ -472,6 +510,9 @@ PerfCounter::PerfCounter() {
   init();
 }
 >>>>>>> add a measurement mechanism with perf_counter
+=======
+#include "include/perf_counter.h"
+>>>>>>> do refactoring of perf_counter
 
 void
 PerfCounter::init(int exc_kernel) {
@@ -518,9 +559,12 @@ PerfCounter::init(int exc_kernel) {
   pea.type = PERF_TYPE_RAW;
   pea.size = sizeof(struct perf_event_attr);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   //  pea.config = LLC_Reference;
 >>>>>>> add a measurement mechanism with perf_counter
+=======
+>>>>>>> do refactoring of perf_counter
   pea.config = L2_RQSTS_MISS;
   pea.disabled = 1;
   pea.exclude_kernel = exc_kernel;
@@ -581,6 +625,7 @@ PerfCounter::init(int exc_kernel) {
   ioctl(fd[0], PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP);
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 int
@@ -638,3 +683,5 @@ PerfCounter::print(char const* title) {
     std::cout << "=====================" << std::endl;
 }
 >>>>>>> add a measurement mechanism with perf_counter
+=======
+>>>>>>> do refactoring of perf_counter
