@@ -18,6 +18,8 @@
 
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 #include <cinttypes>
 
 const int SIZE = 8;
@@ -67,12 +69,38 @@ class PerfCounter {
     const std::uint32_t MEM_INST_RETIRED_ALL_STORES = 0x82d0;
 
  public:
-    PerfCounter();
+    PerfCounter() = default;
+    explicit PerfCounter(bool exc_kernel) {
+        init(exc_kernel ? 1 : 0);
+    }
     ~PerfCounter() = default;
 
-    void start();
-    void stop();
-    void print(char const * title = "perf result");
+    void init(int exc_kernel = 1);
+    void start() {
+        ioctl(fd[0], PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP);
+    }
+    void stop() {
+        ioctl(fd[0], PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
+        read();
+    }
+    void print(char const * title = "perf result") {
+        std::cout << "==== " << title << " ====" << std::endl;
+        if (time_enabled == time_running) {
+            std::cout << "time:         " << time_enabled << std::endl;
+        } else {
+            std::cout << "time_enabled: " << time_enabled << std::endl;
+            std::cout << "time_running: " << time_running << std::endl;
+        }
+        std::cout << "cpu_cycles:   " << val[0] << std::endl;
+        std::cout << "instructions: " << val[1] << std::endl;
+        std::cout << "counter_2:    " << val[2] << std::endl;
+        std::cout << "counter_3:    " << val[3] << std::endl;
+        std::cout << "counter_4:    " << val[4] << std::endl;
+        std::cout << "counter_5:    " << val[5] << std::endl;
+        std::cout << "counter_6:    " << val[6] << std::endl;
+        std::cout << "counter_7:    " << val[7] << std::endl;
+        std::cout << "=====================" << std::endl;
+    }
     PerfCounter& operator+=(PerfCounter &rhs) {
         time_enabled += rhs.time_enabled;
         time_running += rhs.time_running;
@@ -91,12 +119,30 @@ class PerfCounter {
     }
 
   private:
-    void init(int exc_kernel = 1);
-    int read();
-    
+    int read() {
+        unsigned int i, j;
+        int sz;
+        char buf[SIZE*32];
+        struct read_format* rf = (struct read_format*) buf;
+
+        sz = ::read(fd[0], buf, sizeof(buf));
+
+        time_enabled = rf->time_enabled;
+        time_running = rf->time_running;
+        for (i = 0; i < rf->nr; i++) {
+            for (j = 0; j < SIZE; j++) {
+                if (rf->values[i].id == id[j]) {
+                    val[j] = rf->values[i].value;
+                    continue;
+                }
+            }
+        }
+        return sz;
+    }
+
     uint64_t id[SIZE];
     int fd[SIZE];
-    
+
     uint64_t time_enabled {};
     uint64_t time_running {};
     uint64_t val[SIZE] {};
