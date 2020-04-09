@@ -35,9 +35,16 @@ scan_key(Token token, Storage storage,
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     WriteSetObj* inws = ti->search_write_set(*itr);
     if (inws != nullptr) {
-      if (inws->get_op() == OP_TYPE::DELETE)
+      if (inws->get_op() == OP_TYPE::DELETE) {
         return Status::WARN_ALREADY_DELETE;
-      result.emplace_back(&(*itr)->tuple);
+      }
+      if (inws->get_op() == OP_TYPE::UPDATE) {
+        result.emplace_back(itr->get_tuple_ptr_to_local());
+      } else if (inws->get_op() == OP_TYPE::INSERT) {
+        result.emplace_back(itr->get_tuple_ptr_to_db());
+      } else {
+        // error
+      }
       continue;
     }
     ReadSetObj* inrs = ti->search_read_set(*itr);

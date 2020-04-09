@@ -29,6 +29,10 @@ public:
     return tidw_;
   }
 
+  TidWord& get_tidw_ref() {
+    return tidw_;
+  }
+
   TidWord* get_tidw_ptr() {
     return &tidw_;
   }

@@ -61,6 +61,10 @@ public:
     return epoch_; 
   }
 
+  void inc_tid() {
+    ++this->tid_;
+  }
+
   void reset() { 
     obj_ = 0;
   }

@@ -37,6 +37,11 @@ void storeRelease(T& ptr, T2 val) {
   __atomic_store_n(&ptr, (T)val, __ATOMIC_RELEASE);
 }
 
+template <typename T, typename T2>
+void storeRelease(T* ptr, T2 val) {
+  __atomic_store_n(ptr, (T)val, __ATOMIC_RELEASE);
+}
+
 /**
  * @brief atomic acq-rel cas.
  */

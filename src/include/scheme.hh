@@ -134,10 +134,7 @@ class WriteSetObj {
 };
 
 class ReadSetObj {
- public:
-  Record rec_read;
-  Record* rec_ptr; // ptr to database
-
+public:
   ReadSetObj(void) {
     this->rec_ptr = nullptr;
   }
@@ -150,10 +147,19 @@ class ReadSetObj {
   ReadSetObj(ReadSetObj&& right) = default;
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
   ReadSetObj& operator=(ReadSetObj&& right) = default;
+
+  Record* get_rec_read_ptr() { return &rec_read; }
+
+  Record* get_rec_ptr() { return rec_ptr; }
+
+private:
+  Record rec_read;
+  Record* rec_ptr; // ptr to database
+
 };
 
 class OprObj { // Operations for retry by abort
- public:
+public:
   OP_TYPE type;
   std::unique_ptr<char[]> key;
   std::unique_ptr<char[]> val;
@@ -191,8 +197,9 @@ class ThreadInfo {
   /**
    * about garbage collection
    */
-  std::size_t gc_container_index_;
-  std::vector<Record*> *gc_container_;
+  std::size_t gc_container_index_; // common to record and value;
+  std::vector<Record*> *gc_record_container_;
+  std::vector<std::pair<std::string*, Epoch>> *gc_value_container_;
 
   /**
    * about holding operation info.
@@ -227,15 +234,6 @@ class ThreadInfo {
     mrctid_.reset();
     log_dir_.assign(MAC2STR(PROJECT_ROOT));
   }
-
-  /**
-   * Accessor
-   */
-
-  /**
-   * Getter
-   */
-  bool get_txbegan_() { return txbegan_; }
 
   /**
    * @brief clean up about holding operation info.
@@ -332,6 +330,10 @@ class ThreadInfo {
    */
   void wal(uint64_t ctid);
 
+  /**
+   * Getter
+   */
+
   Token get_token() const {
     return token_;
   }
@@ -351,6 +353,10 @@ class ThreadInfo {
   bool get_txbegan() const {
     return txbegan_;
   }
+
+  /**
+   * Accessor
+   */
 
   void set_token(Token token) {
     token_ = token;

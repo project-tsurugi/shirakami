@@ -45,8 +45,9 @@ init_kThreadTable()
      * So it needs surplus operation.
      */
     std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
-    itr->gc_container_ = &kGarbageRecords[gc_index];
     itr->gc_container_index_ = gc_index;
+    itr->gc_record_container_ = &kGarbageRecords[gc_index];
+    itr->gc_value_container_ = &kGarbageValues[gc_index];
 
     /**
      * about logging.

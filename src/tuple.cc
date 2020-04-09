@@ -16,10 +16,12 @@ class Tuple::Impl {
     Impl() : need_delete_pvalue_(false) {
       pvalue_.store(nullptr, std::memory_order_release);
     }
+
     Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : need_delete_pvalue_(true) {
       key_.assign(key_ptr, key_length);
       pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
     }
+
     Impl(const Impl& right);
     Impl(Impl&& right);
 
@@ -28,6 +30,7 @@ class Tuple::Impl {
      * @pre this is called by read_record function at xact.cc only .
      */
     Impl& operator=(const Impl& right);
+
     Impl& operator=(Impl&& right);
     ~Impl() {
       if (this->need_delete_pvalue_) {
@@ -40,6 +43,16 @@ class Tuple::Impl {
     void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
     void set_key(const char* key_ptr, const std::size_t key_length);
     void set_value(const char* value_ptr, const std::size_t value_length);
+
+    /**
+     * @biref Set value
+     * @details Update value and preserve old value, so this 
+     * function is called by updater in write_phase.
+     * @params [in] value_ptr Pointer to value
+     * @params [in] value_length Size of value
+     * @params [out] old_value To tell the caller the old value.
+     * @return void
+     */
     void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value);
 
   private:

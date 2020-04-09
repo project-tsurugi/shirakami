@@ -66,14 +66,14 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
    * about read_set
    */
   tid_a = max(max_wset, max_rset);
-  tid_a.tid++;
+  tid_a.inc_tid();
   
   /*
    * calculates (b)
    * larger than the worker's most recently chosen TID,
    */
   tid_b = ti->mrctid;
-  tid_b.tid++;
+  tid_b.inc_tid();
 
   /* calculates (c) */
   tid_c.epoch = ti->epoch;
@@ -93,10 +93,14 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     switch (iws->op) {
       case OP_TYPE::UPDATE:
-        iws->rec_ptr->tuple.val.reset();
-        iws->rec_ptr->tuple.val = std::move(iws->tuple.val);
-        iws->rec_ptr->tuple.len_val = iws->tuple.len_val;
-        __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
+        std::string* old_value;
+        std::string_view new_value_view = iws->get_tuple_ptr_to_local()->get_value();
+        iws->get_rec_ptr()->get_tuple_ptr()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
+        storeRelease(iws->get_rec_ptr()->get_tid_ref().obj, maxtid.get_obj());
+        std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index];
+        mutex_for_gclist.lock();
+        ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
+        mutex_for_gclist.unlock();
         break;
       case OP_TYPE::INSERT:
         __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
@@ -112,7 +116,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
            */
           std::mutex& mutex_for_gclist = kMutexGarbageRecords[ti->gc_container_index_];
           mutex_for_gclist.lock();
-          ti->gc_container_->emplace_back(iws->rec_ptr);
+          ti->gc_value_container_->emplace_back(iws->rec_ptr);
           mutex_for_gclist.unlock();
 
           __atomic_store_n(&(iws->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);

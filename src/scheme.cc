@@ -54,7 +54,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
        */
       std::mutex& mutex_for_gclist = kMutexGarbageRecords[gc_container_index_];
       mutex_for_gclist.lock();
-      gc_container_->emplace_back(itr->get_rec_ptr());
+      gc_record_container_->emplace_back(itr->get_rec_ptr());
       mutex_for_gclist.unlock();
       TidWord deletetid;
       deletetid.set_lock(false);
@@ -66,11 +66,12 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
   }
 }
 
-ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)
+ReadSetObj* ThreadInfo::search_read_set(const char* key_ptr, std::size_t key_length)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
-    if (itr->rec_ptr->tuple.len_key == len_key
-        && memcmp((*itr).rec_read.tuple.key.get(), key, len_key) == 0) {
+    std::string_view key_view = itr->get_rec_ptr()->get_tuple_ptr()->get_key();
+    if (key_view.size() == key_length
+        && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       return &(*itr);
     }
   }
@@ -80,7 +81,7 @@ ReadSetObj* ThreadInfo::search_read_set(const char* key, std::size_t len_key)
 ReadSetObj* ThreadInfo::search_read_set(Record* rec_ptr)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr)
-    if ((*itr).rec_ptr == rec_ptr) return &(*itr);
+    if (itr->get_rec_ptr() == rec_ptr) return &(*itr);
 
   return nullptr;
 }
