@@ -7,16 +7,16 @@
 #include <cassert>
 #include <string>
 
+#include "debug.hh"
 #include "kvs/tuple.h"
 
 namespace kvs{
 
 class Tuple::Impl {
   public:
-    Impl() : need_delete_pvalue_(true) {
+    Impl() : need_delete_pvalue_(false) {
+      NNN;
       key_.clear();
-      pvalue_.store(new std::string(), std::memory_order_release);
-      pvalue_.load(std::memory_order_acquire)->clear();
     }
 
     Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
@@ -28,9 +28,9 @@ class Tuple::Impl {
      * @brief copy assign operator
      * @pre this is called by read_record function at xact.cc only .
      */
-    Impl& operator=(const Impl& right)&;
+    Impl& operator=(const Impl& right);
 
-    Impl& operator=(Impl&& right)&;
+    Impl& operator=(Impl&& right);
 
     ~Impl() {
       if (this->need_delete_pvalue_) {
@@ -96,7 +96,7 @@ Tuple::Impl::Impl(Impl&& right)
   }
 }
 
-Tuple::Impl& Tuple::Impl::operator=(const Impl& right)&
+Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
 {
   // process about this
   if (this->need_delete_pvalue_) {
@@ -113,8 +113,9 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)&
   }
 }
 
-Tuple::Impl& Tuple::Impl::operator=(Impl&& right)&
+Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 {
+  NNN;
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
@@ -223,6 +224,7 @@ Tuple::Tuple(const Tuple& right)
 
 Tuple::Tuple(Tuple&& right)
 {
+  this->pimpl_ = std::make_unique<Impl>();
   pimpl_ = std::move(right.pimpl_);
 }
 
@@ -234,7 +236,8 @@ Tuple& Tuple::operator=(const Tuple& right)&
 
 Tuple& Tuple::operator=(Tuple&& right)&
 {
-  this->pimpl_ = std::move(right.pimpl_);
+  NNN;
+  *this->pimpl_.get() = std::move(*right.pimpl_.get());
 }
 
 Tuple::~Tuple() {};

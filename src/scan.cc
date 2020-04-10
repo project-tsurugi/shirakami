@@ -67,7 +67,9 @@ scan_key(Token token, Storage storage,
     if (rr != Status::OK) {
       return rr;
     }
+    NNN;
     ti->read_set.emplace_back(std::move(rsob));
+    NNN;
     result.emplace_back(&ti->read_set.back().get_rec_read().get_tuple());
   }
 

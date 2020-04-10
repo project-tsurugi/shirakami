@@ -6,13 +6,14 @@
 #pragma once
 
 #include "tid.hh"
+#include "debug.hh"
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
 
 namespace kvs {
 class Record {
 public:
-  Record () {}
+  Record () : tidw_(), tuple_(nullptr, 0, nullptr, 0) {}
 
   Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw_(), tuple_(key_ptr, key_length, value_ptr, value_length) {
     // init tidw
@@ -21,9 +22,19 @@ public:
   }
 
   Record(const Record& right) = default;
-  Record(Record&& right) = default;
+  Record(Record&& right) {
+    NNN;
+    tidw_ = std::move(right.tidw_);
+    tuple_ = std::move(right.tuple_);
+  }
+
   Record& operator=(const Record& right) = default;
-  Record& operator=(Record&& right) = default;
+  Record& operator=(Record&& right) {
+    NNN;
+    tidw_ = std::move(right.tidw_);
+    tuple_ = std::move(right.tuple_);
+  }
+
 
   TidWord& get_tidw() {
     return tidw_;

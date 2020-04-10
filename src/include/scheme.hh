@@ -44,7 +44,7 @@ namespace kvs {
  */
 class WriteSetObj {
   public:
-    WriteSetObj() {}
+    WriteSetObj() : tuple_() {}
 
     // for insert/delete operation
     WriteSetObj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
@@ -54,10 +54,18 @@ class WriteSetObj {
 
     WriteSetObj(const WriteSetObj& right) = delete;
     // for std::sort
-    WriteSetObj(WriteSetObj&& right) = default;
+    WriteSetObj(WriteSetObj&& right) : rec_ptr_(right.rec_ptr_), op_(right.op_), tuple_(std::move(right.tuple_)) {
+      NNN;
+    }
+
     WriteSetObj& operator=(const WriteSetObj& right) = delete;
     // for std::sort
-    WriteSetObj& operator=(WriteSetObj&& right) = default;
+    WriteSetObj& operator=(WriteSetObj&& right) {
+      NNN;
+      rec_ptr_ = right.rec_ptr_;
+      op_ = right.op_;
+      tuple_ = std::move(right.tuple_);
+    }
 
     bool operator<(const WriteSetObj& right) const;
 
@@ -158,9 +166,19 @@ public:
   }
 
   ReadSetObj(const ReadSetObj& right) = delete;
-  ReadSetObj(ReadSetObj&& right) = default;
+  ReadSetObj(ReadSetObj&& right) {
+    NNN;
+    rec_read = std::move(right.rec_read);
+    rec_ptr = right.rec_ptr;
+  }
+
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
-  ReadSetObj& operator=(ReadSetObj&& right) = default;
+  ReadSetObj& operator=(ReadSetObj&& right) {
+    NNN;
+    rec_read = std::move(right.rec_read);
+    rec_ptr = right.rec_ptr;
+  }
+
 
   Record& get_rec_read() { return rec_read; }
 
