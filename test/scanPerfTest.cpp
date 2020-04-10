@@ -3,17 +3,11 @@
 
 #include "kvs/interface.h"
 
-<<<<<<< HEAD
 // kvs_charkey-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "tsc.hh"
-=======
-#include "include/compiler.hh"
-#include "include/header.hh"
-#include "include/tsc.hh"
 #include "include/perf_counter.h"
->>>>>>> add a measurement mechanism with perf_counter
 
 using namespace kvs;
 using std::cout;
