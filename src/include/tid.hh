@@ -13,6 +13,16 @@ namespace kvs {
 
 class TidWord {
 public:
+  union {
+    uint64_t obj_;
+    struct {
+      bool lock_:1;
+      bool latest_:1;
+      bool absent_:1;
+      uint64_t tid_:29;
+      Epoch epoch_:32;
+    };
+  };
 
   TidWord() { obj_ = 0; }
   TidWord(const uint64_t obj) { obj_ = obj; }
@@ -114,16 +124,5 @@ public:
   }
 
 private:
-  union {
-    uint64_t obj_;
-    struct {
-      bool lock_:1;
-      bool latest_:1;
-      bool absent_:1;
-      uint64_t tid_:29;
-      Epoch epoch_:32;
-    };
-  };
 };
-
 } // namespace kvs

@@ -76,50 +76,56 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   tid_b.inc_tid();
 
   /* calculates (c) */
-  tid_c.epoch = ti->epoch;
+  tid_c.set_epoch(ti->get_epoch());
 
   /* compare a, b, c */
   TidWord maxtid = max({tid_a, tid_b, tid_c});
-  maxtid.lock = 0;
-  maxtid.absent = 0;
-  maxtid.latest = 1;
-  maxtid.epoch = ti->epoch;
-  ti->mrctid = maxtid;
+  maxtid.set_lock(false);
+  maxtid.set_absent(false);
+  maxtid.set_latest(true);
+  maxtid.set_epoch(ti->get_epoch());
+  ti->set_mrctid(maxtid);
 
 #ifdef WAL
-  ti->wal(maxtid.obj);
+  ti->wal(maxtid.get_obj());
 #endif
 
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
-    switch (iws->op) {
+    Record* recptr = iws->get_rec_ptr();
+    switch (iws->get_op()) {
       case OP_TYPE::UPDATE:
-        std::string* old_value;
-        std::string_view new_value_view = iws->get_tuple_ptr_to_local()->get_value();
-        iws->get_rec_ptr()->get_tuple_ptr()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
-        storeRelease(iws->get_rec_ptr()->get_tid_ref().obj, maxtid.get_obj());
-        std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index];
-        mutex_for_gclist.lock();
-        ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
-        mutex_for_gclist.unlock();
-        break;
+        {
+          std::string* old_value;
+          std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
+          recptr->get_tuple().set_value(new_value_view.data(), new_value_view.size(), &old_value);
+          storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+          std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index_];
+          mutex_for_gclist.lock();
+          ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
+          mutex_for_gclist.unlock();
+          break;
+        }
       case OP_TYPE::INSERT:
-        __atomic_store_n(&(iws->rec_ptr->tidw.obj), maxtid.obj, __ATOMIC_RELEASE);
-        break;
+        {
+          storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+          break;
+        }
       case OP_TYPE::DELETE:
         {
           TidWord deletetid = maxtid;
-          deletetid.absent = 1;
-          MTDB.remove_value(iws->rec_ptr->tuple.key.get(), iws->rec_ptr->tuple.len_key);
+          deletetid.set_absent(true);
+          std::string_view key_view = recptr->get_tuple().get_key();
+          MTDB.remove_value(key_view.data(), key_view.size());
 
           /**
            * create information for garbage collection.
            */
           std::mutex& mutex_for_gclist = kMutexGarbageRecords[ti->gc_container_index_];
           mutex_for_gclist.lock();
-          ti->gc_value_container_->emplace_back(iws->rec_ptr);
+          ti->gc_value_container_->emplace_back(recptr);
           mutex_for_gclist.unlock();
 
-          __atomic_store_n(&(iws->rec_ptr->tidw.obj), deletetid.obj, __ATOMIC_RELEASE);
+          storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
           break;
         }
       default:
@@ -148,7 +154,7 @@ abort(Token token)
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
-  ti->get_txbegan() = false;
+  ti->set_txbegan(false);
   gc_records();
   return Status::OK;
 }
@@ -194,7 +200,7 @@ commit(Token token)
   // Phase 2: Lock write set;
   TidWord expected, desired;
   for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
-    if (itr->op == OP_TYPE::INSERT) continue;
+    if (itr->get_op() == OP_TYPE::INSERT) continue;
     // after this, update/delete
     expected.obj = loadAcquire(itr->get_tuple_ptr_to_db()->tidw.obj);
     for (;;) {

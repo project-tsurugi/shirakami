@@ -64,7 +64,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
       deletetid.set_latest(false);
       deletetid.set_absent(false);
       deletetid.set_epoch(this->get_epoch());
-      storeRelease(record->get_tidw(), deletetid);
+      storeRelease(record->get_tidw().obj_, deletetid.obj_);
     }
   }
 }
@@ -122,10 +122,10 @@ void ThreadInfo::unlock_write_set()
 
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     Record* recptr = itr->get_rec_ptr();
-    expected = loadAcquire(recptr->get_tidw());
+    expected = loadAcquire(recptr->get_tidw().obj_);
     desired = expected;
     desired.set_lock(false);
-    storeRelease(recptr->get_tidw(), desired);
+    storeRelease(recptr->get_tidw().obj_, desired.obj_);
   }
 }
 
@@ -134,10 +134,10 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
   TidWord expected, desired;
 
   for (auto itr = begin; itr != end; ++itr) {
-    expected = loadAcquire(itr->get_rec_ptr()->get_tidw());
+    expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_);
     desired = expected;
     desired.set_lock(0);
-    storeRelease(itr->get_rec_ptr()->get_tidw(), desired);
+    storeRelease(itr->get_rec_ptr()->get_tidw().obj_, desired.obj_);
   }
 }
 
@@ -172,7 +172,10 @@ void ThreadInfo::wal(uint64_t ctid)
       // write tx id, op(operation type)
       logfile_.write((void*)&(*itr), sizeof(itr->get_tid()) + sizeof(itr->get_op()));
 
-      std::string_view key_view = itr->get_tuple()->get_key();
+      // common subexpression elimination
+      const Tuple* tupleptr = itr->get_tuple();
+
+      std::string_view key_view = tupleptr->get_key();
       // write key_length
       // key_view.size() returns constexpr.
       std::size_t key_size = key_view.size();
@@ -181,7 +184,7 @@ void ThreadInfo::wal(uint64_t ctid)
       // write key_body
       logfile_.write((void*)key_view.data(), key_size);
 
-      std::string_view value_view = itr->get_tuple()->get_value();
+      std::string_view value_view = tupleptr->get_value();
       // write value_length
       // value_view.size() returns constexpr.
       std::size_t value_size = value_view.size();
@@ -189,7 +192,7 @@ void ThreadInfo::wal(uint64_t ctid)
 
       // write val_body
       if (itr->get_op() != OP_TYPE::DELETE)
-        if ((*itr).tuple_.len_val != 0) {
+        if (value_size != 0) {
           logfile_.write((void*)value_view.data(), value_size);
         }
     }
@@ -200,27 +203,15 @@ void ThreadInfo::wal(uint64_t ctid)
 }
 
 bool 
-operator<(const WriteSetObj& right) const 
+WriteSetObj::operator<(const WriteSetObj& right) const 
 {
-  const Tuple* this_tuple_ptr;
-  if (this->op_ == OP_TYPE::UPDATE) {
-    this_tuple_ptr = this->get_tuple_ptr_to_local();
-  } else {
-    // insert/delete
-    this_tuple_ptr = this->get_tuple_ptr_to_db();
-  }
-  const Tuple* right_tuple_ptr;
-  if (this->op_ == OP_TYPE::UPDATE) {
-    right_tuple_ptr = right.get_tuple_ptr_to_local();
-  } else {
-    // insert/delete
-    right_tuple_ptr = right.get_tuple_ptr_to_db();
-  }
+  const Tuple& this_tuple = this->get_tuple(this->get_op());
+  const Tuple& right_tuple = right.get_tuple(right.get_op());
 
-  const char* this_key_ptr(this_tuple_ptr->get_key().data());
-  const char* right_key_ptr(right_tuple_ptr->get_key().data());
-  std::size_t this_key_size(this_tuple_ptr->get_key().size());
-  std::size_t right_key_size(right_tuple_ptr->get_key().size());
+  const char* this_key_ptr(this_tuple.get_key().data());
+  const char* right_key_ptr(right_tuple.get_key().data());
+  std::size_t this_key_size(this_tuple.get_key().size());
+  std::size_t right_key_size(right_tuple.get_key().size());
 
   bool judge = false;
   if (this_key_size < right_key_size) {
@@ -248,13 +239,13 @@ operator<(const WriteSetObj& right) const
 }
 
 void
-WriteSetObj::reset_tuple(const char* const val_ptr, const std::size_t val_length) & 
+WriteSetObj::reset_tuple_value(const char* const val_ptr, const std::size_t val_length) & 
 {
-  if (itr->op_ == OP_TYPE::UPDATE) {
-    itr->get_tuple_ptr_to_local()->set(val_ptr, val_length);
+  if (this->get_op() == OP_TYPE::UPDATE) {
+    this->get_tuple_to_local().set_value(val_ptr, val_length);
   } else {
     // insert
-    tuple = itr->get_tuple_ptr_to_db()->set(val_ptr, val_length);
+    this->get_tuple_to_db().set_value(val_ptr, val_length);
   }
 }
 

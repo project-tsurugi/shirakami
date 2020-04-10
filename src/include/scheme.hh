@@ -70,27 +70,59 @@ class WriteSetObj {
     }
 
     /**
+     * @brief get tuple ptr appropriately by operation type.
+     * @return Tuple& 
+     */
+    Tuple& get_tuple(const OP_TYPE op) & {
+      if (op == OP_TYPE::UPDATE) {
+        return get_tuple_to_local();
+      } else {
+        // insert/delete
+        return get_tuple_to_db();
+      }
+    }
+
+    /**
+     * @brief get tuple ptr appropriately by operation type.
+     * @return const Tuple& const
+     */
+    const Tuple& get_tuple(const OP_TYPE op) const & {
+      if (op == OP_TYPE::UPDATE) {
+        return get_tuple_to_local();
+      } else {
+        // insert/delete
+        return get_tuple_to_db();
+      }
+    }
+
+    /**
      * @brief get tuple ptr to local write set
-     * @details const prohibits overwriting Tuple * entities.
-     * @return const Tuple* const
+     * @return Tuple& 
      */
     Tuple& get_tuple_to_local() & {
       return this->tuple_;
     }
 
+    /**
+     * @brief get tuple ptr to local write set
+     * @return const Tuple& 
+     */
     const Tuple& get_tuple_to_local() const & {
       return this->tuple_;
     }
 
     /**
      * @brief get tuple ptr to database(global)
-     * @details const prohibits overwriting Tuple * entities.
-     * @return const Tuple* const
+     * @return Tuple& 
      */
     Tuple& get_tuple_to_db() & {
       return this->rec_ptr_->get_tuple();
     }
 
+    /**
+     * @brief get tuple ptr to database(global)
+     * @return const Tuple& 
+     */
     const Tuple& get_tuple_to_db() const & {
       return this->rec_ptr_->get_tuple();
     }
@@ -103,7 +135,7 @@ class WriteSetObj {
       return op_; 
     }
 
-    void reset_tuple(const char* const val_ptr, const std::size_t val_length)&;
+    void reset_tuple_value(const char* const val_ptr, const std::size_t val_length)&;
 
   private:
     /**
