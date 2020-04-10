@@ -3,16 +3,10 @@
 
 #include "kvs/interface.h"
 
-<<<<<<< HEAD
 // kvs_charkey-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "tsc.hh"
-=======
-#include "include/compiler.hh"
-#include "include/header.hh"
-#include "include/tsc.hh"
->>>>>>> c1b5e00c3046a969bb12685c943b42d7cf2ed30d
 #include "include/perf_counter.h"
 
 using namespace kvs;
