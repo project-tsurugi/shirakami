@@ -38,8 +38,10 @@ class Tuple::Impl {
       }
     }
  
-    std::string_view get_key() const;
-    std::string_view get_value() const;
+    std::string_view get_key();
+    const std::string_view get_key() const;
+    std::string_view get_value();
+    const std::string_view get_value() const;
     void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
     void set_key(const char* key_ptr, const std::size_t key_length);
     void set_value(const char* value_ptr, const std::size_t value_length);
@@ -122,13 +124,30 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 }
 
 std::string_view 
+Tuple::Impl::get_key()
+{
+  return std::string_view{key_.data(), key_.size()};
+}
+
+const std::string_view 
 Tuple::Impl::get_key()  const
 {
   return std::string_view{key_.data(), key_.size()};
 }
 
 std::string_view 
-Tuple::Impl::get_value()  const
+Tuple::Impl::get_value()
+{
+  std::string* value = pvalue_.load(std::memory_order_acquire);
+  if (value != nullptr) {
+    return std::string_view{value->data(), value->size()};
+  } else {
+    return std::string_view{};
+  }
+}
+
+const std::string_view 
+Tuple::Impl::get_value() const 
 {
   std::string* value = pvalue_.load(std::memory_order_acquire);
   if (value != nullptr) {
@@ -195,12 +214,24 @@ Tuple& Tuple::operator=(Tuple&& right)
 Tuple::~Tuple() {};
 
 std::string_view 
+Tuple::get_key()
+{
+  return pimpl_.get()->get_key();
+}
+
+const std::string_view 
 Tuple::get_key() const
 {
   return pimpl_.get()->get_key();
 }
 
 std::string_view 
+Tuple::get_value()
+{
+  return pimpl_.get()->get_value();
+}
+
+const std::string_view 
 Tuple::get_value() const
 {
   return pimpl_.get()->get_value();
@@ -210,6 +241,12 @@ void
 Tuple::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
 {
   pimpl_.get()->set(key_ptr, key_length, value_ptr, value_length);
+}
+
+void
+Tuple::set_key(const char* key_ptr, const std::size_t key_length)
+{
+  pimpl_.get()->set_key(key_ptr, key_length);
 }
 
 void

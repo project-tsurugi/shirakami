@@ -36,8 +36,8 @@ init_kThreadTable()
 {
   uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    itr->visible.store(false, std::memory_order_release);
-    itr->txbegan_ = false;
+    itr->set_visible(false);
+    itr->set_txbegan(false);
 
     /**
      * about garbage collection.
@@ -53,7 +53,7 @@ init_kThreadTable()
      * about logging.
      */
 #ifdef WAL
-    itr->log_dir_.assign(LogDirectory);
+    itr->log_dir_.assign(kLogDirectory);
     itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
     if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
@@ -95,15 +95,15 @@ init(std::string log_directory_path)
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */
-  LogDirectory.assign(log_directory_path);
+  kLogDirectory.assign(log_directory_path);
   if (log_directory_path == MAC2STR(PROJECT_ROOT)) {
-    LogDirectory.append("/log");
+    kLogDirectory.append("/log");
   }
 
   /**
    * check whether log_directory_path is filesystem objects.
    */
-  boost::filesystem::path log_dir(LogDirectory);
+  boost::filesystem::path log_dir(kLogDirectory);
   if (boost::filesystem::exists(log_dir)) {
     /**
      * some file exists.

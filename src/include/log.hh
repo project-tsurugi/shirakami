@@ -50,7 +50,7 @@ class LogRecord {
  public:
   LogRecord(){}
 
-  LogRecord(const TidWord tid, const OP_TYPE op, Tuple* const tuple) : tid_(tid), op_(op), tuple_(tuple) {}
+  LogRecord(const TidWord tid, const OP_TYPE op, const Tuple* const tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 
   bool operator<(const LogRecord& right) {
     return this->tid_ < right.tid_;
@@ -60,7 +60,7 @@ class LogRecord {
 
   OP_TYPE get_op() { return op_; }
 
-  Tuple* get_tuple() { return tuple_; }
+  const Tuple* get_tuple() { return tuple_; }
 
   void set_tuple(Tuple* tuple) {
     this->tuple_ = tuple;
@@ -74,7 +74,7 @@ class LogRecord {
   private:
     TidWord tid_;
     OP_TYPE op_;
-    Tuple* tuple_;
+    const Tuple* tuple_;
 };
 
 extern std::string kLogDirectory;

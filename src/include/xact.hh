@@ -43,7 +43,7 @@ static void insert_record_to_masstree(char const *key, std::size_t len_key, Reco
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-extern Status read_record(Record& res, Record* dest);
+extern Status read_record(Record& res, const Record* const dest);
 
 /**
  * @brief Transaction begins.

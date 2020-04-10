@@ -50,11 +50,11 @@ public:
   const char * const rkey_;
   const std::size_t len_rkey_;
   const bool r_exclusive_;
-  std::vector<T*>* scan_buffer_;
+  std::vector<const T*>* scan_buffer_;
   const bool limited_scan_;
   const std::size_t kLimit_ = 1000;
 
-  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* scan_buffer, bool limited_scan = false) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer), limited_scan_(limited_scan) {
+  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* scan_buffer, bool limited_scan = false) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer), limited_scan_(limited_scan) {
     if (limited_scan) {
       scan_buffer->reserve(kLimit_);
     }
@@ -209,7 +209,7 @@ class MasstreeWrapper {
     else return nullptr;
   }
 
-  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<T*>* res, bool limited_scan = false) {
+  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* res, bool limited_scan = false) {
     Str mtkey;
     if (lkey == nullptr) {
       mtkey = Str();

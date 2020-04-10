@@ -33,8 +33,9 @@ void ThreadInfo::clean_up_scan_caches()
 Status ThreadInfo::check_delete_after_write(const char* const key_ptr, const std::size_t key_length)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if (itr->get_rec_ptr()->get_tuple_ptr()->get_key().size() == key_length
-        && memcmp(itr->get_rec_ptr()->get_tuple_ptr()->get_key().data(), key_ptr, key_length) == 0) {
+    std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
+    if (key_view.size() == key_length
+        && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       write_set.erase(itr);
       return Status::WARN_CANCEL_PREVIOUS_OPERATION;
     }
@@ -47,7 +48,9 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) {
-      MTDB.remove_value(itr->get_rec_ptr()->get_tuple_ptr()->get_key().data(), itr->get_rec_ptr()->get_tuple_ptr()->get_key().size());
+      Record* record = itr->get_rec_ptr();
+      std::string_view key_view = record->get_tuple().get_key();
+      MTDB.remove_value(key_view.data(), key_view.size());
       
       /**
        * create information for garbage collection.
@@ -61,15 +64,15 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
       deletetid.set_latest(false);
       deletetid.set_absent(false);
       deletetid.set_epoch(this->get_epoch());
-      __atomic_store_n(itr->get_rec_ptr()->get_tidw_ptr()->get_obj_ptr(), deletetid.get_obj_ptr(), __ATOMIC_RELEASE);
+      storeRelease(record->get_tidw(), deletetid);
     }
   }
 }
 
-ReadSetObj* ThreadInfo::search_read_set(const char* key_ptr, std::size_t key_length)
+ReadSetObj* ThreadInfo::search_read_set(const char* const key_ptr, const std::size_t key_length)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
-    std::string_view key_view = itr->get_rec_ptr()->get_tuple_ptr()->get_key();
+    const std::string_view key_view = itr->get_rec_ptr()->get_tuple_ptr()->get_key();
     if (key_view.size() == key_length
         && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       return &(*itr);
@@ -78,7 +81,7 @@ ReadSetObj* ThreadInfo::search_read_set(const char* key_ptr, std::size_t key_len
   return nullptr;
 }
 
-ReadSetObj* ThreadInfo::search_read_set(Record* rec_ptr)
+ReadSetObj* ThreadInfo::search_read_set(const Record* const rec_ptr)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr)
     if (itr->get_rec_ptr() == rec_ptr) return &(*itr);
@@ -89,8 +92,8 @@ ReadSetObj* ThreadInfo::search_read_set(Record* rec_ptr)
 WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr, const std::size_t key_length)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    Tuple* tuple;
-    if (itr->op_ == OP_TYPE::UPDATE) {
+    const Tuple* tuple;
+    if (itr->get_op() == OP_TYPE::UPDATE) {
       tuple = itr->get_tuple_ptr_to_local();
     } else {
       // insert/delete
@@ -106,10 +109,10 @@ WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr, const std::size_t
   return nullptr;
 }
 
-WriteSetObj* ThreadInfo::search_write_set(Record* rec_ptr)
+const WriteSetObj* ThreadInfo::search_write_set(const Record* const rec_ptr)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr)
-    if (itr->get_record_ptr_to_db() == rec_ptr) return &(*itr);
+    if (itr->get_rec_ptr() == rec_ptr) return &(*itr);
 
   return nullptr;
 }
@@ -119,10 +122,11 @@ void ThreadInfo::unlock_write_set()
   TidWord expected, desired;
 
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    expected = loadAcquire(itr->get_tuple_ptr()->tidw.obj);
+    Record* recptr = itr->get_rec_ptr();
+    expected = loadAcquire(recptr->get_tidw_ref());
     desired = expected;
-    desired.lock = 0;
-    storeRelease(itr->rec_ptr->tidw.obj, desired.obj);
+    desired.set_lock(false);
+    storeRelease(recptr->get_tidw_ref(), desired);
   }
 }
 
@@ -131,20 +135,22 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
   TidWord expected, desired;
 
   for (auto itr = begin; itr != end; ++itr) {
-    expected.obj = loadAcquire(itr->get_record_ptr_to_db()->tidw.obj);
+    expected = loadAcquire(itr->get_rec_ptr()->get_tidw_ref());
     desired = expected;
-    desired.lock = 0;
-    storeRelease(itr->get_record_ptr_to_db()->tidw.obj, desired.obj);
+    desired.set_lock(0);
+    storeRelease(itr->get_rec_ptr()->get_tidw_ref(), desired);
   }
 }
 
 void ThreadInfo::wal(uint64_t ctid)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-    if (itr->op_ == OP_TYPE::UPDATE) {
-      log_set_.emplace_back(ctid, (*itr).op, (*itr).tuple);
+    if (itr->get_op() == OP_TYPE::UPDATE) {
+      log_set_.emplace_back(ctid, itr->get_op(), itr->get_tuple_ptr_to_local());
     } else {
       // insert/delete
+      log_set_.emplace_back(ctid, itr->get_op(), itr->get_tuple_ptr_to_db());
+    }
     latest_log_header_.chkSum_ += log.log_set_.back().computeChkSum();
     ++latest_log_header_.logRecNum_;
   }
@@ -182,22 +188,52 @@ void ThreadInfo::wal(uint64_t ctid)
   log_set_.clear();
 }
 
-Record* 
-WriteSetObj::get_rec_ptr()
+bool 
+operator<(const WriteSetObj& right) const 
 {
-  return this->rec_ptr_;
-}
+  const Tuple* this_tuple_ptr;
+  if (this->op_ == OP_TYPE::UPDATE) {
+    this_tuple_ptr = this->get_tuple_ptr_to_local();
+  } else {
+    // insert/delete
+    this_tuple_ptr = this->get_tuple_ptr_to_db();
+  }
+  const Tuple* right_tuple_ptr;
+  if (this->op_ == OP_TYPE::UPDATE) {
+    right_tuple_ptr = right.get_tuple_ptr_to_local();
+  } else {
+    // insert/delete
+    right_tuple_ptr = right.get_tuple_ptr_to_db();
+  }
 
-const Tuple* const 
-WriteSetObj::get_tuple_ptr_to_local() const
-{
-  return &this->tuple_;
-}
+  const char* this_key_ptr(this_tuple_ptr->get_key().data());
+  const char* right_key_ptr(right_tuple_ptr->get_key().data());
+  std::size_t this_key_size(this_tuple_ptr->get_key().size());
+  std::size_t right_key_size(right_tuple_ptr->get_key().size());
 
-const Tuple* const 
-WriteSetObj::get_tuple_ptr_to_db() const
-{
-  return this->rec_ptr_;
+  bool judge = false;
+  if (this_key_size < right_key_size) {
+    if (memcmp(this_key_ptr, right_key_ptr, this_key_size) <= 0) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if (this_key_size > right_key_size) {
+    if (memcmp(this_key_ptr, right_key_ptr, right_key_size) < 0) {
+      return true;
+    } else {
+      return false;
+    }
+  } else { // same length
+    int ret = memcmp(this_key_ptr, right_key_ptr, this_key_size);      
+    if (ret < 0) {
+      return true;
+    } else if (ret > 0) {
+      return false;
+    } else {
+      ERR; // Unique key is not allowed now.
+    }
+  }
 }
 
 void

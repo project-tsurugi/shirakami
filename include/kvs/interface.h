@@ -211,7 +211,7 @@ extern Status search_key(Token token, Storage storage, const char* const key, co
 extern Status scan_key(Token token, Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    std::vector<Tuple*>& result);
+    std::vector<const Tuple*>& result);
 
 /**
  * @brief This function preserve the specified range of masstree

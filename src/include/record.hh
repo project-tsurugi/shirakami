@@ -25,20 +25,20 @@ public:
   Record& operator=(const Record& right) = default;
   Record& operator=(Record&& right) = default;
 
-  TidWord get_tidw() const {
+  TidWord& get_tidw() {
     return tidw_;
   }
 
-  TidWord& get_tidw_ref() {
+  const TidWord& get_tidw() const {
     return tidw_;
   }
 
-  TidWord* get_tidw_ptr() {
-    return &tidw_;
+  Tuple& get_tuple(){
+    return tuple_;
   }
 
-  Tuple* get_tuple_ptr() {
-    return &tuple_;
+  const Tuple& get_tuple() const {
+    return tuple_;
   }
 
 private:

@@ -59,67 +59,49 @@ class WriteSetObj {
     // for std::sort
     WriteSetObj& operator=(WriteSetObj&& right) = default;
 
-    bool operator<(const WriteSetObj& right) const {
-      const Tuple* this_tuple_ptr;
-      if (this->op_ == OP_TYPE::UPDATE) {
-        this_tuple_ptr = this->get_tuple_ptr_to_local();
-      } else {
-        // insert/delete
-        this_tuple_ptr = this->get_tuple_ptr_to_db();
-      }
-      const Tuple* right_tuple_ptr;
-      if (this->op_ == OP_TYPE::UPDATE) {
-        right_tuple_ptr = right.get_tuple_ptr_to_local();
-      } else {
-        // insert/delete
-        right_tuple_ptr = right.get_tuple_ptr_to_db();
-      }
+    bool operator<(const WriteSetObj& right) const;
 
-      const char* this_key_ptr(this_tuple_ptr->get_key().data());
-      const char* right_key_ptr(right_tuple_ptr->get_key().data());
-      std::size_t this_key_size(this_tuple_ptr->get_key().size());
-      std::size_t right_key_size(right_tuple_ptr->get_key().size());
-
-      bool judge = false;
-      if (this_key_size < right_key_size) {
-        if (memcmp(this_key_ptr, right_key_ptr, this_key_size) <= 0) {
-          return true;
-        } else {
-          return false;
-        }
-      } else if (this_key_size > right_key_size) {
-        if (memcmp(this_key_ptr, right_key_ptr, right_key_size) < 0) {
-          return true;
-        } else {
-          return false;
-        }
-      } else { // same length
-        int ret = memcmp(this_key_ptr, right_key_ptr, this_key_size);      
-        if (ret < 0) {
-          return true;
-        } else if (ret > 0) {
-          return false;
-        } else {
-          ERR; // Unique key is not allowed now.
-        }
-      }
+    Record* get_rec_ptr() {
+      return this->rec_ptr_;
     }
 
-    Record* get_rec_ptr() ;
+    const Record* get_rec_ptr() const {
+      return this->rec_ptr_;
+    }
+
     /**
      * @brief get tuple ptr to local write set
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    const Tuple* const get_tuple_ptr_to_local() const;
+    Tuple& get_tuple_to_local() {
+      return this->tuple_;
+    }
+
+    const Tuple& get_tuple_to_local() const {
+      return this->tuple_;
+    }
+
     /**
      * @brief get tuple ptr to database(global)
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    const Tuple* const get_tuple_ptr_to_db() const;
+    Tuple& get_tuple_to_db() {
+      return this->rec_ptr_->get_tuple();
+    }
 
-    const OP_TYPE get_op() { return op_; }
+    const Tuple& get_tuple_to_db() const {
+      return this->rec_ptr_->get_tuple();
+    }
+
+    OP_TYPE& get_op() { 
+      return op_; 
+    }
+
+    const OP_TYPE& get_op() const { 
+      return op_; 
+    }
 
     void reset_tuple(const char* const val_ptr, const std::size_t val_length);
 
@@ -139,7 +121,7 @@ public:
     this->rec_ptr = nullptr;
   }
 
-  ReadSetObj(Record* rec_ptr) {
+  ReadSetObj(const Record* const rec_ptr) {
     this->rec_ptr = rec_ptr;
   }
 
@@ -148,13 +130,17 @@ public:
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
   ReadSetObj& operator=(ReadSetObj&& right) = default;
 
-  Record* get_rec_read_ptr() { return &rec_read; }
+  Record& get_rec_read() { return rec_read; }
 
-  Record* get_rec_ptr() { return rec_ptr; }
+  const Record& get_rec_read() const { return rec_read; }
+
+  const Record* get_rec_ptr() { return rec_ptr; }
+
+  const Record* get_rec_ptr() const { return rec_ptr; }
 
 private:
   Record rec_read;
-  Record* rec_ptr; // ptr to database
+  const Record* rec_ptr; // ptr to database
 
 };
 
@@ -211,7 +197,7 @@ class ThreadInfo {
   /**
    * about scan operation.
    */
-  std::map<ScanHandle, std::vector<Record*>> scan_cache_;
+  std::map<ScanHandle, std::vector<const Record*>> scan_cache_;
   std::map<ScanHandle, std::size_t> scan_cache_itr_;
   std::map<ScanHandle, std::unique_ptr<char[]>> rkey_;
   std::map<ScanHandle, std::size_t> len_rkey_;
@@ -271,14 +257,14 @@ class ThreadInfo {
    * @param [in] len_key the key length of records.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  ReadSetObj* search_read_set(const char* key, std::size_t len_key);
+  ReadSetObj* search_read_set(const char* const key, const std::size_t len_key);
 
   /**
    * @brief check whether it already executed search operation.
    * @param [in] rec_ptr the pointer of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  ReadSetObj* search_read_set(Record* rec_ptr);
+  ReadSetObj* search_read_set(const Record* const rec_ptr);
 
   /**
    * @brief check whether it already executed write operation.
@@ -286,14 +272,14 @@ class ThreadInfo {
    * @param [in] len_key the key length of records.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  WriteSetObj* search_write_set(const char* key, std::size_t len_key);
+  WriteSetObj* search_write_set(const char* key, const std::size_t len_key);
 
   /**
    * @brief check whether it already executed update/insert operation.
    * @param [in] rec_ptr the pointer of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  WriteSetObj* search_write_set(Record* rec_ptr);
+  const WriteSetObj* search_write_set (const Record* const rec_ptr);
 
   /**
    * @brief check whether it already executed write operation.

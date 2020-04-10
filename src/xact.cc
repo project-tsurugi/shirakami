@@ -72,7 +72,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
    * calculates (b)
    * larger than the worker's most recently chosen TID,
    */
-  tid_b = ti->mrctid;
+  tid_b = ti->get_mrctid();
   tid_b.inc_tid();
 
   /* calculates (c) */
@@ -148,7 +148,7 @@ abort(Token token)
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
-  ti->txbegan_ = false;
+  ti->get_txbegan() = false;
   gc_records();
   return Status::OK;
 }
@@ -242,7 +242,7 @@ commit(Token token)
 
   write_phase(ti, max_rset, max_wset);
 
-  ti->txbegan_ = false;
+  ti->get_txbegan() = false;
   return Status::OK;
 }
 
@@ -291,7 +291,7 @@ leave(Token token)
 }
 
 Status
-read_record(Record& res, Record* dest)
+read_record(Record& res, const Record* const dest)
 {
   TidWord f_check, s_check; // first_check, second_check for occ
 
@@ -348,7 +348,7 @@ Status
 search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -386,7 +386,7 @@ Status
 update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -411,7 +411,7 @@ Status
 insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
@@ -432,7 +432,7 @@ Status
 delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -458,7 +458,7 @@ Status
 upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->txbegan_) tbegin(token);
+  if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset(val, len_val); 
