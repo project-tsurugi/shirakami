@@ -6,6 +6,7 @@
 #include <map>
 #include <string_view>
 
+#include "debug.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "xact.hh"
@@ -48,6 +49,7 @@ scan_key(Token token, Storage storage,
       }
       continue;
     }
+
     const ReadSetObj* inrs = ti->search_read_set(*itr);
     if (inrs != nullptr) {
       result.emplace_back(&inrs->get_rec_read().get_tuple());
@@ -58,13 +60,15 @@ scan_key(Token token, Storage storage,
     // don't execute re-read (read_record function).
     // Because in herbrand semantics, the read reads last update even if the update is own.
 
-    ReadSetObj rsob(*itr);
-    Status rr = read_record(rsob.get_rec_read(), *itr);
+    ReadSetObj rsob(const_cast<Record*>(*itr));
+    Status rr = read_record(rsob.get_rec_read(), const_cast<Record*>(*itr));
+    cout << rsob.get_rec_read().get_tuple().get_key() << endl;
+    cout << rsob.get_rec_read().get_tuple().get_key().size() << endl;
     if (rr != Status::OK) {
       return rr;
     }
-    result.emplace_back(&rsob.get_rec_read().get_tuple());
     ti->read_set.emplace_back(std::move(rsob));
+    result.emplace_back(&ti->read_set.back().get_rec_read().get_tuple());
   }
 
   return Status::OK;

@@ -196,8 +196,7 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0) {
-      cout << itr->get_key().size() << endl;
-      cout << itr->get_key().data() << endl;
+      std::string_view key_view = (*itr)->get_key();
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     }
     else if (ctr == 1)
