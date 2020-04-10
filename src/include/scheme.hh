@@ -61,11 +61,11 @@ class WriteSetObj {
 
     bool operator<(const WriteSetObj& right) const;
 
-    Record* get_rec_ptr() {
+    Record* get_rec_ptr() & {
       return this->rec_ptr_;
     }
 
-    const Record* get_rec_ptr() const {
+    const Record* get_rec_ptr() const & {
       return this->rec_ptr_;
     }
 
@@ -74,11 +74,11 @@ class WriteSetObj {
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    Tuple& get_tuple_to_local() {
+    Tuple& get_tuple_to_local() & {
       return this->tuple_;
     }
 
-    const Tuple& get_tuple_to_local() const {
+    const Tuple& get_tuple_to_local() const & {
       return this->tuple_;
     }
 
@@ -87,23 +87,23 @@ class WriteSetObj {
      * @details const prohibits overwriting Tuple * entities.
      * @return const Tuple* const
      */
-    Tuple& get_tuple_to_db() {
+    Tuple& get_tuple_to_db() & {
       return this->rec_ptr_->get_tuple();
     }
 
-    const Tuple& get_tuple_to_db() const {
+    const Tuple& get_tuple_to_db() const & {
       return this->rec_ptr_->get_tuple();
     }
 
-    OP_TYPE& get_op() { 
+    OP_TYPE& get_op() & { 
       return op_; 
     }
 
-    const OP_TYPE& get_op() const { 
+    const OP_TYPE& get_op() const & { 
       return op_; 
     }
 
-    void reset_tuple(const char* const val_ptr, const std::size_t val_length);
+    void reset_tuple(const char* const val_ptr, const std::size_t val_length)&;
 
   private:
     /**

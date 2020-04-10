@@ -92,7 +92,7 @@ static void
 exec_scan_key(Token token, std::size_t thnm)
 {
   while (true) {
-    std::vector<Tuple*> result;
+    std::vector<const Tuple*> result;
     Storage storage;
     scan_key(token, storage,
         (char*)"a", 1, false,

@@ -25,24 +25,44 @@ public:
    * @brief Initialization
    * @details Initialize members with 0.
    */
-  void init();
+  void init()&;
 
   /**
    * @brief Computing check sum.
    * @details Compute the two's complement of the checksum.
    */
-  void compute_two_complement_of_checksum();
+  void compute_two_complement_of_checksum()&;
 
-  int get_checksum() { return checksum_; }
+  void add_checksum(const int add) & {
+    checksum_ += add;
+  }
 
-  unsigned int get_log_rec_num() { return log_rec_num_; }
+  int& get_checksum() & { 
+    return checksum_; 
+  }
 
-  void set_checksum(int checksum) {
+  const int& get_checksum() const  & { 
+    return checksum_; 
+  }
+
+  unsigned int& get_log_rec_num() & { 
+    return log_rec_num_; 
+  }
+
+  const unsigned int& get_log_rec_num() const & { 
+    return log_rec_num_;
+  }
+
+  void inc_log_rec_num() & {
+    ++this->log_rec_num_;
+  }
+
+  void set_checksum(const int checksum) & {
     this->checksum_ = checksum;
   }
 
 private:
-  int checksum_;
+  int checksum_{};
   unsigned int log_rec_num_{};
 };
 
@@ -56,11 +76,25 @@ class LogRecord {
     return this->tid_ < right.tid_;
   }
 
-  TidWord get_tid() { return tid_; }
+  TidWord& get_tid() & { 
+    return tid_; 
+  }
 
-  OP_TYPE get_op() { return op_; }
+  const TidWord& get_tid() const & { 
+    return tid_; 
+  }
 
-  const Tuple* get_tuple() { return tuple_; }
+  OP_TYPE& get_op() & { 
+    return op_;
+  }
+
+  const OP_TYPE& get_op() const & { 
+    return op_;
+  }
+
+  const Tuple* get_tuple() const & { 
+    return tuple_;
+  }
 
   void set_tuple(Tuple* tuple) {
     this->tuple_ = tuple;
@@ -69,7 +103,7 @@ class LogRecord {
   /**
    * @brief Compute checksum.
    */
-  int compute_checksum();
+  int compute_checksum()&;
 
   private:
     TidWord tid_;

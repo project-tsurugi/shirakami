@@ -38,13 +38,13 @@ class Tuple::Impl {
       }
     }
  
-    std::string_view get_key();
-    const std::string_view get_key() const;
-    std::string_view get_value();
-    const std::string_view get_value() const;
-    void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
-    void set_key(const char* key_ptr, const std::size_t key_length);
-    void set_value(const char* value_ptr, const std::size_t value_length);
+    std::string_view get_key()&;
+    const std::string_view get_key() const&;
+    std::string_view get_value()&;
+    const std::string_view get_value() const&;
+    void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&;
+    void set_key(const char* key_ptr, const std::size_t key_length)&;
+    void set_value(const char* value_ptr, const std::size_t value_length)&;
 
     /**
      * @biref Set value
@@ -55,7 +55,7 @@ class Tuple::Impl {
      * @params [out] old_value To tell the caller the old value.
      * @return void
      */
-    void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value);
+    void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&;
 
   private:
     std::string key_;
@@ -63,7 +63,7 @@ class Tuple::Impl {
     bool need_delete_pvalue_;
 };
 
-Tuple::Impl::Impl(const Impl& right)
+Tuple::Impl::Impl(const Impl& right)&
 {
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
@@ -75,7 +75,7 @@ Tuple::Impl::Impl(const Impl& right)
   }
 }
 
-Tuple::Impl::Impl(Impl&& right)
+Tuple::Impl::Impl(Impl&& right)&
 {
   this->key_ = std::move(right.key_);
   if (right.need_delete_pvalue_) {
@@ -88,7 +88,7 @@ Tuple::Impl::Impl(Impl&& right)
   }
 }
 
-Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
+Tuple::Impl& Tuple::Impl::operator=(const Impl& right)&
 {
   // process about this
   if (this->need_delete_pvalue_) {
@@ -105,7 +105,7 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
   }
 }
 
-Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
+Tuple::Impl& Tuple::Impl::operator=(Impl&& right)&
 {
   // process about this
   if (this->need_delete_pvalue_) {
@@ -124,19 +124,19 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 }
 
 std::string_view 
-Tuple::Impl::get_key()
+Tuple::Impl::get_key()&
 {
-  return std::string_view{key_.data(), key_.size()};
+  return std::move(std::string_view{key_.data(), key_.size()});
 }
 
 const std::string_view 
-Tuple::Impl::get_key()  const
+Tuple::Impl::get_key()  const&
 {
   return std::string_view{key_.data(), key_.size()};
 }
 
 std::string_view 
-Tuple::Impl::get_value()
+Tuple::Impl::get_value()&
 {
   std::string* value = pvalue_.load(std::memory_order_acquire);
   if (value != nullptr) {
@@ -147,7 +147,7 @@ Tuple::Impl::get_value()
 }
 
 const std::string_view 
-Tuple::Impl::get_value() const 
+Tuple::Impl::get_value() const &
 {
   std::string* value = pvalue_.load(std::memory_order_acquire);
   if (value != nullptr) {
@@ -158,7 +158,7 @@ Tuple::Impl::get_value() const
 }
 
 void 
-Tuple::Impl::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
+Tuple::Impl::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&
 {
   key_.assign(key_ptr, key_length);
   pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
@@ -166,19 +166,20 @@ Tuple::Impl::set(const char* key_ptr, const std::size_t key_length, const char* 
 }
 
 void 
-Tuple::Impl::set_key(const char* key_ptr, const std::size_t key_length){
+Tuple::Impl::set_key(const char* key_ptr, const std::size_t key_length)&
+{
   key_.assign(key_ptr, key_length);
 }
 
 void
-Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length)
+Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length)&
 {
   pvalue_.load(std::memory_order_acquire)->assign(value_ptr, value_length);
   this->need_delete_pvalue_ = true;
 }
 
 void
-Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)
+Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&
 {
   *old_value = pvalue_.load(std::memory_order_acquire);
   pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
@@ -214,49 +215,49 @@ Tuple& Tuple::operator=(Tuple&& right)
 Tuple::~Tuple() {};
 
 std::string_view 
-Tuple::get_key()
+Tuple::get_key()&
 {
   return pimpl_.get()->get_key();
 }
 
 const std::string_view 
-Tuple::get_key() const
+Tuple::get_key() const&
 {
   return pimpl_.get()->get_key();
 }
 
 std::string_view 
-Tuple::get_value()
+Tuple::get_value()&
 {
   return pimpl_.get()->get_value();
 }
 
 const std::string_view 
-Tuple::get_value() const
+Tuple::get_value() const&
 {
   return pimpl_.get()->get_value();
 }
 
 void 
-Tuple::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
+Tuple::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&
 {
   pimpl_.get()->set(key_ptr, key_length, value_ptr, value_length);
 }
 
 void
-Tuple::set_key(const char* key_ptr, const std::size_t key_length)
+Tuple::set_key(const char* key_ptr, const std::size_t key_length)&
 {
   pimpl_.get()->set_key(key_ptr, key_length);
 }
 
 void
-Tuple::set_value(const char* value_ptr, const std::size_t value_length)
+Tuple::set_value(const char* value_ptr, const std::size_t value_length)&
 {
   pimpl_.get()->set_value(value_ptr, value_length);
 }
 
 void
-Tuple::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)
+Tuple::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&
 {
   pimpl_.get()->set_value(value_ptr, value_length, old_value);
 }

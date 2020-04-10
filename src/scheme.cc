@@ -72,7 +72,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 ReadSetObj* ThreadInfo::search_read_set(const char* const key_ptr, const std::size_t key_length)
 {
   for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
-    const std::string_view key_view = itr->get_rec_ptr()->get_tuple_ptr()->get_key();
+    const std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
     if (key_view.size() == key_length
         && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       return &(*itr);
@@ -94,13 +94,12 @@ WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr, const std::size_t
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     const Tuple* tuple;
     if (itr->get_op() == OP_TYPE::UPDATE) {
-      tuple = itr->get_tuple_ptr_to_local();
+      tuple = &itr->get_tuple_to_local();
     } else {
       // insert/delete
-      tuple = itr->get_tuple_ptr_to_db();
+      tuple = &itr->get_tuple_to_db();
     }
-    // Rvalue reference suppresses useless copying.
-    std::string_view&& key_view = tuple->get_key();
+    std::string_view key_view = tuple->get_key();
     if (key_view.size() == key_length
         && memcmp(key_view.data(), key_ptr, key_length) == 0) {
       return &(*itr);
@@ -123,10 +122,10 @@ void ThreadInfo::unlock_write_set()
 
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     Record* recptr = itr->get_rec_ptr();
-    expected = loadAcquire(recptr->get_tidw_ref());
+    expected = loadAcquire(recptr->get_tidw());
     desired = expected;
     desired.set_lock(false);
-    storeRelease(recptr->get_tidw_ref(), desired);
+    storeRelease(recptr->get_tidw(), desired);
   }
 }
 
@@ -135,10 +134,10 @@ void ThreadInfo::unlock_write_set(std::vector<WriteSetObj>::iterator begin, std:
   TidWord expected, desired;
 
   for (auto itr = begin; itr != end; ++itr) {
-    expected = loadAcquire(itr->get_rec_ptr()->get_tidw_ref());
+    expected = loadAcquire(itr->get_rec_ptr()->get_tidw());
     desired = expected;
     desired.set_lock(0);
-    storeRelease(itr->get_rec_ptr()->get_tidw_ref(), desired);
+    storeRelease(itr->get_rec_ptr()->get_tidw(), desired);
   }
 }
 
@@ -146,13 +145,13 @@ void ThreadInfo::wal(uint64_t ctid)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if (itr->get_op() == OP_TYPE::UPDATE) {
-      log_set_.emplace_back(ctid, itr->get_op(), itr->get_tuple_ptr_to_local());
+      log_set_.emplace_back(ctid, itr->get_op(), &itr->get_tuple_to_local());
     } else {
       // insert/delete
-      log_set_.emplace_back(ctid, itr->get_op(), itr->get_tuple_ptr_to_db());
+      log_set_.emplace_back(ctid, itr->get_op(), &itr->get_tuple_to_db());
     }
-    latest_log_header_.chkSum_ += log.log_set_.back().computeChkSum();
-    ++latest_log_header_.logRecNum_;
+    latest_log_header_.add_checksum(log_set_.back().compute_checksum());
+    latest_log_header_.inc_log_rec_num();
   }
   
   /**
@@ -163,23 +162,35 @@ void ThreadInfo::wal(uint64_t ctid)
    */
   if (log_set_.size() > KVS_LOG_GC_THRESHOLD) {
     // prepare write header
-    latest_log_header_.convertChkSumIntoComplementOnTwo();
+    latest_log_header_.compute_two_complement_of_checksum();
 
     // write header
     logfile_.write((void*)&latest_log_header_, sizeof(LogHeader));
 
     // write log record
     for (auto itr = log_set_.begin(); itr != log_set_.end(); ++itr) {
-      // write tx id, op(operation type), length of key, length of val
-      logfile_.write((void*)&(*itr), sizeof((*itr).tid_) + sizeof((*itr).op_) + sizeof((*itr).tuple_.len_key) + sizeof((*itr).tuple_.len_val));
+      // write tx id, op(operation type)
+      logfile_.write((void*)&(*itr), sizeof(itr->get_tid()) + sizeof(itr->get_op()));
 
-      // write key body
-      logfile_.write((void*)(*itr).tuple_.key.get(), (*itr).tuple_.len_key);
+      std::string_view key_view = itr->get_tuple()->get_key();
+      // write key_length
+      // key_view.size() returns constexpr.
+      std::size_t key_size = key_view.size();
+      logfile_.write((void*)&key_size, sizeof(key_size));
 
-      // write val body
-      if ((*itr).op_ != OP_TYPE::DELETE)
+      // write key_body
+      logfile_.write((void*)key_view.data(), key_size);
+
+      std::string_view value_view = itr->get_tuple()->get_value();
+      // write value_length
+      // value_view.size() returns constexpr.
+      std::size_t value_size = value_view.size();
+      logfile_.write((void*)value_view.data(), value_size);
+
+      // write val_body
+      if (itr->get_op() != OP_TYPE::DELETE)
         if ((*itr).tuple_.len_val != 0) {
-          logfile_.write((void*)(*itr).tuple_.val.get(), (*itr).tuple_.len_val);
+          logfile_.write((void*)value_view.data(), value_size);
         }
     }
   }
@@ -237,7 +248,7 @@ operator<(const WriteSetObj& right) const
 }
 
 void
-WriteSetObj::reset_tuple(const char* const val_ptr, const std::size_t val_length)
+WriteSetObj::reset_tuple(const char* const val_ptr, const std::size_t val_length) & 
 {
   if (itr->op_ == OP_TYPE::UPDATE) {
     itr->get_tuple_ptr_to_local()->set(val_ptr, val_length);

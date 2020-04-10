@@ -11,21 +11,21 @@ namespace kvs {
 std::string kLogDirectory;
 
 void
-LogHeader::init()
+LogHeader::init() &
 {
   checksum_ = 0;
   log_rec_num_ = 0;
 }
 
 void
-LogHeader::compute_two_complement_of_checksum()
+LogHeader::compute_two_complement_of_checksum() &
 {
   checksum_ ^= 0xffffffff;
   ++checksum_;
 }
 
 int
-LogRecord::compute_checksum()
+LogRecord::compute_checksum() &
 {
   // compute checksum
   // TidWord
