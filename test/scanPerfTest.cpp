@@ -3,6 +3,7 @@
 
 #include "kvs/interface.h"
 
+// kvs_charkey-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "tsc.hh"
@@ -44,10 +45,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
   ScanHandle handle{};
   Tuple* tuple{};
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -65,30 +62,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -100,10 +74,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 1K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -121,30 +91,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -156,10 +103,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 10K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -177,30 +120,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -212,10 +132,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 20K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -233,30 +149,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -268,10 +161,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 40K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -289,30 +178,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -324,10 +190,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 80K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -345,30 +207,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -380,10 +219,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 160K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -401,30 +236,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   /**
    * Prepare for next experiments.
@@ -436,10 +248,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
   cout << "Perform 100 records read_from_scan on a table with 320K records." << endl;
   {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> do refactoring of perf_counter
     PerfCounter perf_counter(true);
     perf_counter.start();
     start = rdtscp();
@@ -457,30 +265,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
     perf_counter.stop();
     cout << "Result : " << end - start << " [clocks]" << endl;
     perf_counter.print();
-<<<<<<< HEAD
   }
-=======
-  PerfCounter perf_counter;
-  perf_counter.start();
-  start = rdtscp();
-  ASSERT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  }
-  /**
-   * Make sure  the scan size.
-   */
-  ASSERT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
-  cout << "scannable_total_index_size : " << scan_size << endl;
-  ASSERT_EQ(Status::OK, commit(s));
-  end = rdtscp();
-  perf_counter.stop();
-  cout << "Result : " << end - start << " [clocks]" << endl;
-  perf_counter.print();
-=======
->>>>>>> do refactoring of perf_counter
-  }
->>>>>>> add a measurement mechanism with perf_counter
 
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -488,10 +273,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 } // namespace kvs_charkey::testing
 
 // perf_counter
-<<<<<<< HEAD
-<<<<<<< HEAD
-#include "include/perf_counter.h"
-=======
 #include <cstdio>
 #include <iostream>
 
@@ -509,10 +290,6 @@ TEST_F(ScanPerfTest, read_from_scan) {
 PerfCounter::PerfCounter() {
   init();
 }
->>>>>>> add a measurement mechanism with perf_counter
-=======
-#include "include/perf_counter.h"
->>>>>>> do refactoring of perf_counter
 
 void
 PerfCounter::init(int exc_kernel) {
@@ -558,13 +335,7 @@ PerfCounter::init(int exc_kernel) {
   memset(&pea, 0, sizeof(struct perf_event_attr));
   pea.type = PERF_TYPE_RAW;
   pea.size = sizeof(struct perf_event_attr);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
   //  pea.config = LLC_Reference;
->>>>>>> add a measurement mechanism with perf_counter
-=======
->>>>>>> do refactoring of perf_counter
   pea.config = L2_RQSTS_MISS;
   pea.disabled = 1;
   pea.exclude_kernel = exc_kernel;
@@ -624,64 +395,3 @@ PerfCounter::init(int exc_kernel) {
 
   ioctl(fd[0], PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP);
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-int
-PerfCounter::read()
-{
-  unsigned int i, j;
-  int sz;
-  char buf[SIZE*32];
-  struct read_format* rf = (struct read_format*) buf;
-
-  sz = ::read(fd[0], buf, sizeof(buf));
-
-  time_enabled = rf->time_enabled;
-  time_running = rf->time_running;
-  for (i = 0; i < rf->nr; i++) {
-    for (j = 0; j < SIZE; j++) {
-      if (rf->values[i].id == id[j]) {
-	val[j] = rf->values[i].value;
-	continue;
-      }
-    }
-  }
-  return sz;
-}
-
-void
-PerfCounter::start()
-{
-  ioctl(fd[0], PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP);
-}
-
-void
-PerfCounter::stop() {
-  ioctl(fd[0], PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
-  read();
-}
-
-void
-PerfCounter::print(char const* title) {
-    std::cout << "==== " << title << " ====" << std::endl;
-    if (time_enabled == time_running) {
-        std::cout << "time:         " << time_enabled << std::endl;
-    } else {
-        std::cout << "time_enabled: " << time_enabled << std::endl;
-        std::cout << "time_running: " << time_running << std::endl;
-    }
-    std::cout << "cpu_cycles:   " << val[0] << std::endl;
-    std::cout << "instructions: " << val[1] << std::endl;
-    std::cout << "counter_2:    " << val[2] << std::endl;
-    std::cout << "counter_3:    " << val[3] << std::endl;
-    std::cout << "counter_4:    " << val[4] << std::endl;
-    std::cout << "counter_5:    " << val[5] << std::endl;
-    std::cout << "counter_6:    " << val[6] << std::endl;
-    std::cout << "counter_7:    " << val[7] << std::endl;
-    std::cout << "=====================" << std::endl;
-}
->>>>>>> add a measurement mechanism with perf_counter
-=======
->>>>>>> do refactoring of perf_counter
