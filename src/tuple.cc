@@ -245,7 +245,7 @@ Tuple::get_key()&
   return pimpl_.get()->get_key();
 }
 
-const std::string_view 
+std::string_view 
 Tuple::get_key() const&
 {
   return pimpl_.get()->get_key();
@@ -257,7 +257,7 @@ Tuple::get_value()&
   return pimpl_.get()->get_value();
 }
 
-const std::string_view 
+std::string_view 
 Tuple::get_value() const&
 {
   return pimpl_.get()->get_value();

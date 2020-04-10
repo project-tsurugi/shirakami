@@ -175,7 +175,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
     gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
     for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
       if ((*itr).type == OP_TYPE::SEARCH) {
-        Tuple *tuple;
+        Tuple* tuple;
         Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);
       } else if ((*itr).type == OP_TYPE::UPDATE) {
         Status op_rs = update(token, storage, (*itr).key.get(), (*itr).len_key, (*itr).val.get(), (*itr).len_val);

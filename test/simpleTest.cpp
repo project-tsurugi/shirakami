@@ -100,13 +100,13 @@ TEST_F(SimpleTest, update) {
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple;
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), tuple->len_val), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
             update(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -145,7 +145,7 @@ TEST_F(SimpleTest, upsert) {
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -189,18 +189,21 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(Status::OK,
             insert(s, st, k6.data(), k6.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k4.data(),
                                  k4.size(), false, records));
   uint64_t ctr(0);
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+    if (ctr == 0) {
+      cout << itr->get_key().size() << endl;
+      cout << itr->get_key().data() << endl;
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+    }
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -210,9 +213,9 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -222,11 +225,11 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -236,9 +239,9 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -248,15 +251,15 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 3)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 4)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -266,9 +269,9 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -277,7 +280,7 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 1);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0) //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+    if (ctr == 0) //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -287,11 +290,11 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -301,15 +304,15 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 3)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 4)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -319,15 +322,15 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->key.get(), nullptr, 0), 0);
+      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
     else if (ctr == 1)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
     else if (ctr == 2)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
     else if (ctr == 3)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
     else if (ctr == 4)
-      ASSERT_EQ(memcmp((*itr)->key.get(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -353,7 +356,7 @@ TEST_F(SimpleTest, scan_with_null_char) {
   ASSERT_EQ(Status::OK,
             upsert(s, st, k4.data(), k4.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k2.data(), k2.size(), false, k5.data(),
                                  k5.size(), true, records));
   EXPECT_EQ(2, records.size());
@@ -370,12 +373,12 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK,
             scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   ASSERT_EQ(Status::OK, commit(s));
   for (auto itr = records.begin(); itr != records.end(); ++itr)
-    cout << std::string((*itr)->key.get(), (*itr)->len_key) << endl;
+    cout << std::string((*itr)->get_key().data(), (*itr)->get_key().size()) << endl;
   records.clear();
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK,
@@ -409,12 +412,12 @@ TEST_F(SimpleTest, insert_delete_with_16chars) {
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
                                  k.size(), false, records));
   EXPECT_EQ(1, records.size());
   for (auto* t : records) {
-    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -428,12 +431,12 @@ TEST_F(SimpleTest, insert_delete_with_10chars) {
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
                                  k.size(), false, records));
   EXPECT_EQ(1, records.size());
   for (auto* t : records) {
-    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -466,7 +469,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       Tuple* t{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
       ASSERT_NE(nullptr, t);
-      v = *reinterpret_cast<std::int64_t*>(t->val.get());
+      v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data()));
       v++;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       ASSERT_EQ(Status::OK,
@@ -484,7 +487,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       Tuple* t{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
       ASSERT_NE(nullptr, t);
-      v = *reinterpret_cast<std::int64_t*>(t->val.get());
+      v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data()));
       EXPECT_EQ(10, v);
       ASSERT_EQ(Status::OK, commit(s));
       ASSERT_EQ(Status::OK, leave(s));
@@ -523,7 +526,7 @@ TEST_F(SimpleTest, read_local_write) {
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   Tuple* tuple{};
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -539,11 +542,11 @@ TEST_F(SimpleTest, read_write_read) {
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK,
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -564,7 +567,7 @@ TEST_F(SimpleTest, double_write) {
   ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE,
             upsert(s, st, k.data(), k.size(), v3.data(), v3.size()));
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v3.data(), v3.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v3.data(), v3.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -579,9 +582,9 @@ TEST_F(SimpleTest, double_read) {
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k.data(), k.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), v.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -592,11 +595,11 @@ TEST_F(SimpleTest, all_deletes) {
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  std::vector<Tuple*> records{};
+  std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK,
             scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   for (auto* t : records) {
-    ASSERT_EQ(Status::OK, delete_record(s, st, t->key.get(), t->len_key));
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
   ASSERT_EQ(Status::OK, commit(s));
   forced_gc_all_records();
@@ -660,14 +663,14 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, st, 3, &tuple));
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(), k4.size(), false, handle));
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  EXPECT_EQ(memcmp(tuple->key.get(), k.data(), k.size()), 0);
-  EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  EXPECT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
-  EXPECT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  EXPECT_EQ(memcmp(tuple->key.get(), k3.data(), k3.size()), 0);
-  EXPECT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_key().data(), k3.data(), k3.size()), 0);
+  EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
   EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
 
@@ -729,19 +732,19 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, open_scan(s, st, k1.data(), k1.size(), false, k2.data(), k2.size(), false, handle));
   ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  ASSERT_EQ(memcmp(tuple->key.get(), k1.data(), k1.size()), 0);
-  ASSERT_EQ(memcmp(tuple->val.get(), v1.data(), v1.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
 
   // record exists
   ASSERT_EQ(Status::OK, search_key(s, st, k4.data(), k4.size(), &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
 
   // record not exist
   ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k3.data(), k3.size(), &tuple));
 
   ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
-  ASSERT_EQ(memcmp(tuple->key.get(), k2.data(), k2.size()), 0);
-  ASSERT_EQ(memcmp(tuple->val.get(), v2.data(), v2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
 

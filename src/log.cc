@@ -104,13 +104,17 @@ single_recovery_from_log()
         // read key_length
         if (sizeof(std::size_t) != logfile.read((void*)&key_length, sizeof(std::size_t))) break;
         // read key_body
-        key_ptr = std::make_unique<char[]>(key_length);
-        if (key_length != logfile.read((void*)key_ptr.get(), key_length)) break;
+        if (key_length > 0) {
+          key_ptr = std::make_unique<char[]>(key_length);
+          if (key_length != logfile.read((void*)key_ptr.get(), key_length)) break;
+        }
         // read value_length
         if (sizeof(std::size_t) != logfile.read((void*)&value_length, sizeof(std::size_t))) break;
         // read value_body
-        value_ptr = std::make_unique<char[]>(value_length);
-        if (value_length != logfile.read((void*)value_ptr.get(), value_length)) break;
+        if (value_length > 0) {
+          value_ptr = std::make_unique<char[]>(value_length);
+          if (value_length != logfile.read((void*)value_ptr.get(), value_length)) break;
+        }
 
         
         logheader.set_checksum(logheader.get_checksum() + log.compute_checksum());

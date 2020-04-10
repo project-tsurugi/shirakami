@@ -22,9 +22,9 @@ public:
   ~Tuple();
 
   std::string_view get_key()&;
-  const std::string_view get_key() const&;
+  std::string_view get_key() const&;
   std::string_view get_value()&;
-  const std::string_view get_value() const&;
+  std::string_view get_value() const&;
 
   void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&;
 

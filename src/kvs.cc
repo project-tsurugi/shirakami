@@ -123,7 +123,7 @@ init(std::string log_directory_path)
   /**
    * If it already exists log files, it recoveries from those.
    */
-  single_recovery_from_log();
+  //single_recovery_from_log();
 
   init_kThreadTable();
   invoke_core_thread();

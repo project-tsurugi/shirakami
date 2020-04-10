@@ -372,12 +372,17 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (record == nullptr || checktid.get_absent() == true) {
-    // The second condition checks 
-    // whether the record you want to read should not be read by parallel insert / delete.
+  if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
+  } else {
+    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+    if (checktid.get_absent() == true) {
+      // The second condition checks 
+      // whether the record you want to read should not be read by parallel insert / delete.
+      *tuple = nullptr;
+      return Status::WARN_NOT_FOUND;
+    }
   }
 
   ReadSetObj rsob(record);
@@ -402,11 +407,15 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (record == nullptr || checktid.get_absent() == true) {
-    // The second condition checks 
-    // whether the record you want to read should not be read by parallel insert / delete.
+  if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
+  } else {
+    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+    if (checktid.get_absent() == true) {
+      // The second condition checks 
+      // whether the record you want to read should not be read by parallel insert / delete.
+      return Status::WARN_NOT_FOUND;
+    }
   }
 
   ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
@@ -444,13 +453,18 @@ delete_record(Token token, Storage storage, const char* const key, const std::si
   Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
+
   Record* record = MTDB.get_value(key, len_key);
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (record == nullptr || checktid.get_absent() == true) {
-    // The second condition checks 
-    // whether the record you want to read should not be read by parallel insert / delete.
+  if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
-  };
+  } else {
+    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+    if (checktid.get_absent() == true) {
+      // The second condition checks 
+      // whether the record you want to read should not be read by parallel insert / delete.
+      return Status::WARN_NOT_FOUND;
+    }
+  }
 
   ti->write_set.emplace_back(OP_TYPE::DELETE, record);
   return check;

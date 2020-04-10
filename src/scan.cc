@@ -143,7 +143,7 @@ scannable_total_index_size(Token token, Storage storage, ScanHandle& handle, std
 }
 
 Status
-read_from_scan(Token token, Storage storage, const ScanHandle handle, const Tuple** const tuple)
+read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -187,10 +187,10 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, const Tupl
       return Status::WARN_ALREADY_DELETE;
     }
     if (inws->get_op() == OP_TYPE::UPDATE) {
-      *tuple = &inws->get_tuple_to_local();
+      *tuple = const_cast<Tuple*>(&inws->get_tuple_to_local());
     } else {
       // insert/delete
-      *tuple = &inws->get_tuple_to_db();
+      *tuple = const_cast<Tuple*>(&inws->get_tuple_to_db());
     }
     ++scan_index;
     return Status::WARN_READ_FROM_OWN_OPERATION;
@@ -198,7 +198,7 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, const Tupl
 
   const ReadSetObj* inrs = ti->search_read_set(key_view.data(), key_view.size());
   if (inrs != nullptr) {
-    *tuple = &inrs->get_rec_read().get_tuple();
+    *tuple = const_cast<Tuple*>(&inrs->get_rec_read().get_tuple());
     ++scan_index;
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
