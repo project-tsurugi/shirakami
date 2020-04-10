@@ -99,7 +99,7 @@ public:
     obj_ = 0;
   }
 
-  void set_tidword(const uint64_t obj) & {
+  void set_obj(const uint64_t obj) & {
     this->obj_ = obj;
   }
 

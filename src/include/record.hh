@@ -41,6 +41,10 @@ public:
     return tuple_;
   }
 
+  void set_tidw(TidWord tidw) & {
+    tidw_.set_obj(tidw.get_obj());
+  }
+
 private:
   TidWord tidw_;
   Tuple tuple_;

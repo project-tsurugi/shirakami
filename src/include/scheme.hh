@@ -349,26 +349,34 @@ class ThreadInfo {
   void wal(uint64_t ctid);
 
   /**
+   * CAS
+   */
+
+  bool cas_visible(bool& expected, bool& desired) & {
+    return visible_.compare_exchange_strong(expected, desired, std::memory_order_acq_rel);
+  }
+
+  /**
    * Getter
    */
 
-  Token get_token() const {
+  Token get_token() const & {
     return token_;
   }
 
-  Epoch get_epoch() const {
+  Epoch get_epoch() const & {
     return epoch_.load(std::memory_order_acquire);
   }
 
-  TidWord get_mrctid() const {
+  TidWord get_mrctid() const & {
     return mrctid_;
   }
 
-  bool get_visible() const {
+  bool get_visible() const & {
     return visible_.load(std::memory_order_acquire);
   }
 
-  bool get_txbegan() const {
+  bool get_txbegan() const & {
     return txbegan_;
   }
 
@@ -376,23 +384,23 @@ class ThreadInfo {
    * Accessor
    */
 
-  void set_token(Token token) {
+  void set_token(Token token) & {
     token_ = token;
   }
 
-  void set_epoch(Epoch epoch) {
+  void set_epoch(Epoch epoch) & {
     epoch_.store(epoch, std::memory_order_release);
   }
 
-  void set_mrctid(TidWord tid) {
+  void set_mrctid(TidWord tid) & {
     mrctid_ = tid;
   }
 
-  void set_visible(bool visible) {
+  void set_visible(bool visible) & {
     visible_.store(visible, std::memory_order_release);
   }
   
-  void set_txbegan(bool txbegan) {
+  void set_txbegan(bool txbegan) & {
     txbegan_ = txbegan;
   }
 

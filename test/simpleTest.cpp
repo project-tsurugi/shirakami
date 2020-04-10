@@ -36,9 +36,9 @@ TEST_F(SimpleTest, project_root) {
 TEST_F(SimpleTest, tidword) {
   // check the alignment of union
   TidWord tidword;
-  tidword.epoch = 1;
-  tidword.lock = 1;
-  uint64_t res = tidword.obj;
+  tidword.set_epoch(1);
+  tidword.set_lock(true);
+  uint64_t res = tidword.get_obj();
   //cout << std::bitset<64>(res) << endl;
 }
 
@@ -74,14 +74,14 @@ TEST_F(SimpleTest, insert) {
     ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
-    ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
+    ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple;
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
-  ASSERT_EQ(memcmp(tuple->val.get(), v.data(), 3), 0);
+  ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }

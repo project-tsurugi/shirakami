@@ -122,7 +122,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
            */
           std::mutex& mutex_for_gclist = kMutexGarbageRecords[ti->gc_container_index_];
           mutex_for_gclist.lock();
-          ti->gc_value_container_->emplace_back(recptr);
+          ti->gc_record_container_->emplace_back(recptr);
           mutex_for_gclist.unlock();
 
           storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
@@ -202,17 +202,17 @@ commit(Token token)
   for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
     // after this, update/delete
-    expected.obj = loadAcquire(itr->get_tuple_ptr_to_db()->tidw.obj);
+    expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
     for (;;) {
-      if (expected.lock) {
-        expected.obj = loadAcquire(itr->get_tuple_ptr_to_db()->tidw.obj);
+      if (expected.get_lock()) {
+        expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
       } else {
         desired = expected;
-        desired.lock = 1;
-        if (__atomic_compare_exchange_n(&(itr->get_tuple_ptr_to_db()->tidw.obj), &(expected.obj), desired.obj, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
+        desired.set_lock(true);
+        if (__atomic_compare_exchange_n(&(itr->get_rec_ptr()->get_tidw().get_obj()), &(expected.get_obj()), desired.get_obj(), false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
       }
     }
-    if (itr->op == OP_TYPE::UPDATE && itr->get_tuple_ptr_to_db()->tidw.absent == true) {
+    if (itr->get_op() == OP_TYPE::UPDATE && itr->get_rec_ptr()->get_tidw().get_absent() == true) {
       ti->unlock_write_set(ti->write_set.begin(), itr);
       abort(token);
       return Status::ERR_WRITE_TO_DELETED_RECORD;
@@ -224,17 +224,17 @@ commit(Token token)
 
   // Serialization point
   asm volatile("" ::: "memory");
-  storeRelease(ti->epoch, load_acquire_ge());
+  ti->set_epoch(load_acquire_ge());
   asm volatile("" ::: "memory");
 
   // Phase 3: Validation
   TidWord check;
   for (auto itr = ti->read_set.begin(); itr != ti->read_set.end(); itr++) {
-    Record* rec_ptr = itr->rec_ptr;
-    check.obj = loadAcquire(rec_ptr->tidw.obj);
-    if (((*itr).rec_read.tidw.epoch != check.epoch || (*itr).rec_read.tidw.tid != check.tid)
-        || (check.absent == 1) // check whether it was deleted.
-        || (check.lock && (ti->search_write_set((*itr).rec_ptr) == nullptr))) {
+    const Record* rec_ptr = itr->get_rec_ptr();
+    check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
+    if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() || itr->get_rec_read().get_tidw().get_tid() != check.get_tid())
+        || (check.get_absent() == true) // check whether it was deleted.
+        || (check.get_lock() && (ti->search_write_set(itr->get_rec_ptr()) == nullptr))) {
       ti->unlock_write_set();
       abort(token);
       return Status::ERR_VALIDATION;
@@ -248,7 +248,7 @@ commit(Token token)
 
   write_phase(ti, max_rset, max_wset);
 
-  ti->get_txbegan() = false;
+  ti->set_txbegan(false);
   return Status::OK;
 }
 
@@ -259,10 +259,10 @@ static Status
 decide_token(Token& token)
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if (itr->visible.load(std::memory_order_acquire) == false) {
+    if (itr->get_visible() == false) {
       bool expected(false);
       bool desired(true);
-      if (itr->visible.compare_exchange_strong(expected, desired, std::memory_order_acq_rel)) {
+      if (itr->cas_visible(expected, desired)) {
         token = static_cast<void*>(&(*itr));
         break;
       }
@@ -285,8 +285,8 @@ leave(Token token)
 {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if (&(*itr) == static_cast<ThreadInfo*>(token)) {
-      if (itr->visible.load(std::memory_order_acquire) == true) {
-        itr->visible.store(false, std::memory_order_release);
+      if (itr->get_visible() == true) {
+        itr->set_visible(false);
         return Status::OK;
       } else {
         return Status::WARN_NOT_IN_A_SESSION;
@@ -301,27 +301,26 @@ read_record(Record& res, const Record* const dest)
 {
   TidWord f_check, s_check; // first_check, second_check for occ
 
-  f_check.obj = loadAcquire(dest->tidw.obj);
+  f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
   for (;;) {
-    while (f_check.lock)
-      f_check.obj = loadAcquire(dest->tidw.obj);
+    while (f_check.get_lock())
+      f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
-    if (f_check.absent == true) {
+    if (f_check.get_absent()) {
       return Status::WARN_CONCURRENT_DELETE;
       // other thread is inserting this record concurrently,
       // but it is't committed yet.
     }
 
+    res.get_tuple() = dest->get_tuple(); // execute copy assign.
 
-    res.tuple = dest->tuple; // execute copy assign.
-
-    s_check.obj = loadAcquire(dest->tidw.obj);
+    s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
     if (f_check == s_check) break;
     f_check = s_check;
   }
 
-  res.tidw = f_check;
+  res.set_tidw(f_check);
   return Status::OK;
 }
 
@@ -333,7 +332,7 @@ delete_all_records()
   while (Status::OK != enter(s)) _mm_pause();
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  std::vector<Record*> scan_res;
+  std::vector<const Record*> scan_res;
   MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
 
   if (scan_res.size() == 0) {
@@ -341,7 +340,8 @@ delete_all_records()
   }
 
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    delete_record(s, st, (*itr)->tuple.key.get(), (*itr)->tuple.len_key);
+    std::string_view key_view = (*itr)->get_tuple().get_key();
+    delete_record(s, st, key_view.data(), key_view.size());
     Status result = commit(s);
     if (result != Status::OK) return result;
   }
@@ -358,21 +358,22 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    if (inws->op == OP_TYPE::DELETE) {
+    if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
     }
-    *tuple = &inws->tuple;
+    *tuple = &inws->get_tuple(inws->get_op());
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   ReadSetObj* inrs = ti->search_read_set(key, len_key);
   if (inrs != nullptr) {
-    *tuple = &inrs->rec_read.tuple;
+    *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (record == nullptr || checktid.get_absent() == true) {
     // The second condition checks 
     // whether the record you want to read should not be read by parallel insert / delete.
     *tuple = nullptr;
@@ -380,10 +381,10 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
   }
 
   ReadSetObj rsob(record);
-  Status rr = read_record(rsob.rec_read, record);
+  Status rr = read_record(rsob.get_rec_read(), record);
   if (rr == Status::OK) {
     ti->read_set.emplace_back(std::move(rsob));
-    *tuple = &ti->read_set.back().rec_read.tuple;
+    *tuple = &ti->read_set.back().get_rec_read().get_tuple();
   }
   return rr;
 }
@@ -396,12 +397,13 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset(val, len_val); 
+    inws->reset_tuple_value(val, len_val); 
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (record == nullptr || checktid.get_absent() == true) {
     // The second condition checks 
     // whether the record you want to read should not be read by parallel insert / delete.
     return Status::WARN_NOT_FOUND;
@@ -420,7 +422,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset(val, len_val); 
+    inws->reset_tuple_value(val, len_val); 
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
@@ -430,7 +432,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
 
   Record* record = new Record(key, len_key, val, len_val);
   insert_record_to_masstree(key, len_key, record);
-  ti->write_set.emplace_back(record, OP_TYPE::INSERT);
+  ti->write_set.emplace_back(OP_TYPE::INSERT, record);
   return Status::OK;
 }
 
@@ -443,13 +445,14 @@ delete_record(Token token, Storage storage, const char* const key, const std::si
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   Record* record = MTDB.get_value(key, len_key);
-  if (record == nullptr || loadAcquire(record->tidw.obj).absent == true) {
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (record == nullptr || checktid.get_absent() == true) {
     // The second condition checks 
     // whether the record you want to read should not be read by parallel insert / delete.
     return Status::WARN_NOT_FOUND;
   };
 
-  ti->write_set.emplace_back(key, len_key, OP_TYPE::DELETE, record);
+  ti->write_set.emplace_back(OP_TYPE::DELETE, record);
   return check;
 }
 
@@ -467,7 +470,7 @@ upsert(Token token, Storage storage, const char* const key, const std::size_t le
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset(val, len_val); 
+    inws->reset_tuple_value(val, len_val); 
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
@@ -475,7 +478,7 @@ upsert(Token token, Storage storage, const char* const key, const std::size_t le
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
     insert_record_to_masstree(key, len_key, record);
-    ti->write_set.emplace_back(record, OP_TYPE::INSERT);
+    ti->write_set.emplace_back(OP_TYPE::INSERT, record);
   }
   else {
     ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);

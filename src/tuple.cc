@@ -13,25 +13,24 @@ namespace kvs{
 
 class Tuple::Impl {
   public:
-    Impl() : {
+    Impl() : need_delete_pvalue_(true) {
       key_.clear();
       pvalue_.store(new std::string(), std::memory_order_release);
       pvalue_.load(std::memory_order_acquire)->clear();
-      need_delete_pvalue_(true);
     }
 
-    Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&;
+    Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
 
-    Impl(const Impl& right)&;
-    Impl(Impl&& right)&;
+    Impl(const Impl& right);
+    Impl(Impl&& right);
 
     /**
      * @brief copy assign operator
      * @pre this is called by read_record function at xact.cc only .
      */
-    Impl& operator=(const Impl& right);
+    Impl& operator=(const Impl& right)&;
 
-    Impl& operator=(Impl&& right);
+    Impl& operator=(Impl&& right)&;
 
     ~Impl() {
       if (this->need_delete_pvalue_) {
@@ -65,14 +64,14 @@ class Tuple::Impl {
     bool need_delete_pvalue_;
 };
 
-Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)  &
+Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
 {
   key_.assign(key_ptr, key_length);
   need_delete_pvalue_ = true;
   pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
 }
 
-Tuple::Impl::Impl(const Impl& right)&
+Tuple::Impl::Impl(const Impl& right)
 {
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
@@ -84,7 +83,7 @@ Tuple::Impl::Impl(const Impl& right)&
   }
 }
 
-Tuple::Impl::Impl(Impl&& right)&
+Tuple::Impl::Impl(Impl&& right)
 {
   this->key_ = std::move(right.key_);
   if (right.need_delete_pvalue_) {
@@ -169,7 +168,7 @@ Tuple::Impl::get_value() const &
 }
 
 void
-Tuple::Impl::reset()
+Tuple::Impl::reset()&
 {
   if (need_delete_pvalue_) delete pvalue_.load(std::memory_order_acquire);
 }
@@ -227,13 +226,13 @@ Tuple::Tuple(Tuple&& right)
   pimpl_ = std::move(right.pimpl_);
 }
 
-Tuple& Tuple::operator=(const Tuple& right)
+Tuple& Tuple::operator=(const Tuple& right)&
 {
   this->pimpl_.reset();
   this->pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
 }
 
-Tuple& Tuple::operator=(Tuple&& right)
+Tuple& Tuple::operator=(Tuple&& right)&
 {
   this->pimpl_ = std::move(right.pimpl_);
 }

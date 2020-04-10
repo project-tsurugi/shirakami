@@ -17,8 +17,8 @@ public:
   Tuple (const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
   Tuple(const Tuple& right);
   Tuple(Tuple&& right);
-  Tuple& operator=(const Tuple& right);
-  Tuple& operator=(Tuple&& right);
+  Tuple& operator=(const Tuple& right)&;
+  Tuple& operator=(Tuple&& right)&;
   ~Tuple();
 
   std::string_view get_key()&;
