@@ -61,15 +61,12 @@ scan_key(Token token, Storage storage,
     // Because in herbrand semantics, the read reads last update even if the update is own.
 
     ReadSetObj rsob(const_cast<Record*>(*itr));
+    NNN;
     Status rr = read_record(rsob.get_rec_read(), const_cast<Record*>(*itr));
-    cout << rsob.get_rec_read().get_tuple().get_key() << endl;
-    cout << rsob.get_rec_read().get_tuple().get_key().size() << endl;
     if (rr != Status::OK) {
       return rr;
     }
-    NNN;
     ti->read_set.emplace_back(std::move(rsob));
-    NNN;
     result.emplace_back(&ti->read_set.back().get_rec_read().get_tuple());
   }
 

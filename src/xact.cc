@@ -313,6 +313,7 @@ read_record(Record& res, const Record* const dest)
       // but it is't committed yet.
     }
 
+    NNN;
     res.get_tuple() = dest->get_tuple(); // execute copy assign.
 
     s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));

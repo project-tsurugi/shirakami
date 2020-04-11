@@ -54,14 +54,13 @@ class WriteSetObj {
 
     WriteSetObj(const WriteSetObj& right) = delete;
     // for std::sort
-    WriteSetObj(WriteSetObj&& right) : rec_ptr_(right.rec_ptr_), op_(right.op_), tuple_(std::move(right.tuple_)) {
-      NNN;
+    WriteSetObj(WriteSetObj&& right) : rec_ptr_(right.rec_ptr_), op_(right.op_), tuple_() {
+      tuple_ = std::move(right.tuple_);
     }
 
     WriteSetObj& operator=(const WriteSetObj& right) = delete;
     // for std::sort
     WriteSetObj& operator=(WriteSetObj&& right) {
-      NNN;
       rec_ptr_ = right.rec_ptr_;
       op_ = right.op_;
       tuple_ = std::move(right.tuple_);
@@ -75,6 +74,18 @@ class WriteSetObj {
 
     const Record* get_rec_ptr() const & {
       return this->rec_ptr_;
+    }
+
+    /**
+     * @brief get tuple ptr appropriately by operation type.
+     * @return Tuple& 
+     */
+    Tuple& get_tuple() & {
+      return get_tuple(op_);
+    }
+
+    const Tuple& get_tuple() const & {
+      return get_tuple(op_);
     }
 
     /**
@@ -167,14 +178,12 @@ public:
 
   ReadSetObj(const ReadSetObj& right) = delete;
   ReadSetObj(ReadSetObj&& right) {
-    NNN;
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }
 
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
   ReadSetObj& operator=(ReadSetObj&& right) {
-    NNN;
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }
@@ -282,6 +291,13 @@ class ThreadInfo {
   void clean_up_scan_caches();
 
   /**
+   * @brief for debug.
+   */
+  void display_read_set();
+
+  void display_write_set();
+
+  /**
    * @brief check whether it already executed update or insert operation.
    * @param [in] key the key of record.
    * @param [in] len_key the key length of records.
@@ -378,23 +394,35 @@ class ThreadInfo {
    * Getter
    */
 
-  Token get_token() const & {
+  Token& get_token() & {
     return token_;
   }
 
-  Epoch get_epoch() const & {
+  const Token& get_token() const & {
+    return token_;
+  }
+
+  const Epoch get_epoch() const & {
     return epoch_.load(std::memory_order_acquire);
   }
 
-  TidWord get_mrctid() const & {
+  TidWord& get_mrctid() & {
     return mrctid_;
   }
 
-  bool get_visible() const & {
+  const TidWord& get_mrctid() const & {
+    return mrctid_;
+  }
+
+  const bool get_visible() const & {
     return visible_.load(std::memory_order_acquire);
   }
 
-  bool get_txbegan() const & {
+  bool& get_txbegan() & {
+    return txbegan_;
+  }
+
+  const bool& get_txbegan() const & {
     return txbegan_;
   }
 

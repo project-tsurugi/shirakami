@@ -5,7 +5,7 @@
 
 // kvs_charkey-impl interface library
 #include "compiler.hh"
-#include "header.hh"
+#include "debug.hh"
 #include "scheme.hh"
 #include "xact.hh"
 
@@ -192,6 +192,8 @@ TEST_F(SimpleTest, scan) {
   std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k4.data(),
                                  k4.size(), false, records));
+  ThreadInfo* ti = static_cast<ThreadInfo*>(s);
+  ti->display_read_set();
   uint64_t ctr(0);
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {

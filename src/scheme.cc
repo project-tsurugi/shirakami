@@ -14,14 +14,16 @@ using std::endl;
 
 namespace kvs{
 
-void ThreadInfo::clean_up_ops_set()
+void 
+ThreadInfo::clean_up_ops_set()
 {
   read_set.clear();
   write_set.clear();
   opr_set.clear();
 }
 
-void ThreadInfo::clean_up_scan_caches()
+void
+ThreadInfo::clean_up_scan_caches()
 {
   scan_cache_.clear();
   scan_cache_itr_.clear();
@@ -30,7 +32,56 @@ void ThreadInfo::clean_up_scan_caches()
   r_exclusive_.clear();
 }
  
-Status ThreadInfo::check_delete_after_write(const char* const key_ptr, const std::size_t key_length)
+void
+ThreadInfo::display_read_set()
+{
+  cout << "==========" << endl;
+  cout << "start : ThreadInfo::display_read_set()" << endl;
+  std::size_t ctr(1);
+  for (auto itr = read_set.begin(); itr != read_set.end(); ++itr) {
+    cout << "Element #" << ctr << " of read set." << endl;
+    cout << "rec_ptr_ : " << itr->get_rec_ptr() << endl;
+    Record& record = itr->get_rec_read();
+    Tuple& tuple = record.get_tuple();
+    cout << "tidw_ :vv" << record.get_tidw() << endl;
+    std::string_view key_view, value_view;
+    key_view = tuple.get_key();
+    value_view = tuple.get_value();
+    cout << "key : " << key_view << endl;
+    cout << "key_size : " << key_view.size() << endl;
+    cout << "value : " << value_view << endl;
+    cout << "value_size : " << value_view.size() << endl;
+    cout << "----------" << endl;
+    ++ctr;
+  }
+  cout << "==========" << endl;
+}
+
+void
+ThreadInfo::display_write_set()
+{
+  cout << "==========" << endl;
+  cout << "start : ThreadInfo::display_write_set()" << endl;
+  std::size_t ctr(1);
+  for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    cout << "Element #" << ctr << " of write set." << endl;
+    cout << "rec_ptr_ : " << itr->get_rec_ptr() << endl;
+    cout << "op_ : " << itr->get_op() << endl;
+    std::string_view key_view, value_view;
+    key_view = itr->get_tuple().get_key();
+    value_view = itr->get_tuple().get_value();
+    cout << "key : " << key_view << endl;
+    cout << "key_size : " << key_view.size() << endl;
+    cout << "value : " << value_view << endl;
+    cout << "value_size : " << value_view.size() << endl;
+    cout << "----------" << endl;
+    ++ctr;
+  }
+  cout << "==========" << endl;
+}
+
+Status
+ThreadInfo::check_delete_after_write(const char* const key_ptr, const std::size_t key_length)
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
@@ -44,7 +95,8 @@ Status ThreadInfo::check_delete_after_write(const char* const key_ptr, const std
   return Status::OK;
 }
 
-void ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
+void
+ThreadInfo::remove_inserted_records_of_write_set_from_masstree()
 {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) {

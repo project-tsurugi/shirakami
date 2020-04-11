@@ -123,6 +123,14 @@ public:
     this->epoch_ = epoch;
   }
 
+  void display();
+
 private:
 };
+
+  inline std::ostream& operator<<(std::ostream& out, TidWord tid) {
+    tid.display();
+    return out;
+  }
+
 } // namespace kvs

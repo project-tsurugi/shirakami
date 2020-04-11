@@ -15,7 +15,6 @@ namespace kvs{
 class Tuple::Impl {
   public:
     Impl() : need_delete_pvalue_(false) {
-      NNN;
       key_.clear();
     }
 
@@ -33,6 +32,7 @@ class Tuple::Impl {
     Impl& operator=(Impl&& right);
 
     ~Impl() {
+      NNN;
       if (this->need_delete_pvalue_) {
         delete pvalue_.load(std::memory_order_acquire);
       }
@@ -73,8 +73,10 @@ Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char*
 
 Tuple::Impl::Impl(const Impl& right)
 {
+  NNN;
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
+    NNN;
     this->need_delete_pvalue_ = true;
     this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
   } else {
@@ -115,7 +117,6 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
 
 Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 {
-  NNN;
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
@@ -212,7 +213,9 @@ Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, st
   this->need_delete_pvalue_ = true;
 }
 
-Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
+Tuple::Tuple() : pimpl_(std::make_unique<Impl>())
+{
+}
 
 Tuple::Tuple (const char* key_ptr, const std::size_t key_length, const char* val_ptr, const std::size_t val_length) : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {}
 
@@ -230,13 +233,14 @@ Tuple::Tuple(Tuple&& right)
 
 Tuple& Tuple::operator=(const Tuple& right)&
 {
+  NNN;
   this->pimpl_.reset();
+  NNN;
   this->pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
 }
 
 Tuple& Tuple::operator=(Tuple&& right)&
 {
-  NNN;
   *this->pimpl_.get() = std::move(*right.pimpl_.get());
 }
 
