@@ -29,6 +29,7 @@ scan_key(Token token, Storage storage,
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
+  auto rset_init_size = ti->read_set.size();
 
   std::vector<const Record*> scan_res;
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res);
@@ -60,16 +61,17 @@ scan_key(Token token, Storage storage,
     // don't execute re-read (read_record function).
     // Because in herbrand semantics, the read reads last update even if the update is own.
 
-    NNN;
     ti->read_set.emplace_back(const_cast<Record*>(*itr));
-    NNN;
     Status rr = read_record(ti->read_set.back().get_rec_read(), const_cast<Record*>(*itr));
     if (rr != Status::OK) {
       return rr;
     }
-    NNN;
-    result.emplace_back(&ti->read_set.back().get_rec_read().get_tuple());
-    NNN;
+  }
+
+  if (rset_init_size != ti->read_set.size()) {
+    for (auto itr = ti->read_set.begin() + rset_init_size; itr != ti->read_set.end(); ++itr) {
+      result.emplace_back(&itr->get_rec_read().get_tuple());
+    }
   }
 
   return Status::OK;

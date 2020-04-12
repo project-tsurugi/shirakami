@@ -32,11 +32,9 @@ class Tuple::Impl {
     Impl& operator=(Impl&& right);
 
     ~Impl() {
-      NNN;
       if (this->need_delete_pvalue_) {
         delete pvalue_.load(std::memory_order_acquire);
       } else {
-        NNN;
       }
     }
  
@@ -75,10 +73,8 @@ Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char*
 
 Tuple::Impl::Impl(const Impl& right)
 {
-  NNN;
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
-    NNN;
     this->need_delete_pvalue_ = true;
     this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
   } else {
@@ -89,8 +85,7 @@ Tuple::Impl::Impl(const Impl& right)
 
 Tuple::Impl::Impl(Impl&& right)
 {
-  NNN;
-  this->key_ = std::move(right.key_);
+  this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
     this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire), std::memory_order_release);
@@ -120,13 +115,12 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
 
 Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 {
-  NNN;
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
   }
   // process about move assign
-  this->key_ = std::move(right.key_);
+  this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
     this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire), std::memory_order_release);
@@ -231,23 +225,17 @@ Tuple::Tuple(const Tuple& right)
 Tuple::Tuple(Tuple&& right)
 {
   this->pimpl_.reset();
-  NNN;
   pimpl_ = std::move(right.pimpl_);
-  NNN;
 }
 
 Tuple& Tuple::operator=(const Tuple& right)&
 {
-  NNN;
   this->pimpl_.reset(new Impl(*right.pimpl_.get()));
-  NNN;
 }
 
 Tuple& Tuple::operator=(Tuple&& right)&
 {
-  NNN;
   this->pimpl_ = std::move(right.pimpl_);
-  NNN;
 }
 
 Tuple::~Tuple() {};

@@ -190,10 +190,14 @@ TEST_F(SimpleTest, scan) {
             insert(s, st, k6.data(), k6.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
+  NNN;
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k4.data(),
                                  k4.size(), false, records));
+  NNN;
   ThreadInfo* ti = static_cast<ThreadInfo*>(s);
+  NNN;
   ti->display_read_set();
+  NNN;
   uint64_t ctr(0);
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {

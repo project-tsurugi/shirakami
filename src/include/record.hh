@@ -23,14 +23,13 @@ public:
 
   Record(const Record& right) = default;
   Record(Record&& right) {
-    NNN;
-    tidw_ = std::move(right.tidw_);
+    tidw_ = right.tidw_;
     tuple_ = std::move(right.tuple_);
   }
 
   Record& operator=(const Record& right) = default;
   Record& operator=(Record&& right) {
-    tidw_ = std::move(right.tidw_);
+    tidw_ = right.tidw_;
     tuple_ = std::move(right.tuple_);
   }
 
