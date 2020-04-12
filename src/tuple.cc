@@ -35,6 +35,8 @@ class Tuple::Impl {
       NNN;
       if (this->need_delete_pvalue_) {
         delete pvalue_.load(std::memory_order_acquire);
+      } else {
+        NNN;
       }
     }
  
@@ -87,6 +89,7 @@ Tuple::Impl::Impl(const Impl& right)
 
 Tuple::Impl::Impl(Impl&& right)
 {
+  NNN;
   this->key_ = std::move(right.key_);
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
@@ -117,6 +120,7 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
 
 Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
 {
+  NNN;
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
@@ -221,27 +225,29 @@ Tuple::Tuple (const char* key_ptr, const std::size_t key_length, const char* val
 
 Tuple::Tuple(const Tuple& right)
 {
-  pimpl_.reset();
-  pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
+  pimpl_.reset(new Impl(*right.pimpl_.get()));
 }
 
 Tuple::Tuple(Tuple&& right)
 {
-  this->pimpl_ = std::make_unique<Impl>();
+  this->pimpl_.reset();
+  NNN;
   pimpl_ = std::move(right.pimpl_);
+  NNN;
 }
 
 Tuple& Tuple::operator=(const Tuple& right)&
 {
   NNN;
-  this->pimpl_.reset();
+  this->pimpl_.reset(new Impl(*right.pimpl_.get()));
   NNN;
-  this->pimpl_ = std::make_unique<Impl>(*right.pimpl_.get());
 }
 
 Tuple& Tuple::operator=(Tuple&& right)&
 {
-  *this->pimpl_.get() = std::move(*right.pimpl_.get());
+  NNN;
+  this->pimpl_ = std::move(right.pimpl_);
+  NNN;
 }
 
 Tuple::~Tuple() {};

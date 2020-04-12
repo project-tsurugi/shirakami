@@ -315,6 +315,7 @@ read_record(Record& res, const Record* const dest)
 
     NNN;
     res.get_tuple() = dest->get_tuple(); // execute copy assign.
+    NNN;
 
     s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
     if (f_check == s_check) break;
@@ -322,6 +323,7 @@ read_record(Record& res, const Record* const dest)
   }
 
   res.set_tidw(f_check);
+    NNN;
   return Status::OK;
 }
 

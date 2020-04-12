@@ -172,18 +172,21 @@ public:
     this->rec_ptr = nullptr;
   }
 
-  ReadSetObj(const Record* const rec_ptr) {
+  ReadSetObj(const Record* const rec_ptr) : rec_read() {
+    NNN;
     this->rec_ptr = rec_ptr;
   }
 
   ReadSetObj(const ReadSetObj& right) = delete;
   ReadSetObj(ReadSetObj&& right) {
+    NNN;
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }
 
   ReadSetObj& operator=(const ReadSetObj& right) = delete;
   ReadSetObj& operator=(ReadSetObj&& right) {
+    NNN;
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }

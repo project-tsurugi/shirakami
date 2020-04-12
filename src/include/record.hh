@@ -13,7 +13,7 @@
 namespace kvs {
 class Record {
 public:
-  Record () : tidw_(), tuple_(nullptr, 0, nullptr, 0) {}
+  Record () : tidw_(), tuple_() {}
 
   Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw_(), tuple_(key_ptr, key_length, value_ptr, value_length) {
     // init tidw
@@ -23,6 +23,7 @@ public:
 
   Record(const Record& right) = default;
   Record(Record&& right) {
+    NNN;
     tidw_ = std::move(right.tidw_);
     tuple_ = std::move(right.tuple_);
   }
