@@ -318,6 +318,8 @@ class ThreadInfo {
    */
   void remove_inserted_records_of_write_set_from_masstree();
 
+  void gc_records_and_values();
+
   /**
    * @brief check whether it already executed search operation.
    * @param [in] key the key of record.

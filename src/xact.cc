@@ -116,6 +116,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
           deletetid.set_absent(true);
           std::string_view key_view = recptr->get_tuple().get_key();
           MTDB.remove_value(key_view.data(), key_view.size());
+          storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
 
           /**
            * create information for garbage collection.
@@ -125,7 +126,6 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
           ti->gc_record_container_->emplace_back(recptr);
           mutex_for_gclist.unlock();
 
-          storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
           break;
         }
       default:
@@ -144,7 +144,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
    */
   ti->clean_up_scan_caches();
 
-  gc_records();
+  ti->gc_records_and_values();
 }
 
 Status
@@ -155,7 +155,7 @@ abort(Token token)
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
   ti->set_txbegan(false);
-  gc_records();
+  ti->gc_records_and_values();
   return Status::OK;
 }
 
