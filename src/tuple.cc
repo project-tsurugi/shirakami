@@ -7,7 +7,6 @@
 #include <cassert>
 #include <string>
 
-#include "debug.hh"
 #include "kvs/tuple.h"
 
 namespace kvs{

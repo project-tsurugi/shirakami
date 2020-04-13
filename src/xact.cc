@@ -16,14 +16,9 @@
 #include "gcollection.hh"
 #include "masstree_wrapper.hh"
 #include "key.hh"
-#include "mutex.hh"
 #include "scheme.hh"
 #include "tsc.hh"
 #include "kvs/interface.h"
-
-// for output debug. finally, it should delete these.
-using std::cout;
-using std::endl;
 
 namespace kvs {
 

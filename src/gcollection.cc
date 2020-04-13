@@ -3,7 +3,6 @@
  * @brief about garbage collection.
  */
 
-#include <iostream>
 #include <utility>
 
 #include "atomic_wrapper.hh"
@@ -11,8 +10,6 @@
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "scheme.hh"
-
-using std::cout, std::endl; 
 
 namespace kvs {
 
@@ -53,11 +50,6 @@ ThreadInfo::gc_records_and_values()
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
         if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
-#if 0
-          cout << "gc record : key : " <<  (*itr)->get_tuple().get_key() << endl;
-          cout << "gc record : epoch : " <<  (*itr)->get_tidw().get_epoch() << endl;
-          cout << "kReclamationEpoch : " << loadAcquire(kReclamationEpoch) << endl;
-#endif
           delete *itr;
           itr = this->gc_record_container_->erase(itr);
         } else {
@@ -74,11 +66,6 @@ ThreadInfo::gc_records_and_values()
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {
         if (itr->second <= loadAcquire(kReclamationEpoch)) {
-#if 0
-          cout << "gc record : value : " <<  *itr->first << endl;
-          cout << "gc record : epoch : " <<  itr->second << endl;
-          cout << "kReclamationEpoch : " << loadAcquire(kReclamationEpoch) << endl;
-#endif
           delete itr->first;
           itr = this->gc_value_container_->erase(itr);
         } else {

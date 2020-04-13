@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iomanip>
-#include <iostream>
 #include <random>
 #include <thread>
 #include <typeinfo>
@@ -11,7 +9,6 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
-#include "debug.hh"
 #include "header.hh"
 
 #include "kvs/scheme.h"
@@ -32,9 +29,6 @@
 #include "../../third_party/masstree-beta/masstree_stats.hh"
 #include "../../third_party/masstree-beta/masstree_tcursor.hh"
 #include "../../third_party/masstree-beta/string.hh"
-
-using std::cout;
-using std::endl;
 
 class key_unparse_unsigned {
  public:

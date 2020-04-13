@@ -10,7 +10,6 @@
 #include "boost/filesystem.hpp"
 #include "cache_line_size.hh"
 #include "cpu.hh"
-#include "debug.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "header.hh"
@@ -19,9 +18,6 @@
 #include "scheme.hh"
 #include "xact.hh"
 #include "kvs/interface.h"
-
-using std::cout;
-using std::endl;
 
 namespace kvs {
 

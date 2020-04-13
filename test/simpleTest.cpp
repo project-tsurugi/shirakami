@@ -7,7 +7,6 @@
 
 // kvs_charkey-impl interface library
 #include "compiler.hh"
-#include "debug.hh"
 #include "scheme.hh"
 #include "xact.hh"
 

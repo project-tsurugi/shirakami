@@ -17,14 +17,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
-#include <iostream>
 #include <tuple>
 #include <utility>
 #include <vector>
 
 #include "cache_line_size.hh"
 #include "compiler.hh"
-#include "debug.hh"
 #include "fileio.hh"
 #include "log.hh"
 #include "record.hh"
@@ -33,8 +31,6 @@
 
 // kvs_charkey/include/
 #include "kvs/scheme.h"
-
-using std::cout, std::endl;
 
 namespace kvs {
 

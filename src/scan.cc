@@ -6,7 +6,6 @@
 #include <map>
 #include <string_view>
 
-#include "debug.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "xact.hh"

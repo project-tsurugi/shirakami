@@ -6,7 +6,6 @@
 #pragma once
 
 #include "tid.hh"
-#include "debug.hh"
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
 
