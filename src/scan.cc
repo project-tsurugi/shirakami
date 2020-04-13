@@ -185,7 +185,6 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
     }
   }
 
-  NNN;
   auto itr = scan_buf.begin() + scan_index;
   std::string_view key_view = (*itr)->get_tuple().get_key();
   const WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());

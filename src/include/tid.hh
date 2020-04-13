@@ -77,24 +77,24 @@ public:
     return absent_; 
   }
 
-  bool get_tid() & { 
+  uint64_t get_tid() & { 
     return tid_;
   }
 
-  bool get_tid() const & { 
+  uint64_t get_tid() const & { 
     return tid_;
   }
 
-  bool get_epoch() & { 
+  Epoch get_epoch() & { 
     return epoch_; 
   }
 
-  bool get_epoch() const & { 
+  Epoch get_epoch() const & { 
     return epoch_; 
   }
 
   void inc_tid() & {
-    ++this->tid_;
+    this->tid_ = this->tid_ + 1;
   }
 
   void reset() & { 

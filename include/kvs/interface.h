@@ -145,6 +145,8 @@ extern Status delete_all_records();
  */
 extern void delete_all_garbage_records();
 
+extern void delete_all_garbage_values();
+
 /**
  * @brief insert the record with given key/value
  * @param token [in] the token retrieved by enter()

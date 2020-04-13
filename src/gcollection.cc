@@ -22,6 +22,28 @@ alignas(CACHE_LINE_SIZE) std::vector<std::pair<std::string*, Epoch>> kGarbageVal
 alignas(CACHE_LINE_SIZE) std::mutex kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 
 void
+delete_all_garbage_records()
+{
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr) {
+      delete *itr;
+    }
+    kGarbageRecords[i].clear();
+  }
+}
+
+void
+delete_all_garbage_values()
+{
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto itr = kGarbageValues[i].begin(); itr != kGarbageValues[i].end(); ++itr) {
+      delete itr->first;
+    }
+    kGarbageValues[i].clear();
+  }
+}
+
+void
 ThreadInfo::gc_records_and_values()
 {
   // for records

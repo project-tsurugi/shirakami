@@ -73,7 +73,6 @@ Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char*
 
 Tuple::Impl::Impl(const Impl& right)
 {
-  NNN;
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;

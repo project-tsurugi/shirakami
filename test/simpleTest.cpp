@@ -1,4 +1,6 @@
 
+#include <bitset>
+
 #include "gtest/gtest.h"
 
 #include "kvs/interface.h"
@@ -22,6 +24,7 @@ class SimpleTest : public ::testing::Test {
     kvs::fin(); 
     kvs::delete_all_records();
     kvs::delete_all_garbage_records();
+    kvs::delete_all_garbage_values();
     //kvs::MTDB.destroy();
   }
 };
@@ -477,15 +480,12 @@ TEST_F(SimpleTest, concurrent_updates) {
       ASSERT_NE(nullptr, t);
       v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data()));
       v++;
-      cout << v << endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       ASSERT_EQ(Status::OK,
                 upsert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),
                        sizeof(std::int64_t)));
       rc = (Status::OK == commit(s));
       ASSERT_EQ(Status::OK, leave(s));
-      if (rc == false) NNN;
-      else NNN;
     }
     static void verify() {
       std::string k("aa");
@@ -493,10 +493,10 @@ TEST_F(SimpleTest, concurrent_updates) {
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
       Storage st{};
-      Tuple* t{};
-      ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
-      ASSERT_NE(nullptr, t);
-      v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data()));
+      Tuple* tuple{};
+      ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+      ASSERT_NE(nullptr, tuple);
+      v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(tuple->get_value().data()));
       ASSERT_EQ(10, v);
       ASSERT_EQ(Status::OK, commit(s));
       ASSERT_EQ(Status::OK, leave(s));
@@ -702,7 +702,6 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::OK, enter(s2));
   ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
   ASSERT_EQ(Status::OK, commit(s2));
-  NNN;
   EXPECT_EQ(Status::WARN_CONCURRENT_DELETE, read_from_scan(s, st, handle, &tuple));
 
   ASSERT_EQ(Status::OK, leave(s));

@@ -198,6 +198,7 @@ test(void)
 
   delete_DataList();
   delete_all_garbage_records();
+  delete_all_garbage_values();
 }
 
 namespace kvs_charkey::testing {

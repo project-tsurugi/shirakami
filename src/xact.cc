@@ -1,8 +1,9 @@
-
 /**
  * @file xact.cc
  * @brief implement about transaction 
  */
+
+#include <bitset>
 
 #include "xact.hh"
 
@@ -28,17 +29,6 @@ namespace kvs {
 
 alignas(CACHE_LINE_SIZE) std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
-
-void
-delete_all_garbage_records()
-{
-  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end(); ++itr) {
-      delete *itr;
-    }
-    kGarbageRecords[i].clear();
-  }
-}
 
 void
 tbegin(Token token)

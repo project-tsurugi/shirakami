@@ -22,6 +22,7 @@ class ThreadInfoTest : public ::testing::Test {
     kvs::fin(); 
     kvs::delete_all_records();
     kvs::delete_all_garbage_records();
+    kvs::delete_all_garbage_values();
     //kvs::MTDB.destroy();
   }
 };
