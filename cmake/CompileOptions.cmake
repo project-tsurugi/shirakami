@@ -57,6 +57,6 @@ if(WAL)
 endif()
 
 function(set_compile_options target_name)
-#    target_compile_options(${target_name}
-#        PRIVATE -Wall -Wextra -Werror)
+    target_compile_options(${target_name}
+        PRIVATE -Wall -Wextra -Werror)
 endfunction(set_compile_options)

@@ -15,7 +15,6 @@
 #include "gcollection.hh"
 #include "masstree_wrapper.hh"
 #include "key.hh"
-#include "kvs.hh"
 #include "mutex.hh"
 #include "scheme.hh"
 #include "tsc.hh"
@@ -99,10 +98,12 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
           std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
           recptr->get_tuple().set_value(new_value_view.data(), new_value_view.size(), &old_value);
           storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
-          std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index_];
-          mutex_for_gclist.lock();
-          ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
-          mutex_for_gclist.unlock();
+          if (old_value != nullptr) {
+            std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index_];
+            mutex_for_gclist.lock();
+            ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
+            mutex_for_gclist.unlock();
+          }
           break;
         }
       case OP_TYPE::INSERT:
@@ -171,7 +172,7 @@ forced_gc_all_records()
   }
 }
 
-static void
+void
 insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
 {
 #ifdef KVS_Linux
@@ -209,7 +210,7 @@ commit(Token token)
       } else {
         desired = expected;
         desired.set_lock(true);
-        if (__atomic_compare_exchange_n(&(itr->get_rec_ptr()->get_tidw().get_obj()), &(expected.get_obj()), desired.get_obj(), false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
+        if (compareExchange(itr->get_rec_ptr()->get_tidw().get_obj(), expected.get_obj(), desired.get_obj())) break;
       }
     }
     if (itr->get_op() == OP_TYPE::UPDATE && itr->get_rec_ptr()->get_tidw().get_absent() == true) {
@@ -304,8 +305,9 @@ read_record(Record& res, const Record* const dest)
   f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
   for (;;) {
-    while (f_check.get_lock())
+    while (f_check.get_lock()) {
       f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+    }
 
     if (f_check.get_absent()) {
       return Status::WARN_CONCURRENT_DELETE;
@@ -316,8 +318,11 @@ read_record(Record& res, const Record* const dest)
     res.get_tuple() = dest->get_tuple(); // execute copy assign.
 
     s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-    if (f_check == s_check) break;
-    f_check = s_check;
+    if (f_check == s_check) {
+      break;
+    } else {
+      f_check = s_check;
+    }
   }
 
   res.set_tidw(f_check);
@@ -351,7 +356,7 @@ delete_all_records()
 }
 
 Status
-search_key(Token token, Storage storage, const char* const key, const std::size_t len_key, Tuple** const tuple)
+search_key(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
@@ -395,7 +400,7 @@ search_key(Token token, Storage storage, const char* const key, const std::size_
 }
 
 Status
-update(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
+update(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
@@ -425,7 +430,7 @@ update(Token token, Storage storage, const char* const key, const std::size_t le
 
 
 Status
-insert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
+insert(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
@@ -446,7 +451,7 @@ insert(Token token, Storage storage, const char* const key, const std::size_t le
 }
 
 Status
-delete_record(Token token, Storage storage, const char* const key, const std::size_t len_key)
+delete_record(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
@@ -470,7 +475,7 @@ delete_record(Token token, Storage storage, const char* const key, const std::si
   return check;
 }
 
-static Record*
+Record*
 find_record_from_masstree(char const *key, std::size_t len_key)
 {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -478,7 +483,7 @@ find_record_from_masstree(char const *key, std::size_t len_key)
 }
 
 Status
-upsert(Token token, Storage storage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
+upsert(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);

@@ -57,8 +57,8 @@ void Result::displayAbortByValidationRate() {
   }
 }
 
-void Result::displayCommitLatencyRate(size_t clocks_per_us, size_t extime,
-                                      size_t thread_num) {
+void Result::displayCommitLatencyRate([[maybe_unused]]size_t clocks_per_us, size_t extime,
+                                      [[maybe_unused]]size_t thread_num) {
   if (total_commit_latency_) {
     long double rate;
     rate =
@@ -427,8 +427,8 @@ void Result::addLocalWriteLatency(const uint64_t count) {
 }
 #endif
 
-void Result::displayAllResult(size_t clocks_per_us, size_t extime,
-                              size_t thread_num) {
+void Result::displayAllResult([[maybe_unused]]size_t clocks_per_us, size_t extime,
+                              [[maybe_unused]]size_t thread_num) {
 #if ADD_ANALYSIS
   displayAbortByOperationRate();
   displayAbortByValidationRate();

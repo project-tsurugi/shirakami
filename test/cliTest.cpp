@@ -40,7 +40,7 @@ std::vector<Tuple*> DataList[Nthread];
 static void
 delete_DataList()
 {
-  for (int i = 0; i < Nthread; ++i) {
+  for (unsigned int i = 0; i < Nthread; ++i) {
     for (auto itr = DataList[i].begin(); itr != DataList[i].end(); ++itr) {
       delete *itr;
     }
@@ -50,7 +50,7 @@ delete_DataList()
 static void
 make_string(char* string, const std::size_t len)
 {
-    for (auto i = 0; i < len-1; ++i) {
+    for (unsigned int i = 0; i < len-1; ++i) {
         string[i] = rand() % 24 + 'a';
     }
     // if you use printf function with %s format later,
@@ -61,14 +61,14 @@ make_string(char* string, const std::size_t len)
 static void
 exec_insert(Token token, std::size_t thnm)
 {
-  for (int i = 0; i < Max_insert; i++) {
+  for (unsigned int i = 0; i < Max_insert; i++) {
     std::unique_ptr<char[]> key = std::make_unique<char[]>(Len_key);
     make_string(key.get(), Len_key);
     std::unique_ptr<char[]> val = std::make_unique<char[]>(Len_val);
     make_string(val.get(), Len_val);
     Tuple* tuple = new Tuple(key.get(), Len_key, val.get(), Len_val);
     DataList[thnm].push_back(tuple);
-    Storage storage;
+    Storage storage(0);
     insert(token, storage, key.get(), Len_key, val.get(), Len_val);
   }
   // Commit;
@@ -81,19 +81,19 @@ exec_search_key(Token token, std::size_t thnm)
 {
     for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); ++itr) {
         Tuple* tuple;
-        Storage storage;
-        Status search_result = search_key(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), &tuple);
+        Storage storage(0);
+        search_key(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), &tuple);
     }
     Status result = commit(token);
     ASSERT_TRUE(result == Status::OK);
 }
 
 static void
-exec_scan_key(Token token, std::size_t thnm)
+exec_scan_key(Token token)
 {
   while (true) {
     std::vector<const Tuple*> result;
-    Storage storage;
+    Storage storage(0);
     scan_key(token, storage,
         (char*)"a", 1, false,
         (char*)"z", 1, false,
@@ -112,8 +112,8 @@ static void
 exec_update(Token token, std::size_t thnm)
 {
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
-    Storage storage;
-    Status update_result = update(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
+    Storage storage(0);
+    update(token, storage, (*itr)->get_key().data(), (*itr)->get_key().size(), (char *)"bouya-yoikoda-nenne-shina", strlen("bouya-yoikoda-nenne-shina"));
   }
   Status result = commit(token);
   ASSERT_TRUE(result == Status::OK);
@@ -122,7 +122,7 @@ exec_update(Token token, std::size_t thnm)
 static void
 exec_delete(const Token token, std::size_t thnm)
 {
-  Storage storage;
+  Storage storage(0);
 
   for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
     //SSS(itr->key);
@@ -151,9 +151,9 @@ test_search(Token token, std::size_t thnm)
 }
 
 static void
-test_scan(Token token, std::size_t thnm)
+test_scan(Token token)
 {
-    exec_scan_key(token, thnm);
+    exec_scan_key(token);
 }
 
 static void
@@ -172,7 +172,7 @@ test_single_operation(Token token, std::size_t thnm)
   test_search(token, thnm);
   test_update(token, thnm);
   test_delete(token, thnm);
-  //test_scan(token);
+  test_scan(token);
 }
 
 static void

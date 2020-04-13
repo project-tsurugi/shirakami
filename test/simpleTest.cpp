@@ -38,7 +38,7 @@ TEST_F(SimpleTest, tidword) {
   TidWord tidword;
   tidword.set_epoch(1);
   tidword.set_lock(true);
-  uint64_t res = tidword.get_obj();
+  [[maybe_unused]]uint64_t res = tidword.get_obj();
   //cout << std::bitset<64>(res) << endl;
 }
 
@@ -196,13 +196,12 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
     if (ctr == 0) {
-      std::string_view key_view = (*itr)->get_key();
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    }
-    else if (ctr == 1)
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -211,10 +210,11 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
+    if (ctr == 0) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 1)
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -223,12 +223,13 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
+    if (ctr == 0) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 1)
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -237,10 +238,11 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
+    if (ctr == 0) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 1)
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -249,16 +251,17 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
-    else if (ctr == 1)
+    if (ctr == 0) {
+      ASSERT_EQ((*itr)->get_key().size(), 0);
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 3)
+    } else if (ctr == 3) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 4)
+    } else if (ctr == 4) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -267,10 +270,11 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
-    else if (ctr == 1)
+    if (ctr == 0) {
+      ASSERT_EQ((*itr)->get_key().size(), 0);
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -288,12 +292,13 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)
+    if (ctr == 0) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 1)
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -302,16 +307,17 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
-    else if (ctr == 1)
+    if (ctr == 0) {
+      ASSERT_EQ((*itr)->get_key().size(), 0);
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 3)
+    } else if (ctr == 3) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 4)
+    } else if (ctr == 4) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -320,16 +326,17 @@ TEST_F(SimpleTest, scan) {
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0);
-      //ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0), 0);
-    else if (ctr == 1)
+    if (ctr == 0) {
+      ASSERT_EQ((*itr)->get_key().size(), 0);
+    } else if (ctr == 1) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
-    else if (ctr == 2)
+    } else if (ctr == 2) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
-    else if (ctr == 3)
+    } else if (ctr == 3) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
-    else if (ctr == 4)
+    } else if (ctr == 4) {
       ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+    }
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
@@ -470,6 +477,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       ASSERT_NE(nullptr, t);
       v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data()));
       v++;
+      cout << v << endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       ASSERT_EQ(Status::OK,
                 upsert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),

@@ -8,7 +8,6 @@
 
 #include "atomic_wrapper.hh"
 #include "cache_line_size.hh"
-#include "cpu.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "scheme.hh"

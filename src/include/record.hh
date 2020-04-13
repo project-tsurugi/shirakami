@@ -31,6 +31,8 @@ public:
   Record& operator=(Record&& right) {
     tidw_ = right.tidw_;
     tuple_ = std::move(right.tuple_);
+
+    return *this;
   }
 
 

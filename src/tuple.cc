@@ -73,6 +73,7 @@ Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char*
 
 Tuple::Impl::Impl(const Impl& right)
 {
+  NNN;
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
@@ -111,6 +112,8 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
     this->need_delete_pvalue_ = false;
     this->pvalue_.store(nullptr, std::memory_order_release);
   }
+
+  return *this;
 }
 
 Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
@@ -129,6 +132,8 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
     this->need_delete_pvalue_ = false;
     this->pvalue_.store(nullptr, std::memory_order_release);
   }
+
+  return *this;
 }
 
 std::string_view 
@@ -205,7 +210,11 @@ Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length)&
 void
 Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&
 {
-  *old_value = pvalue_.load(std::memory_order_acquire);
+  if (this->need_delete_pvalue_) {
+    *old_value = pvalue_.load(std::memory_order_acquire);
+  } else {
+    *old_value = nullptr;
+  }
 
   pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
   this->need_delete_pvalue_ = true;
@@ -231,11 +240,15 @@ Tuple::Tuple(Tuple&& right)
 Tuple& Tuple::operator=(const Tuple& right)&
 {
   this->pimpl_.reset(new Impl(*right.pimpl_.get()));
+
+  return *this;
 }
 
 Tuple& Tuple::operator=(Tuple&& right)&
 {
   this->pimpl_ = std::move(right.pimpl_);
+
+  return *this;
 }
 
 Tuple::~Tuple() {};

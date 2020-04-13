@@ -19,7 +19,7 @@ using namespace kvs;
 namespace kvs {
 
 Status
-scan_key(Token token, Storage storage,
+scan_key(Token token, [[maybe_unused]]Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
     std::vector<const Tuple*>& result)
@@ -78,7 +78,7 @@ scan_key(Token token, Storage storage,
 }
 
 Status
-open_scan(Token token, Storage storage,
+open_scan(Token token, [[maybe_unused]]Storage storage,
     const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
     const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
     ScanHandle& handle)
@@ -133,7 +133,7 @@ open_scan(Token token, Storage storage,
 }
 
 Status
-scannable_total_index_size(Token token, Storage storage, ScanHandle& handle, std::size_t& size)
+scannable_total_index_size(Token token, [[maybe_unused]]Storage storage, ScanHandle& handle, std::size_t& size)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -150,7 +150,7 @@ scannable_total_index_size(Token token, Storage storage, ScanHandle& handle, std
 }
 
 Status
-read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** const tuple)
+read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle handle, Tuple** const tuple)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -224,7 +224,7 @@ read_from_scan(Token token, Storage storage, const ScanHandle handle, Tuple** co
 }
 
 Status
-close_scan(Token token, Storage storage, const ScanHandle handle)
+close_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle handle)
 {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
 

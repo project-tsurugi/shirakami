@@ -51,11 +51,11 @@ class WriteSetObj {
     WriteSetObj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
 
     // for update/
-    WriteSetObj(const char* const key_ptr, const std::size_t key_length, const char* const val_ptr, const std::size_t val_length, const OP_TYPE op, Record* const rec_ptr) : tuple_(key_ptr, key_length, val_ptr, val_length), op_(op), rec_ptr_(rec_ptr) {}
+    WriteSetObj(const char* const key_ptr, const std::size_t key_length, const char* const val_ptr, const std::size_t val_length, const OP_TYPE op, Record* const rec_ptr) : op_(op), rec_ptr_(rec_ptr), tuple_(key_ptr, key_length, val_ptr, val_length) {}
 
     WriteSetObj(const WriteSetObj& right) = delete;
     // for std::sort
-    WriteSetObj(WriteSetObj&& right) : rec_ptr_(right.rec_ptr_), op_(right.op_), tuple_() {
+    WriteSetObj(WriteSetObj&& right) : op_(right.op_), rec_ptr_(right.rec_ptr_), tuple_() {
       tuple_ = std::move(right.tuple_);
     }
 
@@ -65,6 +65,8 @@ class WriteSetObj {
       rec_ptr_ = right.rec_ptr_;
       op_ = right.op_;
       tuple_ = std::move(right.tuple_);
+
+      return *this;
     }
 
     bool operator<(const WriteSetObj& right) const;
@@ -162,9 +164,9 @@ class WriteSetObj {
      * for update : ptr to existing record.
      * for insert : ptr to new existing record.
      */
+    OP_TYPE op_;
     Record* rec_ptr_; // ptr to database
     Tuple tuple_;  // for update
-    OP_TYPE op_;
 };
 
 class ReadSetObj {
@@ -187,6 +189,8 @@ public:
   ReadSetObj& operator=(ReadSetObj&& right) {
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
+    
+    return *this;
   }
 
 
@@ -405,7 +409,7 @@ class ThreadInfo {
     return token_;
   }
 
-  const Epoch get_epoch() const & {
+  Epoch get_epoch() const & {
     return epoch_.load(std::memory_order_acquire);
   }
 
@@ -417,7 +421,7 @@ class ThreadInfo {
     return mrctid_;
   }
 
-  const bool get_visible() const & {
+  bool get_visible() const & {
     return visible_.load(std::memory_order_acquire);
   }
 

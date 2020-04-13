@@ -265,7 +265,6 @@ WriteSetObj::operator<(const WriteSetObj& right) const
   std::size_t this_key_size(this_tuple.get_key().size());
   std::size_t right_key_size(right_tuple.get_key().size());
 
-  bool judge = false;
   if (this_key_size < right_key_size) {
     if (memcmp(this_key_ptr, right_key_ptr, this_key_size) <= 0) {
       return true;

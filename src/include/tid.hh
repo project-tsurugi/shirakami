@@ -29,6 +29,8 @@ public:
 
   TidWord& operator=(const TidWord& right) {
     obj_ = right.get_obj();
+
+    return *this;
   }
 
   bool operator==(const TidWord& right) const {
@@ -55,7 +57,7 @@ public:
     return lock_;
   }
 
-  const bool get_lock() const & { 
+  bool get_lock() const & { 
     return lock_;
   }
 
@@ -63,7 +65,7 @@ public:
     return latest_; 
   }
 
-  const bool get_latest() const & { 
+  bool get_latest() const & { 
     return latest_; 
   }
 
@@ -71,7 +73,7 @@ public:
     return absent_; 
   }
 
-  const bool get_absent() const & { 
+  bool get_absent() const & { 
     return absent_; 
   }
 
@@ -79,7 +81,7 @@ public:
     return tid_;
   }
 
-  const bool get_tid() const & { 
+  bool get_tid() const & { 
     return tid_;
   }
 
@@ -87,7 +89,7 @@ public:
     return epoch_; 
   }
 
-  const bool get_epoch() const & { 
+  bool get_epoch() const & { 
     return epoch_; 
   }
 

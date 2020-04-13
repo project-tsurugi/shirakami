@@ -77,8 +77,8 @@ public:
 
     const int res_memcmp = memcmp(rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
     if (res_memcmp > 0
-        || res_memcmp == 0 && 
-        (!r_exclusive_ && len_rkey_ == key.len || len_rkey_ > key.len)) {
+        || (res_memcmp == 0 && 
+        ((!r_exclusive_ && len_rkey_ == static_cast<std::size_t>(key.len)) || len_rkey_ > static_cast<std::size_t>(key.len)))) {
       scan_buffer_->emplace_back(val);
       return true;
     } else {
@@ -218,7 +218,7 @@ class MasstreeWrapper {
     }
 
     SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res, limited_scan);
-    int r = table_.scan(mtkey, !l_exclusive, scanner, *ti);
+    table_.scan(mtkey, !l_exclusive, scanner, *ti);
   }
 
   void print_table() {

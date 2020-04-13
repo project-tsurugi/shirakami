@@ -97,7 +97,7 @@ single_recovery_from_log()
     const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE);
     while (sizeof(LogHeader) == logfile.read((void*)&logheader, sizeof(LogHeader))) {
       std::vector<LogRecord> log_tmp_buf;
-      for (auto i = 0; i < logheader.get_log_rec_num(); ++i) {
+      for (unsigned int i = 0; i < logheader.get_log_rec_num(); ++i) {
         if (fix_size != logfile.read((void*)&log, fix_size)) break;
         std::unique_ptr<char[]> key_ptr, value_ptr;
         std::size_t key_length, value_length;
@@ -144,6 +144,7 @@ single_recovery_from_log()
   Storage st{};
   enter(s);
   for (auto itr = log_set.begin(); itr != log_set.end(); ++itr) {
+    if (itr->get_tid().get_epoch() > recovery_epoch) break;
     if ((*itr).get_op() == OP_TYPE::UPDATE || (*itr).get_op() == OP_TYPE::INSERT) {
       upsert(s, st, (*itr).get_tuple()->get_key().data(), (*itr).get_tuple()->get_key().size(), (*itr).get_tuple()->get_value().data(), (*itr).get_tuple()->get_value().size());
     } else if ((*itr).get_op() == OP_TYPE::DELETE) {
