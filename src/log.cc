@@ -24,10 +24,10 @@ int LogRecord::compute_checksum() & {
   // compute checksum
   // TidWord
   int chkSum = 0;
-  int* intitr = (int*)this;
-  for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(unsigned int); ++i) {
-    chkSum += (*intitr);
-    ++intitr;
+  const char* charitr = (char*)this;
+  for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(char); ++i) {
+    chkSum += (*charitr);
+    ++charitr;
   }
 
   // OP_TYPE
@@ -35,16 +35,15 @@ int LogRecord::compute_checksum() & {
 
   // key_length
   std::string_view key_view = tuple_->get_key();
-  std::size_t&& key_length = key_view.size();
-  intitr = (int*)&(key_length);
-  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int);
-       ++i) {
-    chkSum += (*intitr);
-    ++intitr;
+  std::size_t key_length = key_view.size();
+  charitr = (char*)&(key_length);
+  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(char); ++i) {
+    chkSum += (*charitr);
+    ++charitr;
   }
 
   // key_body
-  const char* charitr = key_view.data();
+  charitr = key_view.data();
   for (std::size_t i = 0; i < key_view.size(); ++i) {
     chkSum += (*charitr);
     ++charitr;
@@ -52,12 +51,11 @@ int LogRecord::compute_checksum() & {
 
   // value_length
   std::string_view value_view = tuple_->get_value();
-  std::size_t&& value_length = value_view.size();
-  intitr = (int*)&(value_length);
-  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(unsigned int);
-       ++i) {
-    chkSum += (*intitr);
-    ++intitr;
+  std::size_t value_length = value_view.size();
+  charitr = (char*)(&(value_length));
+  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(char); ++i) {
+    chkSum += (*charitr);
+    ++charitr;
   }
 
   // value_body
