@@ -22,7 +22,7 @@ using std::endl;
 namespace kvs_charkey::testing {
 
 class MasstreeTest : public ::testing::Test {
- protected:
+protected:
   MasstreeTest() {}
   ~MasstreeTest() {}
 };

@@ -56,12 +56,12 @@ DEFINE_uint64(val_length, 8, "# length of value(payload).");
 DEFINE_uint64(ops, 10, "# operations per a transaction.");
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");
 DEFINE_double(skew, 0.0, "access skew of transaction.");
-DEFINE_uint64(cpumhz, 2000, "# cpu MHz of execution environment. It is used measuring some time.");
+DEFINE_uint64(
+    cpumhz, 2000,
+    "# cpu MHz of execution environment. It is used measuring some time.");
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
 
-static void
-load_flags()
-{
+static void load_flags() {
   if (FLAGS_thread >= 1) {
     kNthread = FLAGS_thread;
   } else {
@@ -77,7 +77,8 @@ load_flags()
   if (FLAGS_key_length > 1 && FLAGS_key_length % 8 == 0) {
     kKeyLength = FLAGS_key_length;
   } else {
-    cerr << "Length of key must be larger than 0 and be divisible by 8." << endl;
+    cerr << "Length of key must be larger than 0 and be divisible by 8."
+         << endl;
     exit(1);
   }
   if (FLAGS_val_length > 1) {
@@ -89,25 +90,30 @@ load_flags()
   if (FLAGS_ops > 1) {
     kNops = FLAGS_ops;
   } else {
-    cerr << "Number of operations in a transaction must be larger than 0." << endl;
+    cerr << "Number of operations in a transaction must be larger than 0."
+         << endl;
     exit(1);
   }
   if (FLAGS_rratio >= 0 && FLAGS_rratio <= 100) {
     kRRatio = FLAGS_rratio;
   } else {
-    cerr << "Rate of reads in a transaction must be in the range 0 to 100." << endl;
+    cerr << "Rate of reads in a transaction must be in the range 0 to 100."
+         << endl;
     exit(1);
   }
   if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
     kZipfSkew = FLAGS_skew;
   } else {
-    cerr << "Access skew of transaction must be in the range 0 to 0.999... ." << endl;
+    cerr << "Access skew of transaction must be in the range 0 to 0.999... ."
+         << endl;
     exit(1);
   }
   if (FLAGS_cpumhz > 1) {
     kCPUMHz = FLAGS_cpumhz;
   } else {
-    cerr << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0." << endl;
+    cerr << "CPU MHz of execution environment. It is used measuring some time. "
+            "It must be larger than 0."
+         << endl;
     exit(1);
   }
   if (FLAGS_duration >= 1) {
@@ -118,10 +124,7 @@ load_flags()
   }
 }
 
-
-int 
-main(int argc, char* argv[]) 
-{
+int main(int argc, char* argv[]) {
   gflags::SetUsageMessage("YCSB benchmark for kvs_charkey");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
@@ -135,24 +138,21 @@ main(int argc, char* argv[])
   fin();
 }
 
-static bool 
-isReady(const std::vector<char>& readys)
-{
-  for (const char &b : readys) {
+static bool isReady(const std::vector<char>& readys) {
+  for (const char& b : readys) {
     if (!loadAcquire(b)) return false;
   }
   return true;
 }
 
-static void
-waitForReady(const std::vector<char>& readys)
-{
-  while (!isReady(readys)) { _mm_pause(); }
+static void waitForReady(const std::vector<char>& readys) {
+  while (!isReady(readys)) {
+    _mm_pause();
+  }
 }
 
-void
-worker(const size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res)
-{
+void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
+            std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
   rnd.init();
@@ -176,9 +176,11 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
     for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
       if ((*itr).type == OP_TYPE::SEARCH) {
         Tuple* tuple;
-        Status op_rs = search_key(token, storage, (*itr).key.get(), (*itr).len_key, &tuple);
+        Status op_rs = search_key(token, storage, (*itr).key.get(),
+                                  (*itr).len_key, &tuple);
       } else if ((*itr).type == OP_TYPE::UPDATE) {
-        Status op_rs = update(token, storage, (*itr).key.get(), (*itr).len_key, (*itr).val.get(), (*itr).len_val);
+        Status op_rs = update(token, storage, (*itr).key.get(), (*itr).len_key,
+                              (*itr).val.get(), (*itr).len_val);
       }
     }
     if (commit(token) == Status::OK) {
@@ -191,9 +193,7 @@ worker(const size_t thid, char& ready, const bool& start, const bool& quit, std:
   leave(token);
 }
 
-static void
-invoke_leader()
-{
+static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
   alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);
@@ -201,7 +201,8 @@ invoke_leader()
   std::vector<char> readys(kNthread);
   std::vector<std::thread> thv;
   for (size_t i = 0; i < kNthread; ++i)
-    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
+    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
+                     std::ref(quit), std::ref(res));
   waitForReady(readys);
   storeRelease(start, true);
   for (size_t i = 0; i < kExecTime; ++i) {

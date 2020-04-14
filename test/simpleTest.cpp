@@ -17,7 +17,7 @@ using std::endl;
 namespace kvs_charkey::testing {
 
 class SimpleTest : public ::testing::Test {
- protected:
+protected:
   SimpleTest() { kvs::init(); }
   ~SimpleTest() {
     kvs::fin();

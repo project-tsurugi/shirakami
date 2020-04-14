@@ -16,7 +16,7 @@ using std::endl;
 namespace kvs_charkey::testing {
 
 class ThreadInfoTest : public ::testing::Test {
- protected:
+protected:
   ThreadInfoTest() { kvs::init(); }
   ~ThreadInfoTest() {
     kvs::fin();

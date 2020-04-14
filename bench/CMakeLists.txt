@@ -28,10 +28,13 @@ add_executable(ycsb
   ${YCSB_SOURCES}
 )
 
+clang_format(ycsb)
+
 add_executable(masstree
   ${MASSTREE_SOURCES}
 )
 
+clang_format(masstree)
 
 target_link_libraries(ycsb
   PRIVATE kvs_charkey
