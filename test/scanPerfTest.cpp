@@ -27,8 +27,8 @@ protected:
   }
   void DoScan(int);
 
-  const size_t MAX_TUPLES = 1000000;
-  const size_t READ_TUPLES = 100;
+  const int MAX_TUPLES = 1000000;
+  const int READ_TUPLES = 100;
   uint64_t start, end, scan_size;
   Token s{};
   Storage st{};
@@ -161,24 +161,8 @@ TEST_F(ScanPerfTest, read_from_scan) {
 
 } // namespace kvs_charkey::testing
 
+
 // perf_counter
-#include <cstdio>
-#include <iostream>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <asm/unistd.h>
-#include <errno.h>
-#include <stdint.h>
-
-PerfCounter::PerfCounter() {
-  init();
-}
 
 void
 PerfCounter::init(int exc_kernel) {
