@@ -32,6 +32,7 @@ target_link_libraries(kvs_charkey
 
 set_compile_options(kvs_charkey)
 install_custom(kvs_charkey ${export_name})
+clang_format(kvs_charkey)
 
 # for tests
 add_library(kvs_charkey-impl INTERFACE)
@@ -42,4 +43,3 @@ target_link_libraries(kvs_charkey-impl
 target_include_directories(kvs_charkey-impl
     INTERFACE include
 )
-

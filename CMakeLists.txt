@@ -41,6 +41,7 @@ include(CMakePackageConfigHelpers)
 include(CompileOptions)
 include(InstallOptions)
 include(Tests)
+include(FormatFilesWithClangFormat)
 
 if (BUILD_TESTS)
     enable_testing()
@@ -88,10 +89,11 @@ install(
 
 add_subdirectory(src)
 add_subdirectory(bench)
+add_subdirectory(third_party)
+
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
 endif()
-add_subdirectory(third_party)
