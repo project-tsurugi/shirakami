@@ -1,22 +1,10 @@
 file(GLOB SOURCES
         "*.cc"
-        "../third_party/masstree-beta/clp.o"
-        "../third_party/masstree-beta/compiler.o"
-        "../third_party/masstree-beta/kvthread.o"
-        "../third_party/masstree-beta/misc.o"
-        "../third_party/masstree-beta/string.o"
-        "../third_party/masstree-beta/straccum.o"
-        "../third_party/masstree-beta/libjson.a"
 )
 
 add_library(kvs_charkey
     ${SOURCES}
 )
-
-set_target_properties(kvs_charkey
-        PROPERTIES
-        LIBRARY_OUTPUT_NAME "kvs"
-        )
 
 target_include_directories(kvs_charkey
     PRIVATE include
@@ -28,7 +16,13 @@ target_link_libraries(kvs_charkey
         PUBLIC api
         PRIVATE Threads::Threads
         Boost::filesystem
+        ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
 )
+
+set_target_properties(kvs_charkey
+        PROPERTIES
+        LIBRARY_OUTPUT_NAME "kvs"
+        )
 
 set_compile_options(kvs_charkey)
 install_custom(kvs_charkey ${export_name})
