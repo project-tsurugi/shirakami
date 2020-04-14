@@ -19,10 +19,10 @@ constexpr const int READ_TUPLES = 100;
 
 class ScanPerfTest : public ::testing::Test {
  protected:
-  ScanPerfTest() : v1("a") {
+  ScanPerfTest() {
     kvs::init();
     for (int i = 0; i < MAX_TUPLES; ++i) {
-      key[i] = i;
+      key_[i] = i;
     }
   }
   ~ScanPerfTest() { 
@@ -34,45 +34,46 @@ class ScanPerfTest : public ::testing::Test {
   void DoScan();
   void DoInsert(int, int);
 
-  uint64_t key[MAX_TUPLES];
-  std::string v1;
-  Token s{};
-  Storage st{};
-  
-  uint64_t start, end, scan_size;
+  uint64_t key_[MAX_TUPLES];
+  Token s_{};
+  Storage st_{};
 };
 
 void
 ScanPerfTest::DoInsert(int bgn_idx, int end_idx)
 {
+  std::string v1("a");
+
   for (int i = bgn_idx; i < end_idx; ++i) {
-    EXPECT_EQ(Status::OK, insert(s, st, (char *)&key[i], sizeof(key[i]), v1.data(), v1.size()));
+    EXPECT_EQ(Status::OK, insert(s_, st_, (char *)&key_[i], sizeof(key_[i]), v1.data(), v1.size()));
   }
-  EXPECT_EQ(Status::OK, commit(s));
+  EXPECT_EQ(Status::OK, commit(s_));
 }
 
 void
 ScanPerfTest::DoScan()
 {
+  uint64_t start, end, scan_size;
   ScanHandle handle{};
   Tuple* tuple{};
+
   start = rdtscp();
-  EXPECT_EQ(Status::OK, open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
-  for (int i = 0; i < 100; ++i) {
-    EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  EXPECT_EQ(Status::OK, open_scan(s_, st_, nullptr, 0, false, nullptr, 0, false, handle));
+  for (int i = 0; i < READ_TUPLES; ++i) {
+    EXPECT_EQ(Status::OK, read_from_scan(s_, st_, handle, &tuple));
   }
   /**
    * Make sure the scan size.
    */
-  EXPECT_EQ(Status::OK, scannable_total_index_size(s, st, handle, scan_size));
+  EXPECT_EQ(Status::OK, scannable_total_index_size(s_, st_, handle, scan_size));
   cout << "scannable_total_index_size : " << scan_size << endl;
-  EXPECT_EQ(Status::OK, commit(s));
+  EXPECT_EQ(Status::OK, commit(s_));
   end = rdtscp();
   cout << "Result : " << end - start << " [clocks]" << endl;
 }
 
 TEST_F(ScanPerfTest, read_from_scan) {
-  EXPECT_EQ(Status::OK, enter(s));
+  EXPECT_EQ(Status::OK, enter(s_));
 
   DoInsert(0, 100);
   cout << "Perform 100 records read_from_scan on a table with 100 records." << endl;
@@ -127,7 +128,7 @@ TEST_F(ScanPerfTest, read_from_scan) {
   cout << "Perform 100 records read_from_scan on a table with 320K records." << endl;
   DoScan();
 
-  EXPECT_EQ(Status::OK, leave(s));
+  EXPECT_EQ(Status::OK, leave(s_));
 }
 
 } // namespace kvs_charkey::testing
