@@ -36,6 +36,9 @@ find_package(glog REQUIRED)
 find_package(Boost
   COMPONENTS filesystem)
 
+# Formatter should be fairst.
+include(FormatFilesWithClangFormat)
+# ===
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
@@ -88,10 +91,11 @@ install(
 
 add_subdirectory(src)
 add_subdirectory(bench)
+add_subdirectory(third_party)
+
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
 endif()
-add_subdirectory(third_party)

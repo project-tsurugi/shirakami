@@ -12,12 +12,10 @@ using namespace kvs;
 
 using std::cout, std::endl;
 
-namespace  kvs {
+namespace kvs {
 
-void
-TidWord::display()
-{
-  cout << "obj_ : " << std::bitset<sizeof(obj_)*8>(obj_) << endl;
+void TidWord::display() {
+  cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_) << endl;
   cout << "lock_ : " << lock_ << endl;
   cout << "latest_ : " << latest_ << endl;
   cout << "absent_ : " << absent_ << endl;
@@ -25,4 +23,4 @@ TidWord::display()
   cout << "epoch_ : " << epoch_ << endl;
 }
 
-} // namespace kvs
+}  // namespace kvs

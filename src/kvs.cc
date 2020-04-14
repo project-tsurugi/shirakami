@@ -13,23 +13,17 @@
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "header.hh"
+#include "kvs/interface.h"
 #include "log.hh"
 #include "port.h"
 #include "scheme.hh"
 #include "xact.hh"
-#include "kvs/interface.h"
 
 namespace kvs {
 
-static void
-invoke_core_thread()
-{
-  invoke_epocher();
-}
+static void invoke_core_thread() { invoke_epocher(); }
 
-static void
-init_kThreadTable()
-{
+static void init_kThreadTable() {
   uint64_t ctr(0);
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     itr->set_visible(false);
@@ -52,18 +46,18 @@ init_kThreadTable()
     itr->log_dir_.assign(kLogDirectory);
     itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
-    if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY, 0644)) {
+    if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY,
+                            0644)) {
       ERR;
     }
-    //itr->logfile_.ftruncate(10^9); // if it want to be high performance in experiments, this line is used.
+    // itr->logfile_.ftruncate(10^9); // if it want to be high performance in
+    // experiments, this line is used.
 #endif
     ++ctr;
   }
 }
 
-static void
-fin_kThreadTable()
-{
+static void fin_kThreadTable() {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     /**
      * about holding operation info.
@@ -85,9 +79,7 @@ fin_kThreadTable()
   }
 }
 
-Status
-init(std::string log_directory_path)
-{
+Status init(std::string log_directory_path) {
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */
@@ -119,7 +111,7 @@ init(std::string log_directory_path)
   /**
    * If it already exists log files, it recoveries from those.
    */
-  //single_recovery_from_log();
+  // single_recovery_from_log();
 
   init_kThreadTable();
   invoke_core_thread();
@@ -127,13 +119,10 @@ init(std::string log_directory_path)
   return Status::OK;
 }
 
-void
-fin()
-{
+void fin() {
   kEpochThreadEnd.store(true, std::memory_order_release);
   kEpochThread.join();
   fin_kThreadTable();
 }
 
 }  // namespace kvs
-

@@ -131,4 +131,4 @@ TEST_F(ScanPerfTest, read_from_scan) {
   EXPECT_EQ(Status::OK, leave(s_));
 }
 
-} // namespace kvs_charkey::testing
+}  // namespace kvs_charkey::testing
