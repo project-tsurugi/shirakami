@@ -25,7 +25,7 @@ int LogRecord::compute_checksum() & {
   // TidWord
   int chkSum = 0;
   const char* charitr = (char*)this;
-  for (unsigned int i = 0; i < sizeof(TidWord) / sizeof(char); ++i) {
+  for (unsigned int i = 0; i < sizeof(TidWord); ++i) {
     chkSum += (*charitr);
     ++charitr;
   }
@@ -37,7 +37,7 @@ int LogRecord::compute_checksum() & {
   std::string_view key_view = tuple_->get_key();
   std::size_t key_length = key_view.size();
   charitr = (char*)&(key_length);
-  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(char); ++i) {
+  for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;
   }
@@ -53,7 +53,7 @@ int LogRecord::compute_checksum() & {
   std::string_view value_view = tuple_->get_value();
   std::size_t value_length = value_view.size();
   charitr = (char*)(&(value_length));
-  for (unsigned int i = 0; i < sizeof(std::size_t) / sizeof(char); ++i) {
+  for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;
   }
