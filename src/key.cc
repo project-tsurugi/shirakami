@@ -6,13 +6,11 @@
 
 #include "key.hh"
 
-void
-process_key(char** const key, std::size_t& len_key, std::string& newkey)
-{
+void process_key(char** const key, std::size_t& len_key, std::string& newkey) {
   if (*key == nullptr) {
     return;
   }
-  
+
   std::size_t delta_key = 8 - (len_key % 8);
   if (delta_key != 8) {
     newkey.assign(*key, len_key);

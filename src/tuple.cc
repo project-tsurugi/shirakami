@@ -9,33 +9,35 @@
 
 #include "tuple.hh"
 
-namespace kvs{
+namespace kvs {
 
-Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)
-{
+Tuple::Impl::Impl(const char* key_ptr, const std::size_t key_length,
+                  const char* value_ptr, const std::size_t value_length) {
   key_.assign(key_ptr, key_length);
   need_delete_pvalue_ = true;
-  pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
+  pvalue_.store(new std::string(value_ptr, value_length),
+                std::memory_order_release);
 }
 
-Tuple::Impl::Impl(const Impl& right)
-{
+Tuple::Impl::Impl(const Impl& right) {
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
-    this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
+    this->pvalue_.store(
+        new std::string(*right.pvalue_.load(std::memory_order_acquire)),
+        std::memory_order_release);
   } else {
     this->need_delete_pvalue_ = false;
     this->pvalue_.store(nullptr, std::memory_order_release);
   }
 }
 
-Tuple::Impl::Impl(Impl&& right)
-{
+Tuple::Impl::Impl(Impl&& right) {
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
-    this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire), std::memory_order_release);
+    this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire),
+                        std::memory_order_release);
     right.need_delete_pvalue_ = false;
   } else {
     this->need_delete_pvalue_ = false;
@@ -43,8 +45,7 @@ Tuple::Impl::Impl(Impl&& right)
   }
 }
 
-Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
-{
+Tuple::Impl& Tuple::Impl::operator=(const Impl& right) {
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
@@ -53,7 +54,9 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
-    this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), std::memory_order_release);
+    this->pvalue_.store(
+        new std::string(*right.pvalue_.load(std::memory_order_acquire)),
+        std::memory_order_release);
   } else {
     this->need_delete_pvalue_ = false;
     this->pvalue_.store(nullptr, std::memory_order_release);
@@ -62,8 +65,7 @@ Tuple::Impl& Tuple::Impl::operator=(const Impl& right)
   return *this;
 }
 
-Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
-{
+Tuple::Impl& Tuple::Impl::operator=(Impl&& right) {
   // process about this
   if (this->need_delete_pvalue_) {
     delete this->pvalue_.load(std::memory_order_acquire);
@@ -72,7 +74,8 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
   this->key_ = right.key_;
   if (right.need_delete_pvalue_) {
     this->need_delete_pvalue_ = true;
-    this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire), std::memory_order_release);
+    this->pvalue_.store(right.pvalue_.load(std::memory_order_acquire),
+                        std::memory_order_release);
     right.need_delete_pvalue_ = false;
   } else {
     this->need_delete_pvalue_ = false;
@@ -82,21 +85,15 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right)
   return *this;
 }
 
-std::string_view 
-Tuple::Impl::get_key()&
-{
+std::string_view Tuple::Impl::get_key() & {
   return std::string_view{key_.data(), key_.size()};
 }
 
-const std::string_view 
-Tuple::Impl::get_key()  const&
-{
+const std::string_view Tuple::Impl::get_key() const& {
   return std::string_view{key_.data(), key_.size()};
 }
 
-std::string_view 
-Tuple::Impl::get_value()&
-{
+std::string_view Tuple::Impl::get_value() & {
   if (need_delete_pvalue_) {
     // common subexpression elimination
     std::string* value = pvalue_.load(std::memory_order_acquire);
@@ -106,9 +103,7 @@ Tuple::Impl::get_value()&
   }
 }
 
-const std::string_view 
-Tuple::Impl::get_value() const &
-{
+const std::string_view Tuple::Impl::get_value() const& {
   if (need_delete_pvalue_) {
     // common subexpression elimination
     std::string* value = pvalue_.load(std::memory_order_acquire);
@@ -118,133 +113,105 @@ Tuple::Impl::get_value() const &
   }
 }
 
-void
-Tuple::Impl::reset()&
-{
+void Tuple::Impl::reset() & {
   if (need_delete_pvalue_) delete pvalue_.load(std::memory_order_acquire);
 }
 
-void 
-Tuple::Impl::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&
-{
+void Tuple::Impl::set(const char* key_ptr, const std::size_t key_length,
+                      const char* value_ptr, const std::size_t value_length) & {
   key_.assign(key_ptr, key_length);
   if (need_delete_pvalue_) {
     delete pvalue_.load(std::memory_order_acquire);
   }
 
-  pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
+  pvalue_.store(new std::string(value_ptr, value_length),
+                std::memory_order_release);
   this->need_delete_pvalue_ = true;
 }
 
-void 
-Tuple::Impl::set_key(const char* key_ptr, const std::size_t key_length)&
-{
+void Tuple::Impl::set_key(const char* key_ptr, const std::size_t key_length) & {
   key_.assign(key_ptr, key_length);
 }
 
-void
-Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length)&
-{
+void Tuple::Impl::set_value(const char* value_ptr,
+                            const std::size_t value_length) & {
   if (this->need_delete_pvalue_) {
     pvalue_.load(std::memory_order_acquire)->assign(value_ptr, value_length);
   } else {
-    pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
+    pvalue_.store(new std::string(value_ptr, value_length),
+                  std::memory_order_release);
     need_delete_pvalue_ = true;
   }
 }
 
-void
-Tuple::Impl::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&
-{
+void Tuple::Impl::set_value(const char* value_ptr,
+                            const std::size_t value_length,
+                            std::string** const old_value) & {
   if (this->need_delete_pvalue_) {
     *old_value = pvalue_.load(std::memory_order_acquire);
   } else {
     *old_value = nullptr;
   }
 
-  pvalue_.store(new std::string(value_ptr, value_length), std::memory_order_release);
+  pvalue_.store(new std::string(value_ptr, value_length),
+                std::memory_order_release);
   this->need_delete_pvalue_ = true;
 }
 
-Tuple::Tuple() : pimpl_(std::make_unique<Impl>())
-{
+Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
+
+Tuple::Tuple(const char* key_ptr, const std::size_t key_length,
+             const char* val_ptr, const std::size_t val_length)
+    : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {
 }
 
-Tuple::Tuple (const char* key_ptr, const std::size_t key_length, const char* val_ptr, const std::size_t val_length) : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {}
-
-Tuple::Tuple(const Tuple& right)
-{
+Tuple::Tuple(const Tuple& right) {
   pimpl_.reset(new Impl(*right.pimpl_.get()));
 }
 
-Tuple::Tuple(Tuple&& right)
-{
+Tuple::Tuple(Tuple&& right) {
   this->pimpl_.reset();
   pimpl_ = std::move(right.pimpl_);
 }
 
-Tuple& Tuple::operator=(const Tuple& right)&
-{
+Tuple& Tuple::operator=(const Tuple& right) & {
   this->pimpl_.reset(new Impl(*right.pimpl_.get()));
 
   return *this;
 }
 
-Tuple& Tuple::operator=(Tuple&& right)&
-{
+Tuple& Tuple::operator=(Tuple&& right) & {
   this->pimpl_ = std::move(right.pimpl_);
 
   return *this;
 }
 
-Tuple::~Tuple() {};
+Tuple::~Tuple(){};
 
-std::string_view 
-Tuple::get_key()&
-{
-  return pimpl_.get()->get_key();
-}
+std::string_view Tuple::get_key() & { return pimpl_.get()->get_key(); }
 
-std::string_view 
-Tuple::get_key() const&
-{
-  return pimpl_.get()->get_key();
-}
+std::string_view Tuple::get_key() const& { return pimpl_.get()->get_key(); }
 
-std::string_view 
-Tuple::get_value()&
-{
-  return pimpl_.get()->get_value();
-}
+std::string_view Tuple::get_value() & { return pimpl_.get()->get_value(); }
 
-std::string_view 
-Tuple::get_value() const&
-{
-  return pimpl_.get()->get_value();
-}
+std::string_view Tuple::get_value() const& { return pimpl_.get()->get_value(); }
 
-void 
-Tuple::set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&
-{
+void Tuple::set(const char* key_ptr, const std::size_t key_length,
+                const char* value_ptr, const std::size_t value_length) & {
   pimpl_.get()->set(key_ptr, key_length, value_ptr, value_length);
 }
 
-void
-Tuple::set_key(const char* key_ptr, const std::size_t key_length)&
-{
+void Tuple::set_key(const char* key_ptr, const std::size_t key_length) & {
   pimpl_.get()->set_key(key_ptr, key_length);
 }
 
-void
-Tuple::set_value(const char* value_ptr, const std::size_t value_length)&
-{
+void Tuple::set_value(const char* value_ptr, const std::size_t value_length) & {
   pimpl_.get()->set_value(value_ptr, value_length);
 }
 
-void
-Tuple::set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&
-{
+void Tuple::set_value(const char* value_ptr, const std::size_t value_length,
+                      std::string** const old_value) & {
   pimpl_.get()->set_value(value_ptr, value_length, old_value);
 }
 
-} // namespace kvs
+}  // namespace kvs

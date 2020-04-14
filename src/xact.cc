@@ -1,6 +1,6 @@
 /**
  * @file xact.cc
- * @brief implement about transaction 
+ * @brief implement about transaction
  */
 
 #include <bitset>
@@ -14,44 +14,41 @@
 #include "debug.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
-#include "masstree_wrapper.hh"
 #include "key.hh"
+#include "kvs/interface.h"
+#include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tsc.hh"
-#include "kvs/interface.h"
 
 namespace kvs {
 
-alignas(CACHE_LINE_SIZE) std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
+alignas(CACHE_LINE_SIZE)
+    std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
 
-void
-tbegin(Token token)
-{
+void tbegin(Token token) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   ti->set_txbegan(true);
   ti->set_epoch(load_acquire_ge());
 }
 
-static void 
-write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
-{
+static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
-   * It calculates the smallest number that is 
+   * It calculates the smallest number that is
    * (a) larger than the TID of any record read or written by the transaction,
    * (b) larger than the worker's most recently chosen TID,
    * and (C) in the current global epoch.
    */
   TidWord tid_a, tid_b, tid_c;
 
-  /* 
-   * calculates (a) 
+  /*
+   * calculates (a)
    * about read_set
    */
   tid_a = max(max_wset, max_rset);
   tid_a.inc_tid();
-  
+
   /*
    * calculates (b)
    * larger than the worker's most recently chosen TID,
@@ -77,43 +74,45 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
     Record* recptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
-      case OP_TYPE::UPDATE:
-        {
-          std::string* old_value;
-          std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
-          recptr->get_tuple().set_value(new_value_view.data(), new_value_view.size(), &old_value);
-          storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
-          if (old_value != nullptr) {
-            std::mutex& mutex_for_gclist = kMutexGarbageValues[ti->gc_container_index_];
-            mutex_for_gclist.lock();
-            ti->gc_value_container_->emplace_back(std::make_pair(old_value, ti->get_epoch()));
-            mutex_for_gclist.unlock();
-          }
-          break;
-        }
-      case OP_TYPE::INSERT:
-        {
-          storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
-          break;
-        }
-      case OP_TYPE::DELETE:
-        {
-          TidWord deletetid = maxtid;
-          deletetid.set_absent(true);
-          std::string_view key_view = recptr->get_tuple().get_key();
-          MTDB.remove_value(key_view.data(), key_view.size());
-          storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
-
-          /**
-           * create information for garbage collection.
-           */
-          std::mutex& mutex_for_gclist = kMutexGarbageRecords[ti->gc_container_index_];
+      case OP_TYPE::UPDATE: {
+        std::string* old_value;
+        std::string_view new_value_view =
+            iws->get_tuple(iws->get_op()).get_value();
+        recptr->get_tuple().set_value(new_value_view.data(),
+                                      new_value_view.size(), &old_value);
+        storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+        if (old_value != nullptr) {
+          std::mutex& mutex_for_gclist =
+              kMutexGarbageValues[ti->gc_container_index_];
           mutex_for_gclist.lock();
-          ti->gc_record_container_->emplace_back(recptr);
+          ti->gc_value_container_->emplace_back(
+              std::make_pair(old_value, ti->get_epoch()));
           mutex_for_gclist.unlock();
-
-          break;
         }
+        break;
+      }
+      case OP_TYPE::INSERT: {
+        storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+        break;
+      }
+      case OP_TYPE::DELETE: {
+        TidWord deletetid = maxtid;
+        deletetid.set_absent(true);
+        std::string_view key_view = recptr->get_tuple().get_key();
+        MTDB.remove_value(key_view.data(), key_view.size());
+        storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
+
+        /**
+         * create information for garbage collection.
+         */
+        std::mutex& mutex_for_gclist =
+            kMutexGarbageRecords[ti->gc_container_index_];
+        mutex_for_gclist.lock();
+        ti->gc_record_container_->emplace_back(recptr);
+        mutex_for_gclist.unlock();
+
+        break;
+      }
       default:
         ERR;
         break;
@@ -133,9 +132,7 @@ write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset)
   ti->gc_records_and_values();
 }
 
-Status
-abort(Token token)
-{
+Status abort(Token token) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
@@ -145,9 +142,7 @@ abort(Token token)
   return Status::OK;
 }
 
-void
-forced_gc_all_records()
-{
+void forced_gc_all_records() {
   for (uint i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
     auto itr = kGarbageRecords[i].begin();
     while (itr != kGarbageRecords[i].end()) {
@@ -157,9 +152,8 @@ forced_gc_all_records()
   }
 }
 
-void
-insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
-{
+void insert_record_to_masstree(char const* key, std::size_t len_key,
+                               Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) ERR;
@@ -173,15 +167,12 @@ insert_record_to_masstree(char const *key, std::size_t len_key, Record* record)
 #endif
 }
 
-Status
-commit(Token token)
-{
+Status commit(Token token) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   TidWord max_rset, max_wset;
 
   // Phase 1: Sort lock list;
   std::sort(ti->write_set.begin(), ti->write_set.end());
-
 
   // Phase 2: Lock write set;
   TidWord expected, desired;
@@ -191,14 +182,18 @@ commit(Token token)
     expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
     for (;;) {
       if (expected.get_lock()) {
-        expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
+        expected.get_obj() =
+            loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
       } else {
         desired = expected;
         desired.set_lock(true);
-        if (compareExchange(itr->get_rec_ptr()->get_tidw().get_obj(), expected.get_obj(), desired.get_obj())) break;
+        if (compareExchange(itr->get_rec_ptr()->get_tidw().get_obj(),
+                            expected.get_obj(), desired.get_obj()))
+          break;
       }
     }
-    if (itr->get_op() == OP_TYPE::UPDATE && itr->get_rec_ptr()->get_tidw().get_absent() == true) {
+    if (itr->get_op() == OP_TYPE::UPDATE &&
+        itr->get_rec_ptr()->get_tidw().get_absent() == true) {
       ti->unlock_write_set(ti->write_set.begin(), itr);
       abort(token);
       return Status::ERR_WRITE_TO_DELETED_RECORD;
@@ -206,7 +201,6 @@ commit(Token token)
 
     max_wset = max(max_wset, expected);
   }
-
 
   // Serialization point
   asm volatile("" ::: "memory");
@@ -218,9 +212,11 @@ commit(Token token)
   for (auto itr = ti->read_set.begin(); itr != ti->read_set.end(); itr++) {
     const Record* rec_ptr = itr->get_rec_ptr();
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-    if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() || itr->get_rec_read().get_tidw().get_tid() != check.get_tid())
-        || (check.get_absent() == true) // check whether it was deleted.
-        || (check.get_lock() && (ti->search_write_set(itr->get_rec_ptr()) == nullptr))) {
+    if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
+         itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
+        (check.get_absent() == true)  // check whether it was deleted.
+        || (check.get_lock() &&
+            (ti->search_write_set(itr->get_rec_ptr()) == nullptr))) {
       ti->unlock_write_set();
       abort(token);
       return Status::ERR_VALIDATION;
@@ -230,7 +226,7 @@ commit(Token token)
 
   // Phase 4: Write & Unlock
 
-  //exec_logging(write_set, myid);
+  // exec_logging(write_set, myid);
 
   write_phase(ti, max_rset, max_wset);
 
@@ -239,11 +235,10 @@ commit(Token token)
 }
 
 /**
- * @brief Check wheter the session is already started. This function is not thread safe. But this function can be used only after taking mutex.
+ * @brief Check wheter the session is already started. This function is not
+ * thread safe. But this function can be used only after taking mutex.
  */
-static Status
-decide_token(Token& token)
-{
+static Status decide_token(Token& token) {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if (itr->get_visible() == false) {
       bool expected(false);
@@ -259,16 +254,12 @@ decide_token(Token& token)
   return Status::OK;
 }
 
-Status
-enter(Token& token)
-{
+Status enter(Token& token) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return decide_token(token);
 }
 
-Status
-leave(Token token)
-{
+Status leave(Token token) {
   for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
     if (&(*itr) == static_cast<ThreadInfo*>(token)) {
       if (itr->get_visible() == true) {
@@ -282,10 +273,8 @@ leave(Token token)
   return Status::ERR_INVALID_ARGS;
 }
 
-Status
-read_record(Record& res, const Record* const dest)
-{
-  TidWord f_check, s_check; // first_check, second_check for occ
+Status read_record(Record& res, const Record* const dest) {
+  TidWord f_check, s_check;  // first_check, second_check for occ
 
   f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
@@ -300,7 +289,7 @@ read_record(Record& res, const Record* const dest)
       // but it is't committed yet.
     }
 
-    res.get_tuple() = dest->get_tuple(); // execute copy assign.
+    res.get_tuple() = dest->get_tuple();  // execute copy assign.
 
     s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
     if (f_check == s_check) {
@@ -314,9 +303,7 @@ read_record(Record& res, const Record* const dest)
   return Status::OK;
 }
 
-Status
-delete_all_records()
-{
+Status delete_all_records() {
   Token s{};
   Storage st{};
   while (Status::OK != enter(s)) _mm_pause();
@@ -340,9 +327,9 @@ delete_all_records()
   return Status::OK;
 }
 
-Status
-search_key(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, Tuple** const tuple)
-{
+Status search_key(Token token, [[maybe_unused]] Storage sotrage,
+                  const char* const key, const std::size_t len_key,
+                  Tuple** const tuple) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -368,8 +355,9 @@ search_key(Token token, [[maybe_unused]]Storage sotrage, const char* const key, 
   } else {
     TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
     if (checktid.get_absent() == true) {
-      // The second condition checks 
-      // whether the record you want to read should not be read by parallel insert / delete.
+      // The second condition checks
+      // whether the record you want to read should not be read by parallel
+      // insert / delete.
       *tuple = nullptr;
       return Status::WARN_NOT_FOUND;
     }
@@ -384,15 +372,15 @@ search_key(Token token, [[maybe_unused]]Storage sotrage, const char* const key, 
   return rr;
 }
 
-Status
-update(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
-{
+Status update(Token token, [[maybe_unused]] Storage sotrage,
+              const char* const key, const std::size_t len_key,
+              const char* const val, const std::size_t len_val) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val); 
+    inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
@@ -402,26 +390,27 @@ update(Token token, [[maybe_unused]]Storage sotrage, const char* const key, cons
   } else {
     TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
     if (checktid.get_absent() == true) {
-      // The second condition checks 
-      // whether the record you want to read should not be read by parallel insert / delete.
+      // The second condition checks
+      // whether the record you want to read should not be read by parallel
+      // insert / delete.
       return Status::WARN_NOT_FOUND;
     }
   }
 
-  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
-  
+  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
+                             record);
+
   return Status::OK;
 }
 
-
-Status
-insert(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
-{
+Status insert(Token token, [[maybe_unused]] Storage sotrage,
+              const char* const key, const std::size_t len_key,
+              const char* const val, const std::size_t len_val) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val); 
+    inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
@@ -435,9 +424,8 @@ insert(Token token, [[maybe_unused]]Storage sotrage, const char* const key, cons
   return Status::OK;
 }
 
-Status
-delete_record(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key)
-{
+Status delete_record(Token token, [[maybe_unused]] Storage sotrage,
+                     const char* const key, const std::size_t len_key) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
@@ -450,8 +438,9 @@ delete_record(Token token, [[maybe_unused]]Storage sotrage, const char* const ke
   } else {
     TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
     if (checktid.get_absent() == true) {
-      // The second condition checks 
-      // whether the record you want to read should not be read by parallel insert / delete.
+      // The second condition checks
+      // whether the record you want to read should not be read by parallel
+      // insert / delete.
       return Status::WARN_NOT_FOUND;
     }
   }
@@ -460,35 +449,33 @@ delete_record(Token token, [[maybe_unused]]Storage sotrage, const char* const ke
   return check;
 }
 
-Record*
-find_record_from_masstree(char const *key, std::size_t len_key)
-{
+Record* find_record_from_masstree(char const* key, std::size_t len_key) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
 }
 
-Status
-upsert(Token token, [[maybe_unused]]Storage sotrage, const char* const key, const std::size_t len_key, const char* const val, const std::size_t len_val)
-{
+Status upsert(Token token, [[maybe_unused]] Storage sotrage,
+              const char* const key, const std::size_t len_key,
+              const char* const val, const std::size_t len_val) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val); 
+    inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record *record = find_record_from_masstree(key, len_key);
+  Record* record = find_record_from_masstree(key, len_key);
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
     insert_record_to_masstree(key, len_key, record);
     ti->write_set.emplace_back(OP_TYPE::INSERT, record);
-  }
-  else {
-    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE, record);
+  } else {
+    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
+                               record);
   }
 
   return Status::OK;
 }
 
-} //  namespace kvs
+}  //  namespace kvs

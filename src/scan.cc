@@ -17,12 +17,11 @@ using namespace kvs;
 
 namespace kvs {
 
-Status
-scan_key(Token token, [[maybe_unused]]Storage storage,
-    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
-    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    std::vector<const Tuple*>& result)
-{
+Status scan_key(Token token, [[maybe_unused]] Storage storage,
+                const char* const lkey, const std::size_t len_lkey,
+                const bool l_exclusive, const char* const rkey,
+                const std::size_t len_rkey, const bool r_exclusive,
+                std::vector<const Tuple*>& result) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -31,7 +30,8 @@ scan_key(Token token, [[maybe_unused]]Storage storage,
   auto rset_init_size = ti->read_set.size();
 
   std::vector<const Record*> scan_res;
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res);
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive,
+            &scan_res);
 
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     std::string_view key_view = (*itr)->get_tuple().get_key();
@@ -55,20 +55,23 @@ scan_key(Token token, [[maybe_unused]]Storage storage,
       result.emplace_back(&inrs->get_rec_read().get_tuple());
       continue;
     }
-    // if the record was already read/update/insert in the same transaction, 
+    // if the record was already read/update/insert in the same transaction,
     // the result which is record pointer is notified to caller but
     // don't execute re-read (read_record function).
-    // Because in herbrand semantics, the read reads last update even if the update is own.
+    // Because in herbrand semantics, the read reads last update even if the
+    // update is own.
 
     ti->read_set.emplace_back(const_cast<Record*>(*itr));
-    Status rr = read_record(ti->read_set.back().get_rec_read(), const_cast<Record*>(*itr));
+    Status rr = read_record(ti->read_set.back().get_rec_read(),
+                            const_cast<Record*>(*itr));
     if (rr != Status::OK) {
       return rr;
     }
   }
 
   if (rset_init_size != ti->read_set.size()) {
-    for (auto itr = ti->read_set.begin() + rset_init_size; itr != ti->read_set.end(); ++itr) {
+    for (auto itr = ti->read_set.begin() + rset_init_size;
+         itr != ti->read_set.end(); ++itr) {
       result.emplace_back(&itr->get_rec_read().get_tuple());
     }
   }
@@ -76,18 +79,18 @@ scan_key(Token token, [[maybe_unused]]Storage storage,
   return Status::OK;
 }
 
-Status
-open_scan(Token token, [[maybe_unused]]Storage storage,
-    const char* const lkey, const std::size_t len_lkey, const bool l_exclusive,
-    const char* const rkey, const std::size_t len_rkey, const bool r_exclusive,
-    ScanHandle& handle)
-{
+Status open_scan(Token token, [[maybe_unused]] Storage storage,
+                 const char* const lkey, const std::size_t len_lkey,
+                 const bool l_exclusive, const char* const rkey,
+                 const std::size_t len_rkey, const bool r_exclusive,
+                 ScanHandle& handle) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<const Record*> scan_buf;
 
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf, true);
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf,
+            true);
 
   if (scan_buf.size() > 0) {
     /**
@@ -104,7 +107,7 @@ open_scan(Token token, [[maybe_unused]]Storage storage,
         std::unique_ptr<char[]> tmp_rkey;
         if (len_rkey > 0) {
           tmp_rkey = make_unique<char[]>(len_rkey);
-          memcpy(tmp_rkey.get(), rkey, len_rkey); 
+          memcpy(tmp_rkey.get(), rkey, len_rkey);
         } else {
           /**
            * todo : discuss when len_rkey == 0
@@ -122,8 +125,7 @@ open_scan(Token token, [[maybe_unused]]Storage storage,
       if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
     }
     return Status::OK;
-  }
-  else {
+  } else {
     /**
      * scan couldn't find any records.
      */
@@ -131,9 +133,8 @@ open_scan(Token token, [[maybe_unused]]Storage storage,
   }
 }
 
-Status
-scannable_total_index_size(Token token, [[maybe_unused]]Storage storage, ScanHandle& handle, std::size_t& size)
-{
+Status scannable_total_index_size(Token token, [[maybe_unused]] Storage storage,
+                                  ScanHandle& handle, std::size_t& size) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
@@ -148,9 +149,8 @@ scannable_total_index_size(Token token, [[maybe_unused]]Storage storage, ScanHan
   return Status::OK;
 }
 
-Status
-read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle handle, Tuple** const tuple)
-{
+Status read_from_scan(Token token, [[maybe_unused]] Storage storage,
+                      const ScanHandle handle, Tuple** const tuple) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
@@ -167,7 +167,9 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
   if (scan_buf.size() == scan_index) {
     std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
-    MTDB.scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true, ti->rkey_[handle].get(), ti->len_rkey_[handle], ti->r_exclusive_[handle], &new_scan_buf, true);
+    MTDB.scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true,
+              ti->rkey_[handle].get(), ti->len_rkey_[handle],
+              ti->r_exclusive_[handle], &new_scan_buf, true);
 
     if (new_scan_buf.size() > 0) {
       /**
@@ -175,8 +177,7 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
        */
       scan_buf.assign(new_scan_buf.begin(), new_scan_buf.end());
       scan_index = 0;
-    }
-    else {
+    } else {
       /**
        * scan couldn't find any records.
        */
@@ -186,7 +187,8 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
 
   auto itr = scan_buf.begin() + scan_index;
   std::string_view key_view = (*itr)->get_tuple().get_key();
-  const WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
+  const WriteSetObj* inws =
+      ti->search_write_set(key_view.data(), key_view.size());
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       ++scan_index;
@@ -202,7 +204,8 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  const ReadSetObj* inrs = ti->search_read_set(key_view.data(), key_view.size());
+  const ReadSetObj* inrs =
+      ti->search_read_set(key_view.data(), key_view.size());
   if (inrs != nullptr) {
     *tuple = const_cast<Tuple*>(&inrs->get_rec_read().get_tuple());
     ++scan_index;
@@ -221,9 +224,8 @@ read_from_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle ha
   return Status::OK;
 }
 
-Status
-close_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle handle)
-{
+Status close_scan(Token token, [[maybe_unused]] Storage storage,
+                  const ScanHandle handle) {
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
 
   auto itr = ti->scan_cache_.find(handle);
@@ -244,4 +246,4 @@ close_scan(Token token, [[maybe_unused]]Storage storage, const ScanHandle handle
   return Status::OK;
 }
 
-} // namespace kvs
+}  // namespace kvs
