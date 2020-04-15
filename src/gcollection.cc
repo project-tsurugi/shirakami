@@ -10,6 +10,7 @@
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "scheme.hh"
+#include "xact.hh"
 
 namespace kvs {
 
@@ -21,6 +22,23 @@ alignas(CACHE_LINE_SIZE) std::vector<
     std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
 alignas(CACHE_LINE_SIZE) std::mutex
     kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+
+void release_all_heap_objects() {
+  remove_all_leaf_from_mtdb_and_release();
+  delete_all_garbage_records();
+  delete_all_garbage_values();
+}
+
+void remove_all_leaf_from_mtdb_and_release() {
+  std::vector<const Record*> scan_res;
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
+
+  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
+    std::string_view key_view = (*itr)->get_tuple().get_key();
+    MTDB.remove_value(key_view.data(), key_view.size());
+    delete (*itr);
+  }
+}
 
 void delete_all_garbage_records() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {

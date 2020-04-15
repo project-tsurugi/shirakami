@@ -120,16 +120,12 @@ Status init(std::string log_directory_path) {
 }
 
 void fin() {
-  delete_all_records();  // This function uses DB operation.
+  release_all_heap_objects();
 
   // Stop DB operation.
   kEpochThreadEnd.store(true, std::memory_order_release);
   kEpochThread.join();
   fin_kThreadTable();
-
-  // Delete the remaining garbage (heap) object.
-  delete_all_garbage_records();
-  delete_all_garbage_values();
 }
 
 }  // namespace kvs

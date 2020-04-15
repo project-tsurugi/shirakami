@@ -4,8 +4,9 @@ find_program(CLANG_FORMAT_EXE clang-format)
 
 function(clang_format target)
   if (CLANG_FORMAT_EXE)
-    message(STATUS "Enable Clang-Format ${target}")
+    message(STATUS "Enable Clang-Format ${target} : ${SOURCES}")
     get_target_property(MY_SOURCES ${target} SOURCES)
+    message(STATUS "${target} : source files : ${MY_SOURCES}")
     add_custom_target(
       "${target}_format-with-clang-format"
       COMMAND "${CLANG_FORMAT_EXE}" -i -style=file ${MY_SOURCES}
