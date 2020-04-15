@@ -103,6 +103,8 @@ TEST_F(ThreadInfoTest, get_txbegan_) {
   ASSERT_EQ(handle, 0);
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
+
+  ASSERT_EQ(Status::OK, leave(s));
 }
 
 }  // namespace kvs_charkey::testing
