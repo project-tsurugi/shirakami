@@ -59,7 +59,8 @@ void epocher() {
 
     // check_epoch_loaded() checks whether the
     // latest global epoch is read by all the threads
-    while (!check_epoch_loaded()) {
+    while (!check_epoch_loaded() ) {
+      if (kEpochThreadEnd.load(std::memory_order_acquire) == true) return;
       _mm_pause();
     }
 
