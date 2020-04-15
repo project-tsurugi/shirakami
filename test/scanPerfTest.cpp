@@ -27,8 +27,6 @@ protected:
   }
   ~ScanPerfTest() {
     kvs::fin();
-    kvs::delete_all_records();
-    kvs::delete_all_garbage_records();
   }
 
   void DoScan();

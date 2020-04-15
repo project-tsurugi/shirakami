@@ -20,9 +20,6 @@ protected:
   ThreadInfoTest() { kvs::init(); }
   ~ThreadInfoTest() {
     kvs::fin();
-    kvs::delete_all_records();
-    kvs::delete_all_garbage_records();
-    kvs::delete_all_garbage_values();
     // kvs::MTDB.destroy();
   }
 };

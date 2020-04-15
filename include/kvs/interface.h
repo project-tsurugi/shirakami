@@ -140,14 +140,6 @@ extern Status delete_record(Token token, Storage storage, const char* const key,
 extern Status delete_all_records();
 
 /**
- * @brief delete std::vector<Record*> kGarbageRecords at kvs_charkey/src/xact.cc
- * @return void
- */
-extern void delete_all_garbage_records();
-
-extern void delete_all_garbage_values();
-
-/**
  * @brief insert the record with given key/value
  * @param token [in] the token retrieved by enter()
  * @param storage [in] the storage handle retrieved by register_storage() or get_storage()

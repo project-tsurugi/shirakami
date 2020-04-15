@@ -166,8 +166,6 @@ static void test(void) {
   for (auto& th : thv) th.join();
 
   delete_DataList();
-  delete_all_garbage_records();
-  delete_all_garbage_values();
 }
 
 namespace kvs_charkey::testing {

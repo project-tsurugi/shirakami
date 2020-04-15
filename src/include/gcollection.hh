@@ -15,7 +15,18 @@
 
 namespace kvs {
 
+/**
+ * @brief Delete std::vector<Record*> kGarbageRecords at kvs_charkey/src/gcollection.cc
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
 extern void delete_all_garbage_records();
+
+/**
+ * @brief Delete first of std::pair<std::string*, Epoch>> kGarbageValues at kvs_charkey/src/gcollection.cc
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
 extern void delete_all_garbage_values();
 
 extern std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
