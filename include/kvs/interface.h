@@ -22,9 +22,12 @@ namespace kvs {
 extern Status init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
- * @brief join core threads.
+ * @brief do delete operations for all records, join core threads and delete the remaining garbage (heap) objects.
  * @pre It already did init() and invoked core threads.
- * @details init() did invoking core threads detached. So it is good to join those threads. This function surves that joining.
+ * @details It do delete operations for all records.
+ * init() did invoking core threads detached. So it should join those threads. 
+ * This function surves that joining after doing those delete operations.
+ * Then, it delete the remaining garbage (heap) object by using private interface.
  */
 extern void fin();
 
