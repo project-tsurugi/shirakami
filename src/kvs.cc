@@ -120,7 +120,7 @@ Status init(std::string log_directory_path) {
 }
 
 void fin() {
-  delete_all_records(); // This function uses DB operation.
+  delete_all_records();  // This function uses DB operation.
 
   // Stop DB operation.
   kEpochThreadEnd.store(true, std::memory_order_release);

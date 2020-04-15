@@ -15,10 +15,13 @@
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "key.hh"
-#include "kvs/interface.h"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tsc.hh"
+#include "tuple.hh"
+
+#include "kvs/interface.h"
+#include "kvs/tuple.h"
 
 namespace kvs {
 
@@ -78,8 +81,8 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
         std::string* old_value;
         std::string_view new_value_view =
             iws->get_tuple(iws->get_op()).get_value();
-        recptr->get_tuple().set_value(new_value_view.data(),
-                                      new_value_view.size(), &old_value);
+        recptr->get_tuple().get_pimpl()->set_value(
+            new_value_view.data(), new_value_view.size(), &old_value);
         storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
         if (old_value != nullptr) {
           std::mutex& mutex_for_gclist =

@@ -7,6 +7,7 @@
 #include "atomic_wrapper.hh"
 #include "gcollection.hh"
 #include "log.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 using std::cout;
@@ -276,10 +277,10 @@ bool WriteSetObj::operator<(const WriteSetObj& right) const {
 void WriteSetObj::reset_tuple_value(const char* const val_ptr,
                                     const std::size_t val_length) & {
   if (this->get_op() == OP_TYPE::UPDATE) {
-    this->get_tuple_to_local().set_value(val_ptr, val_length);
+    this->get_tuple_to_local().get_pimpl()->set_value(val_ptr, val_length);
   } else {
     // insert
-    this->get_tuple_to_db().set_value(val_ptr, val_length);
+    this->get_tuple_to_db().get_pimpl()->set_value(val_ptr, val_length);
   }
 }
 

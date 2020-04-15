@@ -25,9 +25,7 @@ protected:
       key_[i] = i;
     }
   }
-  ~ScanPerfTest() {
-    kvs::fin();
-  }
+  ~ScanPerfTest() { kvs::fin(); }
 
   void DoScan();
   void DoInsert(int, int);

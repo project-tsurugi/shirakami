@@ -7,6 +7,7 @@
 #include <cassert>
 #include <string>
 
+#include "kvs/tuple.h"
 #include "tuple.hh"
 
 namespace kvs {
@@ -85,25 +86,11 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) {
   return *this;
 }
 
-std::string_view Tuple::Impl::get_key() & {
+std::string_view Tuple::Impl::get_key() const& {
   return std::string_view{key_.data(), key_.size()};
 }
 
-const std::string_view Tuple::Impl::get_key() const& {
-  return std::string_view{key_.data(), key_.size()};
-}
-
-std::string_view Tuple::Impl::get_value() & {
-  if (need_delete_pvalue_) {
-    // common subexpression elimination
-    std::string* value = pvalue_.load(std::memory_order_acquire);
-    return std::string_view{value->data(), value->size()};
-  } else {
-    return std::string_view{};
-  }
-}
-
-const std::string_view Tuple::Impl::get_value() const& {
+std::string_view Tuple::Impl::get_value() const& {
   if (need_delete_pvalue_) {
     // common subexpression elimination
     std::string* value = pvalue_.load(std::memory_order_acquire);
@@ -188,30 +175,9 @@ Tuple& Tuple::operator=(Tuple&& right) & {
 
 Tuple::~Tuple(){};
 
-std::string_view Tuple::get_key() & { return pimpl_.get()->get_key(); }
-
 std::string_view Tuple::get_key() const& { return pimpl_.get()->get_key(); }
-
-std::string_view Tuple::get_value() & { return pimpl_.get()->get_value(); }
 
 std::string_view Tuple::get_value() const& { return pimpl_.get()->get_value(); }
 
-void Tuple::set(const char* key_ptr, const std::size_t key_length,
-                const char* value_ptr, const std::size_t value_length) & {
-  pimpl_.get()->set(key_ptr, key_length, value_ptr, value_length);
-}
-
-void Tuple::set_key(const char* key_ptr, const std::size_t key_length) & {
-  pimpl_.get()->set_key(key_ptr, key_length);
-}
-
-void Tuple::set_value(const char* value_ptr, const std::size_t value_length) & {
-  pimpl_.get()->set_value(value_ptr, value_length);
-}
-
-void Tuple::set_value(const char* value_ptr, const std::size_t value_length,
-                      std::string** const old_value) & {
-  pimpl_.get()->set_value(value_ptr, value_length, old_value);
-}
-
+Tuple::Impl* Tuple::get_pimpl() & { return pimpl_.get(); }
 }  // namespace kvs
