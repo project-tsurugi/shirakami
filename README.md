@@ -29,8 +29,10 @@ ninja
 available options:
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
-* `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate prerequiste installation directory
+* `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
+* `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON` - use formatting for source files
+* `-DWAL=ON` - enable write-ahead-logging
 * for debugging only
   * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
   * `-DENABLE_UB_SANITIZER=ON` - enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
