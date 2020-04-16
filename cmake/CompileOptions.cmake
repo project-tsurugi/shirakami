@@ -52,7 +52,7 @@ add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
 add_definitions(-DKVS_LOG_GC_THRESHOLD=1)
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
-option(WAL "Write ahead logging" ON)
+option(WAL "Write ahead logging" OFF)
 if(WAL)
   add_definitions(-DWAL)
 endif()

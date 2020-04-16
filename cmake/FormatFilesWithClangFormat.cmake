@@ -4,7 +4,7 @@ find_program(CLANG_FORMAT_EXE clang-format)
 
 function(clang_format target)
   if (CLANG_FORMAT_EXE)
-    message(STATUS "Enable Clang-Format ${target} : ${SOURCES}")
+    message(STATUS "Enable Clang-Format ${target}")
     get_target_property(MY_SOURCES ${target} SOURCES)
     message(STATUS "${target} : source files : ${MY_SOURCES}")
     add_custom_target(
