@@ -33,7 +33,6 @@ class Tuple::Impl {
     ~Impl() {
       if (this->need_delete_pvalue_) {
         delete pvalue_.load(std::memory_order_acquire);
-      } else {
       }
     }
  
