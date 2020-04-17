@@ -145,16 +145,6 @@ Status abort(Token token) {
   return Status::OK;
 }
 
-void forced_gc_all_records() {
-  for (uint i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    auto itr = kGarbageRecords[i].begin();
-    while (itr != kGarbageRecords[i].end()) {
-      delete *itr;
-      itr = kGarbageRecords[i].erase(itr);
-    }
-  }
-}
-
 void insert_record_to_masstree(char const* key, std::size_t len_key,
                                Record* record) {
 #ifdef KVS_Linux

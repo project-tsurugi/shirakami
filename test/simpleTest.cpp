@@ -621,7 +621,6 @@ TEST_F(SimpleTest, all_deletes) {
               delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
   ASSERT_EQ(Status::OK, commit(s));
-  forced_gc_all_records();
   ASSERT_EQ(Status::OK, leave(s));
 }
 

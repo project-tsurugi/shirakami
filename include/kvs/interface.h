@@ -269,11 +269,4 @@ extern Status close_scan(Token token, Storage storage, const ScanHandle handle);
  */
 extern void single_recovery_from_log();
 
-/**
- * @brief This function do gc all records in all containers for gc.
- *
- * This function isn't thread safe.
- */
-extern void forced_gc_all_records();
-
 }  // namespace kvs
