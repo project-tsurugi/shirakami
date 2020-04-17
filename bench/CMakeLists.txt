@@ -15,13 +15,13 @@
 file(GLOB YCSB_SOURCES
   "ycsb.cc"
   "masstree_build.cc"
-  "../test/result.cc"
+  "result.cc"
 )
 
 file(GLOB MASSTREE_SOURCES
   "masstree.cc"
   "masstree_build.cc"
-  "../test/result.cc"
+  "result.cc"
 )
 
 add_executable(ycsb
