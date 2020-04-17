@@ -48,6 +48,14 @@ TEST_F(schemeTest, to_string_view_Status) {
   ASSERT_EQ("ERR_VALIDATION"sv, to_string_view(status));
   status = Status::ERR_WRITE_TO_DELETED_RECORD;
   ASSERT_EQ("ERR_WRITE_TO_DELETED_RECORD"sv, to_string_view(status));
+  status = (Status)INT32_MAX;
+  // below statements occur std::abort()
+#if 0
+  try {
+    to_string_view(status);
+  } catch (...) {
+  }
+#endif
 }
 
 TEST_F(schemeTest, ostream_operator_Status) { cout << Status::OK << endl; }
