@@ -3,7 +3,7 @@
 
 #include "kvs/interface.h"
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "scheme.hh"
@@ -13,7 +13,7 @@ using namespace kvs;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class ThreadInfoTest : public ::testing::Test {
 protected:
@@ -107,4 +107,4 @@ TEST_F(ThreadInfoTest, get_txbegan_) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

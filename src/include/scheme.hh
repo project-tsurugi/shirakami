@@ -29,7 +29,7 @@
 #include "scheme.hh"
 #include "tid.hh"
 
-// kvs_charkey/include/
+// shirakami/include/
 #include "kvs/scheme.h"
 
 namespace kvs {

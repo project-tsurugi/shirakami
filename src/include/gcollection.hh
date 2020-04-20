@@ -16,14 +16,14 @@
 namespace kvs {
 
 /**
- * @brief Delete std::vector<Record*> kGarbageRecords at kvs_charkey/src/gcollection.cc
+ * @brief Delete std::vector<Record*> kGarbageRecords at shirakami/src/gcollection.cc
  * @pre This function should be called at terminating db.
  * @return void
  */
 extern void delete_all_garbage_records();
 
 /**
- * @brief Delete first of std::pair<std::string*, Epoch>> kGarbageValues at kvs_charkey/src/gcollection.cc
+ * @brief Delete first of std::pair<std::string*, Epoch>> kGarbageValues at shirakami/src/gcollection.cc
  * @pre This function should be called at terminating db.
  * @return void
  */

@@ -7,7 +7,7 @@ using namespace kvs;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class schemeTest : public ::testing::Test {
 protected:
@@ -90,4 +90,4 @@ TEST_F(schemeTest, ostream_operator_OP_TYPE) {
 
 // scheme.hh
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

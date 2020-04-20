@@ -16,11 +16,11 @@
 
 #pragma once
 
-// kvs_charkey/src/include/
+// shirakami/src/include/
 #include "header.hh"
 #include "scheme.hh"
 
-// kvs_charkey/include/
+// shirakami/include/
 #include "kvs/scheme.h"
 
 size_t decideParallelBuildNumber(std::size_t record, std::size_t thread);

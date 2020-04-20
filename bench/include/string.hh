@@ -1,6 +1,6 @@
 #pragma once
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "header.hh"
 
 static void

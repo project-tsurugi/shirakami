@@ -8,7 +8,7 @@
 #include "string.hh"
 #include "ycsb_param.h"
 
-// kvs_charkey/src/
+// shirakami/src/
 #include "random.hh"
 #include "scheme.hh"
 #include "zipf.hh"

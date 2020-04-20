@@ -17,7 +17,7 @@ file(GLOB TEST_SOURCES
 )
 
 register_tests(
-    TARGET kvs_charkey
-    DEPENDS kvs_charkey-impl
+    TARGET shirakami
+    DEPENDS shirakami-impl
     SOURCES ${TEST_SOURCES}
 )

@@ -1,4 +1,4 @@
-# kvs - charkey
+# shirakami - Transaction Engine.
 
 ## Requirements
 
@@ -65,9 +65,9 @@ Dump the coverage information into html files with the following steps:
 cd build
 mkdir gcovr-html
 GCOVR_COMMON_OPTION='-e ../third_party/ -e ../.*/test.* -e ../.*/examples.* -e ../.local/.*'
-gcovr  -r .. --html --html-details  ${GCOVR_COMMON_OPTION} -o gcovr-html/kvs_charkey-gcovr.html
+gcovr  -r .. --html --html-details  ${GCOVR_COMMON_OPTION} -o gcovr-html/shirakami-gcovr.html
 ```
-Open gcovr-html/kvs_charkey-gcovr.html to see the coverage report.
+Open gcovr-html/shirakami-gcovr.html to see the coverage report.
 
 ## License
 

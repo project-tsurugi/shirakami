@@ -16,7 +16,7 @@
 
 #include "./include/test_param.h"
 
-// kvs_charkey/src/
+// shirakami/src/
 #include "cpu.hh"
 #include "debug.hh"
 #include "header.hh"
@@ -25,7 +25,7 @@
 
 #include "gtest/gtest.h"
 
-// kvs_charkey/include/
+// shirakami/include/
 #include "kvs/interface.h"
 
 using namespace single_thread_test;
@@ -168,7 +168,7 @@ static void test(void) {
   delete_DataList();
 }
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class cliTest : public ::testing::Test {};
 
@@ -178,4 +178,4 @@ TEST_F(cliTest, single_thread_test) {
   fin();
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

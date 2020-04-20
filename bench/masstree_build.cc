@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-// kvs_charkey/test
+// shirakami/test
 #include "result.hh"
 
-// kvs_charkey/bench
+// shirakami/bench
 #include "./include/string.hh"
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "atomic_wrapper.hh"
 #include "cache_line_size.hh"
 #include "clock.hh"
@@ -33,7 +33,7 @@
 #include "xact.hh"
 #include "zipf.hh"
 
-// kvs_charkey/include/
+// shirakami/include/
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 

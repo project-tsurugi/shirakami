@@ -3,7 +3,7 @@
 
 #include "kvs/interface.h"
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "compiler.hh"
 #include "header.hh"
 #include "tsc.hh"
@@ -12,7 +12,7 @@ using namespace kvs;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 constexpr const int MAX_TUPLES = 1000000;
 constexpr const int READ_TUPLES = 100;
@@ -133,4 +133,4 @@ TEST_F(ScanPerfTest, read_from_scan) {
   EXPECT_EQ(Status::OK, leave(s_));
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

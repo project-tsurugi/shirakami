@@ -19,7 +19,7 @@ using namespace std;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class MasstreeTest : public ::testing::Test {
 protected:
@@ -50,4 +50,4 @@ TEST_F(MasstreeTest, remove) {
             MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

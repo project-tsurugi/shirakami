@@ -5,7 +5,7 @@
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class errorTest : public ::testing::Test {
 protected:
@@ -23,4 +23,4 @@ TEST_F(errorTest, LibcError) {
   }
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

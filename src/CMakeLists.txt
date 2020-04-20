@@ -2,38 +2,38 @@ file(GLOB SOURCES
         "*.cc"
 )
 
-add_library(kvs_charkey
+add_library(shirakami
     ${SOURCES}
 )
 
-target_include_directories(kvs_charkey
+target_include_directories(shirakami
     PRIVATE include
 )
 
 find_package(Threads REQUIRED)
 
-target_link_libraries(kvs_charkey
+target_link_libraries(shirakami
         PUBLIC api
         PRIVATE Threads::Threads
         Boost::filesystem
         ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
 )
 
-set_target_properties(kvs_charkey
+set_target_properties(shirakami
         PROPERTIES
         LIBRARY_OUTPUT_NAME "kvs"
         )
 
-set_compile_options(kvs_charkey)
-install_custom(kvs_charkey ${export_name})
-clang_format(kvs_charkey)
+set_compile_options(shirakami)
+install_custom(shirakami ${export_name})
+clang_format(shirakami)
 
 # for tests
-add_library(kvs_charkey-impl INTERFACE)
+add_library(shirakami-impl INTERFACE)
 
-target_link_libraries(kvs_charkey-impl
+target_link_libraries(shirakami-impl
 )
 
-target_include_directories(kvs_charkey-impl
+target_include_directories(shirakami-impl
     INTERFACE include
 )

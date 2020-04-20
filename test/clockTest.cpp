@@ -5,7 +5,7 @@
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class clockTest : public ::testing::Test {
 protected:
@@ -30,4 +30,4 @@ TEST_F(clockTest, sleepMs) {
   ASSERT_EQ(true, true);
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

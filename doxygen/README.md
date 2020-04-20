@@ -1,3 +1,3 @@
-# kvs_charkey
+# shirakami
 
 * [API reference](interface_8h.html)

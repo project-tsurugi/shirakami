@@ -7,7 +7,7 @@ pipeline {
         }
     }
     environment {
-        GITHUB_URL = 'https://github.com/project-tsurugi/kvs_charkey'
+        GITHUB_URL = 'https://github.com/project-tsurugi/shirakami'
         GITHUB_CHECKS = 'tsurugi-check'
         BUILD_PARALLEL_NUM="""${sh(
                 returnStdout: true,
@@ -67,7 +67,7 @@ pipeline {
                 sh '''
                     cd build
                     make doxygen > doxygen.log 2>&1
-                    zip -q -r kvs_charkey-doxygen doxygen/html
+                    zip -q -r shirakami-doxygen doxygen/html
                 '''
             }
         }
@@ -80,9 +80,9 @@ pipeline {
                 sh '''
                     cd build
                     mkdir gcovr-xml gcovr-html
-                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --xml ${GCOVR_COMMON_OPTION} -o gcovr-xml/kvs_charkey-gcovr.xml
-                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --html --html-details --html-title "kvs_charkey coverage" ${GCOVR_COMMON_OPTION} -o gcovr-html/kvs_charkey-gcovr.html
-                    zip -q -r kvs_charkey-coverage-report gcovr-html
+                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --xml ${GCOVR_COMMON_OPTION} -o gcovr-xml/shirakami-gcovr.xml
+                    gcovr -j ${BUILD_PARALLEL_NUM} -r .. --html --html-details --html-title "shirakami coverage" ${GCOVR_COMMON_OPTION} -o gcovr-html/shirakami-gcovr.html
+                    zip -q -r shirakami-coverage-report gcovr-html
                 '''
             }
         }
@@ -98,8 +98,8 @@ pipeline {
                 includePattern: '**/*.md,**/*.txt,**/*.in,**/*.cmake,**/*.cpp,**/*.cc,**/*.h,**/*.hpp',
                 excludePattern: 'third_party/**'),
                 enabledForFailure: true
-            publishCoverage adapters: [coberturaAdapter('build/gcovr-xml/kvs_charkey-gcovr.xml')], sourceFileResolver: sourceFiles('STORE_ALL_BUILD')
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/kvs_charkey-coverage-report.zip, build/kvs_charkey-doxygen.zip', onlyIfSuccessful: true
+            publishCoverage adapters: [coberturaAdapter('build/gcovr-xml/shirakami-gcovr.xml')], sourceFileResolver: sourceFiles('STORE_ALL_BUILD')
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/shirakami-coverage-report.zip, build/shirakami-doxygen.zip', onlyIfSuccessful: true
             notifySlack('kvs-dev', 'next-oltp', '7fb92c62-9c08-4c76-a64c-fac01404f4f3')
         }
     }

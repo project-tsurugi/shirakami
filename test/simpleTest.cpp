@@ -5,7 +5,7 @@
 
 #include "kvs/interface.h"
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "compiler.hh"
 #include "scheme.hh"
 #include "xact.hh"
@@ -14,7 +14,7 @@ using namespace kvs;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class SimpleTest : public ::testing::Test {
 protected:
@@ -819,4 +819,4 @@ TEST_F(SimpleTest, long_insert) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

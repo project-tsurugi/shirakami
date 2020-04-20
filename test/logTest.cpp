@@ -5,7 +5,7 @@
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class logTest : public ::testing::Test {
 protected:
@@ -35,4 +35,4 @@ TEST_F(logTest, LogRecord) {
   }
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

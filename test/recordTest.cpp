@@ -6,7 +6,7 @@ using namespace kvs;
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class recordTest : public ::testing::Test {
 protected:
@@ -24,4 +24,4 @@ TEST_F(recordTest, constructor) {
   }
 }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

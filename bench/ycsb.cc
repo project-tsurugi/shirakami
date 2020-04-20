@@ -16,17 +16,17 @@
 
 #include <xmmintrin.h>
 
-// kvs_charkey/test
+// shirakami/test
 #include "result.hh"
 
-// kvs_charkey/bench
+// shirakami/bench
 #include "./include/gen_tx.hh"
 #include "./include/masstree_build.hh"
 #include "./include/string.hh"
 #include "./include/ycsb.hh"
 #include "./include/ycsb_param.h"
 
-// kvs_charkey/src/
+// shirakami/src/
 #include "atomic_wrapper.hh"
 #include "cache_line_size.hh"
 #include "clock.hh"
@@ -38,7 +38,7 @@
 #include "scheme.hh"
 #include "zipf.hh"
 
-// kvs_charkey/include/
+// shirakami/include/
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
@@ -125,7 +125,7 @@ static void load_flags() {
 }
 
 int main(int argc, char* argv[]) {
-  gflags::SetUsageMessage("YCSB benchmark for kvs_charkey");
+  gflags::SetUsageMessage("YCSB benchmark for shirakami");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
 

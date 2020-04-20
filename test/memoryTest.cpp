@@ -5,7 +5,7 @@
 using std::cout;
 using std::endl;
 
-namespace kvs_charkey::testing {
+namespace shirakami::testing {
 
 class memoryTest : public ::testing::Test {
 protected:
@@ -15,4 +15,4 @@ protected:
 
 TEST_F(memoryTest, displayRusageRUMaxrss) { displayRusageRUMaxrss(); }
 
-}  // namespace kvs_charkey::testing
+}  // namespace shirakami::testing

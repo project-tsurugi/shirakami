@@ -37,8 +37,8 @@ add_executable(masstree
 clang_format(masstree)
 
 target_link_libraries(ycsb
-  PRIVATE kvs_charkey
-  PRIVATE kvs_charkey-impl
+  PRIVATE shirakami
+  PRIVATE shirakami-impl
   PRIVATE Threads::Threads
   PRIVATE gflags::gflags
 )
@@ -53,8 +53,8 @@ target_include_directories(ycsb
   PRIVATE ${gflags_INCLUDE_DIR}
 )
 target_link_libraries(masstree
-  PRIVATE kvs_charkey
-  PRIVATE kvs_charkey-impl
+  PRIVATE shirakami
+  PRIVATE shirakami-impl
   PRIVATE Threads::Threads
   PRIVATE gflags::gflags
 )

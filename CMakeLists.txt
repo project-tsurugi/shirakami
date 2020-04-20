@@ -14,9 +14,9 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(kvs_charkey
+project(shirakami
     VERSION 0.0.1
-    DESCRIPTION "kvs_charkey"
+    DESCRIPTION "shirakami"
     LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -54,11 +54,11 @@ add_library(api INTERFACE)
 target_include_directories(api
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/kvs_charkey>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/shirakami>
 )
 
-set(export_name "kvs_charkey")
-set(package_name "kvs_charkey")
+set(export_name "shirakami")
+set(package_name "shirakami")
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in

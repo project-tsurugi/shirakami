@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
-// kvs_charkey-impl interface library
+// shirakami-impl interface library
 #include "debug.hh"
 #include "memory.hh"
 
