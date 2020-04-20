@@ -68,7 +68,7 @@ private:
 
 class LogRecord {
  public:
-  LogRecord(){}
+  LogRecord() : tid_(), op_(OP_TYPE::NONE), tuple_(nullptr) {}
 
   LogRecord(const TidWord tid, const OP_TYPE op, const Tuple* const tuple) : tid_(tid), op_(op), tuple_(tuple) {}
 

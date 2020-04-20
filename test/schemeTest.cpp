@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "kvs/scheme.h"
+#include "scheme.hh"
 
 using namespace kvs;
 using std::cout;
@@ -13,6 +14,8 @@ protected:
   schemeTest() {}
   ~schemeTest() {}
 };
+
+// kvs/scheme.h
 
 TEST_F(schemeTest, to_string_view_Status) {
   using namespace std::string_view_literals;
@@ -62,24 +65,29 @@ TEST_F(schemeTest, ostream_operator_Status) { cout << Status::OK << endl; }
 
 TEST_F(schemeTest, to_string_view_OP_TYPE) {
   using namespace std::string_view_literals;
-  OP_TYPE op = OP_TYPE::SEARCH;
-  ASSERT_EQ("SEARCH"sv, to_string_view(op));
-  op = OP_TYPE::UPDATE;
-  ASSERT_EQ("UPDATE"sv, to_string_view(op));
-  op = OP_TYPE::INSERT;
-  ASSERT_EQ("INSERT"sv, to_string_view(op));
-  op = OP_TYPE::DELETE;
-  ASSERT_EQ("DELETE"sv, to_string_view(op));
+  OP_TYPE op;
+  op = OP_TYPE::ABORT;
+  ASSERT_EQ("ABORT"sv, to_string_view(op));
   op = OP_TYPE::BEGIN;
   ASSERT_EQ("BEGIN"sv, to_string_view(op));
   op = OP_TYPE::COMMIT;
   ASSERT_EQ("COMMIT"sv, to_string_view(op));
-  op = OP_TYPE::ABORT;
-  ASSERT_EQ("ABORT"sv, to_string_view(op));
+  op = OP_TYPE::DELETE;
+  ASSERT_EQ("DELETE"sv, to_string_view(op));
+  op = OP_TYPE::INSERT;
+  ASSERT_EQ("INSERT"sv, to_string_view(op));
+  op = OP_TYPE::NONE;
+  ASSERT_EQ("NONE"sv, to_string_view(op));
+  op = OP_TYPE::SEARCH;
+  ASSERT_EQ("SEARCH"sv, to_string_view(op));
+  op = OP_TYPE::UPDATE;
+  ASSERT_EQ("UPDATE"sv, to_string_view(op));
 }
 
 TEST_F(schemeTest, ostream_operator_OP_TYPE) {
   cout << OP_TYPE::SEARCH << endl;
 }
+
+// scheme.hh
 
 }  // namespace kvs_charkey::testing

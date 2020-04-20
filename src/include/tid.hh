@@ -24,7 +24,7 @@ public:
     };
   };
 
-  TidWord() { obj_ = 0; }
+  TidWord() : obj_(0) {}
   TidWord(const uint64_t obj) { obj_ = obj; }
 
   TidWord& operator=(const TidWord& right) {

@@ -13,8 +13,8 @@ namespace kvs {
 
 class Tuple::Impl {
   public:
-    Impl() : need_delete_pvalue_(false) {
-      key_.clear();
+    Impl() : key_(), need_delete_pvalue_(false) {
+      pvalue_.store(nullptr, std::memory_order_release);
     }
 
     Impl(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);

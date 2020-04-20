@@ -175,25 +175,27 @@ inline std::ostream& operator<<(std::ostream& out, Status value) {
 }
 
 enum class OP_TYPE : std::int32_t {
-  SEARCH,
-  UPDATE,
-  INSERT,
-  DELETE,
+  ABORT,
   BEGIN,
   COMMIT,
-  ABORT,
+  DELETE,
+  NONE,
+  INSERT,
+  SEARCH,
+  UPDATE,
 };
 
 inline constexpr std::string_view to_string_view(OP_TYPE op) noexcept {
   using namespace std::string_view_literals;
   switch (op) {
-    case OP_TYPE::SEARCH: return "SEARCH"sv;
-    case OP_TYPE::UPDATE: return "UPDATE"sv;
-    case OP_TYPE::INSERT: return "INSERT"sv;
-    case OP_TYPE::DELETE: return "DELETE"sv;
+    case OP_TYPE::ABORT: return "ABORT"sv;
     case OP_TYPE::BEGIN: return "BEGIN"sv;
     case OP_TYPE::COMMIT: return "COMMIT"sv;
-    case OP_TYPE::ABORT: return "ABORT"sv;
+    case OP_TYPE::DELETE: return "DELETE"sv;
+    case OP_TYPE::INSERT: return "INSERT"sv;
+    case OP_TYPE::NONE: return "NONE"sv;
+    case OP_TYPE::SEARCH: return "SEARCH"sv;
+    case OP_TYPE::UPDATE: return "UPDATE"sv;
   }
   std::abort();
 }

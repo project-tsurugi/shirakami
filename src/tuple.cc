@@ -7,6 +7,7 @@
 #include <cassert>
 #include <string>
 
+#include "debug.hh"
 #include "kvs/tuple.h"
 #include "tuple.hh"
 
@@ -96,7 +97,7 @@ std::string_view Tuple::Impl::get_value() const& {
     std::string* value = pvalue_.load(std::memory_order_acquire);
     return std::string_view{value->data(), value->size()};
   } else {
-    return std::string_view{};
+    return {};
   }
 }
 
