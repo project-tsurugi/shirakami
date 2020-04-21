@@ -31,8 +31,11 @@ extern Record* find_record_from_masstree(char const *key, std::size_t len_key);
  * @brief insert record to masstree by using args informations.
  * @pre the record which has the same key as the key of args have never been inserted.
  * @param record It inserts this pointer to masstree database.
+ * @return WARN_ALREADY_EXISTS The records whose key is the same as @key exists in masstree, 
+ * so this function returned immediately.
+ * @return Status::OK It inserted record.
  */
-extern void insert_record_to_masstree(char const *key, std::size_t len_key, Record* record);
+extern Status insert_record_to_masstree(char const *key, std::size_t len_key, Record* record);
 
 /**
  * @brief read record by using dest given by caller and store read info to res given by caller.

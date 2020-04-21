@@ -145,8 +145,8 @@ Status abort(Token token) {
   return Status::OK;
 }
 
-void insert_record_to_masstree(char const* key, std::size_t len_key,
-                               Record* record) {
+Status insert_record_to_masstree(char const* key, std::size_t len_key,
+                                 Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) ERR;
@@ -154,10 +154,11 @@ void insert_record_to_masstree(char const* key, std::size_t len_key,
   setThreadAffinity(core_pos);
 #endif
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  MTDB.insert_value(key, len_key, record);
+  Status insert_result(MTDB.insert_value(key, len_key, record));
 #ifdef KVS_Linux
   setThreadAffinity(current_mask);
 #endif
+  return insert_result;
 }
 
 Status commit(Token token) {
@@ -412,9 +413,14 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,
   }
 
   Record* record = new Record(key, len_key, val, len_val);
-  insert_record_to_masstree(key, len_key, record);
-  ti->write_set.emplace_back(OP_TYPE::INSERT, record);
-  return Status::OK;
+  Status insert_result(insert_record_to_masstree(key, len_key, record));
+  if (insert_result == Status::OK) {
+    ti->write_set.emplace_back(OP_TYPE::INSERT, record);
+    return Status::OK;
+  }
+  // else insert_result == Status::WARN_ALREADY_EXISTS
+  delete record;
+  return Status::WARN_ALREADY_EXISTS;
 }
 
 Status delete_record(Token token, [[maybe_unused]] Storage sotrage,
@@ -461,12 +467,16 @@ Status upsert(Token token, [[maybe_unused]] Storage sotrage,
   Record* record = find_record_from_masstree(key, len_key);
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);
-    insert_record_to_masstree(key, len_key, record);
-    ti->write_set.emplace_back(OP_TYPE::INSERT, record);
-  } else {
-    ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                               record);
+    Status insert_result(insert_record_to_masstree(key, len_key, record));
+    if (insert_result == Status::OK) {
+      ti->write_set.emplace_back(OP_TYPE::INSERT, record);
+      return Status::OK;
+    }
+    // else insert_result == Status::WARN_ALREADY_EXISTS
+    // so goto update.
   }
+  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
+                             record);
 
   return Status::OK;
 }
