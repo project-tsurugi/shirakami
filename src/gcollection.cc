@@ -38,6 +38,13 @@ void remove_all_leaf_from_mtdb_and_release() {
     MTDB.remove_value(key_view.data(), key_view.size());
     delete (*itr);
   }
+
+  /**
+   * check whether MTDB is empty.
+   */
+  scan_res.clear();
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
+  if (scan_res.size() != 0) std::abort();
 }
 
 void delete_all_garbage_records() {
