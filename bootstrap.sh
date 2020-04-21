@@ -1,4 +1,5 @@
 # Install masstree
+set -e
 cd third_party/masstree-beta
 ./bootstrap.sh
 ./configure
