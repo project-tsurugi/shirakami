@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
+#include "debug.hh"
 #include "header.hh"
 
 #include "kvs/scheme.h"
@@ -112,6 +113,10 @@ class MasstreeWrapper {
   static __thread typename table_params::threadinfo_type* ti;
 
   MasstreeWrapper() { this->table_init(); }
+  ~MasstreeWrapper() { 
+    //threadinfo::destruct_all(); 
+    //ti = nullptr;
+  }
 
   void table_init() {
     // printf("masstree table_init()\n");

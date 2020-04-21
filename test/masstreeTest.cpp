@@ -3,13 +3,10 @@
  * @brief test about usage of masstree.
  */
 
-#include "compiler.hh"
 #include "gtest/gtest.h"
-#include "header.hh"
-#include "kvs/interface.h"
+
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
-#include "xact.hh"
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"
