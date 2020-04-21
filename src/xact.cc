@@ -474,6 +474,7 @@ Status upsert(Token token, [[maybe_unused]] Storage sotrage,
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
+    delete record;
   }
   ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
                              record);
