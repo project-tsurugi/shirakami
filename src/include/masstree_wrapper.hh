@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <random>
 #include <thread>
 #include <typeinfo>
@@ -224,8 +225,8 @@ class MasstreeWrapper {
     // future work.
   }
 
-  static bool stopping;
-  static uint32_t printing;
+  static std::atomic<bool> stopping;
+  static std::atomic<uint32_t> printing;
 
  private:
   table_type table_;
@@ -239,9 +240,9 @@ template <typename T>
 __thread typename MasstreeWrapper<T>::table_params::threadinfo_type*
     MasstreeWrapper<T>::ti = nullptr;
 template <typename T>
-bool MasstreeWrapper<T>::stopping = false;
+std::atomic<bool> MasstreeWrapper<T>::stopping = false;
 template <typename T>
-uint32_t MasstreeWrapper<T>::printing = 0;
+std::atomic<uint32_t> MasstreeWrapper<T>::printing = 0;
 extern volatile mrcu_epoch_type active_epoch;
 extern volatile uint64_t globalepoch;
 extern volatile bool recovering;
