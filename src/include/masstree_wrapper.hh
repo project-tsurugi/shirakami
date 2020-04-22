@@ -111,6 +111,8 @@ class MasstreeWrapper {
   typedef typename unlocked_cursor_type::nodeversion_value_type
       nodeversion_value_type;
 
+  // tanabe :: todo. it should be wrapped by atomic type if not only one thread
+  // use this.
   static __thread typename table_params::threadinfo_type* ti;
 
   MasstreeWrapper() { this->table_init(); }
