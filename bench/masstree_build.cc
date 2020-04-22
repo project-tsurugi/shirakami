@@ -56,29 +56,25 @@ size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
 }
 
 void parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end,
-                         std::size_t len_val,
-                         std::vector<Tuple *> *insertedList) {
+                         std::size_t value_length) {
   Token token;
   enter(token);
 
   tbegin(token);
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
-    std::unique_ptr<char[]> val = std::make_unique<char[]>(len_val);
-    make_string(val.get(), len_val);
-    Tuple *tuple =
-        new Tuple((char *)&keybs, sizeof(uint64_t), val.get(), len_val);
+    std::string val(value_length, '0');
+    make_string(val);
     Storage storage;
-    insert(token, storage, (char *)&keybs, sizeof(uint64_t), val.get(),
-           len_val);
-    insertedList->emplace_back(tuple);
+    insert(token, storage, reinterpret_cast<char *>(&keybs), sizeof(uint64_t),
+           val.data(), val.size());
   }
   commit(token);
   leave(token);
 }
 
-void build_mtdb(std::size_t record, std::size_t thread, std::size_t len_val,
-                std::vector<Tuple *> *insertedList) {
+void build_mtdb(std::size_t record, std::size_t thread,
+                std::size_t value_length) {
   printf("ycsb::build_mtdb\n");
   std::vector<std::thread> thv;
 
@@ -87,39 +83,7 @@ void build_mtdb(std::size_t record, std::size_t thread, std::size_t len_val,
   fflush(stdout);
   for (size_t i = 0; i < maxthread; ++i)
     thv.emplace_back(parallel_build_mtdb, i, i * (record / maxthread),
-                     (i + 1) * (record / maxthread) - 1, len_val,
-                     &insertedList[i]);
-
-  for (auto &th : thv) th.join();
-}
-
-void parallel_delete_mtdb(std::size_t thid,
-                          std::vector<Tuple *> *insertedList) {
-  Token token;
-  enter(token);
-  for (auto itr = insertedList->begin(); itr != insertedList->end(); ++itr) {
-    tbegin(token);
-    Storage storage;
-    delete_record(token, storage, (*itr)->get_key().data(),
-                  (*itr)->get_key().size());
-    commit(token);
-    delete *itr;
-  }
-  leave(token);
-
-  insertedList->clear();
-}
-
-void delete_mtdb(std::size_t record, std::size_t thread,
-                 std::vector<Tuple *> *insertedList) {
-  printf("ycsb::delete_mtdb\n");
-  std::vector<std::thread> thv;
-
-  size_t maxthread = decideParallelBuildNumber(record, thread);
-  printf("start parallel_delete_mtdb with %zu threads.\n", maxthread);
-  fflush(stdout);
-  for (size_t i = 0; i < maxthread; ++i)
-    thv.emplace_back(parallel_delete_mtdb, i, &insertedList[i]);
+                     (i + 1) * (record / maxthread) - 1, value_length);
 
   for (auto &th : thv) th.join();
 }

@@ -206,36 +206,25 @@ private:
 
 class OprObj { // Operations for retry by abort
 public:
-  OP_TYPE type;
-  std::unique_ptr<char[]> key;
-  std::unique_ptr<char[]> val;
-  std::size_t len_key;
-  std::size_t len_val;
-
   OprObj() = default;
-  ~OprObj() = default;
-
-  OprObj(OP_TYPE type, char const *key, std::size_t len_key) {
-    this->type = type;
-    this->len_key = len_key;
-    this->key = std::make_unique<char[]>(len_key);
-    memcpy(this->key.get(), key, len_key);
-  }
-
-  OprObj(OP_TYPE type, char const *key, std::size_t len_key, char const *val, std::size_t len_val) {
-    this->type = type;
-    this->len_key = len_key;
-    this->len_val = len_val;
-    this->key = std::make_unique<char[]>(len_key);
-    this->val = std::make_unique<char[]>(len_val);
-    memcpy(this->key.get(), key, len_key);
-    memcpy(this->val.get(), val, len_val);
-  }
+  OprObj(const OP_TYPE type, const char* key_ptr, const std::size_t key_length) : type_(type), key_(key_ptr, key_length), value_() {}
+  OprObj(const OP_TYPE type, const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : type_(type), key_(key_ptr, key_length), value_(value_ptr, value_length) {}
 
   OprObj(const OprObj& right) = delete;
   OprObj(OprObj&& right) = default;
   OprObj& operator=(const OprObj& right) = delete;
   OprObj& operator=(OprObj&& right) = default;
+
+  ~OprObj() = default;
+
+  OP_TYPE get_type() & { return type_; }
+  std::string_view get_key() & { return {key_.data(), key_.size()}; }
+  std::string_view get_value() & { return {value_.data(), value_.size()}; }
+
+private:
+  OP_TYPE type_;
+  std::string key_;
+  std::string value_;
 }; 
 
 class ThreadInfo {

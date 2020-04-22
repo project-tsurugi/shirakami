@@ -1,15 +1,14 @@
 #pragma once
 
-// shirakami-impl interface library
-#include "header.hh"
+#include <string>
 
 static void
-make_string(char* string, std::size_t len)
+make_string(std::string& string)
 {
-    for (uint i = 0; i < len-1; i++) {
+    for (uint i = 0; i < string.size()-1; i++) {
         string[i] = rand() % 24 + 'a';
     }
     // if you use printf function with %s format later,
     // the end of aray must be null chara.
-    string[len-1] = '\0';
+    string.back() = '\0';
 }

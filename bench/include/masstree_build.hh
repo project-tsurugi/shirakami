@@ -24,7 +24,5 @@
 #include "kvs/scheme.h"
 
 size_t decideParallelBuildNumber(std::size_t record, std::size_t thread);
-void parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::size_t len_val, std::vector<kvs::Tuple*> *insertedList);
-void build_mtdb(std::size_t record, std::size_t thread, std::size_t len_val, std::vector<kvs::Tuple*> *insertedList);
-void parallel_delete_mtdb(std::size_t thid, std::vector<kvs::Tuple*> *insertedList);
-void delete_mtdb(std::size_t record, std::size_t thread, std::vector<kvs::Tuple*> *insertedList);
+void parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end, std::size_t value_length);
+void build_mtdb(std::size_t record, std::size_t thread, std::size_t value_length);

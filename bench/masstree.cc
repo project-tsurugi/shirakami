@@ -141,28 +141,14 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
     if (FLAGS_instruction == "insert") {
       std::size_t start(UINT64_MAX / FLAGS_thread * thid),
           end(UINT64_MAX / FLAGS_thread * (thid + 1));
-      std::vector<Tuple*> localInsertedList;
       for (auto i = start; i < end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
-        std::unique_ptr<char[]> val =
-            std::make_unique<char[]>(FLAGS_val_length);
-        make_string(val.get(), FLAGS_val_length);
-        Tuple* tuple = new Tuple((char*)&keybs, sizeof(uint64_t), val.get(),
-                                 FLAGS_val_length);
-        insert(token, storage, (char*)&keybs, sizeof(uint64_t), val.get(),
-               FLAGS_val_length);
-        localInsertedList.emplace_back(tuple);
+        std::string value(FLAGS_val_length, '0');
+        make_string(value);
+        insert(token, storage, reinterpret_cast<char*>(&keybs),
+               sizeof(uint64_t), value.data(), FLAGS_val_length);
         commit(token);
         ++myres.local_commit_counts_;
-        if (unlikely(loadAcquire(quit))) {
-          for (auto itr = localInsertedList.begin();
-               itr != localInsertedList.end(); ++itr) {
-            delete_record(token, storage, (*itr)->get_key().data(),
-                          (*itr)->get_key().size());
-          }
-          if (Status::OK != commit(token)) ERR;
-          break;
-        }
       }
     } else if (FLAGS_instruction == "put") {
 #if 0
@@ -194,9 +180,8 @@ static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);
 
   init();
-  std::vector<Tuple*> insertedList[FLAGS_thread];
   if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
-    build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length, insertedList);
+    build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length);
   }
 
   std::vector<char> readys(FLAGS_thread);
@@ -217,9 +202,6 @@ static void invoke_leader() {
   }
   res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 
-  if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
-    delete_mtdb(FLAGS_record, FLAGS_thread, insertedList);
-  }
   fin();
 }
 
