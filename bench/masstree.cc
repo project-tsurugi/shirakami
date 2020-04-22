@@ -149,6 +149,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
                sizeof(uint64_t), value.data(), FLAGS_val_length);
         commit(token);
         ++myres.local_commit_counts_;
+        if (loadAcquire(quit)) break;
       }
     } else if (FLAGS_instruction == "put") {
 #if 0
@@ -179,9 +180,15 @@ static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) bool quit = false;
   alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);
 
+  cout << "[start] init masstree database." << endl;
   init();
+  cout << "[end] init masstree database." << endl;
   if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
     build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length);
+  }
+  cout << "[report] This experiments use ";
+  if (FLAGS_instruction == "insert") {
+    cout << "insert" << endl;
   }
 
   std::vector<char> readys(FLAGS_thread);
@@ -191,21 +198,28 @@ static void invoke_leader() {
                      std::ref(quit), std::ref(res));
   waitForReady(readys);
   storeRelease(start, true);
+  cout << "[start] measurement." << endl;
   for (size_t i = 0; i < FLAGS_duration; ++i) {
     sleepMs(1000);
   }
+  cout << "[end] measurement." << endl;
   storeRelease(quit, true);
+  cout << "[start] join worker threads." << endl;
   for (auto& th : thv) th.join();
+  cout << "[end] join worker threads." << endl;
 
   for (auto i = 0; i < FLAGS_thread; ++i) {
     res[0].addLocalAllResult(res[i]);
   }
   res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 
+  cout << "[start] fin masstree database." << endl;
   fin();
+  cout << "[end] fin masstree database." << endl;
 }
 
 int main(int argc, char* argv[]) {
+  cout << "start masstree bench." << endl;
   gflags::SetUsageMessage("YCSB benchmark for shirakami");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
