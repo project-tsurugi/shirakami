@@ -56,14 +56,14 @@ static void make_string(char* string, const std::size_t len) {
 
 static void exec_insert(Token token, std::size_t thnm) {
   for (unsigned int i = 0; i < Max_insert; i++) {
-    std::unique_ptr<char[]> key = std::make_unique<char[]>(Len_key);
-    make_string(key.get(), Len_key);
-    std::unique_ptr<char[]> val = std::make_unique<char[]>(Len_val);
-    make_string(val.get(), Len_val);
-    Tuple* tuple = new Tuple(key.get(), Len_key, val.get(), Len_val);
+    std::string key(Len_key, '0');
+    make_string(key.data(), Len_key);
+    std::string value(Len_val, '0');
+    make_string(value.data(), Len_val);
+    Tuple* tuple = new Tuple(key.data(), Len_key, value.data(), Len_val);
     DataList[thnm].push_back(tuple);
     Storage storage(0);
-    insert(token, storage, key.get(), Len_key, val.get(), Len_val);
+    insert(token, storage, key.data(), Len_key, value.data(), Len_val);
   }
   // Commit;
   Status result = commit(token);
