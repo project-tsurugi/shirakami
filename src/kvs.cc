@@ -15,7 +15,6 @@
 #include "header.hh"
 #include "kvs/interface.h"
 #include "log.hh"
-#include "port.h"
 #include "scheme.hh"
 #include "xact.hh"
 

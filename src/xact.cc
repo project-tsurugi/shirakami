@@ -14,7 +14,6 @@
 #include "debug.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
-#include "key.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tsc.hh"
