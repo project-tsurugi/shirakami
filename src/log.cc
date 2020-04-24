@@ -16,15 +16,35 @@ void LogHeader::init() & {
 }
 
 void LogHeader::compute_two_complement_of_checksum() & {
-  checksum_ ^= 0xffffffff;
+  checksum_ ^= mask_full_bits_uint;
   ++checksum_;
+}
+
+unsigned int LogHeader::get_checksum() const & {
+  return checksum_;
+}
+
+void LogHeader::add_checksum(const int add) & {
+  checksum_ += add;
+}
+
+unsigned int LogHeader::get_log_rec_num() const& {
+  return log_rec_num_;
+}
+
+void LogHeader::inc_log_rec_num() & {
+  ++this->log_rec_num_;
+}
+
+void LogHeader::set_checksum(const int checksum) & {
+  this->checksum_ = checksum;
 }
 
 int LogRecord::compute_checksum() & {
   // compute checksum
   // TidWord
   int chkSum = 0;
-  const char* charitr = (char*)this;
+  const char* charitr = reinterpret_cast<char*>(this);
   for (unsigned int i = 0; i < sizeof(TidWord); ++i) {
     chkSum += (*charitr);
     ++charitr;
@@ -36,7 +56,7 @@ int LogRecord::compute_checksum() & {
   // key_length
   std::string_view key_view = tuple_->get_key();
   std::size_t key_length = key_view.size();
-  charitr = (char*)&(key_length);
+  charitr = reinterpret_cast<char*>(&(key_length));
   for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;
@@ -52,7 +72,7 @@ int LogRecord::compute_checksum() & {
   // value_length
   std::string_view value_view = tuple_->get_value();
   std::size_t value_length = value_view.size();
-  charitr = (char*)(&(value_length));
+  charitr = reinterpret_cast<char*>(&(value_length));
   for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;
@@ -83,14 +103,14 @@ void single_recovery_from_log() {
     }
 
     LogRecord log;
-    LogHeader logheader;
+    LogHeader log_header;
     std::vector<Tuple> tuple_buffer;
 
     const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE);
     while (sizeof(LogHeader) ==
-           logfile.read((void*)&logheader, sizeof(LogHeader))) {
+           logfile.read(reinterpret_cast<void*>(&log_header), sizeof(LogHeader))) {
       std::vector<LogRecord> log_tmp_buf;
-      for (unsigned int i = 0; i < logheader.get_log_rec_num(); ++i) {
+      for (unsigned int i = 0; i < log_header.get_log_rec_num(); ++i) {
         if (fix_size != logfile.read((void*)&log, fix_size)) break;
         std::unique_ptr<char[]> key_ptr, value_ptr;
         std::size_t key_length, value_length;
@@ -116,11 +136,11 @@ void single_recovery_from_log() {
             break;
         }
 
-        logheader.set_checksum(logheader.get_checksum() +
+        log_header.set_checksum(log_header.get_checksum() +
                                log.compute_checksum());
         log_tmp_buf.emplace_back(std::move(log));
       }
-      if (logheader.get_checksum() == 0) {
+      if (log_header.get_checksum() == 0) {
         for (auto itr = log_tmp_buf.begin(); itr != log_tmp_buf.end(); ++itr) {
           log_set.emplace_back(std::move(*itr));
         }

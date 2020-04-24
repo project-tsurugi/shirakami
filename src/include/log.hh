@@ -22,10 +22,9 @@ namespace kvs {
 class LogHeader {
 public:
   /**
-   * @brief Initialization
-   * @details Initialize members with 0.
+   * @brief Adds the argument to @var LogHeader::checksum_.
    */
-  void init()&;
+  void add_checksum(const int add) &;
 
   /**
    * @brief Computing check sum.
@@ -33,37 +32,37 @@ public:
    */
   void compute_two_complement_of_checksum()&;
 
-  void add_checksum(const int add) & {
-    checksum_ += add;
-  }
+  /**
+   * @brief Gets the value of @var LogHeader::checksum_.
+   */
+  [[nodiscard]] unsigned int get_checksum() const &;
 
-  int& get_checksum() & { 
-    return checksum_; 
-  }
+  /**
+   * @brief Gets the value of @var LogHeader::log_rec_num_.
+   */
+  [[nodiscard]] unsigned int get_log_rec_num() const &;
 
-  const int& get_checksum() const  & { 
-    return checksum_; 
-  }
+  /**
+   * @brief Adds the one to @var LogHeader::log_rec_num_.
+   */
+  void inc_log_rec_num() &;
 
-  unsigned int& get_log_rec_num() & { 
-    return log_rec_num_; 
-  }
+  /**
+   * @brief Initialization
+   * @details Initialize members with 0.
+   */
+  void init()&;
 
-  const unsigned int& get_log_rec_num() const & { 
-    return log_rec_num_;
-  }
-
-  void inc_log_rec_num() & {
-    ++this->log_rec_num_;
-  }
-
-  void set_checksum(const int checksum) & {
-    this->checksum_ = checksum;
-  }
+  /**
+   * @brief Sets @var LogHeader::checksum_ to the argument.
+   * @param checksum
+   */
+  void set_checksum(const int checksum) &;
 
 private:
-  int checksum_{};
+  unsigned int checksum_{};
   unsigned int log_rec_num_{};
+  const unsigned int mask_full_bits_uint = 0xffffffff;
 };
 
 class LogRecord {

@@ -26,6 +26,7 @@ public:
 
   TidWord() : obj_(0) {}
   TidWord(const uint64_t obj) { obj_ = obj; }
+  TidWord(const TidWord& right) : obj_(right.get_obj()){}
 
   TidWord& operator=(const TidWord& right) {
     obj_ = right.get_obj();
