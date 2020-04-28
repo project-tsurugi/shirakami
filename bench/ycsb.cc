@@ -213,4 +213,5 @@ static void invoke_leader() {
     res[0].addLocalAllResult(res[i]);
   }
   res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+  cout << "end experiments, start cleanup." << endl;
 }
