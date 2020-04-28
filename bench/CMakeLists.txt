@@ -68,3 +68,8 @@ target_include_directories(masstree
   PRIVATE ./../test/include
   PRIVATE ${gflags_INCLUDE_DIR}
 )
+
+add_test(
+  NAME ycsb
+  COMMAND ycsb)
+
