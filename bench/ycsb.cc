@@ -152,7 +152,6 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
             std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
-  rnd.init();
   FastZipf zipf(&rnd, kZipfSkew, kCardinality);
   Result& myres = std::ref(res[thid]);
 

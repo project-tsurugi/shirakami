@@ -13,9 +13,8 @@
 
 class Xoroshiro128Plus {
  public:
-  uint64_t s[2];
 
-  inline void init() {
+  Xoroshiro128Plus () {
     std::random_device rnd;
     s[0] = rnd();
     s[1] = splitMix64(s[0]);
@@ -91,4 +90,7 @@ class Xoroshiro128Plus {
     s[0] = s0;
     s[1] = s1;
   }
+
+private:
+  uint64_t s[2];
 };

@@ -58,7 +58,6 @@ size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
 void parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end,
                          std::size_t value_length) {
   Xoroshiro128Plus rnd;
-  rnd.init();
   Token token;
   enter(token);
 
