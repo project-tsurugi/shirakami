@@ -1,8 +1,7 @@
 /**
- * @file
+ * @file error.hh
  * @brief error utilities.
- * @author Takayuki Tanabe
- * @detail This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
+ * @details This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
 

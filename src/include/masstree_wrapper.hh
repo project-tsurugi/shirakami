@@ -144,10 +144,12 @@ class MasstreeWrapper {
   /**
    * @brief insert value to masstree
    * @param key This must be a type of const char*.
-   * @detail future work, we try to delete making temporary
+   * @param len_key
+   * @param value
+   * @details future work, we try to delete making temporary
    * object std::string buf(key). But now, if we try to do 
    * without making temporary object, it fails by masstree.
-   * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @key exists in masstree, so this function returned immediately.
+   * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @a key exists in masstree, so this function returned immediately.
    * @return Status::OK success.
    */
   kvs::Status insert_value(const char* key, std::size_t len_key, T* value) {

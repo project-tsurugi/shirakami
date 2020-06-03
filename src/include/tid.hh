@@ -1,5 +1,5 @@
 /**
- * @file header about tid
+ * @file tid.hh
  * @brief utilities about transaction id
  */
 

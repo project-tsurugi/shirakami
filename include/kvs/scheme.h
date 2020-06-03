@@ -51,7 +51,7 @@ enum class Status : std::int32_t {
   /**
    * @brief warning
    * @details
-   * (insert) The records whose key is the same as @key exists in MTDB, so this function returned immediately.
+   * (insert) The records whose key is the same as @a key exists in MTDB, so this function returned immediately.
    */
   WARN_ALREADY_EXISTS,
   /**

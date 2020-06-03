@@ -1,8 +1,7 @@
 /**
- * @file
+ * @file fileio.hh
  * @brief File IO utilities.
- * @author Takashi Hoshino -> Takayuki Tanabe
- * @detail This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
+ * @details This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file scheme.hh
  * @brief private scheme of transaction engine
  */
 
@@ -36,7 +36,7 @@ namespace kvs {
 
 /**
  * @brief element of write set.
- * @detail copy constructor/assign operator can't be used in this class 
+ * @details copy constructor/assign operator can't be used in this class
  * in terms of performance.
  */
 class WriteSetObj {

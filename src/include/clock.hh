@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @file
- * @biref functions about clock.
+ * @file clock.hh
+ * @brief functions about clock.
  */
 
 #include "header.hh"

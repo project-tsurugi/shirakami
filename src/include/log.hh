@@ -1,7 +1,7 @@
 /**
  * @file log.hh
  * @brief Log record class.
- * @detail This source is implemented by refering the source https://github.com/thawk105/ccbench.
+ * @details This source is implemented by refering the source https://github.com/thawk105/ccbench.
  */
 
 #pragma once
@@ -54,7 +54,7 @@ public:
   void init()&;
 
   /**
-   * @brief Sets @var LogHeader::checksum_ to the argument.
+   * @brief Sets @a LogHeader::checksum_ to the argument.
    * @param checksum
    */
   void set_checksum(const int checksum) &;

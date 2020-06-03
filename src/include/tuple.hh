@@ -1,5 +1,6 @@
 /**
- * @file header about Tuple::Impl
+ * @file tuple.hh
+ * @brief header about Tuple::Impl
  */
 
 #pragma once
@@ -45,10 +46,10 @@ class Tuple::Impl {
      * @details Substitute argment for key_. 
      * If a memory area has already been allocated for value, that area is released. 
      * Allocates a new memory area for value and initializes it.
-     * @params [in] key_ptr Pointer to key
-     * @params [in] key_length Size of key
-     * @params [in] value_ptr Pointer to value
-     * @params [in] value_length Size of value
+     * @param[in] key_ptr Pointer to key
+     * @param[in] key_length Size of key
+     * @param[in] value_ptr Pointer to value
+     * @param[in] value_length Size of value
      * @return void
      */
     void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&;
@@ -68,12 +69,12 @@ class Tuple::Impl {
     void set_value(const char* value_ptr, const std::size_t value_length)&;
 
     /**
-     * @biref Set value
+     * @brief Set value
      * @details Update value and preserve old value, so this 
      * function is called by updater in write_phase.
-     * @params [in] value_ptr Pointer to value
-     * @params [in] value_length Size of value
-     * @params [out] old_value To tell the caller the old value.
+     * @param[in] value_ptr Pointer to value
+     * @param[in] value_length Size of value
+     * @param[out] old_value To tell the caller the old value.
      * @return void
      */
     void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&;
