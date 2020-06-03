@@ -4,3 +4,9 @@
 [submodule "third_party/masstree-beta"]
 	path = third_party/masstree-beta
 	url = git@github.com:project-tsurugi/masstree-beta.git
+[submodule ".github/actions/tsurugi-annotations-action"]
+	path = .github/actions/tsurugi-annotations-action
+	url = git@github.com:project-tsurugi/tsurugi-annotations-action.git
+[submodule ".github/actions/tsurugi-slack-action"]
+	path = .github/actions/tsurugi-slack-action
+	url = git@github.com:project-tsurugi/tsurugi-slack-action.git
