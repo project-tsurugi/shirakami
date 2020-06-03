@@ -1,6 +1,6 @@
 /**
- * @file header about record
- * @brief utilities about record
+ * @file record.hh
+ * @brief header about record
  */
 
 #pragma once

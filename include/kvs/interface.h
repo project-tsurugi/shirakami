@@ -220,7 +220,7 @@ extern Status scan_key(Token token, Storage storage,
  * @param[in] len_rkey
  * @param[in] r_exclusive
  * @param[out] handle the handle to identify scanned result. This handle will be deleted at abort function.
- * @return Status:::WARN_SCAN_LIMIT The scan could find some records but could not preserve result due to capacity limitation.
+ * @return Status::WARN_SCAN_LIMIT The scan could find some records but could not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  * @return Status::OK the some records was scanned.
  */
