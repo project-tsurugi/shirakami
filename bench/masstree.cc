@@ -121,7 +121,6 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
             std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
-  rnd.init();
   FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
   Result& myres = std::ref(res[thid]);
 
@@ -144,7 +143,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
       for (auto i = start; i < end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
         std::string value(FLAGS_val_length, '0');
-        make_string(value);
+        make_string(value, rnd);
         insert(token, storage, reinterpret_cast<char*>(&keybs),
                sizeof(uint64_t), value.data(), FLAGS_val_length);
         commit(token);

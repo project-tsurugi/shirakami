@@ -30,7 +30,7 @@ gen_tx_rw(std::vector<OprObj>& opr_set, std::size_t tpnm, std::size_t opnm, std:
       opr_set.emplace_back(OP_TYPE::SEARCH, reinterpret_cast<char*>(&keybs), sizeof(uint64_t));
     } else {
       std::string value(kValLength, '0');
-      make_string(value);
+      make_string(value, rnd);
       opr_set.emplace_back(OP_TYPE::UPDATE, reinterpret_cast<char*>(&keybs), sizeof(uint64_t), value.data(), kValLength);
     }
   }
