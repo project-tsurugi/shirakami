@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DWAL=OFF -DENABLE_SANITIZER=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DWAL=OFF -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --target all --clean-first -- -j8
 
       - id: CTest
@@ -42,6 +42,11 @@ jobs:
         run: |
           cd build
           ctest --verbose --timeout 100
+
+      - id: Clang-Tidy
+        name: Clang-Tidy
+        run: |
+          python tools/bin/run-clang-tidy.py -clang-tidy-binary clang-tidy-8 -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -header-filter=$(pwd)'/(include|src)/.*\\.h$' $(pwd)'/src/.*' 2>&1 | tee build/clang-tidy.log
 
       - id: Doxygen
         name: Doxygen
