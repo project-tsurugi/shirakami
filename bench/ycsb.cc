@@ -30,13 +30,8 @@
 
 // shirakami/src/
 #include "atomic_wrapper.hh"
-#include "cache_line_size.hh"
 #include "clock.hh"
-#include "compiler.hh"
 #include "cpu.hh"
-#include "random.hh"
-#include "scheme.hh"
-#include "zipf.hh"
 
 // shirakami/include/
 
