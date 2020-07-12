@@ -21,19 +21,11 @@
 #include "./include/string.hh"
 
 // shirakami-impl interface library
-#include "atomic_wrapper.hh"
-#include "cache_line_size.hh"
 #include "clock.hh"
-#include "compiler.hh"
 #include "cpu.hh"
 #include "random.hh"
 #include "scheme.hh"
 #include "xact.hh"
-#include "zipf.hh"
-
-// shirakami/include/
-#include "kvs/interface.h"
-#include "kvs/scheme.h"
 
 using namespace kvs;
 using std::cout, std::endl, std::cerr;
