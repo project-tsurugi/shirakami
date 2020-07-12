@@ -42,17 +42,18 @@ using namespace kvs;
 using namespace ycsb_param;
 using std::cout, std::endl, std::cerr;
 
-DEFINE_uint64(thread, 1, "# worker threads.");
-DEFINE_uint64(record, 100, "# database records(tuples).");
-DEFINE_uint64(key_length, 8, "# length of key.");
-DEFINE_uint64(val_length, 4, "# length of value(payload).");
-DEFINE_uint64(ops, 1, "# operations per a transaction.");
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");
-DEFINE_double(skew, 0.0, "access skew of transaction.");
-DEFINE_uint64(
-    cpumhz, 2000,
-    "# cpu MHz of execution environment. It is used measuring some time.");
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
+DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
+DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
+DEFINE_uint64(key_length, 8, "# length of key.");                     // NOLINT
+DEFINE_uint64(val_length, 4, "# length of value(payload).");          // NOLINT
+DEFINE_uint64(ops, 1, "# operations per a transaction.");             // NOLINT
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");        // NOLINT
+DEFINE_double(skew, 0.0, "access skew of transaction.");              // NOLINT
+DEFINE_uint64(                                                        // NOLINT
+    cpumhz, 2000,                                                     // NOLINT
+    "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
+    "time.");                                                         // NOLINT
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 
 static void load_flags() {
   if (FLAGS_thread >= 1) {
@@ -67,7 +68,8 @@ static void load_flags() {
     cerr << "Number of database records(tuples) must be large than 0." << endl;
     exit(1);
   }
-  if (FLAGS_key_length > 1 && FLAGS_key_length % 8 == 0) {
+  constexpr std::size_t eight = 8;
+  if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
     kKeyLength = FLAGS_key_length;
   } else {
     cerr << "Length of key must be larger than 0 and be divisible by 8."
@@ -87,7 +89,8 @@ static void load_flags() {
          << endl;
     exit(1);
   }
-  if (FLAGS_rratio >= 0 && FLAGS_rratio <= 100) {
+  constexpr std::size_t thousand = 100;
+  if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
     kRRatio = FLAGS_rratio;
   } else {
     cerr << "Rate of reads in a transaction must be in the range 0 to 100."
@@ -117,20 +120,23 @@ static void load_flags() {
   }
 }
 
-int main(int argc, char* argv[]) {
-  gflags::SetUsageMessage("YCSB benchmark for shirakami");
+auto main(int argc, char* argv[]) -> int {
+  gflags::SetUsageMessage(
+      static_cast<const std::string&>("YCSB benchmark for shirakami"));
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
 
-  init();
+  init(); // NOLINT
   build_mtdb(kCardinality, kNthread, kValLength);
   invoke_leader();
   fin();
+
+  return 0;
 }
 
-static bool isReady(const std::vector<char>& readys) {
+static auto isReady(const std::vector<char>& readys) -> bool {
   for (const char& b : readys) {
-    if (!loadAcquire(b)) return false;
+    if (loadAcquire(b) == 0) return false;
   }
   return true;
 }
@@ -146,15 +152,15 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   // init work
   Xoroshiro128Plus rnd;
   FastZipf zipf(&rnd, kZipfSkew, kCardinality);
-  Result& myres = std::ref(res[thid]);
+  std::reference_wrapper<Result> myres = std::ref(res[thid]);
 
   // this function can be used in Linux environment only.
 #ifdef KVS_Linux
-  setThreadAffinity(thid);
+  setThreadAffinity(static_cast<const int>(thid));
 #endif
 
-  Token token;
-  Storage storage;
+  Token token{};
+  Storage storage{};
   enter(token);
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
 
@@ -175,9 +181,9 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
       }
     }
     if (commit(token) == Status::OK) {
-      ++myres.local_commit_counts_;
+      ++myres.get().local_commit_counts_;
     } else {
-      ++myres.local_abort_counts_;
+      ++myres.get().local_abort_counts_;
       abort(token);
     }
   }
