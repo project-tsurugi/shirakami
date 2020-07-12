@@ -49,7 +49,7 @@ size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
   return 1;
 }
 
-void parallel_build_mtdb(std::size_t thid, std::size_t start, std::size_t end,
+void parallel_build_mtdb(std::size_t start, std::size_t end,
                          std::size_t value_length) {
   Xoroshiro128Plus rnd;
   Token token;
@@ -77,7 +77,7 @@ void build_mtdb(std::size_t record, std::size_t thread,
   printf("start parallel_build_mtdb with %zu threads.\n", maxthread);
   fflush(stdout);
   for (size_t i = 0; i < maxthread; ++i)
-    thv.emplace_back(parallel_build_mtdb, i, i * (record / maxthread),
+    thv.emplace_back(parallel_build_mtdb, i * (record / maxthread),
                      (i + 1) * (record / maxthread) - 1, value_length);
 
   for (auto &th : thv) th.join();
