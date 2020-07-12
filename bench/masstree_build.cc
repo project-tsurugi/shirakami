@@ -26,8 +26,6 @@
 #include "clock.hh"
 #include "compiler.hh"
 #include "cpu.hh"
-#include "debug.hh"
-#include "header.hh"
 #include "random.hh"
 #include "scheme.hh"
 #include "xact.hh"
@@ -49,7 +47,11 @@ size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
     if (record % i == 0) {
       return i;
     }
-    if (i == 1) ERR;
+    if (i == 1) {
+      std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+                << std::endl;
+      std::abort();
+    }
   }
 
   return 1;

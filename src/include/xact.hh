@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "header.hh"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 

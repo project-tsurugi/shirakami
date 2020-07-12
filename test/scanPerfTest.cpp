@@ -1,11 +1,14 @@
+/**
+ * @file scanPerfTest.cpp
+ */
+
+#include <cstddef>
 
 #include "gtest/gtest.h"
 
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
-#include "compiler.hh"
-#include "header.hh"
 #include "tsc.hh"
 
 using namespace kvs;

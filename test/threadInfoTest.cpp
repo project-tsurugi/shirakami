@@ -1,13 +1,13 @@
+/**
+ * @file threadInfoTest.cpp
+ */
 
 #include "gtest/gtest.h"
 
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
-#include "compiler.hh"
-#include "header.hh"
 #include "scheme.hh"
-#include "xact.hh"
 
 using namespace kvs;
 using std::cout;

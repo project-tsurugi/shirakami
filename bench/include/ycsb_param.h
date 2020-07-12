@@ -1,12 +1,11 @@
 /**
- * @file
+ * @file ycsb_param.h
  * @brief ycsb test parameters
  */
 
 #pragma once
 
 #include "cache_line_size.hh"
-#include "header.hh"
 
 namespace ycsb_param {
 

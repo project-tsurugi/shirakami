@@ -1,7 +1,8 @@
 /**
  * @file fileio.hh
  * @brief File IO utilities.
- * @details This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
+ * @details This source is implemented by refering the source
+ * https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
 
@@ -14,11 +15,11 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <iostream>
 #include <mutex>
 #include <stdexcept>
 #include <string>
 
-#include "debug.hh"
 #include "error.hh"
 
 #ifdef KVS_Linux
@@ -26,7 +27,7 @@
 #endif  // KVS_Linux
 
 class File {
- private:
+private:
   int fd_;
   bool autoClose_;
 
@@ -37,7 +38,7 @@ class File {
     throw LibcError(err, s);
   }
 
- public:
+public:
   File() : fd_(-1), autoClose_(false) {}
 
   bool open(const std::string& filePath, int flags) {
@@ -52,8 +53,10 @@ class File {
   bool try_open(const std::string& file_path, int flags) {
     fd_ = ::open(file_path.c_str(), flags);
     autoClose_ = true;
-    if (fd_ == -1) return false;
-    else return true;
+    if (fd_ == -1)
+      return false;
+    else
+      return true;
   }
 
   bool open(const std::string& filePath, int flags, mode_t mode) {
@@ -79,7 +82,11 @@ class File {
   }
 
   int fd() const {
-    if (fd_ < 0) ERR;
+    if (fd_ < 0) {
+      std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+                << std::endl;
+      std::abort();
+    };
     return fd_;
   }
 
@@ -112,7 +119,7 @@ class File {
     while (s < size) {
       size_t r = readsome(&buf[s], size - s);
       s += r;
-      if (size-s != r) return s;
+      if (size - s != r) return s;
     }
     return s;
   }
@@ -123,7 +130,11 @@ class File {
     while (s < size) {
       ssize_t r = ::write(fd(), &buf[s], size - s);
       if (r < 0) throw LibcError(errno, "write failed: ");
-      if (r == 0) ERR;
+      if (r == 0) {
+        std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+                  << std::endl;
+        std::abort();
+      }
       s += r;
     }
   }
@@ -192,7 +203,11 @@ inline void genLogFileName(std::string& logpath, const int thid) {
 
   memset(pathname, '\0', PATHNAME_SIZE);
 
-  if (getcwd(pathname, PATHNAME_SIZE) == NULL) ERR;
+  if (getcwd(pathname, PATHNAME_SIZE) == NULL) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
 
   logpath = pathname;
   logpath += "/log/log" + std::to_string(thid);

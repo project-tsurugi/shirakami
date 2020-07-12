@@ -4,7 +4,6 @@
 #include <iostream>
 
 // shirakami-impl interface library
-#include "debug.hh"
 #include "memory.hh"
 
 #include "./include/result.hh"

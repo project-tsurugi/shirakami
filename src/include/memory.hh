@@ -1,16 +1,21 @@
+/**
+ * @file memory.hh
+ */
+
 #pragma once
 
 #include <stdio.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 
-#include "debug.hh"
+#include <iostream>
 
-static void
-displayRusageRUMaxrss()
-{
+static void displayRusageRUMaxrss() {
   struct rusage r;
-  if (getrusage(RUSAGE_SELF, &r) != 0) ERR;
+  if (getrusage(RUSAGE_SELF, &r) != 0) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
   printf("maxrss:\t%ld kB\n", r.ru_maxrss);
 }
-

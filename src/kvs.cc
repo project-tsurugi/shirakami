@@ -12,7 +12,6 @@
 #include "cpu.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
-#include "header.hh"
 #include "kvs/interface.h"
 #include "log.hh"
 #include "scheme.hh"

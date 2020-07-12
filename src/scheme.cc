@@ -4,6 +4,7 @@
  */
 
 #include "scheme.hh"
+
 #include "atomic_wrapper.hh"
 #include "gcollection.hh"
 #include "log.hh"
@@ -269,7 +270,9 @@ bool WriteSetObj::operator<(const WriteSetObj& right) const {
     } else if (ret > 0) {
       return false;
     } else {
-      ERR;  // Unique key is not allowed now.
+      std::cout << __FILE__ << " : " << __LINE__
+                << " : Unique key is not allowed now." << std::endl;
+      std::abort();
     }
   }
 }

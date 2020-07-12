@@ -17,7 +17,6 @@
 #pragma once
 
 // shirakami/src/include/
-#include "header.hh"
 #include "scheme.hh"
 
 // shirakami/include/

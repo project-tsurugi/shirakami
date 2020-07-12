@@ -10,9 +10,6 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 
-#include "debug.hh"
-#include "header.hh"
-
 #include "kvs/scheme.h"
 
 /* if you use formatter, following 2 lines may be exchange.

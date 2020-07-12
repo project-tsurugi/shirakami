@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * @file ycsb.cc
+ */
+
 #include <xmmintrin.h>
 
 // shirakami/test
@@ -32,8 +36,6 @@
 #include "clock.hh"
 #include "compiler.hh"
 #include "cpu.hh"
-#include "debug.hh"
-#include "header.hh"
 #include "random.hh"
 #include "scheme.hh"
 #include "zipf.hh"

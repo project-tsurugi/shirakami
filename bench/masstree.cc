@@ -23,22 +23,12 @@
 
 // shirakami/src/
 #include "atomic_wrapper.hh"
-#include "cache_line_size.hh"
 #include "clock.hh"
-#include "compiler.hh"
 #include "cpu.hh"
-#include "debug.hh"
-#include "header.hh"
-#include "random.hh"
-#include "record.hh"
-#include "scheme.hh"
-#include "zipf.hh"
-
-// shirakami/include/
-#include "kvs/interface.h"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "kvs/interface.h"
+#include "zipf.hh"
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"
@@ -138,9 +128,9 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   enter(token);
   while (likely(!loadAcquire(quit))) {
     if (FLAGS_instruction == "insert") {
-      std::size_t start(UINT64_MAX / FLAGS_thread * thid),
+      std::size_t begin(UINT64_MAX / FLAGS_thread * thid),
           end(UINT64_MAX / FLAGS_thread * (thid + 1));
-      for (auto i = start; i < end; ++i) {
+      for (auto i = begin; i < end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
         std::string value(FLAGS_val_length, '0');
         make_string(value, rnd);

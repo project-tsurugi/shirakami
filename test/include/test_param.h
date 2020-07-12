@@ -1,7 +1,10 @@
+/**
+ * @file test_param.h
+ */
+
 #pragma once
 
-// shirakami-impl interface library
-#include "header.hh"
+#include <cstddef>
 
 #define DECLARE_ENTITY_TOKEN_FOR_EXP
 

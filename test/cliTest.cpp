@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * @file cliTest.cpp
+ */
+
 #include "./include/test_param.h"
 
-// shirakami/src/
-#include "cpu.hh"
-#include "debug.hh"
-#include "header.hh"
-
 #include <cstdint>
+#include <thread>
 
+#include "cpu.hh"
 #include "gtest/gtest.h"
 
 // shirakami/include/
@@ -152,7 +153,11 @@ static void test_single_operation(Token token, std::size_t thnm) {
 static void worker(const size_t thid) {
   Token token;
   Status enter_result = enter(token);
-  if (enter_result == Status::ERR_SESSION_LIMIT) ERR;
+  if (enter_result == Status::ERR_SESSION_LIMIT) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
 
   test_single_operation(token, thid);
 

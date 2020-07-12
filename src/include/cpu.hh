@@ -1,16 +1,18 @@
+/**
+ * @file cpu.hh
+ */
+
 #pragma once
 
-#include <atomic>
 #include <cpuid.h>
-#include <iostream>
 #include <sched.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <cstdint>
-
-#include "debug.hh"
+#include <iostream>
 
 #define CPUID(INFO, LEAF, SUBLEAF) \
   __cpuid_count(LEAF, SUBLEAF, INFO[0], INFO[1], INFO[2], INFO[3])
@@ -42,8 +44,9 @@
       break;
     } else {
       desired = sysconf(_SC_NPROCESSORS_CONF);
-      if (nprocessors.compare_exchange_strong(
-            local_nprocessors, desired, memory_order_acq_rel, memory_order_acquire)) {
+      if (nprocessors.compare_exchange_strong(local_nprocessors, desired,
+                                              memory_order_acq_rel,
+                                              memory_order_acquire)) {
         break;
       }
     }
@@ -55,14 +58,22 @@
   CPU_ZERO(&cpu_set);
   CPU_SET(myid % local_nprocessors, &cpu_set);
 
-  if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) ERR;
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
   return;
 }
 
 [[maybe_unused]] static void setThreadAffinity(const cpu_set_t id) {
   pid_t pid = syscall(SYS_gettid);
 
-  if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) ERR;
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
   return;
 }
 
@@ -70,7 +81,11 @@
   pid_t pid = syscall(SYS_gettid);
   cpu_set_t result;
 
-  if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) ERR;
+  if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
 
   return result;
 }

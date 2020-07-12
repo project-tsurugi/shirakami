@@ -3,24 +3,22 @@
  * @brief implement about transaction
  */
 
-#include <bitset>
-
 #include "xact.hh"
+
+#include <bitset>
 
 #include "atomic_wrapper.hh"
 #include "cache_line_size.hh"
 #include "clock.hh"
 #include "cpu.hh"
-#include "debug.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
+#include "kvs/interface.h"
+#include "kvs/tuple.h"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tsc.hh"
 #include "tuple.hh"
-
-#include "kvs/interface.h"
-#include "kvs/tuple.h"
 
 namespace kvs {
 
@@ -116,7 +114,9 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
         break;
       }
       default:
-        ERR;
+        std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+                  << std::endl;
+        std::abort();
         break;
     }
   }
@@ -148,7 +148,11 @@ Status insert_record_to_masstree(char const* key, std::size_t len_key,
                                  Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
-  if (core_pos == -1) ERR;
+  if (core_pos == -1) {
+    std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
+              << std::endl;
+    std::abort();
+  }
   cpu_set_t current_mask = getThreadAffinity();
   setThreadAffinity(core_pos);
 #endif
