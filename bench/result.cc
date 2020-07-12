@@ -4,34 +4,38 @@
 #include <iostream>
 
 // shirakami-impl interface library
+#include "./include/result.hh"
 #include "memory.hh"
 
-#include "./include/result.hh"
-
-using std::cout;
-using std::endl;
-using std::fixed;
-using std::setprecision;
-using namespace std;
-
-void Result::displayAbortCounts() {
-  cout << "abort_counts_:\t" << total_abort_counts_ << endl;
+void Result::displayAbortCounts() const {
+  std::cout << "abort_counts_:\t" << total_abort_counts_ << std::endl;
 }
 
-void Result::displayAbortRate() {
-  long double ave_rate = (double)total_abort_counts_ /
-                         (double)(total_commit_counts_ + total_abort_counts_);
-  cout << fixed << setprecision(4) << "abort_rate:\t" << ave_rate << endl;
+void Result::displayAbortRate() const {
+  if (total_abort_counts_ == 0) {
+    std::cout << "abort_rate:\t0" << std::endl;
+  } else {
+    long double ave_rate =
+        static_cast<double>(total_abort_counts_) /
+        static_cast<double>(total_commit_counts_ + total_abort_counts_);
+    std::cout << std::fixed << std::setprecision(4) << "abort_rate:\t"
+              << ave_rate << std::endl;
+  }
 }
 
-void Result::displayCommitCounts() {
-  cout << "commit_counts_:\t" << total_commit_counts_ << endl;
+void Result::displayCommitCounts() const {
+  std::cout << "commit_counts_:\t" << total_commit_counts_ << std::endl;
 }
 
-void Result::displayTps(size_t extime) {
-  uint64_t result = total_commit_counts_ / extime;
-  cout << "latency[ns]:\t" << powl(10.0, 9.0) / result << endl;
-  cout << "throughput[tps]:\t" << result << endl;
+void Result::displayTps(size_t extime) const {
+  if (total_commit_counts_ == 0) {
+    std::cout << "throughput[tps]:\t0" << std::endl;
+  } else {
+    uint64_t result = total_commit_counts_ / extime;
+    constexpr std::uint64_t ns_sec = 1000000000;
+    std::cout << "latency[ns]:\t" << ns_sec / result << std::endl;
+    std::cout << "throughput[tps]:\t" << result << std::endl;
+  }
 }
 
 #if ADD_ANALYSIS
@@ -40,9 +44,10 @@ void Result::displayAbortByOperationRate() {
     long double rate;
     rate = (long double)total_abort_by_operation_ /
            (long double)total_abort_counts_;
-    cout << "abort_by_operation:\t" << total_abort_by_operation_ << endl;
-    cout << fixed << setprecision(4) << "abort_by_operation_rate:\t" << rate
-         << endl;
+    std::cout << "abort_by_operation:\t" << total_abort_by_operation_
+              << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "abort_by_operation_rate:\t" << rate << std::endl;
   }
 }
 
@@ -50,9 +55,10 @@ void Result::displayAbortByValidationRate() {
   if (total_abort_by_validation_) {
     long double rate;
     rate = (double)total_abort_by_validation_ / (double)total_abort_counts_;
-    cout << "abort_by_validation:\t" << total_abort_by_validation_ << endl;
-    cout << fixed << setprecision(4) << "abort_by_validation_rate:\t" << rate
-         << endl;
+    std::cout << "abort_by_validation:\t" << total_abort_by_validation_
+              << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "abort_by_validation_rate:\t" << rate << std::endl;
   }
 }
 
@@ -65,8 +71,8 @@ void Result::displayCommitLatencyRate([[maybe_unused]] size_t clocks_per_us,
         (long double)total_commit_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "commit_latency_rate:\t" << rate
-         << endl;
+    std::cout << std::fixed << std::setprecision(4) << "commit_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 
@@ -78,26 +84,28 @@ void Result::displayBackoffLatencyRate(size_t clocks_per_us, size_t extime,
         (long double)total_backoff_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "backoff_latency_rate:\t" << rate
-         << endl;
+    std::cout << std::fixed << std::setprecision(4) << "backoff_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 
 void Result::displayEarlyAbortRate() {
   if (total_early_aborts_) {
-    cout << fixed << setprecision(4) << "early_abort_rate:\t"
-         << (long double)total_early_aborts_ / (long double)total_abort_counts_
-         << endl;
+    std::cout << std::fixed << std::setprecision(4) << "early_abort_rate:\t"
+              << (long double)total_early_aborts_ /
+                     (long double)total_abort_counts_
+              << std::endl;
   }
 }
 
 void Result::displayExtraReads() {
   if (total_extra_reads_)
-    cout << "extra_reads:\t" << total_extra_reads_ << endl;
+    std::cout << "extra_reads:\t" << total_extra_reads_ << std::endl;
 }
 
 void Result::displayGCCounts() {
-  if (total_gc_counts_) cout << "gc_counts:\t" << total_gc_counts_ << endl;
+  if (total_gc_counts_)
+    std::cout << "gc_counts:\t" << total_gc_counts_ << std::endl;
 }
 
 void Result::displayGCLatencyRate(size_t clocks_per_us, size_t extime,
@@ -108,19 +116,21 @@ void Result::displayGCLatencyRate(size_t clocks_per_us, size_t extime,
         (long double)total_gc_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "gc_latency_rate:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4) << "gc_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 
 void Result::displayGCTMTElementsCounts() {
   if (total_gc_TMT_elements_counts_)
-    cout << "gc_TMT_elements_counts:\t" << total_gc_TMT_elements_counts_
-         << endl;
+    std::cout << "gc_TMT_elements_counts:\t" << total_gc_TMT_elements_counts_
+              << std::endl;
 }
 
 void Result::displayGCVersionCounts() {
   if (total_gc_version_counts_)
-    cout << "gc_version_counts:\t" << total_gc_version_counts_ << endl;
+    std::cout << "gc_version_counts:\t" << total_gc_version_counts_
+              << std::endl;
 }
 
 void Result::displayMakeProcedureLatencyRate(size_t clocks_per_us,
@@ -131,14 +141,14 @@ void Result::displayMakeProcedureLatencyRate(size_t clocks_per_us,
         (long double)total_make_procedure_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "make_procedure_latency_rate:\t" << rate
-         << endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "make_procedure_latency_rate:\t" << rate << std::endl;
   }
 }
 
 void Result::displayMemcpys() {
   if (total_memcpys) {
-    cout << "memcpys:\t" << total_memcpys << endl;
+    std::cout << "memcpys:\t" << total_memcpys << std::endl;
   }
 }
 
@@ -177,14 +187,14 @@ void Result::displayOtherWorkLatencyRate(size_t clocks_per_us, size_t extime,
         thread_num;
   }
 
-  cout << fixed << setprecision(4) << "other_work_latency_rate:\t"
-       << (1.0 - sum_rate) << endl;
+  std::cout << std::fixed << std::setprecision(4)
+            << "other_work_latency_rate:\t" << (1.0 - sum_rate) << std::endl;
 }
 
 void Result::displayPreemptiveAbortsCounts() {
   if (total_preemptive_aborts_counts_)
-    cout << "preemptive_aborts_counts:\t" << total_preemptive_aborts_counts_
-         << endl;
+    std::cout << "preemptive_aborts_counts:\t"
+              << total_preemptive_aborts_counts_ << std::endl;
 }
 
 void Result::displayRatioOfPreemptiveAbortToTotalAbort() {
@@ -192,8 +202,9 @@ void Result::displayRatioOfPreemptiveAbortToTotalAbort() {
     long double rate;
     rate =
         (double)total_preemptive_aborts_counts_ / (double)total_abort_counts_;
-    cout << fixed << setprecision(4)
-         << "ratio_of_preemptive_abort_to_total_abort:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "ratio_of_preemptive_abort_to_total_abort:\t" << rate
+              << std::endl;
   }
 }
 
@@ -205,7 +216,8 @@ void Result::displayReadLatencyRate(size_t clocks_per_us, size_t extime,
         (long double)total_read_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "read_latency_rate:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4) << "read_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 
@@ -214,40 +226,44 @@ void Result::displayRtsupdRate() {
     long double rate;
     rate = (double)total_rtsupd_ /
            ((double)total_rtsupd_ + (double)total_rtsupd_chances_);
-    cout << fixed << setprecision(4) << "rtsupd_rate:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4) << "rtsupd_rate:\t" << rate
+              << std::endl;
   }
 }
 
 void Result::displayTemperatureResets() {
   if (total_temperature_resets_)
-    cout << "temperature_resets:\t" << total_temperature_resets_ << endl;
+    std::cout << "temperature_resets:\t" << total_temperature_resets_
+              << std::endl;
 }
 
 void Result::displayTimestampHistorySuccessCounts() {
   if (total_timestamp_history_success_counts_)
-    cout << "timestamp_history_success_counts:\t"
-         << total_timestamp_history_success_counts_ << endl;
+    std::cout << "timestamp_history_success_counts:\t"
+              << total_timestamp_history_success_counts_ << std::endl;
 }
 
 void Result::displayTimestampHistoryFailCounts() {
   if (total_timestamp_history_fail_counts_)
-    cout << "timestamp_history_fail_counts:\t"
-         << total_timestamp_history_fail_counts_ << endl;
+    std::cout << "timestamp_history_fail_counts:\t"
+              << total_timestamp_history_fail_counts_ << std::endl;
 }
 
 void Result::displayTreeTraversal() {
   if (total_tree_traversal_)
-    cout << "tree_traversal:\t" << total_tree_traversal_ << endl;
+    std::cout << "tree_traversal:\t" << total_tree_traversal_ << std::endl;
 }
 
 void Result::displayTMTElementMalloc() {
   if (total_TMT_element_malloc_)
-    cout << "TMT_element_malloc:\t" << total_TMT_element_malloc_ << endl;
+    std::cout << "TMT_element_malloc:\t" << total_TMT_element_malloc_
+              << std::endl;
 }
 
 void Result::displayTMTElementReuse() {
   if (total_TMT_element_reuse_)
-    cout << "TMT_element_reuse:\t" << total_TMT_element_reuse_ << endl;
+    std::cout << "TMT_element_reuse:\t" << total_TMT_element_reuse_
+              << std::endl;
 }
 
 void Result::displayValiLatencyRate(size_t clocks_per_us, size_t extime,
@@ -258,7 +274,8 @@ void Result::displayValiLatencyRate(size_t clocks_per_us, size_t extime,
         (long double)total_vali_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "vali_latency_rate:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4) << "vali_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 
@@ -267,10 +284,10 @@ void Result::displayValidationFailureByTidRate() {
     long double rate;
     rate = (double)total_validation_failure_by_tid_ /
            (double)total_abort_by_validation_;
-    cout << "validation_failure_by_tid:\t" << total_validation_failure_by_tid_
-         << endl;
-    cout << fixed << setprecision(4) << "validation_failure_by_tid_rate:\t"
-         << rate << endl;
+    std::cout << "validation_failure_by_tid:\t"
+              << total_validation_failure_by_tid_ << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "validation_failure_by_tid_rate:\t" << rate << std::endl;
   }
 }
 
@@ -279,21 +296,21 @@ void Result::displayValidationFailureByWritelockRate() {
     long double rate;
     rate = (double)total_validation_failure_by_writelock_ /
            (double)total_abort_by_validation_;
-    cout << "validation_failure_by_writelock:\t"
-         << total_validation_failure_by_writelock_ << endl;
-    cout << fixed << setprecision(4)
-         << "validation_failure_by_writelock_rate:\t" << rate << endl;
+    std::cout << "validation_failure_by_writelock:\t"
+              << total_validation_failure_by_writelock_ << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << "validation_failure_by_writelock_rate:\t" << rate << std::endl;
   }
 }
 
 void Result::displayVersionMalloc() {
   if (total_version_malloc_)
-    cout << "version_malloc:\t" << total_version_malloc_ << endl;
+    std::cout << "version_malloc:\t" << total_version_malloc_ << std::endl;
 }
 
 void Result::displayVersionReuse() {
   if (total_version_reuse_)
-    cout << "version_reuse:\t" << total_version_reuse_ << endl;
+    std::cout << "version_reuse:\t" << total_version_reuse_ << std::endl;
 }
 
 void Result::displayWriteLatencyRate(size_t clocks_per_us, size_t extime,
@@ -304,7 +321,8 @@ void Result::displayWriteLatencyRate(size_t clocks_per_us, size_t extime,
         (long double)total_write_latency_ /
         ((long double)clocks_per_us * powl(10.0, 6.0) * (long double)extime) /
         thread_num;
-    cout << fixed << setprecision(4) << "write_latency_rate:\t" << rate << endl;
+    std::cout << std::fixed << std::setprecision(4) << "write_latency_rate:\t"
+              << rate << std::endl;
   }
 }
 #endif
@@ -428,7 +446,7 @@ void Result::addLocalWriteLatency(const uint64_t count) {
 
 void Result::displayAllResult([[maybe_unused]] size_t clocks_per_us,
                               size_t extime,
-                              [[maybe_unused]] size_t thread_num) {
+                              [[maybe_unused]] size_t thread_num) const {
 #if ADD_ANALYSIS
   displayAbortByOperationRate();
   displayAbortByValidationRate();

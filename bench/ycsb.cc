@@ -26,9 +26,7 @@
 // shirakami/bench
 #include "./include/gen_tx.hh"
 #include "./include/masstree_build.hh"
-#include "./include/string.hh"
 #include "./include/ycsb.hh"
-#include "./include/ycsb_param.h"
 
 // shirakami/src/
 #include "atomic_wrapper.hh"
@@ -41,8 +39,6 @@
 #include "zipf.hh"
 
 // shirakami/include/
-#include "kvs/interface.h"
-#include "kvs/scheme.h"
 
 #include "gflags/gflags.h"
 #include "glog/logging.h"
@@ -52,10 +48,10 @@ using namespace ycsb_param;
 using std::cout, std::endl, std::cerr;
 
 DEFINE_uint64(thread, 1, "# worker threads.");
-DEFINE_uint64(record, 1000, "# database records(tuples).");
+DEFINE_uint64(record, 100, "# database records(tuples).");
 DEFINE_uint64(key_length, 8, "# length of key.");
-DEFINE_uint64(val_length, 8, "# length of value(payload).");
-DEFINE_uint64(ops, 10, "# operations per a transaction.");
+DEFINE_uint64(val_length, 4, "# length of value(payload).");
+DEFINE_uint64(ops, 1, "# operations per a transaction.");
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");
 DEFINE_double(skew, 0.0, "access skew of transaction.");
 DEFINE_uint64(
@@ -89,7 +85,7 @@ static void load_flags() {
     cerr << "Length of val must be larger than 0." << endl;
     exit(1);
   }
-  if (FLAGS_ops > 1) {
+  if (FLAGS_ops >= 1) {
     kNops = FLAGS_ops;
   } else {
     cerr << "Number of operations in a transaction must be larger than 0."
@@ -162,13 +158,14 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   setThreadAffinity(thid);
 #endif
 
-  storeRelease(ready, 1);
-  while (!loadAcquire(start)) _mm_pause();
-
   Token token;
   Storage storage;
   enter(token);
   ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+
+  storeRelease(ready, 1);
+  while (!loadAcquire(start)) _mm_pause();
+
   while (likely(!loadAcquire(quit))) {
     gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
     for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {

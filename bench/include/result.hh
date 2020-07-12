@@ -77,11 +77,11 @@ class Result {
   uint64_t total_latency_ = 0;
 #endif
 
-  void displayAbortCounts();
-  void displayAbortRate();
-  void displayCommitCounts();
-  void displayTps(size_t extime);
-  void displayAllResult(size_t clocks_per_us, size_t extime, size_t thread_num);
+  void displayAbortCounts() const;
+  void displayAbortRate() const;
+  void displayCommitCounts() const;
+  void displayTps(size_t extime) const;
+  void displayAllResult(size_t clocks_per_us, size_t extime, size_t thread_num) const;
 #if ADD_ANALYSIS
   void displayAbortByOperationRate();   // abort by operation rate;
   void displayAbortByValidationRate();  // abort by validation rate;
