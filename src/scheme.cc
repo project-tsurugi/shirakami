@@ -204,7 +204,7 @@ void ThreadInfo::wal(uint64_t ctid) {
     latest_log_header_.compute_two_complement_of_checksum();
 
     // write header
-    logfile_.write((void*)&latest_log_header_, sizeof(LogHeader));
+    logfile_.write((void*)&latest_log_header_, sizeof(Log::LogHeader));
 
     // write log record
     for (auto itr = log_set_.begin(); itr != log_set_.end(); ++itr) {

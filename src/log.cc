@@ -4,43 +4,40 @@
  */
 
 #include "log.hh"
-#include "kvs/scheme.h"
 
 namespace kvs {
 
-std::string kLogDirectory;
-
-void LogHeader::init() & {
+void Log::LogHeader::init() & {
   checksum_ = 0;
   log_rec_num_ = 0;
 }
 
-void LogHeader::compute_two_complement_of_checksum() & {
+void Log::LogHeader::compute_two_complement_of_checksum() & {
   checksum_ ^= mask_full_bits_uint;
   ++checksum_;
 }
 
-unsigned int LogHeader::get_checksum() const & {
+unsigned int Log::LogHeader::get_checksum() const & {
   return checksum_;
 }
 
-void LogHeader::add_checksum(const int add) & {
+void Log::LogHeader::add_checksum(const int add) & {
   checksum_ += add;
 }
 
-unsigned int LogHeader::get_log_rec_num() const& {
+unsigned int Log::LogHeader::get_log_rec_num() const& {
   return log_rec_num_;
 }
 
-void LogHeader::inc_log_rec_num() & {
+void Log::LogHeader::inc_log_rec_num() & {
   ++this->log_rec_num_;
 }
 
-void LogHeader::set_checksum(const int checksum) & {
+void Log::LogHeader::set_checksum(const int checksum) & {
   this->checksum_ = checksum;
 }
 
-int LogRecord::compute_checksum() & {
+int Log::LogRecord::compute_checksum() & {
   // compute checksum
   // TidWord
   int chkSum = 0;
@@ -88,7 +85,7 @@ int LogRecord::compute_checksum() & {
   return chkSum;
 }
 
-void single_recovery_from_log() {
+void Log::single_recovery_from_log() {
   std::vector<LogRecord> log_set;
   for (auto i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
     File logfile;

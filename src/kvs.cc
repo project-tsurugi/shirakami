@@ -77,19 +77,19 @@ static void fin_kThreadTable() {
   }
 }
 
-Status init(std::string log_directory_path) {
+Status init(std::string_view log_directory_path) {
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */
-  kLogDirectory.assign(log_directory_path);
+  Log::set_kLogDirectory(log_directory_path);
   if (log_directory_path == MAC2STR(PROJECT_ROOT)) {
-    kLogDirectory.append("/log");
+    Log::get_kLogDirectory().append("/log");
   }
 
   /**
    * check whether log_directory_path is filesystem objects.
    */
-  boost::filesystem::path log_dir(kLogDirectory);
+  boost::filesystem::path log_dir(Log::get_kLogDirectory());
   if (boost::filesystem::exists(log_dir)) {
     /**
      * some file exists.

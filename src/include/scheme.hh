@@ -256,8 +256,8 @@ class ThreadInfo {
    */
   std::string log_dir_;
   File logfile_;
-  LogHeader latest_log_header_;
-  std::vector<LogRecord> log_set_;
+  Log::LogHeader latest_log_header_;
+  std::vector<Log::LogRecord> log_set_;
 
   ThreadInfo(const Token token) {
     this->token_ = token;

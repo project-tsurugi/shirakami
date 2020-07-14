@@ -27,8 +27,10 @@
 #include "cpu.hh"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#if 0
 #include "kvs/interface.h"
 #include "zipf.hh"
+#endif
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"
@@ -36,17 +38,17 @@
 using namespace kvs;
 using std::cout, std::endl, std::cerr;
 
-DEFINE_uint64(thread, 1, "# worker threads.");
-DEFINE_uint64(record, 1000, "# database records(tuples).");
-DEFINE_uint64(key_length, 8, "# length of key.");
-DEFINE_uint64(val_length, 8, "# length of value(payload).");
-DEFINE_uint64(
+DEFINE_uint64(thread, 1, "# worker threads.");                // NOLINT
+DEFINE_uint64(record, 1000, "# database records(tuples).");   // NOLINT
+DEFINE_uint64(key_length, 8, "# length of key.");             // NOLINT
+DEFINE_uint64(val_length, 8, "# length of value(payload).");  // NOLINT
+DEFINE_uint64(                                                // NOLINT
     cpumhz, 2100,
     "# cpu MHz of execution environment. It is used measuring some time.");
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");
-DEFINE_string(instruction, "insert",
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");  // NOLINT
+DEFINE_string(instruction, "insert",                              // NOLINT
               "insert or put or get. The default is insert.");
-DEFINE_double(skew, 0.0, "access skew of transaction.");
+DEFINE_double(skew, 0.0, "access skew of transaction.");  // NOLINT
 
 static void load_flags() {
   if (FLAGS_thread == 0) {
@@ -111,12 +113,14 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
             std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
+#if 0
   FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
+#endif
   Result& myres = std::ref(res[thid]);
 
   // this function can be used in Linux environment only.
 #ifdef KVS_Linux
-  setThreadAffinity(thid);
+  setThreadAffinity(static_cast<const int>(thid));
 #endif
 
   storeRelease(ready, 1);
@@ -209,7 +213,7 @@ static void invoke_leader() {
 
 int main(int argc, char* argv[]) {
   cout << "start masstree bench." << endl;
-  gflags::SetUsageMessage("YCSB benchmark for shirakami");
+  gflags::SetUsageMessage(static_cast<const std::string&>("YCSB benchmark for shirakami"));
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
   invoke_leader();

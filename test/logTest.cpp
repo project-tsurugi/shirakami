@@ -14,7 +14,7 @@ protected:
 };
 
 TEST_F(logTest, LogHeader) {
-  LogHeader lh;
+  Log::LogHeader lh;
   lh.init();
   ASSERT_EQ(lh.get_checksum(), 0);
   ASSERT_EQ(lh.get_log_rec_num(), 0);
@@ -28,7 +28,7 @@ TEST_F(logTest, LogHeader) {
 
 TEST_F(logTest, LogRecord) {
   {
-    LogRecord lr{};
+    Log::LogRecord lr{};
     ASSERT_EQ(lr.get_tid().get_obj(), 0);
     ASSERT_EQ(lr.get_op(), OP_TYPE::NONE);
     ASSERT_EQ(lr.get_tuple(), nullptr);

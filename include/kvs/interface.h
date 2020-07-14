@@ -19,7 +19,7 @@ namespace kvs {
  * Some files which has the same path exist.
  * @return Status::OK
  */
-extern Status init(std::string log_directory_path = MAC2STR(PROJECT_ROOT));
+extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
  * @brief do delete operations for all records, join core threads and delete the remaining garbage (heap) objects.
