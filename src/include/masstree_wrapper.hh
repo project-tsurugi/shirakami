@@ -15,19 +15,19 @@
 /* if you use formatter, following 2 lines may be exchange.
  * but there is a dependency relation, so teh order is restricted config -> compiler.
  * To depend exchanging 2 lines, insert empty line. */
-#include "../../third_party/masstree-beta/config.h"
+#include "masstree-beta/config.h"
 
-#include "../../third_party/masstree-beta/compiler.hh"
+#include "masstree-beta/compiler.hh"
 
-#include "../../third_party/masstree-beta/kvthread.hh"
-#include "../../third_party/masstree-beta/masstree.hh"
-#include "../../third_party/masstree-beta/masstree_insert.hh"
-#include "../../third_party/masstree-beta/masstree_print.hh"
-#include "../../third_party/masstree-beta/masstree_remove.hh"
-#include "../../third_party/masstree-beta/masstree_scan.hh"
-#include "../../third_party/masstree-beta/masstree_stats.hh"
-#include "../../third_party/masstree-beta/masstree_tcursor.hh"
-#include "../../third_party/masstree-beta/string.hh"
+#include "masstree-beta/kvthread.hh"
+#include "masstree-beta/masstree.hh"
+#include "masstree-beta/masstree_insert.hh"
+#include "masstree-beta/masstree_print.hh"
+#include "masstree-beta/masstree_remove.hh"
+#include "masstree-beta/masstree_scan.hh"
+#include "masstree-beta/masstree_stats.hh"
+#include "masstree-beta/masstree_tcursor.hh"
+#include "masstree-beta/string.hh"
 
 class key_unparse_unsigned {
  public:

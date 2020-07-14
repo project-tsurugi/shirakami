@@ -13,63 +13,65 @@
 # limitations under the License.
 
 file(GLOB YCSB_SOURCES
-  "ycsb.cc"
-  "masstree_build.cc"
-  "result.cc"
-)
+        "ycsb.cc"
+        "masstree_build.cc"
+        "result.cc"
+        )
 
 file(GLOB MASSTREE_SOURCES
-  "masstree.cc"
-  "masstree_build.cc"
-  "result.cc"
-)
+        "masstree.cc"
+        "masstree_build.cc"
+        "result.cc"
+        )
 
 add_executable(ycsb
-  ${YCSB_SOURCES}
-)
+        ${YCSB_SOURCES}
+        )
 
 clang_format(ycsb)
 
 add_executable(masstree
-  ${MASSTREE_SOURCES}
-)
+        ${MASSTREE_SOURCES}
+        )
 
 clang_format(masstree)
 
 target_link_libraries(ycsb
-  PRIVATE shirakami
-  PRIVATE shirakami-impl
-  PRIVATE Threads::Threads
-  PRIVATE gflags::gflags
-)
+        PRIVATE shirakami
+        PRIVATE shirakami-impl
+        PRIVATE Threads::Threads
+        PRIVATE gflags::gflags
+        )
 
 target_include_directories(ycsb
-  PRIVATE .
-  PRIVATE ./include
-  PRIVATE ./../bench/
-  PRIVATE ./../include
-  PRIVATE ./../src/include
-  PRIVATE ./../test/include
-  PRIVATE ${gflags_INCLUDE_DIR}
-)
+        PRIVATE .
+        PRIVATE ./include
+        PRIVATE ./../bench/
+        PRIVATE ./../include
+        PRIVATE ./../src/include
+        PRIVATE ./../test/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+        PRIVATE ${gflags_INCLUDE_DIR}
+        )
 target_link_libraries(masstree
-  PRIVATE shirakami
-  PRIVATE shirakami-impl
-  PRIVATE Threads::Threads
-  PRIVATE gflags::gflags
-)
+        PRIVATE shirakami
+        PRIVATE shirakami-impl
+        PRIVATE Threads::Threads
+        PRIVATE gflags::gflags
+        )
 
 target_include_directories(masstree
-  PRIVATE .
-  PRIVATE ./include
-  PRIVATE ./../bench/
-  PRIVATE ./../include
-  PRIVATE ./../src/include
-  PRIVATE ./../test/include
-  PRIVATE ${gflags_INCLUDE_DIR}
-)
+        PRIVATE .
+        PRIVATE ./include
+        PRIVATE ./../bench/
+        PRIVATE ./../include
+        PRIVATE ./../src/include
+        PRIVATE ./../test/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+        PRIVATE ${gflags_INCLUDE_DIR}
+        )
 
 add_test(
-  NAME ycsb
-  COMMAND ycsb)
+        NAME ycsb
+        COMMAND ycsb)
 

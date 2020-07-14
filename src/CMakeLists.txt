@@ -1,14 +1,15 @@
 file(GLOB SOURCES
         "*.cc"
-)
+        )
 
 add_library(shirakami
-    ${SOURCES}
-)
+        ${SOURCES}
+        )
 
 target_include_directories(shirakami
-    PRIVATE include
-)
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+        )
 
 find_package(Threads REQUIRED)
 
@@ -17,7 +18,7 @@ target_link_libraries(shirakami
         PRIVATE Threads::Threads
         Boost::filesystem
         ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
-)
+        )
 
 set_target_properties(shirakami
         PROPERTIES
@@ -32,8 +33,8 @@ clang_format(shirakami)
 add_library(shirakami-impl INTERFACE)
 
 target_link_libraries(shirakami-impl
-)
+        )
 
 target_include_directories(shirakami-impl
-    INTERFACE include
-)
+        INTERFACE include
+        )
