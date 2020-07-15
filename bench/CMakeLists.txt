@@ -44,12 +44,12 @@ target_link_libraries(ycsb
         )
 
 target_include_directories(ycsb
-        PRIVATE .
-        PRIVATE ./include
-        PRIVATE ./../bench/
-        PRIVATE ./../include
-        PRIVATE ./../src/include
-        PRIVATE ./../test/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/bench/
+        PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE ${gflags_INCLUDE_DIR}
         )
@@ -61,12 +61,12 @@ target_link_libraries(masstree
         )
 
 target_include_directories(masstree
-        PRIVATE .
-        PRIVATE ./include
-        PRIVATE ./../bench/
-        PRIVATE ./../include
-        PRIVATE ./../src/include
-        PRIVATE ./../test/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/bench/
+        PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE ${gflags_INCLUDE_DIR}
         )
