@@ -1,7 +1,6 @@
 #pragma once
 
 #include <pthread.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -199,7 +198,7 @@ inline constexpr std::string_view to_string_view(  // NOLINT
   std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, Status value) {
+inline std::ostream& operator<<(std::ostream& out, Status value) {  // NOLINT
   return out << to_string_view(value);
 }
 
@@ -214,7 +213,8 @@ enum class OP_TYPE : std::int32_t {
   UPDATE,
 };
 
-inline constexpr std::string_view to_string_view(OP_TYPE op) noexcept {
+inline constexpr std::string_view to_string_view(  // NOLINT
+    OP_TYPE op) noexcept {
   using namespace std::string_view_literals;
   switch (op) {
     case OP_TYPE::ABORT:
@@ -237,7 +237,7 @@ inline constexpr std::string_view to_string_view(OP_TYPE op) noexcept {
   std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, OP_TYPE op) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, OP_TYPE op) {  // NOLINT
   return out << to_string_view(op);
 }
 

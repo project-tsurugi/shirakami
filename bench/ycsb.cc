@@ -121,13 +121,13 @@ static void load_flags() {
   }
 }
 
-auto main(int argc, char* argv[]) -> int {
-  gflags::SetUsageMessage(
-      static_cast<const std::string&>("YCSB benchmark for shirakami"));
+int main(int argc, char* argv[]) {  // NOLINT
+  gflags::SetUsageMessage(static_cast<const std::string&>(
+      "YCSB benchmark for shirakami"));  // NOLINT
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
 
-  init(); // NOLINT
+  init();  // NOLINT
   build_mtdb(kCardinality, kNthread, kValLength);
   invoke_leader();
   fin();
@@ -135,7 +135,7 @@ auto main(int argc, char* argv[]) -> int {
   return 0;
 }
 
-static auto isReady(const std::vector<char>& readys) -> bool {
+static bool isReady(const std::vector<char>& readys) {  // NOLINT
   for (const char& b : readys) {
     if (loadAcquire(b) == 0) return false;
   }
@@ -163,22 +163,21 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   Token token{};
   Storage storage{};
   enter(token);
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
 
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
   while (likely(!loadAcquire(quit))) {
     gen_tx_rw(ti->opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
-    for (auto itr = ti->opr_set.begin(); itr != ti->opr_set.end(); ++itr) {
-      if (itr->get_type() == OP_TYPE::SEARCH) {
-        Tuple* tuple;
-        Status op_rs = search_key(token, storage, itr->get_key().data(),
-                                  itr->get_key().size(), &tuple);
-      } else if (itr->get_type() == OP_TYPE::UPDATE) {
-        Status op_rs =
-            update(token, storage, itr->get_key().data(), itr->get_key().size(),
-                   itr->get_value().data(), itr->get_value().size());
+    for (auto&& itr : ti->opr_set) {
+      if (itr.get_type() == OP_TYPE::SEARCH) {
+        Tuple* tuple{};
+        search_key(token, storage, itr.get_key().data(), itr.get_key().size(),
+                   &tuple);
+      } else if (itr.get_type() == OP_TYPE::UPDATE) {
+        update(token, storage, itr.get_key().data(), itr.get_key().size(),
+               itr.get_value().data(), itr.get_value().size());
       }
     }
     if (commit(token) == Status::OK) {
@@ -194,17 +193,18 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
-  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);
+  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
 
-  std::vector<char> readys(kNthread);
+  std::vector<char> readys(kNthread);  // NOLINT
   std::vector<std::thread> thv;
-  for (size_t i = 0; i < kNthread; ++i)
+  for (size_t i = 0; i < kNthread; ++i) {
     thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                      std::ref(quit), std::ref(res));
+  }
   waitForReady(readys);
   storeRelease(start, true);
   for (size_t i = 0; i < kExecTime; ++i) {
-    sleepMs(1000);
+    sleepMs(1000);  // NOLINT
   }
   storeRelease(quit, true);
   for (auto& th : thv) th.join();

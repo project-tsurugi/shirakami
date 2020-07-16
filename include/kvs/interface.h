@@ -93,7 +93,7 @@ extern Status abort(Token token);  // NOLINT
  * that is used for the subsequent calls related with the storage.
  * @return Status::OK if successful
  */
-extern Status register_storage(char const* name,  // NOLINT
+[[maybe_unused]] extern Status register_storage(char const* name,  // NOLINT
                                std::size_t len_name, Storage& storage);
 
 /**
@@ -106,7 +106,7 @@ extern Status register_storage(char const* name,  // NOLINT
  * @return Status::ERR_NOT_FOUND If the storage is not registered with the given
  * name
  */
-extern Status get_storage(char const* name,  // NOLINT
+[[maybe_unused]] extern Status get_storage(char const* name,  // NOLINT
                           std::size_t len_name, Storage& storage);
 
 /**
@@ -117,7 +117,7 @@ extern Status get_storage(char const* name,  // NOLINT
  * @return Status::ERR_NOT_FOUND If the storage is not registered with the given
  * name
  */
-extern Status delete_storage(Storage storage);  // NOLINT
+[[maybe_unused]] extern Status delete_storage(Storage storage);  // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -168,7 +168,7 @@ extern Status delete_record(Token token, Storage storage,  // NOLINT
  * @return Return value of commit function. If it return this, you can retry
  * delete_all_records meaning to resume this function.
  */
-extern Status delete_all_records();  // NOLINT
+[[maybe_unused]] extern Status delete_all_records();  // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -337,6 +337,6 @@ extern Status close_scan(Token token, Storage storage,  // NOLINT
  * @pre It must decide correct wal directory name decided by
  * change_wal_directory function before it executes recovery.
  */
-extern void single_recovery_from_log();
+[[maybe_unused]] extern void single_recovery_from_log();
 
 }  // namespace kvs

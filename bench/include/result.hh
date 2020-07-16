@@ -85,11 +85,11 @@ public:
   void displayVersionMalloc() const;
   void displayVersionReuse() const;
 
-  [[nodiscard]] std::uint64_t &get_local_commit_counts() {
+  [[nodiscard]] std::uint64_t &get_local_commit_counts() { // NOLINT
     return local_commit_counts_;
   }
 
-  [[nodiscard]] std::uint64_t &get_local_abort_counts() {
+  [[nodiscard]] std::uint64_t &get_local_abort_counts() { // NOLINT
     return local_abort_counts_;
   }
 

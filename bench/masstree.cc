@@ -25,10 +25,9 @@
 #include "atomic_wrapper.hh"
 #include "clock.hh"
 #include "cpu.hh"
-#include "tuple.hh"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "tuple.hh"
 #if 0
 #include "kvs/interface.h"
 #include "zipf.hh"
@@ -36,9 +35,6 @@
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"
-
-using namespace kvs;
-using std::cout, std::endl, std::cerr;
 
 DEFINE_uint64(thread, 1, "# worker threads.");                // NOLINT
 DEFINE_uint64(record, 1000, "# database records(tuples).");   // NOLINT
@@ -54,53 +50,57 @@ DEFINE_double(skew, 0.0, "access skew of transaction.");  // NOLINT
 
 static void load_flags() {
   if (FLAGS_thread == 0) {
-    cerr << "Number of threads must be larger than 0." << std::endl;
+    std::cerr << "Number of threads must be larger than 0." << std::endl;
     exit(1);
   }
   if (FLAGS_record == 0) {
-    cerr << "Number of database records(tuples) must be large than 0." << endl;
+    std::cerr << "Number of database records(tuples) must be large than 0."
+              << std::endl;
     exit(1);
   }
-  if (FLAGS_key_length == 0 || FLAGS_key_length % 8 != 0) {
-    cerr << "Length of key must be larger than 0 and be divisible by 8."
-         << endl;
+  if (FLAGS_key_length == 0 || FLAGS_key_length % 8 != 0) {  // NOLINT
+    std::cerr << "Length of key must be larger than 0 and be divisible by 8."
+              << std::endl;
     exit(1);
   }
   if (FLAGS_val_length == 0) {
-    cerr << "Length of val must be larger than 0." << endl;
+    std::cerr << "Length of val must be larger than 0." << std::endl;
     exit(1);
   }
   if (FLAGS_cpumhz == 0) {
-    cerr << "CPU MHz of execution environment. It is used measuring some time. "
-            "It must be larger than 0."
-         << endl;
+    std::cerr
+        << "CPU MHz of execution environment. It is used measuring some time. "
+           "It must be larger than 0."
+        << std::endl;
     exit(1);
   }
   if (FLAGS_duration == 0) {
-    cerr << "Duration of benchmark in seconds must be larger than 0." << endl;
+    std::cerr << "Duration of benchmark in seconds must be larger than 0."
+              << std::endl;
     exit(1);
   }
   if (FLAGS_instruction == "insert" || FLAGS_instruction == "put" ||
       FLAGS_instruction == "get") {
     // ok
   } else {
-    cerr << "The instruction option must be insert or put or get. The default "
-            "is insert."
-         << endl;
+    std::cerr
+        << "The instruction option must be insert or put or get. The default "
+           "is insert."
+        << std::endl;
     exit(1);
   }
   if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
     // ok
   } else {
-    cerr << "access skew of transaction must be in the range 0 to 0.999..."
-         << endl;
+    std::cerr << "access skew of transaction must be in the range 0 to 0.999..."
+              << std::endl;
     exit(1);
   }
 }
 
-static bool isReady(const std::vector<char>& readys) {
+static bool isReady(const std::vector<char>& readys) {  // NOLINT
   for (const char& b : readys) {
-    if (!loadAcquire(b)) return false;
+    if (loadAcquire(b) == 0) return false;
   }
   return true;
 }
@@ -128,20 +128,20 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();
 
-  Token token;
-  kvs::Record myrecord;
-  Storage storage;
+  Token token{};
+  kvs::Record myrecord{};
+  Storage storage{};
   enter(token);
   while (likely(!loadAcquire(quit))) {
     if (FLAGS_instruction == "insert") {
-      std::size_t begin(UINT64_MAX / FLAGS_thread * thid),
-          end(UINT64_MAX / FLAGS_thread * (thid + 1));
+      std::size_t begin(UINT64_MAX / FLAGS_thread * thid);
+      std::size_t end(UINT64_MAX / FLAGS_thread * (thid + 1));
       for (auto i = begin; i < end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
-        std::string value(FLAGS_val_length, '0');
+        std::string value(FLAGS_val_length, '0');  // NOLINT
         make_string(value, rnd);
-        insert(token, storage, reinterpret_cast<char*>(&keybs),
-               sizeof(uint64_t), value.data(), FLAGS_val_length);
+        insert(token, storage, reinterpret_cast<char*>(&keybs),  // NOLINT
+               sizeof(std::uint64_t), value.data(), FLAGS_val_length);
         commit(token);
         ++myres.get_local_commit_counts();
         if (loadAcquire(quit)) break;
@@ -167,56 +167,59 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 #endif
     }
   }
-  leave(token);
+  leave(token);  // NOLINT
 }
 
 static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) bool start = false;
   alignas(CACHE_LINE_SIZE) bool quit = false;
-  alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);
+  alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);  // NOLINT
 
-  cout << "[start] init masstree database." << endl;
-  init();
-  cout << "[end] init masstree database." << endl;
+  std::cout << "[start] init masstree database." << std::endl;
+  init();  // NOLINT
+  std::cout << "[end] init masstree database." << std::endl;
   if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
     build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length);
   }
-  cout << "[report] This experiments use ";
+  std::cout << "[report] This experiments use ";
   if (FLAGS_instruction == "insert") {
-    cout << "insert" << endl;
+    std::cout << "insert" << std::endl;
   }
 
-  std::vector<char> readys(FLAGS_thread);
+  std::vector<char> readys(FLAGS_thread);  // NOLINT
   std::vector<std::thread> thv;
-  for (size_t i = 0; i < FLAGS_thread; ++i)
+  for (size_t i = 0; i < FLAGS_thread; ++i) {
     thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                      std::ref(quit), std::ref(res));
+  }
   waitForReady(readys);
   storeRelease(start, true);
-  cout << "[start] measurement." << endl;
+  std::cout << "[start] measurement." << std::endl;
   for (size_t i = 0; i < FLAGS_duration; ++i) {
-    sleepMs(1000);
+    sleepMs(1000);  // NOLINT
   }
-  cout << "[end] measurement." << endl;
+  std::cout << "[end] measurement." << std::endl;
   storeRelease(quit, true);
-  cout << "[start] join worker threads." << endl;
-  for (auto& th : thv) th.join();
-  cout << "[end] join worker threads." << endl;
+  std::cout << "[start] join worker threads." << std::endl;
+  for (auto&& th : thv) th.join();
+  std::cout << "[end] join worker threads." << std::endl;
 
   for (auto i = 0; i < FLAGS_thread; ++i) {
     res[0].addLocalAllResult(res[i]);
   }
   res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 
-  cout << "[start] fin masstree database." << endl;
+  std::cout << "[start] fin masstree database." << std::endl;
   fin();
-  cout << "[end] fin masstree database." << endl;
+  std::cout << "[end] fin masstree database." << std::endl;
 }
 
-int main(int argc, char* argv[]) {
-  cout << "start masstree bench." << endl;
-  gflags::SetUsageMessage(static_cast<const std::string&>("YCSB benchmark for shirakami"));
+int main(int argc, char* argv[]) {  // NOLINT
+  std::cout << "start masstree bench." << std::endl;
+  gflags::SetUsageMessage(static_cast<const std::string&>(
+      "YCSB benchmark for shirakami"));  // NOLINT
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   load_flags();
   invoke_leader();
+  return 0;
 }

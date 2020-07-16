@@ -31,9 +31,10 @@
 using namespace kvs;
 using std::cout, std::endl, std::cerr;
 
-size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
+size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
+                                 std::size_t thread) {
   // if table size is very small, it builds by single thread.
-  if (record < 1000) return 1;
+  if (record < 1000) return 1;  // NOLINT
 
   // else
   for (size_t i = thread; i > 0; --i) {
@@ -53,17 +54,17 @@ size_t decideParallelBuildNumber(std::size_t record, std::size_t thread) {
 void parallel_build_mtdb(std::size_t start, std::size_t end,
                          std::size_t value_length) {
   Xoroshiro128Plus rnd;
-  Token token;
+  Token token{};
   enter(token);
 
   tbegin(token);
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
-    std::string val(value_length, '0');
+    std::string val(value_length, '0');  // NOLINT
     make_string(val, rnd);
-    Storage storage;
-    insert(token, storage, reinterpret_cast<char *>(&keybs), sizeof(uint64_t),
-           val.data(), val.size());
+    Storage storage{};
+    insert(token, storage, reinterpret_cast<char *>(&keybs),  // NOLINT
+           sizeof(uint64_t), val.data(), val.size());
   }
   commit(token);
   leave(token);
@@ -71,15 +72,16 @@ void parallel_build_mtdb(std::size_t start, std::size_t end,
 
 void build_mtdb(std::size_t record, std::size_t thread,
                 std::size_t value_length) {
-  printf("ycsb::build_mtdb\n");
+  printf("ycsb::build_mtdb\n");  // NOLINT
   std::vector<std::thread> thv;
 
   size_t maxthread = decideParallelBuildNumber(record, thread);
-  printf("start parallel_build_mtdb with %zu threads.\n", maxthread);
+  printf("start parallel_build_mtdb with %zu threads.\n", maxthread);  // NOLINT
   fflush(stdout);
-  for (size_t i = 0; i < maxthread; ++i)
+  for (size_t i = 0; i < maxthread; ++i) {
     thv.emplace_back(parallel_build_mtdb, i * (record / maxthread),
                      (i + 1) * (record / maxthread) - 1, value_length);
+  }
 
   for (auto &th : thv) th.join();
 }
