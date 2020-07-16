@@ -12,6 +12,7 @@
 // shirakami-impl interface library
 #include "compiler.hh"
 #include "scheme.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 using namespace kvs;

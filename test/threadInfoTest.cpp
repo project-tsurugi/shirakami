@@ -8,6 +8,7 @@
 
 // shirakami-impl interface library
 #include "scheme.hh"
+#include "tuple.hh"
 
 using namespace kvs;
 using std::cout;

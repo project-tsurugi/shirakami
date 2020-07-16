@@ -7,6 +7,7 @@
 
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
+#include "tuple.hh"
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"

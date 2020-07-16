@@ -25,6 +25,8 @@
 #include "atomic_wrapper.hh"
 #include "clock.hh"
 #include "cpu.hh"
+#include "tuple.hh"
+
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #if 0

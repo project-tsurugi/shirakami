@@ -32,6 +32,7 @@
 #include "atomic_wrapper.hh"
 #include "clock.hh"
 #include "cpu.hh"
+#include "tuple.hh"
 
 // shirakami/include/
 

@@ -24,6 +24,7 @@
 #include <thread>
 
 #include "cpu.hh"
+#include "tuple.hh"
 #include "gtest/gtest.h"
 
 // shirakami/include/

@@ -15,6 +15,7 @@
 #include "kvs/interface.h"
 #include "log.hh"
 #include "scheme.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 namespace kvs {

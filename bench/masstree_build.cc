@@ -25,6 +25,7 @@
 #include "cpu.hh"
 #include "random.hh"
 #include "scheme.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 using namespace kvs;

@@ -4,6 +4,7 @@
  */
 
 #include "log.hh"
+#include "tuple.hh"
 
 namespace kvs {
 

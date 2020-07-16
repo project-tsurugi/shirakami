@@ -10,6 +10,7 @@
 #include "compiler.hh"
 #include "cpu.hh"
 #include "epoch.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 namespace kvs {

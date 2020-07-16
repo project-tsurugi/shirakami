@@ -10,6 +10,7 @@
 #include "epoch.hh"
 #include "gcollection.hh"
 #include "scheme.hh"
+#include "tuple.hh"
 #include "xact.hh"
 
 namespace kvs {
