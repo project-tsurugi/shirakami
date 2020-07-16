@@ -143,7 +143,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
         insert(token, storage, reinterpret_cast<char*>(&keybs),
                sizeof(uint64_t), value.data(), FLAGS_val_length);
         commit(token);
-        ++myres.local_commit_counts_;
+        ++myres.get_local_commit_counts();
         if (loadAcquire(quit)) break;
       }
     } else if (FLAGS_instruction == "put") {

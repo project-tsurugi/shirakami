@@ -13,25 +13,29 @@
 #include "scheme.hh"
 #include "zipf.hh"
 
-using namespace kvs;
-using namespace ycsb_param;
-
 /**
  * @brief generate search/update operations.
  */
-static void
-gen_tx_rw(std::vector<OprObj>& opr_set, std::size_t tpnm, std::size_t opnm, std::size_t rratio, Xoroshiro128Plus& rnd, FastZipf& zipf) {
+static void gen_tx_rw(std::vector<OprObj>& opr_set, std::size_t tpnm,
+                      std::size_t opnm, std::size_t rratio,
+                      Xoroshiro128Plus& rnd, FastZipf& zipf) {
   for (auto i = 0; i < opnm; ++i) {
     uint64_t keynm = zipf() % tpnm;
     uint64_t keybs = __builtin_bswap64(keynm);
-    //std::unique_ptr<char[]> key = std::make_unique<char[]>(kKeyLength);
-    //memcpy(key.get(), (std::to_string(keynm)).c_str(), kKeyLength);
-    if ((rnd.next() % 100) < rratio) {
-      opr_set.emplace_back(OP_TYPE::SEARCH, reinterpret_cast<char*>(&keybs), sizeof(uint64_t));
+    // std::unique_ptr<char[]> key = std::make_unique<char[]>(kKeyLength);
+    // memcpy(key.get(), (std::to_string(keynm)).c_str(), kKeyLength);
+    constexpr std::size_t thou = 100;
+    if ((rnd.next() % thou) < rratio) {
+      opr_set.emplace_back(OP_TYPE::SEARCH,
+                           reinterpret_cast<char*>(&keybs),  // NOLINT
+                           sizeof(uint64_t));
     } else {
-      std::string value(kValLength, '0');
+      std::string value(ycsb_param::kValLength, '0'); // NOLINT
       make_string(value, rnd);
-      opr_set.emplace_back(OP_TYPE::UPDATE, reinterpret_cast<char*>(&keybs), sizeof(uint64_t), value.data(), kValLength);
+      opr_set.emplace_back(OP_TYPE::UPDATE,
+                           reinterpret_cast<char*>(&keybs),  // NOLINT
+                           sizeof(uint64_t), value.data(),
+                           ycsb_param::kValLength);
     }
   }
 }

@@ -22,6 +22,9 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-size_t decideParallelBuildNumber(std::size_t record, std::size_t thread);
-void parallel_build_mtdb(std::size_t start, std::size_t end, std::size_t value_length);
-void build_mtdb(std::size_t record, std::size_t thread, std::size_t value_length);
+size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
+                                 std::size_t thread);
+void parallel_build_mtdb(std::size_t start, std::size_t end,
+                         std::size_t value_length);
+void build_mtdb(std::size_t record, std::size_t thread,
+                std::size_t value_length);

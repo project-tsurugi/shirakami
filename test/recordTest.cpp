@@ -1,21 +1,14 @@
 #include "gtest/gtest.h"
-
 #include "record.hh"
 #include "tuple.hh"
 
 using namespace kvs;
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
-class recordTest : public ::testing::Test {
-protected:
-  recordTest() {}
-  ~recordTest() {}
-};
+class recordTest : public ::testing::Test {};
 
-TEST_F(recordTest, constructor) {
+TEST_F(recordTest, constructor) { // NOLINT
   {
     Record rec;
     ASSERT_EQ(rec.get_tidw().get_obj(), 0);

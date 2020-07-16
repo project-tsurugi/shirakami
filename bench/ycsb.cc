@@ -182,9 +182,9 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
       }
     }
     if (commit(token) == Status::OK) {
-      ++myres.get().local_commit_counts_;
+      ++myres.get().get_local_commit_counts();
     } else {
-      ++myres.get().local_abort_counts_;
+      ++myres.get().get_local_abort_counts();
       abort(token);
     }
   }
