@@ -155,7 +155,7 @@ extern Status upsert(Token token, Storage storage,  // NOLINT
 extern Status delete_record(Token token, Storage storage,  // NOLINT
                             const char* key, std::size_t len_key);
 
-/**
+[[maybe_unused]] /**
  * @brief Delete the all records.
  * @pre This function is called by a single thread and does't allow moving of
  * other threads.

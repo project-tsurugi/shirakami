@@ -9,30 +9,27 @@
 
 #include "atomic_wrapper.hh"
 #include "cache_line_size.hh"
-#include "clock.hh"
 #include "cpu.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
-#include "kvs/interface.h"
-#include "kvs/tuple.h"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
-#include "tsc.hh"
 #include "tuple.hh"
 
 namespace kvs {
 
 alignas(CACHE_LINE_SIZE)
-    std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
-alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;
+    std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;  // NOLINT
+alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;              // NOLINT
 
 void tbegin(Token token) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   ti->set_txbegan(true);
   ti->set_epoch(load_acquire_ge());
 }
 
-static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
+static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
+                        const TidWord& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
    * It calculates the smallest number that is
@@ -40,7 +37,9 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
    * (b) larger than the worker's most recently chosen TID,
    * and (C) in the current global epoch.
    */
-  TidWord tid_a, tid_b, tid_c;
+  TidWord tid_a;
+  TidWord tid_b;
+  TidWord tid_c;
 
   /*
    * calculates (a)
@@ -75,7 +74,7 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
     Record* recptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
       case OP_TYPE::UPDATE: {
-        std::string* old_value;
+        std::string* old_value{};
         std::string_view new_value_view =
             iws->get_tuple(iws->get_op()).get_value();
         recptr->get_tuple().get_pimpl()->set_value(
@@ -83,7 +82,7 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
         storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
         if (old_value != nullptr) {
           std::mutex& mutex_for_gclist =
-              kMutexGarbageValues[ti->gc_container_index_];
+              kMutexGarbageValues.at(ti->gc_container_index_);
           mutex_for_gclist.lock();
           ti->gc_value_container_->emplace_back(
               std::make_pair(old_value, ti->get_epoch()));
@@ -106,7 +105,7 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
          * create information for garbage collection.
          */
         std::mutex& mutex_for_gclist =
-            kMutexGarbageRecords[ti->gc_container_index_];
+            kMutexGarbageRecords.at(ti->gc_container_index_);
         mutex_for_gclist.lock();
         ti->gc_record_container_->emplace_back(recptr);
         mutex_for_gclist.unlock();
@@ -117,7 +116,6 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
         std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
                   << std::endl;
         std::abort();
-        break;
     }
   }
 
@@ -125,7 +123,6 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
    * about holding operation info.
    */
   ti->clean_up_ops_set();
-
   /**
    * about scan operation.
    */
@@ -134,8 +131,8 @@ static void write_phase(ThreadInfo* ti, TidWord max_rset, TidWord max_wset) {
   ti->gc_records_and_values();
 }
 
-Status abort(Token token) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+Status abort(Token token) {  // NOLINT
+  auto* ti = static_cast<ThreadInfo*>(token);
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
@@ -144,8 +141,8 @@ Status abort(Token token) {
   return Status::OK;
 }
 
-Status insert_record_to_masstree(char const* key, std::size_t len_key,
-                                 Record* record) {
+Status insert_record_to_masstree(char const* key,  // NOLINT
+                                 std::size_t len_key, Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) {
@@ -164,15 +161,17 @@ Status insert_record_to_masstree(char const* key, std::size_t len_key,
   return insert_result;
 }
 
-Status commit(Token token) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
-  TidWord max_rset, max_wset;
+Status commit(Token token) {  // NOLINT
+  auto* ti = static_cast<ThreadInfo*>(token);
+  TidWord max_rset;
+  TidWord max_wset;
 
   // Phase 1: Sort lock list;
   std::sort(ti->write_set.begin(), ti->write_set.end());
 
   // Phase 2: Lock write set;
-  TidWord expected, desired;
+  TidWord expected;
+  TidWord desired;
   for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
     // after this, update/delete
@@ -185,12 +184,13 @@ Status commit(Token token) {
         desired = expected;
         desired.set_lock(true);
         if (compareExchange(itr->get_rec_ptr()->get_tidw().get_obj(),
-                            expected.get_obj(), desired.get_obj()))
+                            expected.get_obj(), desired.get_obj())) {
           break;
+        }
       }
     }
-    if (itr->get_op() == OP_TYPE::UPDATE &&
-        itr->get_rec_ptr()->get_tidw().get_absent() == true) {
+    if (itr->get_op() == OP_TYPE::UPDATE &&  // NOLINT
+        itr->get_rec_ptr()->get_tidw().get_absent()) {
       ti->unlock_write_set(ti->write_set.begin(), itr);
       abort(token);
       return Status::ERR_WRITE_TO_DELETED_RECORD;
@@ -200,9 +200,9 @@ Status commit(Token token) {
   }
 
   // Serialization point
-  asm volatile("" ::: "memory");
+  asm volatile("" ::: "memory");  // NOLINT
   ti->set_epoch(load_acquire_ge());
-  asm volatile("" ::: "memory");
+  asm volatile("" ::: "memory");  // NOLINT
 
   // Phase 3: Validation
   TidWord check;
@@ -211,7 +211,7 @@ Status commit(Token token) {
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
          itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
-        (check.get_absent() == true)  // check whether it was deleted.
+        check.get_absent()  // check whether it was deleted.
         || (check.get_lock() &&
             (ti->search_write_set(itr->get_rec_ptr()) == nullptr))) {
       ti->unlock_write_set();
@@ -235,43 +235,43 @@ Status commit(Token token) {
  * @brief Check wheter the session is already started. This function is not
  * thread safe. But this function can be used only after taking mutex.
  */
-static Status decide_token(Token& token) {
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if (itr->get_visible() == false) {
+static Status decide_token(Token& token) {  // NOLINT
+  for (auto&& itr : kThreadTable) {
+    if (!itr.get_visible()) {
       bool expected(false);
       bool desired(true);
-      if (itr->cas_visible(expected, desired)) {
-        token = static_cast<void*>(&(*itr));
+      if (itr.cas_visible(expected, desired)) {
+        token = static_cast<void*>(&(itr));
         break;
       }
     }
-    if (itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
+    if (&itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
   }
 
   return Status::OK;
 }
 
-Status enter(Token& token) {
+Status enter(Token& token) {  // NOLINT
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return decide_token(token);
 }
 
-Status leave(Token token) {
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if (&(*itr) == static_cast<ThreadInfo*>(token)) {
-      if (itr->get_visible() == true) {
-        itr->set_visible(false);
+Status leave(Token token) {  // NOLINT
+  for (auto&& itr : kThreadTable) {
+    if (&itr == static_cast<ThreadInfo*>(token)) {
+      if (itr.get_visible()) {
+        itr.set_visible(false);
         return Status::OK;
-      } else {
-        return Status::WARN_NOT_IN_A_SESSION;
       }
+      return Status::WARN_NOT_IN_A_SESSION;
     }
   }
   return Status::ERR_INVALID_ARGS;
 }
 
-Status read_record(Record& res, const Record* const dest) {
-  TidWord f_check, s_check;  // first_check, second_check for occ
+Status read_record(Record& res, const Record* const dest) {  // NOLINT
+  TidWord f_check;
+  TidWord s_check;  // first_check, second_check for occ
 
   f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
@@ -291,16 +291,15 @@ Status read_record(Record& res, const Record* const dest) {
     s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
     if (f_check == s_check) {
       break;
-    } else {
-      f_check = s_check;
     }
+    f_check = s_check;
   }
 
   res.set_tidw(f_check);
   return Status::OK;
 }
 
-Status delete_all_records() {
+[[maybe_unused]] Status delete_all_records() {  // NOLINT
   Token s{};
   Storage st{};
   while (Status::OK != enter(s)) _mm_pause();
@@ -309,12 +308,12 @@ Status delete_all_records() {
   std::vector<const Record*> scan_res;
   MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);
 
-  if (scan_res.size() == 0) {
+  if (scan_res.empty()) {
     return Status::WARN_ALREADY_DELETE;
   }
 
-  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    std::string_view key_view = (*itr)->get_tuple().get_key();
+  for (auto&& itr : scan_res) {
+    std::string_view key_view = itr->get_tuple().get_key();
     delete_record(s, st, key_view.data(), key_view.size());
     Status result = commit(s);
     if (result != Status::OK) return result;
@@ -324,10 +323,10 @@ Status delete_all_records() {
   return Status::OK;
 }
 
-Status search_key(Token token, [[maybe_unused]] Storage sotrage,
+Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                   const char* const key, const std::size_t len_key,
                   Tuple** const tuple) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -349,15 +348,14 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
-  } else {
-    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-    if (checktid.get_absent() == true) {
-      // The second condition checks
-      // whether the record you want to read should not be read by parallel
-      // insert / delete.
-      *tuple = nullptr;
-      return Status::WARN_NOT_FOUND;
-    }
+  }
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (checktid.get_absent()) {
+    // The second condition checks
+    // whether the record you want to read should not be read by parallel
+    // insert / delete.
+    *tuple = nullptr;
+    return Status::WARN_NOT_FOUND;
   }
 
   ReadSetObj rsob(record);
@@ -369,10 +367,10 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,
   return rr;
 }
 
-Status update(Token token, [[maybe_unused]] Storage sotrage,
+Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -384,14 +382,13 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
-  } else {
-    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-    if (checktid.get_absent() == true) {
-      // The second condition checks
-      // whether the record you want to read should not be read by parallel
-      // insert / delete.
-      return Status::WARN_NOT_FOUND;
-    }
+  }
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (checktid.get_absent()) {
+    // The second condition checks
+    // whether the record you want to read should not be read by parallel
+    // insert / delete.
+    return Status::WARN_NOT_FOUND;
   }
 
   ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
@@ -400,10 +397,10 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,
   return Status::OK;
 }
 
-Status insert(Token token, [[maybe_unused]] Storage sotrage,
+Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -415,20 +412,20 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  Record* record = new Record(key, len_key, val, len_val);
+  Record* record = new Record(key, len_key, val, len_val);  // NOLINT
   Status insert_result(insert_record_to_masstree(key, len_key, record));
   if (insert_result == Status::OK) {
     ti->write_set.emplace_back(OP_TYPE::INSERT, record);
     return Status::OK;
   }
   // else insert_result == Status::WARN_ALREADY_EXISTS
-  delete record;
+  delete record;  // NOLINT
   return Status::WARN_ALREADY_EXISTS;
 }
 
-Status delete_record(Token token, [[maybe_unused]] Storage sotrage,
+Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                      const char* const key, const std::size_t len_key) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
@@ -437,29 +434,29 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,
   Record* record = MTDB.get_value(key, len_key);
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
-  } else {
-    TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
-    if (checktid.get_absent() == true) {
-      // The second condition checks
-      // whether the record you want to read should not be read by parallel
-      // insert / delete.
-      return Status::WARN_NOT_FOUND;
-    }
+  }
+  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  if (checktid.get_absent()) {
+    // The second condition checks
+    // whether the record you want to read should not be read by parallel
+    // insert / delete.
+    return Status::WARN_NOT_FOUND;
   }
 
   ti->write_set.emplace_back(OP_TYPE::DELETE, record);
   return check;
 }
 
-Record* find_record_from_masstree(char const* key, std::size_t len_key) {
+Record* find_record_from_masstree(char const* key,  // NOLINT
+                                  std::size_t len_key) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
 }
 
-Status upsert(Token token, [[maybe_unused]] Storage sotrage,
-              const char* const key, const std::size_t len_key,
-              const char* const val, const std::size_t len_val) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+Status upsert(Token token, [[maybe_unused]] Storage storage, // NOLINT
+              const char* const key, std::size_t len_key,
+              const char* const val, std::size_t len_val) {
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -469,7 +466,7 @@ Status upsert(Token token, [[maybe_unused]] Storage sotrage,
 
   Record* record = find_record_from_masstree(key, len_key);
   if (record == nullptr) {
-    record = new Record(key, len_key, val, len_val);
+    record = new Record(key, len_key, val, len_val); // NOLINT
     Status insert_result(insert_record_to_masstree(key, len_key, record));
     if (insert_result == Status::OK) {
       ti->write_set.emplace_back(OP_TYPE::INSERT, record);
@@ -477,7 +474,7 @@ Status upsert(Token token, [[maybe_unused]] Storage sotrage,
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
-    delete record;
+    delete record; // NOLINT
   }
   ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
                              record);
