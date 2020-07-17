@@ -3,12 +3,13 @@
  * @brief about garbage collection.
  */
 
-#include "gcollection.hh"
-
 #include <utility>
+
+#include "gcollection.hh"
 
 #include "atomic_wrapper.hh"
 #include "epoch.hh"
+#include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tuple.hh"
 #include "xact.hh"
@@ -33,7 +34,7 @@ void release_all_heap_objects() {
 
 void remove_all_leaf_from_mtdb_and_release() {
   std::vector<const Record*> scan_res;
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);  // NOLINT
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);  // NOLINT
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
@@ -45,7 +46,7 @@ void remove_all_leaf_from_mtdb_and_release() {
    * check whether MTDB is empty.
    */
   scan_res.clear();
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);  // NOLINT
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);  // NOLINT
   if (!scan_res.empty()) std::abort();
 }
 

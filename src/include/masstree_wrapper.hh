@@ -1,24 +1,26 @@
 #pragma once
 
+#include <pthread.h>
+#include <xmmintrin.h>
+
 #include <atomic>
+#include <cstdlib>
 #include <random>
 #include <thread>
 #include <typeinfo>
 #include <vector>
 
-#include <pthread.h>
-#include <stdlib.h>
-#include <xmmintrin.h>
-
 #include "kvs/scheme.h"
 
 /* if you use formatter, following 2 lines may be exchange.
- * but there is a dependency relation, so teh order is restricted config -> compiler.
- * To depend exchanging 2 lines, insert empty line. */
+ * but there is a dependency relation, so teh order is restricted config ->
+ * compiler. To depend exchanging 2 lines, insert empty line. */
+// config
 #include "masstree-beta/config.h"
-
+// compiler
 #include "masstree-beta/compiler.hh"
 
+// masstree-header
 #include "masstree-beta/kvthread.hh"
 #include "masstree-beta/masstree.hh"
 #include "masstree-beta/masstree_insert.hh"
@@ -30,33 +32,36 @@
 #include "masstree-beta/string.hh"
 
 class key_unparse_unsigned {
- public:
-  static int unparse_key(Masstree::key<uint64_t> key, char* buf, int buflen) {
-    return snprintf(buf, buflen, "%" PRIu64, key.ikey());
+public:
+  [[maybe_unused]] static int unparse_key(  // NOLINT
+      Masstree::key<uint64_t> key, char* buf, int buflen) {
+    return snprintf(buf, buflen, "%" PRIu64, key.ikey());  // NOLINT
   }
 };
 
 template <typename T>
 class SearchRangeScanner {
 public:
-  typedef Masstree::Str Str;
-  const char * const rkey_;
-  const std::size_t len_rkey_;
-  const bool r_exclusive_;
-  std::vector<const T*>* scan_buffer_;
-  const bool limited_scan_;
-  const std::size_t kLimit_ = 1000;
+  using Str = Masstree::Str;
 
-  SearchRangeScanner(const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* scan_buffer, bool limited_scan = false) : rkey_(rkey), len_rkey_(len_rkey), r_exclusive_(r_exclusive), scan_buffer_(scan_buffer), limited_scan_(limited_scan) {
+  SearchRangeScanner(const char* const rkey, const std::size_t len_rkey,
+                     const bool r_exclusive, std::vector<const T*>* scan_buffer,
+                     bool limited_scan)
+      : rkey_(rkey),
+        len_rkey_(len_rkey),
+        r_exclusive_(r_exclusive),
+        scan_buffer_(scan_buffer),
+        limited_scan_(limited_scan) {
     if (limited_scan) {
       scan_buffer->reserve(kLimit_);
     }
   }
 
   template <typename SS, typename K>
-  void visit_leaf(const SS&, const K&, threadinfo&) {}
+  [[maybe_unused]] void visit_leaf(const SS&, const K&, threadinfo&) {}
 
-  bool visit_value(const Str key, T* val, threadinfo&) {
+  [[maybe_unused]] bool visit_value(const Str key, T* val,  // NOLINT
+                                    threadinfo&) {
     if (limited_scan_) {
       if (scan_buffer_->size() >= kLimit_) {
         return false;
@@ -68,16 +73,25 @@ public:
       return true;
     }
 
-    const int res_memcmp = memcmp(rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
-    if (res_memcmp > 0
-        || (res_memcmp == 0 && 
-        ((!r_exclusive_ && len_rkey_ == static_cast<std::size_t>(key.len)) || len_rkey_ > static_cast<std::size_t>(key.len)))) {
+    const int res_memcmp = memcmp(
+        rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
+    if (res_memcmp > 0 ||
+        (res_memcmp == 0 &&
+         ((!r_exclusive_ && len_rkey_ == static_cast<std::size_t>(key.len)) ||
+          len_rkey_ > static_cast<std::size_t>(key.len)))) {
       scan_buffer_->emplace_back(val);
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
+
+private:
+  const char* const rkey_{};
+  const std::size_t len_rkey_{};
+  const bool r_exclusive_{};
+  std::vector<const T*>* scan_buffer_{};
+  const bool limited_scan_{false};
+  static constexpr std::size_t kLimit_ = 1000;
 };
 
 /* Notice.
@@ -85,38 +99,36 @@ public:
  * inserting a pointer of T as value.
  */
 template <typename T>
-class MasstreeWrapper {
- public:
-  static constexpr uint64_t insert_bound = UINT64_MAX;  // 0xffffff;
+class MasstreeWrapper {  // NOLINT
+public:
+  [[maybe_unused]] static constexpr uint64_t insert_bound =
+      UINT64_MAX;  // 0xffffff;
   // static constexpr uint64_t insert_bound = 0xffffff; //0xffffff;
-  struct table_params : public Masstree::nodeparams<15, 15> {
-    typedef T* value_type;
-    typedef Masstree::value_print<value_type> value_print_type;
-    typedef threadinfo threadinfo_type;
-    typedef key_unparse_unsigned key_unparse_type;
-    static constexpr ssize_t print_max_indent_depth = 12;
+  struct table_params : public Masstree::nodeparams<15, 15> {  // NOLINT
+    using value_type = T*;
+    using value_print_type = Masstree::value_print<value_type>;
+    using threadinfo_type = threadinfo;
+    using key_unparse_type = key_unparse_unsigned;
+    [[maybe_unused]] static constexpr ssize_t print_max_indent_depth = 12;
   };
 
-  typedef Masstree::Str Str;
-  typedef Masstree::basic_table<table_params> table_type;
-  typedef Masstree::unlocked_tcursor<table_params> unlocked_cursor_type;
-  typedef Masstree::tcursor<table_params> cursor_type;
-  typedef Masstree::leaf<table_params> leaf_type;
-  typedef Masstree::internode<table_params> internode_type;
+  using Str = Masstree::Str;
+  using table_type = Masstree::basic_table<table_params>;
+  using unlocked_cursor_type = Masstree::unlocked_tcursor<table_params>;
+  using cursor_type = Masstree::tcursor<table_params>;
+  using leaf_type = Masstree::leaf<table_params>;
+  using internode_type = Masstree::internode<table_params>;
 
-  typedef typename table_type::node_type node_type;
-  typedef typename unlocked_cursor_type::nodeversion_value_type
-      nodeversion_value_type;
+  using node_type = typename table_type::node_type;
+  using nodeversion_value_type =
+      typename unlocked_cursor_type::nodeversion_value_type;
 
   // tanabe :: todo. it should be wrapped by atomic type if not only one thread
   // use this.
   static __thread typename table_params::threadinfo_type* ti;
 
   MasstreeWrapper() { this->table_init(); }
-  ~MasstreeWrapper() { 
-    //threadinfo::destruct_all(); 
-    //ti = nullptr;
-  }
+  ~MasstreeWrapper() = default;
 
   void table_init() {
     // printf("masstree table_init()\n");
@@ -130,11 +142,11 @@ class MasstreeWrapper {
     if (ti == nullptr) ti = threadinfo::make(threadinfo::TI_PROCESS, thread_id);
   }
 
-  void table_print() {
+  [[maybe_unused]] void table_print() {
     table_.print(stdout);
     fprintf(stdout, "Stats: %s\n",
             Masstree::json_stats(table_, ti)
-                .unparse(lcdf::Json::indent_depth(1000))
+                .unparse(lcdf::Json::indent_depth(1000))  // NOLINT
                 .c_str());
   }
 
@@ -144,12 +156,14 @@ class MasstreeWrapper {
    * @param len_key
    * @param value
    * @details future work, we try to delete making temporary
-   * object std::string buf(key). But now, if we try to do 
+   * object std::string buf(key). But now, if we try to do
    * without making temporary object, it fails by masstree.
-   * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @a key exists in masstree, so this function returned immediately.
+   * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @a
+   * key exists in masstree, so this function returned immediately.
    * @return Status::OK success.
    */
-  kvs::Status insert_value(const char* key, std::size_t len_key, T* value) {
+  kvs::Status insert_value(const char* key, std::size_t len_key,  // NOLINT
+                           T* value) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
     // always_assert(!found, "keys should all be unique");
@@ -166,7 +180,8 @@ class MasstreeWrapper {
   }
 
   // for bench.
-  kvs::Status put_value(const char* key, std::size_t len_key, T* value, T** record) {
+  kvs::Status put_value(const char* key, std::size_t len_key,  // NOLINT
+                        T* value, T** record) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
@@ -176,41 +191,44 @@ class MasstreeWrapper {
       fence();
       lp.finish(0, *ti);
       return kvs::Status::OK;
-    } else {
-      fence();
-      lp.finish(0, *ti);
-      /**
-       * Look project_root/third_party/masstree/masstree_get.hh:98 and 100.
-       * If the node wasn't found, the lock was acquired and tcursor::state_ is 0.
-       * So it needs to release.
-       * If state_ == 0, finish function merely release locks of existing nodes.
-       */
-      return kvs::Status::WARN_NOT_FOUND;
     }
+    fence();
+    lp.finish(0, *ti);
+    /**
+     * Look project_root/third_party/masstree/masstree_get.hh:98 and 100.
+     * If the node wasn't found, the lock was acquired and tcursor::state_ is
+     * 0. So it needs to release. If state_ == 0, finish function merely
+     * release locks of existing nodes.
+     */
+    return kvs::Status::WARN_NOT_FOUND;
   }
 
-  kvs::Status remove_value(const char* key, std::size_t len_key) {
+  kvs::Status remove_value(const char* key, std::size_t len_key) {  // NOLINT
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
       // try finish_remove. If it fails, following processing unlocks nodes.
       lp.finish(-1, *ti);
       return kvs::Status::OK;
-    } else {
-      // no nodes
-      lp.finish(-1, *ti);
-      return kvs::Status::WARN_NOT_FOUND;
     }
+    // no nodes
+    lp.finish(-1, *ti);
+    return kvs::Status::WARN_NOT_FOUND;
   }
 
-  T* get_value(const char* key, std::size_t len_key) {
+  T* get_value(const char* key, std::size_t len_key) {  // NOLINT
     unlocked_cursor_type lp(table_, key, len_key);
     bool found = lp.find_unlocked(*ti);
-    if (found) return lp.value();
-    else return nullptr;
+    if (found) {
+      return lp.value();
+    }
+    return nullptr;
   }
 
-  void scan(const char * const lkey, const std::size_t len_lkey, const  bool l_exclusive, const char * const rkey, const std::size_t len_rkey, const bool r_exclusive, std::vector<const T*>* res, bool limited_scan = false) {
+  void scan(const char* const lkey, const std::size_t len_lkey,
+            const bool l_exclusive, const char* const rkey,
+            const std::size_t len_rkey, const bool r_exclusive,
+            std::vector<const T*>* res, bool limited_scan) {
     Str mtkey;
     if (lkey == nullptr) {
       mtkey = Str();
@@ -218,21 +236,22 @@ class MasstreeWrapper {
       mtkey = Str(lkey, len_lkey);
     }
 
-    SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res, limited_scan);
+    SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res,
+                                  limited_scan);
     table_.scan(mtkey, !l_exclusive, scanner, *ti);
   }
 
-  void print_table() {
+  [[maybe_unused]] void print_table() {
     // future work.
   }
 
-  static std::atomic<bool> stopping;
-  static std::atomic<uint32_t> printing;
+  [[maybe_unused]] static inline std::atomic<bool> stopping{};      // NOLINT
+  [[maybe_unused]] static inline std::atomic<uint32_t> printing{};  // NOLINT
 
- private:
+private:
   table_type table_;
 
-  static inline Str make_key(const char* char_key, std::string& buf) {
+  [[maybe_unused]] static inline Str make_key(std::string& buf) {  // NOLINT
     return Str(buf);
   }
 };
@@ -240,10 +259,5 @@ class MasstreeWrapper {
 template <typename T>
 __thread typename MasstreeWrapper<T>::table_params::threadinfo_type*
     MasstreeWrapper<T>::ti = nullptr;
-template <typename T>
-std::atomic<bool> MasstreeWrapper<T>::stopping = false;
-template <typename T>
-std::atomic<uint32_t> MasstreeWrapper<T>::printing = 0;
-extern volatile mrcu_epoch_type active_epoch;
-extern volatile uint64_t globalepoch;
-extern volatile bool recovering;
+
+[[maybe_unused]] extern volatile bool recovering;

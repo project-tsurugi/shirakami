@@ -32,7 +32,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,
 
   std::vector<const Record*> scan_res;
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive,
-            &scan_res);
+            &scan_res, false);
 
   for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
     std::string_view key_view = (*itr)->get_tuple().get_key();

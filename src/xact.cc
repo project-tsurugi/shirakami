@@ -307,7 +307,7 @@ Status delete_all_records() {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
   std::vector<const Record*> scan_res;
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);
 
   if (scan_res.size() == 0) {
     return Status::WARN_ALREADY_DELETE;
