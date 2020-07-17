@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -16,14 +17,16 @@
 namespace kvs {
 
 /**
- * @brief Delete std::vector<Record*> kGarbageRecords at shirakami/src/gcollection.cc
+ * @brief Delete std::vector<Record*> kGarbageRecords at
+ * shirakami/src/gcollection.cc
  * @pre This function should be called at terminating db.
  * @return void
  */
 extern void delete_all_garbage_records();
 
 /**
- * @brief Delete first of std::pair<std::string*, Epoch>> kGarbageValues at shirakami/src/gcollection.cc
+ * @brief Delete first of std::pair<std::string*, Epoch>> kGarbageValues at
+ * shirakami/src/gcollection.cc
  * @pre This function should be called at terminating db.
  * @return void
  */
@@ -31,7 +34,8 @@ extern void delete_all_garbage_values();
 
 /**
  * @brief Release all heap objects in this system.
- * @details Do three functions: delete_all_garbage_values(), delete_all_garbage_records(), and remove_all_leaf_from_mtdb_and_release().
+ * @details Do three functions: delete_all_garbage_values(),
+ * delete_all_garbage_records(), and remove_all_leaf_from_mtdb_and_release().
  * @pre This function should be called at terminating db.
  * @return void
  */
@@ -44,9 +48,12 @@ extern void release_all_heap_objects();
  */
 extern void remove_all_leaf_from_mtdb_and_release();
 
-extern std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-extern std::mutex kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-extern std::vector<std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
-extern std::mutex kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+extern std::array<std::vector<Record*>, KVS_NUMBER_OF_LOGICAL_CORES>
+    kGarbageRecords;
+extern std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords;
+extern std::array<std::vector<std::pair<std::string*, Epoch>>,
+                  KVS_NUMBER_OF_LOGICAL_CORES>
+    kGarbageValues;
+extern std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues;
 
-} // namespace kvs
+}  // namespace kvs

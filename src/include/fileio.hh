@@ -26,44 +26,30 @@
 #include <linux/fs.h>
 #endif  // KVS_Linux
 
-class File {
-private:
-  int fd_;
-  bool autoClose_;
-
-  void throwOpenError(const std::string& filePath) const {
-    const int err = errno;
-    std::string s("open failed: ");
-    s += filePath;
-    throw LibcError(err, s);
-  }
-
+class File {  // NOLINT
 public:
-  File() : fd_(-1), autoClose_(false) {}
+  File() = default;
 
-  bool open(const std::string& filePath, int flags) {
-    fd_ = ::open(filePath.c_str(), flags);
+  bool open(const std::string& filePath, int flags) {  // NOLINT
+    fd_ = ::open(filePath.c_str(), flags);             // NOLINT
     autoClose_ = true;
     if (fd_ == -1) {
-      throw LibcError(errno);
+      throw LibcError(errno);  // NOLINT
     }
     return fd_ >= 0;
   }
 
-  bool try_open(const std::string& file_path, int flags) {
-    fd_ = ::open(file_path.c_str(), flags);
+  bool try_open(const std::string& file_path, int flags) {  // NOLINT
+    fd_ = ::open(file_path.c_str(), flags);                 // NOLINT
     autoClose_ = true;
-    if (fd_ == -1)
-      return false;
-    else
-      return true;
+    return fd_ != -1;
   }
 
-  bool open(const std::string& filePath, int flags, mode_t mode) {
-    fd_ = ::open(filePath.c_str(), flags, mode);
+  bool open(const std::string& filePath, int flags, mode_t mode) {  // NOLINT
+    fd_ = ::open(filePath.c_str(), flags, mode);                    // NOLINT
     autoClose_ = true;
     if (fd_ == -1) {
-      throw LibcError(errno);
+      throw LibcError(errno);  // NOLINT
     }
     return fd_ >= 0;
   }
@@ -76,29 +62,29 @@ public:
     if (!this->open(filePath, flags, mode)) throwOpenError(filePath);
   }
 
-  explicit File(int fd, bool autoClose = false)
+  [[maybe_unused]] explicit File(int fd, bool autoClose)
       : fd_(fd), autoClose_(autoClose) {}
   ~File() noexcept try { close(); } catch (...) {
   }
 
-  int fd() const {
+  [[nodiscard]] int fd() const {  // NOLINT
     if (fd_ < 0) {
       std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
                 << std::endl;
       std::abort();
-    };
+    }
     return fd_;
   }
 
   void close() {
     if (!autoClose_ || fd_ < 0) return;
     if (::close(fd_) < 0) {
-      throw LibcError(errno, "close failed: ");
+      throw LibcError(errno, "close failed: ");  // NOLINT
     }
     fd_ = -1;
   }
 
-  void close_if_exist() {
+  [[maybe_unused]] void close_if_exist() {
     ::close(fd_);
     fd_ = -1;
   }
@@ -107,29 +93,29 @@ public:
    * @brief read some data
    * @return the volume which is read.
    */
-  size_t readsome(void* data, size_t size) {
+  size_t readsome(void* data, size_t size) const {  // NOLINT
     ssize_t r = ::read(fd(), data, size);
-    if (r < 0) throw LibcError(errno, "read failed: ");
+    if (r < 0) throw LibcError(errno, "read failed: ");  // NOLINT
     return r;
   }
 
-  size_t read(void* data, size_t size) {
-    char* buf = reinterpret_cast<char*>(data);
+  size_t read(void* data, size_t size) const {  // NOLINT
+    char* buf = reinterpret_cast<char*>(data);  // NOLINT
     size_t s = 0;
     while (s < size) {
-      size_t r = readsome(&buf[s], size - s);
+      size_t r = readsome(&buf[s], size - s);  // NOLINT
       s += r;
       if (size - s != r) return s;
     }
     return s;
   }
 
-  void write(const void* data, size_t size) {
-    const char* buf = reinterpret_cast<const char*>(data);
+  void write(const void* data, size_t size) const {
+    const char* buf = reinterpret_cast<const char*>(data);  // NOLINT
     size_t s = 0;
     while (s < size) {
-      ssize_t r = ::write(fd(), &buf[s], size - s);
-      if (r < 0) throw LibcError(errno, "write failed: ");
+      ssize_t r = ::write(fd(), &buf[s], size - s);         // NOLINT
+      if (r < 0) throw LibcError(errno, "write failed: ");  // NOLINT
       if (r == 0) {
         std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
                   << std::endl;
@@ -140,31 +126,43 @@ public:
   }
 
 #ifdef KVS_Linux
-  void fdatasync() {
+  [[maybe_unused]] void fdatasync() const {
     if (::fdatasync(fd()) < 0) {
-      throw LibcError(errno, "fdsync failed: ");
+      throw LibcError(errno, "fdsync failed: ");  // NOLINT
     }
   }
 #endif  // KVS_Linux
 
-  void fsync() {
+  [[maybe_unused]] void fsync() const {
     if (::fsync(fd()) < 0) {
-      throw LibcError(errno, "fsync failed: ");
+      throw LibcError(errno, "fsync failed: ");  // NOLINT
     }
   }
 
-  void ftruncate(off_t length) {
+  [[maybe_unused]] void ftruncate(off_t length) const {
     if (::ftruncate(fd(), length) < 0) {
-      throw LibcError(errno, "ftruncate failed: ");
+      throw LibcError(errno, "ftruncate failed: ");  // NOLINT
     }
   }
+
+private:
+  static void throwOpenError(const std::string& filePath) {
+    const int err = errno;
+    std::string s("open failed: ");  // NOLINT
+    s += filePath;
+    throw LibcError(err, s);
+  }
+
+  int fd_{-1};
+  bool autoClose_{};
 };
 
 // create a file if it does not exist.
-inline void createEmptyFile(const std::string& path, mode_t mode = 0644) {
-  struct stat st;
+[[maybe_unused]] inline void createEmptyFile(const std::string& path,
+                                             mode_t mode = 0644) {  // NOLINT
+  struct stat st {};
   if (::stat(path.c_str(), &st) == 0) return;
-  File writer(path, O_CREAT | O_TRUNC | O_RDWR, mode);
+  File writer(path, O_CREAT | O_TRUNC | O_RDWR, mode);  // NOLINT
   writer.close();
 }
 
@@ -191,24 +189,26 @@ inline void readAllFromFile(File& file, String& buf) {
 }
 
 template <typename String>
-inline void readAllFromFile(const std::string& path, String& buf) {
+[[maybe_unused]] inline void readAllFromFile(const std::string& path,
+                                             String& buf) {
   File file(path, O_RDONLY);
   readAllFromFile(file, buf);
   file.close();
 }
 
-inline void genLogFileName(std::string& logpath, const int thid) {
-  const int PATHNAME_SIZE = 512;
-  char pathname[PATHNAME_SIZE];
+[[maybe_unused]] inline void genLogFileName(std::string& logpath,
+                                            const int thid) {
+  constexpr int PATHNAME_SIZE = 512;
+  std::array<char, PATHNAME_SIZE> pathname{};
 
-  memset(pathname, '\0', PATHNAME_SIZE);
+  memset(pathname.data(), '\0', PATHNAME_SIZE);
 
-  if (getcwd(pathname, PATHNAME_SIZE) == NULL) {
+  if (getcwd(pathname.data(), PATHNAME_SIZE) == nullptr) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
               << std::endl;
     std::abort();
   }
 
-  logpath = pathname;
+  logpath = pathname.data();
   logpath += "/log/log" + std::to_string(thid);
 }

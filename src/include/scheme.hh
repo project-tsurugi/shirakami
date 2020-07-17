@@ -307,7 +307,7 @@ class ThreadInfo {
    */
   void remove_inserted_records_of_write_set_from_masstree();
 
-  void gc_records_and_values();
+  void gc_records_and_values() const;
 
   /**
    * @brief check whether it already executed search operation.

@@ -36,6 +36,8 @@
 // to use declaration of entity of global variables.
 #include "./../src/masstree_wrapper.cc"
 
+using namespace kvs;
+
 DEFINE_uint64(thread, 1, "# worker threads.");                // NOLINT
 DEFINE_uint64(record, 1000, "# database records(tuples).");   // NOLINT
 DEFINE_uint64(key_length, 8, "# length of key.");             // NOLINT

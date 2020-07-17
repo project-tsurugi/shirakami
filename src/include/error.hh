@@ -1,32 +1,35 @@
 /**
  * @file error.hh
  * @brief error utilities.
- * @details This source is implemented by refering the source https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
+ * @details This source is implemented by refering the source
+ * https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
 
 #pragma once
 
+#include <array>
 #include <exception>
 
 // class
 class LibcError : public std::exception {
- private:
+private:
   std::string str_;
-  static std::string generateMessage(int errnum, const std::string &msg) {
+  static std::string generateMessage(int errnum,  // NOLINT
+                                     const std::string &msg) {
     std::string s(msg);
-    const size_t BUF_SIZE = 1024;
-    char buf[BUF_SIZE];
-    ::snprintf(buf, 1024, " %d ", errnum);
-    s += buf;
-    if (::strerror_r(errnum, buf, BUF_SIZE) != nullptr) {
-      s += buf;
+    constexpr std::size_t BUF_SIZE = 1024;
+    std::array<char, BUF_SIZE> buf{};
+    ::snprintf(buf.data(), 1024, " %d ", errnum);  // NOLINT
+    s += buf.data();
+    if (::strerror_r(errnum, buf.data(), BUF_SIZE) != nullptr) {
+      s += buf.data();
     }
     return s;
   }
 
- public:
-  explicit LibcError(int errnum = errno, const std::string &msg = "libc_error:")
+public:
+  explicit LibcError(int errnum = errno,                      // NOLINT
+                     const std::string &msg = "libc_error:")  // NOLINT
       : str_(generateMessage(errnum, msg)) {}
 };
-

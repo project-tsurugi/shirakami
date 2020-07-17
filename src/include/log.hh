@@ -7,16 +7,13 @@
 
 #pragma once
 
-#include <string.h>
-
 #include <cstdint>
+#include <cstring>
 
 #include "fileio.hh"
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 #include "tid.hh"
-
-using namespace kvs;
 
 namespace kvs {
 
@@ -27,7 +24,7 @@ public:
     /**
      * @brief Adds the argument to @var LogHeader::checksum_.
      */
-    void add_checksum(const int add) &;
+    void add_checksum(int add) &;
 
     /**
      * @brief Computing check sum.
@@ -38,12 +35,12 @@ public:
     /**
      * @brief Gets the value of @var LogHeader::checksum_.
      */
-    [[nodiscard]] unsigned int get_checksum() const&;
+    [[nodiscard]] unsigned int get_checksum() const&;  // NOLINT
 
     /**
      * @brief Gets the value of @var LogHeader::log_rec_num_.
      */
-    [[nodiscard]] unsigned int get_log_rec_num() const&;
+    [[nodiscard]] unsigned int get_log_rec_num() const&;  // NOLINT
 
     /**
      * @brief Adds the one to @var LogHeader::log_rec_num_.
@@ -60,7 +57,7 @@ public:
      * @brief Sets @a LogHeader::checksum_ to the argument.
      * @param checksum
      */
-    void set_checksum(const int checksum) &;
+    void set_checksum(unsigned int checksum) &;
 
   private:
     unsigned int checksum_{};
@@ -70,37 +67,43 @@ public:
 
   class LogRecord {
   public:
-    LogRecord() : tid_(), op_(OP_TYPE::NONE), tuple_(nullptr) {}
+    LogRecord() = default;
 
-    LogRecord(const TidWord tid, const OP_TYPE op, const Tuple* const tuple)
+    LogRecord(const TidWord& tid, const OP_TYPE op, const Tuple* const tuple)
         : tid_(tid), op_(op), tuple_(tuple) {}
 
-    bool operator<(const LogRecord& right) { return this->tid_ < right.tid_; }
-
-    TidWord& get_tid() & { return tid_; }
-
-    const TidWord& get_tid() const& { return tid_; }
-
-    OP_TYPE& get_op() & { return op_; }
-
-    const OP_TYPE& get_op() const& { return op_; }
-
-    const Tuple* get_tuple() const& { return tuple_; }
-
-    void set_tuple(Tuple* tuple) { this->tuple_ = tuple; }
+    bool operator<(const LogRecord& right) {  // NOLINT
+      return this->tid_ < right.tid_;
+    }
 
     /**
      * @brief Compute checksum.
      */
-    int compute_checksum() &;
+    unsigned int compute_checksum() &;  // NOLINT
+
+    TidWord& get_tid() & { return tid_; }  // NOLINT
+
+    [[maybe_unused]] [[nodiscard]] const TidWord& get_tid() const& {  // NOLINT
+      return tid_;
+    }
+
+    [[nodiscard]] const Tuple* get_tuple() const& { return tuple_; }  // NOLINT
+
+    OP_TYPE& get_op() & { return op_; }  // NOLINT
+
+    [[maybe_unused]] [[nodiscard]] const OP_TYPE& get_op() const& {  // NOLINT
+      return op_;
+    }
+
+    [[maybe_unused]] void set_tuple(Tuple* tuple) { this->tuple_ = tuple; }
 
   private:
-    TidWord tid_;
-    OP_TYPE op_;
-    const Tuple* tuple_;
+    TidWord tid_{};
+    OP_TYPE op_{OP_TYPE::NONE};
+    const Tuple* tuple_{nullptr};
   };
 
-  [[nodiscard]] static std::string& get_kLogDirectory() {
+  [[nodiscard]] static std::string& get_kLogDirectory() {  // NOLINT
     return kLogDirectory;
   }
 
@@ -108,9 +111,9 @@ public:
     kLogDirectory.assign(new_directory);
   }
 
-  static void single_recovery_from_log();
+  [[maybe_unused]] static void single_recovery_from_log();
 
 private:
-  static inline std::string kLogDirectory;  // NOLINT
+  static inline std::string kLogDirectory{};  // NOLINT
 };
 }  // namespace kvs

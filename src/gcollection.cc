@@ -3,26 +3,27 @@
  * @brief about garbage collection.
  */
 
+#include "gcollection.hh"
+
 #include <utility>
 
 #include "atomic_wrapper.hh"
-#include "cache_line_size.hh"
 #include "epoch.hh"
-#include "gcollection.hh"
 #include "scheme.hh"
 #include "tuple.hh"
 #include "xact.hh"
 
 namespace kvs {
 
+alignas(CACHE_LINE_SIZE) std::array<
+    std::vector<Record*>, KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords{};
 alignas(CACHE_LINE_SIZE)
-    std::vector<Record*> kGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-alignas(CACHE_LINE_SIZE) std::mutex
-    kMutexGarbageRecords[KVS_NUMBER_OF_LOGICAL_CORES];
-alignas(CACHE_LINE_SIZE) std::vector<
-    std::pair<std::string*, Epoch>> kGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
-alignas(CACHE_LINE_SIZE) std::mutex
-    kMutexGarbageValues[KVS_NUMBER_OF_LOGICAL_CORES];
+    std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords{};
+alignas(
+    CACHE_LINE_SIZE) std::array<std::vector<std::pair<std::string*, Epoch>>,
+                                KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues{};
+alignas(CACHE_LINE_SIZE)
+    std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues{};
 
 void release_all_heap_objects() {
   remove_all_leaf_from_mtdb_and_release();
@@ -32,52 +33,50 @@ void release_all_heap_objects() {
 
 void remove_all_leaf_from_mtdb_and_release() {
   std::vector<const Record*> scan_res;
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);  // NOLINT
 
-  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    std::string_view key_view = (*itr)->get_tuple().get_key();
+  for (auto&& itr : scan_res) {
+    std::string_view key_view = itr->get_tuple().get_key();
     MTDB.remove_value(key_view.data(), key_view.size());
-    delete (*itr);
+    delete itr;  // NOLINT
   }
 
   /**
    * check whether MTDB is empty.
    */
   scan_res.clear();
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);
-  if (scan_res.size() != 0) std::abort();
+  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res);  // NOLINT
+  if (!scan_res.empty()) std::abort();
 }
 
 void delete_all_garbage_records() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto itr = kGarbageRecords[i].begin(); itr != kGarbageRecords[i].end();
-         ++itr) {
-      delete *itr;
+    for (auto&& itr : kGarbageRecords.at(i)) {
+      delete itr;  // NOLINT
     }
-    kGarbageRecords[i].clear();
+    kGarbageRecords.at(i).clear();
   }
 }
 
 void delete_all_garbage_values() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto itr = kGarbageValues[i].begin(); itr != kGarbageValues[i].end();
-         ++itr) {
-      delete itr->first;
+    for (auto&& itr : kGarbageValues.at(i)) {
+      delete itr.first; // NOLINT
     }
-    kGarbageValues[i].clear();
+    kGarbageValues.at(i).clear();
   }
 }
 
-void ThreadInfo::gc_records_and_values() {
+void ThreadInfo::gc_records_and_values() const {
   // for records
   {
     std::mutex& mutex_for_gclist =
-        kMutexGarbageRecords[this->gc_container_index_];
+        kMutexGarbageRecords.at(this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
         if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
-          delete *itr;
+          delete *itr; // NOLINT
           itr = this->gc_record_container_->erase(itr);
         } else {
           break;
@@ -89,12 +88,12 @@ void ThreadInfo::gc_records_and_values() {
   // for values
   {
     std::mutex& mutex_for_gclist =
-        kMutexGarbageValues[this->gc_container_index_];
+        kMutexGarbageValues.at(this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {
         if (itr->second <= loadAcquire(kReclamationEpoch)) {
-          delete itr->first;
+          delete itr->first; // NOLINT
           itr = this->gc_value_container_->erase(itr);
         } else {
           break;

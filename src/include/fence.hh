@@ -1,3 +1,7 @@
+/**
+ * @file fence.hh
+ */
+
 #pragma once
 
 #include "inline.hh"

@@ -10,7 +10,6 @@
 namespace kvs {
 
 extern void init();
-extern void fin();
 
 /**
  * @brief init work about kThreadTable
