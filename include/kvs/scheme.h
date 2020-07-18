@@ -163,37 +163,37 @@ inline constexpr std::string_view to_string_view(  // NOLINT
   using namespace std::string_view_literals;
   switch (value) {
     case Status::WARN_ALREADY_DELETE:
-      return "WARN_ALREADY_DELETE"sv;
+      return "WARN_ALREADY_DELETE"sv;  // NOLINT
     case Status::WARN_ALREADY_EXISTS:
-      return "WARN_ALREADY_EXISTS"sv;
+      return "WARN_ALREADY_EXISTS"sv;  // NOLINT
     case Status::WARN_CANCEL_PREVIOUS_OPERATION:
-      return "WARN_CANCEL_PREVIOUS_OPERATION"sv;
+      return "WARN_CANCEL_PREVIOUS_OPERATION"sv;  // NOLINT
     case Status::WARN_CONCURRENT_DELETE:
-      return "WARN_CONCURRENT_DELETE"sv;
+      return "WARN_CONCURRENT_DELETE"sv;  // NOLINT
     case Status::WARN_INVALID_HANDLE:
-      return "WARN_INVALID_HANDLE"sv;
+      return "WARN_INVALID_HANDLE"sv;  // NOLINT
     case Status::WARN_NOT_FOUND:
-      return "WARN_NOT_FOUND"sv;
+      return "WARN_NOT_FOUND"sv;  // NOLINT
     case Status::WARN_NOT_IN_A_SESSION:
-      return "WARN_NOT_IN_A_SESSION"sv;
+      return "WARN_NOT_IN_A_SESSION"sv;  // NOLINT
     case Status::WARN_READ_FROM_OWN_OPERATION:
-      return "WARN_READ_FROM_OWN_OPERATION"sv;
+      return "WARN_READ_FROM_OWN_OPERATION"sv;  // NOLINT
     case Status::WARN_SCAN_LIMIT:
-      return "WARN_SCAN_LIMIT"sv;
+      return "WARN_SCAN_LIMIT"sv;  // NOLINT
     case Status::WARN_WRITE_TO_LOCAL_WRITE:
-      return "WARN_WRITE_TO_LOCAL_WRITE"sv;
+      return "WARN_WRITE_TO_LOCAL_WRITE"sv;  // NOLINT
     case Status::OK:
-      return "OK"sv;
+      return "OK"sv;  // NOLINT
     case Status::ERR_INVALID_ARGS:
-      return "ERR_INVALID_ARGS"sv;
+      return "ERR_INVALID_ARGS"sv;  // NOLINT
     case Status::ERR_NOT_FOUND:
-      return "ERR_NOT_FOUND"sv;
+      return "ERR_NOT_FOUND"sv;  // NOLINT
     case Status::ERR_SESSION_LIMIT:
-      return "ERR_SESSION_LIMIT"sv;
+      return "ERR_SESSION_LIMIT"sv;  // NOLINT
     case Status::ERR_VALIDATION:
-      return "ERR_VALIDATION"sv;
+      return "ERR_VALIDATION"sv;  // NOLINT
     case Status::ERR_WRITE_TO_DELETED_RECORD:
-      return "ERR_WRITE_TO_DELETED_RECORD"sv;
+      return "ERR_WRITE_TO_DELETED_RECORD"sv;  // NOLINT
   }
   std::abort();
 }

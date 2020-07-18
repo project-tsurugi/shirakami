@@ -70,7 +70,7 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
   ti->wal(maxtid.get_obj());
 #endif
 
-  for (auto iws = ti->write_set.begin(); iws != ti->write_set.end(); ++iws) {
+  for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end(); ++iws) {
     Record* recptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
       case OP_TYPE::UPDATE: {
@@ -82,9 +82,9 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
         storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
         if (old_value != nullptr) {
           std::mutex& mutex_for_gclist =
-              kMutexGarbageValues.at(ti->gc_container_index_);
+              kMutexGarbageValues.at(ti->get_gc_container_index());
           mutex_for_gclist.lock();
-          ti->gc_value_container_->emplace_back(
+          ti->get_gc_value_container()->emplace_back(
               std::make_pair(old_value, ti->get_epoch()));
           mutex_for_gclist.unlock();
         }
@@ -105,9 +105,9 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
          * create information for garbage collection.
          */
         std::mutex& mutex_for_gclist =
-            kMutexGarbageRecords.at(ti->gc_container_index_);
+            kMutexGarbageRecords.at(ti->get_gc_container_index());
         mutex_for_gclist.lock();
-        ti->gc_record_container_->emplace_back(recptr);
+        ti->get_gc_record_container()->emplace_back(recptr);
         mutex_for_gclist.unlock();
 
         break;
@@ -167,12 +167,12 @@ Status commit(Token token) {  // NOLINT
   TidWord max_wset;
 
   // Phase 1: Sort lock list;
-  std::sort(ti->write_set.begin(), ti->write_set.end());
+  std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
 
   // Phase 2: Lock write set;
   TidWord expected;
   TidWord desired;
-  for (auto itr = ti->write_set.begin(); itr != ti->write_set.end(); ++itr) {
+  for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end(); ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
     // after this, update/delete
     expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
@@ -191,7 +191,7 @@ Status commit(Token token) {  // NOLINT
     }
     if (itr->get_op() == OP_TYPE::UPDATE &&  // NOLINT
         itr->get_rec_ptr()->get_tidw().get_absent()) {
-      ti->unlock_write_set(ti->write_set.begin(), itr);
+      ti->unlock_write_set(ti->get_write_set().begin(), itr);
       abort(token);
       return Status::ERR_WRITE_TO_DELETED_RECORD;
     }
@@ -206,7 +206,7 @@ Status commit(Token token) {  // NOLINT
 
   // Phase 3: Validation
   TidWord check;
-  for (auto itr = ti->read_set.begin(); itr != ti->read_set.end(); itr++) {
+  for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end(); itr++) {
     const Record* rec_ptr = itr->get_rec_ptr();
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
@@ -361,8 +361,8 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   ReadSetObj rsob(record);
   Status rr = read_record(rsob.get_rec_read(), record);
   if (rr == Status::OK) {
-    ti->read_set.emplace_back(std::move(rsob));
-    *tuple = &ti->read_set.back().get_rec_read().get_tuple();
+    ti->get_read_set().emplace_back(std::move(rsob));
+    *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
   }
   return rr;
 }
@@ -391,7 +391,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
+  ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
                              record);
 
   return Status::OK;
@@ -415,7 +415,7 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   Record* record = new Record(key, len_key, val, len_val);  // NOLINT
   Status insert_result(insert_record_to_masstree(key, len_key, record));
   if (insert_result == Status::OK) {
-    ti->write_set.emplace_back(OP_TYPE::INSERT, record);
+    ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
     return Status::OK;
   }
   // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -443,7 +443,7 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ti->write_set.emplace_back(OP_TYPE::DELETE, record);
+  ti->get_write_set().emplace_back(OP_TYPE::DELETE, record);
   return check;
 }
 
@@ -469,14 +469,14 @@ Status upsert(Token token, [[maybe_unused]] Storage storage, // NOLINT
     record = new Record(key, len_key, val, len_val); // NOLINT
     Status insert_result(insert_record_to_masstree(key, len_key, record));
     if (insert_result == Status::OK) {
-      ti->write_set.emplace_back(OP_TYPE::INSERT, record);
+      ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
       return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
     delete record; // NOLINT
   }
-  ti->write_set.emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
+  ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
                              record);
 
   return Status::OK;

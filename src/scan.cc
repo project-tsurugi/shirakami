@@ -26,7 +26,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
-  auto rset_init_size = ti->read_set.size();
+  auto rset_init_size = ti->get_read_set().size();
 
   std::vector<const Record*> scan_res;
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res,
@@ -60,17 +60,17 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // Because in herbrand semantics, the read reads last update even if the
     // update is own.
 
-    ti->read_set.emplace_back(const_cast<Record*>(itr));
-    Status rr = read_record(ti->read_set.back().get_rec_read(),
+    ti->get_read_set().emplace_back(const_cast<Record*>(itr));
+    Status rr = read_record(ti->get_read_set().back().get_rec_read(),
                             const_cast<Record*>(itr));
     if (rr != Status::OK) {
       return rr;
     }
   }
 
-  if (rset_init_size != ti->read_set.size()) {
-    for (auto itr = ti->read_set.begin() + rset_init_size;
-         itr != ti->read_set.end(); ++itr) {
+  if (rset_init_size != ti->get_read_set().size()) {
+    for (auto itr = ti->get_read_set().begin() + rset_init_size;
+         itr != ti->get_read_set().end(); ++itr) {
       result.emplace_back(&itr->get_rec_read().get_tuple());
     }
   }
@@ -96,10 +96,10 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
      * scan could find any records.
      */
     for (ScanHandle i = 0;; ++i) {
-      auto itr = ti->scan_cache_.find(i);
-      if (itr == ti->scan_cache_.end()) {
-        ti->scan_cache_[i] = std::move(scan_buf);
-        ti->scan_cache_itr_[i] = 0;
+      auto itr = ti->get_scan_cache().find(i);
+      if (itr == ti->get_scan_cache().end()) {
+        ti->get_scan_cache()[i] = std::move(scan_buf);
+        ti->get_scan_cache_itr()[i] = 0;
         /**
          * begin : init about right_end_point_
          */
@@ -112,9 +112,9 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
            * todo : discuss when len_rkey == 0
            */
         }
-        ti->rkey_[i] = std::move(tmp_rkey);
-        ti->len_rkey_[i] = len_rkey;
-        ti->r_exclusive_[i] = r_exclusive;
+        ti->get_rkey()[i] = std::move(tmp_rkey);
+        ti->get_len_rkey()[i] = len_rkey;
+        ti->get_r_exclusive()[i] = r_exclusive;
         /**
          * end : init about right_end_point_
          */
@@ -137,14 +137,14 @@ Status scannable_total_index_size(Token token,  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
+  if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
      * the handle was invalid.
      */
     return Status::WARN_INVALID_HANDLE;
   }
 
-  size = ti->scan_cache_[handle].size();
+  size = ti->get_scan_cache()[handle].size();
   return Status::OK;
 }
 
@@ -154,22 +154,22 @@ Status read_from_scan(Token token,  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
+  if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
      * the handle was invalid.
      */
     return Status::WARN_INVALID_HANDLE;
   }
 
-  std::vector<const Record*>& scan_buf = ti->scan_cache_[handle];
-  std::size_t& scan_index = ti->scan_cache_itr_[handle];
+  std::vector<const Record*>& scan_buf = ti->get_scan_cache()[handle];
+  std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 
   if (scan_buf.size() == scan_index) {
     std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
     MTDB.scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true,
-              ti->rkey_[handle].get(), ti->len_rkey_[handle],
-              ti->r_exclusive_[handle], &new_scan_buf, true);
+              ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
+              ti->get_r_exclusive()[handle], &new_scan_buf, true);
 
     if (!new_scan_buf.empty()) {
       /**
@@ -217,8 +217,8 @@ Status read_from_scan(Token token,  // NOLINT
   if (rr != Status::OK) {
     return rr;
   }
-  ti->read_set.emplace_back(std::move(rsob));
-  *tuple = &ti->read_set.back().get_rec_read().get_tuple();
+  ti->get_read_set().emplace_back(std::move(rsob));
+  *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
   ++scan_index;
 
   return Status::OK;
@@ -228,19 +228,19 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const ScanHandle handle) {
   auto* ti = static_cast<ThreadInfo*>(token);
 
-  auto itr = ti->scan_cache_.find(handle);
-  if (itr == ti->scan_cache_.end()) {
+  auto itr = ti->get_scan_cache().find(handle);
+  if (itr == ti->get_scan_cache().end()) {
     return Status::WARN_INVALID_HANDLE;
   }
-  ti->scan_cache_.erase(itr);
-  auto index_itr = ti->scan_cache_itr_.find(handle);
-  ti->scan_cache_itr_.erase(index_itr);
-  auto rkey_itr = ti->rkey_.find(handle);
-  ti->rkey_.erase(rkey_itr);
-  auto len_rkey_itr = ti->len_rkey_.find(handle);
-  ti->len_rkey_.erase(len_rkey_itr);
-  auto r_exclusive_itr = ti->r_exclusive_.find(handle);
-  ti->r_exclusive_.erase(r_exclusive_itr);
+  ti->get_scan_cache().erase(itr);
+  auto index_itr = ti->get_scan_cache_itr().find(handle);
+  ti->get_scan_cache_itr().erase(index_itr);
+  auto rkey_itr = ti->get_rkey().find(handle);
+  ti->get_rkey().erase(rkey_itr);
+  auto len_rkey_itr = ti->get_len_rkey().find(handle);
+  ti->get_len_rkey().erase(len_rkey_itr);
+  auto r_exclusive_itr = ti->get_r_exclusive().find(handle);
+  ti->get_r_exclusive().erase(r_exclusive_itr);
 
   return Status::OK;
 }

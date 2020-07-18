@@ -19,8 +19,8 @@ public:
       bool lock_ : 1;
       bool latest_ : 1;
       bool absent_ : 1;
-      uint64_t tid_ : 29;
-      Epoch epoch_ : 32;
+      uint64_t tid_ : 29; // NOLINT
+      Epoch epoch_ : 32; // NOLINT
     };
   };
 

@@ -40,7 +40,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   // TidWord
   unsigned int chkSum = 0;
   const char* charitr = reinterpret_cast<char*>(this);  // NOLINT
-  for (unsigned int i = 0; i < sizeof(TidWord); ++i) {
+  for (std::size_t i = 0; i < sizeof(TidWord); ++i) {
     chkSum += (*charitr);
     ++charitr;  // NOLINT
   }
@@ -52,7 +52,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   std::string_view key_view = tuple_->get_key();
   std::size_t key_length = key_view.size();
   charitr = reinterpret_cast<char*>(&(key_length));  // NOLINT
-  for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
+  for (std::size_t i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;  // NOLINT
   }
@@ -68,7 +68,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   std::string_view value_view = tuple_->get_value();
   std::size_t value_length = value_view.size();
   charitr = reinterpret_cast<char*>(&(value_length));  // NOLINT
-  for (unsigned int i = 0; i < sizeof(std::size_t); ++i) {
+  for (std::size_t i = 0; i < sizeof(std::size_t); ++i) {
     chkSum += (*charitr);
     ++charitr;  // NOLINT
   }

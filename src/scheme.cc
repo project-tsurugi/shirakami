@@ -134,7 +134,7 @@ ReadSetObj* ThreadInfo::search_read_set(  // NOLINT
 }
 
 WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr,  // NOLINT
-                                          const std::size_t key_length) {
+                                          std::size_t key_length) {
   for (auto&& itr : write_set) {
     const Tuple* tuple;  // NOLINT
     if (itr.get_op() == OP_TYPE::UPDATE) {
@@ -153,7 +153,7 @@ WriteSetObj* ThreadInfo::search_write_set(const char* key_ptr,  // NOLINT
 }
 
 const WriteSetObj* ThreadInfo::search_write_set(  // NOLINT
-    const Record* const rec_ptr) {
+    const Record* rec_ptr) {
   for (auto& itr : write_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
   }

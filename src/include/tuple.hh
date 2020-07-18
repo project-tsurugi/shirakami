@@ -14,8 +14,7 @@ namespace kvs {
 
 class Tuple::Impl {
 public:
-  Impl() : key_(), pvalue_(nullptr) {}
-
+  Impl() {} // NOLINT
   Impl(const char* key_ptr, std::size_t key_length, const char* value_ptr,
        std::size_t value_length);
 
@@ -82,7 +81,7 @@ public:
 
 private:
   std::string key_{};
-  std::atomic<std::string*> pvalue_{};
+  std::atomic<std::string*> pvalue_{nullptr};
   bool need_delete_pvalue_{false};
 };
 
