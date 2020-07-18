@@ -6,7 +6,7 @@
 #include "random.hh"
 
 static void make_string(std::string& string, Xoroshiro128Plus& rnd) {
-  for (uint i = 0; i < string.size() - 1; i++) {
+  for (std::size_t i = 0; i < string.size() - 1; i++) {
     constexpr std::size_t tf = 24;
     string[i] = rnd.next() % tf + 'a';
   }

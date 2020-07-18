@@ -55,7 +55,7 @@ public:
   WriteSetObj(const WriteSetObj& right) = delete;
   // for std::sort
   WriteSetObj(WriteSetObj&& right)
-      : op_(right.op_), rec_ptr_(right.rec_ptr_), tuple_() {
+      : op_(right.op_), rec_ptr_(right.rec_ptr_) {
     tuple_ = std::move(right.tuple_);
   }
 
@@ -159,7 +159,7 @@ class ReadSetObj {  // NOLINT
 public:
   ReadSetObj() { this->rec_ptr = nullptr; }
 
-  explicit ReadSetObj(const Record* const rec_ptr) : rec_read() {
+  explicit ReadSetObj(const Record* const rec_ptr) {
     this->rec_ptr = rec_ptr;
   }
 
@@ -432,7 +432,7 @@ public:
 
   bool& get_txbegan() & { return txbegan_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& {
+  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& { // NOLINT
     return txbegan_;
   }  // NOLINT
 

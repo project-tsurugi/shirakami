@@ -16,8 +16,8 @@ public:
   class Impl;
 
   Tuple();
-  Tuple(const char* key_ptr, std::size_t key_length, const char* value_ptr,
-        std::size_t value_length);
+  Tuple(const char* key_ptr, std::size_t key_length, const char* val_ptr,
+        std::size_t val_length);
   Tuple(const Tuple& right);
   Tuple(Tuple&& right);
   Tuple& operator=(const Tuple& right) &;  // NOLINT

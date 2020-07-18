@@ -218,21 +218,21 @@ inline constexpr std::string_view to_string_view(  // NOLINT
   using namespace std::string_view_literals;
   switch (op) {
     case OP_TYPE::ABORT:
-      return "ABORT"sv;
+      return "ABORT"sv;  // NOLINT
     case OP_TYPE::BEGIN:
-      return "BEGIN"sv;
+      return "BEGIN"sv;  // NOLINT
     case OP_TYPE::COMMIT:
-      return "COMMIT"sv;
+      return "COMMIT"sv;  // NOLINT
     case OP_TYPE::DELETE:
-      return "DELETE"sv;
+      return "DELETE"sv;  // NOLINT
     case OP_TYPE::INSERT:
-      return "INSERT"sv;
+      return "INSERT"sv;  // NOLINT
     case OP_TYPE::NONE:
-      return "NONE"sv;
+      return "NONE"sv;  // NOLINT
     case OP_TYPE::SEARCH:
-      return "SEARCH"sv;
+      return "SEARCH"sv;  // NOLINT
     case OP_TYPE::UPDATE:
-      return "UPDATE"sv;
+      return "UPDATE"sv;  // NOLINT
   }
   std::abort();
 }

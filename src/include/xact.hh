@@ -10,7 +10,8 @@
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 
-#define KVS_EPOCH_TIME 40  // ms
+#define KVS_EPOCH_TIME 40  // NOLINT
+// ms
 
 namespace kvs {
 
@@ -36,8 +37,7 @@ extern Record* find_record_from_masstree(char const* key,  // NOLINT
  * @return Status::OK It inserted record.
  */
 extern Status insert_record_to_masstree(char const* key,  // NOLINT
-                                        std::size_t len_key,
-                                        Record* record);
+                                        std::size_t len_key, Record* record);
 
 /**
  * @brief read record by using dest given by caller and store read info to res
@@ -50,7 +50,7 @@ extern Status insert_record_to_masstree(char const* key,  // NOLINT
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-extern Status read_record(Record& res, const Record* dest); // NOLINT
+extern Status read_record(Record& res, const Record* dest);  // NOLINT
 
 /**
  * @brief Transaction begins.

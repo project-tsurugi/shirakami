@@ -197,7 +197,7 @@ static void invoke_leader() {
 
   std::vector<char> readys(kNthread);  // NOLINT
   std::vector<std::thread> thv;
-  for (size_t i = 0; i < kNthread; ++i) {
+  for (std::size_t i = 0; i < kNthread; ++i) {
     thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                      std::ref(quit), std::ref(res));
   }
@@ -209,7 +209,7 @@ static void invoke_leader() {
   storeRelease(quit, true);
   for (auto& th : thv) th.join();
 
-  for (auto i = 0; i < kNthread; ++i) {
+  for (std::size_t i = 0; i < kNthread; ++i) {
     res[0].addLocalAllResult(res[i]);
   }
   res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);

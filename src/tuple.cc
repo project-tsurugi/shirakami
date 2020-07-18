@@ -143,8 +143,8 @@ void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length,
 
 Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
 
-Tuple::Tuple(const char* key_ptr, const std::size_t key_length,
-             const char* val_ptr, const std::size_t val_length)
+Tuple::Tuple(const char* key_ptr, std::size_t key_length,
+             const char* val_ptr, std::size_t val_length)
     : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {
 }
 

@@ -190,14 +190,14 @@ static void invoke_leader() {
 
   std::vector<char> readys(FLAGS_thread);  // NOLINT
   std::vector<std::thread> thv;
-  for (size_t i = 0; i < FLAGS_thread; ++i) {
+  for (std::size_t i = 0; i < FLAGS_thread; ++i) {
     thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                      std::ref(quit), std::ref(res));
   }
   waitForReady(readys);
   storeRelease(start, true);
   std::cout << "[start] measurement." << std::endl;
-  for (size_t i = 0; i < FLAGS_duration; ++i) {
+  for (std::size_t i = 0; i < FLAGS_duration; ++i) {
     sleepMs(1000);  // NOLINT
   }
   std::cout << "[end] measurement." << std::endl;
@@ -206,7 +206,7 @@ static void invoke_leader() {
   for (auto&& th : thv) th.join();
   std::cout << "[end] join worker threads." << std::endl;
 
-  for (auto i = 0; i < FLAGS_thread; ++i) {
+  for (std::size_t i = 0; i < FLAGS_thread; ++i) {
     res[0].addLocalAllResult(res[i]);
   }
   res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);

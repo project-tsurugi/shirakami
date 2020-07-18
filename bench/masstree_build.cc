@@ -29,7 +29,6 @@
 #include "xact.hh"
 
 using namespace kvs;
-using std::cout, std::endl, std::cerr;
 
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
                                  std::size_t thread) {

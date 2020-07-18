@@ -5,16 +5,18 @@
 
 #pragma once
 
-#include "tid.hh"
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
+#include "tid.hh"
 
 namespace kvs {
-class Record {
+class Record { // NOLINT
 public:
-  Record () : tidw_(), tuple_() {}
+  Record() {} // NOLINT
 
-  Record(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length) : tidw_(), tuple_(key_ptr, key_length, value_ptr, value_length) {
+  Record(const char* key_ptr, const std::size_t key_length,
+         const char* value_ptr, const std::size_t value_length)
+      : tuple_(key_ptr, key_length, value_ptr, value_length) {
     // init tidw
     tidw_.set_absent(true);
     tidw_.set_lock(true);
@@ -26,38 +28,27 @@ public:
     tuple_ = std::move(right.tuple_);
   }
 
-  Record& operator=(const Record& right) = default;
-  Record& operator=(Record&& right) {
+  Record& operator=(const Record& right) = default; // NOLINT
+  Record& operator=(Record&& right) { // NOLINT
     tidw_ = right.tidw_;
     tuple_ = std::move(right.tuple_);
 
     return *this;
   }
 
+  TidWord& get_tidw() { return tidw_; } // NOLINT
 
-  TidWord& get_tidw() {
-    return tidw_;
-  }
+  [[nodiscard]] const TidWord& get_tidw() const { return tidw_; } // NOLINT
 
-  const TidWord& get_tidw() const {
-    return tidw_;
-  }
+  Tuple& get_tuple() { return tuple_; } // NOLINT
 
-  Tuple& get_tuple(){
-    return tuple_;
-  }
+  [[nodiscard]] const Tuple& get_tuple() const { return tuple_; } // NOLINT
 
-  const Tuple& get_tuple() const {
-    return tuple_;
-  }
-
-  void set_tidw(TidWord tidw) & {
-    tidw_.set_obj(tidw.get_obj());
-  }
+  void set_tidw(TidWord tidw) & { tidw_.set_obj(tidw.get_obj()); }
 
 private:
   TidWord tidw_;
   Tuple tuple_;
 };
 
-} // namespace kvs
+}  // namespace kvs
