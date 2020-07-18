@@ -4,7 +4,6 @@
  */
 
 #include "gtest/gtest.h"
-
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tuple.hh"
@@ -14,38 +13,42 @@
 
 using namespace kvs;
 using namespace std;
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
-class MasstreeTest : public ::testing::Test {
-protected:
-  MasstreeTest() {}
-  ~MasstreeTest() {}
-};
+class MasstreeTest : public ::testing::Test {};  // NOLINT
 
-TEST_F(MasstreeTest, insert_third) {
+TEST_F(MasstreeTest, insert_third) {  // NOLINT
   MasstreeWrapper<uint64_t> MT;
-  uint64_t key = {0};
-  ASSERT_EQ(Status::OK, MT.insert_value((char*)(&key), sizeof(&key), &key));
-  ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
-            MT.insert_value((char*)(&key), sizeof(&key), &key));
-  ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
-            MT.insert_value((char*)(&key), sizeof(&key), &key));
+  uint64_t key{0};
+  ASSERT_EQ(Status::OK,
+            MT.insert_value(reinterpret_cast<char*>(&key),  // NOLINT
+                            sizeof(&key), &key));
+  ASSERT_EQ(
+      Status::WARN_ALREADY_EXISTS,
+      MT.insert_value(reinterpret_cast<char*>(&key), sizeof(&key),  // NOLINT
+                      &key));
+  ASSERT_EQ(
+      Status::WARN_ALREADY_EXISTS,
+      MT.insert_value(reinterpret_cast<char*>(&key), sizeof(&key),  // NOLINT
+                      &key));
 }
 
-TEST_F(MasstreeTest, remove) {
+TEST_F(MasstreeTest, remove) {  // NOLINT
   MasstreeWrapper<uint64_t> MT;
-  uint64_t key = {0};
-  ASSERT_EQ(Status::WARN_NOT_FOUND,
-            MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));
+  uint64_t key{0};
+  ASSERT_EQ(
+      Status::WARN_NOT_FOUND,
+      MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));  // NOLINT
   ASSERT_EQ(Status::OK,
-            MT.insert_value(reinterpret_cast<char*>(&key), sizeof(&key), &key));
+            MT.insert_value(reinterpret_cast<char*>(&key),  // NOLINT
+                            sizeof(&key), &key));
   ASSERT_EQ(Status::OK,
-            MT.remove_value(reinterpret_cast<char*>(&key), sizeof(&key)));
-  ASSERT_EQ(Status::WARN_NOT_FOUND,
-            MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));
+            MT.remove_value(reinterpret_cast<char*>(&key),  // NOLINT
+                            sizeof(&key)));
+  ASSERT_EQ(
+      Status::WARN_NOT_FOUND,
+      MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));  // NOLINT
 }
 
 }  // namespace shirakami::testing

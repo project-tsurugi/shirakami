@@ -57,9 +57,9 @@ static void make_string(char* string, const std::size_t len) {
 
 static void exec_insert(Token token, std::size_t thnm) {
   for (unsigned int i = 0; i < Max_insert; i++) {
-    std::string key(Len_key, '0'); // NOLINT
+    std::string key(Len_key, '0');  // NOLINT
     make_string(key.data(), Len_key);
-    std::string value(Len_val, '0'); // NOLINT
+    std::string value(Len_val, '0');  // NOLINT
     make_string(value.data(), Len_val);
     Tuple* tuple =  // NOLINT
         new Tuple(key.data(), Len_key, value.data(), Len_val);
@@ -113,13 +113,11 @@ static void exec_update(Token token, std::size_t thnm) {
 static void exec_delete(const Token token, std::size_t thnm) {
   Storage storage(0);
 
-  for (auto itr = DataList[thnm].begin(); itr != DataList[thnm].end(); itr++) {
-    // SSS(itr->key);
-    delete_record(token, storage, (*itr)->get_key().data(),
-                  (*itr)->get_key().size());
+  for (auto&& itr : DataList.at(thnm)) {
+    delete_record(token, storage, itr->get_key().data(), itr->get_key().size());
   }
   Status result = commit(token);
-  ASSERT_TRUE(result == Status::OK);
+  ASSERT_EQ(result, Status::OK);
 }
 
 static void test_insert(Token token, std::size_t thnm) {
@@ -152,7 +150,7 @@ static void test_single_operation(Token token, std::size_t thnm) {
 }
 
 static void worker(const size_t thid) {
-  Token token;
+  Token token{};
   Status enter_result = enter(token);
   if (enter_result == Status::ERR_SESSION_LIMIT) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
@@ -165,7 +163,7 @@ static void worker(const size_t thid) {
   leave(token);
 }
 
-static void test(void) {
+static void test() {
   std::vector<std::thread> thv;
   for (std::size_t i = 0; i < Nthread; ++i) thv.emplace_back(worker, i);
 
@@ -178,8 +176,8 @@ namespace shirakami::testing {
 
 class cliTest : public ::testing::Test {};
 
-TEST_F(cliTest, single_thread_test) {
-  init();
+TEST_F(cliTest, single_thread_test) { // NOLINT
+  init(); // NOLINT
   test();
   fin();
 }

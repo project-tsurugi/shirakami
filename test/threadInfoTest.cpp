@@ -3,7 +3,6 @@
  */
 
 #include "gtest/gtest.h"
-
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
@@ -11,27 +10,23 @@
 #include "tuple.hh"
 
 using namespace kvs;
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
 class ThreadInfoTest : public ::testing::Test {
-protected:
-  ThreadInfoTest() { kvs::init(); }
-  ~ThreadInfoTest() {
-    kvs::fin();
-    // kvs::MTDB.destroy();
-  }
+public:
+  void SetUp() override { kvs::init(); } // NOLINT
+
+  void TearDown() override { kvs::fin(); }
 };
 
-TEST_F(ThreadInfoTest, get_txbegan_) {
-  std::string k("aaa");
-  std::string v("bbb");
+TEST_F(ThreadInfoTest, get_txbegan_) { // NOLINT
+  std::string k("aaa"); // NOLINT
+  std::string v("bbb"); // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  ThreadInfo* ti = static_cast<ThreadInfo*>(s);
+  auto* ti = static_cast<ThreadInfo*>(s);
   ASSERT_EQ(ti->get_txbegan(), false);
   // test upsert
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));

@@ -2,59 +2,54 @@
  * @file simpleTest.cpp
  */
 
+#include <array>
 #include <bitset>
 #include <future>
 
 #include "gtest/gtest.h"
-
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
 #include "compiler.hh"
 #include "scheme.hh"
 #include "tuple.hh"
-#include "xact.hh"
 
 using namespace kvs;
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
-class SimpleTest : public ::testing::Test {
-protected:
-  SimpleTest() { kvs::init(); }
-  ~SimpleTest() {
-    kvs::fin();
-    // kvs::MTDB.destroy();
-  }
+class SimpleTest : public ::testing::Test {  // NOLINT
+public:
+  void SetUp() override { kvs::init(); }  // NOLINT
+
+  void TearDown() override { kvs::fin(); }
 };
 
-TEST_F(SimpleTest, project_root) {
-  cout << MAC2STR(PROJECT_ROOT) << endl;
-  std::string str(MAC2STR(PROJECT_ROOT));
+TEST_F(SimpleTest, project_root) {  // NOLINT
+  std::cout << MAC2STR(PROJECT_ROOT) << std::endl;
+  std::string str(MAC2STR(PROJECT_ROOT));  // NOLINT
   str.append("/log/");
-  cout << str << endl;
+  std::cout << str << std::endl;
 }
 
-TEST_F(SimpleTest, tidword) {
+TEST_F(SimpleTest, tidword) {  // NOLINT
   // check the alignment of union
   TidWord tidword;
   tidword.set_epoch(1);
   tidword.set_lock(true);
   [[maybe_unused]] uint64_t res = tidword.get_obj();
-  // cout << std::bitset<64>(res) << endl;
+  // std::cout << std::bitset<64>(res) << std::endl;
 }
 
-TEST_F(SimpleTest, enter) {
-  Token s[] = {nullptr, nullptr};
+TEST_F(SimpleTest, enter) {  // NOLINT
+  std::array<Token, 2> s{nullptr, nullptr};
   ASSERT_EQ(Status::OK, enter(s[0]));
   ASSERT_EQ(Status::OK, enter(s[1]));
   ASSERT_EQ(Status::OK, leave(s[0]));
   ASSERT_EQ(Status::OK, leave(s[1]));
 }
 
-TEST_F(SimpleTest, leave) {
+TEST_F(SimpleTest, leave) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -62,9 +57,9 @@ TEST_F(SimpleTest, leave) {
   ASSERT_EQ(Status::ERR_INVALID_ARGS, leave(nullptr));
 }
 
-TEST_F(SimpleTest, insert) {
-  std::string k("aaa");
-  std::string v("bbb");
+TEST_F(SimpleTest, insert) {  // NOLINT
+  std::string k("aaa");       // NOLINT
+  std::string v("bbb");       // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -73,7 +68,7 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   {
-    Tuple* tuple;
+    Tuple* tuple{};
     char k2 = 0;
     ASSERT_EQ(Status::OK, insert(s, st, &k2, 1, v.data(), v.size()));
     ASSERT_EQ(Status::OK, commit(s));
@@ -81,7 +76,7 @@ TEST_F(SimpleTest, insert) {
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
-  Tuple* tuple;
+  Tuple* tuple{};
   ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
@@ -90,10 +85,10 @@ TEST_F(SimpleTest, insert) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, update) {
-  std::string k("aaa");
-  std::string v("aaa");
-  std::string v2("bbb");
+TEST_F(SimpleTest, update) {  // NOLINT
+  std::string k("aaa");       // NOLINT
+  std::string v("aaa");       // NOLINT
+  std::string v2("bbb");      // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
@@ -102,7 +97,7 @@ TEST_F(SimpleTest, update) {
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  Tuple* tuple;
+  Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(
       memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()),
@@ -117,12 +112,12 @@ TEST_F(SimpleTest, update) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, search) {
-  std::string k("aaa");
-  std::string v("bbb");
+TEST_F(SimpleTest, search) {  // NOLINT
+  std::string k("aaa");       // NOLINT
+  std::string v("bbb");       // NOLINT
   Token s{};
   Storage st{};
-  Tuple* tuple;
+  Tuple* tuple{};
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::WARN_NOT_FOUND,
             search_key(s, st, k.data(), k.size(), &tuple));
@@ -134,13 +129,13 @@ TEST_F(SimpleTest, search) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, upsert) {
-  std::string k("aaa");
-  std::string v("aaa");
-  std::string v2("bbb");
+TEST_F(SimpleTest, upsert) {  // NOLINT
+  std::string k("aaa");       // NOLINT
+  std::string v("aaa");       // NOLINT
+  std::string v2("bbb");      // NOLINT
   Token s{};
   Storage st{};
-  Tuple* tuple;
+  Tuple* tuple{};
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK, commit(s));
@@ -156,10 +151,10 @@ TEST_F(SimpleTest, upsert) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, delete_) {
-  std::string k("aaa");
-  std::string v("aaa");
-  std::string v2("bbb");
+TEST_F(SimpleTest, delete_) {  // NOLINT
+  std::string k("aaa");        // NOLINT
+  std::string v("aaa");        // NOLINT
+  std::string v2("bbb");       // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
@@ -175,14 +170,14 @@ TEST_F(SimpleTest, delete_) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, scan) {
-  std::string k("aaa");
-  std::string k2("aab");
-  std::string k3("aac");
-  std::string k4("aad");
-  std::string k5("aadd");
-  std::string k6("aa");
-  std::string v("bbb");
+TEST_F(SimpleTest, scan) {  // NOLINT
+  std::string k("aaa");     // NOLINT
+  std::string k2("aab");    // NOLINT
+  std::string k3("aac");    // NOLINT
+  std::string k4("aad");    // NOLINT
+  std::string k5("aadd");   // NOLINT
+  std::string k6("aa");     // NOLINT
+  std::string v("bbb");     // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -200,13 +195,13 @@ TEST_F(SimpleTest, scan) {
                                  k4.size(), false, records));
   uint64_t ctr(0);
   ASSERT_EQ(records.size(), 3);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -215,11 +210,11 @@ TEST_F(SimpleTest, scan) {
                                  k4.size(), false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -228,13 +223,13 @@ TEST_F(SimpleTest, scan) {
                                  k3.size(), false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -243,11 +238,11 @@ TEST_F(SimpleTest, scan) {
                                  k3.size(), true, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     }
     ++ctr;
   }
@@ -256,17 +251,17 @@ TEST_F(SimpleTest, scan) {
                                  k3.size(), false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ((*itr)->get_key().size(), 0);
+      ASSERT_EQ(itr->get_key().size(), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 3) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 4) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -275,11 +270,11 @@ TEST_F(SimpleTest, scan) {
                                  false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ((*itr)->get_key().size(), 0);
+      ASSERT_EQ(itr->get_key().size(), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
     }
     ++ctr;
   }
@@ -288,23 +283,28 @@ TEST_F(SimpleTest, scan) {
                                  true, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 1);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
-    if (ctr == 0)  // ASSERT_EQ(memcmp((*itr)->get_key().data(), nullptr, 0),
-                   // 0);
+  for ([[maybe_unused]] auto&& itr : records) {
+    if (ctr == 0) {
+      // ASSERT_EQ(itr->get_key().data(), nullptr);
+      /*
+       * key which is nullptr was inserted, but itr->get_key().data() refer
+       * record, so not nullptr.
+       */
       ++ctr;
+    }
   }
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, nullptr,
                                  k3.size(), false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -313,17 +313,17 @@ TEST_F(SimpleTest, scan) {
                                  k3.size(), false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ((*itr)->get_key().size(), 0);
+      ASSERT_EQ(itr->get_key().size(), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 3) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 4) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -332,17 +332,17 @@ TEST_F(SimpleTest, scan) {
                                  false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
-  for (auto itr = records.begin(); itr != records.end(); ++itr) {
+  for (auto&& itr : records) {
     if (ctr == 0) {
-      ASSERT_EQ((*itr)->get_key().size(), 0);
+      ASSERT_EQ(itr->get_key().size(), 0);
     } else if (ctr == 1) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k6.data(), k6.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
     } else if (ctr == 2) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k.data(), k.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
     } else if (ctr == 3) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k2.data(), k2.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
     } else if (ctr == 4) {
-      ASSERT_EQ(memcmp((*itr)->get_key().data(), k3.data(), k3.size()), 0);
+      ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
     }
     ++ctr;
   }
@@ -350,14 +350,14 @@ TEST_F(SimpleTest, scan) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, scan_with_null_char) {
-  std::string k("a\0a", 3);
-  std::string k2("a\0a/", 4);
-  std::string k3("a\0a/c", 5);
-  std::string k4("a\0ab", 4);
-  std::string k5("a\0a0", 4);
+TEST_F(SimpleTest, scan_with_null_char) {  // NOLINT
+  std::string k("a\0a", 3);                // NOLINT
+  std::string k2("a\0a/", 4);              // NOLINT
+  std::string k3("a\0a/c", 5);             // NOLINT
+  std::string k4("a\0ab", 4);              // NOLINT
+  std::string k5("a\0a0", 4);              // NOLINT
   ASSERT_EQ(3, k.size());
-  std::string v("bbb");
+  std::string v("bbb");  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -377,12 +377,12 @@ TEST_F(SimpleTest, scan_with_null_char) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, scan_key_then_search_key) {
-  std::string k("a");
-  std::string k2("a/");
-  std::string k3("a/c");
-  std::string k4("b");
-  std::string v("bbb");
+TEST_F(SimpleTest, scan_key_then_search_key) {  // NOLINT
+  std::string k("a");                           // NOLINT
+  std::string k2("a/");                         // NOLINT
+  std::string k3("a/c");                        // NOLINT
+  std::string k4("b");                          // NOLINT
+  std::string v("bbb");                         // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -390,9 +390,11 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   ASSERT_EQ(Status::OK,
             scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   ASSERT_EQ(Status::OK, commit(s));
-  for (auto itr = records.begin(); itr != records.end(); ++itr)
-    cout << std::string((*itr)->get_key().data(), (*itr)->get_key().size())
-         << endl;
+  for (auto&& itr : records) {
+    std::cout << std::string(itr->get_key().data(),  // NOLINT
+                             itr->get_key().size())
+              << std::endl;
+  }
   records.clear();
   ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
   ASSERT_EQ(Status::OK,
@@ -419,9 +421,9 @@ TEST_F(SimpleTest, scan_key_then_search_key) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, insert_delete_with_16chars) {
-  std::string k("testing_a0123456");
-  std::string v("bbb");
+TEST_F(SimpleTest, insert_delete_with_16chars) {  // NOLINT
+  std::string k("testing_a0123456");              // NOLINT
+  std::string v("bbb");                           // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -431,7 +433,7 @@ TEST_F(SimpleTest, insert_delete_with_16chars) {
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
                                  k.size(), false, records));
   EXPECT_EQ(1, records.size());
-  for (auto* t : records) {
+  for (auto&& t : records) {
     ASSERT_EQ(Status::OK,
               delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
@@ -439,9 +441,9 @@ TEST_F(SimpleTest, insert_delete_with_16chars) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, insert_delete_with_10chars) {
-  std::string k("testing_a0");
-  std::string v("bbb");
+TEST_F(SimpleTest, insert_delete_with_10chars) {  // NOLINT
+  std::string k("testing_a0");                    // NOLINT
+  std::string v("bbb");                           // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -451,7 +453,7 @@ TEST_F(SimpleTest, insert_delete_with_10chars) {
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
                                  k.size(), false, records));
   EXPECT_EQ(1, records.size());
-  for (auto* t : records) {
+  for (auto&& t : records) {
     ASSERT_EQ(Status::OK,
               delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
@@ -459,26 +461,26 @@ TEST_F(SimpleTest, insert_delete_with_10chars) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, concurrent_updates) {
+TEST_F(SimpleTest, concurrent_updates) {  // NOLINT
   struct S {
     static void prepare() {
-      std::string k0("a");
-      std::string k("aa");
+      std::string k0("a");  // NOLINT
+      std::string k("aa");  // NOLINT
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
       Storage st{};
-      ASSERT_EQ(Status::OK,
-                insert(s, st, k0.data(), k0.size(), reinterpret_cast<char*>(&v),
-                       sizeof(std::int64_t)));
-      ASSERT_EQ(Status::OK,
-                insert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),
-                       sizeof(std::int64_t)));
+      ASSERT_EQ(Status::OK, insert(s, st, k0.data(), k0.size(),
+                                   reinterpret_cast<char*>(&v),  // NOLINT
+                                   sizeof(std::int64_t)));
+      ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(),
+                                   reinterpret_cast<char*>(&v),  // NOLINT
+                                   sizeof(std::int64_t)));
       ASSERT_EQ(Status::OK, commit(s));
       ASSERT_EQ(Status::OK, leave(s));
     }
     static void run(bool& rc) {
-      std::string k("aa");
+      std::string k("aa");  // NOLINT
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
@@ -486,18 +488,18 @@ TEST_F(SimpleTest, concurrent_updates) {
       Tuple* t{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
       ASSERT_NE(nullptr, t);
-      v = *reinterpret_cast<std::int64_t*>(
+      v = *reinterpret_cast<std::int64_t*>(  // NOLINT
           const_cast<char*>(t->get_value().data()));
       v++;
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      ASSERT_EQ(Status::OK,
-                upsert(s, st, k.data(), k.size(), reinterpret_cast<char*>(&v),
-                       sizeof(std::int64_t)));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));  // NOLINT
+      ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(),
+                                   reinterpret_cast<char*>(&v),  // NOLINT
+                                   sizeof(std::int64_t)));
       rc = (Status::OK == commit(s));
       ASSERT_EQ(Status::OK, leave(s));
     }
     static void verify() {
-      std::string k("aa");
+      std::string k("aa");  // NOLINT
       std::int64_t v{0};
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
@@ -505,7 +507,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       Tuple* tuple{};
       ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
       ASSERT_NE(nullptr, tuple);
-      v = *reinterpret_cast<std::int64_t*>(
+      v = *reinterpret_cast<std::int64_t*>(  // NOLINT
           const_cast<char*>(tuple->get_value().data()));
       ASSERT_EQ(10, v);
       ASSERT_EQ(Status::OK, commit(s));
@@ -515,7 +517,7 @@ TEST_F(SimpleTest, concurrent_updates) {
 
   S::prepare();
   auto r1 = std::async(std::launch::async, [&] {
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 5; ++i) {  // NOLINT
       bool rc = false;
       S::run(rc);
       if (!rc) {
@@ -524,7 +526,7 @@ TEST_F(SimpleTest, concurrent_updates) {
       }
     }
   });
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 5; ++i) {  // NOLINT
     bool rc = false;
     S::run(rc);
     if (!rc) {
@@ -536,9 +538,9 @@ TEST_F(SimpleTest, concurrent_updates) {
   S::verify();
 }
 
-TEST_F(SimpleTest, read_local_write) {
-  std::string k("aaa");
-  std::string v("bbb");
+TEST_F(SimpleTest, read_local_write) {  // NOLINT
+  std::string k("aaa");                 // NOLINT
+  std::string v("bbb");                 // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -551,10 +553,10 @@ TEST_F(SimpleTest, read_local_write) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, read_write_read) {
-  std::string k("aaa");
-  std::string v("bbb");
-  std::string v2("ccc");
+TEST_F(SimpleTest, read_write_read) {  // NOLINT
+  std::string k("aaa");                // NOLINT
+  std::string v("bbb");                // NOLINT
+  std::string v2("ccc");               // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -572,11 +574,11 @@ TEST_F(SimpleTest, read_write_read) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, double_write) {
-  std::string k("aaa");
-  std::string v("bbb");
-  std::string v2("ccc");
-  std::string v3("ddd");
+TEST_F(SimpleTest, double_write) {  // NOLINT
+  std::string k("aaa");             // NOLINT
+  std::string v("bbb");             // NOLINT
+  std::string v2("ccc");            // NOLINT
+  std::string v3("ddd");            // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -594,9 +596,9 @@ TEST_F(SimpleTest, double_write) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, double_read) {
-  std::string k("aaa");
-  std::string v("bbb");
+TEST_F(SimpleTest, double_read) {  // NOLINT
+  std::string k("aaa");            // NOLINT
+  std::string v("bbb");            // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -612,16 +614,16 @@ TEST_F(SimpleTest, double_read) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, all_deletes) {
-  std::string k("testing_a0123456");
-  std::string v("bbb");
+TEST_F(SimpleTest, all_deletes) {     // NOLINT
+  std::string k("testing_a0123456");  // NOLINT
+  std::string v("bbb");               // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK,
             scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
-  for (auto* t : records) {
+  for (auto&& t : records) {
     ASSERT_EQ(Status::OK,
               delete_record(s, st, t->get_key().data(), t->get_key().size()));
   }
@@ -629,13 +631,14 @@ TEST_F(SimpleTest, all_deletes) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, open_scan_test) {
-  std::string k1("a");
-  std::string v1("0");
+TEST_F(SimpleTest, open_scan_test) {  // NOLINT
+  std::string k1("a");                // NOLINT
+  std::string v1("0");                // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
-  ScanHandle handle{}, handle2{};
+  ScanHandle handle{};
+  ScanHandle handle2{};
   ASSERT_EQ(Status::WARN_NOT_FOUND,
             open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(Status::OK, commit(s));
@@ -652,15 +655,15 @@ TEST_F(SimpleTest, open_scan_test) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, read_from_scan) {
-  std::string k("aaa");
-  std::string k2("aab");
-  std::string k3("aac");
-  std::string k4("aad");
-  std::string k5("aae");
-  std::string k6("aa");
-  std::string v1("bbb");
-  std::string v2("bbb");
+TEST_F(SimpleTest, read_from_scan) {  // NOLINT
+  std::string k("aaa");               // NOLINT
+  std::string k2("aab");              // NOLINT
+  std::string k3("aac");              // NOLINT
+  std::string k4("aad");              // NOLINT
+  std::string k5("aae");              // NOLINT
+  std::string k6("aa");               // NOLINT
+  std::string v1("bbb");              // NOLINT
+  std::string v2("bbb");              // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -713,8 +716,8 @@ TEST_F(SimpleTest, read_from_scan) {
 
   /**
    * test
-   * if read_from_scan detects the record deleted by myself, it function returns
-   * Status::WARN_ALREADY_DELETE.
+   * if read_from_scan detects the record deleted by myself, it function
+   * returns Status::WARN_ALREADY_DELETE.
    */
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(),
                                   k4.size(), false, handle));
@@ -741,9 +744,9 @@ TEST_F(SimpleTest, read_from_scan) {
   ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(SimpleTest, close_scan) {
-  std::string k1("a");
-  std::string v1("0");
+TEST_F(SimpleTest, close_scan) {  // NOLINT
+  std::string k1("a");            // NOLINT
+  std::string v1("0");            // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
@@ -758,13 +761,13 @@ TEST_F(SimpleTest, close_scan) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, mixing_scan_and_search) {
-  std::string k1("aaa");
-  std::string k2("aab");
-  std::string k3("xxx");
-  std::string k4("zzz");
-  std::string v1("bbb");
-  std::string v2("bbb");
+TEST_F(SimpleTest, mixing_scan_and_search) {  // NOLINT
+  std::string k1("aaa");                      // NOLINT
+  std::string k2("aab");                      // NOLINT
+  std::string k3("xxx");                      // NOLINT
+  std::string k4("zzz");                      // NOLINT
+  std::string v1("bbb");                      // NOLINT
+  std::string v2("bbb");                      // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -800,21 +803,33 @@ TEST_F(SimpleTest, mixing_scan_and_search) {
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(SimpleTest, long_insert) {
-  std::string k("CUSTOMER");
-  std::string v(
-      "b23456789012345678901234567890123456789012345678901234567890123456789012"
-      "345678901234567890123456789012345678901234567890123456789012345678901234"
-      "567890123456789012345678901234567890123456789012345678901234567890123456"
-      "789012345678901234567890123456789012345678901234567890123456789012345678"
-      "901234567890123456789012345678901234567890123456789012345678901234567890"
-      "123456789012345678901234567890123456789012345678901234567890123456789012"
-      "345678901234567890123456789012345678901234567890123456789012345678901234"
-      "567890123456789012345678901234567890123456789012345678901234567890123456"
-      "789012345678901234567890123456789012345678901234567890123456789012345678"
-      "901234567890123456789012345678901234567890123456789012345678901234567890"
-      "123456789012345678901234567890123456789012345678901234567890123456789012"
-      "345678901234567890123456789012345678901234567890123456789012345678901234"
+TEST_F(SimpleTest, long_insert) {  // NOLINT
+  std::string k("CUSTOMER");       // NOLINT
+  std::string v(                   // NOLINT
+      "b234567890123456789012345678901234567890123456789012345678901234567890"
+      "12"
+      "3456789012345678901234567890123456789012345678901234567890123456789012"
+      "34"
+      "5678901234567890123456789012345678901234567890123456789012345678901234"
+      "56"
+      "7890123456789012345678901234567890123456789012345678901234567890123456"
+      "78"
+      "9012345678901234567890123456789012345678901234567890123456789012345678"
+      "90"
+      "1234567890123456789012345678901234567890123456789012345678901234567890"
+      "12"
+      "3456789012345678901234567890123456789012345678901234567890123456789012"
+      "34"
+      "5678901234567890123456789012345678901234567890123456789012345678901234"
+      "56"
+      "7890123456789012345678901234567890123456789012345678901234567890123456"
+      "78"
+      "9012345678901234567890123456789012345678901234567890123456789012345678"
+      "90"
+      "1234567890123456789012345678901234567890123456789012345678901234567890"
+      "12"
+      "3456789012345678901234567890123456789012345678901234567890123456789012"
+      "34"
       "5678901234567890123456789012345678901234567890");
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));

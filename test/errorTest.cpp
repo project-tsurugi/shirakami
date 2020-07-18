@@ -2,24 +2,18 @@
 
 #include "error.hh"
 
-using std::cout;
-using std::endl;
-
 namespace shirakami::testing {
 
-class errorTest : public ::testing::Test {
-protected:
-  errorTest() {}
-  ~errorTest() {}
+class errorTest : public ::testing::Test { // NOLINT
 };
 
-TEST_F(errorTest, LibcError) {
-  std::string errorstring;
+TEST_F(errorTest, LibcError) { // NOLINT
+  std::string errorstring{};
   try {
     throw LibcError(errno, errorstring);
   } catch (...) {
-    cout << "catch block." << endl;
-    cout << errorstring << endl;
+    std::cout << "catch block." << std::endl;
+    std::cout << errorstring << std::endl;
   }
 }
 

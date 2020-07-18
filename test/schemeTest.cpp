@@ -1,24 +1,16 @@
 #include "gtest/gtest.h"
-
 #include "kvs/scheme.h"
-#include "scheme.hh"
 #include "tuple.hh"
 
 using namespace kvs;
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
-class schemeTest : public ::testing::Test {
-protected:
-  schemeTest() {}
-  ~schemeTest() {}
-};
+class schemeTest : public ::testing::Test {};
 
 // kvs/scheme.h
 
-TEST_F(schemeTest, to_string_view_Status) {
+TEST_F(schemeTest, to_string_view_Status) {  // NOLINT
   using namespace std::string_view_literals;
   Status status = Status::WARN_ALREADY_DELETE;
   ASSERT_EQ("WARN_ALREADY_DELETE"sv, to_string_view(status));
@@ -52,9 +44,9 @@ TEST_F(schemeTest, to_string_view_Status) {
   ASSERT_EQ("ERR_VALIDATION"sv, to_string_view(status));
   status = Status::ERR_WRITE_TO_DELETED_RECORD;
   ASSERT_EQ("ERR_WRITE_TO_DELETED_RECORD"sv, to_string_view(status));
-  status = (Status)INT32_MAX;
-  // below statements occur std::abort()
 #if 0
+  // below statements occur std::abort()
+  status = (Status)INT32_MAX;  // NOLINT
   try {
     to_string_view(status);
   } catch (...) {
@@ -62,9 +54,11 @@ TEST_F(schemeTest, to_string_view_Status) {
 #endif
 }
 
-TEST_F(schemeTest, ostream_operator_Status) { cout << Status::OK << endl; }
+TEST_F(schemeTest, ostream_operator_Status) {  // NOLINT
+  std::cout << Status::OK << std::endl;
+}
 
-TEST_F(schemeTest, to_string_view_OP_TYPE) {
+TEST_F(schemeTest, to_string_view_OP_TYPE) { // NOLINT
   using namespace std::string_view_literals;
   OP_TYPE op;
   op = OP_TYPE::ABORT;
@@ -85,8 +79,8 @@ TEST_F(schemeTest, to_string_view_OP_TYPE) {
   ASSERT_EQ("UPDATE"sv, to_string_view(op));
 }
 
-TEST_F(schemeTest, ostream_operator_OP_TYPE) {
-  cout << OP_TYPE::SEARCH << endl;
+TEST_F(schemeTest, ostream_operator_OP_TYPE) { // NOLINT
+  std::cout << OP_TYPE::SEARCH << std::endl;
 }
 
 // scheme.hh

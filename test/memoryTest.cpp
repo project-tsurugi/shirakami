@@ -1,18 +1,12 @@
 #include "gtest/gtest.h"
-
 #include "memory.hh"
-
-using std::cout;
-using std::endl;
 
 namespace shirakami::testing {
 
-class memoryTest : public ::testing::Test {
-protected:
-  memoryTest() {}
-  ~memoryTest() {}
-};
+class memoryTest : public ::testing::Test {};
 
-TEST_F(memoryTest, displayRusageRUMaxrss) { displayRusageRUMaxrss(); }
+TEST_F(memoryTest, displayRusageRUMaxrss) {  // NOLINT
+  displayRusageRUMaxrss();
+}
 
 }  // namespace shirakami::testing

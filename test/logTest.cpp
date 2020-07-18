@@ -3,9 +3,9 @@
 
 namespace shirakami::testing {
 
-class logTest : public ::testing::Test {};
+class logTest : public ::testing::Test {}; // NOLINT
 
-TEST_F(logTest, LogHeader) { // NOLINT
+TEST_F(logTest, LogHeader) {  // NOLINT
   kvs::Log::LogHeader lh;
   lh.init();
   ASSERT_EQ(lh.get_checksum(), 0);
@@ -18,7 +18,7 @@ TEST_F(logTest, LogHeader) { // NOLINT
   ASSERT_EQ(lh.get_log_rec_num(), 1);
 }
 
-TEST_F(logTest, LogRecord) { // NOLINT
+TEST_F(logTest, LogRecord) {  // NOLINT
   using namespace kvs;
   Log::LogRecord lr{};
   ASSERT_EQ(lr.get_tid().get_obj(), 0);
