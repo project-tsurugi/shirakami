@@ -3,27 +3,25 @@
  * @brief implement about epoch
  */
 
-#include <xmmintrin.h>
+#include "epoch.hh"
 
 #include "atomic_wrapper.hh"
 #include "clock.hh"
-#include "compiler.hh"
 #include "cpu.hh"
-#include "epoch.hh"
 #include "tuple.hh"
 #include "xact.hh"
 
 namespace kvs {
 
-std::thread kEpochThread;
-std::atomic<bool> kEpochThreadEnd;
+std::thread kEpochThread;           // NOLINT
+std::atomic<bool> kEpochThreadEnd;  // NOLINT
 Epoch kGlobalEpoch(1);
 Epoch kReclamationEpoch(0);
 
 void atomic_add_global_epoch() {
-  uint64_t expected = load_acquire_ge();
+  std::uint32_t expected = load_acquire_ge();
   for (;;) {
-    uint64_t desired = expected + 1;
+    std::uint32_t desired = expected + 1;
     if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired,
                                     false, __ATOMIC_ACQ_REL,
                                     __ATOMIC_ACQUIRE)) {
@@ -32,13 +30,13 @@ void atomic_add_global_epoch() {
   }
 }
 
-bool check_epoch_loaded() {
+bool check_epoch_loaded() {  // NOLINT
   uint64_t curEpoch = load_acquire_ge();
 
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    if (itr->get_visible() == true
+  for (auto&& itr : kThreadTable) {
+    if (itr.get_visible()
         //&& loadAcquire(itr->epoch_) != curEpoch) {
-        && itr->get_epoch() != curEpoch) {
+        && itr.get_epoch() != curEpoch) {
       return false;
     }
   }
@@ -55,13 +53,13 @@ void epocher() {
   setThreadAffinity(static_cast<int>(CorePosition::EPOCHER));
 #endif
 
-  while (likely(kEpochThreadEnd.load(std::memory_order_acquire) == false)) {
+  while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
     sleepMs(KVS_EPOCH_TIME);
 
     // check_epoch_loaded() checks whether the
     // latest global epoch is read by all the threads
     while (!check_epoch_loaded()) {
-      if (kEpochThreadEnd.load(std::memory_order_acquire) == true) return;
+      if (kEpochThreadEnd.load(std::memory_order_acquire)) return;
       _mm_pause();
     }
 
@@ -75,7 +73,7 @@ void invoke_epocher() {
   kEpochThread = std::thread(epocher);
 }
 
-uint64_t load_acquire_ge() {
+std::uint32_t load_acquire_ge() { // NOLINT
   return __atomic_load_n(&(kGlobalEpoch), __ATOMIC_ACQUIRE);
 }
 

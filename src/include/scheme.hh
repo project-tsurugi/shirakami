@@ -283,9 +283,9 @@ class ThreadInfo {
   /**
    * @brief for debug.
    */
-  void display_read_set();
+  [[maybe_unused]] void display_read_set();
 
-  void display_write_set();
+  [[maybe_unused]] void display_write_set();
 
   /**
    * @brief check whether it already executed update or insert operation.

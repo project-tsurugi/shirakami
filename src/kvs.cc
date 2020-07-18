@@ -8,13 +8,9 @@
 #include <cstdint>
 
 #include "boost/filesystem.hpp"
-#include "cache_line_size.hh"
-#include "cpu.hh"
 #include "epoch.hh"
 #include "gcollection.hh"
-#include "kvs/interface.h"
 #include "log.hh"
-#include "scheme.hh"
 #include "tuple.hh"
 #include "xact.hh"
 
@@ -24,9 +20,9 @@ static void invoke_core_thread() { invoke_epocher(); }
 
 static void init_kThreadTable() {
   uint64_t ctr(0);
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
-    itr->set_visible(false);
-    itr->set_txbegan(false);
+  for (auto&& itr : kThreadTable) {
+    itr.set_visible(false);
+    itr.set_txbegan(false);
 
     /**
      * about garbage collection.
@@ -34,9 +30,9 @@ static void init_kThreadTable() {
      * So it needs surplus operation.
      */
     std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
-    itr->gc_container_index_ = gc_index;
-    itr->gc_record_container_ = &kGarbageRecords[gc_index];
-    itr->gc_value_container_ = &kGarbageValues[gc_index];
+    itr.gc_container_index_ = gc_index;
+    itr.gc_record_container_ = &kGarbageRecords.at(gc_index);
+    itr.gc_value_container_ = &kGarbageValues.at(gc_index);
 
     /**
      * about logging.
@@ -57,28 +53,28 @@ static void init_kThreadTable() {
 }
 
 static void fin_kThreadTable() {
-  for (auto itr = kThreadTable.begin(); itr != kThreadTable.end(); ++itr) {
+  for (auto&& itr : kThreadTable) {
     /**
      * about holding operation info.
      */
-    itr->clean_up_ops_set();
+    itr.clean_up_ops_set();
 
     /**
      * about scan operation
      */
-    itr->clean_up_scan_caches();
+    itr.clean_up_scan_caches();
 
     /**
      * about logging
      */
-    itr->log_set_.clear();
+    itr.log_set_.clear();
 #ifdef WAL
     itr->logfile_.close();
 #endif
   }
 }
 
-Status init(std::string_view log_directory_path) {
+Status init(std::string_view log_directory_path) { // NOLINT
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */

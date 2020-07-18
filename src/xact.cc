@@ -45,7 +45,7 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
    * calculates (a)
    * about read_set
    */
-  tid_a = max(max_wset, max_rset);
+  tid_a = std::max(max_wset, max_rset);
   tid_a.inc_tid();
 
   /*
@@ -59,7 +59,7 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
   tid_c.set_epoch(ti->get_epoch());
 
   /* compare a, b, c */
-  TidWord maxtid = max({tid_a, tid_b, tid_c});
+  TidWord maxtid = std::max({tid_a, tid_b, tid_c});
   maxtid.set_lock(false);
   maxtid.set_absent(false);
   maxtid.set_latest(true);
@@ -196,7 +196,7 @@ Status commit(Token token) {  // NOLINT
       return Status::ERR_WRITE_TO_DELETED_RECORD;
     }
 
-    max_wset = max(max_wset, expected);
+    max_wset = std::max(max_wset, expected);
   }
 
   // Serialization point
@@ -218,7 +218,7 @@ Status commit(Token token) {  // NOLINT
       abort(token);
       return Status::ERR_VALIDATION;
     }
-    max_rset = max(max_rset, check);
+    max_rset = std::max(max_rset, check);
   }
 
   // Phase 4: Write & Unlock

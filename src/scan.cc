@@ -6,24 +6,22 @@
 #include <map>
 #include <string_view>
 
+#include "kvs/interface.h"
 #include "masstree_wrapper.hh"
 #include "scheme.hh"
 #include "tuple.hh"
 #include "xact.hh"
 
-#include "kvs/interface.h"
-#include "kvs/scheme.h"
-
 using namespace kvs;
 
 namespace kvs {
 
-Status scan_key(Token token, [[maybe_unused]] Storage storage,
+Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 const char* const lkey, const std::size_t len_lkey,
                 const bool l_exclusive, const char* const rkey,
                 const std::size_t len_rkey, const bool r_exclusive,
                 std::vector<const Tuple*>& result) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
@@ -31,11 +29,11 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,
   auto rset_init_size = ti->read_set.size();
 
   std::vector<const Record*> scan_res;
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive,
-            &scan_res, false);
+  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res,
+            false);
 
-  for (auto itr = scan_res.begin(); itr != scan_res.end(); ++itr) {
-    std::string_view key_view = (*itr)->get_tuple().get_key();
+  for (auto&& itr : scan_res) {
+    std::string_view key_view = itr->get_tuple().get_key();
     WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
@@ -51,7 +49,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,
       continue;
     }
 
-    const ReadSetObj* inrs = ti->search_read_set(*itr);
+    const ReadSetObj* inrs = ti->search_read_set(itr);
     if (inrs != nullptr) {
       result.emplace_back(&inrs->get_rec_read().get_tuple());
       continue;
@@ -62,9 +60,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,
     // Because in herbrand semantics, the read reads last update even if the
     // update is own.
 
-    ti->read_set.emplace_back(const_cast<Record*>(*itr));
+    ti->read_set.emplace_back(const_cast<Record*>(itr));
     Status rr = read_record(ti->read_set.back().get_rec_read(),
-                            const_cast<Record*>(*itr));
+                            const_cast<Record*>(itr));
     if (rr != Status::OK) {
       return rr;
     }
@@ -80,12 +78,12 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,
   return Status::OK;
 }
 
-Status open_scan(Token token, [[maybe_unused]] Storage storage,
+Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  const char* const lkey, const std::size_t len_lkey,
                  const bool l_exclusive, const char* const rkey,
                  const std::size_t len_rkey, const bool r_exclusive,
                  ScanHandle& handle) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<const Record*> scan_buf;
@@ -93,7 +91,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,
   MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf,
             true);
 
-  if (scan_buf.size() > 0) {
+  if (!scan_buf.empty()) {
     /**
      * scan could find any records.
      */
@@ -105,9 +103,9 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,
         /**
          * begin : init about right_end_point_
          */
-        std::unique_ptr<char[]> tmp_rkey;
+        std::unique_ptr<char[]> tmp_rkey;  // NOLINT
         if (len_rkey > 0) {
-          tmp_rkey = make_unique<char[]>(len_rkey);
+          tmp_rkey = std::make_unique<char[]>(len_rkey);  // NOLINT
           memcpy(tmp_rkey.get(), rkey, len_rkey);
         } else {
           /**
@@ -126,17 +124,17 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,
       if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
     }
     return Status::OK;
-  } else {
-    /**
-     * scan couldn't find any records.
-     */
-    return Status::WARN_NOT_FOUND;
   }
+  /**
+   * scan couldn't find any records.
+   */
+  return Status::WARN_NOT_FOUND;
 }
 
-Status scannable_total_index_size(Token token, [[maybe_unused]] Storage storage,
+Status scannable_total_index_size(Token token,  // NOLINT
+                                  [[maybe_unused]] Storage storage,
                                   ScanHandle& handle, std::size_t& size) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
   if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
@@ -150,9 +148,10 @@ Status scannable_total_index_size(Token token, [[maybe_unused]] Storage storage,
   return Status::OK;
 }
 
-Status read_from_scan(Token token, [[maybe_unused]] Storage storage,
-                      const ScanHandle handle, Tuple** const tuple) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+Status read_from_scan(Token token,  // NOLINT
+                      [[maybe_unused]] Storage storage, const ScanHandle handle,
+                      Tuple** const tuple) {
+  auto* ti = static_cast<ThreadInfo*>(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
   if (ti->scan_cache_.find(handle) == ti->scan_cache_.end()) {
@@ -172,7 +171,7 @@ Status read_from_scan(Token token, [[maybe_unused]] Storage storage,
               ti->rkey_[handle].get(), ti->len_rkey_[handle],
               ti->r_exclusive_[handle], &new_scan_buf, true);
 
-    if (new_scan_buf.size() > 0) {
+    if (!new_scan_buf.empty()) {
       /**
        * scan could find any records.
        */
@@ -225,24 +224,23 @@ Status read_from_scan(Token token, [[maybe_unused]] Storage storage,
   return Status::OK;
 }
 
-Status close_scan(Token token, [[maybe_unused]] Storage storage,
+Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const ScanHandle handle) {
-  ThreadInfo* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<ThreadInfo*>(token);
 
   auto itr = ti->scan_cache_.find(handle);
   if (itr == ti->scan_cache_.end()) {
     return Status::WARN_INVALID_HANDLE;
-  } else {
-    ti->scan_cache_.erase(itr);
-    auto index_itr = ti->scan_cache_itr_.find(handle);
-    ti->scan_cache_itr_.erase(index_itr);
-    auto rkey_itr = ti->rkey_.find(handle);
-    ti->rkey_.erase(rkey_itr);
-    auto len_rkey_itr = ti->len_rkey_.find(handle);
-    ti->len_rkey_.erase(len_rkey_itr);
-    auto r_exclusive_itr = ti->r_exclusive_.find(handle);
-    ti->r_exclusive_.erase(r_exclusive_itr);
   }
+  ti->scan_cache_.erase(itr);
+  auto index_itr = ti->scan_cache_itr_.find(handle);
+  ti->scan_cache_itr_.erase(index_itr);
+  auto rkey_itr = ti->rkey_.find(handle);
+  ti->rkey_.erase(rkey_itr);
+  auto len_rkey_itr = ti->len_rkey_.find(handle);
+  ti->len_rkey_.erase(len_rkey_itr);
+  auto r_exclusive_itr = ti->r_exclusive_.find(handle);
+  ti->r_exclusive_.erase(r_exclusive_itr);
 
   return Status::OK;
 }

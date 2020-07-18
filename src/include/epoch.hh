@@ -39,7 +39,7 @@ extern void epocher();
  */
 extern void invoke_epocher();
 
-extern std::uint64_t load_acquire_ge(); // NOLINT
+extern std::uint32_t load_acquire_ge(); // NOLINT
 
 extern Epoch kGlobalEpoch;
 extern Epoch kReclamationEpoch;
