@@ -94,7 +94,8 @@ extern Status abort(Token token);  // NOLINT
  * @return Status::OK if successful
  */
 [[maybe_unused]] extern Status register_storage(char const* name,  // NOLINT
-                               std::size_t len_name, Storage& storage);
+                                                std::size_t len_name,
+                                                Storage& storage);
 
 /**
  * @brief get existing storage handle
@@ -107,7 +108,8 @@ extern Status abort(Token token);  // NOLINT
  * name
  */
 [[maybe_unused]] extern Status get_storage(char const* name,  // NOLINT
-                          std::size_t len_name, Storage& storage);
+                                           std::size_t len_name,
+                                           Storage& storage);
 
 /**
  * @brief delete existing storage and records under the storage.
@@ -156,19 +158,22 @@ extern Status delete_record(Token token, Storage storage,  // NOLINT
                             const char* key, std::size_t len_key);
 
 [[maybe_unused]] /**
- * @brief Delete the all records.
- * @pre This function is called by a single thread and does't allow moving of
- * other threads.
- * @details This function executes tbegin(Token token) internaly, so it doesn't
- * need to call tbegin(Token token). Also it doesn't need to call enter/leave
- * around calling this function. Because this function calls enter/leave
- * appropriately.
- * @return Status::WARN_ALREADY_DELETE There are no records.
- * @return Status::OK success
- * @return Return value of commit function. If it return this, you can retry
- * delete_all_records meaning to resume this function.
- */
-[[maybe_unused]] extern Status delete_all_records();  // NOLINT
+                  * @brief Delete the all records.
+                  * @pre This function is called by a single thread and does't
+                  * allow moving of other threads.
+                  * @details This function executes tbegin(Token token)
+                  * internaly, so it doesn't need to call tbegin(Token token).
+                  * Also it doesn't need to call enter/leave around calling this
+                  * function. Because this function calls enter/leave
+                  * appropriately.
+                  * @return Status::WARN_ALREADY_DELETE There are no records.
+                  * @return Status::OK success
+                  * @return Return value of commit function. If it return this,
+                  * you can retry delete_all_records meaning to resume this
+                  * function.
+                  */
+                 [[maybe_unused]] extern Status
+                 delete_all_records();  // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -282,8 +287,8 @@ extern Status open_scan(Token token, Storage storage,  // NOLINT
                         ScanHandle& handle);
 
 /**
- * @brief This function checks the size resulted at open_scan with the @a handle
- * .
+ * @brief This function checks the size resulted at open_scan with the @a
+ * handle.
  * @param token [in] the token retrieved by enter()
  * @param storage [in] the storage handle retrieved by register_storage() or
  * get_storage()
