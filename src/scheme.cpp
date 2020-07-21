@@ -6,7 +6,7 @@
 #include "atomic_wrapper.h"
 #include "garbage_collection.h"
 #include "log.h"
-#include "scheme_local.h"
+#include "thread_info.h"
 #include "tuple_local.h"
 #include "xact.h"
 

@@ -31,13 +31,12 @@
 #include "./include/masstree_build.h"
 #include "./include/ycsb.h"
 
-// shirakami/src/
+// shirakami/src/include
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "cpu.h"
+#include "thread_info.h"
 #include "tuple_local.h"
-
-// shirakami/include/
 
 #include "gflags/gflags.h"
 #include "glog/logging.h"

@@ -9,6 +9,7 @@
 #include "kvs/scheme.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
+#include "thread_info.h"
 
 namespace kvs {
 
