@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "record.hh"
-#include "tuple.hh"
+#include "record.h"
+#include "tuple_local.h"
 
 using namespace kvs;
 

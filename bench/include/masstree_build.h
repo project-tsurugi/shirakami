@@ -17,7 +17,7 @@
 #pragma once
 
 // shirakami/src/include/
-#include "scheme.hh"
+#include "scheme_local.h"
 
 // shirakami/include/
 #include "kvs/scheme.h"

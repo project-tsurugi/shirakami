@@ -3,16 +3,16 @@
  * @brief about entire kvs.
  */
 
-#include "kvs.hh"
+#include "kvs.h"
 
 #include <cstdint>
 
 #include "boost/filesystem.hpp"
-#include "epoch.hh"
-#include "gcollection.hh"
-#include "log.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "epoch.h"
+#include "gcollection.h"
+#include "log.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 namespace kvs {
 

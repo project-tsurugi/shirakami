@@ -3,7 +3,7 @@
  * @details implement about tid.
  */
 
-#include "tid.hh"
+#include "tid.h"
 
 #include <bitset>
 #include <iostream>

@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "epoch.hh"
-#include "record.hh"
+#include "epoch.h"
+#include "record.h"
 
 namespace kvs {
 

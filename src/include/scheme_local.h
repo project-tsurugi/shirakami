@@ -21,13 +21,13 @@
 #include <utility>
 #include <vector>
 
-#include "cache_line_size.hh"
-#include "compiler.hh"
-#include "fileio.hh"
-#include "log.hh"
-#include "record.hh"
-#include "scheme.hh"
-#include "tid.hh"
+#include "cache_line_size.h"
+#include "compiler.h"
+#include "fileio.h"
+#include "log.h"
+#include "record.h"
+#include "scheme_local.h"
+#include "tid.h"
 
 // shirakami/include/
 #include "kvs/scheme.h"

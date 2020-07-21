@@ -3,9 +3,9 @@
  * @brief implement about log
  */
 
-#include "log.hh"
+#include "log.h"
 
-#include "tuple.hh"
+#include "tuple_local.h"
 
 namespace kvs {
 

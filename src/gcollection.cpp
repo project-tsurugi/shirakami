@@ -3,16 +3,16 @@
  * @brief about garbage collection.
  */
 
+#include "gcollection.h"
+
 #include <utility>
 
-#include "gcollection.hh"
-
-#include "atomic_wrapper.hh"
-#include "epoch.hh"
-#include "masstree_wrapper.hh"
-#include "scheme.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "atomic_wrapper.h"
+#include "epoch.h"
+#include "masstree_beta_wrapper.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 namespace kvs {
 

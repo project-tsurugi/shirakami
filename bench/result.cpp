@@ -4,8 +4,8 @@
 #include <iostream>
 
 // shirakami-impl interface library
-#include "./include/result.hh"
-#include "memory.hh"
+#include "./include/result.h"
+#include "memory.h"
 
 void Result::displayAbortCounts() const {
   std::cout << "abort_counts_:\t" << total_abort_counts_ << std::endl;

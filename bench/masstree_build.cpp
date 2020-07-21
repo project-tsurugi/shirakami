@@ -15,18 +15,18 @@
  */
 
 // shirakami/test
-#include "result.hh"
+#include "result.h"
 
 // shirakami/bench
-#include "./include/string.hh"
+#include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
-#include "clock.hh"
-#include "cpu.hh"
-#include "random.hh"
-#include "scheme.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "clock.h"
+#include "cpu.h"
+#include "random.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 using namespace kvs;
 

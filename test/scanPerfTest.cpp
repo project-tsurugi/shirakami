@@ -6,7 +6,7 @@
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
-#include "tsc.hh"
+#include "tsc.h"
 
 using namespace kvs;
 

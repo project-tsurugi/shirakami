@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
+#include <shirakami_string.h>
+
+#include <cstring>
+
 // shirakami/test/include
-#include "result.hh"
+#include "result.h"
 
 // shirakami/bench
-#include "./include/masstree_build.hh"
-#include "./include/string.hh"
+#include "./include/masstree_build.h"
 
 // shirakami/src/
-#include "atomic_wrapper.hh"
-#include "clock.hh"
-#include "cpu.hh"
+#include "atomic_wrapper.h"
+#include "clock.h"
+#include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "tuple.hh"
+#include "tuple_local.h"
 #if 0
 #include "kvs/interface.h"
 #include "zipf.hh"
 #endif
 
 // to use declaration of entity of global variables.
-#include "./../src/masstree_wrapper.cc"
+#include "./../src/masstree_beta_wrapper.cpp"
 
 using namespace kvs;
 

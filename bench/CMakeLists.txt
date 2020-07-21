@@ -13,15 +13,15 @@
 # limitations under the License.
 
 file(GLOB YCSB_SOURCES
-        "ycsb.cc"
-        "masstree_build.cc"
-        "result.cc"
+        "ycsb.cpp"
+        "masstree_build.cpp"
+        "result.cpp"
         )
 
 file(GLOB MASSTREE_SOURCES
-        "masstree.cc"
-        "masstree_build.cc"
-        "result.cc"
+        "masstree.cpp"
+        "masstree_build.cpp"
+        "result.cpp"
         )
 
 add_executable(ycsb

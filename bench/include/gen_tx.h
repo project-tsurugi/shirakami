@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include "string.hh"
-#include "ycsb_param.h"
+#include "./shirakami_string.h"
+#include "./ycsb_param.h"
 
 // shirakami/src/
-#include "random.hh"
-#include "scheme.hh"
-#include "zipf.hh"
+#include "random.h"
+#include "scheme_local.h"
+#include "zipf.h"
 
 /**
  * @brief generate search/update operations.

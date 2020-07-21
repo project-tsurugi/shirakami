@@ -3,18 +3,18 @@
  * @brief implement about transaction
  */
 
-#include "xact.hh"
+#include "xact.h"
 
 #include <bitset>
 
-#include "atomic_wrapper.hh"
-#include "cache_line_size.hh"
-#include "cpu.hh"
-#include "epoch.hh"
-#include "gcollection.hh"
-#include "masstree_wrapper.hh"
-#include "scheme.hh"
-#include "tuple.hh"
+#include "atomic_wrapper.h"
+#include "cache_line_size.h"
+#include "cpu.h"
+#include "epoch.h"
+#include "gcollection.h"
+#include "masstree_beta_wrapper.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
 
 namespace kvs {
 

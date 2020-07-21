@@ -4,6 +4,6 @@
 
 #pragma once
 
-#include "inline.hh"
+#include "inline.h"
 
 INLINE void compilerFence() { asm volatile("" ::: "memory"); }

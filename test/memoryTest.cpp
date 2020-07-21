@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "memory.hh"
+#include "memory.h"
 
 namespace shirakami::testing {
 

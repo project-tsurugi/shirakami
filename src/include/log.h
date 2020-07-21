@@ -10,10 +10,10 @@
 #include <cstdint>
 #include <cstring>
 
-#include "fileio.hh"
+#include "fileio.h"
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
-#include "tid.hh"
+#include "tid.h"
 
 namespace kvs {
 

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "kvs/scheme.h"
-#include "masstree_wrapper.hh"
-#include "scheme.hh"
+#include "masstree_beta_wrapper.h"
+#include "scheme_local.h"
 
 #define KVS_EPOCH_TIME 40  // NOLINT
 // ms

@@ -7,7 +7,7 @@
 #include <random>
 #include <vector>
 
-#include "random.hh"
+#include "random.h"
 
 // Fast zipf distribution by Jim Gray et al.
 class FastZipf {

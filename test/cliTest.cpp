@@ -22,9 +22,9 @@
 #include <thread>
 
 #include "./include/test_param.h"
-#include "cpu.hh"
+#include "cpu.h"
 #include "gtest/gtest.h"
-#include "tuple.hh"
+#include "tuple_local.h"
 
 // shirakami/include/
 #include "kvs/interface.h"

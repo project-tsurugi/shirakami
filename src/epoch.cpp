@@ -3,13 +3,13 @@
  * @brief implement about epoch
  */
 
-#include "epoch.hh"
+#include "epoch.h"
 
-#include "atomic_wrapper.hh"
-#include "clock.hh"
-#include "cpu.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "atomic_wrapper.h"
+#include "clock.h"
+#include "cpu.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 namespace kvs {
 

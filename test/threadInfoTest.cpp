@@ -6,8 +6,8 @@
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
-#include "scheme.hh"
-#include "tuple.hh"
+#include "scheme_local.h"
+#include "tuple_local.h"
 
 using namespace kvs;
 

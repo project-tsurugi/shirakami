@@ -4,12 +4,12 @@
  */
 
 #include "gtest/gtest.h"
-#include "masstree_wrapper.hh"
-#include "scheme.hh"
-#include "tuple.hh"
+#include "masstree_beta_wrapper.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
 
 // to use declaration of entity of global variables.
-#include "./../src/masstree_wrapper.cc"
+#include "./../src/masstree_beta_wrapper.cpp"
 
 using namespace kvs;
 using namespace std;

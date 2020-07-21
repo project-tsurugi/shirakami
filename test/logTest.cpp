@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "log.hh"
+#include "log.h"
 
 namespace shirakami::testing {
 

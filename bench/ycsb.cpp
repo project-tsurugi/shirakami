@@ -18,21 +18,24 @@
  * @file ycsb.cc
  */
 
+#include <shirakami_string.h>
 #include <xmmintrin.h>
 
+#include <cstring>
+
 // shirakami/test
-#include "result.hh"
+#include "result.h"
 
 // shirakami/bench
-#include "./include/gen_tx.hh"
-#include "./include/masstree_build.hh"
-#include "./include/ycsb.hh"
+#include "./include/gen_tx.h"
+#include "./include/masstree_build.h"
+#include "./include/ycsb.h"
 
 // shirakami/src/
-#include "atomic_wrapper.hh"
-#include "clock.hh"
-#include "cpu.hh"
-#include "tuple.hh"
+#include "atomic_wrapper.h"
+#include "clock.h"
+#include "cpu.h"
+#include "tuple_local.h"
 
 // shirakami/include/
 

@@ -3,13 +3,12 @@
  * @brief about scheme
  */
 
-#include "scheme.hh"
-
-#include "atomic_wrapper.hh"
-#include "gcollection.hh"
-#include "log.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "atomic_wrapper.h"
+#include "gcollection.h"
+#include "log.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 namespace kvs {
 

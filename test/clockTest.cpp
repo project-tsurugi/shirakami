@@ -1,6 +1,5 @@
+#include "clock.h"
 #include "gtest/gtest.h"
-
-#include "clock.hh"
 
 namespace shirakami::testing {
 

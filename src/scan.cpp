@@ -7,10 +7,10 @@
 #include <string_view>
 
 #include "kvs/interface.h"
-#include "masstree_wrapper.hh"
-#include "scheme.hh"
-#include "tuple.hh"
-#include "xact.hh"
+#include "masstree_beta_wrapper.h"
+#include "scheme_local.h"
+#include "tuple_local.h"
+#include "xact.h"
 
 using namespace kvs;
 

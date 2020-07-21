@@ -3,7 +3,7 @@
 #include <string>
 
 // shirakami/src/
-#include "random.hh"
+#include "random.h"
 
 static void make_string(std::string& string, Xoroshiro128Plus& rnd) {
   for (std::size_t i = 0; i < string.size() - 1; i++) {

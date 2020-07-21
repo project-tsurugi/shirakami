@@ -11,6 +11,8 @@
 #include <array>
 #include <exception>
 
+#include <cstring>
+
 // class
 class LibcError : public std::exception {
 private:

@@ -7,7 +7,7 @@
 
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
-#include "tid.hh"
+#include "tid.h"
 
 namespace kvs {
 class Record { // NOLINT

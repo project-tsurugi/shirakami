@@ -1,6 +1,5 @@
+#include "error.h"
 #include "gtest/gtest.h"
-
-#include "error.hh"
 
 namespace shirakami::testing {
 

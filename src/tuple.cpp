@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "tuple.hh"
+#include "tuple_local.h"
 
 namespace kvs {
 

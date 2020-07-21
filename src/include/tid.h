@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "epoch.hh"
+#include "epoch.h"
 
 namespace kvs {
 
