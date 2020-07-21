@@ -11,7 +11,7 @@
 #include "cache_line_size.h"
 #include "cpu.h"
 #include "epoch.h"
-#include "gcollection.h"
+#include "garbage_collection.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"

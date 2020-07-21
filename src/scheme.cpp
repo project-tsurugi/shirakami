@@ -4,7 +4,7 @@
  */
 
 #include "atomic_wrapper.h"
-#include "gcollection.h"
+#include "garbage_collection.h"
 #include "log.h"
 #include "scheme_local.h"
 #include "tuple_local.h"

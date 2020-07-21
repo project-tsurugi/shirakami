@@ -9,7 +9,7 @@
 
 #include "boost/filesystem.hpp"
 #include "epoch.h"
-#include "gcollection.h"
+#include "garbage_collection.h"
 #include "log.h"
 #include "tuple_local.h"
 #include "xact.h"
