@@ -45,7 +45,7 @@ public:
     return result;
   }
 
-  uint64_t operator()() { return next(); } // NOLINT
+  uint64_t operator()() { return next(); }  // NOLINT
 
   /* This is the jump function for the generator. It is equivalent
      to 2^64 calls to next(); it can be used to generate 2^64
@@ -58,7 +58,7 @@ public:
     uint64_t s0 = 0;
     uint64_t s1 = 0;
     for (uint64_t i = 0; i < sizeof JUMP / sizeof JUMP.at(0); i++) {  // NOLINT
-      for (std::uint32_t b = 0; b < 64; b++) { // NOLINT
+      for (std::uint32_t b = 0; b < 64; b++) {                        // NOLINT
         if ((JUMP.at(i) & UINT64_C(1) << b) != 0U) {
           s0 ^= s.at(0);
           s1 ^= s.at(1);
@@ -82,8 +82,8 @@ public:
     uint64_t s0 = 0;
     uint64_t s1 = 0;
     for (uint64_t i = 0; i < sizeof LONG_JUMP / sizeof LONG_JUMP.at(0);
-         i++) {  // NOLINT
-      for (std::uint32_t b = 0; b < 64; b++) { // NOLINT
+         i++) {                                 // NOLINT
+      for (std::uint32_t b = 0; b < 64; b++) {  // NOLINT
         if ((LONG_JUMP.at(i) & UINT64_C(1) << b) != 0U) {
           s0 ^= s.at(0);
           s1 ^= s.at(1);

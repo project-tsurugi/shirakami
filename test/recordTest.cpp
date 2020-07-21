@@ -8,7 +8,7 @@ namespace shirakami::testing {
 
 class recordTest : public ::testing::Test {};
 
-TEST_F(recordTest, constructor) { // NOLINT
+TEST_F(recordTest, constructor) {  // NOLINT
   {
     Record rec;
     ASSERT_EQ(rec.get_tidw().get_obj(), 0);

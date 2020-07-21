@@ -172,8 +172,8 @@ extern Status delete_record(Token token, Storage storage,  // NOLINT
                   * you can retry delete_all_records meaning to resume this
                   * function.
                   */
-                 [[maybe_unused]] extern Status
-                 delete_all_records();  // NOLINT
+[[maybe_unused]] extern Status
+delete_all_records();  // NOLINT
 
 /**
  * @brief insert the record with given key/value

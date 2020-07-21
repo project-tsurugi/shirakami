@@ -15,14 +15,14 @@ namespace shirakami::testing {
 
 class ThreadInfoTest : public ::testing::Test {
 public:
-  void SetUp() override { kvs::init(); } // NOLINT
+  void SetUp() override { kvs::init(); }  // NOLINT
 
   void TearDown() override { kvs::fin(); }
 };
 
-TEST_F(ThreadInfoTest, get_txbegan_) { // NOLINT
-  std::string k("aaa"); // NOLINT
-  std::string v("bbb"); // NOLINT
+TEST_F(ThreadInfoTest, get_txbegan_) {  // NOLINT
+  std::string k("aaa");                 // NOLINT
+  std::string v("bbb");                 // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};

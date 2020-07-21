@@ -70,7 +70,8 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
   ti->wal(maxtid.get_obj());
 #endif
 
-  for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end(); ++iws) {
+  for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
+       ++iws) {
     Record* recptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
       case OP_TYPE::UPDATE: {
@@ -172,7 +173,8 @@ Status commit(Token token) {  // NOLINT
   // Phase 2: Lock write set;
   TidWord expected;
   TidWord desired;
-  for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end(); ++itr) {
+  for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end();
+       ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
     // after this, update/delete
     expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
@@ -206,7 +208,8 @@ Status commit(Token token) {  // NOLINT
 
   // Phase 3: Validation
   TidWord check;
-  for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end(); itr++) {
+  for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end();
+       itr++) {
     const Record* rec_ptr = itr->get_rec_ptr();
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
@@ -392,7 +395,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   }
 
   ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                             record);
+                                   record);
 
   return Status::OK;
 }
@@ -453,9 +456,9 @@ Record* find_record_from_masstree(char const* key,  // NOLINT
   return MTDB.get_value(key, len_key);
 }
 
-Status upsert(Token token, [[maybe_unused]] Storage storage, // NOLINT
-              const char* const key, std::size_t len_key,
-              const char* const val, std::size_t len_val) {
+Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
+              const char* const key, std::size_t len_key, const char* const val,
+              std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
@@ -466,7 +469,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage, // NOLINT
 
   Record* record = find_record_from_masstree(key, len_key);
   if (record == nullptr) {
-    record = new Record(key, len_key, val, len_val); // NOLINT
+    record = new Record(key, len_key, val, len_val);  // NOLINT
     Status insert_result(insert_record_to_masstree(key, len_key, record));
     if (insert_result == Status::OK) {
       ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
@@ -474,10 +477,10 @@ Status upsert(Token token, [[maybe_unused]] Storage storage, // NOLINT
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
-    delete record; // NOLINT
+    delete record;  // NOLINT
   }
   ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                             record);
+                                   record);
 
   return Status::OK;
 }

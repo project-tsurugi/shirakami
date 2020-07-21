@@ -31,7 +31,7 @@ static void init_kThreadTable() {
      */
     std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
     itr.set_gc_container_index(gc_index);
-    itr.set_gc_record_container( &kGarbageRecords.at(gc_index));
+    itr.set_gc_record_container(&kGarbageRecords.at(gc_index));
     itr.set_gc_value_container(&kGarbageValues.at(gc_index));
 
     /**
@@ -74,7 +74,7 @@ static void fin_kThreadTable() {
   }
 }
 
-Status init(std::string_view log_directory_path) { // NOLINT
+Status init(std::string_view log_directory_path) {  // NOLINT
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */

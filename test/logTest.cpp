@@ -3,7 +3,7 @@
 
 namespace shirakami::testing {
 
-class logTest : public ::testing::Test {}; // NOLINT
+class logTest : public ::testing::Test {};  // NOLINT
 
 TEST_F(logTest, LogHeader) {  // NOLINT
   kvs::Log::LogHeader lh;

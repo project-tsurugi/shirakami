@@ -58,7 +58,7 @@ TEST_F(schemeTest, ostream_operator_Status) {  // NOLINT
   std::cout << Status::OK << std::endl;
 }
 
-TEST_F(schemeTest, to_string_view_OP_TYPE) { // NOLINT
+TEST_F(schemeTest, to_string_view_OP_TYPE) {  // NOLINT
   using namespace std::string_view_literals;
   OP_TYPE op;
   op = OP_TYPE::ABORT;
@@ -79,7 +79,7 @@ TEST_F(schemeTest, to_string_view_OP_TYPE) { // NOLINT
   ASSERT_EQ("UPDATE"sv, to_string_view(op));
 }
 
-TEST_F(schemeTest, ostream_operator_OP_TYPE) { // NOLINT
+TEST_F(schemeTest, ostream_operator_OP_TYPE) {  // NOLINT
   std::cout << OP_TYPE::SEARCH << std::endl;
 }
 

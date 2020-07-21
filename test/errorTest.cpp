@@ -3,10 +3,10 @@
 
 namespace shirakami::testing {
 
-class errorTest : public ::testing::Test { // NOLINT
+class errorTest : public ::testing::Test {  // NOLINT
 };
 
-TEST_F(errorTest, LibcError) { // NOLINT
+TEST_F(errorTest, LibcError) {  // NOLINT
   std::string errorstring{};
   try {
     throw LibcError(errno, errorstring);

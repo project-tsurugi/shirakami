@@ -11,7 +11,7 @@
 
 namespace kvs {
 
-class TidWord { // NOLINT
+class TidWord {  // NOLINT
 public:
   union {  // NOLINT
     uint64_t obj_;
@@ -19,8 +19,8 @@ public:
       bool lock_ : 1;
       bool latest_ : 1;
       bool absent_ : 1;
-      uint64_t tid_ : 29; // NOLINT
-      Epoch epoch_ : 32; // NOLINT
+      uint64_t tid_ : 29;  // NOLINT
+      Epoch epoch_ : 32;   // NOLINT
     };
   };
 
@@ -84,7 +84,9 @@ public:
 
   void set_absent(const bool absent) & { this->absent_ = absent; }  // NOLINT
 
-  [[maybe_unused]] void set_tid(const uint64_t tid) & { this->tid_ = tid; }  // NOLINT
+  [[maybe_unused]] void set_tid(const uint64_t tid) & {
+    this->tid_ = tid;
+  }  // NOLINT
 
   void set_epoch(const Epoch epoch) & { this->epoch_ = epoch; }  // NOLINT
 

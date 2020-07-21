@@ -31,7 +31,7 @@ static void gen_tx_rw(std::vector<kvs::OprObj>& opr_set, std::size_t tpnm,
                            reinterpret_cast<char*>(&keybs),  // NOLINT
                            sizeof(uint64_t));
     } else {
-      std::string value(ycsb_param::kValLength, '0'); // NOLINT
+      std::string value(ycsb_param::kValLength, '0');  // NOLINT
       make_string(value, rnd);
       opr_set.emplace_back(OP_TYPE::UPDATE,
                            reinterpret_cast<char*>(&keybs),  // NOLINT

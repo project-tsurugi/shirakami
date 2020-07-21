@@ -290,9 +290,9 @@ void Result::displayValiLatencyRate(size_t clocks_per_us, size_t extime,
     constexpr std::size_t ten = 10;
     constexpr std::size_t six = 6;
     long double rate = static_cast<long double>(total_vali_latency_) /
-           (static_cast<long double>(clocks_per_us) * powl(ten, six) *
-            static_cast<long double>(extime)) /
-           thread_num;
+                       (static_cast<long double>(clocks_per_us) *
+                        powl(ten, six) * static_cast<long double>(extime)) /
+                       thread_num;
     std::cout << std::fixed << std::setprecision(4) << "vali_latency_rate:\t"
               << rate << std::endl;
   }
@@ -338,10 +338,10 @@ void Result::displayWriteLatencyRate(size_t clocks_per_us, size_t extime,
   if (total_write_latency_ != 0U) {
     constexpr std::size_t ten = 10;
     constexpr std::size_t six = 6;
-    long double rate =
-        static_cast<long double>(total_write_latency_) /
-        (static_cast<long double>(clocks_per_us) * powl(ten, six) * static_cast<long double>(extime)) /
-        thread_num;
+    long double rate = static_cast<long double>(total_write_latency_) /
+                       (static_cast<long double>(clocks_per_us) *
+                        powl(ten, six) * static_cast<long double>(extime)) /
+                       thread_num;
     std::cout << std::fixed << std::setprecision(4) << "write_latency_rate:\t"
               << rate << std::endl;
   }
@@ -375,13 +375,9 @@ void Result::addLocalEarlyAborts(uint64_t count) {
   total_early_aborts_ += count;
 }
 
-void Result::addLocalExtraReads(uint64_t count) {
-  total_extra_reads_ += count;
-}
+void Result::addLocalExtraReads(uint64_t count) { total_extra_reads_ += count; }
 
-void Result::addLocalGCCounts(uint64_t count) {
-  total_gc_counts_ += count;
-}
+void Result::addLocalGCCounts(uint64_t count) { total_gc_counts_ += count; }
 
 void Result::addLocalGCVersionCounts(uint64_t count) {
   total_gc_version_counts_ += count;
@@ -391,9 +387,7 @@ void Result::addLocalGCTMTElementsCounts(uint64_t count) {
   total_gc_TMT_elements_counts_ += count;
 }
 
-void Result::addLocalGCLatency(uint64_t count) {
-  total_gc_latency_ += count;
-}
+void Result::addLocalGCLatency(uint64_t count) { total_gc_latency_ += count; }
 
 void Result::addLocalMakeProcedureLatency(uint64_t count) {
   total_make_procedure_latency_ += count;

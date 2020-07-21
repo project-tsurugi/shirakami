@@ -6,6 +6,6 @@
  */
 
 /**
- * @brief cache line size is 64 bytes. 
+ * @brief cache line size is 64 bytes.
  */
-#define CACHE_LINE_SIZE 64 // NOLINT
+#define CACHE_LINE_SIZE 64  // NOLINT

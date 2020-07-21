@@ -9,9 +9,8 @@
 #pragma once
 
 #include <array>
-#include <exception>
-
 #include <cstring>
+#include <exception>
 
 // class
 class LibcError : public std::exception {

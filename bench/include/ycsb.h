@@ -1,6 +1,6 @@
 #pragma once
 
-static bool isReady(const std::vector<char>& readys); // NOLINT
+static bool isReady(const std::vector<char>& readys);  // NOLINT
 
 static void waitForReady(const std::vector<char>& readys);
 

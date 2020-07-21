@@ -23,7 +23,7 @@
     if (local_nprocessors != -1) {
       break;
     }
-    int desired = sysconf(_SC_NPROCESSORS_CONF); // NOLINT
+    int desired = sysconf(_SC_NPROCESSORS_CONF);  // NOLINT
     if (nprocessors.compare_exchange_strong(local_nprocessors, desired,
                                             memory_order_acq_rel,
                                             memory_order_acquire)) {
@@ -31,11 +31,11 @@
     }
   }
 
-  pid_t pid = syscall(SYS_gettid); // NOLINT
+  pid_t pid = syscall(SYS_gettid);  // NOLINT
   cpu_set_t cpu_set;
 
   CPU_ZERO(&cpu_set);
-  CPU_SET(myid % local_nprocessors, &cpu_set); // NOLINT
+  CPU_SET(myid % local_nprocessors, &cpu_set);  // NOLINT
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
@@ -45,7 +45,7 @@
 }
 
 [[maybe_unused]] static void setThreadAffinity(const cpu_set_t id) {
-  pid_t pid = syscall(SYS_gettid); // NOLINT
+  pid_t pid = syscall(SYS_gettid);  // NOLINT
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
@@ -54,8 +54,8 @@
   }
 }
 
-[[maybe_unused]] static cpu_set_t getThreadAffinity() { // NOLINT
-  pid_t pid = syscall(SYS_gettid); // NOLINT
+[[maybe_unused]] static cpu_set_t getThreadAffinity() {  // NOLINT
+  pid_t pid = syscall(SYS_gettid);                       // NOLINT
   cpu_set_t result;
 
   if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) {

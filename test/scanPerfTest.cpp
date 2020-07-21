@@ -80,57 +80,59 @@ TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
   /**
    * Prepare for next experiments.
    */
-  DoInsert(100, 1000); // NOLINT
+  DoInsert(100, 1000);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 1K records."
-       << std::endl;
+            << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(1000, 10000); // NOLINT
+  DoInsert(1000, 10000);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 10K records."
-       << std::endl;
+            << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(10000, 20000); // NOLINT
+  DoInsert(10000, 20000);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 20K records."
-       << std::endl;
+            << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(20000, 40000); // NOLINT
+  DoInsert(20000, 40000);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 40K records."
-       << std::endl;
+            << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(40000, 80000); // NOLINT
+  DoInsert(40000, 80000);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 80K records."
-       << std::endl;
+            << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(80000, 160000); // NOLINT
-  std::cout << "Perform 100 records read_from_scan on a table with 160K records."
-       << std::endl;
+  DoInsert(80000, 160000);  // NOLINT
+  std::cout
+      << "Perform 100 records read_from_scan on a table with 160K records."
+      << std::endl;
   DoScan();
 
   /**
    * Prepare for next experiments.
    */
-  DoInsert(160000, 320000); // NOLINT
-  std::cout << "Perform 100 records read_from_scan on a table with 320K records."
-       << std::endl;
+  DoInsert(160000, 320000);  // NOLINT
+  std::cout
+      << "Perform 100 records read_from_scan on a table with 320K records."
+      << std::endl;
   DoScan();
 
   EXPECT_EQ(Status::OK, kvs::leave(get_s()));

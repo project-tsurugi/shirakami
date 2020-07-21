@@ -73,7 +73,7 @@ void invoke_epocher() {
   kEpochThread = std::thread(epocher);
 }
 
-std::uint32_t load_acquire_ge() { // NOLINT
+std::uint32_t load_acquire_ge() {  // NOLINT
   return __atomic_load_n(&(kGlobalEpoch), __ATOMIC_ACQUIRE);
 }
 

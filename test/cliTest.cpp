@@ -176,8 +176,8 @@ namespace shirakami::testing {
 
 class cliTest : public ::testing::Test {};
 
-TEST_F(cliTest, single_thread_test) { // NOLINT
-  init(); // NOLINT
+TEST_F(cliTest, single_thread_test) {  // NOLINT
+  init();                              // NOLINT
   test();
   fin();
 }

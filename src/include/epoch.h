@@ -25,7 +25,7 @@ using Epoch = std::uint32_t;
 
 extern void atomic_add_global_epoch();
 
-extern bool check_epoch_loaded(); // NOLINT
+extern bool check_epoch_loaded();  // NOLINT
 
 /**
  * @brief epoch thread
@@ -39,7 +39,7 @@ extern void epocher();
  */
 extern void invoke_epocher();
 
-extern std::uint32_t load_acquire_ge(); // NOLINT
+extern std::uint32_t load_acquire_ge();  // NOLINT
 
 extern Epoch kGlobalEpoch;
 extern Epoch kReclamationEpoch;
@@ -48,4 +48,4 @@ extern Epoch kReclamationEpoch;
 extern std::thread kEpochThread;
 extern std::atomic<bool> kEpochThreadEnd;
 
-} // namespace kvs.
+}  // namespace kvs.

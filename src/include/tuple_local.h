@@ -14,7 +14,7 @@ namespace kvs {
 
 class Tuple::Impl {
 public:
-  Impl() {} // NOLINT
+  Impl() {}  // NOLINT
   Impl(const char* key_ptr, std::size_t key_length, const char* value_ptr,
        std::size_t value_length);
 

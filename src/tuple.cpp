@@ -114,7 +114,8 @@ void Tuple::Impl::set(const char* key_ptr, std::size_t key_length,
   this->need_delete_pvalue_ = true;
 }
 
-[[maybe_unused]] void Tuple::Impl::set_key(const char* key_ptr, std::size_t key_length) & {
+[[maybe_unused]] void Tuple::Impl::set_key(const char* key_ptr,
+                                           std::size_t key_length) & {
   key_.assign(key_ptr, key_length);
 }
 
@@ -143,8 +144,8 @@ void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length,
 
 Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
 
-Tuple::Tuple(const char* key_ptr, std::size_t key_length,
-             const char* val_ptr, std::size_t val_length)
+Tuple::Tuple(const char* key_ptr, std::size_t key_length, const char* val_ptr,
+             std::size_t val_length)
     : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {
 }
 

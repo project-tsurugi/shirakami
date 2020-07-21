@@ -62,7 +62,7 @@ void delete_all_garbage_records() {
 void delete_all_garbage_values() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
     for (auto&& itr : kGarbageValues.at(i)) {
-      delete itr.first; // NOLINT
+      delete itr.first;  // NOLINT
     }
     kGarbageValues.at(i).clear();
   }
@@ -77,7 +77,7 @@ void ThreadInfo::gc_records_and_values() const {
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
         if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
-          delete *itr; // NOLINT
+          delete *itr;  // NOLINT
           itr = this->gc_record_container_->erase(itr);
         } else {
           break;
@@ -94,7 +94,7 @@ void ThreadInfo::gc_records_and_values() const {
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {
         if (itr->second <= loadAcquire(kReclamationEpoch)) {
-          delete itr->first; // NOLINT
+          delete itr->first;  // NOLINT
           itr = this->gc_value_container_->erase(itr);
         } else {
           break;

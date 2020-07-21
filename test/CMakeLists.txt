@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-    "*.cpp"
-    "*.cc"
-)
+        "*.cpp"
+        "*.cc"
+        )
 
 register_tests(
-    TARGET shirakami
-    DEPENDS shirakami-impl
-    SOURCES ${TEST_SOURCES}
+        TARGET shirakami
+        DEPENDS shirakami-impl
+        SOURCES ${TEST_SOURCES}
 )
