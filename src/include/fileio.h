@@ -1,5 +1,5 @@
 /**
- * @file fileio.hh
+ * @file fileio.h
  * @brief File IO utilities.
  * @details This source is implemented by refering the source
  * https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.

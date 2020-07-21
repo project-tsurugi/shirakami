@@ -1,5 +1,5 @@
 /**
- * @file memory.hh
+ * @file memory.h
  */
 
 #pragma once

@@ -1,5 +1,5 @@
 /**
- * @file scheme.hh
+ * @file scheme.h
  * @brief private scheme of transaction engine
  */
 

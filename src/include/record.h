@@ -1,5 +1,5 @@
 /**
- * @file record.hh
+ * @file record.h
  * @brief header about record
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file tsc.hh
+ * @file tsc.h
  */
 
 #pragma once

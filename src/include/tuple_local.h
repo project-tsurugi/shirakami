@@ -1,5 +1,5 @@
 /**
- * @file tuple.hh
+ * @file tuple.h
  * @brief header about Tuple::Impl
  */
 

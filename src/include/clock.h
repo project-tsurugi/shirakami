@@ -1,5 +1,5 @@
 /**
- * @file clock.hh
+ * @file clock.h
  * @brief functions about clock.
  */
 

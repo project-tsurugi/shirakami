@@ -1,5 +1,5 @@
 /**
- * @file tid.hh
+ * @file tid.h
  * @brief utilities about transaction id
  */
 
@@ -85,8 +85,8 @@ public:
   void set_absent(const bool absent) & { this->absent_ = absent; }  // NOLINT
 
   [[maybe_unused]] void set_tid(const uint64_t tid) & {
-    this->tid_ = tid;
-  }  // NOLINT
+    this->tid_ = tid;  // NOLINT
+  }
 
   void set_epoch(const Epoch epoch) & { this->epoch_ = epoch; }  // NOLINT
 

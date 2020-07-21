@@ -1,5 +1,5 @@
 /**
- * @file compiler.hh
+ * @file compiler.h
  */
 
 #pragma once

@@ -1,5 +1,5 @@
 /**
- * @file epoch.hh
+ * @file epoch.h
  * @brief header about epoch
  */
 

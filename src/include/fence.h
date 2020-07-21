@@ -1,5 +1,5 @@
 /**
- * @file fence.hh
+ * @file fence.h
  */
 
 #pragma once

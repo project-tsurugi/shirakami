@@ -1,5 +1,5 @@
 /**
- * @file cpu.hh
+ * @file cpu.h
  */
 
 #pragma once
