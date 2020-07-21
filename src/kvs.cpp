@@ -31,8 +31,10 @@ static void init_kThreadTable() {
      */
     std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
     itr.set_gc_container_index(gc_index);
-    itr.set_gc_record_container(&kGarbageRecords.at(gc_index));
-    itr.set_gc_value_container(&kGarbageValues.at(gc_index));
+    itr.set_gc_record_container(
+        &garbage_collection::get_garbage_records_at(gc_index));
+    itr.set_gc_value_container(
+        &garbage_collection::get_garbage_values_at(gc_index));
 
     /**
      * about logging.
@@ -115,7 +117,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
 }
 
 void fin() {
-  release_all_heap_objects();
+  garbage_collection::release_all_heap_objects();
 
   // Stop DB operation.
   epoch::set_epoch_thread_end(true);

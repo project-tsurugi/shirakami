@@ -15,23 +15,13 @@
 
 namespace kvs {
 
-alignas(CACHE_LINE_SIZE) std::array<
-    std::vector<Record*>, KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords{};
-alignas(CACHE_LINE_SIZE)
-    std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords{};
-alignas(CACHE_LINE_SIZE)
-    std::array<std::vector<std::pair<std::string*, epoch::epoch_t>>,
-               KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues{};
-alignas(CACHE_LINE_SIZE)
-    std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues{};
-
-void release_all_heap_objects() {
-  remove_all_leaf_from_mtdb_and_release();
-  delete_all_garbage_records();
-  delete_all_garbage_values();
+[[maybe_unused]] void garbage_collection::release_all_heap_objects() {
+  garbage_collection::remove_all_leaf_from_mtdb_and_release();
+  garbage_collection::delete_all_garbage_records();
+  garbage_collection::delete_all_garbage_values();
 }
 
-void remove_all_leaf_from_mtdb_and_release() {
+void garbage_collection::remove_all_leaf_from_mtdb_and_release() {
   std::vector<const Record*> scan_res;
   MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);  // NOLINT
 
@@ -49,21 +39,21 @@ void remove_all_leaf_from_mtdb_and_release() {
   if (!scan_res.empty()) std::abort();
 }
 
-void delete_all_garbage_records() {
+void garbage_collection::delete_all_garbage_records() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto&& itr : kGarbageRecords.at(i)) {
+    for (auto&& itr : get_garbage_records_at(i)) {
       delete itr;  // NOLINT
     }
-    kGarbageRecords.at(i).clear();
+    get_garbage_records_at(i).clear();
   }
 }
 
-void delete_all_garbage_values() {
+void garbage_collection::delete_all_garbage_values() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto&& itr : kGarbageValues.at(i)) {
+    for (auto&& itr : get_garbage_values_at(i)) {
       delete itr.first;  // NOLINT
     }
-    kGarbageValues.at(i).clear();
+    get_garbage_values_at(i).clear();
   }
 }
 
@@ -71,7 +61,7 @@ void ThreadInfo::gc_records_and_values() const {
   // for records
   {
     std::mutex& mutex_for_gclist =
-        kMutexGarbageRecords.at(this->gc_container_index_);
+        garbage_collection::get_mutex_garbage_records_at(this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
@@ -88,7 +78,7 @@ void ThreadInfo::gc_records_and_values() const {
   // for values
   {
     std::mutex& mutex_for_gclist =
-        kMutexGarbageValues.at(this->gc_container_index_);
+        garbage_collection::get_mutex_garbage_values_at(this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {

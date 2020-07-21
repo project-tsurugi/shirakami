@@ -83,7 +83,7 @@ static void write_phase(ThreadInfo* ti, const tid_word& max_rset,
         storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
         if (old_value != nullptr) {
           std::mutex& mutex_for_gclist =
-              kMutexGarbageValues.at(ti->get_gc_container_index());
+              garbage_collection::get_mutex_garbage_values_at(ti->get_gc_container_index());
           mutex_for_gclist.lock();
           ti->get_gc_value_container()->emplace_back(
               std::make_pair(old_value, ti->get_epoch()));
@@ -106,7 +106,7 @@ static void write_phase(ThreadInfo* ti, const tid_word& max_rset,
          * create information for garbage collection.
          */
         std::mutex& mutex_for_gclist =
-            kMutexGarbageRecords.at(ti->get_gc_container_index());
+            garbage_collection::get_mutex_garbage_records_at(ti->get_gc_container_index());
         mutex_for_gclist.lock();
         ti->get_gc_record_container()->emplace_back(recptr);
         mutex_for_gclist.unlock();

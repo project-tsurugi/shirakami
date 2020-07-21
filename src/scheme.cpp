@@ -97,7 +97,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
        * create information for garbage collection.
        */
       std::mutex& mutex_for_gclist =
-          kMutexGarbageRecords.at(gc_container_index_);
+          garbage_collection::get_mutex_garbage_records_at(gc_container_index_);
       mutex_for_gclist.lock();
       gc_record_container_->emplace_back(itr.get_rec_ptr());
       mutex_for_gclist.unlock();
