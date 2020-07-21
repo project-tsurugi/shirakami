@@ -20,7 +20,7 @@ public:
       bool latest_ : 1;
       bool absent_ : 1;
       uint64_t tid_ : 29;  // NOLINT
-      epoch_t epoch_ : 32;   // NOLINT
+      epoch::epoch_t epoch_ : 32;   // NOLINT
     };
   };
 
@@ -68,9 +68,9 @@ public:
 
   [[maybe_unused]] uint64_t get_tid() const& { return tid_; }  // NOLINT
 
-  epoch_t get_epoch() & { return epoch_; }  // NOLINT
+  epoch::epoch_t get_epoch() & { return epoch_; }  // NOLINT
 
-  [[maybe_unused]] epoch_t get_epoch() const& { return epoch_; }  // NOLINT
+  [[maybe_unused]] epoch::epoch_t get_epoch() const& { return epoch_; }  // NOLINT
 
   void inc_tid() & { this->tid_ = this->tid_ + 1; }  // NOLINT
 
@@ -88,7 +88,7 @@ public:
     this->tid_ = tid;  // NOLINT
   }
 
-  void set_epoch(const epoch_t epoch) & { this->epoch_ = epoch; }  // NOLINT
+  void set_epoch(const epoch::epoch_t epoch) & { this->epoch_ = epoch; }  // NOLINT
 
   void display();
 

@@ -16,7 +16,7 @@
 
 namespace kvs {
 
-static void invoke_core_thread() { invoke_epocher(); }
+static void invoke_core_thread() { epoch::invoke_epocher(); }
 
 static void init_kThreadTable() {
   uint64_t ctr(0);
@@ -118,8 +118,8 @@ void fin() {
   release_all_heap_objects();
 
   // Stop DB operation.
-  kEpochThreadEnd.store(true, std::memory_order_release);
-  kEpochThread.join();
+  epoch::set_epoch_thread_end(true);
+  epoch::join_epoch_thread();
   fin_kThreadTable();
 }
 

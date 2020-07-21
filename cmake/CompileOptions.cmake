@@ -46,6 +46,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
+add_definitions(-DKVS_EPOCH_TIME=40)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
 add_definitions(-DKVS_MAX_KEY_LENGTH=1000)

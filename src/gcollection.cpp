@@ -7,7 +7,6 @@
 
 #include <utility>
 
-#include "atomic_wrapper.h"
 #include "epoch.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
@@ -20,9 +19,9 @@ alignas(CACHE_LINE_SIZE) std::array<
     std::vector<Record*>, KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords{};
 alignas(CACHE_LINE_SIZE)
     std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords{};
-alignas(
-    CACHE_LINE_SIZE) std::array<std::vector<std::pair<std::string*, epoch_t>>,
-                                KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues{};
+alignas(CACHE_LINE_SIZE)
+    std::array<std::vector<std::pair<std::string*, epoch::epoch_t>>,
+               KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues{};
 alignas(CACHE_LINE_SIZE)
     std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues{};
 
@@ -76,7 +75,7 @@ void ThreadInfo::gc_records_and_values() const {
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
-        if ((*itr)->get_tidw().get_epoch() <= loadAcquire(kReclamationEpoch)) {
+        if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
           delete *itr;  // NOLINT
           itr = this->gc_record_container_->erase(itr);
         } else {
@@ -93,7 +92,7 @@ void ThreadInfo::gc_records_and_values() const {
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {
-        if (itr->second <= loadAcquire(kReclamationEpoch)) {
+        if (itr->second <= epoch::get_reclamation_epoch()) {
           delete itr->first;  // NOLINT
           itr = this->gc_value_container_->erase(itr);
         } else {

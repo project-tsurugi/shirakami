@@ -10,9 +10,6 @@
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 
-#define KVS_EPOCH_TIME 40  // NOLINT
-// ms
-
 namespace kvs {
 
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;

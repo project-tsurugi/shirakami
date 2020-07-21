@@ -51,7 +51,7 @@ extern void remove_all_leaf_from_mtdb_and_release();
 extern std::array<std::vector<Record*>, KVS_NUMBER_OF_LOGICAL_CORES>
     kGarbageRecords;
 extern std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords;
-extern std::array<std::vector<std::pair<std::string*, epoch_t>>,
+extern std::array<std::vector<std::pair<std::string*, epoch::epoch_t>>,
                   KVS_NUMBER_OF_LOGICAL_CORES>
     kGarbageValues;
 extern std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues;

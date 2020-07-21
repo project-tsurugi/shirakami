@@ -162,7 +162,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   if (log_set.empty()) return;
 
   sort(log_set.begin(), log_set.end());
-  const epoch_t recovery_epoch = log_set.back().get_tid().get_epoch() - 2;
+  const epoch::epoch_t recovery_epoch = log_set.back().get_tid().get_epoch() - 2;
 
   Token s{};
   Storage st{};
