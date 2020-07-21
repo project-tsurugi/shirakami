@@ -49,7 +49,7 @@ public:
 
   static void join_epoch_thread() { kEpochThread.join(); }
 
-  static std::uint32_t load_acquire_ge();  // NOLINT
+  static std::uint32_t load_acquire_global_epoch();  // NOLINT
 
   static void set_epoch_thread_end(bool tf) {
     kEpochThreadEnd.store(tf, std::memory_order_release);

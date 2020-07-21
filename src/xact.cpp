@@ -25,7 +25,7 @@ alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;              // NOLINT
 void tbegin(Token token) {
   auto* ti = static_cast<ThreadInfo*>(token);
   ti->set_txbegan(true);
-  ti->set_epoch(epoch::load_acquire_ge());
+  ti->set_epoch(epoch::load_acquire_global_epoch());
 }
 
 static void write_phase(ThreadInfo* ti, const tid_word& max_rset,
@@ -203,7 +203,7 @@ Status commit(Token token) {  // NOLINT
 
   // Serialization point
   asm volatile("" ::: "memory");  // NOLINT
-  ti->set_epoch(epoch::load_acquire_ge());
+  ti->set_epoch(epoch::load_acquire_global_epoch());
   asm volatile("" ::: "memory");  // NOLINT
 
   // Phase 3: Validation

@@ -14,7 +14,7 @@
 namespace kvs {
 
 void epoch::atomic_add_global_epoch() {
-  std::uint32_t expected = load_acquire_ge();
+  std::uint32_t expected = load_acquire_global_epoch();
   for (;;) {
     std::uint32_t desired = expected + 1;
     if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired,
@@ -26,7 +26,7 @@ void epoch::atomic_add_global_epoch() {
 }
 
 bool epoch::check_epoch_loaded() {  // NOLINT
-  uint64_t curEpoch = load_acquire_ge();
+  uint64_t curEpoch = load_acquire_global_epoch();
 
   for (auto&& itr : kThreadTable) {
     if (itr.get_visible()
@@ -72,7 +72,7 @@ void epoch::invoke_epocher() {
   kEpochThread = std::thread(epocher);
 }
 
-std::uint32_t epoch::load_acquire_ge() {  // NOLINT
+std::uint32_t epoch::load_acquire_global_epoch() {  // NOLINT
   return loadAcquire(epoch::kGlobalEpoch);
 }
 
