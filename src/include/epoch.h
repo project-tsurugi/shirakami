@@ -11,7 +11,7 @@
 namespace kvs {
 
 /**
- * @brief Epoch class
+ * @brief epoch_t
  * @details
  * Tidword is composed of union ...
  * 1bits : lock
@@ -19,9 +19,9 @@ namespace kvs {
  * 1bits : absent
  * 29bits : tid
  * 32 bits : epoch.
- * So Epoch should be uint32_t.
+ * So epoch_t should be uint32_t.
  */
-using Epoch = std::uint32_t;
+using epoch_t = std::uint32_t;
 
 extern void atomic_add_global_epoch();
 
@@ -41,8 +41,8 @@ extern void invoke_epocher();
 
 extern std::uint32_t load_acquire_ge();  // NOLINT
 
-extern Epoch kGlobalEpoch;
-extern Epoch kReclamationEpoch;
+extern epoch_t kGlobalEpoch;
+extern epoch_t kReclamationEpoch;
 
 // about epoch thread
 extern std::thread kEpochThread;

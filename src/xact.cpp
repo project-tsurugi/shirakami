@@ -28,8 +28,8 @@ void tbegin(Token token) {
   ti->set_epoch(load_acquire_ge());
 }
 
-static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
-                        const TidWord& max_wset) {
+static void write_phase(ThreadInfo* ti, const tid_word& max_rset,
+                        const tid_word& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
    * It calculates the smallest number that is
@@ -37,9 +37,9 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
    * (b) larger than the worker's most recently chosen TID,
    * and (C) in the current global epoch.
    */
-  TidWord tid_a;
-  TidWord tid_b;
-  TidWord tid_c;
+  tid_word tid_a;
+  tid_word tid_b;
+  tid_word tid_c;
 
   /*
    * calculates (a)
@@ -59,7 +59,7 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
   tid_c.set_epoch(ti->get_epoch());
 
   /* compare a, b, c */
-  TidWord maxtid = std::max({tid_a, tid_b, tid_c});
+  tid_word maxtid = std::max({tid_a, tid_b, tid_c});
   maxtid.set_lock(false);
   maxtid.set_absent(false);
   maxtid.set_latest(true);
@@ -96,7 +96,7 @@ static void write_phase(ThreadInfo* ti, const TidWord& max_rset,
         break;
       }
       case OP_TYPE::DELETE: {
-        TidWord deletetid = maxtid;
+        tid_word deletetid = maxtid;
         deletetid.set_absent(true);
         std::string_view key_view = recptr->get_tuple().get_key();
         MTDB.remove_value(key_view.data(), key_view.size());
@@ -164,15 +164,15 @@ Status insert_record_to_masstree(char const* key,  // NOLINT
 
 Status commit(Token token) {  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
-  TidWord max_rset;
-  TidWord max_wset;
+  tid_word max_rset;
+  tid_word max_wset;
 
   // Phase 1: Sort lock list;
   std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
 
   // Phase 2: Lock write set;
-  TidWord expected;
-  TidWord desired;
+  tid_word expected;
+  tid_word desired;
   for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end();
        ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
@@ -207,7 +207,7 @@ Status commit(Token token) {  // NOLINT
   asm volatile("" ::: "memory");  // NOLINT
 
   // Phase 3: Validation
-  TidWord check;
+  tid_word check;
   for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end();
        itr++) {
     const Record* rec_ptr = itr->get_rec_ptr();
@@ -273,8 +273,8 @@ Status leave(Token token) {  // NOLINT
 }
 
 Status read_record(Record& res, const Record* const dest) {  // NOLINT
-  TidWord f_check;
-  TidWord s_check;  // first_check, second_check for occ
+  tid_word f_check;
+  tid_word s_check;  // first_check, second_check for occ
 
   f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
@@ -352,7 +352,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
   if (checktid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -386,7 +386,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
   if (checktid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -438,7 +438,7 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  TidWord checktid(loadAcquire(record->get_tidw().get_obj()));
+  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
   if (checktid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel

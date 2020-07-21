@@ -37,10 +37,10 @@ void Log::LogHeader::set_checksum(unsigned int checksum) & {
 
 unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   // compute checksum
-  // TidWord
+  // tid_word
   unsigned int chkSum = 0;
   const char* charitr = reinterpret_cast<char*>(this);  // NOLINT
-  for (std::size_t i = 0; i < sizeof(TidWord); ++i) {
+  for (std::size_t i = 0; i < sizeof(tid_word); ++i) {
     chkSum += (*charitr);
     ++charitr;  // NOLINT
   }
@@ -101,7 +101,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
     LogHeader log_header{};
     std::vector<Tuple> tuple_buffer;
 
-    const std::size_t fix_size = sizeof(TidWord) + sizeof(OP_TYPE);
+    const std::size_t fix_size = sizeof(tid_word) + sizeof(OP_TYPE);
     while (sizeof(LogHeader) ==
            logfile.read(reinterpret_cast<void*>(&log_header),  // NOLINT
                         sizeof(LogHeader))) {
@@ -162,7 +162,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   if (log_set.empty()) return;
 
   sort(log_set.begin(), log_set.end());
-  const Epoch recovery_epoch = log_set.back().get_tid().get_epoch() - 2;
+  const epoch_t recovery_epoch = log_set.back().get_tid().get_epoch() - 2;
 
   Token s{};
   Storage st{};

@@ -365,7 +365,7 @@ public:
    * Getter
    */
 
-  [[nodiscard]] Epoch get_epoch() const& {  // NOLINT
+  [[nodiscard]] epoch_t get_epoch() const& {  // NOLINT
     return epoch_.load(std::memory_order_acquire);
   }
 
@@ -377,7 +377,7 @@ public:
     return gc_record_container_;
   }
 
-  std::vector<std::pair<std::string*, Epoch>>*
+  std::vector<std::pair<std::string*, epoch_t>>*
   get_gc_value_container() {  // NOLINT
     return gc_value_container_;
   }
@@ -390,9 +390,9 @@ public:
     return log_set_;
   }
 
-  TidWord& get_mrctid() & { return mrctid_; }  // NOLINT
+  tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const TidWord& get_mrctid() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid() const& {  // NOLINT
     return mrctid_;
   }
 
@@ -447,7 +447,7 @@ public:
 
   [[maybe_unused]] void set_token(Token token) & { token_ = token; }
 
-  void set_epoch(Epoch epoch) & {
+  void set_epoch(epoch_t epoch) & {
     epoch_.store(epoch, std::memory_order_release);
   }
 
@@ -460,11 +460,11 @@ public:
   }
 
   void set_gc_value_container(  // NOLINT
-      std::vector<std::pair<std::string*, Epoch>>* new_cont) {
+      std::vector<std::pair<std::string*, epoch_t>>* new_cont) {
     gc_value_container_ = new_cont;
   }
 
-  void set_mrctid(const TidWord& tid) & { mrctid_ = tid; }
+  void set_mrctid(const tid_word& tid) & { mrctid_ = tid; }
 
   void set_visible(bool visible) & {
     visible_.store(visible, std::memory_order_release);
@@ -474,8 +474,8 @@ public:
 
 private:
   alignas(CACHE_LINE_SIZE) Token token_{};
-  std::atomic<Epoch> epoch_{};
-  TidWord mrctid_{};  // most recently chosen tid, for calculate new tids.
+  std::atomic<epoch_t> epoch_{};
+  tid_word mrctid_{};  // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible_{};
   bool txbegan_{};
 
@@ -484,7 +484,7 @@ private:
    */
   std::size_t gc_container_index_{};  // common to record and value;
   std::vector<Record*>* gc_record_container_{};
-  std::vector<std::pair<std::string*, Epoch>>* gc_value_container_{};
+  std::vector<std::pair<std::string*, epoch_t>>* gc_value_container_{};
 
   /**
    * about holding operation info.

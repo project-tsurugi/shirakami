@@ -69,7 +69,7 @@ public:
   public:
     LogRecord() = default;
 
-    LogRecord(const TidWord& tid, const OP_TYPE op, const Tuple* const tuple)
+    LogRecord(const tid_word& tid, const OP_TYPE op, const Tuple* const tuple)
         : tid_(tid), op_(op), tuple_(tuple) {}
 
     bool operator<(const LogRecord& right) {  // NOLINT
@@ -81,9 +81,9 @@ public:
      */
     unsigned int compute_checksum() &;  // NOLINT
 
-    TidWord& get_tid() & { return tid_; }  // NOLINT
+    tid_word& get_tid() & { return tid_; }  // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] const TidWord& get_tid() const& {  // NOLINT
+    [[maybe_unused]] [[nodiscard]] const tid_word& get_tid() const& {  // NOLINT
       return tid_;
     }
 
@@ -98,7 +98,7 @@ public:
     [[maybe_unused]] void set_tuple(Tuple* tuple) { this->tuple_ = tuple; }
 
   private:
-    TidWord tid_{};
+    tid_word tid_{};
     OP_TYPE op_{OP_TYPE::NONE};
     const Tuple* tuple_{nullptr};
   };

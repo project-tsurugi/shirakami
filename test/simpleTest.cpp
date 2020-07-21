@@ -34,7 +34,7 @@ TEST_F(SimpleTest, project_root) {  // NOLINT
 
 TEST_F(SimpleTest, tidword) {  // NOLINT
   // check the alignment of union
-  TidWord tidword;
+  tid_word tidword;
   tidword.set_epoch(1);
   tidword.set_lock(true);
   [[maybe_unused]] uint64_t res = tidword.get_obj();

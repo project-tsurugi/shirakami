@@ -36,18 +36,18 @@ public:
     return *this;
   }
 
-  TidWord& get_tidw() { return tidw_; }  // NOLINT
+  tid_word& get_tidw() { return tidw_; }  // NOLINT
 
-  [[nodiscard]] const TidWord& get_tidw() const { return tidw_; }  // NOLINT
+  [[nodiscard]] const tid_word& get_tidw() const { return tidw_; }  // NOLINT
 
   Tuple& get_tuple() { return tuple_; }  // NOLINT
 
   [[nodiscard]] const Tuple& get_tuple() const { return tuple_; }  // NOLINT
 
-  void set_tidw(TidWord tidw) & { tidw_.set_obj(tidw.get_obj()); }
+  void set_tidw(tid_word tidw) & { tidw_.set_obj(tidw.get_obj()); }
 
 private:
-  TidWord tidw_;
+  tid_word tidw_;
   Tuple tuple_;
 };
 

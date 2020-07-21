@@ -14,7 +14,7 @@ using std::cout, std::endl;
 
 namespace kvs {
 
-void TidWord::display() {
+void tid_word::display() {
   cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_) << endl;  // NOLINT
   cout << "lock_ : " << lock_ << endl;                               // NOLINT
   cout << "latest_ : " << latest_ << endl;                           // NOLINT

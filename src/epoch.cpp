@@ -15,8 +15,8 @@ namespace kvs {
 
 std::thread kEpochThread;           // NOLINT
 std::atomic<bool> kEpochThreadEnd;  // NOLINT
-Epoch kGlobalEpoch(1);
-Epoch kReclamationEpoch(0);
+epoch_t kGlobalEpoch(1);
+epoch_t kReclamationEpoch(0);
 
 void atomic_add_global_epoch() {
   std::uint32_t expected = load_acquire_ge();

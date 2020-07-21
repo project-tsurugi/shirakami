@@ -21,7 +21,7 @@ alignas(CACHE_LINE_SIZE) std::array<
 alignas(CACHE_LINE_SIZE)
     std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords{};
 alignas(
-    CACHE_LINE_SIZE) std::array<std::vector<std::pair<std::string*, Epoch>>,
+    CACHE_LINE_SIZE) std::array<std::vector<std::pair<std::string*, epoch_t>>,
                                 KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues{};
 alignas(CACHE_LINE_SIZE)
     std::array<std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues{};

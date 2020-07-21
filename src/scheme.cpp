@@ -101,7 +101,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
       mutex_for_gclist.lock();
       gc_record_container_->emplace_back(itr.get_rec_ptr());
       mutex_for_gclist.unlock();
-      TidWord deletetid;
+      tid_word deletetid;
       deletetid.set_lock(false);
       deletetid.set_latest(false);
       deletetid.set_absent(false);
@@ -161,8 +161,8 @@ const WriteSetObj* ThreadInfo::search_write_set(  // NOLINT
 }
 
 void ThreadInfo::unlock_write_set() {
-  TidWord expected{};
-  TidWord desired{};
+  tid_word expected{};
+  tid_word desired{};
 
   for (auto& itr : write_set) {
     Record* recptr = itr.get_rec_ptr();
@@ -176,8 +176,8 @@ void ThreadInfo::unlock_write_set() {
 void ThreadInfo::unlock_write_set(  // NOLINT
     std::vector<WriteSetObj>::iterator begin,
     std::vector<WriteSetObj>::iterator end) {
-  TidWord expected;
-  TidWord desired;
+  tid_word expected;
+  tid_word desired;
 
   for (auto itr = begin; itr != end; ++itr) {
     expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_);  // NOLINT
