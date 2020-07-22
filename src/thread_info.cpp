@@ -16,7 +16,6 @@ namespace shirakami {
 void ThreadInfo::clean_up_ops_set() {
   read_set.clear();
   write_set.clear();
-  opr_set.clear();
 }
 
 void ThreadInfo::clean_up_scan_caches() {

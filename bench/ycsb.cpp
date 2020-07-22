@@ -164,6 +164,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 
   Token token{};
   Storage storage{};
+  std::vector<shirakami::OprObj> opr_set;
   enter(token);
   auto* ti = static_cast<ThreadInfo*>(token);
 
@@ -171,8 +172,8 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   while (!loadAcquire(start)) _mm_pause();
 
   while (likely(!loadAcquire(quit))) {
-    gen_tx_rw(ti->get_opr_set(), kCardinality, kNops, kRRatio, rnd, zipf);
-    for (auto&& itr : ti->get_opr_set()) {
+    gen_tx_rw(opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
+    for (auto&& itr : opr_set) {
       if (itr.get_type() == OP_TYPE::SEARCH) {
         Tuple* tuple{};
         search_key(token, storage, itr.get_key().data(), itr.get_key().size(),

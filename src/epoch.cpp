@@ -29,9 +29,7 @@ bool epoch::check_epoch_loaded() {  // NOLINT
   uint64_t curEpoch = load_acquire_global_epoch();
 
   for (auto&& itr : kThreadTable) {
-    if (itr.get_visible()
-        //&& loadAcquire(itr->epoch_) != curEpoch) {
-        && itr.get_epoch() != curEpoch) {
+    if (itr.get_visible() && itr.get_epoch() != curEpoch) {
       return false;
     }
   }
@@ -45,11 +43,6 @@ void epoch::epocher() {
    * To increment it,
    * all the worker-threads need to read the latest one.
    */
-
-#ifdef KVS_Linux
-  setThreadAffinity(static_cast<int>(CorePosition::EPOCHER));
-#endif
-
   while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
     sleepMs(KVS_EPOCH_TIME);
 

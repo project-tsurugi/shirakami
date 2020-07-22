@@ -19,9 +19,4 @@ static void init_kThreadTable();
  */
 static void fin_kThreadTable();
 
-/**
- * @brief invoke core threads about shirakami.
- */
-static void invoke_core_thread();
-
 }  // namespace shirakami

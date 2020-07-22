@@ -64,6 +64,11 @@ public:
 
   [[maybe_unused]] void display_write_set();
 
+  bool cas_visible(bool& expected, bool& desired) & {  // NOLINT
+    return visible_.compare_exchange_strong(expected, desired,
+                                            std::memory_order_acq_rel);
+  }
+
   /**
    * @brief check whether it already executed update or insert operation.
    * @param [in] key the key of record.
@@ -76,6 +81,80 @@ public:
   Status check_delete_after_write(const char* key,  // NOLINT
                                   std::size_t len_key);
 
+  void gc_records_and_values() const;
+
+  [[nodiscard]] epoch::epoch_t get_epoch() const& {  // NOLINT
+    return epoch_.load(std::memory_order_acquire);
+  }
+
+  [[maybe_unused]] std::size_t get_gc_container_index() {  // NOLINT
+    return gc_container_index_;
+  }
+
+  std::vector<Record*>* get_gc_record_container() {  // NOLINT
+    return gc_record_container_;
+  }
+
+  std::vector<std::pair<std::string*, epoch::epoch_t>>*
+  get_gc_value_container() {  // NOLINT
+    return gc_value_container_;
+  }
+
+  std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
+    return len_rkey_;
+  }
+
+  std::vector<Log::LogRecord>& get_log_set() {  // NOLINT
+    return log_set_;
+  }
+
+  tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
+
+  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid() const& {  // NOLINT
+    return mrctid_;
+  }
+
+  std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
+    return r_exclusive_;
+  }
+
+  std::map<ScanHandle, std::unique_ptr<char[]>>& get_rkey() {  // NOLINT
+    return rkey_;
+  }
+
+  std::vector<ReadSetObj>& get_read_set() {  // NOLINT
+    return read_set;
+  }
+
+  std::map<ScanHandle, std::vector<const Record*>>&
+  get_scan_cache() {  // NOLINT
+    return scan_cache_;
+  }
+
+  std::map<ScanHandle, std::size_t>& get_scan_cache_itr() {  // NOLINT
+    return scan_cache_itr_;
+  }
+
+  [[maybe_unused]] Token& get_token() & { return token_; }  // NOLINT
+
+  [[maybe_unused]] [[nodiscard]] const Token& get_token() const& {  // NOLINT
+    return token_;
+  }
+
+  bool& get_txbegan() & { return txbegan_; }  // NOLINT
+
+  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& {  // NOLINT
+    return txbegan_;
+  }  // NOLINT
+
+  [[nodiscard]] bool get_visible() const& {  // NOLINT
+    return visible_.load(std::memory_order_acquire);
+  }
+
+  std::vector<WriteSetObj>& get_write_set() {  // NOLINT
+    return write_set;
+  }
+
   /**
    * @brief Remove inserted records of write set from masstree.
    *
@@ -86,8 +165,6 @@ public:
    * @pre This function is called at abort.
    */
   void remove_inserted_records_of_write_set_from_masstree();
-
-  void gc_records_and_values() const;
 
   /**
    * @brief check whether it already executed search operation.
@@ -147,99 +224,6 @@ public:
    */
   void wal(uint64_t ctid);
 
-  /**
-   * CAS
-   */
-
-  bool cas_visible(bool& expected, bool& desired) & {  // NOLINT
-    return visible_.compare_exchange_strong(expected, desired,
-                                            std::memory_order_acq_rel);
-  }
-
-  /**
-   * Getter
-   */
-
-  [[nodiscard]] epoch::epoch_t get_epoch() const& {  // NOLINT
-    return epoch_.load(std::memory_order_acquire);
-  }
-
-  [[maybe_unused]] std::size_t get_gc_container_index() {  // NOLINT
-    return gc_container_index_;
-  }
-
-  std::vector<Record*>* get_gc_record_container() {  // NOLINT
-    return gc_record_container_;
-  }
-
-  std::vector<std::pair<std::string*, epoch::epoch_t>>*
-  get_gc_value_container() {  // NOLINT
-    return gc_value_container_;
-  }
-
-  std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
-    return len_rkey_;
-  }
-
-  std::vector<Log::LogRecord>& get_log_set() {  // NOLINT
-    return log_set_;
-  }
-
-  tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
-
-  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid() const& {  // NOLINT
-    return mrctid_;
-  }
-
-  std::vector<OprObj>& get_opr_set() {  // NOLINT
-    return opr_set;
-  }
-
-  std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
-    return r_exclusive_;
-  }
-
-  std::map<ScanHandle, std::unique_ptr<char[]>>& get_rkey() {  // NOLINT
-    return rkey_;
-  }
-
-  std::vector<ReadSetObj>& get_read_set() {  // NOLINT
-    return read_set;
-  }
-
-  std::map<ScanHandle, std::vector<const Record*>>&
-  get_scan_cache() {  // NOLINT
-    return scan_cache_;
-  }
-
-  std::map<ScanHandle, std::size_t>& get_scan_cache_itr() {  // NOLINT
-    return scan_cache_itr_;
-  }
-
-  [[maybe_unused]] Token& get_token() & { return token_; }  // NOLINT
-
-  [[maybe_unused]] [[nodiscard]] const Token& get_token() const& {  // NOLINT
-    return token_;
-  }
-
-  bool& get_txbegan() & { return txbegan_; }  // NOLINT
-
-  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& {  // NOLINT
-    return txbegan_;
-  }  // NOLINT
-
-  [[nodiscard]] bool get_visible() const& {  // NOLINT
-    return visible_.load(std::memory_order_acquire);
-  }
-
-  std::vector<WriteSetObj>& get_write_set() {  // NOLINT
-    return write_set;
-  }
-
-  /**
-   * setter
-   */
-
   [[maybe_unused]] void set_token(Token token) & { token_ = token; }
 
   void set_epoch(epoch::epoch_t epoch) & {
@@ -286,7 +270,6 @@ private:
    */
   std::vector<ReadSetObj> read_set{};
   std::vector<WriteSetObj> write_set{};
-  std::vector<OprObj> opr_set{};
 
   /**
    * about scan operation.

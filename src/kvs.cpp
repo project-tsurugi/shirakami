@@ -16,8 +16,6 @@
 
 namespace shirakami {
 
-static void invoke_core_thread() { epoch::invoke_epocher(); }
-
 static void init_kThreadTable() {
   uint64_t ctr(0);
   for (auto&& itr : kThreadTable) {
@@ -111,7 +109,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
   // single_recovery_from_log();
 
   init_kThreadTable();
-  invoke_core_thread();
+  epoch::invoke_epocher();
 
   return Status::OK;
 }
