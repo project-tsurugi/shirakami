@@ -7,6 +7,8 @@
 #include <string_view>
 
 #include "kvs/interface.h"
+
+#include "concurrency_control.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
@@ -22,7 +24,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 const std::size_t len_rkey, const bool r_exclusive,
                 std::vector<const Tuple*>& result) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
@@ -61,7 +63,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // update is own.
 
     ti->get_read_set().emplace_back(const_cast<Record*>(itr));
-    Status rr = read_record(ti->get_read_set().back().get_rec_read(),
+    Status rr = cc_silo::read_record(ti->get_read_set().back().get_rec_read(),
                             const_cast<Record*>(itr));
     if (rr != Status::OK) {
       return rr;
@@ -84,7 +86,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  const std::size_t len_rkey, const bool r_exclusive,
                  ScanHandle& handle) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<const Record*> scan_buf;
 
@@ -213,7 +215,7 @@ Status read_from_scan(Token token,  // NOLINT
   }
 
   ReadSetObj rsob(*itr);
-  Status rr = read_record(rsob.get_rec_read(), *itr);
+  Status rr = cc_silo::read_record(rsob.get_rec_read(), *itr);
   if (rr != Status::OK) {
     return rr;
   }

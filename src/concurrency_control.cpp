@@ -11,6 +11,42 @@
 
 namespace shirakami {
 
+void cc_silo::tbegin(Token token) {
+  auto* ti = static_cast<ThreadInfo*>(token);
+  ti->set_txbegan(true);
+  ti->set_epoch(epoch::load_acquire_global_epoch());
+}
+
+Status cc_silo::read_record(Record& res, const Record* const dest) {  // NOLINT
+  tid_word f_check;
+  tid_word s_check;  // first_check, second_check for occ
+
+  f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+
+  for (;;) {
+    while (f_check.get_lock()) {
+      f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+    }
+
+    if (f_check.get_absent()) {
+      return Status::WARN_CONCURRENT_DELETE;
+      // other thread is inserting this record concurrently,
+      // but it is't committed yet.
+    }
+
+    res.get_tuple() = dest->get_tuple();  // execute copy assign.
+
+    s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+    if (f_check == s_check) {
+      break;
+    }
+    f_check = s_check;
+  }
+
+  res.set_tidw(f_check);
+  return Status::OK;
+}
+
 void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
                         const tid_word& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());

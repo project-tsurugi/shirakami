@@ -129,7 +129,7 @@ Status commit(Token token) {  // NOLINT
 Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                      const char* const key, const std::size_t len_key) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
@@ -208,7 +208,7 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
@@ -247,7 +247,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                   const char* const key, const std::size_t len_key,
                   Tuple** const tuple) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -279,7 +279,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   }
 
   ReadSetObj rsob(record);
-  Status rr = read_record(rsob.get_rec_read(), record);
+  Status rr = cc_silo::read_record(rsob.get_rec_read(), record);
   if (rr == Status::OK) {
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
@@ -291,7 +291,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
@@ -321,7 +321,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, std::size_t len_key, const char* const val,
               std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) tbegin(token);
+  if (!ti->get_txbegan()) cc_silo::tbegin(token);
   WriteSetObj* inws = ti->search_write_set(key, len_key);
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);

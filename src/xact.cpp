@@ -22,12 +22,6 @@ alignas(CACHE_LINE_SIZE)
     std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;  // NOLINT
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;              // NOLINT
 
-void tbegin(Token token) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  ti->set_txbegan(true);
-  ti->set_epoch(epoch::load_acquire_global_epoch());
-}
-
 Status insert_record_to_masstree(char const* key,  // NOLINT
                                  std::size_t len_key, Record* record) {
 #ifdef KVS_Linux
@@ -46,36 +40,6 @@ Status insert_record_to_masstree(char const* key,  // NOLINT
   setThreadAffinity(current_mask);
 #endif
   return insert_result;
-}
-
-Status read_record(Record& res, const Record* const dest) {  // NOLINT
-  tid_word f_check;
-  tid_word s_check;  // first_check, second_check for occ
-
-  f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-
-  for (;;) {
-    while (f_check.get_lock()) {
-      f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-    }
-
-    if (f_check.get_absent()) {
-      return Status::WARN_CONCURRENT_DELETE;
-      // other thread is inserting this record concurrently,
-      // but it is't committed yet.
-    }
-
-    res.get_tuple() = dest->get_tuple();  // execute copy assign.
-
-    s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-    if (f_check == s_check) {
-      break;
-    }
-    f_check = s_check;
-  }
-
-  res.set_tidw(f_check);
-  return Status::OK;
 }
 
 Record* find_record_from_masstree(char const* key,  // NOLINT

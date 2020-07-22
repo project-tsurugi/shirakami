@@ -22,6 +22,7 @@
 
 // shirakami-impl interface library
 #include "clock.h"
+#include "concurrency_control.h"
 #include "cpu.h"
 #include "random.h"
 #include "scheme_local.h"
@@ -56,7 +57,7 @@ void parallel_build_mtdb(std::size_t start, std::size_t end,
   Token token{};
   enter(token);
 
-  tbegin(token);
+  cc_silo::tbegin(token);
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
     std::string val(value_length, '0');  // NOLINT
