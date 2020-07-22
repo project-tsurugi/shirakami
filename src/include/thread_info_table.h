@@ -35,8 +35,8 @@ public:
   static void init_kThreadTable();
 
 private:
-  static inline std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS>
-      kThreadTable;  // NOLINT
+  static inline std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS>  // NOLINT
+      kThreadTable;                                               // NOLINT
 };
 
 }  // namespace shirakami
