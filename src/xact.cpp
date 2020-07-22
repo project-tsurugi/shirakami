@@ -7,10 +7,8 @@
 
 #include <bitset>
 
-#include "atomic_wrapper.h"
 #include "cache_line_size.h"
 #include "cpu.h"
-#include "epoch.h"
 #include "garbage_collection.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
@@ -18,8 +16,6 @@
 
 namespace shirakami {
 
-alignas(CACHE_LINE_SIZE)
-    std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;  // NOLINT
 alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;              // NOLINT
 
 Status insert_record_to_masstree(char const* key,  // NOLINT
