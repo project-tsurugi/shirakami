@@ -10,3 +10,6 @@
 [submodule ".github/actions/tsurugi-slack-action"]
 	path = .github/actions/tsurugi-slack-action
 	url = git@github.com:project-tsurugi/tsurugi-slack-action.git
+[submodule "third_party/yakushima"]
+	path = third_party/yakushima
+	url = git@github.com:project-tsurugi/yakushima.git
