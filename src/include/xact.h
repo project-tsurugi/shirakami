@@ -13,7 +13,6 @@
 
 namespace shirakami {
 
-extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 extern MasstreeWrapper<Record> MTDB;
 
 /**

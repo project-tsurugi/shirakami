@@ -7,7 +7,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
-#include "cpu.h"
+#include "thread_info_table.h"
 #include "tuple_local.h"
 #include "xact.h"
 
@@ -28,7 +28,7 @@ void epoch::atomic_add_global_epoch() {
 bool epoch::check_epoch_loaded() {  // NOLINT
   uint64_t curEpoch = load_acquire_global_epoch();
 
-  for (auto&& itr : kThreadTable) {
+  for (auto&& itr : thread_info_table::get_thread_info_table()) {
     if (itr.get_visible() && itr.get_epoch() != curEpoch) {
       return false;
     }
