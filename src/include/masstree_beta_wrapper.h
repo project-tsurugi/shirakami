@@ -31,6 +31,8 @@
 #include "masstree-beta/masstree_tcursor.hh"
 #include "masstree-beta/string.hh"
 
+namespace shirakami {
+
 class key_unparse_unsigned {
 public:
   [[maybe_unused]] static int unparse_key(  // NOLINT
@@ -261,3 +263,5 @@ __thread typename MasstreeWrapper<T>::table_params::threadinfo_type*
     MasstreeWrapper<T>::ti = nullptr;
 
 [[maybe_unused]] extern volatile bool recovering;
+
+} // namespace shirakami

@@ -24,10 +24,10 @@
 #include "clock.h"
 #include "concurrency_control.h"
 #include "cpu.h"
+#include "index.h"
 #include "random.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 using namespace shirakami;
 

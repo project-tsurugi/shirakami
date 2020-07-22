@@ -7,9 +7,9 @@
 
 #include "atomic_wrapper.h"
 #include "garbage_collection.h"
+#include "index.h"
 #include "log.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 namespace shirakami {
 
@@ -92,7 +92,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
     if (itr.get_op() == OP_TYPE::INSERT) {
       Record* record = itr.get_rec_ptr();
       std::string_view key_view = record->get_tuple().get_key();
-      MTDB.remove_value(key_view.data(), key_view.size());
+      index_kohler_masstree::get_mtdb().remove_value(key_view.data(), key_view.size());
 
       /**
        * create information for garbage collection.

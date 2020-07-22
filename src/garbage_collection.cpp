@@ -8,10 +8,10 @@
 #include <utility>
 
 #include "epoch.h"
+#include "index.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 namespace shirakami {
 
@@ -23,19 +23,22 @@ namespace shirakami {
 
 void garbage_collection::remove_all_leaf_from_mtdb_and_release() {
   std::vector<const Record*> scan_res;
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);  // NOLINT
+  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+                                         &scan_res, false);  // NOLINT
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
-    MTDB.remove_value(key_view.data(), key_view.size());
+    index_kohler_masstree::get_mtdb().remove_value(key_view.data(),
+                                                   key_view.size());
     delete itr;  // NOLINT
   }
 
   /**
-   * check whether MTDB is empty.
+   * check whether index_kohler_masstree::get_mtdb() is empty.
    */
   scan_res.clear();
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);  // NOLINT
+  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+                                         &scan_res, false);  // NOLINT
   if (!scan_res.empty()) std::abort();
 }
 
@@ -61,7 +64,8 @@ void ThreadInfo::gc_records_and_values() const {
   // for records
   {
     std::mutex& mutex_for_gclist =
-        garbage_collection::get_mutex_garbage_records_at(this->gc_container_index_);
+        garbage_collection::get_mutex_garbage_records_at(
+            this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_record_container_->begin();
       while (itr != this->gc_record_container_->end()) {
@@ -78,7 +82,8 @@ void ThreadInfo::gc_records_and_values() const {
   // for values
   {
     std::mutex& mutex_for_gclist =
-        garbage_collection::get_mutex_garbage_values_at(this->gc_container_index_);
+        garbage_collection::get_mutex_garbage_values_at(
+            this->gc_container_index_);
     if (mutex_for_gclist.try_lock()) {
       auto itr = this->gc_value_container_->begin();
       while (itr != this->gc_value_container_->end()) {

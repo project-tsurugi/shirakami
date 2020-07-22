@@ -7,9 +7,9 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "index.h"
 #include "thread_info_table.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 namespace shirakami {
 

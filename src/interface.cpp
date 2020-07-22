@@ -3,20 +3,18 @@
  * @brief implement about transaction
  */
 
-#include "xact.h"
-
 #include <bitset>
 
 #include "atomic_wrapper.h"
+#include "boost/filesystem.hpp"
 #include "concurrency_control.h"
 #include "epoch.h"
 #include "garbage_collection.h"
+#include "index.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "thread_info_table.h"
 #include "tuple_local.h"
-
-#include "boost/filesystem.hpp"
 
 namespace shirakami {
 
@@ -109,7 +107,8 @@ Status commit(Token token) {  // NOLINT
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
   std::vector<const Record*> scan_res;
-  MTDB.scan(nullptr, 0, false, nullptr, 0, false, &scan_res, false);
+  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+                                         &scan_res, false);
 
   if (scan_res.empty()) {
     return Status::WARN_ALREADY_DELETE;
@@ -134,7 +133,7 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  Record* record = MTDB.get_value(key, len_key);
+  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
@@ -215,12 +214,12 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  if (find_record_from_masstree(key, len_key) != nullptr) {
+  if (index_kohler_masstree::find_record_from_masstree(key, len_key) != nullptr) {
     return Status::WARN_ALREADY_EXISTS;
   }
 
   Record* record = new Record(key, len_key, val, len_val);  // NOLINT
-  Status insert_result(insert_record_to_masstree(key, len_key, record));
+  Status insert_result(index_kohler_masstree::insert_record_to_masstree(key, len_key, record));
   if (insert_result == Status::OK) {
     ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
     return Status::OK;
@@ -264,7 +263,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  Record* record = MTDB.get_value(key, len_key);
+  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
@@ -299,7 +298,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record = MTDB.get_value(key, len_key);
+  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
@@ -328,10 +327,10 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record = find_record_from_masstree(key, len_key);
+  Record* record = index_kohler_masstree::index_kohler_masstree::find_record_from_masstree(key, len_key);
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);  // NOLINT
-    Status insert_result(insert_record_to_masstree(key, len_key, record));
+    Status insert_result(index_kohler_masstree::insert_record_to_masstree(key, len_key, record));
     if (insert_result == Status::OK) {
       ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
       return Status::OK;

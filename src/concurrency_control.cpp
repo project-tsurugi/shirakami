@@ -2,12 +2,12 @@
  * @file concurrency_control.cpp
  */
 
-
 #include "concurrency_control.h"
+
 #include "garbage_collection.h"
+#include "index.h"
 #include "masstree_beta_wrapper.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 namespace shirakami {
 
@@ -119,7 +119,7 @@ void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
         tid_word deletetid = maxtid;
         deletetid.set_absent(true);
         std::string_view key_view = recptr->get_tuple().get_key();
-        MTDB.remove_value(key_view.data(), key_view.size());
+        index_kohler_masstree::get_mtdb().remove_value(key_view.data(), key_view.size());
         storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
 
         /**

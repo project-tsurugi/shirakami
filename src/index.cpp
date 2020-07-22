@@ -3,23 +3,23 @@
  * @brief implement about transaction
  */
 
-#include "xact.h"
+#include "index.h"
 
 #include <bitset>
 
-#include "cache_line_size.h"
 #include "cpu.h"
 #include "garbage_collection.h"
-#include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
 
+// index choice
+#include "masstree_beta_wrapper.h"
+
 namespace shirakami {
 
-alignas(CACHE_LINE_SIZE) MasstreeWrapper<Record> MTDB;              // NOLINT
-
-Status insert_record_to_masstree(char const* key,  // NOLINT
-                                 std::size_t len_key, Record* record) {
+Status index_kohler_masstree::insert_record_to_masstree(
+    char const* key,  // NOLINT
+    std::size_t len_key, Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) {
@@ -38,8 +38,9 @@ Status insert_record_to_masstree(char const* key,  // NOLINT
   return insert_result;
 }
 
-Record* find_record_from_masstree(char const* key,  // NOLINT
-                                  std::size_t len_key) {
+Record* index_kohler_masstree::find_record_from_masstree(
+    char const* key,  // NOLINT
+    std::size_t len_key) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
 }

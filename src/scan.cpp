@@ -6,13 +6,12 @@
 #include <map>
 #include <string_view>
 
-#include "kvs/interface.h"
-
 #include "concurrency_control.h"
+#include "index.h"
+#include "kvs/interface.h"
 #include "masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
-#include "xact.h"
 
 using namespace shirakami;
 
@@ -31,7 +30,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   auto rset_init_size = ti->get_read_set().size();
 
   std::vector<const Record*> scan_res;
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res,
+  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res,
             false);
 
   for (auto&& itr : scan_res) {
@@ -90,7 +89,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<const Record*> scan_buf;
 
-  MTDB.scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf,
+  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf,
             true);
 
   if (!scan_buf.empty()) {
@@ -169,7 +168,7 @@ Status read_from_scan(Token token,  // NOLINT
   if (scan_buf.size() == scan_index) {
     std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
-    MTDB.scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true,
+    index_kohler_masstree::get_mtdb().scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true,
               ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
               ti->get_r_exclusive()[handle], &new_scan_buf, true);
 
