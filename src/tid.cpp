@@ -10,17 +10,15 @@
 
 using namespace kvs;
 
-using std::cout, std::endl;
-
 namespace kvs {
 
 void tid_word::display() {
-  cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_) << endl;  // NOLINT
-  cout << "lock_ : " << lock_ << endl;                               // NOLINT
-  cout << "latest_ : " << latest_ << endl;                           // NOLINT
-  cout << "absent_ : " << absent_ << endl;                           // NOLINT
-  cout << "tid_ : " << tid_ << endl;                                 // NOLINT
-  cout << "epoch_ : " << epoch_ << endl;                             // NOLINT
+  std::cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_) << std::endl;  // NOLINT
+  std::cout << "lock_ : " << lock_ << std::endl;                               // NOLINT
+  std::cout << "latest_ : " << latest_ << std::endl;                           // NOLINT
+  std::cout << "absent_ : " << absent_ << std::endl;                           // NOLINT
+  std::cout << "tid_ : " << tid_ << std::endl;                                 // NOLINT
+  std::cout << "epoch_ : " << epoch_ << std::endl;                             // NOLINT
 }
 
 }  // namespace kvs

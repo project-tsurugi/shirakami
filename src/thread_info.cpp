@@ -3,10 +3,11 @@
  * @brief about scheme
  */
 
+#include "thread_info.h"
+
 #include "atomic_wrapper.h"
 #include "garbage_collection.h"
 #include "log.h"
-#include "thread_info.h"
 #include "tuple_local.h"
 #include "xact.h"
 
@@ -75,6 +76,7 @@ void ThreadInfo::clean_up_scan_caches() {
 Status ThreadInfo::check_delete_after_write(  // NOLINT
     const char* const key_ptr, const std::size_t key_length) {
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+    // It can't use lange-based for because it use write_set.erase.
     std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
     if (key_view.size() == key_length &&
         memcmp(key_view.data(), key_ptr, key_length) == 0) {
