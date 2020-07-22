@@ -17,7 +17,7 @@
 
 namespace shirakami {
 
-Status index_kohler_masstree::insert_record_to_masstree(
+Status index_kohler_masstree::insert_record(
     char const* key,  // NOLINT
     std::size_t len_key, Record* record) {
 #ifdef KVS_Linux
@@ -38,7 +38,7 @@ Status index_kohler_masstree::insert_record_to_masstree(
   return insert_result;
 }
 
-Record* index_kohler_masstree::find_record_from_masstree(
+Record* index_kohler_masstree::find_record(
     char const* key,  // NOLINT
     std::size_t len_key) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());

@@ -214,12 +214,13 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  if (index_kohler_masstree::find_record_from_masstree(key, len_key) != nullptr) {
+  if (index_kohler_masstree::find_record(key, len_key) != nullptr) {
     return Status::WARN_ALREADY_EXISTS;
   }
 
   Record* record = new Record(key, len_key, val, len_val);  // NOLINT
-  Status insert_result(index_kohler_masstree::insert_record_to_masstree(key, len_key, record));
+  Status insert_result(
+      index_kohler_masstree::insert_record(key, len_key, record));
   if (insert_result == Status::OK) {
     ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
     return Status::OK;
@@ -327,10 +328,12 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record = index_kohler_masstree::index_kohler_masstree::find_record_from_masstree(key, len_key);
+  Record* record =
+      index_kohler_masstree::index_kohler_masstree::find_record(key, len_key);
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);  // NOLINT
-    Status insert_result(index_kohler_masstree::insert_record_to_masstree(key, len_key, record));
+    Status insert_result(
+        index_kohler_masstree::insert_record(key, len_key, record));
     if (insert_result == Status::OK) {
       ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
       return Status::OK;

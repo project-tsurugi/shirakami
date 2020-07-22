@@ -19,12 +19,10 @@ public:
    * @brief find record from masstree by using args informations.
    * @return the found record pointer.
    */
-  static Record* find_record_from_masstree(char const* key,  // NOLINT
-                                           std::size_t len_key);
+  static Record* find_record(char const* key,  // NOLINT
+                             std::size_t len_key);
 
-  static MasstreeWrapper<Record>& get_mtdb() {
-    return MTDB;
-  }
+  static MasstreeWrapper<Record>& get_mtdb() { return MTDB; }
 
   /**
    * @brief insert record to masstree by using args informations.
@@ -37,8 +35,8 @@ public:
    * exists in masstree, so this function returned immediately.
    * @return Status::OK It inserted record.
    */
-  static Status insert_record_to_masstree(char const* key,  // NOLINT
-                                          std::size_t len_key, Record* record);
+  static Status insert_record(char const* key,  // NOLINT
+                              std::size_t len_key, Record* record);
 
 private:
   static inline MasstreeWrapper<Record> MTDB;  // NOLINT
