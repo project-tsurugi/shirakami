@@ -9,8 +9,6 @@
 
 namespace shirakami {
 
-extern void init();
-
 /**
  * @brief init work about kThreadTable
  */
