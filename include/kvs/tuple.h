@@ -9,7 +9,7 @@
 #include <string_view>
 #include <utility>
 
-namespace kvs {
+namespace shirakami {
 
 class Tuple {
 public:
@@ -32,4 +32,4 @@ private:
   std::unique_ptr<Impl> pimpl_;
 };
 
-}  // namespace kvs
+}  // namespace shirakami

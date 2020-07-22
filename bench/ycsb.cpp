@@ -41,7 +41,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-using namespace kvs;
+using namespace shirakami;
 using namespace ycsb_param;
 using std::cout, std::endl, std::cerr;
 

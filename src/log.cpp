@@ -7,7 +7,7 @@
 
 #include "tuple_local.h"
 
-namespace kvs {
+namespace shirakami {
 
 void Log::LogHeader::init() & {
   checksum_ = 0;
@@ -183,4 +183,4 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   leave(s);
 }
 
-}  // namespace kvs
+}  // namespace shirakami

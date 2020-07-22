@@ -13,7 +13,7 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-namespace kvs {
+namespace shirakami {
 
 [[maybe_unused]] void garbage_collection::release_all_heap_objects() {
   garbage_collection::remove_all_leaf_from_mtdb_and_release();
@@ -94,4 +94,4 @@ void ThreadInfo::gc_records_and_values() const {
   }
 }
 
-}  // namespace kvs
+}  // namespace shirakami

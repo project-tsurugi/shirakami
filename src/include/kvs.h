@@ -1,13 +1,13 @@
 /**
  * @file
- * @brief core work about kvs.
+ * @brief core work about shirakami.
  */
 
 #pragma once
 
 #include "xact.h"
 
-namespace kvs {
+namespace shirakami {
 
 extern void init();
 
@@ -22,8 +22,8 @@ static void init_kThreadTable();
 static void fin_kThreadTable();
 
 /**
- * @brief invoke core threads about kvs.
+ * @brief invoke core threads about shirakami.
  */
 static void invoke_core_thread();
 
-}  // namespace kvs
+}  // namespace shirakami

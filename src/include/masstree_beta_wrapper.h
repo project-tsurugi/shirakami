@@ -162,7 +162,7 @@ public:
    * key exists in masstree, so this function returned immediately.
    * @return Status::OK success.
    */
-  kvs::Status insert_value(const char* key, std::size_t len_key,  // NOLINT
+  shirakami::Status insert_value(const char* key, std::size_t len_key,  // NOLINT
                            T* value) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
@@ -171,16 +171,16 @@ public:
       // release lock of existing nodes meaning the first arg equals 0
       lp.finish(0, *ti);
       // return
-      return kvs::Status::WARN_ALREADY_EXISTS;
+      return shirakami::Status::WARN_ALREADY_EXISTS;
     }
     lp.value() = value;
     fence();
     lp.finish(1, *ti);
-    return kvs::Status::OK;
+    return shirakami::Status::OK;
   }
 
   // for bench.
-  kvs::Status put_value(const char* key, std::size_t len_key,  // NOLINT
+  shirakami::Status put_value(const char* key, std::size_t len_key,  // NOLINT
                         T* value, T** record) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
@@ -190,7 +190,7 @@ public:
       lp.value() = value;
       fence();
       lp.finish(0, *ti);
-      return kvs::Status::OK;
+      return shirakami::Status::OK;
     }
     fence();
     lp.finish(0, *ti);
@@ -200,20 +200,20 @@ public:
      * 0. So it needs to release. If state_ == 0, finish function merely
      * release locks of existing nodes.
      */
-    return kvs::Status::WARN_NOT_FOUND;
+    return shirakami::Status::WARN_NOT_FOUND;
   }
 
-  kvs::Status remove_value(const char* key, std::size_t len_key) {  // NOLINT
+  shirakami::Status remove_value(const char* key, std::size_t len_key) {  // NOLINT
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
       // try finish_remove. If it fails, following processing unlocks nodes.
       lp.finish(-1, *ti);
-      return kvs::Status::OK;
+      return shirakami::Status::OK;
     }
     // no nodes
     lp.finish(-1, *ti);
-    return kvs::Status::WARN_NOT_FOUND;
+    return shirakami::Status::WARN_NOT_FOUND;
   }
 
   T* get_value(const char* key, std::size_t len_key) {  // NOLINT

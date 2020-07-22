@@ -32,14 +32,14 @@
 #include "glog/logging.h"
 #include "tuple_local.h"
 #if 0
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 #include "zipf.hh"
 #endif
 
 // to use declaration of entity of global variables.
 #include "./../src/masstree_beta_wrapper.cpp"
 
-using namespace kvs;
+using namespace shirakami;
 
 DEFINE_uint64(thread, 1, "# worker threads.");                // NOLINT
 DEFINE_uint64(record, 1000, "# database records(tuples).");   // NOLINT
@@ -134,7 +134,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   while (!loadAcquire(start)) _mm_pause();
 
   Token token{};
-  kvs::Record myrecord{};
+  shirakami::Record myrecord{};
   Storage storage{};
   enter(token);
   while (likely(!loadAcquire(quit))) {
@@ -155,17 +155,17 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 #if 0
       // future work : If it defines that the record number is divisible by 2, it can use mask and "and computation"  instead of "surplus computation".
       // Then, it will be faster than now.
-      kvs::Record* record;
-      kvs::Record* newrecord = new kvs::Record();
+      shirakami::Record* record;
+      shirakami::Record* newrecord = new shirakami::Record();
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
-      if (kvs::Status::OK != MTDB.put_value((char*)&keybs, sizeof(uint64_t), newrecord, &record)) ERR;
+      if (shirakami::Status::OK != MTDB.put_value((char*)&keybs, sizeof(uint64_t), newrecord, &record)) ERR;
       delete record;
       ++myres.local_commit_counts_;
     } else if (FLAGS_instruction == "get") {
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
-      kvs::Record* record;
+      shirakami::Record* record;
       record = MTDB.get_value((char*)&keybs, sizeof(uint64_t));
       if (record == nullptr) ERR;
       ++myres.local_commit_counts_;

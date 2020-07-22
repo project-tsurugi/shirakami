@@ -15,7 +15,7 @@
 #include "kvs/scheme.h"
 #include "tid.h"
 
-namespace kvs {
+namespace shirakami {
 
 class Log {
 public:
@@ -116,4 +116,4 @@ public:
 private:
   static inline std::string kLogDirectory{};  // NOLINT
 };
-}  // namespace kvs
+}  // namespace shirakami

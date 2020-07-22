@@ -16,7 +16,7 @@
 #include "scheme_local.h"
 #include "tuple_local.h"
 
-namespace kvs {
+namespace shirakami {
 
 alignas(CACHE_LINE_SIZE)
     std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;  // NOLINT
@@ -485,4 +485,4 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  //  namespace kvs
+}  //  namespace shirakami

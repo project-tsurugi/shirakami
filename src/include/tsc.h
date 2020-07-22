@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-namespace kvs {
+namespace shirakami {
 
 [[maybe_unused]] static uint64_t rdtsc() {  // NOLINT
   uint64_t rax{};
@@ -28,4 +28,4 @@ namespace kvs {
   return (rdx << 32) | rax;  // NOLINT
 }
 
-}  // namespace kvs
+}  // namespace shirakami

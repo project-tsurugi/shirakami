@@ -2,7 +2,7 @@
 #include "record.h"
 #include "tuple_local.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 namespace shirakami::testing {
 

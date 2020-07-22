@@ -9,7 +9,7 @@
 #include "kvs/tuple.h"
 #include "tid.h"
 
-namespace kvs {
+namespace shirakami {
 class Record {  // NOLINT
 public:
   Record() {}  // NOLINT
@@ -51,4 +51,4 @@ private:
   Tuple tuple_;
 };
 
-}  // namespace kvs
+}  // namespace shirakami

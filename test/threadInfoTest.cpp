@@ -9,15 +9,15 @@
 #include "thread_info.h"
 #include "tuple_local.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 namespace shirakami::testing {
 
 class ThreadInfoTest : public ::testing::Test {
 public:
-  void SetUp() override { kvs::init(); }  // NOLINT
+  void SetUp() override { shirakami::init(); }  // NOLINT
 
-  void TearDown() override { kvs::fin(); }
+  void TearDown() override { shirakami::fin(); }
 };
 
 TEST_F(ThreadInfoTest, get_txbegan_) {  // NOLINT

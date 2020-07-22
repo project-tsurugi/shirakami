@@ -14,15 +14,15 @@
 #include "scheme_local.h"
 #include "tuple_local.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 namespace shirakami::testing {
 
 class SimpleTest : public ::testing::Test {  // NOLINT
 public:
-  void SetUp() override { kvs::init(); }  // NOLINT
+  void SetUp() override { shirakami::init(); }  // NOLINT
 
-  void TearDown() override { kvs::fin(); }
+  void TearDown() override { shirakami::fin(); }
 };
 
 TEST_F(SimpleTest, project_root) {  // NOLINT

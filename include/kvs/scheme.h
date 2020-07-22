@@ -14,7 +14,7 @@
 #include <memory>
 #include <vector>
 
-namespace kvs {
+namespace shirakami {
 
 /**
  * @brief Session token
@@ -241,4 +241,4 @@ inline std::ostream& operator<<(std::ostream& out, OP_TYPE op) {  // NOLINT
   return out << to_string_view(op);
 }
 
-}  // namespace kvs
+}  // namespace shirakami

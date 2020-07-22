@@ -9,7 +9,7 @@
 
 #include "epoch.h"
 
-namespace kvs {
+namespace shirakami {
 
 class tid_word {  // NOLINT
 public:
@@ -100,4 +100,4 @@ inline std::ostream& operator<<(std::ostream& out, tid_word tid) {  // NOLINT
   return out;
 }
 
-}  // namespace kvs
+}  // namespace shirakami

@@ -16,10 +16,10 @@
 /**
  * @brief generate search/update operations.
  */
-static void gen_tx_rw(std::vector<kvs::OprObj>& opr_set, std::size_t tpnm,
+static void gen_tx_rw(std::vector<shirakami::OprObj>& opr_set, std::size_t tpnm,
                       std::size_t opnm, std::size_t rratio,
                       Xoroshiro128Plus& rnd, FastZipf& zipf) {
-  using namespace kvs;
+  using namespace shirakami;
   for (std::size_t i = 0; i < opnm; ++i) {
     uint64_t keynm = zipf() % tpnm;
     uint64_t keybs = __builtin_bswap64(keynm);

@@ -30,7 +30,7 @@
 #include "kvs/interface.h"
 
 using namespace single_thread_test;
-using namespace kvs;
+using namespace shirakami;
 
 std::array<std::vector<Tuple*>, Nthread> DataList{};
 

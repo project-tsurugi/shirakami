@@ -28,7 +28,7 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
                                  std::size_t thread) {

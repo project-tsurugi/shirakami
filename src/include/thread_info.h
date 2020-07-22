@@ -32,7 +32,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-namespace kvs {
+namespace shirakami {
 
 class ThreadInfo {
 public:
@@ -309,4 +309,4 @@ private:
                                           struct timeval end, int nthread);
 [[maybe_unused]] extern void print_status(Status status);
 
-}  // namespace kvs
+}  // namespace shirakami

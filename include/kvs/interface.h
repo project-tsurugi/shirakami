@@ -5,14 +5,14 @@
 #define STRING(macro) #macro          // NOLINT
 #define MAC2STR(macro) STRING(macro)  // NOLINT
 
-namespace kvs {
+namespace shirakami {
 /**
  * @file interface.h
  * @brief transaction engine interface
  */
 
 /**
- * @brief initialize kvs environment
+ * @brief initialize shirakami environment
  * @details When it starts to use this system, in other words, it starts to
  * build database, it must be executed first.
  * @param[in] log_directory_path of WAL directory.
@@ -220,8 +220,8 @@ extern Status update(Token token, Storage storage,  // NOLINT
  * @param key the search key
  * @param len_key indicate the key length
  * @param tuple output parameter to pass the found Tuple pointer.
- * The ownership of the address which is pointed by the tuple is in kvs.
- * So upper layer from kvs don't have to be care.
+ * The ownership of the address which is pointed by the tuple is in shirakami.
+ * So upper layer from shirakami don't have to be care.
  * nullptr when nothing is found for the given key.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
@@ -344,4 +344,4 @@ extern Status close_scan(Token token, Storage storage,  // NOLINT
  */
 [[maybe_unused]] extern void single_recovery_from_log();
 
-}  // namespace kvs
+}  // namespace shirakami

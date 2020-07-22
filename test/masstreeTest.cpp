@@ -11,7 +11,7 @@
 // to use declaration of entity of global variables.
 #include "./../src/masstree_beta_wrapper.cpp"
 
-using namespace kvs;
+using namespace shirakami;
 using namespace std;
 
 namespace shirakami::testing {

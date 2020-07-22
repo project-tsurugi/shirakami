@@ -11,7 +11,7 @@
 #include "scheme_local.h"
 #include "thread_info.h"
 
-namespace kvs {
+namespace shirakami {
 
 extern std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS> kThreadTable;
 extern MasstreeWrapper<Record> MTDB;
@@ -57,4 +57,4 @@ extern Status read_record(Record& res, const Record* dest);  // NOLINT
  */
 extern void tbegin(Token token);
 
-}  // namespace kvs
+}  // namespace shirakami

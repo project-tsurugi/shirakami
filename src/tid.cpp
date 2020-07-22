@@ -8,9 +8,9 @@
 #include <bitset>
 #include <iostream>
 
-using namespace kvs;
+using namespace shirakami;
 
-namespace kvs {
+namespace shirakami {
 
 void tid_word::display() {
   std::cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_) << std::endl;  // NOLINT
@@ -21,4 +21,4 @@ void tid_word::display() {
   std::cout << "epoch_ : " << epoch_ << std::endl;                             // NOLINT
 }
 
-}  // namespace kvs
+}  // namespace shirakami

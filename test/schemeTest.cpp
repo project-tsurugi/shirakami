@@ -2,13 +2,13 @@
 #include "kvs/scheme.h"
 #include "tuple_local.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 namespace shirakami::testing {
 
 class schemeTest : public ::testing::Test {};
 
-// kvs/scheme.h
+// shirakami/scheme.h
 
 TEST_F(schemeTest, to_string_view_Status) {  // NOLINT
   using namespace std::string_view_literals;

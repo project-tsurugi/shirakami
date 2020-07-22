@@ -10,7 +10,7 @@
 
 #include "atomic_wrapper.h"
 
-namespace kvs {
+namespace shirakami {
 
 class epoch {
 public:
@@ -64,4 +64,4 @@ private:
   static inline std::atomic<bool> kEpochThreadEnd;  // NOLINT
 };
 
-}  // namespace kvs.
+}  // namespace shirakami.

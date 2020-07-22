@@ -11,7 +11,7 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-namespace kvs {
+namespace shirakami {
 
 void epoch::atomic_add_global_epoch() {
   std::uint32_t expected = load_acquire_global_epoch();
@@ -76,4 +76,4 @@ std::uint32_t epoch::load_acquire_global_epoch() {  // NOLINT
   return loadAcquire(epoch::kGlobalEpoch);
 }
 
-}  // namespace kvs
+}  // namespace shirakami

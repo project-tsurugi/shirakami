@@ -10,7 +10,7 @@
 
 #include "kvs/tuple.h"
 
-namespace kvs {
+namespace shirakami {
 
 class Tuple::Impl {
 public:
@@ -85,4 +85,4 @@ private:
   bool need_delete_pvalue_{false};
 };
 
-}  // namespace kvs
+}  // namespace shirakami

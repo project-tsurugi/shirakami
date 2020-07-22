@@ -15,7 +15,7 @@
 #include "epoch.h"
 #include "record.h"
 
-namespace kvs {
+namespace shirakami {
 
 class garbage_collection {
 public:
@@ -83,4 +83,4 @@ private:
       std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues;  // NOLINT
 };
 
-}  // namespace kvs
+}  // namespace shirakami

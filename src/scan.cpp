@@ -12,9 +12,9 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-using namespace kvs;
+using namespace shirakami;
 
-namespace kvs {
+namespace shirakami {
 
 Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 const char* const lkey, const std::size_t len_lkey,
@@ -245,4 +245,4 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  // namespace kvs
+}  // namespace shirakami

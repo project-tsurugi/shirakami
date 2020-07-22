@@ -8,7 +8,7 @@
 // shirakami-impl interface library
 #include "tsc.h"
 
-using namespace kvs;
+using namespace shirakami;
 
 namespace shirakami::testing {
 
@@ -23,13 +23,13 @@ public:
   ::Token& get_s() { return s_; }  // NOLINT
 
   void SetUp() override {
-    kvs::init();  // NOLINT
+    shirakami::init();  // NOLINT
     for (int i = 0; i < MAX_TUPLES; ++i) {
       key_.at(i) = i;
     }
   }
 
-  void TearDown() override { kvs::fin(); }
+  void TearDown() override { shirakami::fin(); }
 
 private:
   std::array<std::uint64_t, MAX_TUPLES> key_{};
@@ -70,7 +70,7 @@ void ScanPerfTest::DoScan() {
 }
 
 TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
-  EXPECT_EQ(Status::OK, kvs::enter(get_s()));
+  EXPECT_EQ(Status::OK, shirakami::enter(get_s()));
 
   DoInsert(0, 100);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 100 records."
@@ -135,7 +135,7 @@ TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
       << std::endl;
   DoScan();
 
-  EXPECT_EQ(Status::OK, kvs::leave(get_s()));
+  EXPECT_EQ(Status::OK, shirakami::leave(get_s()));
 }
 
 }  // namespace shirakami::testing

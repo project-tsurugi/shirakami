@@ -1,6 +1,6 @@
 /**
- * @file kvs.cc
- * @brief about entire kvs.
+ * @file shirakami.cc
+ * @brief about entire shirakami.
  */
 
 #include "kvs.h"
@@ -14,7 +14,7 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-namespace kvs {
+namespace shirakami {
 
 static void invoke_core_thread() { epoch::invoke_epocher(); }
 
@@ -125,4 +125,4 @@ void fin() {
   fin_kThreadTable();
 }
 
-}  // namespace kvs
+}  // namespace shirakami

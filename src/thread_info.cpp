@@ -11,7 +11,7 @@
 #include "tuple_local.h"
 #include "xact.h"
 
-namespace kvs {
+namespace shirakami {
 
 void ThreadInfo::clean_up_ops_set() {
   read_set.clear();
@@ -253,4 +253,4 @@ void ThreadInfo::wal(uint64_t ctid) {
   log_set_.clear();
 }
 
-}  // namespace kvs
+}  // namespace shirakami

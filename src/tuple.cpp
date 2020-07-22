@@ -9,7 +9,7 @@
 
 #include "tuple_local.h"
 
-namespace kvs {
+namespace shirakami {
 
 Tuple::Impl::Impl(const char* key_ptr, std::size_t key_length,
                   const char* value_ptr, std::size_t value_length)
@@ -176,4 +176,4 @@ std::string_view Tuple::get_value() const& {  // NOLINT
 }
 
 Tuple::Impl* Tuple::get_pimpl() & { return pimpl_.get(); }  // NOLINT
-}  // namespace kvs
+}  // namespace shirakami

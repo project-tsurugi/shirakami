@@ -32,7 +32,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-namespace kvs {
+namespace shirakami {
 
 /**
  * @brief element of write set.
@@ -226,4 +226,4 @@ private:
   std::string value_{};
 };
 
-}  // namespace kvs
+}  // namespace shirakami
