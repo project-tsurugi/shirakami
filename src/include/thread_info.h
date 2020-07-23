@@ -36,6 +36,38 @@ namespace shirakami {
 
 class ThreadInfo {
 public:
+  class gc_handler {
+  public:
+    std::size_t get_container_index() const {  // NOLINT
+      return container_index_;
+    }
+
+    std::vector<Record*>* get_record_container() const {  // NOLINT
+      return record_container_;
+    }
+
+    [[nodiscard]] std::vector<std::pair<std::string*, epoch::epoch_t>>*
+    get_value_container() const {  // NOLINT
+      return value_container_;
+    }
+
+    void set_container_index(std::size_t index) { container_index_ = index; }
+
+    void set_record_container(std::vector<Record*>* cont) {
+      record_container_ = cont;
+    }
+
+    void set_value_container(
+        std::vector<std::pair<std::string*, epoch::epoch_t>>* cont) {
+      value_container_ = cont;
+    }
+
+  private:
+    std::size_t container_index_{};  // common to record and value;
+    std::vector<Record*>* record_container_{};
+    std::vector<std::pair<std::string*, epoch::epoch_t>>* value_container_{};
+  };
+
   explicit ThreadInfo(const Token token) {
     this->token_ = token;
     mrctid_.reset();
@@ -88,16 +120,16 @@ public:
   }
 
   [[maybe_unused]] std::size_t get_gc_container_index() {  // NOLINT
-    return gc_container_index_;
+    return gc_handle.get_container_index();
   }
 
   std::vector<Record*>* get_gc_record_container() {  // NOLINT
-    return gc_record_container_;
+    return gc_handle.get_record_container();
   }
 
   std::vector<std::pair<std::string*, epoch::epoch_t>>*
   get_gc_value_container() {  // NOLINT
-    return gc_value_container_;
+    return gc_handle.get_value_container();
   }
 
   std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
@@ -110,7 +142,8 @@ public:
 
   tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid()  // NOLINT
+      const& {                                                 // NOLINT
     return mrctid_;
   }
 
@@ -231,16 +264,16 @@ public:
   }
 
   void set_gc_container_index(std::size_t new_index) {
-    gc_container_index_ = new_index;
+    gc_handle.set_container_index(new_index);
   }
 
-  void set_gc_record_container(std::vector<Record*>* new_cont) {  // NOLINT
-    gc_record_container_ = new_cont;
+  void set_gc_record_container(std::vector<Record*>* cont) {  // NOLINT
+    gc_handle.set_record_container(cont);
   }
 
   void set_gc_value_container(  // NOLINT
-      std::vector<std::pair<std::string*, epoch::epoch_t>>* new_cont) {
-    gc_value_container_ = new_cont;
+      std::vector<std::pair<std::string*, epoch::epoch_t>>* cont) {
+    gc_handle.set_value_container(cont);
   }
 
   void set_mrctid(const tid_word& tid) & { mrctid_ = tid; }
@@ -261,9 +294,7 @@ private:
   /**
    * about garbage collection
    */
-  std::size_t gc_container_index_{};  // common to record and value;
-  std::vector<Record*>* gc_record_container_{};
-  std::vector<std::pair<std::string*, epoch::epoch_t>>* gc_value_container_{};
+  gc_handler gc_handle;
 
   /**
    * about holding operation info.

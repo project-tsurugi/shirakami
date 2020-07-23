@@ -5,12 +5,8 @@
 
 #include "garbage_collection.h"
 
-#include <utility>
-
 #include "epoch.h"
 #include "index.h"
-#include "masstree_beta_wrapper.h"
-#include "scheme_local.h"
 #include "tuple_local.h"
 
 namespace shirakami {
@@ -65,13 +61,13 @@ void ThreadInfo::gc_records_and_values() const {
   {
     std::mutex& mutex_for_gclist =
         garbage_collection::get_mutex_garbage_records_at(
-            this->gc_container_index_);
+            this->gc_handle.get_container_index());
     if (mutex_for_gclist.try_lock()) {
-      auto itr = this->gc_record_container_->begin();
-      while (itr != this->gc_record_container_->end()) {
+      auto itr = this->gc_handle.get_record_container()->begin();
+      while (itr != this->gc_handle.get_record_container()->end()) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
           delete *itr;  // NOLINT
-          itr = this->gc_record_container_->erase(itr);
+          itr = this->gc_handle.get_record_container()->erase(itr);
         } else {
           break;
         }
@@ -83,13 +79,13 @@ void ThreadInfo::gc_records_and_values() const {
   {
     std::mutex& mutex_for_gclist =
         garbage_collection::get_mutex_garbage_values_at(
-            this->gc_container_index_);
+            this->gc_handle.get_container_index());
     if (mutex_for_gclist.try_lock()) {
-      auto itr = this->gc_value_container_->begin();
-      while (itr != this->gc_value_container_->end()) {
+      auto itr = this->gc_handle.get_value_container()->begin();
+      while (itr != this->gc_handle.get_value_container()->end()) {
         if (itr->second <= epoch::get_reclamation_epoch()) {
           delete itr->first;  // NOLINT
-          itr = this->gc_value_container_->erase(itr);
+          itr = this->gc_handle.get_value_container()->erase(itr);
         } else {
           break;
         }
