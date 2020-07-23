@@ -61,13 +61,13 @@ void ThreadInfo::gc_records_and_values() const {
   {
     std::mutex& mutex_for_gclist =
         garbage_collection::get_mutex_garbage_records_at(
-            this->gc_handle.get_container_index());
+            this->gc_handle_.get_container_index());
     if (mutex_for_gclist.try_lock()) {
-      auto itr = this->gc_handle.get_record_container()->begin();
-      while (itr != this->gc_handle.get_record_container()->end()) {
+      auto itr = this->gc_handle_.get_record_container()->begin();
+      while (itr != this->gc_handle_.get_record_container()->end()) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
           delete *itr;  // NOLINT
-          itr = this->gc_handle.get_record_container()->erase(itr);
+          itr = this->gc_handle_.get_record_container()->erase(itr);
         } else {
           break;
         }
@@ -79,13 +79,13 @@ void ThreadInfo::gc_records_and_values() const {
   {
     std::mutex& mutex_for_gclist =
         garbage_collection::get_mutex_garbage_values_at(
-            this->gc_handle.get_container_index());
+            this->gc_handle_.get_container_index());
     if (mutex_for_gclist.try_lock()) {
-      auto itr = this->gc_handle.get_value_container()->begin();
-      while (itr != this->gc_handle.get_value_container()->end()) {
+      auto itr = this->gc_handle_.get_value_container()->begin();
+      while (itr != this->gc_handle_.get_value_container()->end()) {
         if (itr->second <= epoch::get_reclamation_epoch()) {
           delete itr->first;  // NOLINT
-          itr = this->gc_handle.get_value_container()->erase(itr);
+          itr = this->gc_handle_.get_value_container()->erase(itr);
         } else {
           break;
         }

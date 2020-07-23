@@ -120,16 +120,16 @@ public:
   }
 
   [[maybe_unused]] std::size_t get_gc_container_index() {  // NOLINT
-    return gc_handle.get_container_index();
+    return gc_handle_.get_container_index();
   }
 
   std::vector<Record*>* get_gc_record_container() {  // NOLINT
-    return gc_handle.get_record_container();
+    return gc_handle_.get_record_container();
   }
 
   std::vector<std::pair<std::string*, epoch::epoch_t>>*
   get_gc_value_container() {  // NOLINT
-    return gc_handle.get_value_container();
+    return gc_handle_.get_value_container();
   }
 
   std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
@@ -264,16 +264,16 @@ public:
   }
 
   void set_gc_container_index(std::size_t new_index) {
-    gc_handle.set_container_index(new_index);
+    gc_handle_.set_container_index(new_index);
   }
 
   void set_gc_record_container(std::vector<Record*>* cont) {  // NOLINT
-    gc_handle.set_record_container(cont);
+    gc_handle_.set_record_container(cont);
   }
 
   void set_gc_value_container(  // NOLINT
       std::vector<std::pair<std::string*, epoch::epoch_t>>* cont) {
-    gc_handle.set_value_container(cont);
+    gc_handle_.set_value_container(cont);
   }
 
   void set_mrctid(const tid_word& tid) & { mrctid_ = tid; }
@@ -294,7 +294,7 @@ private:
   /**
    * about garbage collection
    */
-  gc_handler gc_handle;
+  gc_handler gc_handle_;
 
   /**
    * about holding operation info.
