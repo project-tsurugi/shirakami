@@ -12,15 +12,14 @@
 #include "./../src/masstree_beta_wrapper.cpp"
 
 using namespace shirakami;
-using namespace std;
 
 namespace shirakami::testing {
 
 class MasstreeTest : public ::testing::Test {};  // NOLINT
 
 TEST_F(MasstreeTest, insert_third) {  // NOLINT
-  MasstreeWrapper<uint64_t> MT;
-  uint64_t key{0};
+  MasstreeWrapper<std::uint64_t> MT;
+  std::uint64_t key{0};
   ASSERT_EQ(Status::OK,
             MT.insert_value(reinterpret_cast<char*>(&key),  // NOLINT
                             sizeof(&key), &key));
@@ -35,8 +34,8 @@ TEST_F(MasstreeTest, insert_third) {  // NOLINT
 }
 
 TEST_F(MasstreeTest, remove) {  // NOLINT
-  MasstreeWrapper<uint64_t> MT;
-  uint64_t key{0};
+  MasstreeWrapper<std::uint64_t> MT;
+  std::uint64_t key{0};
   ASSERT_EQ(
       Status::WARN_NOT_FOUND,
       MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));  // NOLINT

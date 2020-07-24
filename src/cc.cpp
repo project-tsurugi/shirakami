@@ -2,7 +2,7 @@
  * @file concurrency_control.cpp
  */
 
-#include "concurrency_control.h"
+#include "cc.h"
 
 #include "garbage_collection.h"
 #include "index.h"

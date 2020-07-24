@@ -5,7 +5,7 @@
 
 #include <map>
 
-#include "concurrency_control.h"
+#include "cc.h"
 #include "index.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 

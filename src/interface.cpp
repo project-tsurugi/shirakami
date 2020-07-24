@@ -7,7 +7,7 @@
 
 #include "atomic_wrapper.h"
 #include "boost/filesystem.hpp"
-#include "concurrency_control.h"
+#include "cc.h"
 #include "garbage_collection.h"
 #include "index.h"
 #include "thread_info_table.h"

@@ -10,7 +10,7 @@ class recordTest : public ::testing::Test {};
 
 TEST_F(recordTest, constructor) {  // NOLINT
   {
-    Record rec;
+    Record rec{};
     ASSERT_EQ(rec.get_tidw().get_obj(), 0);
     Tuple& tuple = rec.get_tuple();
     ASSERT_EQ(tuple.get_key().size(), 0);

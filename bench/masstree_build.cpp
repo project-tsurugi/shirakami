@@ -21,8 +21,8 @@
 #include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
+#include "cc.h"
 #include "clock.h"
-#include "concurrency_control.h"
 #include "cpu.h"
 #include "index.h"
 #include "random.h"
