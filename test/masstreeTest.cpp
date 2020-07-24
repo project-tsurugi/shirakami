@@ -8,8 +8,10 @@
 #include "scheme_local.h"
 #include "tuple_local.h"
 
+#ifdef INDEX_KOHLER_MASSTREE
 // to use declaration of entity of global variables.
-#include "index/masstree_beta/masstree_beta_wrapper.cpp"
+#include "index/masstree_beta/global_variable.cpp"
+#endif
 
 using namespace shirakami;
 

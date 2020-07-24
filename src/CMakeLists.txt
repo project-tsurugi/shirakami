@@ -9,7 +9,7 @@ if (BUILD_CC_SILO_VARIANT)
 endif()
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_SOURCES "index/masstree_beta/masstree_beta_wrapper.cpp")
+    file(GLOB INDEX_SOURCES "index/masstree_beta/global_variable.cpp")
     set(SOURCES ${SOURCES} ${INDEX_SOURCES})
 endif ()
 
