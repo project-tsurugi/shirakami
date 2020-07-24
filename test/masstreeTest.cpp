@@ -4,7 +4,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "index/include/masstree_beta_wrapper.h"
+#include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
 

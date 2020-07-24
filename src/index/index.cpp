@@ -7,7 +7,7 @@
 #include <bitset>
 
 #include "cpu.h"
-#include "index/include/masstree_beta_wrapper.h"
+#include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #include "record.h"
 #include "tuple_local.h"
 

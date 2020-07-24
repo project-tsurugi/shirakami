@@ -1,12 +1,12 @@
 /**
- * @file concurrency_control.cpp
+ * @file silo_variant.cpp
  */
 
 #include "cc/include/silo_variant.h"
 
 #include "garbage_collection.h"
 #ifdef INDEX_KOHLER_MASSTREE
-#include "index/include/masstree_beta_wrapper.h"
+#include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 #include "tuple_local.h"
 

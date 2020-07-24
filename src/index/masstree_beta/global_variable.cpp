@@ -5,7 +5,7 @@
 
 #include "tuple_local.h"
 
-#include "index/include/masstree_beta_wrapper.h"
+#include "index/masstree_beta/include/masstree_beta_wrapper.h"
 
 volatile mrcu_epoch_type active_epoch = 1;
 volatile uint64_t globalepoch = 1;
