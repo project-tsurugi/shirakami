@@ -1,5 +1,5 @@
 /**
- * @file cc.h
+ * @file silo_variant.h
  */
 
 #pragma once
