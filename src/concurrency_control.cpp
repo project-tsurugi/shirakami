@@ -13,7 +13,7 @@ namespace shirakami {
 
 void cc_silo::tbegin(Token token) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  ti->set_txbegan(true);
+  ti->set_tx_began(true);
   ti->set_epoch(epoch::load_acquire_global_epoch());
 }
 
@@ -48,7 +48,7 @@ Status cc_silo::read_record(Record& res, const Record* const dest) {  // NOLINT
 }
 
 void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
-                        const tid_word& max_wset) {
+                          const tid_word& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
    * It calculates the smallest number that is
@@ -83,14 +83,14 @@ void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
   maxtid.set_absent(false);
   maxtid.set_latest(true);
   maxtid.set_epoch(ti->get_epoch());
-  ti->set_mrctid(maxtid);
+  ti->set_mrc_tid(maxtid);
 
 #ifdef WAL
   ti->wal(maxtid.get_obj());
 #endif
 
-  for (auto iws = ti->get_write_set().begin();
-       iws != ti->get_write_set().end(); ++iws) {
+  for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
+       ++iws) {
     Record* recptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
       case OP_TYPE::UPDATE: {
@@ -119,7 +119,8 @@ void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
         tid_word deletetid = maxtid;
         deletetid.set_absent(true);
         std::string_view key_view = recptr->get_tuple().get_key();
-        index_kohler_masstree::get_mtdb().remove_value(key_view.data(), key_view.size());
+        index_kohler_masstree::get_mtdb().remove_value(key_view.data(),
+                                                       key_view.size());
         storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
 
         /**
@@ -152,4 +153,4 @@ void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
 
   ti->gc_records_and_values();
 }
-} // namespace shirakami
+}  // namespace shirakami

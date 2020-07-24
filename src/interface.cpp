@@ -23,7 +23,7 @@ Status abort(Token token) {  // NOLINT
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
-  ti->set_txbegan(false);
+  ti->set_tx_began(false);
   ti->gc_records_and_values();
   return Status::OK;
 }
@@ -96,7 +96,7 @@ Status commit(Token token) {  // NOLINT
 
   cc_silo::write_phase(ti, max_rset, max_wset);
 
-  ti->set_txbegan(false);
+  ti->set_tx_began(false);
   return Status::OK;
 }
 

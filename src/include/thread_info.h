@@ -104,11 +104,13 @@ public:
 
   class log_handler {
   public:
-    std::vector<Log::LogRecord>& get_log_set() { return log_set_; }
+    std::vector<Log::LogRecord>& get_log_set() { return log_set_; }  // NOLINT
 
-    File& get_log_file() { return log_file_; }
+    File& get_log_file() { return log_file_; }  // NOLINT
 
-    Log::LogHeader& get_latest_log_header() { return latest_log_header_; }
+    Log::LogHeader& get_latest_log_header() {  // NOLINT
+      return latest_log_header_;
+    }
 
     void set_log_dir(std::string&& str) { log_dir_ = str; }
 
@@ -121,12 +123,12 @@ public:
 
   explicit ThreadInfo(const Token token) {
     this->token_ = token;
-    mrctid_.reset();
+    get_mrctid().reset();
   }
 
   ThreadInfo() {
     this->visible_.store(false, std::memory_order_release);
-    mrctid_.reset();
+    get_mrctid().reset();
     log_handle_.set_log_dir(MAC2STR(PROJECT_ROOT));
   }
 
@@ -191,11 +193,11 @@ public:
     return log_handle_.get_log_set();
   }
 
-  tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
+  tid_word& get_mrctid() & { return mrc_tid_; }  // NOLINT
 
   [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid()  // NOLINT
       const& {                                                 // NOLINT
-    return mrctid_;
+    return mrc_tid_;
   }
 
   std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
@@ -225,10 +227,10 @@ public:
     return token_;
   }
 
-  bool& get_txbegan() & { return txbegan_; }  // NOLINT
+  bool& get_txbegan() & { return tx_began_; }  // NOLINT
 
   [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& {  // NOLINT
-    return txbegan_;
+    return tx_began_;
   }  // NOLINT
 
   [[nodiscard]] bool get_visible() const& {  // NOLINT
@@ -303,10 +305,10 @@ public:
 
   /**
    * @brief write-ahead logging
-   * @param [in] ctid commit tid.
+   * @param [in] commit_id commit tid.
    * @return void
    */
-  void wal(uint64_t ctid);
+  void wal(uint64_t commit_id);
 
   [[maybe_unused]] void set_token(Token token) & { token_ = token; }
 
@@ -327,20 +329,20 @@ public:
     gc_handle_.set_value_container(cont);
   }
 
-  void set_mrctid(const tid_word& tid) & { mrctid_ = tid; }
+  void set_mrc_tid(const tid_word& tid) & { mrc_tid_ = tid; }
 
   void set_visible(bool visible) & {
     visible_.store(visible, std::memory_order_release);
   }
 
-  void set_txbegan(bool txbegan) & { txbegan_ = txbegan; }
+  void set_tx_began(bool tf) & { tx_began_ = tf; }
 
 private:
   alignas(CACHE_LINE_SIZE) Token token_{};
   std::atomic<epoch::epoch_t> epoch_{};
-  tid_word mrctid_{};  // most recently chosen tid, for calculate new tids.
+  tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible_{};
-  bool txbegan_{};
+  bool tx_began_{};
 
   /**
    * about garbage collection
@@ -362,9 +364,5 @@ private:
    */
   log_handler log_handle_;
 };
-
-[[maybe_unused]] extern void print_result(struct timeval begin,
-                                          struct timeval end, int nthread);
-[[maybe_unused]] extern void print_status(Status status);
 
 }  // namespace shirakami

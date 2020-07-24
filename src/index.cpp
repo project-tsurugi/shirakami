@@ -17,9 +17,9 @@
 
 namespace shirakami {
 
-Status index_kohler_masstree::insert_record(
-    char const* key,  // NOLINT
-    std::size_t len_key, Record* record) {
+Status index_kohler_masstree::insert_record(char const* key,  // NOLINT
+                                            std::size_t len_key,
+                                            Record* record) {
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
   if (core_pos == -1) {
@@ -38,9 +38,8 @@ Status index_kohler_masstree::insert_record(
   return insert_result;
 }
 
-Record* index_kohler_masstree::find_record(
-    char const* key,  // NOLINT
-    std::size_t len_key) {
+Record* index_kohler_masstree::find_record(char const* key,  // NOLINT
+                                           std::size_t len_key) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
 }

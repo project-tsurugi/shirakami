@@ -30,8 +30,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   auto rset_init_size = ti->get_read_set().size();
 
   std::vector<const Record*> scan_res;
-  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_res,
-            false);
+  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
+                                         len_rkey, r_exclusive, &scan_res,
+                                         false);
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
@@ -63,7 +64,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
     ti->get_read_set().emplace_back(const_cast<Record*>(itr));
     Status rr = cc_silo::read_record(ti->get_read_set().back().get_rec_read(),
-                            const_cast<Record*>(itr));
+                                     const_cast<Record*>(itr));
     if (rr != Status::OK) {
       return rr;
     }
@@ -89,8 +90,9 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   std::vector<const Record*> scan_buf;
 
-  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey, r_exclusive, &scan_buf,
-            true);
+  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
+                                         len_rkey, r_exclusive, &scan_buf,
+                                         true);
 
   if (!scan_buf.empty()) {
     /**
@@ -168,9 +170,10 @@ Status read_from_scan(Token token,  // NOLINT
   if (scan_buf.size() == scan_index) {
     std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
-    index_kohler_masstree::get_mtdb().scan(tupleptr->get_key().data(), tupleptr->get_key().size(), true,
-              ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
-              ti->get_r_exclusive()[handle], &new_scan_buf, true);
+    index_kohler_masstree::get_mtdb().scan(
+        tupleptr->get_key().data(), tupleptr->get_key().size(), true,
+        ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
+        ti->get_r_exclusive()[handle], &new_scan_buf, true);
 
     if (!new_scan_buf.empty()) {
       /**

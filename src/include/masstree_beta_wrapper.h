@@ -164,8 +164,9 @@ public:
    * key exists in masstree, so this function returned immediately.
    * @return Status::OK success.
    */
-  shirakami::Status insert_value(const char* key, std::size_t len_key,  // NOLINT
-                           T* value) {
+  shirakami::Status insert_value(const char* key,
+                                 std::size_t len_key,  // NOLINT
+                                 T* value) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_insert(*ti);
     // always_assert(!found, "keys should all be unique");
@@ -183,7 +184,7 @@ public:
 
   // for bench.
   shirakami::Status put_value(const char* key, std::size_t len_key,  // NOLINT
-                        T* value, T** record) {
+                              T* value, T** record) {
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
@@ -205,7 +206,8 @@ public:
     return shirakami::Status::WARN_NOT_FOUND;
   }
 
-  shirakami::Status remove_value(const char* key, std::size_t len_key) {  // NOLINT
+  shirakami::Status remove_value(const char* key,
+                                 std::size_t len_key) {  // NOLINT
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
     if (found) {
@@ -264,4 +266,4 @@ __thread typename MasstreeWrapper<T>::table_params::threadinfo_type*
 
 [[maybe_unused]] extern volatile bool recovering;
 
-} // namespace shirakami
+}  // namespace shirakami

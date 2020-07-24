@@ -3,11 +3,11 @@
  * @brief about entire shirakami.
  */
 
+#include "thread_info_table.h"
 
 #include <cstdint>
 
 #include "garbage_collection.h"
-#include "thread_info_table.h"
 #include "tuple_local.h"
 
 namespace shirakami {
@@ -32,7 +32,7 @@ void thread_info_table::init_kThreadTable() {
   uint64_t ctr(0);
   for (auto&& itr : kThreadTable) {
     itr.set_visible(false);
-    itr.set_txbegan(false);
+    itr.set_tx_began(false);
 
     /**
      * about garbage collection.
@@ -54,7 +54,7 @@ void thread_info_table::init_kThreadTable() {
     itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
     if (!itr->log_file_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY,
-                            0644)) {
+                             0644)) {
       ERR;
     }
     // itr->log_file_.ftruncate(10^9); // if it want to be high performance in

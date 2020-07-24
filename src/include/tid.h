@@ -19,25 +19,25 @@ public:
       bool lock_ : 1;
       bool latest_ : 1;
       bool absent_ : 1;
-      uint64_t tid_ : 29;  // NOLINT
-      epoch::epoch_t epoch_ : 32;   // NOLINT
+      uint64_t tid_ : 29;          // NOLINT
+      epoch::epoch_t epoch_ : 32;  // NOLINT
     };
   };
 
-  tid_word()         // NOLINT
+  tid_word()        // NOLINT
       : obj_(0) {}  // NOLINT : clang-tidy order to initialize other member, but
                     // it occurs compile error.
   tid_word(const uint64_t obj) { obj_ = obj; }  // NOLINT : the same as above.
-  tid_word(const tid_word& right)                // NOLINT
-      : obj_(right.get_obj()) {}               // NOLINT : the same as above.
+  tid_word(const tid_word& right)               // NOLINT
+      : obj_(right.get_obj()) {}                // NOLINT : the same as above.
 
   tid_word& operator=(const tid_word& right) {  // NOLINT
-    obj_ = right.get_obj();                   // NOLINT : union
+    obj_ = right.get_obj();                     // NOLINT : union
     return *this;
   }
 
   bool operator==(const tid_word& right) const {  // NOLINT : trailing
-    return obj_ == right.get_obj();              // NOLINT : union
+    return obj_ == right.get_obj();               // NOLINT : union
   }
 
   bool operator!=(const tid_word& right) const {  // NOLINT : trailing
@@ -45,7 +45,7 @@ public:
   }
 
   bool operator<(const tid_word& right) const {  // NOLINT : trailing
-    return this->obj_ < right.get_obj();        // NOLINT : union
+    return this->obj_ < right.get_obj();         // NOLINT : union
   }
 
   uint64_t& get_obj() & { return obj_; }  // NOLINT
@@ -70,7 +70,9 @@ public:
 
   epoch::epoch_t get_epoch() & { return epoch_; }  // NOLINT
 
-  [[maybe_unused]] epoch::epoch_t get_epoch() const& { return epoch_; }  // NOLINT
+  [[maybe_unused]] epoch::epoch_t get_epoch() const& {
+    return epoch_;
+  }  // NOLINT
 
   void inc_tid() & { this->tid_ = this->tid_ + 1; }  // NOLINT
 
@@ -88,7 +90,9 @@ public:
     this->tid_ = tid;  // NOLINT
   }
 
-  void set_epoch(const epoch::epoch_t epoch) & { this->epoch_ = epoch; }  // NOLINT
+  void set_epoch(const epoch::epoch_t epoch) & {
+    this->epoch_ = epoch;
+  }  // NOLINT
 
   void display();
 
