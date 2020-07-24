@@ -8,12 +8,7 @@
 #include <bitset>
 
 #include "cpu.h"
-#include "garbage_collection.h"
-#include "scheme_local.h"
 #include "tuple_local.h"
-
-// index choice
-#include "masstree_beta_wrapper.h"
 
 namespace shirakami {
 

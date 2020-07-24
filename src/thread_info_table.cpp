@@ -5,10 +5,8 @@
 
 #include "thread_info_table.h"
 
-#include <cstdint>
-
 #include "garbage_collection.h"
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

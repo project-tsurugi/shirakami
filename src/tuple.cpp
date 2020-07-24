@@ -5,8 +5,6 @@
 
 #include "kvs/tuple.h"
 
-#include <memory>
-
 #include "tuple_local.h"
 
 namespace shirakami {

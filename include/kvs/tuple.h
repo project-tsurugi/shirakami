@@ -11,7 +11,7 @@
 
 namespace shirakami {
 
-class Tuple {
+class Tuple { // NOLINT
 public:
   class Impl;
 
@@ -22,7 +22,6 @@ public:
   Tuple(Tuple&& right);
   Tuple& operator=(const Tuple& right) &;  // NOLINT
   Tuple& operator=(Tuple&& right) &;       // NOLINT
-  ~Tuple() = default;
 
   [[nodiscard]] std::string_view get_key() const&;    // NOLINT
   [[nodiscard]] std::string_view get_value() const&;  // NOLINT

@@ -17,7 +17,7 @@ public:
   /**
    * @brief epoch_t
    * @details
-   * Tidword is composed of union ...
+   * tid_word is composed of union ...
    * 1bits : lock
    * 1bits : latest
    * 1bits : absent

@@ -15,18 +15,18 @@
 #include <iostream>
 
 #ifdef KVS_Linux
-[[maybe_unused]] static void setThreadAffinity(const int myid) {
+[[maybe_unused]] static void setThreadAffinity(const int my_id) {
   using namespace std;
-  static std::atomic<int> nprocessors(-1);
-  int local_nprocessors = nprocessors.load(memory_order_acquire);
+  static std::atomic<int> n_processors(-1);
+  int local_n_processors = n_processors.load(memory_order_acquire);
   for (;;) {
-    if (local_nprocessors != -1) {
+    if (local_n_processors != -1) {
       break;
     }
     int desired = sysconf(_SC_NPROCESSORS_CONF);  // NOLINT
-    if (nprocessors.compare_exchange_strong(local_nprocessors, desired,
-                                            memory_order_acq_rel,
-                                            memory_order_acquire)) {
+    if (n_processors.compare_exchange_strong(local_n_processors, desired,
+                                             memory_order_acq_rel,
+                                             memory_order_acquire)) {
       break;
     }
   }
@@ -35,7 +35,7 @@
   cpu_set_t cpu_set;
 
   CPU_ZERO(&cpu_set);
-  CPU_SET(myid % local_nprocessors, &cpu_set);  // NOLINT
+  CPU_SET(my_id % local_n_processors, &cpu_set);  // NOLINT
 
   if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
@@ -67,7 +67,4 @@
   return result;
 }
 
-enum class CorePosition : std::int32_t {
-  EPOCHER = 0,
-};
 #endif  // KVS_Linux

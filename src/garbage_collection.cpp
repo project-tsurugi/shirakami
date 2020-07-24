@@ -5,9 +5,8 @@
 
 #include "garbage_collection.h"
 
-#include "epoch.h"
 #include "index.h"
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

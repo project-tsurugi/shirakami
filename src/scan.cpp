@@ -4,14 +4,10 @@
  */
 
 #include <map>
-#include <string_view>
 
 #include "concurrency_control.h"
 #include "index.h"
-#include "kvs/interface.h"
-#include "masstree_beta_wrapper.h"
-#include "scheme_local.h"
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 using namespace shirakami;
 

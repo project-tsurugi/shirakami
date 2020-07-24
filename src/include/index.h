@@ -22,7 +22,7 @@ public:
   static Record* find_record(char const* key,  // NOLINT
                              std::size_t len_key);
 
-  static MasstreeWrapper<Record>& get_mtdb() { return MTDB; }
+  static MasstreeWrapper<Record>& get_mtdb() { return MTDB; }  // NOLINT
 
   /**
    * @brief insert record to masstree by using args informations.

@@ -195,11 +195,6 @@ public:
 
   tid_word& get_mrctid() & { return mrc_tid_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const tid_word& get_mrctid()  // NOLINT
-      const& {                                                 // NOLINT
-    return mrc_tid_;
-  }
-
   std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
     return scan_handle_.get_r_exclusive_();
   }

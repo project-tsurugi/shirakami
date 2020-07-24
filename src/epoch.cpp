@@ -1,15 +1,14 @@
 /**
- * @file epoch.cc
+ * @file epoch.cpp
  * @brief implement about epoch
  */
 
 #include "epoch.h"
 
-#include "atomic_wrapper.h"
 #include "clock.h"
 #include "index.h"
 #include "thread_info_table.h"
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

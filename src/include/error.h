@@ -1,7 +1,7 @@
 /**
  * @file error.h
  * @brief error utilities.
- * @details This source is implemented by refering the source
+ * @details This source is implemented by referring the source
  * https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
@@ -30,7 +30,7 @@ private:
   }
 
 public:
-  explicit LibcError(int errnum = errno,                      // NOLINT
+  explicit LibcError(int err_num = errno,                     // NOLINT
                      const std::string &msg = "libc_error:")  // NOLINT
-      : str_(generateMessage(errnum, msg)) {}
+      : str_(generateMessage(err_num, msg)) {}
 };

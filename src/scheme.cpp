@@ -4,7 +4,6 @@
  */
 
 #include "garbage_collection.h"
-#include "log.h"
 #include "thread_info.h"
 #include "tuple_local.h"
 

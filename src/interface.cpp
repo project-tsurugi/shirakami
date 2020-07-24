@@ -8,13 +8,10 @@
 #include "atomic_wrapper.h"
 #include "boost/filesystem.hpp"
 #include "concurrency_control.h"
-#include "epoch.h"
 #include "garbage_collection.h"
 #include "index.h"
-#include "masstree_beta_wrapper.h"
-#include "scheme_local.h"
 #include "thread_info_table.h"
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 
@@ -133,12 +130,12 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
 
-  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
+  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (checktid.get_absent()) {
+  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+  if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
     // insert / delete.
@@ -175,7 +172,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
   /**
    * check whether log_directory_path is filesystem objects.
    */
-  boost::filesystem::path log_dir(Log::get_kLogDirectory());
+  boost::filesystem::path log_dir{Log::get_kLogDirectory()};
   if (boost::filesystem::exists(log_dir)) {
     /**
      * some file exists.
@@ -208,7 +205,7 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const val, const std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  WriteSetObj* inws = ti->search_write_set(key, len_key);
+  WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -249,7 +246,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  WriteSetObj* inws = ti->search_write_set(key, len_key);
+  WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
@@ -258,13 +255,13 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj* inrs = ti->search_read_set(key, len_key);
+  ReadSetObj* inrs{ti->search_read_set(key, len_key)};
   if (inrs != nullptr) {
     *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
+  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
@@ -293,18 +290,18 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) cc_silo::tbegin(token);
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  WriteSetObj* inws = ti->search_write_set(key, len_key);
+  WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record = index_kohler_masstree::get_mtdb().get_value(key, len_key);
+  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (checktid.get_absent()) {
+  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+  if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
     // insert / delete.
@@ -322,14 +319,14 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  WriteSetObj* inws = ti->search_write_set(key, len_key);
-  if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val);
+  WriteSetObj* in_ws{ti->search_write_set(key, len_key)};
+  if (in_ws != nullptr) {
+    in_ws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record =
-      index_kohler_masstree::index_kohler_masstree::find_record(key, len_key);
+  Record* record{
+      index_kohler_masstree::index_kohler_masstree::find_record(key, len_key)};
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);  // NOLINT
     Status insert_result(

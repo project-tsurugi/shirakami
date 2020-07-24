@@ -6,7 +6,6 @@
 
 #include "garbage_collection.h"
 #include "index.h"
-#include "masstree_beta_wrapper.h"
 #include "tuple_local.h"
 
 namespace shirakami {

@@ -5,7 +5,7 @@
 
 #include "log.h"
 
-#include "tuple_local.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 
