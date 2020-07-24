@@ -23,13 +23,15 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
-option(BUILD_SILO_VARIANT "Build Silo variant as CC" ON)
-option(BUILD_KOHLER_MASSTREE "Build Kohler Masstree as index" ON)
 
 option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
 option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
+
+option(BUILD_CC_SILO_VARIANT "Build Silo variant as CC" ON)
+option(BUILD_INDEX_KOHLER_MASSTREE "Build Kohler Masstree as index" ON)
+option(BUILD_INDEX_YAKUSHIMA "Build yakushima as index" ON)
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)
