@@ -1,6 +1,5 @@
 file(GLOB SOURCES
         "*.cpp"
-        "index/index.cpp"
         )
 
 if (BUILD_CC_SILO_VARIANT)
@@ -9,7 +8,7 @@ if (BUILD_CC_SILO_VARIANT)
 endif()
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_SOURCES "index/masstree_beta/global_variable.cpp")
+    file(GLOB INDEX_SOURCES "index/masstree_beta/*.cpp")
     set(SOURCES ${SOURCES} ${INDEX_SOURCES})
 endif ()
 
