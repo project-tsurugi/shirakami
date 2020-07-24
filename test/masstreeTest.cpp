@@ -10,7 +10,7 @@
 
 #ifdef INDEX_KOHLER_MASSTREE
 // to use declaration of entity of global variables.
-#include "index/masstree_beta/global_variable.cpp"
+#include "index/masstree_beta/masstree_beta_wrapper.cpp"
 #endif
 
 using namespace shirakami;
