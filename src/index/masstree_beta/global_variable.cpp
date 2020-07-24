@@ -3,6 +3,8 @@
  * @brief implement about masstree_wrapper
  */
 
+#include "tuple_local.h"
+
 #include "index/include/masstree_beta_wrapper.h"
 
 volatile mrcu_epoch_type active_epoch = 1;

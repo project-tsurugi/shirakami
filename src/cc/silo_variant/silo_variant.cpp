@@ -5,7 +5,9 @@
 #include "cc/include/silo_variant.h"
 
 #include "garbage_collection.h"
-#include "index/include/index.h"
+#ifdef INDEX_KOHLER_MASSTREE
+#include "index/include/masstree_beta_wrapper.h"
+#endif
 #include "tuple_local.h"
 
 namespace shirakami {
