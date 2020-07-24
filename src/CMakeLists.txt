@@ -1,8 +1,13 @@
 file(GLOB SOURCES
         "*.cpp"
         "cc/*.cpp"
-        "index/*.cpp"
+        "index/index.cpp"
         )
+
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB INDEX_SOURCES "index/masstree_beta_wrapper.cpp")
+    set(SOURCES ${SOURCES} ${INDEX_SOURCES})
+endif ()
 
 add_library(shirakami
         ${SOURCES}
