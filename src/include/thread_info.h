@@ -68,6 +68,57 @@ public:
     std::vector<std::pair<std::string*, epoch::epoch_t>>* value_container_{};
   };
 
+  class scan_handler {
+  public:
+    [[maybe_unused]] std::map<ScanHandle, std::size_t>&
+    get_len_rkey() {  // NOLINT
+      return len_rkey_;
+    }
+
+    [[maybe_unused]] std::map<ScanHandle, bool>& get_r_exclusive_() {  // NOLINT
+      return r_exclusive_;
+    }
+
+    [[maybe_unused]] std::map<ScanHandle, std::unique_ptr<char[]>>&  // NOLINT
+    get_rkey() {                                                     // NOLINT
+      return rkey_;
+    }
+
+    [[maybe_unused]] std::map<ScanHandle, std::vector<const Record*>>&
+    get_scan_cache() {  // NOLINT
+      return scan_cache_;
+    }
+
+    [[maybe_unused]] std::map<ScanHandle, std::size_t>&
+    get_scan_cache_itr() {  // NOLINT
+      return scan_cache_itr_;
+    }
+
+  private:
+    std::map<ScanHandle, std::size_t> len_rkey_{};
+    std::map<ScanHandle, bool> r_exclusive_{};
+    std::map<ScanHandle, std::unique_ptr<char[]>> rkey_{};  // NOLINT
+    std::map<ScanHandle, std::vector<const Record*>> scan_cache_{};
+    std::map<ScanHandle, std::size_t> scan_cache_itr_{};
+  };
+
+  class log_handler {
+  public:
+    std::vector<Log::LogRecord>& get_log_set() { return log_set_; }
+
+    File& get_log_file() { return log_file_; }
+
+    Log::LogHeader& get_latest_log_header() { return latest_log_header_; }
+
+    void set_log_dir(std::string&& str) { log_dir_ = str; }
+
+  private:
+    std::string log_dir_{};
+    File log_file_{};
+    std::vector<Log::LogRecord> log_set_{};
+    Log::LogHeader latest_log_header_{};
+  };
+
   explicit ThreadInfo(const Token token) {
     this->token_ = token;
     mrctid_.reset();
@@ -76,7 +127,7 @@ public:
   ThreadInfo() {
     this->visible_.store(false, std::memory_order_release);
     mrctid_.reset();
-    log_dir_.assign(MAC2STR(PROJECT_ROOT));
+    log_handle_.set_log_dir(MAC2STR(PROJECT_ROOT));
   }
 
   /**
@@ -133,11 +184,11 @@ public:
   }
 
   std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
-    return len_rkey_;
+    return scan_handle_.get_len_rkey();
   }
 
   std::vector<Log::LogRecord>& get_log_set() {  // NOLINT
-    return log_set_;
+    return log_handle_.get_log_set();
   }
 
   tid_word& get_mrctid() & { return mrctid_; }  // NOLINT
@@ -148,11 +199,11 @@ public:
   }
 
   std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
-    return r_exclusive_;
+    return scan_handle_.get_r_exclusive_();
   }
 
   std::map<ScanHandle, std::unique_ptr<char[]>>& get_rkey() {  // NOLINT
-    return rkey_;
+    return scan_handle_.get_rkey();
   }
 
   std::vector<ReadSetObj>& get_read_set() {  // NOLINT
@@ -161,11 +212,11 @@ public:
 
   std::map<ScanHandle, std::vector<const Record*>>&
   get_scan_cache() {  // NOLINT
-    return scan_cache_;
+    return scan_handle_.get_scan_cache();
   }
 
   std::map<ScanHandle, std::size_t>& get_scan_cache_itr() {  // NOLINT
-    return scan_cache_itr_;
+    return scan_handle_.get_scan_cache_itr();
   }
 
   [[maybe_unused]] Token& get_token() & { return token_; }  // NOLINT
@@ -305,18 +356,11 @@ private:
   /**
    * about scan operation.
    */
-  std::map<ScanHandle, std::vector<const Record*>> scan_cache_{};
-  std::map<ScanHandle, std::size_t> scan_cache_itr_{};
-  std::map<ScanHandle, std::unique_ptr<char[]>> rkey_{};  // NOLINT
-  std::map<ScanHandle, std::size_t> len_rkey_{};
-  std::map<ScanHandle, bool> r_exclusive_{};
+  scan_handler scan_handle_;
   /**
    * about logging.
    */
-  std::string log_dir_{};
-  File logfile_{};
-  Log::LogHeader latest_log_header_{};
-  std::vector<Log::LogRecord> log_set_{};
+  log_handler log_handle_;
 };
 
 [[maybe_unused]] extern void print_result(struct timeval begin,

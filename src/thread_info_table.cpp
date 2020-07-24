@@ -53,11 +53,11 @@ void thread_info_table::init_kThreadTable() {
     itr->log_dir_.assign(kLogDirectory);
     itr->log_dir_.append("/log");
     itr->log_dir_.append(std::to_string(ctr));
-    if (!itr->logfile_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY,
+    if (!itr->log_file_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY,
                             0644)) {
       ERR;
     }
-    // itr->logfile_.ftruncate(10^9); // if it want to be high performance in
+    // itr->log_file_.ftruncate(10^9); // if it want to be high performance in
     // experiments, this line is used.
 #endif
     ++ctr;
@@ -81,7 +81,7 @@ void thread_info_table::fin_kThreadTable() {
      */
     itr.get_log_set().clear();
 #ifdef WAL
-    itr->logfile_.close();
+    itr->log_file_.close();
 #endif
   }
 }

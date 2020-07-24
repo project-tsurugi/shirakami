@@ -19,11 +19,11 @@ void ThreadInfo::clean_up_ops_set() {
 }
 
 void ThreadInfo::clean_up_scan_caches() {
-  scan_cache_.clear();
-  scan_cache_itr_.clear();
-  rkey_.clear();
-  len_rkey_.clear();
-  r_exclusive_.clear();
+  scan_handle_.get_scan_cache().clear();
+  scan_handle_.get_scan_cache_itr().clear();
+  scan_handle_.get_rkey().clear();
+  scan_handle_.get_len_rkey().clear();
+  scan_handle_.get_r_exclusive_().clear();
 }
 
 [[maybe_unused]] void ThreadInfo::display_read_set() {
@@ -192,14 +192,14 @@ void ThreadInfo::unlock_write_set(  // NOLINT
 void ThreadInfo::wal(uint64_t ctid) {
   for (auto&& itr : write_set) {
     if (itr.get_op() == OP_TYPE::UPDATE) {
-      log_set_.emplace_back(ctid, itr.get_op(), &itr.get_tuple_to_local());
+      log_handle_.get_log_set().emplace_back(ctid, itr.get_op(), &itr.get_tuple_to_local());
     } else {
       // insert/delete
-      log_set_.emplace_back(ctid, itr.get_op(), &itr.get_tuple_to_db());
+      log_handle_.get_log_set().emplace_back(ctid, itr.get_op(), &itr.get_tuple_to_db());
     }
-    latest_log_header_.add_checksum(
-        log_set_.back().compute_checksum());  // NOLINT
-    latest_log_header_.inc_log_rec_num();
+    log_handle_.get_latest_log_header().add_checksum(
+        log_handle_.get_log_set().back().compute_checksum());  // NOLINT
+    log_handle_.get_latest_log_header().inc_log_rec_num();
   }
 
   /**
@@ -208,18 +208,18 @@ void ThreadInfo::wal(uint64_t ctid) {
    * some buffer (like char*) and do memcpy instead of write system call
    * and do write system call in a batch.
    */
-  if (log_set_.size() > KVS_LOG_GC_THRESHOLD) {
+  if (log_handle_.get_log_set().size() > KVS_LOG_GC_THRESHOLD) {
     // prepare write header
-    latest_log_header_.compute_two_complement_of_checksum();
+    log_handle_.get_latest_log_header().compute_two_complement_of_checksum();
 
     // write header
-    logfile_.write(static_cast<void*>(&latest_log_header_),
+    log_handle_.get_log_file().write(static_cast<void*>(&log_handle_.get_latest_log_header()),
                    sizeof(Log::LogHeader));
 
     // write log record
-    for (auto&& itr : log_set_) {
+    for (auto&& itr : log_handle_.get_log_set()) {
       // write tx id, op(operation type)
-      logfile_.write(static_cast<void*>(&itr),
+      log_handle_.get_log_file().write(static_cast<void*>(&itr),
                      sizeof(itr.get_tid()) + sizeof(itr.get_op()));
 
       // common subexpression elimination
@@ -229,28 +229,28 @@ void ThreadInfo::wal(uint64_t ctid) {
       // write key_length
       // key_view.size() returns constexpr.
       std::size_t key_size = key_view.size();
-      logfile_.write(static_cast<void*>(&key_size), sizeof(key_size));
+      log_handle_.get_log_file().write(static_cast<void*>(&key_size), sizeof(key_size));
 
       // write key_body
-      logfile_.write((void*)key_view.data(), key_size);  // NOLINT
+      log_handle_.get_log_file().write((void*)key_view.data(), key_size);  // NOLINT
 
       std::string_view value_view = tupleptr->get_value();
       // write value_length
       // value_view.size() returns constexpr.
       std::size_t value_size = value_view.size();
-      logfile_.write((void*)value_view.data(), value_size);  // NOLINT
+      log_handle_.get_log_file().write((void*)value_view.data(), value_size);  // NOLINT
 
       // write val_body
       if (itr.get_op() != OP_TYPE::DELETE) {
         if (value_size != 0) {
-          logfile_.write((void*)value_view.data(), value_size);  // NOLINT
+          log_handle_.get_log_file().write((void*)value_view.data(), value_size);  // NOLINT
         }
       }
     }
   }
 
-  latest_log_header_.init();
-  log_set_.clear();
+  log_handle_.get_latest_log_header().init();
+  log_handle_.get_log_set().clear();
 }
 
 }  // namespace shirakami
