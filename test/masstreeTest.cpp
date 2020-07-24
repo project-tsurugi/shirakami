@@ -4,12 +4,12 @@
  */
 
 #include "gtest/gtest.h"
-#include "masstree_beta_wrapper.h"
+#include "index/include/masstree_beta_wrapper.h"
 #include "scheme_local.h"
 #include "tuple_local.h"
 
 // to use declaration of entity of global variables.
-#include "./../src/masstree_beta_wrapper.cpp"
+#include "index/masstree_beta_wrapper.cpp"
 
 using namespace shirakami;
 

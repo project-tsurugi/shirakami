@@ -21,8 +21,8 @@
 #include <utility>
 #include <vector>
 
-#include "cache_line_size.h"
 #include "compiler.h"
+#include "cpu.h"
 #include "fileio.h"
 #include "log.h"
 #include "record.h"

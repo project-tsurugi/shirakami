@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "cache_line_size.h"
+#include "cpu.h"
 #include "epoch.h"
 #include "record.h"
 

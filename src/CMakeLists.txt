@@ -9,6 +9,7 @@ add_library(shirakami
         )
 
 target_include_directories(shirakami
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         )

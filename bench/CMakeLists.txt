@@ -48,6 +48,7 @@ target_include_directories(ycsb
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/
         PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/src
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
@@ -65,6 +66,7 @@ target_include_directories(masstree
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/
         PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/src
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party

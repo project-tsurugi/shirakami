@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "cache_line_size.h"
+#include "cpu.h"
 
 namespace ycsb_param {
 

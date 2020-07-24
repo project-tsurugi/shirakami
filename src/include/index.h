@@ -1,17 +1,23 @@
 
 /**
- * @file
+ * @file index.h
  * @brief private transaction engine interface
  */
 
 #pragma once
 
 #include "kvs/scheme.h"
-#include "masstree_beta_wrapper.h"
+
 #include "scheme_local.h"
 #include "thread_info.h"
 
+#ifdef INDEX_KOHLER_MASSTREE
+#include "index/include/masstree_beta_wrapper.h"
+#endif
+
 namespace shirakami {
+
+#ifdef INDEX_KOHLER_MASSTREE
 
 class index_kohler_masstree {
 public:
@@ -41,5 +47,7 @@ public:
 private:
   static inline MasstreeWrapper<Record> MTDB;  // NOLINT
 };
+
+#endif // ifdef INDEX_KOHLER_MASSTREE
 
 }  // namespace shirakami

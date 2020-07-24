@@ -14,6 +14,11 @@
 #include <cstdint>
 #include <iostream>
 
+/**
+ * @brief cache line size is 64 bytes.
+ */
+#define CACHE_LINE_SIZE 64  // NOLINT
+
 #ifdef KVS_Linux
 [[maybe_unused]] static void setThreadAffinity(const int my_id) {
   using namespace std;

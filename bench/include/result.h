@@ -5,7 +5,7 @@
 #include <iostream>
 
 // shirakami-impl interface library
-#include "cache_line_size.h"
+#include "cpu.h"
 
 class Result {
 public:
