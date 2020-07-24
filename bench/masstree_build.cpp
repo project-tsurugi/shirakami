@@ -21,12 +21,10 @@
 #include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
-#include "cc.h"
+#include "cc/include/silo_variant.h"
 #include "clock.h"
 #include "cpu.h"
-#include "index.h"
 #include "random.h"
-#include "scheme_local.h"
 #include "tuple_local.h"
 
 using namespace shirakami;

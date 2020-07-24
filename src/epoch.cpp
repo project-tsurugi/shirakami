@@ -6,7 +6,7 @@
 #include "epoch.h"
 
 #include "clock.h"
-#include "index.h"
+#include "index/include/index.h"
 #include "thread_info_table.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 

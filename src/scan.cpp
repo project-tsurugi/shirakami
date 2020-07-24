@@ -5,8 +5,8 @@
 
 #include <map>
 
-#include "cc.h"
-#include "index.h"
+#include "cc/include/silo_variant.h"
+#include "index/include/index.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
 using namespace shirakami;

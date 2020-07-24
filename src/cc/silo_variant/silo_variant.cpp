@@ -2,10 +2,10 @@
  * @file concurrency_control.cpp
  */
 
-#include "cc.h"
+#include "cc/include/silo_variant.h"
 
 #include "garbage_collection.h"
-#include "index.h"
+#include "index/include/index.h"
 #include "tuple_local.h"
 
 namespace shirakami {

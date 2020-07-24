@@ -6,7 +6,7 @@
 #include "thread_info.h"
 
 #include "garbage_collection.h"
-#include "index.h"
+#include "index/include/index.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {

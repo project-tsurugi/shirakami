@@ -7,9 +7,9 @@
 
 #include "atomic_wrapper.h"
 #include "boost/filesystem.hpp"
-#include "cc.h"
+#include "cc/include/silo_variant.h"
 #include "garbage_collection.h"
-#include "index.h"
+#include "index/include/index.h"
 #include "thread_info_table.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 

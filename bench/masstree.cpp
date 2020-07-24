@@ -37,7 +37,7 @@
 #endif
 
 // to use declaration of entity of global variables.
-#include "index/masstree_beta_wrapper.cpp"
+#include "index/masstree_beta/masstree_beta_wrapper.cpp"
 
 using namespace shirakami;
 

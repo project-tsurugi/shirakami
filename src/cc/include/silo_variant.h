@@ -8,6 +8,8 @@
 
 namespace shirakami {
 
+#ifdef CC_SILO_VARIANT
+
 class cc_silo {
 public:
   /**
@@ -33,5 +35,7 @@ public:
   static void write_phase(ThreadInfo* ti, const tid_word& max_rset,
                           const tid_word& max_wset);
 };
+
+#endif // CC_SILO_VARIANT
 
 }  // namespace shirakami
