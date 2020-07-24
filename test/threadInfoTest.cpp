@@ -3,10 +3,11 @@
  */
 
 #include "gtest/gtest.h"
+
 #include "kvs/interface.h"
 
-// shirakami-impl interface library
-#include "thread_info.h"
+#include "cc/silo_variant/include/thread_info.h"
+
 #include "tuple_local.h"
 
 using namespace shirakami;

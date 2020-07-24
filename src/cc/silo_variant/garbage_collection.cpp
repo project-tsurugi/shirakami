@@ -3,13 +3,13 @@
  * @brief about garbage collection.
  */
 
-#include "garbage_collection.h"
+#include "cc/silo_variant/include/garbage_collection.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
-#include "thread_info.h"
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "cc/silo_variant/include/thread_info.h"
+#include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

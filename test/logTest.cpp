@@ -1,5 +1,12 @@
+/**
+ * @file logTest.cpp
+ */
+
+#ifdef CC_SILO_VARIANT
+#include "cc/silo_variant/include/log.h"
+#endif
+
 #include "gtest/gtest.h"
-#include "log.h"
 
 namespace shirakami::testing {
 

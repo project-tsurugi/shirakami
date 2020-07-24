@@ -1,6 +1,12 @@
-#include "gtest/gtest.h"
-#include "kvs/scheme.h"
+/**
+ * @file schemeTest.cpp
+ */
+
 #include "tuple_local.h"
+
+#include "gtest/gtest.h"
+
+#include "kvs/scheme.h"
 
 using namespace shirakami;
 

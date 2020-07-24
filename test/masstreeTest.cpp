@@ -3,10 +3,10 @@
  * @brief test about usage of masstree.
  */
 
+#include "cc/silo_variant/include/scheme_local.h"
+#include "include/tuple_local.h"
 #include "gtest/gtest.h"
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#include "scheme_local.h"
-#include "tuple_local.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 // to use declaration of entity of global variables.

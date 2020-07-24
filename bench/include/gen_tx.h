@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file gen_tx.h
  * @brief generate operations of transaction.
  */
 
@@ -9,8 +9,8 @@
 #include "./ycsb_param.h"
 
 // shirakami/src/
+#include "cc/silo_variant/include/scheme_local.h"
 #include "random.h"
-#include "scheme_local.h"
 #include "zipf.h"
 
 /**

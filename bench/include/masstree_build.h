@@ -16,10 +16,10 @@
 
 #pragma once
 
-// shirakami/src/include/
-#include "scheme_local.h"
+#ifdef CC_SILO_VARIANT
+#include "cc/silo_variant/include/scheme_local.h"
+#endif
 
-// shirakami/include/
 #include "kvs/scheme.h"
 
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT

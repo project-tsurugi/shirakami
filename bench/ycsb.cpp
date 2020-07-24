@@ -18,7 +18,6 @@
  * @file ycsb.cc
  */
 
-#include <shirakami_string.h>
 #include <xmmintrin.h>
 
 #include <cstring>
@@ -27,17 +26,17 @@
 #include "result.h"
 
 // shirakami/bench
-#include "./include/gen_tx.h"
-#include "./include/masstree_build.h"
-#include "./include/ycsb.h"
+#include "gen_tx.h"
+#include "masstree_build.h"
+#include "ycsb.h"
+#include "shirakami_string.h"
 
 // shirakami/src/include
 #include "atomic_wrapper.h"
+#include "cc/silo_variant/include/thread_info.h"
 #include "clock.h"
 #include "cpu.h"
-#include "thread_info.h"
 #include "tuple_local.h"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 

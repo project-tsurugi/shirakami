@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file garbage_collection.h
  * @brief about garbage collection
  */
 

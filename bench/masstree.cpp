@@ -28,9 +28,9 @@
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "cpu.h"
+#include "tuple_local.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "tuple_local.h"
 #if 0
 #include "shirakami/interface.h"
 #include "zipf.hh"

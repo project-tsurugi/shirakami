@@ -2,13 +2,13 @@
  * @file silo_variant.cpp
  */
 
-#include "cc/include/silo_variant.h"
+#include "cc/silo_variant//include/silo_variant.h"
 
-#include "garbage_collection.h"
+#include "cc/silo_variant/include/garbage_collection.h"
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
-#include "tuple_local.h"
+#include "include/tuple_local.h"
 
 namespace shirakami {
 

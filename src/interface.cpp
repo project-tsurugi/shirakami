@@ -7,13 +7,15 @@
 
 #include "atomic_wrapper.h"
 #include "boost/filesystem.hpp"
-#include "cc/include/silo_variant.h"
-#include "garbage_collection.h"
+#ifdef CC_SILO_VARIANT
+#include "cc/silo_variant/include/garbage_collection.h"
+#include "cc/silo_variant/include/silo_variant.h"
+#include "cc/silo_variant/include/thread_info_table.h"
+#endif  // CC_SILO_VARIANT
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif
-#include "thread_info_table.h"
-#include "tuple_local.h"  // sizeof(Tuple)
+#endif                            // INDEX_KOHLER_MASSTREE
+#include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

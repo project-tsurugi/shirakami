@@ -21,10 +21,11 @@
 #include <cstdint>
 #include <thread>
 
-#include "./include/test_param.h"
+#include "test_param.h"
+
 #include "cpu.h"
-#include "gtest/gtest.h"
 #include "tuple_local.h"
+#include "gtest/gtest.h"
 
 // shirakami/include/
 #include "kvs/interface.h"

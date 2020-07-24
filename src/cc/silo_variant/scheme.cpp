@@ -3,9 +3,9 @@
  * @brief about scheme
  */
 
-#include "garbage_collection.h"
-#include "thread_info.h"
-#include "tuple_local.h"
+#include "cc/silo_variant/include/garbage_collection.h"
+#include "cc/silo_variant/include/thread_info.h"
+#include "include/tuple_local.h"
 
 namespace shirakami {
 

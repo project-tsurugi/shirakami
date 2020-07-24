@@ -1,6 +1,12 @@
-#include "gtest/gtest.h"
-#include "record.h"
+/**
+ * @file recordTest.cpp
+ */
+
+#include "cc/silo_variant/include/record.h"
+
 #include "tuple_local.h"
+
+#include "gtest/gtest.h"
 
 using namespace shirakami;
 

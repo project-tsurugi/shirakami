@@ -10,8 +10,10 @@
 #include <typeinfo>
 #include <vector>
 
+#ifdef CC_SILO_VARIANT
+#include "cc/silo_variant/include/record.h"
+#endif
 #include "kvs/scheme.h"
-#include "record.h"
 
 /* if you use formatter, following 2 lines may be exchange.
  * but there is a dependency relation, so teh order is restricted config ->
@@ -285,7 +287,9 @@ public:
                               std::size_t len_key, Record* record);
 
 private:
+#ifdef CC_SILO_VARIANT
   static inline MasstreeWrapper<Record> MTDB;  // NOLINT
+#endif
 };
 
 }  // namespace shirakami

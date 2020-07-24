@@ -5,11 +5,11 @@
 
 #include <map>
 
-#include "cc/include/silo_variant.h"
+#include "cc/silo_variant/include/silo_variant.h"
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "include/tuple_local.h"  // sizeof(Tuple)
 
 using namespace shirakami;
 

@@ -3,10 +3,10 @@
  * @brief about entire shirakami.
  */
 
-#include "thread_info_table.h"
+#include "cc/silo_variant/include/thread_info_table.h"
 
-#include "garbage_collection.h"
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "cc/silo_variant/include/garbage_collection.h"
+#include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 

@@ -3,12 +3,12 @@
  * @brief implement about masstree_wrapper
  */
 
+#include "index/masstree_beta/include/masstree_beta_wrapper.h"
+
 #include <bitset>
 
+#include "include/tuple_local.h"
 #include "cpu.h"
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#include "record.h"
-#include "tuple_local.h"
 
 volatile mrcu_epoch_type active_epoch = 1;
 volatile uint64_t globalepoch = 1;

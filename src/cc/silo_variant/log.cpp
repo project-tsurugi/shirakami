@@ -1,11 +1,11 @@
 /**
- * @file log.cc
+ * @file log.cpp
  * @brief implement about log
  */
 
-#include "log.h"
+#include "cc/silo_variant/include/log.h"
 
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 
