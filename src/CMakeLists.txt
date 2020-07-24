@@ -1,5 +1,7 @@
 file(GLOB SOURCES
         "*.cpp"
+        "cc/*.cpp"
+        "index/*.cpp"
         )
 
 add_library(shirakami

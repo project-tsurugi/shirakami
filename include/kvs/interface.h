@@ -157,23 +157,22 @@ extern Status upsert(Token token, Storage storage,  // NOLINT
 extern Status delete_record(Token token, Storage storage,  // NOLINT
                             const char* key, std::size_t len_key);
 
-[[maybe_unused]] /**
-                  * @brief Delete the all records.
-                  * @pre This function is called by a single thread and does't
-                  * allow moving of other threads.
-                  * @details This function executes tbegin(Token token)
-                  * internaly, so it doesn't need to call tbegin(Token token).
-                  * Also it doesn't need to call enter/leave around calling this
-                  * function. Because this function calls enter/leave
-                  * appropriately.
-                  * @return Status::WARN_ALREADY_DELETE There are no records.
-                  * @return Status::OK success
-                  * @return Return value of commit function. If it return this,
-                  * you can retry delete_all_records meaning to resume this
-                  * function.
-                  */
-[[maybe_unused]] extern Status
-delete_all_records();  // NOLINT
+/**
+ * @brief Delete the all records.
+ * @pre This function is called by a single thread and does't
+ * allow moving of other threads.
+ * @details This function executes tbegin(Token token)
+ * internaly, so it doesn't need to call tbegin(Token token).
+ * Also it doesn't need to call enter/leave around calling this
+ * function. Because this function calls enter/leave
+ * appropriately.
+ * @return Status::WARN_ALREADY_DELETE There are no records.
+ * @return Status::OK success
+ * @return Return value of commit function. If it return this,
+ * you can retry delete_all_records meaning to resume this
+ * function.
+ */
+[[maybe_unused]] extern Status delete_all_records();  // NOLINT
 
 /**
  * @brief insert the record with given key/value
