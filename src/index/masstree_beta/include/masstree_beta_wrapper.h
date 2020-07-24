@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "kvs/scheme.h"
-
 #include "record.h"
 
 /* if you use formatter, following 2 lines may be exchange.
@@ -35,7 +34,7 @@
 
 namespace shirakami {
 
-class key_unparse_unsigned {
+class key_unparse_unsigned {  // NOLINT
 public:
   [[maybe_unused]] static int unparse_key(  // NOLINT
       Masstree::key<uint64_t> key, char* buf, int buflen) {
@@ -146,14 +145,6 @@ public:
     if (ti == nullptr) ti = threadinfo::make(threadinfo::TI_PROCESS, thread_id);
   }
 
-  [[maybe_unused]] void table_print() {
-    table_.print(stdout);
-    fprintf(stdout, "Stats: %s\n",
-            Masstree::json_stats(table_, ti)
-                .unparse(lcdf::Json::indent_depth(1000))  // NOLINT
-                .c_str());
-  }
-
   /**
    * @brief insert value to masstree
    * @param key This must be a type of const char*.
@@ -166,7 +157,7 @@ public:
    * key exists in masstree, so this function returned immediately.
    * @return Status::OK success.
    */
-  shirakami::Status insert_value(const char* key,
+  shirakami::Status insert_value(const char* key,      // NOLINT
                                  std::size_t len_key,  // NOLINT
                                  T* value) {
     cursor_type lp(table_, key, len_key);
@@ -208,7 +199,7 @@ public:
     return shirakami::Status::WARN_NOT_FOUND;
   }
 
-  shirakami::Status remove_value(const char* key,
+  shirakami::Status remove_value(const char* key,        // NOLINT
                                  std::size_t len_key) {  // NOLINT
     cursor_type lp(table_, key, len_key);
     bool found = lp.find_locked(*ti);
