@@ -1,8 +1,8 @@
 /**
- * @file silo_variant.cpp
+ * @file helper.cpp
  */
 
-#include "cc/silo_variant//include/silo_variant.h"
+#include "cc/silo_variant//include/helper.h"
 
 #include "cc/silo_variant/include/garbage_collection.h"
 #ifdef INDEX_KOHLER_MASSTREE

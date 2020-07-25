@@ -9,7 +9,7 @@
 #include "boost/filesystem.hpp"
 #ifdef CC_SILO_VARIANT
 #include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/silo_variant.h"
+#include "cc/silo_variant/include/helper.h"
 #include "cc/silo_variant/include/thread_info_table.h"
 #endif  // CC_SILO_VARIANT
 #ifdef INDEX_KOHLER_MASSTREE
