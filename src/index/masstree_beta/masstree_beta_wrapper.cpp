@@ -7,8 +7,8 @@
 
 #include <bitset>
 
-#include "include/tuple_local.h"
 #include "cpu.h"
+#include "include/tuple_local.h"
 
 volatile mrcu_epoch_type active_epoch = 1;
 volatile uint64_t globalepoch = 1;
@@ -29,22 +29,23 @@ Status index_kohler_masstree::insert_record(char const* key,  // NOLINT
   }
   cpu_set_t current_mask = getThreadAffinity();
   setThreadAffinity(core_pos);
-#endif // KVS_Linux
+#endif  // KVS_Linux
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   Status insert_result(MTDB.insert_value(key, len_key, record));
 #ifdef KVS_Linux
   setThreadAffinity(current_mask);
-#endif // KVS_Linux
+#endif  // KVS_Linux
   return insert_result;
-#endif // INDEX_KOHLER_MASSTREE
+#endif  // INDEX_KOHLER_MASSTREE
 }
 
-silo_variant::Record* index_kohler_masstree::find_record(char const* key,  // NOLINT
-                                           std::size_t len_key) {
+silo_variant::Record* index_kohler_masstree::find_record(
+    char const* key,  // NOLINT
+    std::size_t len_key) {
 #ifdef INDEX_KOHLER_MASSTREE
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
-#endif // INDEX_KOHLER_MASSTREE
+#endif  // INDEX_KOHLER_MASSTREE
 }
 
-} // namespace yakushima
+}  // namespace shirakami

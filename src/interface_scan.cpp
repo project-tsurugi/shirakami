@@ -32,7 +32,8 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
-    silo_variant::WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
+    silo_variant::WriteSetObj* inws =
+        ti->search_write_set(key_view.data(), key_view.size());
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
         return Status::WARN_ALREADY_DELETE;
@@ -59,8 +60,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // update is own.
 
     ti->get_read_set().emplace_back(const_cast<silo_variant::Record*>(itr));
-    Status rr = silo_variant::read_record(ti->get_read_set().back().get_rec_read(),
-                                     const_cast<silo_variant::Record*>(itr));
+    Status rr =
+        silo_variant::read_record(ti->get_read_set().back().get_rec_read(),
+                                  const_cast<silo_variant::Record*>(itr));
     if (rr != Status::OK) {
       return rr;
     }
@@ -160,7 +162,8 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_INVALID_HANDLE;
   }
 
-  std::vector<const silo_variant::Record*>& scan_buf = ti->get_scan_cache()[handle];
+  std::vector<const silo_variant::Record*>& scan_buf =
+      ti->get_scan_cache()[handle];
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 
   if (scan_buf.size() == scan_index) {
@@ -245,4 +248,4 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami

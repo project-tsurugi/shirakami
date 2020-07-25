@@ -49,7 +49,7 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
 }
 
 void write_phase(ThreadInfo* ti, const tid_word& max_rset,
-                          const tid_word& max_wset) {
+                 const tid_word& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
    * It calculates the smallest number that is

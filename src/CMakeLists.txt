@@ -5,7 +5,7 @@ file(GLOB SOURCES
 if (BUILD_CC_SILO_VARIANT)
     file(GLOB CC_SOURCES "cc/silo_variant/*.cpp")
     set(SOURCES ${SOURCES} ${CC_SOURCES})
-endif()
+endif ()
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
     file(GLOB INDEX_SOURCES "index/masstree_beta/*.cpp")

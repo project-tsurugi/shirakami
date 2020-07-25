@@ -38,7 +38,8 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  silo_variant::Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  silo_variant::Record* record{
+      index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;

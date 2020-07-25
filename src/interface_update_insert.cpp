@@ -32,7 +32,8 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  silo_variant::Record* record = new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
+  silo_variant::Record* record =
+      new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
   Status insert_result(
       index_kohler_masstree::insert_record(key, len_key, record));
   if (insert_result == Status::OK) {
@@ -56,7 +57,8 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  silo_variant::Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  silo_variant::Record* record{
+      index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }

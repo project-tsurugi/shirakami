@@ -8,7 +8,6 @@
 #include <bitset>
 #include <iostream>
 
-
 namespace shirakami::silo_variant {
 
 void tid_word::display() {
