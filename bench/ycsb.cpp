@@ -163,9 +163,8 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 
   Token token{};
   Storage storage{};
-  std::vector<shirakami::OprObj> opr_set;
+  std::vector<shirakami::silo_variant::OprObj> opr_set;
   enter(token);
-  auto* ti = static_cast<ThreadInfo*>(token);
 
   storeRelease(ready, 1);
   while (!loadAcquire(start)) _mm_pause();

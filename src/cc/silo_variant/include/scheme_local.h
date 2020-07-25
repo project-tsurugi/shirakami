@@ -32,7 +32,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 /**
  * @brief element of write set.
@@ -226,4 +226,4 @@ private:
   std::string value_{};
 };
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

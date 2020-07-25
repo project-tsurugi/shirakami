@@ -11,7 +11,7 @@
 #include "cc/silo_variant/include/thread_info.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 [[maybe_unused]] void garbage_collection::release_all_heap_objects() {
   garbage_collection::remove_all_leaf_from_mtdb_and_release();
@@ -97,4 +97,4 @@ void ThreadInfo::gc_records_and_values() const {
   }
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

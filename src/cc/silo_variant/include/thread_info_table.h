@@ -9,7 +9,7 @@
 
 #include "thread_info.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 class thread_info_table {
 public:
@@ -39,4 +39,4 @@ private:
       kThreadTable;                                               // NOLINT
 };
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

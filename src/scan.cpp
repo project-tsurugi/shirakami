@@ -11,8 +11,6 @@
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-using namespace shirakami;
-
 namespace shirakami {
 
 Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
@@ -20,21 +18,21 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 const bool l_exclusive, const char* const rkey,
                 const std::size_t len_rkey, const bool r_exclusive,
                 std::vector<const Tuple*>& result) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
   auto rset_init_size = ti->get_read_set().size();
 
-  std::vector<const Record*> scan_res;
+  std::vector<const silo_variant::Record*> scan_res;
   index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
                                          len_rkey, r_exclusive, &scan_res,
                                          false);
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
-    WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
+    silo_variant::WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
         return Status::WARN_ALREADY_DELETE;
@@ -49,7 +47,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
       continue;
     }
 
-    const ReadSetObj* inrs = ti->search_read_set(itr);
+    const silo_variant::ReadSetObj* inrs = ti->search_read_set(itr);
     if (inrs != nullptr) {
       result.emplace_back(&inrs->get_rec_read().get_tuple());
       continue;
@@ -60,9 +58,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // Because in herbrand semantics, the read reads last update even if the
     // update is own.
 
-    ti->get_read_set().emplace_back(const_cast<Record*>(itr));
-    Status rr = cc_silo::read_record(ti->get_read_set().back().get_rec_read(),
-                                     const_cast<Record*>(itr));
+    ti->get_read_set().emplace_back(const_cast<silo_variant::Record*>(itr));
+    Status rr = silo_variant::read_record(ti->get_read_set().back().get_rec_read(),
+                                     const_cast<silo_variant::Record*>(itr));
     if (rr != Status::OK) {
       return rr;
     }
@@ -83,10 +81,10 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  const bool l_exclusive, const char* const rkey,
                  const std::size_t len_rkey, const bool r_exclusive,
                  ScanHandle& handle) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  std::vector<const Record*> scan_buf;
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  std::vector<const silo_variant::Record*> scan_buf;
 
   index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
                                          len_rkey, r_exclusive, &scan_buf,
@@ -135,8 +133,8 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 Status scannable_total_index_size(Token token,  // NOLINT
                                   [[maybe_unused]] Storage storage,
                                   ScanHandle& handle, std::size_t& size) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
@@ -152,8 +150,8 @@ Status scannable_total_index_size(Token token,  // NOLINT
 Status read_from_scan(Token token,  // NOLINT
                       [[maybe_unused]] Storage storage, const ScanHandle handle,
                       Tuple** const tuple) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
@@ -162,11 +160,11 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_INVALID_HANDLE;
   }
 
-  std::vector<const Record*>& scan_buf = ti->get_scan_cache()[handle];
+  std::vector<const silo_variant::Record*>& scan_buf = ti->get_scan_cache()[handle];
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 
   if (scan_buf.size() == scan_index) {
-    std::vector<const Record*> new_scan_buf;
+    std::vector<const silo_variant::Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
     index_kohler_masstree::get_mtdb().scan(
         tupleptr->get_key().data(), tupleptr->get_key().size(), true,
@@ -189,7 +187,7 @@ Status read_from_scan(Token token,  // NOLINT
 
   auto itr = scan_buf.begin() + scan_index;
   std::string_view key_view = (*itr)->get_tuple().get_key();
-  const WriteSetObj* inws =
+  const silo_variant::WriteSetObj* inws =
       ti->search_write_set(key_view.data(), key_view.size());
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
@@ -206,7 +204,7 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  const ReadSetObj* inrs =
+  const silo_variant::ReadSetObj* inrs =
       ti->search_read_set(key_view.data(), key_view.size());
   if (inrs != nullptr) {
     *tuple = const_cast<Tuple*>(&inrs->get_rec_read().get_tuple());
@@ -214,8 +212,8 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj rsob(*itr);
-  Status rr = cc_silo::read_record(rsob.get_rec_read(), *itr);
+  silo_variant::ReadSetObj rsob(*itr);
+  Status rr = silo_variant::read_record(rsob.get_rec_read(), *itr);
   if (rr != Status::OK) {
     return rr;
   }
@@ -228,7 +226,7 @@ Status read_from_scan(Token token,  // NOLINT
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const ScanHandle handle) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
 
   auto itr = ti->get_scan_cache().find(handle);
   if (itr == ti->get_scan_cache().end()) {
@@ -247,4 +245,4 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

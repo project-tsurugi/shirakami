@@ -55,7 +55,7 @@ void parallel_build_mtdb(std::size_t start, std::size_t end,
   Token token{};
   enter(token);
 
-  cc_silo::tbegin(token);
+  silo_variant::tbegin(token);
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
     std::string val(value_length, '0');  // NOLINT

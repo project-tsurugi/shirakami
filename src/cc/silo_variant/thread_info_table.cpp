@@ -8,7 +8,7 @@
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 Status thread_info_table::decide_token(Token& token) {  // NOLINT
   for (auto&& itr : kThreadTable) {
@@ -84,4 +84,4 @@ void thread_info_table::fin_kThreadTable() {
   }
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

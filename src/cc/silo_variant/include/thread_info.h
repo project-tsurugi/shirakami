@@ -32,7 +32,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 class ThreadInfo {
 public:
@@ -360,4 +360,4 @@ private:
   log_handler log_handle_;
 };
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

@@ -8,8 +8,6 @@
 // shirakami-impl interface library
 #include "tsc.h"
 
-using namespace shirakami;
-
 namespace shirakami::testing {
 
 constexpr const int MAX_TUPLES = 1000000;
@@ -20,7 +18,7 @@ public:
   void DoInsert(int, int);
   void DoScan();
 
-  ::Token& get_s() { return s_; }  // NOLINT
+  Token& get_s() { return s_; }  // NOLINT
 
   void SetUp() override {
     shirakami::init();  // NOLINT
@@ -33,7 +31,7 @@ public:
 
 private:
   std::array<std::uint64_t, MAX_TUPLES> key_{};
-  ::Token s_{};
+  Token s_{};
   Storage st_{};
 };
 

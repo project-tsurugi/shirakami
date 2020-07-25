@@ -11,7 +11,7 @@
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 void ThreadInfo::clean_up_ops_set() {
   read_set.clear();
@@ -265,4 +265,4 @@ void ThreadInfo::wal(uint64_t commit_id) {
   log_handle_.get_log_set().clear();
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

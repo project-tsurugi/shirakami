@@ -8,9 +8,8 @@
 #include <bitset>
 #include <iostream>
 
-using namespace shirakami;
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 void tid_word::display() {
   std::cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_)  // NOLINT
@@ -22,4 +21,4 @@ void tid_word::display() {
   std::cout << "epoch_ : " << epoch_ << std::endl;               // NOLINT
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

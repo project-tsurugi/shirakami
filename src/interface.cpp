@@ -20,7 +20,7 @@
 namespace shirakami {
 
 Status abort(Token token) {  // NOLINT
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
   ti->remove_inserted_records_of_write_set_from_masstree();
   ti->clean_up_ops_set();
   ti->clean_up_scan_caches();
@@ -30,16 +30,16 @@ Status abort(Token token) {  // NOLINT
 }
 
 Status commit(Token token) {  // NOLINT
-  auto* ti = static_cast<ThreadInfo*>(token);
-  tid_word max_rset;
-  tid_word max_wset;
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  silo_variant::tid_word max_rset;
+  silo_variant::tid_word max_wset;
 
   // Phase 1: Sort lock list;
   std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
 
   // Phase 2: Lock write set;
-  tid_word expected;
-  tid_word desired;
+  silo_variant::tid_word expected;
+  silo_variant::tid_word desired;
   for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end();
        ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
@@ -70,14 +70,14 @@ Status commit(Token token) {  // NOLINT
 
   // Serialization point
   asm volatile("" ::: "memory");  // NOLINT
-  ti->set_epoch(epoch::load_acquire_global_epoch());
+  ti->set_epoch(silo_variant::epoch::load_acquire_global_epoch());
   asm volatile("" ::: "memory");  // NOLINT
 
   // Phase 3: Validation
-  tid_word check;
+  silo_variant::tid_word check;
   for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end();
        itr++) {
-    const Record* rec_ptr = itr->get_rec_ptr();
+    const silo_variant::Record* rec_ptr = itr->get_rec_ptr();
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
          itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
@@ -95,7 +95,7 @@ Status commit(Token token) {  // NOLINT
 
   // exec_logging(write_set, myid);
 
-  cc_silo::write_phase(ti, max_rset, max_wset);
+  silo_variant::write_phase(ti, max_rset, max_wset);
 
   ti->set_tx_began(false);
   return Status::OK;
@@ -105,9 +105,9 @@ Status commit(Token token) {  // NOLINT
   Token s{};
   Storage st{};
   while (Status::OK != enter(s)) _mm_pause();
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
 
-  std::vector<const Record*> scan_res;
+  std::vector<const silo_variant::Record*> scan_res;
   index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
                                          &scan_res, false);
 
@@ -128,17 +128,17 @@ Status commit(Token token) {  // NOLINT
 
 Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                      const char* const key, const std::size_t len_key) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
 
-  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  silo_variant::Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+  silo_variant::tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
   if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -151,32 +151,32 @@ Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 }
 
 Status enter(Token& token) {  // NOLINT
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  return thread_info_table::decide_token(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  return silo_variant::thread_info_table::decide_token(token);
 }
 
 void fin() {
-  garbage_collection::release_all_heap_objects();
+  silo_variant::garbage_collection::release_all_heap_objects();
 
   // Stop DB operation.
-  epoch::set_epoch_thread_end(true);
-  epoch::join_epoch_thread();
-  thread_info_table::fin_kThreadTable();
+  silo_variant::epoch::set_epoch_thread_end(true);
+  silo_variant::epoch::join_epoch_thread();
+  silo_variant::thread_info_table::fin_kThreadTable();
 }
 
 Status init(std::string_view log_directory_path) {  // NOLINT
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */
-  Log::set_kLogDirectory(log_directory_path);
+  silo_variant::Log::set_kLogDirectory(log_directory_path);
   if (log_directory_path == MAC2STR(PROJECT_ROOT)) {
-    Log::get_kLogDirectory().append("/log");
+    silo_variant::Log::get_kLogDirectory().append("/log");
   }
 
   /**
    * check whether log_directory_path is filesystem objects.
    */
-  boost::filesystem::path log_dir{Log::get_kLogDirectory()};
+  boost::filesystem::path log_dir{silo_variant::Log::get_kLogDirectory()};
   if (boost::filesystem::exists(log_dir)) {
     /**
      * some file exists.
@@ -198,8 +198,8 @@ Status init(std::string_view log_directory_path) {  // NOLINT
    */
   // single_recovery_from_log();
 
-  thread_info_table::init_kThreadTable();
-  epoch::invoke_epocher();
+  silo_variant::thread_info_table::init_kThreadTable();
+  silo_variant::epoch::invoke_epocher();
 
   return Status::OK;
 }
@@ -207,9 +207,9 @@ Status init(std::string_view log_directory_path) {  // NOLINT
 Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  WriteSetObj* inws{ti->search_write_set(key, len_key)};
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -219,7 +219,7 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  Record* record = new Record(key, len_key, val, len_val);  // NOLINT
+  silo_variant::Record* record = new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
   Status insert_result(
       index_kohler_masstree::insert_record(key, len_key, record));
   if (insert_result == Status::OK) {
@@ -232,8 +232,8 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 }
 
 Status leave(Token token) {  // NOLINT
-  for (auto&& itr : thread_info_table::get_thread_info_table()) {
-    if (&itr == static_cast<ThreadInfo*>(token)) {
+  for (auto&& itr : silo_variant::thread_info_table::get_thread_info_table()) {
+    if (&itr == static_cast<silo_variant::ThreadInfo*>(token)) {
       if (itr.get_visible()) {
         itr.set_visible(false);
         return Status::OK;
@@ -247,10 +247,10 @@ Status leave(Token token) {  // NOLINT
 Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                   const char* const key, const std::size_t len_key,
                   Tuple** const tuple) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  WriteSetObj* inws{ti->search_write_set(key, len_key)};
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
@@ -259,18 +259,18 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj* inrs{ti->search_read_set(key, len_key)};
+  silo_variant::ReadSetObj* inrs{ti->search_read_set(key, len_key)};
   if (inrs != nullptr) {
     *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  silo_variant::Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
-  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
+  silo_variant::tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
   if (checktid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -279,8 +279,8 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ReadSetObj rsob(record);
-  Status rr = cc_silo::read_record(rsob.get_rec_read(), record);
+  silo_variant::ReadSetObj rsob(record);
+  Status rr = silo_variant::read_record(rsob.get_rec_read(), record);
   if (rr == Status::OK) {
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
@@ -291,20 +291,20 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  WriteSetObj* inws{ti->search_write_set(key, len_key)};
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  silo_variant::Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+  silo_variant::tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
   if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -321,18 +321,18 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, std::size_t len_key, const char* const val,
               std::size_t len_val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
-  if (!ti->get_txbegan()) cc_silo::tbegin(token);
-  WriteSetObj* in_ws{ti->search_write_set(key, len_key)};
+  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  silo_variant::WriteSetObj* in_ws{ti->search_write_set(key, len_key)};
   if (in_ws != nullptr) {
     in_ws->reset_tuple_value(val, len_val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
-  Record* record{
+  silo_variant::Record* record{
       index_kohler_masstree::index_kohler_masstree::find_record(key, len_key)};
   if (record == nullptr) {
-    record = new Record(key, len_key, val, len_val);  // NOLINT
+    record = new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
     Status insert_result(
         index_kohler_masstree::insert_record(key, len_key, record));
     if (insert_result == Status::OK) {

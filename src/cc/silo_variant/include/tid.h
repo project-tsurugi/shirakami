@@ -9,7 +9,7 @@
 
 #include "epoch.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 class tid_word {  // NOLINT
 public:
@@ -104,4 +104,4 @@ inline std::ostream& operator<<(std::ostream& out, tid_word tid) {  // NOLINT
   return out;
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

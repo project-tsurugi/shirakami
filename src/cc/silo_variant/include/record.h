@@ -9,7 +9,8 @@
 #include "kvs/tuple.h"
 #include "tid.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
+
 class Record {  // NOLINT
 public:
   Record() {}  // NOLINT
@@ -51,4 +52,4 @@ private:
   Tuple tuple_;
 };
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

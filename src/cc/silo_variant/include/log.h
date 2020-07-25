@@ -15,7 +15,7 @@
 #include "kvs/scheme.h"
 #include "tid.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 class Log {
 public:
@@ -116,4 +116,5 @@ public:
 private:
   static inline std::string kLogDirectory{};  // NOLINT
 };
-}  // namespace shirakami
+
+}  // namespace shirakami::silo_variant

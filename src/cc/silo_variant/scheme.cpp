@@ -7,7 +7,7 @@
 #include "cc/silo_variant/include/thread_info.h"
 #include "include/tuple_local.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 bool WriteSetObj::operator<(const WriteSetObj& right) const {  // NOLINT
   const Tuple& this_tuple = this->get_tuple(this->get_op());
@@ -45,4 +45,4 @@ void WriteSetObj::reset_tuple_value(const char* const val_ptr,
       ->set_value(val_ptr, val_length);
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

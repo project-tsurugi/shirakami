@@ -136,7 +136,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   while (!loadAcquire(start)) _mm_pause();
 
   Token token{};
-  shirakami::Record myrecord{};
+  shirakami::silo_variant::Record myrecord{};
   Storage storage{};
   enter(token);
   while (likely(!loadAcquire(quit))) {
@@ -157,8 +157,8 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 #if 0
       // future work : If it defines that the record number is divisible by 2, it can use mask and "and computation"  instead of "surplus computation".
       // Then, it will be faster than now.
-      shirakami::Record* record;
-      shirakami::Record* newrecord = new shirakami::Record();
+      shirakami::silo_variant::Record* record;
+      shirakami::silo_variant::Record* newrecord = new shirakami::silo_variant::Record();
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
       if (shirakami::Status::OK != MTDB.put_value((char*)&keybs, sizeof(uint64_t), newrecord, &record)) ERR;
@@ -167,7 +167,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
     } else if (FLAGS_instruction == "get") {
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
-      shirakami::Record* record;
+      shirakami::silo_variant::Record* record;
       record = MTDB.get_value((char*)&keybs, sizeof(uint64_t));
       if (record == nullptr) ERR;
       ++myres.local_commit_counts_;

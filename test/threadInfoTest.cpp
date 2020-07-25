@@ -10,7 +10,7 @@
 
 #include "tuple_local.h"
 
-using namespace shirakami;
+using namespace shirakami::silo_variant;
 
 namespace shirakami::testing {
 

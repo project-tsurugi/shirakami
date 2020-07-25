@@ -267,10 +267,10 @@ public:
    * @brief find record from masstree by using args informations.
    * @return the found record pointer.
    */
-  static Record* find_record(char const* key,  // NOLINT
+  static silo_variant::Record* find_record(char const* key,  // NOLINT
                              std::size_t len_key);
 
-  static MasstreeWrapper<Record>& get_mtdb() { return MTDB; }  // NOLINT
+  static MasstreeWrapper<silo_variant::Record>& get_mtdb() { return MTDB; }  // NOLINT
 
   /**
    * @brief insert record to masstree by using args informations.
@@ -284,11 +284,11 @@ public:
    * @return Status::OK It inserted record.
    */
   static Status insert_record(char const* key,  // NOLINT
-                              std::size_t len_key, Record* record);
+                              std::size_t len_key, silo_variant::Record* record);
 
 private:
 #ifdef CC_SILO_VARIANT
-  static inline MasstreeWrapper<Record> MTDB;  // NOLINT
+  static inline MasstreeWrapper<silo_variant::Record> MTDB;  // NOLINT
 #endif
 };
 

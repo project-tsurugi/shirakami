@@ -7,7 +7,7 @@
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 void Log::LogHeader::init() & {
   checksum_ = 0;
@@ -184,4 +184,4 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   leave(s);
 }
 
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

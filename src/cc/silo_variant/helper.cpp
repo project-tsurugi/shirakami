@@ -10,15 +10,15 @@
 #endif
 #include "include/tuple_local.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
-void cc_silo::tbegin(Token token) {
+void tbegin(Token token) {
   auto* ti = static_cast<ThreadInfo*>(token);
   ti->set_tx_began(true);
   ti->set_epoch(epoch::load_acquire_global_epoch());
 }
 
-Status cc_silo::read_record(Record& res, const Record* const dest) {  // NOLINT
+Status read_record(Record& res, const Record* const dest) {  // NOLINT
   tid_word f_check;
   tid_word s_check;  // first_check, second_check for occ
 
@@ -48,7 +48,7 @@ Status cc_silo::read_record(Record& res, const Record* const dest) {  // NOLINT
   return Status::OK;
 }
 
-void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
+void write_phase(ThreadInfo* ti, const tid_word& max_rset,
                           const tid_word& max_wset) {
   MasstreeWrapper<Record>::thread_init(sched_getcpu());
   /*
@@ -154,4 +154,4 @@ void cc_silo::write_phase(ThreadInfo* ti, const tid_word& max_rset,
 
   ti->gc_records_and_values();
 }
-}  // namespace shirakami
+}  // namespace shirakami::silo_variant

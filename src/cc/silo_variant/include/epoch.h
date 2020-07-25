@@ -10,7 +10,7 @@
 
 #include "atomic_wrapper.h"
 
-namespace shirakami {
+namespace shirakami::silo_variant {
 
 class epoch {
 public:
@@ -64,4 +64,4 @@ private:
   static inline std::atomic<bool> kEpochThreadEnd;  // NOLINT
 };
 
-}  // namespace shirakami.
+}  // namespace shirakami::silo_variant
