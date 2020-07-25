@@ -1,5 +1,5 @@
 /**
- * @file scan.cc
+ * @file interface_scan.cpp
  * @detail implement about scan operation.
  */
 

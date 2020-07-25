@@ -1,5 +1,5 @@
 /**
- * @file interface.cpp
+ * @file interface_update_insert.cpp
  * @brief implement about transaction
  */
 
@@ -32,8 +32,8 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  silo_variant::Record* record =
-      new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
+  silo_variant::Record* record =  // NOLINT
+      new silo_variant::Record(key, len_key, val, len_val);
   Status insert_result(
       index_kohler_masstree::insert_record(key, len_key, record));
   if (insert_result == Status::OK) {

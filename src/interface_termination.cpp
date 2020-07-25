@@ -1,5 +1,5 @@
 /**
- * @file interface.cpp
+ * @file interface_termination.cpp
  * @brief implement about transaction
  */
 
