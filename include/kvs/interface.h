@@ -60,10 +60,10 @@ extern Status leave(Token token);  // NOLINT
  * @brief silo's(SOSP2013) validation protocol. If this function return ERR_
  * status, this called abort function.
  * @param token retrieved by enter()
- * @pre executed enter -> tbegin -> transaction operation.
- * @post execute leave to leave the session or tbegin to start next transaction.
+ * @pre executed enter -> tx_begin -> transaction operation.
+ * @post execute leave to leave the session or tx_begin to start next transaction.
  * @return Status::ERR_VALIDATION This means read validation failure and it
- * already executed abort(). After this, do tbegin to start next transaction or
+ * already executed abort(). After this, do tx_begin to start next transaction or
  * leave to leave the session.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction was interrupted
  * by some delete transaction between read phase and validation phase. So it
@@ -77,9 +77,9 @@ extern Status commit(Token token);  // NOLINT
  *
  * do local set/cache clear, try gc.
  * @param[in] token the token retrieved by enter()
- * @pre it did enter -> ... -> tbegin -> some access
+ * @pre it did enter -> ... -> tx_begin -> some access
  * operation(update/insert/search/delete) or no operation
- * @post execute leave to leave the session or tbegin to start next transaction.
+ * @post execute leave to leave the session or tx_begin to start next transaction.
  * @return Status::OK success.
  */
 extern Status abort(Token token);  // NOLINT
@@ -161,8 +161,8 @@ extern Status delete_record(Token token, Storage storage,  // NOLINT
  * @brief Delete the all records.
  * @pre This function is called by a single thread and does't
  * allow moving of other threads.
- * @details This function executes tbegin(Token token)
- * internaly, so it doesn't need to call tbegin(Token token).
+ * @details This function executes tx_begin(Token token)
+ * internaly, so it doesn't need to call tx_begin(Token token).
  * Also it doesn't need to call enter/leave around calling this
  * function. Because this function calls enter/leave
  * appropriately.

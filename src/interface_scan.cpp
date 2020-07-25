@@ -19,7 +19,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 const std::size_t len_rkey, const bool r_exclusive,
                 std::vector<const Tuple*>& result) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   // as a precaution
   result.clear();
@@ -84,7 +84,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  const std::size_t len_rkey, const bool r_exclusive,
                  ScanHandle& handle) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   std::vector<const silo_variant::Record*> scan_buf;
 

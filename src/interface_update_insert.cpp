@@ -21,7 +21,7 @@ Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
@@ -49,7 +49,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
@@ -80,7 +80,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, std::size_t len_key, const char* const val,
               std::size_t len_val) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   silo_variant::WriteSetObj* in_ws{ti->search_write_set(key, len_key)};
   if (in_ws != nullptr) {
     in_ws->reset_tuple_value(val, len_val);

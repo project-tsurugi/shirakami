@@ -21,7 +21,7 @@ Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                   const char* const key, const std::size_t len_key,
                   Tuple** const tuple) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
   silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {

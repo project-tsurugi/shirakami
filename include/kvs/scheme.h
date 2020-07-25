@@ -145,7 +145,7 @@ enum class Status : std::int32_t {
    * @brief error
    * @details
    * (commit) This means read validation failure and it already executed
-   * abort(). After this, do tbegin to start next transaction or leave to leave
+   * abort(). After this, do tx_begin to start next transaction or leave to leave
    * the session.
    */
   ERR_VALIDATION,

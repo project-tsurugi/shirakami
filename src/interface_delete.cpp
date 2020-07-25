@@ -45,7 +45,7 @@ namespace shirakami {
 Status delete_record(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                      const char* const key, const std::size_t len_key) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tbegin(token);
+  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
   Status check = ti->check_delete_after_write(key, len_key);
 
   MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());

@@ -8,12 +8,20 @@
 
 namespace shirakami::silo_variant {
 
+Status enter(Token& token);
+
+void fin();
+
+Status init(std::string_view log_directory_path);
+
+Status leave(Token token);
+
 /**
  * @brief Transaction begins.
  * @details Get an epoch accessible to this transaction.
  * @return void
  */
-void tbegin(Token token);
+void tx_begin(Token token);
 
 /**
  * @brief read record by using dest given by caller and store read info to res
