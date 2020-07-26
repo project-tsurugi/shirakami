@@ -18,6 +18,9 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   Tuple** tuple) {
 #ifdef CC_SILO_VARIANT
   return silo_variant::search_key(token, storage, key, len_key, tuple);
+#else
+  std::cout << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+  std::abort();
 #endif
 }
 

@@ -12,9 +12,9 @@
 
 namespace shirakami::silo_variant {
 
-Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
+Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const char* const key, const std::size_t len_key,
-                  Tuple** const tuple) {
+                  Tuple** tuple) {
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
   if (!ti->get_txbegan()) silo_variant::tx_begin(token);
 

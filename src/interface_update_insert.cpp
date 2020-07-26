@@ -5,106 +5,45 @@
 
 #include <bitset>
 
-#include "atomic_wrapper.h"
 #ifdef CC_SILO_VARIANT
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "cc/silo_variant/include/interface.h"
 #endif  // CC_SILO_VARIANT
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif                            // INDEX_KOHLER_MASSTREE
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 
-Status insert(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
+Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
-  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
-  if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val);
-    return Status::WARN_WRITE_TO_LOCAL_WRITE;
-  }
-
-  if (index_kohler_masstree::find_record(key, len_key) != nullptr) {
-    return Status::WARN_ALREADY_EXISTS;
-  }
-
-  silo_variant::Record* record =  // NOLINT
-      new silo_variant::Record(key, len_key, val, len_val);
-  Status insert_result(
-      index_kohler_masstree::insert_record(key, len_key, record));
-  if (insert_result == Status::OK) {
-    ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
-    return Status::OK;
-  }
-  // else insert_result == Status::WARN_ALREADY_EXISTS
-  delete record;  // NOLINT
-  return Status::WARN_ALREADY_EXISTS;
+#ifdef CC_SILO_VARIANT
+    return silo_variant::insert(token, storage, key, len_key, val, len_val);
+#else
+  std::cout << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+  std::abort();
+#endif
 }
 
-Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
+Status update(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, const std::size_t len_key,
               const char* const val, const std::size_t len_val) {
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
-  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
-  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
-  if (inws != nullptr) {
-    inws->reset_tuple_value(val, len_val);
-    return Status::WARN_WRITE_TO_LOCAL_WRITE;
-  }
-
-  silo_variant::Record* record{
-      index_kohler_masstree::get_mtdb().get_value(key, len_key)};
-  if (record == nullptr) {
-    return Status::WARN_NOT_FOUND;
-  }
-  silo_variant::tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
-  if (check_tid.get_absent()) {
-    // The second condition checks
-    // whether the record you want to read should not be read by parallel
-    // insert / delete.
-    return Status::WARN_NOT_FOUND;
-  }
-
-  ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                                   record);
-
-  return Status::OK;
+#ifdef CC_SILO_VARIANT
+    return silo_variant::update(token, storage, key, len_key, val, len_val);
+#else
+  std::cout << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+  std::abort();
+#endif
 }
 
 Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* const key, std::size_t len_key, const char* const val,
               std::size_t len_val) {
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
-  silo_variant::WriteSetObj* in_ws{ti->search_write_set(key, len_key)};
-  if (in_ws != nullptr) {
-    in_ws->reset_tuple_value(val, len_val);
-    return Status::WARN_WRITE_TO_LOCAL_WRITE;
-  }
-
-  silo_variant::Record* record{
-      index_kohler_masstree::index_kohler_masstree::find_record(key, len_key)};
-  if (record == nullptr) {
-    record = new silo_variant::Record(key, len_key, val, len_val);  // NOLINT
-    Status insert_result(
-        index_kohler_masstree::insert_record(key, len_key, record));
-    if (insert_result == Status::OK) {
-      ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
-      return Status::OK;
-    }
-    // else insert_result == Status::WARN_ALREADY_EXISTS
-    // so goto update.
-    delete record;  // NOLINT
-  }
-  ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                                   record);
-
-  return Status::OK;
+#ifdef CC_SILO_VARIANT
+  return silo_variant::upsert(token, storage, key, len_key, val, len_val);
+#else
+  std::cout << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+  std::abort();
+#endif
 }
 
 }  //  namespace shirakami
