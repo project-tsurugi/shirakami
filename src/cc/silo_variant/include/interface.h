@@ -8,8 +8,12 @@
 
 namespace shirakami::silo_variant {
 
+Status abort(Token token);  // NOLINT
+
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const ScanHandle handle);
+
+Status commit(Token token);  // NOLINT
 
 [[maybe_unused]] Status delete_all_records();  // NOLINT
 
