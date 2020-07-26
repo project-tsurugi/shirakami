@@ -7,7 +7,7 @@
 
 #ifdef CC_SILO_VARIANT
 #include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/helper.h"
+#include "cc/silo_variant/include/interface.h"
 #endif  // CC_SILO_VARIANT
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"

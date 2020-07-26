@@ -36,6 +36,9 @@ void tx_begin(Token token);
  */
 Status read_record(Record& res, const Record* dest);  // NOLINT
 
+Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
+                  const char* key, std::size_t len_key, Tuple** tuple);
+
 void write_phase(ThreadInfo* ti, const tid_word& max_rset,
                  const tid_word& max_wset);
 

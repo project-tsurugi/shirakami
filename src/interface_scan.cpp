@@ -5,7 +5,7 @@
 
 #include <map>
 
-#include "cc/silo_variant/include/helper.h"
+#include "cc/silo_variant/include/interface.h"
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
