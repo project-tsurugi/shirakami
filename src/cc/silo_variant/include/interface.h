@@ -8,6 +8,11 @@
 
 namespace shirakami::silo_variant {
 
+[[maybe_unused]] Status delete_all_records();  // NOLINT
+
+Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
+                     const char* key, std::size_t len_key);
+
 Status enter(Token& token);  // NOLINT
 
 void fin();
