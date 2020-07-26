@@ -26,7 +26,7 @@
 #include "fileio.h"
 #include "log.h"
 #include "record.h"
-#include "scheme_local.h"
+#include "scheme.h"
 #include "tid.h"
 
 // shirakami/include/

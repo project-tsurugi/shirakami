@@ -10,7 +10,7 @@
 #include "kvs/interface.h"
 
 // shirakami-impl interface library
-#include "cc/silo_variant/include/scheme_local.h"
+#include "cc/silo_variant/include/scheme.h"
 #include "compiler.h"
 #include "tuple_local.h"
 

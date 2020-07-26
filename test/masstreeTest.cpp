@@ -3,9 +3,9 @@
  * @brief test about usage of masstree.
  */
 
-#include "cc/silo_variant/include/scheme_local.h"
-#include "include/tuple_local.h"
+#include "cc/silo_variant/include/scheme.h"
 #include "gtest/gtest.h"
+#include "include/tuple_local.h"
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
