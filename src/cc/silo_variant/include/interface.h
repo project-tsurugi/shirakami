@@ -8,6 +8,9 @@
 
 namespace shirakami::silo_variant {
 
+Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
+                  const ScanHandle handle);
+
 [[maybe_unused]] Status delete_all_records();  // NOLINT
 
 Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
@@ -25,6 +28,10 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 Status leave(Token token);  // NOLINT
 
+Status read_from_scan(Token token,  // NOLINT
+                      [[maybe_unused]] Storage storage, const ScanHandle handle,
+                      Tuple** const tuple);
+
 /**
  * @brief read record by using dest given by caller and store read info to res
  * given by caller.
@@ -37,6 +44,20 @@ Status leave(Token token);  // NOLINT
  * but it isn't committed yet.
  */
 Status read_record(Record& res, const Record* dest);  // NOLINT
+
+Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
+                 const char* lkey, std::size_t len_lkey, bool l_exclusive,
+                 const char* rkey, std::size_t len_rkey, bool r_exclusive,
+                 ScanHandle& handle);
+
+Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
+                const char* lkey, std::size_t len_lkey, bool l_exclusive,
+                const char* rkey, std::size_t len_rkey, bool r_exclusive,
+                std::vector<const Tuple*>& result);
+
+Status scannable_total_index_size(Token token,  // NOLINT
+                                  [[maybe_unused]] Storage storage,
+                                  ScanHandle& handle, std::size_t& size);
 
 Status search_key(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
                   const char* key, std::size_t len_key, Tuple** tuple);
