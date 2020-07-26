@@ -1,5 +1,5 @@
 /**
- * @file helper.h
+ * @file interface.h
  */
 
 #pragma once
