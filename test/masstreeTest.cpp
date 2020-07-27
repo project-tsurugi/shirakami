@@ -20,7 +20,7 @@ namespace shirakami::testing {
 class MasstreeTest : public ::testing::Test {};  // NOLINT
 
 TEST_F(MasstreeTest, insert_third) {  // NOLINT
-  MasstreeWrapper<std::uint64_t> MT;
+  masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(Status::OK,
             MT.insert_value(reinterpret_cast<char*>(&key),  // NOLINT
@@ -36,7 +36,7 @@ TEST_F(MasstreeTest, insert_third) {  // NOLINT
 }
 
 TEST_F(MasstreeTest, remove) {  // NOLINT
-  MasstreeWrapper<std::uint64_t> MT;
+  masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(
       Status::WARN_NOT_FOUND,

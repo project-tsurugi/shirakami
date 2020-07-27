@@ -117,7 +117,7 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
 
 void write_phase(ThreadInfo* ti, const tid_word& max_rset,
                  const tid_word& max_wset) {
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
   /*
    * It calculates the smallest number that is
    * (a) larger than the TID of any record read or written by the transaction,
@@ -187,7 +187,7 @@ void write_phase(ThreadInfo* ti, const tid_word& max_rset,
         tid_word deletetid = maxtid;
         deletetid.set_absent(true);
         std::string_view key_view = recptr->get_tuple().get_key();
-        index_kohler_masstree::get_mtdb().remove_value(key_view.data(),
+        kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                        key_view.size());
         storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
 

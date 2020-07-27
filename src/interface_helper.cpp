@@ -18,7 +18,7 @@ namespace shirakami {
 
 Status enter(Token& token) {  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  masstree_wrapper<silo_variant::Record>::thread_init(sched_getcpu());
 #endif
 
 #ifdef CC_SILO_VARIANT

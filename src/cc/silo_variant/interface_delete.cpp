@@ -25,8 +25,8 @@ namespace shirakami::silo_variant {
 
   std::vector<const Record*> scan_res;
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
+  kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
                                          &scan_res, false);
 #endif  // INDEX_KOHLER_MASSTREE
 
@@ -52,8 +52,8 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   Status check = ti->check_delete_after_write(key, len_key);
 
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
+  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
 #endif  // INDEX_KOHLER_MASSTREE
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;

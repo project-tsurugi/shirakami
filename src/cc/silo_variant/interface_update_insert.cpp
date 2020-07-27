@@ -29,7 +29,7 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  if (index_kohler_masstree::find_record(key, len_key) != nullptr) {
+  if (kohler_masstree::find_record(key, len_key) != nullptr) {
     return Status::WARN_ALREADY_EXISTS;
   }
 #endif
@@ -37,8 +37,7 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   Record* record =  // NOLINT
       new Record(key, len_key, val, len_val);
 #ifdef INDEX_KOHLER_MASSTREE
-  Status insert_result(
-      index_kohler_masstree::insert_record(key, len_key, record));
+  Status insert_result(kohler_masstree::insert_record(key, len_key, record));
 #endif
   if (insert_result == Status::OK) {
     ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
@@ -53,7 +52,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               std::size_t len_val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
   WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val, len_val);
@@ -61,7 +60,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
 #endif
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
@@ -92,14 +91,12 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* record{
-      index_kohler_masstree::index_kohler_masstree::find_record(key, len_key)};
+  Record* record{kohler_masstree::kohler_masstree::find_record(key, len_key)};
 #endif
   if (record == nullptr) {
     record = new Record(key, len_key, val, len_val);  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
-    Status insert_result(
-        index_kohler_masstree::insert_record(key, len_key, record));
+    Status insert_result(kohler_masstree::insert_record(key, len_key, record));
 #endif
     if (insert_result == Status::OK) {
       ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);

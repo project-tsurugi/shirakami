@@ -43,8 +43,8 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   std::vector<const Record*> scan_buf;
 
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
+  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
                                          len_rkey, r_exclusive, &scan_buf,
                                          true);
 #endif  // INDEX_KOHLER_MASSTREE
@@ -108,8 +108,8 @@ Status read_from_scan(Token token,  // NOLINT
     std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
 #ifdef INDEX_KOHLER_MASSTREE
-    MasstreeWrapper<Record>::thread_init(sched_getcpu());
-    index_kohler_masstree::get_mtdb().scan(
+    masstree_wrapper<Record>::thread_init(sched_getcpu());
+    kohler_masstree::get_mtdb().scan(
 #endif  // INDEX_KOHLER_MASSTREE
         tupleptr->get_key().data(), tupleptr->get_key().size(), true,
         ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
@@ -180,8 +180,8 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
   std::vector<const Record*> scan_res;
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
-  index_kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
+  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
                                          len_rkey, r_exclusive, &scan_res,
                                          false);
 #endif  // INDEX_KOHLER_MASSTREE
@@ -236,7 +236,7 @@ Status scannable_total_index_size(Token token,  // NOLINT
                                   [[maybe_unused]] Storage storage,
                                   ScanHandle& handle, std::size_t& size) {
   auto* ti = static_cast<ThreadInfo*>(token);
-  MasstreeWrapper<Record>::thread_init(sched_getcpu());
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**

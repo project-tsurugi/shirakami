@@ -18,7 +18,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   if (!ti->get_txbegan()) silo_variant::tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
-  MasstreeWrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  masstree_wrapper<silo_variant::Record>::thread_init(sched_getcpu());
 #endif
   silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
@@ -37,7 +37,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
   silo_variant::Record* record{
-      index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+      kohler_masstree::get_mtdb().get_value(key, len_key)};
 #endif
   if (record == nullptr) {
     *tuple = nullptr;

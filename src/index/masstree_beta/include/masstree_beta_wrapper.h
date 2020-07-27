@@ -104,7 +104,7 @@ private:
  * inserting a pointer of T as value.
  */
 template <typename T>
-class MasstreeWrapper {  // NOLINT
+class masstree_wrapper {  // NOLINT
 public:
   [[maybe_unused]] static constexpr uint64_t insert_bound =
       UINT64_MAX;  // 0xffffff;
@@ -132,8 +132,8 @@ public:
   // use this.
   static __thread typename table_params::threadinfo_type* ti;
 
-  MasstreeWrapper() { this->table_init(); }
-  ~MasstreeWrapper() = default;
+  masstree_wrapper() { this->table_init(); }
+  ~masstree_wrapper() = default;
 
   void table_init() {
     // printf("masstree table_init()\n");
@@ -256,12 +256,12 @@ private:
 };
 
 template <typename T>
-__thread typename MasstreeWrapper<T>::table_params::threadinfo_type*
-    MasstreeWrapper<T>::ti = nullptr;
+__thread typename masstree_wrapper<T>::table_params::threadinfo_type*
+    masstree_wrapper<T>::ti = nullptr;
 
 [[maybe_unused]] extern volatile bool recovering;
 
-class index_kohler_masstree {
+class kohler_masstree {
 public:
   /**
    * @brief find record from masstree by using args informations.
@@ -270,7 +270,7 @@ public:
   static silo_variant::Record* find_record(char const* key,  // NOLINT
                                            std::size_t len_key);
 
-  static MasstreeWrapper<silo_variant::Record>& get_mtdb() {
+  static masstree_wrapper<silo_variant::Record>& get_mtdb() {
     return MTDB;
   }  // NOLINT
 
@@ -291,7 +291,7 @@ public:
 
 private:
 #ifdef CC_SILO_VARIANT
-  static inline MasstreeWrapper<silo_variant::Record> MTDB;  // NOLINT
+  static inline masstree_wrapper<silo_variant::Record> MTDB;  // NOLINT
 #endif
 };
 

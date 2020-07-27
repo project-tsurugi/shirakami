@@ -21,12 +21,12 @@ namespace shirakami::silo_variant {
 
 void garbage_collection::remove_all_leaf_from_mtdb_and_release() {
   std::vector<const Record*> scan_res;
-  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+  kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
                                          &scan_res, false);  // NOLINT
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
-    index_kohler_masstree::get_mtdb().remove_value(key_view.data(),
+    kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                    key_view.size());
     delete itr;  // NOLINT
   }
@@ -35,7 +35,7 @@ void garbage_collection::remove_all_leaf_from_mtdb_and_release() {
    * check whether index_kohler_masstree::get_mtdb() is empty.
    */
   scan_res.clear();
-  index_kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
+  kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
                                          &scan_res, false);  // NOLINT
   if (!scan_res.empty()) std::abort();
 }
