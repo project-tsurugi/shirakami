@@ -1,5 +1,5 @@
 /**
- * @file scheme.h
+ * @file cc/silo_variant/include/scheme.h
  * @brief private scheme of transaction engine
  */
 

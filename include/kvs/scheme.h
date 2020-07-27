@@ -1,3 +1,7 @@
+/**
+ * @file include/kvs/scheme.h
+ */
+
 #pragma once
 
 #include <pthread.h>

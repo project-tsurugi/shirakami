@@ -1,5 +1,5 @@
 /**
- * @file interface.h
+ * @file include/kvs/interface.h
  * @brief transaction engine interface
  */
 
