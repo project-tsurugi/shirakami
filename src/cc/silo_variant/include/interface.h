@@ -11,7 +11,7 @@ namespace shirakami::silo_variant {
 Status abort(Token token);  // NOLINT
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                  const ScanHandle handle);
+                  ScanHandle handle);
 
 Status commit(Token token);  // NOLINT
 
@@ -33,8 +33,8 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 Status leave(Token token);  // NOLINT
 
 Status read_from_scan(Token token,  // NOLINT
-                      [[maybe_unused]] Storage storage, const ScanHandle handle,
-                      Tuple** const tuple);
+                      [[maybe_unused]] Storage storage, ScanHandle handle,
+                      Tuple** tuple);
 
 /**
  * @brief read record by using dest given by caller and store read info to res

@@ -3,7 +3,6 @@
  */
 
 #include "cc/silo_variant//include/interface.h"
-
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "cc/silo_variant/include/thread_info_table.h"
 #ifdef INDEX_KOHLER_MASSTREE

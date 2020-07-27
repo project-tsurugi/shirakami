@@ -14,7 +14,7 @@
 namespace shirakami::silo_variant {
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                  const ScanHandle handle) {
+                  ScanHandle handle) {
   auto* ti = static_cast<ThreadInfo*>(token);
 
   auto itr = ti->get_scan_cache().find(handle);
@@ -90,8 +90,8 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 }
 
 Status read_from_scan(Token token,  // NOLINT
-                      [[maybe_unused]] Storage storage, const ScanHandle handle,
-                      Tuple** const tuple) {
+                      [[maybe_unused]] Storage storage, ScanHandle handle,
+                      Tuple** tuple) {
   auto* ti = static_cast<ThreadInfo*>(token);
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {

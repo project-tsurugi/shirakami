@@ -61,8 +61,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* record{
-      index_kohler_masstree::get_mtdb().get_value(key, len_key)};
+  Record* record{index_kohler_masstree::get_mtdb().get_value(key, len_key)};
 #endif
   if (record == nullptr) {
     return Status::WARN_NOT_FOUND;
@@ -116,4 +115,4 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  //  namespace shirakami
+}  // namespace shirakami::silo_variant

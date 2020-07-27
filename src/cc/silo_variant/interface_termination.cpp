@@ -100,4 +100,4 @@ Status commit(Token token) {  // NOLINT
   return Status::OK;
 }
 
-}  //  namespace shirakami
+}  // namespace shirakami::silo_variant
