@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @file ycsb.cc
- */
-
 #include <xmmintrin.h>
 
 #include <cstring>
@@ -26,14 +22,15 @@
 #include "result.h"
 
 // shirakami/bench
+#include "build_db.h"
 #include "gen_tx.h"
-#include "masstree_build.h"
-#include "ycsb.h"
 #include "shirakami_string.h"
 
 // shirakami/src/include
 #include "atomic_wrapper.h"
+#ifdef CC_SILO_VARIANT
 #include "cc/silo_variant/include/thread_info.h"
+#endif // CC_SILO_VARIANT
 #include "clock.h"
 #include "cpu.h"
 #include "tuple_local.h"
@@ -42,7 +39,6 @@
 
 using namespace shirakami;
 using namespace ycsb_param;
-using std::cout, std::endl, std::cerr;
 
 DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
 DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
@@ -57,67 +53,99 @@ DEFINE_uint64(                                                        // NOLINT
     "time.");                                                         // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 
+static bool isReady(const std::vector<char>& readys);  // NOLINT
+static void waitForReady(const std::vector<char>& readys);
+static void invoke_leader();
+static void worker(size_t thid, char& ready, const bool& start, const bool& quit,
+                   std::vector<Result>& res);
+
+static void invoke_leader() {
+  alignas(CACHE_LINE_SIZE) bool start = false;
+  alignas(CACHE_LINE_SIZE) bool quit = false;
+  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
+
+  std::vector<char> readys(kNthread);  // NOLINT
+  std::vector<std::thread> thv;
+  for (std::size_t i = 0; i < kNthread; ++i) {
+    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
+                     std::ref(quit), std::ref(res));
+  }
+  waitForReady(readys);
+  storeRelease(start, true);
+  for (size_t i = 0; i < kExecTime; ++i) {
+    sleepMs(1000);  // NOLINT
+  }
+  storeRelease(quit, true);
+  for (auto& th : thv) th.join();
+
+  for (std::size_t i = 0; i < kNthread; ++i) {
+    res[0].addLocalAllResult(res[i]);
+  }
+  res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+  std::cout << "end experiments, start cleanup." << std::endl;
+}
+
 static void load_flags() {
   if (FLAGS_thread >= 1) {
     kNthread = FLAGS_thread;
   } else {
-    cerr << "Number of threads must be larger than 0." << std::endl;
+    std::cerr << "Number of threads must be larger than 0." << std::endl;
     exit(1);
   }
   if (FLAGS_record > 1) {
     kCardinality = FLAGS_record;
   } else {
-    cerr << "Number of database records(tuples) must be large than 0." << endl;
+    std::cerr << "Number of database records(tuples) must be large than 0." << std::endl;
     exit(1);
   }
   constexpr std::size_t eight = 8;
   if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
     kKeyLength = FLAGS_key_length;
   } else {
-    cerr << "Length of key must be larger than 0 and be divisible by 8."
-         << endl;
+    std::cerr << "Length of key must be larger than 0 and be divisible by 8."
+         << std::endl;
     exit(1);
   }
   if (FLAGS_val_length > 1) {
     kValLength = FLAGS_val_length;
   } else {
-    cerr << "Length of val must be larger than 0." << endl;
+    std::cerr << "Length of val must be larger than 0." << std::endl;
     exit(1);
   }
   if (FLAGS_ops >= 1) {
     kNops = FLAGS_ops;
   } else {
-    cerr << "Number of operations in a transaction must be larger than 0."
-         << endl;
+    std::cerr << "Number of operations in a transaction must be larger than 0."
+         << std::endl;
     exit(1);
   }
   constexpr std::size_t thousand = 100;
   if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
     kRRatio = FLAGS_rratio;
   } else {
-    cerr << "Rate of reads in a transaction must be in the range 0 to 100."
-         << endl;
+    std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
+         << std::endl;
     exit(1);
   }
   if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
     kZipfSkew = FLAGS_skew;
   } else {
-    cerr << "Access skew of transaction must be in the range 0 to 0.999... ."
-         << endl;
+    std::cerr << "Access skew of transaction must be in the range 0 to 0.999... ."
+         << std::endl;
     exit(1);
   }
   if (FLAGS_cpumhz > 1) {
     kCPUMHz = FLAGS_cpumhz;
   } else {
-    cerr << "CPU MHz of execution environment. It is used measuring some time. "
+    std::cerr << "CPU MHz of execution environment. It is used measuring some time. "
             "It must be larger than 0."
-         << endl;
+         << std::endl;
     exit(1);
   }
   if (FLAGS_duration >= 1) {
     kExecTime = FLAGS_duration;
   } else {
-    cerr << "Duration of benchmark in seconds must be larger than 0." << endl;
+    std::cerr << "Duration of benchmark in seconds must be larger than 0." << std::endl;
     exit(1);
   }
 }
@@ -129,21 +157,21 @@ int main(int argc, char* argv[]) {  // NOLINT
   load_flags();
 
   init();  // NOLINT
-  build_mtdb(kCardinality, kNthread, kValLength);
+  build_db(kCardinality, kNthread, kValLength);
   invoke_leader();
   fin();
 
   return 0;
 }
 
-static bool isReady(const std::vector<char>& readys) {  // NOLINT
+bool isReady(const std::vector<char>& readys) {  // NOLINT
   for (const char& b : readys) {
     if (loadAcquire(b) == 0) return false;
   }
   return true;
 }
 
-static void waitForReady(const std::vector<char>& readys) {
+void waitForReady(const std::vector<char>& readys) {
   while (!isReady(readys)) {
     _mm_pause();
   }
@@ -191,28 +219,3 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   leave(token);
 }
 
-static void invoke_leader() {
-  alignas(CACHE_LINE_SIZE) bool start = false;
-  alignas(CACHE_LINE_SIZE) bool quit = false;
-  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
-
-  std::vector<char> readys(kNthread);  // NOLINT
-  std::vector<std::thread> thv;
-  for (std::size_t i = 0; i < kNthread; ++i) {
-    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
-                     std::ref(quit), std::ref(res));
-  }
-  waitForReady(readys);
-  storeRelease(start, true);
-  for (size_t i = 0; i < kExecTime; ++i) {
-    sleepMs(1000);  // NOLINT
-  }
-  storeRelease(quit, true);
-  for (auto& th : thv) th.join();
-
-  for (std::size_t i = 0; i < kNthread; ++i) {
-    res[0].addLocalAllResult(res[i]);
-  }
-  res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
-  cout << "end experiments, start cleanup." << endl;
-}

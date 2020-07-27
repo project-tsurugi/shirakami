@@ -52,7 +52,7 @@ if (BUILD_INDEX_KOHLER_MASSTREE)
     add_definitions(-DINDEX_KOHLER_MASSTREE)
 endif ()
 if (BUILD_INDEX_YAKUSHIMA)
-    add_definitions()
+    add_definitions(-DINDEX_YAKUSHIMA)
 endif ()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)

@@ -18,6 +18,7 @@
 #include "result.h"
 
 // shirakami/bench
+#include "./include/build_db.h"
 #include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
@@ -27,7 +28,7 @@
 #include "random.h"
 #include "tuple_local.h"
 
-using namespace shirakami;
+namespace shirakami {
 
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
                                  std::size_t thread) {
@@ -49,13 +50,16 @@ size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
   return 1;
 }
 
-void parallel_build_mtdb(std::size_t start, std::size_t end,
+void parallel_build_db(std::size_t start, std::size_t end,
                          std::size_t value_length) {
   Xoroshiro128Plus rnd;
   Token token{};
   enter(token);
 
+#ifdef CC_SILO_VARIANT
   silo_variant::tx_begin(token);
+#endif
+
   for (uint64_t i = start; i <= end; ++i) {
     uint64_t keybs = __builtin_bswap64(i);
     std::string val(value_length, '0');  // NOLINT
@@ -68,18 +72,20 @@ void parallel_build_mtdb(std::size_t start, std::size_t end,
   leave(token);
 }
 
-void build_mtdb(std::size_t record, std::size_t thread,
+void build_db(std::size_t record, std::size_t thread,
                 std::size_t value_length) {
   printf("ycsb::build_mtdb\n");  // NOLINT
   std::vector<std::thread> thv;
 
-  size_t maxthread = decideParallelBuildNumber(record, thread);
-  printf("start parallel_build_mtdb with %zu threads.\n", maxthread);  // NOLINT
+  size_t max_thread{decideParallelBuildNumber(record, thread)};
+  printf("start parallel_build_db with %zu threads.\n", max_thread);  // NOLINT
   fflush(stdout);
-  for (size_t i = 0; i < maxthread; ++i) {
-    thv.emplace_back(parallel_build_mtdb, i * (record / maxthread),
-                     (i + 1) * (record / maxthread) - 1, value_length);
+  for (size_t i = 0; i < max_thread; ++i) {
+    thv.emplace_back(parallel_build_db, i * (record / max_thread),
+                     (i + 1) * (record / max_thread) - 1, value_length);
   }
 
   for (auto &th : thv) th.join();
+}
+
 }

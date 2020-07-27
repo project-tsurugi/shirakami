@@ -14,13 +14,13 @@
 
 file(GLOB YCSB_SOURCES
         "ycsb.cpp"
-        "masstree_build.cpp"
+        "build_db.cpp"
         "result.cpp"
         )
 
 file(GLOB MASSTREE_SOURCES
         "masstree.cpp"
-        "masstree_build.cpp"
+        "build_db.cpp"
         "result.cpp"
         )
 

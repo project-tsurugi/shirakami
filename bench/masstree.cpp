@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * This file is the benchmark of kohler's masstree.
+ */
+
 #include <shirakami_string.h>
 
 #include <cstring>
@@ -22,24 +26,18 @@
 #include "result.h"
 
 // shirakami/bench
-#include "./include/masstree_build.h"
+#include "./include/build_db.h"
 
 // shirakami/src/
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "cpu.h"
-#include "tuple_local.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#if 0
-#include "shirakami/interface.h"
-#include "zipf.hh"
-#endif
+#include "tuple_local.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
 // to use declaration of entity of global variables.
 #include "index/masstree_beta/masstree_beta_wrapper.cpp"
-#endif
 
 using namespace shirakami;
 
@@ -186,7 +184,7 @@ static void invoke_leader() {
   init();  // NOLINT
   std::cout << "[end] init masstree database." << std::endl;
   if (FLAGS_instruction == "put" || FLAGS_instruction == "get") {
-    build_mtdb(FLAGS_record, FLAGS_thread, FLAGS_val_length);
+    build_db(FLAGS_record, FLAGS_thread, FLAGS_val_length);
   }
   std::cout << "[report] This experiments use ";
   if (FLAGS_instruction == "insert") {
