@@ -12,9 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-        "*.cpp"
-        "*.cc"
+        "cliTest.cpp"
+        "clockTest.cpp"
+        "errorTest.cpp"
+        "logTest.cpp"
+        "memoryTest.cpp"
+        "recordTest.cpp"
+        "schemeTest.cpp"
+        "simpleTest.cpp"
+        "threadInfoTest.cpp"
         )
+
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB INDEX_TEST_SOURCES "masstreeBetaTest.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
+endif ()
 
 register_tests(
         TARGET shirakami
