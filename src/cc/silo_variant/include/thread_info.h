@@ -32,6 +32,10 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
+#ifdef INDEX_YAKUSHIMA
+#include "yakushima/include/kvs.h"
+#endif
+
 namespace shirakami::silo_variant {
 
 class ThreadInfo {
@@ -185,6 +189,12 @@ public:
     return gc_handle_.get_value_container();
   }
 
+#ifdef INDEX_YAKUSHIMA
+  [[nodiscard]] yakushima::Token get_yakushima_token() {
+    return yakushima_token_;
+  }
+#endif
+
   std::map<ScanHandle, std::size_t>& get_len_rkey() {  // NOLINT
     return scan_handle_.get_len_rkey();
   }
@@ -324,16 +334,25 @@ public:
     gc_handle_.set_value_container(cont);
   }
 
+#ifdef INDEX_YAKUSHIMA
+  void set_kvs_token(yakushima::Token new_token) {
+    yakushima_token_ = new_token;
+  }
+#endif
+
   void set_mrc_tid(const tid_word& tid) & { mrc_tid_ = tid; }
+
+  void set_tx_began(bool tf) & { tx_began_ = tf; }
 
   void set_visible(bool visible) & {
     visible_.store(visible, std::memory_order_release);
   }
 
-  void set_tx_began(bool tf) & { tx_began_ = tf; }
-
 private:
   alignas(CACHE_LINE_SIZE) Token token_{};
+#ifdef INDEX_YAKUSHIMA
+  yakushima::Token yakushima_token_{};
+#endif
   std::atomic<epoch::epoch_t> epoch_{};
   tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
   std::atomic<bool> visible_{};

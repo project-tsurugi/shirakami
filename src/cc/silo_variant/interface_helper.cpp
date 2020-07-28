@@ -5,6 +5,7 @@
 #include "cc/silo_variant//include/interface.h"
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "cc/silo_variant/include/thread_info_table.h"
+
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
@@ -14,7 +15,13 @@
 namespace shirakami::silo_variant {
 
 Status enter(Token& token) {  // NOLINT
-  return thread_info_table::decide_token(token);
+  Status ret_status = thread_info_table::decide_token(token);
+#ifdef INDEX_YAKUSHIMA
+  yakushima::Token kvs_token{};
+  yakushima::yakushima_kvs::enter(kvs_token);
+  static_cast<ThreadInfo*>(token)->set_kvs_token(kvs_token);
+#endif
+  return ret_status;
 }
 
 void fin() {
@@ -24,6 +31,10 @@ void fin() {
   epoch::set_epoch_thread_end(true);
   epoch::join_epoch_thread();
   thread_info_table::fin_kThreadTable();
+
+#ifdef INDEX_YAKUSHIMA
+  yakushima::yakushima_kvs::fin();
+#endif
 }
 
 Status init(std::string_view log_directory_path) {  // NOLINT
@@ -59,9 +70,11 @@ Status init(std::string_view log_directory_path) {  // NOLINT
    * If it already exists log files, it recoveries from those.
    */
   // single_recovery_from_log();
-
   thread_info_table::init_kThreadTable();
   epoch::invoke_epocher();
+#ifdef INDEX_YAKUSHIMA
+  yakushima::yakushima_kvs::init();
+#endif
 
   return Status::OK;
 }
@@ -70,6 +83,10 @@ Status leave(Token token) {  // NOLINT
   for (auto&& itr : thread_info_table::get_thread_info_table()) {
     if (&itr == static_cast<ThreadInfo*>(token)) {
       if (itr.get_visible()) {
+#ifdef INDEX_YAKUSHIMA
+        yakushima::yakushima_kvs::leave(
+            static_cast<ThreadInfo*>(token)->get_yakushima_token());
+#endif
         itr.set_visible(false);
         return Status::OK;
       }
@@ -117,7 +134,10 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
 
 void write_phase(ThreadInfo* ti, const tid_word& max_rset,
                  const tid_word& max_wset) {
+#ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
+#endif // INDEX_KOHLER_MASSTREE
+
   /*
    * It calculates the smallest number that is
    * (a) larger than the TID of any record read or written by the transaction,
@@ -187,8 +207,12 @@ void write_phase(ThreadInfo* ti, const tid_word& max_rset,
         tid_word deletetid = maxtid;
         deletetid.set_absent(true);
         std::string_view key_view = recptr->get_tuple().get_key();
+#ifdef INDEX_KOHLER_MASSTREE
         kohler_masstree::get_mtdb().remove_value(key_view.data(),
-                                                       key_view.size());
+                                                 key_view.size());
+#elif INDEX_YAKUSHIMA
+        yakushima::yakushima_kvs::remove(ti->get_yakushima_token(), key_view);
+#endif
         storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
 
         /**

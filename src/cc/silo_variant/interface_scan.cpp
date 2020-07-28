@@ -40,14 +40,22 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  ScanHandle& handle) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
-  std::vector<const Record*> scan_buf;
 
 #ifdef INDEX_KOHLER_MASSTREE
+  std::vector<const Record*> scan_buf;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
-                                         len_rkey, r_exclusive, &scan_buf,
-                                         true);
-#endif  // INDEX_KOHLER_MASSTREE
+  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
+                                   r_exclusive, &scan_buf, true);
+#elif INDEX_YAKUSHIMA
+  std::vector<std::tuple<Record*, std::size_t> > scan_res;
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,
+                                 {rkey, len_rkey}, r_exclusive, scan_res);
+  std::vector<const Record*> scan_buf;
+  scan_buf.reserve(scan_res.size());
+  for (auto&& elem : scan_res) {
+    scan_buf.emplace_back(std::get<0>(elem));
+  }
+#endif
 
   if (!scan_buf.empty()) {
     /**
@@ -105,15 +113,26 @@ Status read_from_scan(Token token,  // NOLINT
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 
   if (scan_buf.size() == scan_index) {
-    std::vector<const Record*> new_scan_buf;
     const Tuple* tupleptr(&scan_buf.back()->get_tuple());
 #ifdef INDEX_KOHLER_MASSTREE
+    std::vector<const Record*> new_scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
     kohler_masstree::get_mtdb().scan(
-#endif  // INDEX_KOHLER_MASSTREE
         tupleptr->get_key().data(), tupleptr->get_key().size(), true,
         ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
         ti->get_r_exclusive()[handle], &new_scan_buf, true);
+#elif INDEX_YAKUSHIMA
+    std::vector<std::tuple<Record*, std::size_t> > scan_res;
+    yakushima::yakushima_kvs::scan(
+        {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
+        {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
+        ti->get_r_exclusive()[handle], scan_res);
+    std::vector<const Record*> new_scan_buf;
+    new_scan_buf.reserve(scan_res.size());
+    for (auto&& elem : scan_res) {
+      new_scan_buf.emplace_back(std::get<0>(elem));
+    }
+#endif
 
     if (!new_scan_buf.empty()) {
       /**
@@ -178,13 +197,21 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   result.clear();
   auto rset_init_size = ti->get_read_set().size();
 
-  std::vector<const Record*> scan_res;
 #ifdef INDEX_KOHLER_MASSTREE
+  std::vector<const Record*> scan_res;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey,
-                                         len_rkey, r_exclusive, &scan_res,
-                                         false);
-#endif  // INDEX_KOHLER_MASSTREE
+  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
+                                   r_exclusive, &scan_res, false);
+#elif INDEX_YAKUSHIMA
+  std::vector<std::tuple<Record*, std::size_t> > scan_buf;
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,
+                                 {rkey, len_rkey}, r_exclusive, scan_buf);
+  std::vector<const Record*> scan_res;
+  scan_res.reserve(scan_buf.size());
+  for (auto&& elem : scan_buf) {
+    scan_res.emplace_back(std::get<0>(elem));
+  }
+#endif
 
   for (auto&& itr : scan_res) {
     std::string_view key_view = itr->get_tuple().get_key();
@@ -236,7 +263,9 @@ Status scannable_total_index_size(Token token,  // NOLINT
                                   [[maybe_unused]] Storage storage,
                                   ScanHandle& handle, std::size_t& size) {
   auto* ti = static_cast<ThreadInfo*>(token);
+#ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
+#endif
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
