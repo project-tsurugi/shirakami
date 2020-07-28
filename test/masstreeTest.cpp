@@ -6,7 +6,11 @@
 #include "cc/silo_variant/include/scheme.h"
 #include "gtest/gtest.h"
 #include "include/tuple_local.h"
+#ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
+#elif INDEX_YAKUSHIMA
+#include "yakushima/include/kvs.h"
+#endif
 
 #ifdef INDEX_KOHLER_MASSTREE
 // to use declaration of entity of global variables.
@@ -19,6 +23,7 @@ namespace shirakami::testing {
 
 class MasstreeTest : public ::testing::Test {};  // NOLINT
 
+#ifdef INDEX_KOHLER_MASSTREE
 TEST_F(MasstreeTest, insert_third) {  // NOLINT
   masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
@@ -51,5 +56,6 @@ TEST_F(MasstreeTest, remove) {  // NOLINT
       Status::WARN_NOT_FOUND,
       MT.remove_value(reinterpret_cast<char*>(&key), sizeof(key)));  // NOLINT
 }
+#endif
 
 }  // namespace shirakami::testing

@@ -14,10 +14,17 @@
 #include <cstdint>
 #include <iostream>
 
+namespace shirakami {
+
+#ifndef CACHE_LINE_SIZE
 /**
  * @brief cache line size is 64 bytes.
  */
-#define CACHE_LINE_SIZE 64  // NOLINT
+static constexpr std::size_t CACHE_LINE_SIZE{64};  // NOLINT
+#else
+#undef CACHE_LINE_SIZE
+static constexpr std::size_t CACHE_LINE_SIZE{64};  // NOLINT
+#endif
 
 #ifdef KVS_Linux
 [[maybe_unused]] static void setThreadAffinity(const int my_id) {
@@ -73,3 +80,5 @@
 }
 
 #endif  // KVS_Linux
+
+}  // namespace shirakami

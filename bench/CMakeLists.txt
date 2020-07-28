@@ -18,23 +18,9 @@ file(GLOB YCSB_SOURCES
         "result.cpp"
         )
 
-file(GLOB MASSTREE_SOURCES
-        "masstree.cpp"
-        "build_db.cpp"
-        "result.cpp"
-        )
-
 add_executable(ycsb
         ${YCSB_SOURCES}
         )
-
-clang_format(ycsb)
-
-add_executable(masstree
-        ${MASSTREE_SOURCES}
-        )
-
-clang_format(masstree)
 
 target_link_libraries(ycsb
         PRIVATE shirakami
@@ -54,26 +40,39 @@ target_include_directories(ycsb
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE ${gflags_INCLUDE_DIR}
         )
-target_link_libraries(masstree
-        PRIVATE shirakami
-        PRIVATE shirakami-impl
-        PRIVATE Threads::Threads
-        PRIVATE gflags::gflags
-        )
-
-target_include_directories(masstree
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/bench/
-        PRIVATE ${PROJECT_SOURCE_DIR}/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/src
-        PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/test/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-        PRIVATE ${gflags_INCLUDE_DIR}
-        )
 
 add_test(
         NAME ycsb
         COMMAND ycsb)
 
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB MASSTREE_SOURCES
+            "masstree_beta.cpp"
+            "build_db.cpp"
+            "result.cpp"
+            )
+
+    add_executable(masstree
+            ${MASSTREE_SOURCES}
+            )
+
+
+    target_link_libraries(masstree
+            PRIVATE shirakami
+            PRIVATE shirakami-impl
+            PRIVATE Threads::Threads
+            PRIVATE gflags::gflags
+            )
+
+    target_include_directories(masstree
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/bench/
+            PRIVATE ${PROJECT_SOURCE_DIR}/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/src
+            PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/test/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+            PRIVATE ${gflags_INCLUDE_DIR}
+            )
+endif ()

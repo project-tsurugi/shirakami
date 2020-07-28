@@ -1,3 +1,7 @@
+/**
+ * @file bench/include/result.h
+ */
+
 #pragma once
 
 #include <atomic>
@@ -6,6 +10,8 @@
 
 // shirakami-impl interface library
 #include "cpu.h"
+
+namespace shirakami {
 
 class Result {
 public:
@@ -155,3 +161,5 @@ private:
   std::uint64_t total_version_reuse_ = 0;
   std::uint64_t total_write_latency_ = 0;
 };
+
+}  // namespace shirakami

@@ -1,5 +1,5 @@
 /**
- * @file gen_tx.h
+ * @file bench/include/gen_tx.h
  * @brief generate operations of transaction.
  */
 
@@ -12,6 +12,8 @@
 #include "cc/silo_variant/include/scheme.h"
 #include "random.h"
 #include "zipf.h"
+
+namespace shirakami {
 
 /**
  * @brief generate search/update operations.
@@ -41,3 +43,5 @@ static void gen_tx_rw(std::vector<shirakami::silo_variant::OprObj>& opr_set, std
     }
   }
 }
+
+} // namespace shirakami

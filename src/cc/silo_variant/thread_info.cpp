@@ -92,8 +92,12 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
     if (itr.get_op() == OP_TYPE::INSERT) {
       Record* record = itr.get_rec_ptr();
       std::string_view key_view = record->get_tuple().get_key();
+#ifdef INDEX_KOHLER_MASSTREE
       kohler_masstree::get_mtdb().remove_value(key_view.data(),
-                                                     key_view.size());
+                                               key_view.size());
+#elif INDEX_YAKUSHIMA
+      yakushima::yakushima_kvs::remove(get_yakushima_token(), key_view);
+#endif
 
       /**
        * create information for garbage collection.

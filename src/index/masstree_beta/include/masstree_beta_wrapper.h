@@ -25,7 +25,7 @@
 
 // masstree-header
 #include "masstree-beta/kvthread.hh"
-#include "masstree-beta/masstree.hh"
+#include "masstree-beta/masstree_beta.hh"
 #include "masstree-beta/masstree_insert.hh"
 #include "masstree-beta/masstree_print.hh"
 #include "masstree-beta/masstree_remove.hh"

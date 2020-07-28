@@ -30,4 +30,4 @@ void parallel_build_db(std::size_t start, std::size_t end,
                        std::size_t value_length);
 void build_db(std::size_t record, std::size_t thread, std::size_t value_length);
 
-}
+}  // namespace shirakami

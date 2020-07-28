@@ -1,4 +1,8 @@
 /**
+ * @file src/include/random.h
+ */
+
+/**
  * This algorithm is originally developed
  * by David Blackman and Sebastiano Vigna (vigna@acm.org)
  * http://xoroshiro.di.unimi.it/xoroshiro128plus.c
@@ -6,11 +10,13 @@
  * And Tanabe Takayuki custmized.
  */
 
+#pragma once
+
 #include <array>
 #include <cstdint>
 #include <random>
 
-#pragma once
+namespace shirakami {
 
 class Xoroshiro128Plus {
 public:
@@ -98,3 +104,5 @@ public:
 private:
   std::array<uint64_t, 2> s;  // NOLINT
 };
+
+} // namespace shirakami

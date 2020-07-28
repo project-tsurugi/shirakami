@@ -1,5 +1,5 @@
 /**
- * @file memory.h
+ * @file src/include/memory.h
  */
 
 #pragma once
@@ -10,6 +10,8 @@
 #include <ctime>
 #include <iostream>
 
+namespace shirakami {
+
 static void displayRusageRUMaxrss() {  // NOLINT
   struct rusage r {};
   if (getrusage(RUSAGE_SELF, &r) != 0) {
@@ -18,4 +20,6 @@ static void displayRusageRUMaxrss() {  // NOLINT
     std::abort();
   }
   printf("maxrss:\t%ld kB\n", r.ru_maxrss);  // NOLINT
+}
+
 }

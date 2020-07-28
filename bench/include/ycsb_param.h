@@ -7,7 +7,7 @@
 
 #include "cpu.h"
 
-namespace ycsb_param {
+namespace shirakami::ycsb_param {
 
 [[maybe_unused]]
 /**
@@ -55,4 +55,4 @@ alignas(CACHE_LINE_SIZE) std::size_t kCPUMHz = 2496;  // NOLINT
  */
 alignas(CACHE_LINE_SIZE) std::size_t kExecTime = 1;  // NOLINT
 
-}  // end of namespace ycsb_param
+}  // end of namespace shirakami::ycsb_param

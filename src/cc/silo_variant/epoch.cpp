@@ -5,10 +5,9 @@
 
 #include "cc/silo_variant/include/epoch.h"
 
+#include <xmmintrin.h>
+
 #include "clock.h"
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif
 #include "cc/silo_variant/include/thread_info_table.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 

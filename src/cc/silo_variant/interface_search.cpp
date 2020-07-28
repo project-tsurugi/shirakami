@@ -18,9 +18,9 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   if (!ti->get_txbegan()) silo_variant::tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
-  masstree_wrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif
-  silo_variant::WriteSetObj* inws{ti->search_write_set(key, len_key)};
+  WriteSetObj* inws{ti->search_write_set(key, len_key)};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
@@ -29,21 +29,23 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  silo_variant::ReadSetObj* inrs{ti->search_read_set(key, len_key)};
+  ReadSetObj* inrs{ti->search_read_set(key, len_key)};
   if (inrs != nullptr) {
     *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  silo_variant::Record* record{
-      kohler_masstree::get_mtdb().get_value(key, len_key)};
+  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
+#elif INDEX_YAKUSHIMA
+  Record* record{
+      std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key}))};
 #endif
   if (record == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
-  silo_variant::tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
+  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
   if (checktid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -52,8 +54,8 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  silo_variant::ReadSetObj rsob(record);
-  Status rr = silo_variant::read_record(rsob.get_rec_read(), record);
+  ReadSetObj rsob(record);
+  Status rr = read_record(rsob.get_rec_read(), record);
   if (rr == Status::OK) {
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();

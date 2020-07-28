@@ -12,7 +12,8 @@
 #include <cstring>
 #include <exception>
 
-// class
+namespace shirakami {
+
 class LibcError : public std::exception {
 private:
   std::string str_;
@@ -34,3 +35,5 @@ public:
                      const std::string &msg = "libc_error:")  // NOLINT
       : str_(generateMessage(err_num, msg)) {}
 };
+
+} // namespace shirakami

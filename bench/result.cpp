@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -6,6 +5,8 @@
 // shirakami-impl interface library
 #include "./include/result.h"
 #include "memory.h"
+
+namespace shirakami {
 
 void Result::displayAbortCounts() const {
   std::cout << "abort_counts_:\t" << total_abort_counts_ << std::endl;
@@ -530,4 +531,6 @@ void Result::addLocalAllResult(const Result &other) {
       other.local_validation_failure_by_writelock_);
   addLocalVersionMalloc(other.local_version_malloc_);
   addLocalVersionReuse(other.local_version_reuse_);
+}
+
 }

@@ -1,3 +1,7 @@
+/**
+ * @file src/include/zipf.h
+ */
+
 #pragma once
 
 #include <cassert>
@@ -8,6 +12,8 @@
 #include <vector>
 
 #include "random.h"
+
+namespace shirakami {
 
 // Fast zipf distribution by Jim Gray et al.
 class FastZipf {
@@ -65,3 +71,5 @@ public:
     return ans;
   }
 };
+
+} // namespace shirakami

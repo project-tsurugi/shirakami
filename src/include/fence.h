@@ -6,4 +6,9 @@
 
 #include "inline.h"
 
+namespace shirakami {
+
 INLINE void compilerFence() { asm volatile("" ::: "memory"); }
+
+} // namespace shirakami
+

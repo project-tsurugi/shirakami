@@ -26,6 +26,8 @@
 #include <linux/fs.h>
 #endif  // KVS_Linux
 
+namespace shirakami {
+
 class File {  // NOLINT
 public:
   File() = default;
@@ -212,3 +214,5 @@ template <typename String>
   logpath = pathname.data();
   logpath += "/log/log" + std::to_string(thid);
 }
+
+} // namespace shirakami
