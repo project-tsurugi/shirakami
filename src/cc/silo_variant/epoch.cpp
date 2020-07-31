@@ -11,7 +11,7 @@
 #include "cc/silo_variant/include/thread_info_table.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 void epoch::atomic_add_global_epoch() {
   std::uint32_t expected = load_acquire_global_epoch();

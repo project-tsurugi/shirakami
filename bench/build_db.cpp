@@ -30,6 +30,10 @@
 
 namespace shirakami {
 
+#ifdef CC_SILO_VARIANT
+using namespace cc_silo_variant;
+#endif
+
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
                                  std::size_t thread) {
   // if table size is very small, it builds by single thread.
@@ -51,13 +55,13 @@ size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
 }
 
 void parallel_build_db(std::size_t start, std::size_t end,
-                         std::size_t value_length) {
+                       std::size_t value_length) {
   Xoroshiro128Plus rnd;
   Token token{};
   enter(token);
 
 #ifdef CC_SILO_VARIANT
-  silo_variant::tx_begin(token);
+  cc_silo_variant::tx_begin(token);
 #endif
 
   for (uint64_t i = start; i <= end; ++i) {
@@ -73,7 +77,7 @@ void parallel_build_db(std::size_t start, std::size_t end,
 }
 
 void build_db(std::size_t record, std::size_t thread,
-                std::size_t value_length) {
+              std::size_t value_length) {
   printf("ycsb::build_mtdb\n");  // NOLINT
   std::vector<std::thread> thv;
 
@@ -81,11 +85,11 @@ void build_db(std::size_t record, std::size_t thread,
   printf("start parallel_build_db with %zu threads.\n", max_thread);  // NOLINT
   fflush(stdout);
   for (size_t i = 0; i < max_thread; ++i) {
-    thv.emplace_back(parallel_build_db, i * (record / max_thread),
+    thv.emplace_back(parallel_build_db, i * (record / max_thread),  // NOLINT
                      (i + 1) * (record / max_thread) - 1, value_length);
   }
 
   for (auto &th : thv) th.join();
 }
 
-}
+}  // namespace shirakami

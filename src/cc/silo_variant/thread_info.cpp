@@ -11,7 +11,7 @@
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 void ThreadInfo::clean_up_ops_set() {
   read_set.clear();

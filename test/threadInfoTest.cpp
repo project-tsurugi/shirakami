@@ -10,15 +10,19 @@
 
 #include "tuple_local.h"
 
-using namespace shirakami::silo_variant;
+#ifdef CC_SILO_VARIANT
+using namespace shirakami::cc_silo_variant;
+#endif
 
 namespace shirakami::testing {
 
+using namespace shirakami::cc_silo_variant;
+
 class ThreadInfoTest : public ::testing::Test {
 public:
-  void SetUp() override { shirakami::init(); }  // NOLINT
+  void SetUp() override { init(); }  // NOLINT
 
-  void TearDown() override { shirakami::fin(); }
+  void TearDown() override { fin(); }
 };
 
 TEST_F(ThreadInfoTest, get_txbegan_) {  // NOLINT

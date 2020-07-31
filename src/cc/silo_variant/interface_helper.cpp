@@ -12,7 +12,9 @@
 #include "boost/filesystem.hpp"
 #include "include/tuple_local.h"
 
-namespace shirakami::silo_variant {
+#include "kvs/interface.h"
+
+namespace shirakami::cc_silo_variant {
 
 Status enter(Token& token) {  // NOLINT
   Status ret_status = thread_info_table::decide_token(token);

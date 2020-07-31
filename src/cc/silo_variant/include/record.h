@@ -9,7 +9,7 @@
 #include "kvs/tuple.h"
 #include "tid.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class Record {  // NOLINT
 public:

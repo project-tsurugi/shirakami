@@ -9,7 +9,7 @@
 
 #include "thread_info.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class thread_info_table {
 public:

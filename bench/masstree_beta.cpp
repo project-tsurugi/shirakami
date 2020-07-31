@@ -40,6 +40,9 @@
 #include "index/masstree_beta/masstree_beta_wrapper.cpp"
 
 using namespace shirakami;
+#ifdef CC_SILO_VARIANT
+using namespace shirakami::cc_silo_variant;
+#endif
 
 DEFINE_uint64(thread, 1, "# worker threads.");                // NOLINT
 DEFINE_uint64(record, 1000, "# database records(tuples).");   // NOLINT
@@ -104,7 +107,7 @@ static void load_flags() {
 }
 
 static bool isReady(const std::vector<char>& readys) {  // NOLINT
-  for (const char& b : readys) {
+  for (const char& b : readys) {                        // NOLINT
     if (loadAcquire(b) == 0) return false;
   }
   return true;
@@ -134,7 +137,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   while (!loadAcquire(start)) _mm_pause();
 
   Token token{};
-  shirakami::silo_variant::Record myrecord{};
+  shirakami::cc_silo_variant::Record myrecord{};
   Storage storage{};
   enter(token);
   while (likely(!loadAcquire(quit))) {
@@ -155,8 +158,8 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 #if 0
       // future work : If it defines that the record number is divisible by 2, it can use mask and "and computation"  instead of "surplus computation".
       // Then, it will be faster than now.
-      shirakami::silo_variant::Record* record;
-      shirakami::silo_variant::Record* newrecord = new shirakami::silo_variant::Record();
+      shirakami::cc_silo_variant::Record* record;
+      shirakami::cc_silo_variant::Record* newrecord = new shirakami::cc_silo_variant::Record();
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
       if (shirakami::Status::OK != MTDB.put_value((char*)&keybs, sizeof(uint64_t), newrecord, &record)) ERR;
@@ -165,7 +168,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
     } else if (FLAGS_instruction == "get") {
       uint64_t keynm = zipf() % FLAGS_record;
       uint64_t keybs = __builtin_bswap64(keynm);
-      shirakami::silo_variant::Record* record;
+      shirakami::cc_silo_variant::Record* record;
       record = MTDB.get_value((char*)&keybs, sizeof(uint64_t));
       if (record == nullptr) ERR;
       ++myres.local_commit_counts_;

@@ -10,7 +10,7 @@
 
 #include "atomic_wrapper.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class epoch {
 public:

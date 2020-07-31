@@ -10,6 +10,10 @@
 
 namespace shirakami::testing {
 
+#ifdef CC_SILO_VARIANT
+using namespace shirakami::cc_silo_variant;
+#endif
+
 constexpr const int MAX_TUPLES = 1000000;
 constexpr const int READ_TUPLES = 100;
 
@@ -21,13 +25,13 @@ public:
   Token& get_s() { return s_; }  // NOLINT
 
   void SetUp() override {
-    shirakami::init();  // NOLINT
+    init();  // NOLINT
     for (int i = 0; i < MAX_TUPLES; ++i) {
       key_.at(i) = i;
     }
   }
 
-  void TearDown() override { shirakami::fin(); }
+  void TearDown() override { fin(); }
 
 private:
   std::array<std::uint64_t, MAX_TUPLES> key_{};
@@ -68,7 +72,7 @@ void ScanPerfTest::DoScan() {
 }
 
 TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
-  EXPECT_EQ(Status::OK, shirakami::enter(get_s()));
+  EXPECT_EQ(Status::OK, enter(get_s()));
 
   DoInsert(0, 100);  // NOLINT
   std::cout << "Perform 100 records read_from_scan on a table with 100 records."
@@ -133,7 +137,7 @@ TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
       << std::endl;
   DoScan();
 
-  EXPECT_EQ(Status::OK, shirakami::leave(get_s()));
+  EXPECT_EQ(Status::OK, leave(get_s()));
 }
 
 }  // namespace shirakami::testing

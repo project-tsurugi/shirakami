@@ -7,7 +7,7 @@
 #include "cc/silo_variant/include/thread_info.h"
 #include "include/tuple_local.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 bool WriteSetObj::operator<(const WriteSetObj& right) const {  // NOLINT
   const Tuple& this_tuple = this->get_tuple(this->get_op());

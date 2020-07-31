@@ -36,7 +36,7 @@
 #include "yakushima/include/kvs.h"
 #endif
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class ThreadInfo {
 public:

@@ -32,7 +32,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 /**
  * @brief element of write set.

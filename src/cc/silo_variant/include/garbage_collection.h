@@ -15,7 +15,7 @@
 #include "epoch.h"
 #include "record.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class garbage_collection {
 public:

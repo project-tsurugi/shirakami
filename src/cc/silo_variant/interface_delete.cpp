@@ -14,8 +14,9 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif                            // INDEX_KOHLER_MASSTREE
 #include "include/tuple_local.h"  // sizeof(Tuple)
+#include "kvs/interface.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
 #ifdef INDEX_YAKUSHIMA

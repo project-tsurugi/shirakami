@@ -14,10 +14,12 @@
 #endif                            // INDEX_KOHLER_MASSTREE
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+#include "kvs/interface.h"
+
+namespace shirakami::cc_silo_variant {
 
 Status abort(Token token) {  // NOLINT
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
+  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
 #if defined(INDEX_KOHLER_MASSTREE) || defined(INDEX_YAKUSHIMA)
   ti->remove_inserted_records_of_write_set_from_masstree();
 #endif
@@ -29,16 +31,16 @@ Status abort(Token token) {  // NOLINT
 }
 
 Status commit(Token token) {  // NOLINT
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  silo_variant::tid_word max_rset;
-  silo_variant::tid_word max_wset;
+  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
+  cc_silo_variant::tid_word max_rset;
+  cc_silo_variant::tid_word max_wset;
 
   // Phase 1: Sort lock list;
   std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
 
   // Phase 2: Lock write set;
-  silo_variant::tid_word expected;
-  silo_variant::tid_word desired;
+  cc_silo_variant::tid_word expected;
+  cc_silo_variant::tid_word desired;
   for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end();
        ++itr) {
     if (itr->get_op() == OP_TYPE::INSERT) continue;
@@ -69,14 +71,14 @@ Status commit(Token token) {  // NOLINT
 
   // Serialization point
   asm volatile("" ::: "memory");  // NOLINT
-  ti->set_epoch(silo_variant::epoch::load_acquire_global_epoch());
+  ti->set_epoch(cc_silo_variant::epoch::load_acquire_global_epoch());
   asm volatile("" ::: "memory");  // NOLINT
 
   // Phase 3: Validation
-  silo_variant::tid_word check;
+  cc_silo_variant::tid_word check;
   for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end();
        itr++) {
-    const silo_variant::Record* rec_ptr = itr->get_rec_ptr();
+    const cc_silo_variant::Record* rec_ptr = itr->get_rec_ptr();
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
          itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
@@ -94,7 +96,7 @@ Status commit(Token token) {  // NOLINT
 
   // exec_logging(write_set, myid);
 
-  silo_variant::write_phase(ti, max_rset, max_wset);
+  cc_silo_variant::write_phase(ti, max_rset, max_wset);
 
   ti->set_tx_began(false);
   return Status::OK;

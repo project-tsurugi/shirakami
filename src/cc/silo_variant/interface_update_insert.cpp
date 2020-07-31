@@ -15,7 +15,7 @@
 #endif                            // INDEX_KOHLER_MASSTREE
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               const char* key, std::size_t len_key, const char* val,

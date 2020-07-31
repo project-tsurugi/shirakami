@@ -9,13 +9,15 @@
 #endif
 #include "include/tuple_local.h"
 
-namespace shirakami::silo_variant {
+#include "kvs/interface.h"
+
+namespace shirakami::cc_silo_variant {
 
 Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   const char* const key, const std::size_t len_key,
                   Tuple** tuple) {
-  auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-  if (!ti->get_txbegan()) silo_variant::tx_begin(token);
+  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
+  if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());

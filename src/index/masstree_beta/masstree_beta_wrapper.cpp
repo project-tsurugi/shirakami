@@ -18,7 +18,7 @@ namespace shirakami {
 
 Status kohler_masstree::insert_record(char const* key,  // NOLINT
                                             std::size_t len_key,
-                                            silo_variant::Record* record) {
+                                      cc_silo_variant::Record* record) {
 #ifdef INDEX_KOHLER_MASSTREE
 #ifdef KVS_Linux
   int core_pos = sched_getcpu();
@@ -30,7 +30,7 @@ Status kohler_masstree::insert_record(char const* key,  // NOLINT
   cpu_set_t current_mask = getThreadAffinity();
   setThreadAffinity(core_pos);
 #endif  // KVS_Linux
-  masstree_wrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  masstree_wrapper<cc_silo_variant::Record>::thread_init(sched_getcpu());
   Status insert_result(MTDB.insert_value(key, len_key, record));
 #ifdef KVS_Linux
   setThreadAffinity(current_mask);
@@ -39,11 +39,11 @@ Status kohler_masstree::insert_record(char const* key,  // NOLINT
 #endif  // INDEX_KOHLER_MASSTREE
 }
 
-silo_variant::Record* kohler_masstree::find_record(
+cc_silo_variant::Record* kohler_masstree::find_record(
     char const* key,  // NOLINT
     std::size_t len_key) {
 #ifdef INDEX_KOHLER_MASSTREE
-  masstree_wrapper<silo_variant::Record>::thread_init(sched_getcpu());
+  masstree_wrapper<cc_silo_variant::Record>::thread_init(sched_getcpu());
   return MTDB.get_value(key, len_key);
 #endif  // INDEX_KOHLER_MASSTREE
 }

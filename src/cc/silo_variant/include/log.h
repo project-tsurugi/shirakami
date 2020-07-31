@@ -15,7 +15,7 @@
 #include "kvs/scheme.h"
 #include "tid.h"
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 class Log {
 public:

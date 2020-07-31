@@ -11,7 +11,9 @@
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+#include "kvs/interface.h"
+
+namespace shirakami::cc_silo_variant {
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   ScanHandle handle) {

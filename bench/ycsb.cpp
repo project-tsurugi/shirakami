@@ -30,15 +30,18 @@
 #include "atomic_wrapper.h"
 #ifdef CC_SILO_VARIANT
 #include "cc/silo_variant/include/thread_info.h"
-#endif // CC_SILO_VARIANT
+#endif  // CC_SILO_VARIANT
 #include "clock.h"
 #include "cpu.h"
-#include "tuple_local.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "tuple_local.h"
 
 using namespace shirakami;
 using namespace ycsb_param;
+#ifdef CC_SILO_VARIANT
+using namespace shirakami::cc_silo_variant;
+#endif
 
 DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
 DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
@@ -56,8 +59,8 @@ DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 static bool isReady(const std::vector<char>& readys);  // NOLINT
 static void waitForReady(const std::vector<char>& readys);
 static void invoke_leader();
-static void worker(size_t thid, char& ready, const bool& start, const bool& quit,
-                   std::vector<Result>& res);
+static void worker(size_t thid, char& ready, const bool& start,
+                   const bool& quit, std::vector<Result>& res);
 
 static void invoke_leader() {
   alignas(CACHE_LINE_SIZE) bool start = false;
@@ -95,7 +98,8 @@ static void load_flags() {
   if (FLAGS_record > 1) {
     kCardinality = FLAGS_record;
   } else {
-    std::cerr << "Number of database records(tuples) must be large than 0." << std::endl;
+    std::cerr << "Number of database records(tuples) must be large than 0."
+              << std::endl;
     exit(1);
   }
   constexpr std::size_t eight = 8;
@@ -103,7 +107,7 @@ static void load_flags() {
     kKeyLength = FLAGS_key_length;
   } else {
     std::cerr << "Length of key must be larger than 0 and be divisible by 8."
-         << std::endl;
+              << std::endl;
     exit(1);
   }
   if (FLAGS_val_length > 1) {
@@ -116,7 +120,7 @@ static void load_flags() {
     kNops = FLAGS_ops;
   } else {
     std::cerr << "Number of operations in a transaction must be larger than 0."
-         << std::endl;
+              << std::endl;
     exit(1);
   }
   constexpr std::size_t thousand = 100;
@@ -124,28 +128,31 @@ static void load_flags() {
     kRRatio = FLAGS_rratio;
   } else {
     std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
-         << std::endl;
+              << std::endl;
     exit(1);
   }
   if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
     kZipfSkew = FLAGS_skew;
   } else {
-    std::cerr << "Access skew of transaction must be in the range 0 to 0.999... ."
-         << std::endl;
+    std::cerr
+        << "Access skew of transaction must be in the range 0 to 0.999... ."
+        << std::endl;
     exit(1);
   }
   if (FLAGS_cpumhz > 1) {
     kCPUMHz = FLAGS_cpumhz;
   } else {
-    std::cerr << "CPU MHz of execution environment. It is used measuring some time. "
-            "It must be larger than 0."
-         << std::endl;
+    std::cerr
+        << "CPU MHz of execution environment. It is used measuring some time. "
+           "It must be larger than 0."
+        << std::endl;
     exit(1);
   }
   if (FLAGS_duration >= 1) {
     kExecTime = FLAGS_duration;
   } else {
-    std::cerr << "Duration of benchmark in seconds must be larger than 0." << std::endl;
+    std::cerr << "Duration of benchmark in seconds must be larger than 0."
+              << std::endl;
     exit(1);
   }
 }
@@ -166,7 +173,7 @@ int main(int argc, char* argv[]) {  // NOLINT
 }
 
 bool isReady(const std::vector<char>& readys) {  // NOLINT
-  for (const char& b : readys) {
+  for (const char& b : readys) {                 // NOLINT
     if (loadAcquire(b) == 0) return false;
   }
   return true;
@@ -192,7 +199,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 
   Token token{};
   Storage storage{};
-  std::vector<shirakami::silo_variant::OprObj> opr_set;
+  std::vector<shirakami::cc_silo_variant::OprObj> opr_set;
   enter(token);
 
   storeRelease(ready, 1);
@@ -219,4 +226,3 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   }
   leave(token);
 }
-

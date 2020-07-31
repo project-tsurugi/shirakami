@@ -7,7 +7,7 @@
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::silo_variant {
+namespace shirakami::cc_silo_variant {
 
 void Log::LogHeader::init() & {
   checksum_ = 0;

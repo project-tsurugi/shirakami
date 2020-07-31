@@ -21,19 +21,23 @@
 #include <cstdint>
 #include <thread>
 
-#include "test_param.h"
-
 #include "cpu.h"
-#include "tuple_local.h"
 #include "gtest/gtest.h"
+#include "test_param.h"
+#include "tuple_local.h"
 
 // shirakami/include/
 #include "kvs/interface.h"
 
 using namespace single_thread_test;
-using namespace shirakami;
 
-std::array<std::vector<Tuple*>, Nthread> DataList{};
+namespace shirakami::testing {
+
+#ifdef CC_SILO_VARIANT
+using namespace shirakami::cc_silo_variant;
+#endif
+
+std::array<std::vector<Tuple*>, Nthread> DataList{};  // NOLINT
 
 /**
  * @brief delete DataList object.
@@ -111,7 +115,7 @@ static void exec_update(Token token, std::size_t thnm) {
   ASSERT_EQ(result, Status::OK);
 }
 
-static void exec_delete(const Token token, std::size_t thnm) {
+static void exec_delete(Token token, std::size_t thnm) {
   Storage storage(0);
 
   for (auto&& itr : DataList.at(thnm)) {
@@ -166,14 +170,14 @@ static void worker(const size_t thid) {
 
 static void test() {
   std::vector<std::thread> thv;
-  for (std::size_t i = 0; i < Nthread; ++i) thv.emplace_back(worker, i);
+  for (std::size_t i = 0; i < Nthread; ++i) {
+    thv.emplace_back(worker, i);  // NOLINT
+  }
 
   for (auto& th : thv) th.join();
 
   delete_DataList();
 }
-
-namespace shirakami::testing {
 
 class cliTest : public ::testing::Test {};
 
