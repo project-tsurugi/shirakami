@@ -32,27 +32,27 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   masstree_wrapper<Record>::thread_init(sched_getcpu());
   if (kohler_masstree::find_record(key, len_key) != nullptr) {
 #elif INDEX_YAKUSHIMA
-  if (std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key})) !=
+  if (std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key})) !=
       nullptr) {
 #endif
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  Record* record =  // NOLINT
+  Record* rec_ptr =  // NOLINT
       new Record(key, len_key, val, len_val);
 #ifdef INDEX_KOHLER_MASSTREE
-  Status insert_result(kohler_masstree::insert_record(key, len_key, record));
+  Status insert_result(kohler_masstree::insert_record(key, len_key, rec_ptr));
   if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
   yakushima::status insert_result{
-      yakushima::yakushima_kvs::put<Record>(  // NOLINT
-          {key, len_key}, record)};
+      yakushima::yakushima_kvs::put<Record*>(  // NOLINT
+          {key, len_key}, &rec_ptr)};
   if (insert_result == yakushima::status::OK) {
 #endif
-    ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
+    ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
     return Status::OK;
   }
-  delete record;  // NOLINT
+  delete rec_ptr;  // NOLINT
   return Status::WARN_ALREADY_EXISTS;
 }
 
@@ -70,15 +70,19 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
-#elif INDEX_YAKUSHIMA
-  Record* record{
-      std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key}))};
-#endif
-  if (record == nullptr) {
+  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key, len_key)};
+  if (rec_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+#elif INDEX_YAKUSHIMA
+  Record** rec_double_ptr{
+      std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  if (rec_double_ptr == nullptr) {
+    return Status::WARN_NOT_FOUND;
+  }
+  Record* rec_ptr{*rec_double_ptr};
+#endif
+  tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
   if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -87,7 +91,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   }
 
   ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                                   record);
+                                   rec_ptr);
 
   return Status::OK;
 }
@@ -105,32 +109,40 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  Record* record{kohler_masstree::kohler_masstree::find_record(key, len_key)};
+  Record* rec_ptr{kohler_masstree::kohler_masstree::find_record(key, len_key)};
 #elif INDEX_YAKUSHIMA
-  Record* record{
-      std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key}))};
+  Record** rec_double_ptr{
+      std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  Record* rec_ptr{};
+  if (rec_double_ptr == nullptr) {
+    rec_ptr = nullptr;
+  } else {
+    rec_ptr =
+        (*std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key})));
+  }
 #endif
-  if (record == nullptr) {
-    record = new Record(key, len_key, val, len_val);  // NOLINT
+  if (rec_ptr == nullptr) {
+    rec_ptr = new Record(key, len_key, val, len_val);  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
-    Status insert_result(kohler_masstree::insert_record(key, len_key, record));
+    Status insert_result(kohler_masstree::insert_record(key, len_key, rec_ptr));
     if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
     yakushima::status insert_result{
-        yakushima::yakushima_kvs::put<Record>({key, len_key}, record)};  // NOLINT
+        yakushima::yakushima_kvs::put<Record*>(  // NOLINT
+            {key, len_key}, &rec_ptr)};
     if (insert_result == yakushima::status::OK) {
 #endif
-      ti->get_write_set().emplace_back(OP_TYPE::INSERT, record);
+      ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
       return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
-    delete record;  // NOLINT
+    delete rec_ptr;  // NOLINT
   }
   ti->get_write_set().emplace_back(key, len_key, val, len_val, OP_TYPE::UPDATE,
-                                   record);
+                                   rec_ptr);
 
   return Status::OK;
-}
+}  // namespace shirakami::silo_variant
 
 }  // namespace shirakami::silo_variant

@@ -18,7 +18,7 @@ namespace shirakami::silo_variant {
 
 Status abort(Token token) {  // NOLINT
   auto* ti = static_cast<silo_variant::ThreadInfo*>(token);
-#ifdef INDEX_KOHLER_MASSTREE
+#if defined(INDEX_KOHLER_MASSTREE) || defined(INDEX_YAKUSHIMA)
   ti->remove_inserted_records_of_write_set_from_masstree();
 #endif
   ti->clean_up_ops_set();

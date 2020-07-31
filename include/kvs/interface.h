@@ -116,7 +116,7 @@ extern Status enter(Token& token);  // NOLINT
  * @pre It already did init() and invoked core threads.
  * @details It do delete operations for all records.
  * init() did invoking core threads detached. So it should join those threads.
- * This function surves that joining after doing those delete operations.
+ * This function serves that joining after doing those delete operations.
  * Then, it delete the remaining garbage (heap) object by using private
  * interface.
  */

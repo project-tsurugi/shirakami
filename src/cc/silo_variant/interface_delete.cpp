@@ -29,7 +29,7 @@ namespace shirakami::silo_variant {
   kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
                                    &scan_res, false);
 #elif INDEX_YAKUSHIMA
-  std::vector<std::tuple<Record*, std::size_t> > scan_res;
+  std::vector<std::tuple<Record**, std::size_t> > scan_res;
   yakushima::yakushima_kvs::scan("", false, "", false, scan_res);
 #endif
 
@@ -41,7 +41,7 @@ namespace shirakami::silo_variant {
 #ifdef INDEX_KOHLER_MASSTREE
     std::string_view key_view = itr->get_tuple().get_key();
 #elif INDEX_YAKUSHIMA
-    std::string_view key_view = std::get<0>(itr)->get_tuple().get_key();
+    std::string_view key_view = (*std::get<0>(itr))->get_tuple().get_key();
 #endif
     delete_record(s, st, key_view.data(), key_view.size());
     Status result = commit(s);
@@ -60,14 +60,18 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
-#elif INDEX_YAKUSHIMA
-  Record* record{std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key}))};
-#endif
-  if (record == nullptr) {
+  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key, len_key)};
+  if (rec_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
-  tid_word check_tid(loadAcquire(record->get_tidw().get_obj()));
+#elif INDEX_YAKUSHIMA
+  Record** rec_double_ptr{std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  if (rec_double_ptr == nullptr) {
+    return Status::WARN_NOT_FOUND;
+  }
+  Record* rec_ptr{*rec_double_ptr};
+#endif
+  tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
   if (check_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
@@ -75,7 +79,7 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ti->get_write_set().emplace_back(OP_TYPE::DELETE, record);
+  ti->get_write_set().emplace_back(OP_TYPE::DELETE, rec_ptr);
   return check;
 }
 

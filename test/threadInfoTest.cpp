@@ -100,7 +100,7 @@ TEST_F(ThreadInfoTest, get_txbegan_) {  // NOLINT
   ASSERT_EQ(handle, 0);
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
-
+  delete_all_records();
   ASSERT_EQ(Status::OK, leave(s));
 }
 

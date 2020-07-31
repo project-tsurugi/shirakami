@@ -159,6 +159,7 @@ int main(int argc, char* argv[]) {  // NOLINT
   init();  // NOLINT
   build_db(kCardinality, kNthread, kValLength);
   invoke_leader();
+  delete_all_records();
   fin();
 
   return 0;

@@ -22,7 +22,10 @@ class SimpleTest : public ::testing::Test {  // NOLINT
 public:
   void SetUp() override { shirakami::init(); }  // NOLINT
 
-  void TearDown() override { shirakami::fin(); }
+  void TearDown() override {
+    shirakami::delete_all_records();
+    shirakami::fin();
+  }
 };
 
 TEST_F(SimpleTest, project_root) {  // NOLINT
@@ -247,8 +250,8 @@ TEST_F(SimpleTest, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, k3.data(),
-                                 k3.size(), false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, 0, false, k3.data(), k3.size(),
+                                 false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto&& itr : records) {
@@ -294,8 +297,8 @@ TEST_F(SimpleTest, scan) {  // NOLINT
     }
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, nullptr,
-                                 k3.size(), false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, nullptr, 0,
+                                 false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
   for (auto&& itr : records) {
@@ -309,8 +312,8 @@ TEST_F(SimpleTest, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, nullptr, k.size(), false, nullptr,
-                                 k3.size(), false, records));
+  ASSERT_EQ(Status::OK,
+            scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto&& itr : records) {
@@ -352,10 +355,10 @@ TEST_F(SimpleTest, scan) {  // NOLINT
 
 TEST_F(SimpleTest, scan_with_null_char) {  // NOLINT
   std::string k("a\0a", 3);                // NOLINT
-  std::string k2("a\0a/", 4);              // NOLINT
-  std::string k3("a\0a/c", 5);             // NOLINT
+  std::string k2("a\0aa", 4);              // NOLINT
+  std::string k3("a\0aac", 5);             // NOLINT
   std::string k4("a\0ab", 4);              // NOLINT
-  std::string k5("a\0a0", 4);              // NOLINT
+  std::string k5("a\0ac", 4);              // NOLINT
   ASSERT_EQ(3, k.size());
   std::string v("bbb");  // NOLINT
   Token s{};
@@ -372,15 +375,15 @@ TEST_F(SimpleTest, scan_with_null_char) {  // NOLINT
   std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k2.data(), k2.size(), false, k5.data(),
                                  k5.size(), true, records));
-  EXPECT_EQ(2, records.size());
+  EXPECT_EQ(3, records.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(SimpleTest, scan_key_then_search_key) {  // NOLINT
   std::string k("a");                           // NOLINT
-  std::string k2("a/");                         // NOLINT
-  std::string k3("a/c");                        // NOLINT
+  std::string k2("aa");                         // NOLINT
+  std::string k3("aac");                        // NOLINT
   std::string k4("b");                          // NOLINT
   std::string v("bbb");                         // NOLINT
   Token s{};

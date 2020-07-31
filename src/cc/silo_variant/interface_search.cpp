@@ -36,17 +36,21 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* record{kohler_masstree::get_mtdb().get_value(key, len_key)};
-#elif INDEX_YAKUSHIMA
-  Record* record{
-      std::get<0>(yakushima::yakushima_kvs::get<Record>({key, len_key}))};
-#endif
-  if (record == nullptr) {
+  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key, len_key)};
+  if (rec_ptr == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
-  tid_word checktid(loadAcquire(record->get_tidw().get_obj()));
-  if (checktid.get_absent()) {
+#elif INDEX_YAKUSHIMA
+  Record** rec_double_ptr{std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  if (rec_double_ptr == nullptr) {
+    *tuple = nullptr;
+    return Status::WARN_NOT_FOUND;
+  }
+  Record* rec_ptr{*rec_double_ptr};
+#endif
+  tid_word chk_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
+  if (chk_tid.get_absent()) {
     // The second condition checks
     // whether the record you want to read should not be read by parallel
     // insert / delete.
@@ -54,10 +58,10 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ReadSetObj rsob(record);
-  Status rr = read_record(rsob.get_rec_read(), record);
+  ReadSetObj rs_ob(rec_ptr);
+  Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
   if (rr == Status::OK) {
-    ti->get_read_set().emplace_back(std::move(rsob));
+    ti->get_read_set().emplace_back(std::move(rs_ob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
   }
   return rr;
