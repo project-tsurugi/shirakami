@@ -30,8 +30,8 @@ option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 option(BUILD_CC_SILO_VARIANT "Build Silo variant as CC" ON)
-option(BUILD_INDEX_KOHLER_MASSTREE "Build Kohler Masstree as index" OFF)
-option(BUILD_INDEX_YAKUSHIMA "Build yakushima as index" ON)
+option(BUILD_INDEX_KOHLER_MASSTREE "Build Kohler Masstree as index" ON)
+option(BUILD_INDEX_YAKUSHIMA "Build yakushima as index" OFF)
 
 find_package(Doxygen)
 find_package(Threads REQUIRED)

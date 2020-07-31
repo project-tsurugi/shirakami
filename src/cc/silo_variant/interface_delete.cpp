@@ -18,37 +18,15 @@
 namespace shirakami::silo_variant {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
-
-  Token s{};
-  Storage st{};
-  while (Status::OK != enter(s)) _mm_pause();
-
-#ifdef INDEX_KOHLER_MASSTREE
-  std::vector<const Record*> scan_res;
-  masstree_wrapper<Record>::thread_init(sched_getcpu());
-  kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
-                                   &scan_res, false);
-#elif INDEX_YAKUSHIMA
+#ifdef INDEX_YAKUSHIMA
   std::vector<std::tuple<Record**, std::size_t> > scan_res;
   yakushima::yakushima_kvs::scan("", false, "", false, scan_res);
-#endif
-
-  if (scan_res.empty()) {
-    return Status::WARN_ALREADY_DELETE;
-  }
 
   for (auto&& itr : scan_res) {
-#ifdef INDEX_KOHLER_MASSTREE
-    std::string_view key_view = itr->get_tuple().get_key();
-#elif INDEX_YAKUSHIMA
-    std::string_view key_view = (*std::get<0>(itr))->get_tuple().get_key();
-#endif
-    delete_record(s, st, key_view.data(), key_view.size());
-    Status result = commit(s);
-    if (result != Status::OK) return result;
+    delete *std::get<0>(itr);  // NOLINT
   }
 
-  leave(s);
+#endif
   return Status::OK;
 }
 
@@ -65,7 +43,8 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 #elif INDEX_YAKUSHIMA
-  Record** rec_double_ptr{std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  Record** rec_double_ptr{
+      std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
   if (rec_double_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
