@@ -22,7 +22,7 @@
 #include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
-#include "cc/silo_variant/include/interface.h"
+#include "cc/silo_variant/include/interface_helper.h"
 #include "clock.h"
 #include "cpu.h"
 #include "random.h"

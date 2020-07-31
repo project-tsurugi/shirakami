@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-        "cliTest.cpp"
-        "clockTest.cpp"
-        "errorTest.cpp"
-        "logTest.cpp"
-        "memoryTest.cpp"
-        "recordTest.cpp"
-        "schemeTest.cpp"
-        "simpleTest.cpp"
-        "threadInfoTest.cpp"
+        "client_test.cpp"
+        "clock_test.cpp"
+        "error_test.cpp"
+        "log_test.cpp"
+        "memory_test.cpp"
+        "record_test.cpp"
+        "scheme_test.cpp"
+        "simple_test.cpp"
+        "thread_info_test.cpp"
         )
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_TEST_SOURCES "masstreeBetaTest.cpp")
+    file(GLOB INDEX_TEST_SOURCES "masstree_beta_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
 endif ()
 

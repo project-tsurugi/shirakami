@@ -2,7 +2,8 @@
  * @file helper.cpp
  */
 
-#include "cc/silo_variant//include/interface.h"
+#include "cc/silo_variant//include/interface_helper.h"
+
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "cc/silo_variant/include/thread_info_table.h"
 
