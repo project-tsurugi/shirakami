@@ -1,5 +1,5 @@
 /**
- * @file gcollection.cc
+ * @file garbage_collection.cpp
  * @brief about garbage collection.
  */
 
@@ -14,12 +14,12 @@
 namespace shirakami::cc_silo_variant {
 
 [[maybe_unused]] void garbage_collection::release_all_heap_objects() {
-  garbage_collection::remove_all_leaf_from_mtdb_and_release();
+  garbage_collection::remove_all_leaf_from_mt_db_and_release();
   garbage_collection::delete_all_garbage_records();
   garbage_collection::delete_all_garbage_values();
 }
 
-void garbage_collection::remove_all_leaf_from_mtdb_and_release() {
+void garbage_collection::remove_all_leaf_from_mt_db_and_release() {
 #ifdef INDEX_KOHLER_MASSTREE
   std::vector<const Record*> scan_res;
   kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
@@ -63,10 +63,10 @@ void garbage_collection::delete_all_garbage_values() {
 void ThreadInfo::gc_records_and_values() const {
   // for records
   {
-    std::mutex& mutex_for_gclist =
+    std::mutex& mutex_for_gc_list =
         garbage_collection::get_mutex_garbage_records_at(
             this->gc_handle_.get_container_index());
-    if (mutex_for_gclist.try_lock()) {
+    if (mutex_for_gc_list.try_lock()) {
       auto itr = this->gc_handle_.get_record_container()->begin();
       while (itr != this->gc_handle_.get_record_container()->end()) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
@@ -76,15 +76,15 @@ void ThreadInfo::gc_records_and_values() const {
           break;
         }
       }
-      mutex_for_gclist.unlock();
+      mutex_for_gc_list.unlock();
     }
   }
   // for values
   {
-    std::mutex& mutex_for_gclist =
+    std::mutex& mutex_for_gc_list =
         garbage_collection::get_mutex_garbage_values_at(
             this->gc_handle_.get_container_index());
-    if (mutex_for_gclist.try_lock()) {
+    if (mutex_for_gc_list.try_lock()) {
       auto itr = this->gc_handle_.get_value_container()->begin();
       while (itr != this->gc_handle_.get_value_container()->end()) {
         if (itr->second <= epoch::get_reclamation_epoch()) {
@@ -94,7 +94,7 @@ void ThreadInfo::gc_records_and_values() const {
           break;
         }
       }
-      mutex_for_gclist.unlock();
+      mutex_for_gc_list.unlock();
     }
   }
 }

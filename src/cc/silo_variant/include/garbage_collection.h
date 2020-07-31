@@ -57,7 +57,7 @@ public:
   /**
    * @brief Release all heap objects in this system.
    * @details Do three functions: delete_all_garbage_values(),
-   * delete_all_garbage_records(), and remove_all_leaf_from_mtdb_and_release().
+   * delete_all_garbage_records(), and remove_all_leaf_from_mt_db_and_release().
    * @pre This function should be called at terminating db.
    * @return void
    */
@@ -68,7 +68,7 @@ public:
    * @pre This function should be called at terminating db.
    * @return void
    */
-  static void remove_all_leaf_from_mtdb_and_release();
+  static void remove_all_leaf_from_mt_db_and_release();
 
 private:
   alignas(CACHE_LINE_SIZE) static inline std::array<  // NOLINT

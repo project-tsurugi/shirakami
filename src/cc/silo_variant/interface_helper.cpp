@@ -13,8 +13,6 @@
 #include "boost/filesystem.hpp"
 #include "include/tuple_local.h"
 
-#include "kvs/interface.h"
-
 namespace shirakami::cc_silo_variant {
 
 Status enter(Token& token) {  // NOLINT
@@ -119,7 +117,7 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
     if (f_check.get_absent()) {
       return Status::WARN_CONCURRENT_DELETE;
       // other thread is inserting this record concurrently,
-      // but it is't committed yet.
+      // but it isn't committed yet.
     }
 
     res.get_tuple() = dest->get_tuple();  // execute copy assign.
@@ -135,8 +133,8 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
   return Status::OK;
 }
 
-void write_phase(ThreadInfo* ti, const tid_word& max_rset,
-                 const tid_word& max_wset) {
+void write_phase(ThreadInfo* ti, const tid_word& max_r_set,
+                 const tid_word& max_w_set) {
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif // INDEX_KOHLER_MASSTREE
@@ -155,7 +153,7 @@ void write_phase(ThreadInfo* ti, const tid_word& max_rset,
    * calculates (a)
    * about read_set
    */
-  tid_a = std::max(max_wset, max_rset);
+  tid_a = std::max(max_w_set, max_r_set);
   tid_a.inc_tid();
 
   /*
@@ -169,64 +167,64 @@ void write_phase(ThreadInfo* ti, const tid_word& max_rset,
   tid_c.set_epoch(ti->get_epoch());
 
   /* compare a, b, c */
-  tid_word maxtid = std::max({tid_a, tid_b, tid_c});
-  maxtid.set_lock(false);
-  maxtid.set_absent(false);
-  maxtid.set_latest(true);
-  maxtid.set_epoch(ti->get_epoch());
-  ti->set_mrc_tid(maxtid);
+  tid_word max_tid = std::max({tid_a, tid_b, tid_c});
+  max_tid.set_lock(false);
+  max_tid.set_absent(false);
+  max_tid.set_latest(true);
+  max_tid.set_epoch(ti->get_epoch());
+  ti->set_mrc_tid(max_tid);
 
 #ifdef WAL
-  ti->wal(maxtid.get_obj());
+  ti->wal(max_tid.get_obj());
 #endif
 
   for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
        ++iws) {
-    Record* recptr = iws->get_rec_ptr();
+    Record* rec_ptr = iws->get_rec_ptr();
     switch (iws->get_op()) {
       case OP_TYPE::UPDATE: {
         std::string* old_value{};
         std::string_view new_value_view =
             iws->get_tuple(iws->get_op()).get_value();
-        recptr->get_tuple().get_pimpl()->set_value(
+        rec_ptr->get_tuple().get_pimpl()->set_value(
             new_value_view.data(), new_value_view.size(), &old_value);
-        storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+        storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
         if (old_value != nullptr) {
-          std::mutex& mutex_for_gclist =
+          std::mutex& mutex_for_gc_list =
               garbage_collection::get_mutex_garbage_values_at(
                   ti->get_gc_container_index());
-          mutex_for_gclist.lock();
+          mutex_for_gc_list.lock();
           ti->get_gc_value_container()->emplace_back(
               std::make_pair(old_value, ti->get_epoch()));
-          mutex_for_gclist.unlock();
+          mutex_for_gc_list.unlock();
         }
         break;
       }
       case OP_TYPE::INSERT: {
-        storeRelease(recptr->get_tidw().get_obj(), maxtid.get_obj());
+        storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
         break;
       }
       case OP_TYPE::DELETE: {
-        tid_word deletetid = maxtid;
-        deletetid.set_absent(true);
-        std::string_view key_view = recptr->get_tuple().get_key();
+        tid_word delete_tid = max_tid;
+        delete_tid.set_absent(true);
+        std::string_view key_view = rec_ptr->get_tuple().get_key();
 #ifdef INDEX_KOHLER_MASSTREE
         kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                  key_view.size());
 #elif INDEX_YAKUSHIMA
         yakushima::yakushima_kvs::remove(ti->get_yakushima_token(), key_view);
 #endif
-        storeRelease(recptr->get_tidw().get_obj(), deletetid.get_obj());
+        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
 
         /**
          * create information for garbage collection.
          */
-        std::mutex& mutex_for_gclist =
+        std::mutex& mutex_for_gc_list =
             garbage_collection::get_mutex_garbage_records_at(
                 ti->get_gc_container_index());
-        mutex_for_gclist.lock();
-        ti->get_gc_record_container()->emplace_back(recptr);
-        mutex_for_gclist.unlock();
+        mutex_for_gc_list.lock();
+        ti->get_gc_record_container()->emplace_back(rec_ptr);
+        mutex_for_gc_list.unlock();
 
         break;
       }

@@ -11,8 +11,6 @@
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-#include "kvs/interface.h"
-
 namespace shirakami::cc_silo_variant {
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
@@ -26,10 +24,10 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   ti->get_scan_cache().erase(itr);
   auto index_itr = ti->get_scan_cache_itr().find(handle);
   ti->get_scan_cache_itr().erase(index_itr);
-  auto rkey_itr = ti->get_rkey().find(handle);
-  ti->get_rkey().erase(rkey_itr);
-  auto len_rkey_itr = ti->get_len_rkey().find(handle);
-  ti->get_len_rkey().erase(len_rkey_itr);
+  auto r_key_itr = ti->get_rkey().find(handle);
+  ti->get_rkey().erase(r_key_itr);
+  auto len_r_key_itr = ti->get_len_rkey().find(handle);
+  ti->get_len_rkey().erase(len_r_key_itr);
   auto r_exclusive_itr = ti->get_r_exclusive().find(handle);
   ti->get_r_exclusive().erase(r_exclusive_itr);
 
@@ -261,7 +259,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-Status scannable_total_index_size(Token token,  // NOLINT
+[[maybe_unused]] Status scannable_total_index_size(Token token,  // NOLINT
                                   [[maybe_unused]] Storage storage,
                                   ScanHandle& handle, std::size_t& size) {
   auto* ti = static_cast<ThreadInfo*>(token);

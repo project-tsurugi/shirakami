@@ -276,7 +276,7 @@ extern Status scan_key(Token token, Storage storage,  // NOLINT
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
-extern Status scannable_total_index_size(Token token,  // NOLINT
+[[maybe_unused]] extern Status scannable_total_index_size(Token token,  // NOLINT
                                          Storage storage, ScanHandle& handle,
                                          std::size_t& size);
 
