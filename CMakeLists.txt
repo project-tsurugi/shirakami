@@ -40,7 +40,7 @@ find_package(glog REQUIRED)
 find_package(Boost
   COMPONENTS filesystem)
 
-# Formatter should be fairst.
+# Formatter should be first.
 include(FormatFilesWithClangFormat)
 # ===
 include(GNUInstallDirs)

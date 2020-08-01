@@ -19,7 +19,7 @@ file(GLOB TEST_SOURCES
         "memory_test.cpp"
         "record_test.cpp"
         "scheme_test.cpp"
-        "simple_test.cpp"
+        "interface.cpp"
         "thread_info_test.cpp"
         )
 
