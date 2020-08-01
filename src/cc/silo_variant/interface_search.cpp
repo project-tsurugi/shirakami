@@ -4,7 +4,7 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 #include "include/tuple_local.h"
-#include "kvs/interface.h" // NOLINT
+#include "kvs/interface.h"  // NOLINT
 
 namespace shirakami::cc_silo_variant {
 

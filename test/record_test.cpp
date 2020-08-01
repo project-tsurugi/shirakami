@@ -10,9 +10,9 @@ using namespace shirakami::cc_silo_variant;
 
 namespace shirakami::testing {
 
-class record_test : public ::testing::Test {};
+class record : public ::testing::Test {};
 
-TEST_F(record_test, constructor) {  // NOLINT
+TEST_F(record, constructor) {  // NOLINT
   {
     Record rec{};
     ASSERT_EQ(rec.get_tidw().get_obj(), 0);

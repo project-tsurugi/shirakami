@@ -175,9 +175,9 @@ static void test() {
   delete_DataList();
 }
 
-class client_test : public ::testing::Test {};
+class client : public ::testing::Test {};
 
-TEST_F(client_test, single_thread_test) {  // NOLINT
+TEST_F(client, single_thread_test) {  // NOLINT
   init();                              // NOLINT
   test();
   fin();

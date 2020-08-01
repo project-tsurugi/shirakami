@@ -16,10 +16,10 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class masstree_test : public ::testing::Test {};  // NOLINT
+class masstree : public ::testing::Test {};  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
-TEST_F(masstree_test, insert_third) {  // NOLINT
+TEST_F(masstree, insert_third) {  // NOLINT
   masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(Status::OK,
@@ -35,7 +35,7 @@ TEST_F(masstree_test, insert_third) {  // NOLINT
                       &key));
 }
 
-TEST_F(masstree_test, remove) {  // NOLINT
+TEST_F(masstree, remove) {  // NOLINT
   masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(

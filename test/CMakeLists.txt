@@ -15,12 +15,14 @@ file(GLOB TEST_SOURCES
         "client_test.cpp"
         "clock_test.cpp"
         "error_test.cpp"
+        "interface/interface_test.cpp"
+        "interface/simple_insert_test.cpp"
+        "interface/simple_scan_test.cpp"
+        "interface/simple_update_test.cpp"
         "log_test.cpp"
         "memory_test.cpp"
         "record_test.cpp"
         "scheme_test.cpp"
-        "interface.cpp"
-        "interface_update_insert_test.cpp"
         "thread_info_test.cpp"
         )
 

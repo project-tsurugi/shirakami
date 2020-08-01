@@ -8,11 +8,11 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class scheme_test : public ::testing::Test {};
+class scheme : public ::testing::Test {};
 
 // shirakami/scheme.h
 
-TEST_F(scheme_test, to_string_view_Status) {  // NOLINT
+TEST_F(scheme, to_string_view_Status) {  // NOLINT
   using namespace std::string_view_literals;
   Status status = Status::WARN_ALREADY_DELETE;
   ASSERT_EQ("WARN_ALREADY_DELETE"sv, to_string_view(status));
@@ -56,11 +56,11 @@ TEST_F(scheme_test, to_string_view_Status) {  // NOLINT
 #endif
 }
 
-TEST_F(scheme_test, ostream_operator_Status) {  // NOLINT
+TEST_F(scheme, ostream_operator_Status) {  // NOLINT
   std::cout << Status::OK << std::endl;
 }
 
-TEST_F(scheme_test, to_string_view_OP_TYPE) {  // NOLINT
+TEST_F(scheme, to_string_view_OP_TYPE) {  // NOLINT
   using namespace std::string_view_literals;
   OP_TYPE op;
   op = OP_TYPE::ABORT;
@@ -81,7 +81,7 @@ TEST_F(scheme_test, to_string_view_OP_TYPE) {  // NOLINT
   ASSERT_EQ("UPDATE"sv, to_string_view(op));
 }
 
-TEST_F(scheme_test, ostream_operator_OP_TYPE) {  // NOLINT
+TEST_F(scheme, ostream_operator_OP_TYPE) {  // NOLINT
   std::cout << OP_TYPE::SEARCH << std::endl;
 }
 
