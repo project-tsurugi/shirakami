@@ -3,9 +3,9 @@
 
 namespace shirakami::testing {
 
-class memoryTest : public ::testing::Test {};
+class memory_test : public ::testing::Test {};
 
-TEST_F(memoryTest, displayRusageRUMaxrss) {  // NOLINT
+TEST_F(memory_test, displayRusageRUMaxrss) {  // NOLINT
   displayRusageRUMaxrss();
 }
 

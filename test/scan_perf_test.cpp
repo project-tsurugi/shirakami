@@ -1,7 +1,3 @@
-/**
- * @file scanPerfTest.cpp
- */
-
 #include "gtest/gtest.h"
 #include "kvs/interface.h"
 
@@ -17,7 +13,7 @@ using namespace shirakami::cc_silo_variant;
 constexpr const int MAX_TUPLES = 1000000;
 constexpr const int READ_TUPLES = 100;
 
-class ScanPerfTest : public ::testing::Test {
+class scan_perf_test : public ::testing::Test {
 public:
   void DoInsert(int, int);
   void DoScan();
@@ -39,7 +35,7 @@ private:
   Storage st_{};
 };
 
-void ScanPerfTest::DoInsert(int bgn_idx, int end_idx) {
+void scan_perf_test::DoInsert(int bgn_idx, int end_idx) {
   std::string v1("a");  // NOLINT
 
   for (int i = bgn_idx; i < end_idx; ++i) {
@@ -50,7 +46,7 @@ void ScanPerfTest::DoInsert(int bgn_idx, int end_idx) {
   EXPECT_EQ(Status::OK, commit(s_));
 }
 
-void ScanPerfTest::DoScan() {
+void scan_perf_test::DoScan() {
   std::uint64_t scan_size{};
   ScanHandle handle{};
   Tuple* tuple{};
@@ -71,7 +67,7 @@ void ScanPerfTest::DoScan() {
   std::cout << "Result : " << end - start << " [clocks]" << std::endl;
 }
 
-TEST_F(ScanPerfTest, read_from_scan) {  // NOLINT
+TEST_F(scan_perf_test, read_from_scan) {  // NOLINT
   EXPECT_EQ(Status::OK, enter(get_s()));
 
   DoInsert(0, 100);  // NOLINT

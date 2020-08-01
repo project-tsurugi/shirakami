@@ -1,10 +1,9 @@
-#include "kvs/interface.h"
-
 #include <array>
 #include <bitset>
 #include <future>
 
 #include "gtest/gtest.h"
+#include "kvs/interface.h"
 
 // shirakami-impl interface library
 #include "cc/silo_variant/include/scheme.h"
@@ -19,7 +18,7 @@ namespace shirakami::testing {
 
 using namespace shirakami::cc_silo_variant;
 
-class interface : public ::testing::Test {  // NOLINT
+class interface_update_insert_test : public ::testing::Test {  // NOLINT
 public:
   void SetUp() override { init(); }  // NOLINT
 
@@ -29,14 +28,14 @@ public:
   }
 };
 
-TEST_F(interface, project_root) {  // NOLINT
+TEST_F(interface_update_insert_test, project_root) {  // NOLINT
   std::cout << MAC2STR(PROJECT_ROOT) << std::endl;
   std::string str(MAC2STR(PROJECT_ROOT));  // NOLINT
   str.append("/log/");
   std::cout << str << std::endl;
 }
 
-TEST_F(interface, tidword) {  // NOLINT
+TEST_F(interface_update_insert_test, tidword) {  // NOLINT
   // check the alignment of union
   tid_word tidword;
   tidword.set_epoch(1);
@@ -45,7 +44,7 @@ TEST_F(interface, tidword) {  // NOLINT
   // std::cout << std::bitset<64>(res) << std::endl;
 }
 
-TEST_F(interface, enter) {  // NOLINT
+TEST_F(interface_update_insert_test, enter) {  // NOLINT
   std::array<Token, 2> s{nullptr, nullptr};
   ASSERT_EQ(Status::OK, enter(s[0]));
   ASSERT_EQ(Status::OK, enter(s[1]));
@@ -53,7 +52,7 @@ TEST_F(interface, enter) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s[1]));
 }
 
-TEST_F(interface, leave) {  // NOLINT
+TEST_F(interface_update_insert_test, leave) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -61,7 +60,7 @@ TEST_F(interface, leave) {  // NOLINT
   ASSERT_EQ(Status::ERR_INVALID_ARGS, leave(nullptr));
 }
 
-TEST_F(interface, insert) {  // NOLINT
+TEST_F(interface_update_insert_test, insert) {  // NOLINT
   std::string k("aaa");       // NOLINT
   std::string v("bbb");       // NOLINT
   Token s{};
@@ -89,7 +88,7 @@ TEST_F(interface, insert) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, update) {  // NOLINT
+TEST_F(interface_update_insert_test, update) {  // NOLINT
   std::string k("aaa");       // NOLINT
   std::string v("aaa");       // NOLINT
   std::string v2("bbb");      // NOLINT
@@ -116,7 +115,7 @@ TEST_F(interface, update) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, search) {  // NOLINT
+TEST_F(interface_update_insert_test, search) {  // NOLINT
   std::string k("aaa");       // NOLINT
   std::string v("bbb");       // NOLINT
   Token s{};
@@ -133,7 +132,7 @@ TEST_F(interface, search) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, upsert) {  // NOLINT
+TEST_F(interface_update_insert_test, upsert) {  // NOLINT
   std::string k("aaa");       // NOLINT
   std::string v("aaa");       // NOLINT
   std::string v2("bbb");      // NOLINT
@@ -155,7 +154,7 @@ TEST_F(interface, upsert) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, delete_) {  // NOLINT
+TEST_F(interface_update_insert_test, delete_) {  // NOLINT
   std::string k("aaa");        // NOLINT
   std::string v("aaa");        // NOLINT
   std::string v2("bbb");       // NOLINT
@@ -174,7 +173,7 @@ TEST_F(interface, delete_) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, scan) {  // NOLINT
+TEST_F(interface_update_insert_test, scan) {  // NOLINT
   std::string k("aaa");     // NOLINT
   std::string k2("aab");    // NOLINT
   std::string k3("aac");    // NOLINT
@@ -354,7 +353,7 @@ TEST_F(interface, scan) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, scan_with_null_char) {  // NOLINT
+TEST_F(interface_update_insert_test, scan_with_null_char) {  // NOLINT
   std::string k("a\0a", 3);                // NOLINT
   std::string k2("a\0aa", 4);              // NOLINT
   std::string k3("a\0aac", 5);             // NOLINT
@@ -381,7 +380,7 @@ TEST_F(interface, scan_with_null_char) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, scan_key_then_search_key) {  // NOLINT
+TEST_F(interface_update_insert_test, scan_key_then_search_key) {  // NOLINT
   std::string k("a");                           // NOLINT
   std::string k2("aa");                         // NOLINT
   std::string k3("aac");                        // NOLINT
@@ -425,7 +424,7 @@ TEST_F(interface, scan_key_then_search_key) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, insert_delete_with_16chars) {  // NOLINT
+TEST_F(interface_update_insert_test, insert_delete_with_16chars) {  // NOLINT
   std::string k("testing_a0123456");              // NOLINT
   std::string v("bbb");                           // NOLINT
   Token s{};
@@ -445,7 +444,7 @@ TEST_F(interface, insert_delete_with_16chars) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, insert_delete_with_10chars) {  // NOLINT
+TEST_F(interface_update_insert_test, insert_delete_with_10chars) {  // NOLINT
   std::string k("testing_a0");                    // NOLINT
   std::string v("bbb");                           // NOLINT
   Token s{};
@@ -465,7 +464,7 @@ TEST_F(interface, insert_delete_with_10chars) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, concurrent_updates) {  // NOLINT
+TEST_F(interface_update_insert_test, concurrent_updates) {  // NOLINT
   struct S {
     static void prepare() {
       std::string k0("a");  // NOLINT
@@ -542,7 +541,7 @@ TEST_F(interface, concurrent_updates) {  // NOLINT
   S::verify();
 }
 
-TEST_F(interface, read_local_write) {  // NOLINT
+TEST_F(interface_update_insert_test, read_local_write) {  // NOLINT
   std::string k("aaa");                 // NOLINT
   std::string v("bbb");                 // NOLINT
   Token s{};
@@ -557,7 +556,7 @@ TEST_F(interface, read_local_write) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, read_write_read) {  // NOLINT
+TEST_F(interface_update_insert_test, read_write_read) {  // NOLINT
   std::string k("aaa");                // NOLINT
   std::string v("bbb");                // NOLINT
   std::string v2("ccc");               // NOLINT
@@ -578,7 +577,7 @@ TEST_F(interface, read_write_read) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, double_write) {  // NOLINT
+TEST_F(interface_update_insert_test, double_write) {  // NOLINT
   std::string k("aaa");             // NOLINT
   std::string v("bbb");             // NOLINT
   std::string v2("ccc");            // NOLINT
@@ -600,7 +599,7 @@ TEST_F(interface, double_write) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, double_read) {  // NOLINT
+TEST_F(interface_update_insert_test, double_read) {  // NOLINT
   std::string k("aaa");            // NOLINT
   std::string v("bbb");            // NOLINT
   Token s{};
@@ -618,7 +617,7 @@ TEST_F(interface, double_read) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, all_deletes) {     // NOLINT
+TEST_F(interface_update_insert_test, all_deletes) {     // NOLINT
   std::string k("testing_a0123456");  // NOLINT
   std::string v("bbb");               // NOLINT
   Token s{};
@@ -635,7 +634,7 @@ TEST_F(interface, all_deletes) {     // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, open_scan_test) {  // NOLINT
+TEST_F(interface_update_insert_test, open_scan_test) {  // NOLINT
   std::string k1("a");                // NOLINT
   std::string v1("0");                // NOLINT
   Token s{};
@@ -659,7 +658,7 @@ TEST_F(interface, open_scan_test) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, read_from_scan) {  // NOLINT
+TEST_F(interface_update_insert_test, read_from_scan) {  // NOLINT
   std::string k("aaa");               // NOLINT
   std::string k2("aab");              // NOLINT
   std::string k3("aac");              // NOLINT
@@ -748,7 +747,7 @@ TEST_F(interface, read_from_scan) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(interface, close_scan) {  // NOLINT
+TEST_F(interface_update_insert_test, close_scan) {  // NOLINT
   std::string k1("a");            // NOLINT
   std::string v1("0");            // NOLINT
   Token s{};
@@ -765,7 +764,7 @@ TEST_F(interface, close_scan) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, mixing_scan_and_search) {  // NOLINT
+TEST_F(interface_update_insert_test, mixing_scan_and_search) {  // NOLINT
   std::string k1("aaa");                      // NOLINT
   std::string k2("aab");                      // NOLINT
   std::string k3("xxx");                      // NOLINT
@@ -807,7 +806,7 @@ TEST_F(interface, mixing_scan_and_search) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(interface, long_insert) {  // NOLINT
+TEST_F(interface_update_insert_test, long_insert) {  // NOLINT
   std::string k("CUSTOMER");       // NOLINT
   std::string v(                   // NOLINT
       "b234567890123456789012345678901234567890123456789012345678901234567890"

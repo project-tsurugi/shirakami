@@ -1,8 +1,3 @@
-/**
- * @file interface_termination.cpp
- * @brief implement about transaction
- */
-
 #include <bitset>
 
 #include "atomic_wrapper.h"
@@ -13,8 +8,7 @@
 #ifdef INDEX_KOHLER_MASSTREE
 #endif                            // INDEX_KOHLER_MASSTREE
 #include "include/tuple_local.h"  // sizeof(Tuple)
-
-#include "kvs/interface.h"
+#include "kvs/interface.h"        // NOLINT
 
 namespace shirakami::cc_silo_variant {
 
@@ -102,4 +96,4 @@ Status commit(Token token) {  // NOLINT
   return Status::OK;
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

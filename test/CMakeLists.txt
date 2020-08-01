@@ -20,6 +20,7 @@ file(GLOB TEST_SOURCES
         "record_test.cpp"
         "scheme_test.cpp"
         "interface.cpp"
+        "interface_update_insert_test.cpp"
         "thread_info_test.cpp"
         )
 

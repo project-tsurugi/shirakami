@@ -1,7 +1,3 @@
-/**
- * @file recordTest.cpp
- */
-
 #include "cc/silo_variant/include/record.h"
 
 #include "tuple_local.h"
@@ -14,9 +10,9 @@ using namespace shirakami::cc_silo_variant;
 
 namespace shirakami::testing {
 
-class recordTest : public ::testing::Test {};
+class record_test : public ::testing::Test {};
 
-TEST_F(recordTest, constructor) {  // NOLINT
+TEST_F(record_test, constructor) {  // NOLINT
   {
     Record rec{};
     ASSERT_EQ(rec.get_tidw().get_obj(), 0);

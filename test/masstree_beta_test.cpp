@@ -1,8 +1,3 @@
-/**
- * @file masstreeTest.cpp
- * @brief test about usage of masstree.
- */
-
 #include "cc/silo_variant/include/scheme.h"
 #include "gtest/gtest.h"
 #include "include/tuple_local.h"
@@ -21,10 +16,10 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class MasstreeTest : public ::testing::Test {};  // NOLINT
+class masstree_test : public ::testing::Test {};  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
-TEST_F(MasstreeTest, insert_third) {  // NOLINT
+TEST_F(masstree_test, insert_third) {  // NOLINT
   masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(Status::OK,
@@ -40,7 +35,7 @@ TEST_F(MasstreeTest, insert_third) {  // NOLINT
                       &key));
 }
 
-TEST_F(MasstreeTest, remove) {  // NOLINT
+TEST_F(masstree_test, remove) {  // NOLINT
   masstree_wrapper<std::uint64_t> MT;
   std::uint64_t key{0};
   ASSERT_EQ(

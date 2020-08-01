@@ -1,13 +1,7 @@
-/**
- * @file threadInfoTest.cpp
- */
-
-#include "gtest/gtest.h"
-
-#include "kvs/interface.h"
-
 #include "cc/silo_variant/include/thread_info.h"
 
+#include "gtest/gtest.h"
+#include "kvs/interface.h"
 #include "tuple_local.h"
 
 #ifdef CC_SILO_VARIANT
@@ -18,14 +12,14 @@ namespace shirakami::testing {
 
 using namespace shirakami::cc_silo_variant;
 
-class ThreadInfoTest : public ::testing::Test {
+class thread_info_test : public ::testing::Test {
 public:
   void SetUp() override { init(); }  // NOLINT
 
   void TearDown() override { fin(); }
 };
 
-TEST_F(ThreadInfoTest, get_txbegan_) {  // NOLINT
+TEST_F(thread_info_test, get_txbegan_) {  // NOLINT
   std::string k("aaa");                 // NOLINT
   std::string v("bbb");                 // NOLINT
   Token s{};

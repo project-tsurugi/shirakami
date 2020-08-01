@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @file cliTest.cpp
- */
-
 #include <cstdint>
 #include <thread>
 
@@ -179,9 +175,9 @@ static void test() {
   delete_DataList();
 }
 
-class cliTest : public ::testing::Test {};
+class client_test : public ::testing::Test {};
 
-TEST_F(cliTest, single_thread_test) {  // NOLINT
+TEST_F(client_test, single_thread_test) {  // NOLINT
   init();                              // NOLINT
   test();
   fin();

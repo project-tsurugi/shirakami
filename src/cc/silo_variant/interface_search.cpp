@@ -1,15 +1,10 @@
-/**
- * @file helper.cpp
- */
-
 #include "cc/silo_variant//include/interface_helper.h"
 #include "cc/silo_variant/include/thread_info_table.h"
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 #include "include/tuple_local.h"
-
-#include "kvs/interface.h"
+#include "kvs/interface.h" // NOLINT
 
 namespace shirakami::cc_silo_variant {
 
