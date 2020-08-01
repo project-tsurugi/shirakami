@@ -31,12 +31,12 @@ function(register_tests)
         message(FATAL_ERROR "SOURCES must be set")
     endif()
 
-    # collect non "*Test" source files: it must be linked from "*Test" files.
+    # collect non "*test" source files: it must be linked from "*test" files.
     set(TESTS_COMMON_SOURCES)
     set(HAS_MAIN_SOURCE OFF)
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
-        if(NOT fname MATCHES "Test$")
+        if(NOT fname MATCHES "test$")
             list(APPEND TESTS_COMMON_SOURCES ${src})
         endif()
         if(fname MATCHES "(^|_)main$")
@@ -44,7 +44,7 @@ function(register_tests)
         endif()
     endforeach()
 
-    # register tests for each "*Test" file as <target-name>-<file-name>
+    # register tests for each "*test" file as <target-name>-<file-name>
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
         if(fname MATCHES "test$")
