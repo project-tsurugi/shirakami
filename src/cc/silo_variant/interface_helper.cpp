@@ -26,6 +26,7 @@ Status enter(Token& token) {  // NOLINT
 }
 
 void fin() {
+  delete_all_records();
   garbage_collection::release_all_heap_objects();
 
   // Stop DB operation.

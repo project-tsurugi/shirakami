@@ -26,6 +26,7 @@ namespace shirakami::cc_silo_variant {
     delete *std::get<0>(itr);  // NOLINT
   }
 
+  yakushima::yakushima_kvs::destroy();
 #endif
   return Status::OK;
 }

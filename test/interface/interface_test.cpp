@@ -23,7 +23,6 @@ public:
   void SetUp() override { init(); }  // NOLINT
 
   void TearDown() override {
-    delete_all_records();
     fin();
   }
 };
