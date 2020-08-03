@@ -28,6 +28,12 @@ namespace shirakami::cc_silo_variant {
 
   yakushima::yakushima_kvs::destroy();
 #endif
+  /**
+   * INDEX_KOHLER_MASSTREE case
+   * Since the destructor of the stored value is also called by the destructor
+   * of kohler masstree, there is no need to do anything with
+   * INDEX_KOHLER_MASSTREE.
+   */
   return Status::OK;
 }
 
@@ -63,4 +69,4 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return check;
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant
