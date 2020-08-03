@@ -33,7 +33,7 @@ file(GLOB TEST_SOURCES
         )
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_TEST_SOURCES "masstree_beta_test.cpp")
+    file(GLOB INDEX_TEST_SOURCES "index/masstree_beta/masstree_beta_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
 endif ()
 
