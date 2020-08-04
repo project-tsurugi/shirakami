@@ -47,13 +47,13 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
                                    r_exclusive, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
-  std::vector<std::tuple<Record**, std::size_t> > scan_res;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,
+  std::vector<std::pair<Record**, std::size_t> > scan_res;
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive, // NOLINT
                                  {rkey, len_rkey}, r_exclusive, scan_res);
   std::vector<const Record*> scan_buf;
   scan_buf.reserve(scan_res.size());
   for (auto&& elem : scan_res) {
-    scan_buf.emplace_back((*std::get<0>(elem)));
+    scan_buf.emplace_back((*elem.first));
   }
 #endif
 
@@ -122,15 +122,15 @@ Status read_from_scan(Token token,  // NOLINT
         ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
         ti->get_r_exclusive()[handle], &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
-    std::vector<std::tuple<Record**, std::size_t> > scan_res;
-    yakushima::yakushima_kvs::scan(
+    std::vector<std::pair<Record**, std::size_t> > scan_res;
+    yakushima::yakushima_kvs::scan( // NOLINT
         {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
         {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
         ti->get_r_exclusive()[handle], scan_res);
     std::vector<const Record*> new_scan_buf;
     new_scan_buf.reserve(scan_res.size());
     for (auto&& elem : scan_res) {
-      new_scan_buf.emplace_back((*std::get<0>(elem)));
+      new_scan_buf.emplace_back((*elem.first));
     }
 #endif
 
@@ -203,13 +203,13 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
                                    r_exclusive, &scan_res, false);
 #elif INDEX_YAKUSHIMA
-  std::vector<std::tuple<Record**, std::size_t> > scan_buf;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,
+  std::vector<std::pair<Record**, std::size_t> > scan_buf;
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive, // NOLINT
                                  {rkey, len_rkey}, r_exclusive, scan_buf);
   std::vector<const Record*> scan_res;
   scan_res.reserve(scan_buf.size());
   for (auto&& elem : scan_buf) {
-    scan_res.emplace_back((*std::get<0>(elem)));
+    scan_res.emplace_back((*elem.first));
   }
 #endif
 

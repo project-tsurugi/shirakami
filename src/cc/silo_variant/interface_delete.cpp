@@ -19,11 +19,11 @@ namespace shirakami::cc_silo_variant {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
 #ifdef INDEX_YAKUSHIMA
-  std::vector<std::tuple<Record**, std::size_t> > scan_res;
+  std::vector<std::pair<Record**, std::size_t> > scan_res;
   yakushima::yakushima_kvs::scan("", false, "", false, scan_res);
 
   for (auto&& itr : scan_res) {
-    delete *std::get<0>(itr);  // NOLINT
+    delete *itr.first;  // NOLINT
   }
 
   yakushima::yakushima_kvs::destroy();
@@ -51,7 +51,7 @@ Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 #elif INDEX_YAKUSHIMA
   Record** rec_double_ptr{
-      std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+      yakushima::yakushima_kvs::get<Record*>({key, len_key}).first};
   if (rec_double_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
