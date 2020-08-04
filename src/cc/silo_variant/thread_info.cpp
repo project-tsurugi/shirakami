@@ -72,13 +72,12 @@ void ThreadInfo::clean_up_scan_caches() {
   std::cout << "==========" << std::endl;
 }
 
-Status ThreadInfo::check_delete_after_write(  // NOLINT
-    const char* const key_ptr, const std::size_t key_length) {
+Status ThreadInfo::check_delete_after_write(std::string_view key) {  // NOLINT
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     // It can't use lange-based for because it use write_set.erase.
     std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
-    if (key_view.size() == key_length &&
-        memcmp(key_view.data(), key_ptr, key_length) == 0) {
+    if (key_view.size() == key.size() &&
+        memcmp(key_view.data(), key.data(), key.size()) == 0) {
       write_set.erase(itr);
       return Status::WARN_CANCEL_PREVIOUS_OPERATION;
     }
@@ -269,4 +268,4 @@ void ThreadInfo::wal(uint64_t commit_id) {
   log_handle_.get_log_set().clear();
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

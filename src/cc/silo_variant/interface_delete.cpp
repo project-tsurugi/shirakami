@@ -38,20 +38,20 @@ namespace shirakami::cc_silo_variant {
 }
 
 Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                     const char* key, std::size_t len_key) {
+                     std::string_view key) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
-  Status check = ti->check_delete_after_write(key, len_key);
+  Status check = ti->check_delete_after_write(key);
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key, len_key)};
+  Record* rec_ptr{
+      kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
   if (rec_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
 #elif INDEX_YAKUSHIMA
-  Record** rec_double_ptr{
-      yakushima::yakushima_kvs::get<Record*>({key, len_key}).first};
+  Record** rec_double_ptr{yakushima::yakushima_kvs::get<Record*>(key).first};
   if (rec_double_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }

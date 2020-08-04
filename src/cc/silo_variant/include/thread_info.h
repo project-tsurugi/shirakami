@@ -167,8 +167,7 @@ public:
    * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert
    * operation before this delete_record operation.
    */
-  Status check_delete_after_write(const char* key,  // NOLINT
-                                  std::size_t len_key);
+  Status check_delete_after_write(std::string_view key);  // NOLINT
 
   void gc_records_and_values() const;
 
@@ -379,4 +378,4 @@ private:
   log_handler log_handle_;
 };
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

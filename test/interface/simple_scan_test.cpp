@@ -318,7 +318,7 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
    */
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(),
                                   k4.size(), false, handle));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k));
   EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, st, handle, &tuple));
   ASSERT_EQ(Status::OK, abort(s));
 
@@ -332,7 +332,7 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
                                   k4.size(), false, handle));
   Token s2{};
   ASSERT_EQ(Status::OK, enter(s2));
-  ASSERT_EQ(Status::OK, delete_record(s2, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, delete_record(s2, st, k));
   ASSERT_EQ(Status::OK, commit(s2));
   EXPECT_EQ(Status::WARN_CONCURRENT_DELETE,
             read_from_scan(s, st, handle, &tuple));

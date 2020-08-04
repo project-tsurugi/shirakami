@@ -176,12 +176,11 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
              itr.get_tuple()->get_value().data(),
              itr.get_tuple()->get_value().size());
     } else if (itr.get_op() == OP_TYPE::DELETE) {
-      delete_record(s, st, itr.get_tuple()->get_key().data(),
-                    itr.get_tuple()->get_key().size());
+      delete_record(s, st, itr.get_tuple()->get_key());
     }
     commit(s);
   }
   leave(s);
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

@@ -115,7 +115,7 @@ static void exec_delete(Token token, std::size_t thnm) {
   Storage storage(0);
 
   for (auto&& itr : DataList.at(thnm)) {
-    delete_record(token, storage, itr->get_key().data(), itr->get_key().size());
+    delete_record(token, storage, itr->get_key());
   }
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);
@@ -178,7 +178,7 @@ static void test() {
 class client : public ::testing::Test {};
 
 TEST_F(client, single_thread_test) {  // NOLINT
-  init();                              // NOLINT
+  init();                             // NOLINT
   test();
   fin();
 }

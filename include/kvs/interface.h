@@ -88,7 +88,7 @@ extern Status commit(Token token);  // NOLINT
  * operation before this fucntion and did delete operation.
  */
 extern Status delete_record(Token token, Storage storage,  // NOLINT
-                            const char* key, std::size_t len_key);
+                            std::string_view key);
 
 /**
  * @brief delete existing storage and records under the storage.
@@ -133,8 +133,7 @@ extern void fin();
  * @return Status::ERR_NOT_FOUND If the storage is not registered with the given
  * name
  */
-[[maybe_unused]] extern Status get_storage(char const* name,  // NOLINT
-                                           std::size_t len_name,
+[[maybe_unused]] extern Status get_storage(std::string_view name,  // NOLINT
                                            Storage& storage);
 
 /**
@@ -276,9 +275,9 @@ extern Status scan_key(Token token, Storage storage,  // NOLINT
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
-[[maybe_unused]] extern Status scannable_total_index_size(Token token,  // NOLINT
-                                         Storage storage, ScanHandle& handle,
-                                         std::size_t& size);
+[[maybe_unused]] extern Status scannable_total_index_size(
+    Token token,  // NOLINT
+    Storage storage, ScanHandle& handle, std::size_t& size);
 
 /**
  * @brief search with the given key and return the found tuple

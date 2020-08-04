@@ -36,11 +36,11 @@ TEST_F(thread_info, get_txbegan_) {  // NOLINT
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test delete
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);

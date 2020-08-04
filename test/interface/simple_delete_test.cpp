@@ -1,9 +1,8 @@
-#include "kvs/interface.h"
-
 #include <array>
 #include <bitset>
 
 #include "gtest/gtest.h"
+#include "kvs/interface.h"
 
 // shirakami-impl interface library
 #include "cc/silo_variant/include/scheme.h"
@@ -26,27 +25,27 @@ public:
 };
 
 TEST_F(simple_delete, delete_) {  // NOLINT
-  std::string k("aaa");            // NOLINT
-  std::string v("aaa");            // NOLINT
-  std::string v2("bbb");           // NOLINT
+  std::string k("aaa");           // NOLINT
+  std::string v("aaa");           // NOLINT
+  std::string v2("bbb");          // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
             upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::OK, delete_record(s, st, k));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k.data(), k.size()));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_delete, all_deletes) {  // NOLINT
-  std::string k("testing_a0123456");   // NOLINT
-  std::string v("bbb");                // NOLINT
+  std::string k("testing_a0123456");  // NOLINT
+  std::string v("bbb");               // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -54,8 +53,7 @@ TEST_F(simple_delete, all_deletes) {  // NOLINT
   ASSERT_EQ(Status::OK,
             scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
   for (auto&& t : records) {
-    ASSERT_EQ(Status::OK,
-              delete_record(s, st, t->get_key().data(), t->get_key().size()));
+    ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key()));
   }
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));

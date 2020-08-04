@@ -1,13 +1,10 @@
 #include "kvs/interface.h"
 
-#include <array>
 #include <bitset>
 
 #include "gtest/gtest.h"
 
 // shirakami-impl interface library
-#include "cc/silo_variant/include/scheme.h"
-#include "compiler.h"
 #include "tuple_local.h"
 
 #ifdef CC_SILO_VARIANT
@@ -60,7 +57,7 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
             search_key(s, st, k2.data(), k2.size(), &tuple));
   EXPECT_NE(nullptr, tuple);
-  delete_record(s, st, k2.data(), k2.size());
+  delete_record(s, st, k2);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(),
                                  k4.size(), true, records));
