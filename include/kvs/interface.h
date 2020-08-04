@@ -159,8 +159,8 @@ extern Status init(                                                // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed
  * update/insert/upsert, so it update the local write set object.
  */
-extern Status insert(Token token, Storage storage, std::string_view key,
-                     std::string_view val);  // NOLINT
+extern Status insert(Token token, Storage storage,  // NOLINT
+                     std::string_view key, std::string_view val);
 
 /**
  * @brief leave session
