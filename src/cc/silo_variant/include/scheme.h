@@ -65,7 +65,7 @@ public:
     op_ = right.op_;
     tuple_ = std::move(right.tuple_);
 
-    return *this;
+    return *this;  // NOLINT
   }
 
   bool operator<(const WriteSetObj& right) const;  // NOLINT
@@ -142,7 +142,7 @@ public:
 
   [[nodiscard]] const OP_TYPE& get_op() const& { return op_; }  // NOLINT
 
-  void reset_tuple_value(const char* val_ptr, std::size_t val_length) &;
+  void reset_tuple_value(std::string_view val);
 
 private:
   /**
@@ -226,4 +226,4 @@ private:
   std::string value_{};
 };
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

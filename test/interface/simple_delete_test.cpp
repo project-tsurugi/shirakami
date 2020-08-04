@@ -1,12 +1,8 @@
-#include <array>
 #include <bitset>
 
 #include "gtest/gtest.h"
 #include "kvs/interface.h"
 
-// shirakami-impl interface library
-#include "cc/silo_variant/include/scheme.h"
-#include "compiler.h"
 #include "tuple_local.h"
 
 #ifdef CC_SILO_VARIANT
@@ -33,8 +29,7 @@ TEST_F(simple_delete, delete_) {  // NOLINT
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK,
-            upsert(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, delete_record(s, st, k));
   ASSERT_EQ(Status::OK, commit(s));

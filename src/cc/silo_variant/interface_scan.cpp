@@ -48,7 +48,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                                    r_exclusive, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_res;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive, // NOLINT
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,  // NOLINT
                                  {rkey, len_rkey}, r_exclusive, scan_res);
   std::vector<const Record*> scan_buf;
   scan_buf.reserve(scan_res.size());
@@ -123,7 +123,7 @@ Status read_from_scan(Token token,  // NOLINT
         ti->get_r_exclusive()[handle], &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t> > scan_res;
-    yakushima::yakushima_kvs::scan( // NOLINT
+    yakushima::yakushima_kvs::scan(  // NOLINT
         {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
         {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
         ti->get_r_exclusive()[handle], scan_res);
@@ -150,8 +150,7 @@ Status read_from_scan(Token token,  // NOLINT
 
   auto itr = scan_buf.begin() + scan_index;
   std::string_view key_view = (*itr)->get_tuple().get_key();
-  const WriteSetObj* inws =
-      ti->search_write_set(key_view.data(), key_view.size());
+  const WriteSetObj* inws = ti->search_write_set(key_view);
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       ++scan_index;
@@ -204,7 +203,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                                    r_exclusive, &scan_res, false);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_buf;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive, // NOLINT
+  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,  // NOLINT
                                  {rkey, len_rkey}, r_exclusive, scan_buf);
   std::vector<const Record*> scan_res;
   scan_res.reserve(scan_buf.size());
@@ -214,8 +213,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 #endif
 
   for (auto&& itr : scan_res) {
-    std::string_view key_view = itr->get_tuple().get_key();
-    WriteSetObj* inws = ti->search_write_set(key_view.data(), key_view.size());
+    WriteSetObj* inws = ti->search_write_set(itr->get_tuple().get_key());
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
         return Status::WARN_ALREADY_DELETE;
@@ -259,9 +257,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(Token token,  // NOLINT
-                                  [[maybe_unused]] Storage storage,
-                                  ScanHandle& handle, std::size_t& size) {
+[[maybe_unused]] Status scannable_total_index_size( // NOLINT
+    Token token,  // NOLINT
+    [[maybe_unused]] Storage storage, ScanHandle& handle, std::size_t& size) {
   auto* ti = static_cast<ThreadInfo*>(token);
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
@@ -278,4 +276,4 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

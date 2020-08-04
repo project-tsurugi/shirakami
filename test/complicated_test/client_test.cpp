@@ -62,11 +62,11 @@ static void exec_insert(Token token, std::size_t thnm) {
     make_string(key.data(), Len_key);
     std::string value(Len_val, '0');  // NOLINT
     make_string(value.data(), Len_val);
-    Tuple* tuple =  // NOLINT
-        new Tuple(key.data(), Len_key, value.data(), Len_val);
+    Tuple* tuple =                                              // NOLINT
+        new Tuple(key.data(), Len_key, value.data(), Len_val);  // NOLINT
     DataList.at(thnm).push_back(tuple);
     Storage storage(0);
-    insert(token, storage, key.data(), Len_key, value.data(), Len_val);
+    insert(token, storage, key, value);
   }
   // Commit;
   Status result = commit(token);
@@ -103,9 +103,9 @@ static void exec_scan_key(Token token) {
 static void exec_update(Token token, std::size_t thnm) {
   for (auto&& itr : DataList.at(thnm)) {
     Storage storage(0);
-    update(token, storage, itr->get_key().data(), itr->get_key().size(),
-           static_cast<const char*>("bouya-yoikoda-nenne-shina"),
-           strlen("bouya-yoikoda-nenne-shina"));
+    update(token, storage, itr->get_key(),
+           {static_cast<const char*>("bouya-yoikoda-nenne-shina"),
+            strlen("bouya-yoikoda-nenne-shina")});
   }
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);

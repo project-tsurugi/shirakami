@@ -148,8 +148,10 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
         uint64_t keybs = __builtin_bswap64(i);
         std::string value(FLAGS_val_length, '0');  // NOLINT
         make_string(value, rnd);
-        insert(token, storage, reinterpret_cast<char*>(&keybs),  // NOLINT
-               sizeof(std::uint64_t), value.data(), FLAGS_val_length);
+        insert(token, storage,
+               {reinterpret_cast<char*>(&keybs),  // NOLINT
+                sizeof(std::uint64_t)},
+               value);
         commit(token);
         ++myres.get_local_commit_counts();
         if (loadAcquire(quit)) break;

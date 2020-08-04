@@ -40,8 +40,10 @@ void scan_perf::DoInsert(int bgn_idx, int end_idx) {
 
   for (int i = bgn_idx; i < end_idx; ++i) {
     EXPECT_EQ(Status::OK,
-              insert(s_, st_, reinterpret_cast<char*>(&key_.at(i)),  // NOLINT
-                     sizeof(key_.at(i)), v1.data(), v1.size()));
+              insert(s_, st_,
+                     {reinterpret_cast<char*>(&key_.at(i)),  // NOLINT
+                      sizeof(key_.at(i))},
+                     v1));
   }
   EXPECT_EQ(Status::OK, commit(s_));
 }

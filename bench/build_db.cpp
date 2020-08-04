@@ -69,8 +69,10 @@ void parallel_build_db(std::size_t start, std::size_t end,
     std::string val(value_length, '0');  // NOLINT
     make_string(val, rnd);
     Storage storage{};
-    insert(token, storage, reinterpret_cast<char *>(&keybs),  // NOLINT
-           sizeof(uint64_t), val.data(), val.size());
+    insert(token, storage,
+           {reinterpret_cast<char *>(&keybs),  // NOLINT
+            sizeof(uint64_t)},
+           val);
   }
   commit(token);
   leave(token);

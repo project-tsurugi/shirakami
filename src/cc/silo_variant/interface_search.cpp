@@ -17,7 +17,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif
-  WriteSetObj* inws{ti->search_write_set(key, len_key)};
+  WriteSetObj* inws{ti->search_write_set({key, len_key})};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;

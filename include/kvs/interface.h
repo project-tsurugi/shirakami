@@ -78,7 +78,6 @@ extern Status commit(Token token);  // NOLINT
  * @param storage [in] the storage handle retrieved by register_storage() or
  * get_storage()
  * @param key the key of the record for deletion
- * @param len_key indicate the key length
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
  * @return Status::WARN_NOT_FOUND No corresponding record in masstree. If you
@@ -126,7 +125,6 @@ extern void fin();
 /**
  * @brief get existing storage handle
  * @param name the name of the storage
- * @param len_name the length of the name
  * @param storage output parameter to pass the storage handle,
  * that is used for the subsequent calls related with the storage.
  * @return Status::OK if successful
@@ -154,17 +152,15 @@ extern Status init(                                                // NOLINT
  * @param storage [in] the storage handle retrieved by register_storage() or
  * get_storage()
  * @param key the key of the inserted record
- * @param len_key indicate the key length
  * @param val the value of the inserted record
- * @param len_val indicate the value length
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @a
  * key exists in MTDB, so this function returned immediately.
  * @return Status::OK success
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed
  * update/insert/upsert, so it update the local write set object.
  */
-extern Status insert(Token token, Storage storage, const char* key,  // NOLINT
-                     std::size_t len_key, const char* val, std::size_t len_val);
+extern Status insert(Token token, Storage storage, std::string_view key,
+                     std::string_view val);  // NOLINT
 
 /**
  * @brief leave session
@@ -275,8 +271,8 @@ extern Status scan_key(Token token, Storage storage,  // NOLINT
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
-[[maybe_unused]] extern Status scannable_total_index_size(
-    Token token,  // NOLINT
+[[maybe_unused]] extern Status scannable_total_index_size(  // NOLINT
+    Token token,                                            // NOLINT
     Storage storage, ScanHandle& handle, std::size_t& size);
 
 /**
@@ -325,8 +321,7 @@ extern Status search_key(Token token, Storage storage,  // NOLINT
  * so it update the value which is going to be updated.
  */
 extern Status update(Token token, Storage storage,  // NOLINT
-                     const char* key, std::size_t len_key, const char* val,
-                     std::size_t len_val);
+                     std::string_view key, std::string_view val);
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -343,7 +338,6 @@ extern Status update(Token token, Storage storage,  // NOLINT
  * insert/update/upsert, so it overwrite its local write set.
  */
 extern Status upsert(Token token, Storage storage,  // NOLINT
-                     const char* key, std::size_t len_key, const char* val,
-                     std::size_t len_val);
+                     std::string_view key, std::string_view val);
 
 }  // namespace shirakami

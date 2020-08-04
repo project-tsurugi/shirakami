@@ -32,14 +32,14 @@ TEST_F(simple_scan, scan) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v.data(), v.size()));
-  ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, insert(s, st, "", v));
+  ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k2.data(), k2.size(), v.data(), v.size()));
+            insert(s, st, k2, v));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k3.data(), k3.size(), v.data(), v.size()));
+            insert(s, st, k3, v));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k6.data(), k6.size(), v.data(), v.size()));
+            insert(s, st, k6, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k4.data(),
@@ -212,13 +212,13 @@ TEST_F(simple_scan, scan_with_null_char) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
   ASSERT_EQ(Status::OK,
-            upsert(s, st, k2.data(), k2.size(), v.data(), v.size()));
+            upsert(s, st, k2, v));
   ASSERT_EQ(Status::OK,
-            upsert(s, st, k3.data(), k3.size(), v.data(), v.size()));
+            upsert(s, st, k3, v));
   ASSERT_EQ(Status::OK,
-            upsert(s, st, k4.data(), k4.size(), v.data(), v.size()));
+            upsert(s, st, k4, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
   ASSERT_EQ(Status::OK, scan_key(s, st, k2.data(), k2.size(), false, k5.data(),
@@ -240,7 +240,7 @@ TEST_F(simple_scan, open_scan_test) {  // NOLINT
             open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
+            insert(s, st, k1, v1));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
             open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));
@@ -264,17 +264,17 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, nullptr, 0, v1.data(), v1.size()));
+  ASSERT_EQ(Status::OK, insert(s, st, "", v1));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k.data(), k.size(), v1.data(), v1.size()));
+            insert(s, st, k, v1));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
+            insert(s, st, k2, v2));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k3.data(), k3.size(), v1.data(), v1.size()));
+            insert(s, st, k3, v1));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k5.data(), k5.size(), v1.data(), v1.size()));
+            insert(s, st, k5, v1));
   ASSERT_EQ(Status::OK,
-            insert(s, st, k6.data(), k6.size(), v2.data(), v2.size()));
+            insert(s, st, k6, v2));
   ScanHandle handle{};
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, open_scan(s, st, k.data(), k.size(), false, k4.data(),
@@ -349,7 +349,7 @@ TEST_F(simple_scan, close_scan) {  // NOLINT
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{};
   ASSERT_EQ(Status::OK,
-            insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
+            insert(s, st, k1, v1));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK,
             open_scan(s, st, nullptr, 0, false, nullptr, 0, false, handle));

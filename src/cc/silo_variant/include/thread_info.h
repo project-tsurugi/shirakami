@@ -274,11 +274,9 @@ public:
   /**
    * @brief check whether it already executed write operation.
    * @param [in] key the key of record.
-   * @param [in] len_key the key length of records.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  WriteSetObj* search_write_set(const char* key,  // NOLINT
-                                std::size_t len_key);
+  WriteSetObj* search_write_set(std::string_view key);  // NOLINT
 
   /**
    * @brief check whether it already executed update/insert operation.

@@ -19,9 +19,7 @@ class simple_update : public ::testing::Test {  // NOLINT
 public:
   void SetUp() override { init(); }  // NOLINT
 
-  void TearDown() override {
-    fin();
-  }
+  void TearDown() override { fin(); }
 };
 
 TEST_F(simple_update, update) {  // NOLINT
@@ -31,10 +29,9 @@ TEST_F(simple_update, update) {  // NOLINT
   Token s{};
   Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND,
-            update(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
@@ -42,8 +39,7 @@ TEST_F(simple_update, update) {  // NOLINT
       memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()),
       0);
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK,
-            update(s, st, k.data(), k.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, update(s, st, k, v2));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
@@ -60,12 +56,12 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
       Token s{};
       ASSERT_EQ(Status::OK, enter(s));
       Storage st{};
-      ASSERT_EQ(Status::OK, insert(s, st, k0.data(), k0.size(),
-                                   reinterpret_cast<char*>(&v),  // NOLINT
-                                   sizeof(std::int64_t)));
-      ASSERT_EQ(Status::OK, insert(s, st, k.data(), k.size(),
-                                   reinterpret_cast<char*>(&v),  // NOLINT
-                                   sizeof(std::int64_t)));
+      ASSERT_EQ(Status::OK, insert(s, st, k0,
+                                   {reinterpret_cast<char*>(&v),  // NOLINT
+                                    sizeof(std::int64_t)}));
+      ASSERT_EQ(Status::OK, insert(s, st, k,
+                                   {reinterpret_cast<char*>(&v),  // NOLINT
+                                    sizeof(std::int64_t)}));
       ASSERT_EQ(Status::OK, commit(s));
       ASSERT_EQ(Status::OK, leave(s));
     }
@@ -82,9 +78,9 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
           const_cast<char*>(t->get_value().data()));
       v++;
       std::this_thread::sleep_for(std::chrono::milliseconds(100));  // NOLINT
-      ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(),
-                                   reinterpret_cast<char*>(&v),  // NOLINT
-                                   sizeof(std::int64_t)));
+      ASSERT_EQ(Status::OK, upsert(s, st, k,
+                                   {reinterpret_cast<char*>(&v),  // NOLINT
+                                    sizeof(std::int64_t)}));
       rc = (Status::OK == commit(s));
       ASSERT_EQ(Status::OK, leave(s));
     }

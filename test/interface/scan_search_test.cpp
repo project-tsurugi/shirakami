@@ -1,8 +1,7 @@
-#include "kvs/interface.h"
-
 #include <bitset>
 
 #include "gtest/gtest.h"
+#include "kvs/interface.h"
 
 // shirakami-impl interface library
 #include "tuple_local.h"
@@ -23,11 +22,11 @@ public:
 };
 
 TEST_F(scan_search, scan_key_search_key) {  // NOLINT
-  std::string k("a");                               // NOLINT
-  std::string k2("aa");                             // NOLINT
-  std::string k3("aac");                            // NOLINT
-  std::string k4("b");                              // NOLINT
-  std::string v("bbb");                             // NOLINT
+  std::string k("a");                       // NOLINT
+  std::string k2("aa");                     // NOLINT
+  std::string k3("aac");                    // NOLINT
+  std::string k4("b");                      // NOLINT
+  std::string v("bbb");                     // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -41,13 +40,10 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
               << std::endl;
   }
   records.clear();
-  ASSERT_EQ(Status::OK, upsert(s, st, k.data(), k.size(), v.data(), v.size()));
-  ASSERT_EQ(Status::OK,
-            upsert(s, st, k2.data(), k2.size(), v.data(), v.size()));
-  ASSERT_EQ(Status::OK,
-            upsert(s, st, k3.data(), k3.size(), v.data(), v.size()));
-  ASSERT_EQ(Status::OK,
-            upsert(s, st, k4.data(), k4.size(), v.data(), v.size()));
+  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
+  ASSERT_EQ(Status::OK, upsert(s, st, k2, v));
+  ASSERT_EQ(Status::OK, upsert(s, st, k3, v));
+  ASSERT_EQ(Status::OK, upsert(s, st, k4, v));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), true, k4.data(),
                                  k4.size(), true, records));
@@ -67,21 +63,18 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
 }
 
 TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
-  std::string k1("aaa");                          // NOLINT
-  std::string k2("aab");                          // NOLINT
-  std::string k3("xxx");                          // NOLINT
-  std::string k4("zzz");                          // NOLINT
-  std::string v1("bbb");                          // NOLINT
-  std::string v2("bbb");                          // NOLINT
+  std::string k1("aaa");                       // NOLINT
+  std::string k2("aab");                       // NOLINT
+  std::string k3("xxx");                       // NOLINT
+  std::string k4("zzz");                       // NOLINT
+  std::string v1("bbb");                       // NOLINT
+  std::string v2("bbb");                       // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  ASSERT_EQ(Status::OK,
-            insert(s, st, k1.data(), k1.size(), v1.data(), v1.size()));
-  ASSERT_EQ(Status::OK,
-            insert(s, st, k2.data(), k2.size(), v2.data(), v2.size()));
-  ASSERT_EQ(Status::OK,
-            insert(s, st, k4.data(), k4.size(), v2.data(), v2.size()));
+  ASSERT_EQ(Status::OK, insert(s, st, k1, v1));
+  ASSERT_EQ(Status::OK, insert(s, st, k2, v2));
+  ASSERT_EQ(Status::OK, insert(s, st, k4, v2));
   ASSERT_EQ(Status::OK, commit(s));
   ScanHandle handle{};
   Tuple* tuple{};

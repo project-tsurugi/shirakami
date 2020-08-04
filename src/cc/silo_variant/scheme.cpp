@@ -37,12 +37,11 @@ bool WriteSetObj::operator<(const WriteSetObj& right) const {  // NOLINT
   std::abort();
 }
 
-void WriteSetObj::reset_tuple_value(const char* const val_ptr,
-                                    const std::size_t val_length) & {
+void WriteSetObj::reset_tuple_value(std::string_view val) {
   (this->get_op() == OP_TYPE::UPDATE ? this->get_tuple_to_local()
                                      : this->get_tuple_to_db())
       .get_pimpl()
-      ->set_value(val_ptr, val_length);
+      ->set_value(val.data(), val.size());
 }
 
 }  // namespace shirakami::silo_variant

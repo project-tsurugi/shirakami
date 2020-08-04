@@ -213,8 +213,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
         search_key(token, storage, itr.get_key().data(), itr.get_key().size(),
                    &tuple);
       } else if (itr.get_type() == OP_TYPE::UPDATE) {
-        update(token, storage, itr.get_key().data(), itr.get_key().size(),
-               itr.get_value().data(), itr.get_value().size());
+        update(token, storage, itr.get_key(), itr.get_value());
       }
     }
     if (commit(token) == Status::OK) {

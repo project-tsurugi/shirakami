@@ -171,10 +171,7 @@ unsigned int Log::LogRecord::compute_checksum() & {  // NOLINT
   for (auto&& itr : log_set) {
     if (itr.get_tid().get_epoch() > recovery_epoch) break;
     if (itr.get_op() == OP_TYPE::UPDATE || itr.get_op() == OP_TYPE::INSERT) {
-      upsert(s, st, itr.get_tuple()->get_key().data(),
-             itr.get_tuple()->get_key().size(),
-             itr.get_tuple()->get_value().data(),
-             itr.get_tuple()->get_value().size());
+      upsert(s, st, itr.get_tuple()->get_key(), itr.get_tuple()->get_value());
     } else if (itr.get_op() == OP_TYPE::DELETE) {
       delete_record(s, st, itr.get_tuple()->get_key());
     }
