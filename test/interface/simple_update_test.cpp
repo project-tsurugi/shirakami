@@ -34,14 +34,14 @@ TEST_F(simple_update, update) {  // NOLINT
   ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
   ASSERT_EQ(
       memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()),
       0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, update(s, st, k, v2));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -72,7 +72,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
       ASSERT_EQ(Status::OK, enter(s));
       Storage st{};
       Tuple* t{};
-      ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &t));
+      ASSERT_EQ(Status::OK, search_key(s, st, k, &t));
       ASSERT_NE(nullptr, t);
       v = *reinterpret_cast<std::int64_t*>(  // NOLINT
           const_cast<char*>(t->get_value().data()));
@@ -91,7 +91,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
       ASSERT_EQ(Status::OK, enter(s));
       Storage st{};
       Tuple* tuple{};
-      ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+      ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
       ASSERT_NE(nullptr, tuple);
       v = *reinterpret_cast<std::int64_t*>(  // NOLINT
           const_cast<char*>(tuple->get_value().data()));

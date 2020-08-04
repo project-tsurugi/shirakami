@@ -54,8 +54,7 @@ void scan_perf::DoScan() {
   Tuple* tuple{};
 
   std::uint64_t start{rdtscp()};
-  EXPECT_EQ(Status::OK,
-            open_scan(s_, st_, nullptr, 0, false, nullptr, 0, false, handle));
+  EXPECT_EQ(Status::OK, open_scan(s_, st_, "", false, "", false, handle));
   for (int i = 0; i < READ_TUPLES; ++i) {
     EXPECT_EQ(Status::OK, read_from_scan(s_, st_, handle, &tuple));
   }

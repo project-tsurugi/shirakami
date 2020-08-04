@@ -117,12 +117,11 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
   }
 }
 
-ReadSetObj* ThreadInfo::search_read_set(const char* const key_ptr,  // NOLINT
-                                        const std::size_t key_length) {
+ReadSetObj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
   for (auto&& itr : read_set) {
     const std::string_view key_view = itr.get_rec_ptr()->get_tuple().get_key();
-    if (key_view.size() == key_length &&
-        memcmp(key_view.data(), key_ptr, key_length) == 0) {
+    if (key_view.size() == key.size() &&
+        memcmp(key_view.data(), key.data(), key.size()) == 0) {
       return &itr;
     }
   }

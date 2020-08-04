@@ -177,11 +177,9 @@ extern Status leave(Token token);  // NOLINT
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the storage handle retrieved by register_storage() or
  * get_storage()
- * @param[in] lkey
- * @param[in] len_lkey
+ * @param[in] left_key
  * @param[in] l_exclusive
- * @param[in] rkey
- * @param[in] len_rkey
+ * @param[in] right_key
  * @param[in] r_exclusive
  * @param[out] handle the handle to identify scanned result. This handle will be
  * deleted at abort function.
@@ -191,9 +189,8 @@ extern Status leave(Token token);  // NOLINT
  * @return Status::OK the some records was scanned.
  */
 extern Status open_scan(Token token, Storage storage,  // NOLINT
-                        const char* lkey, std::size_t len_lkey,
-                        bool l_exclusive, const char* rkey,
-                        std::size_t len_rkey, bool r_exclusive,
+                        std::string_view left_key, bool l_exclusive,
+                        std::string_view right_key, bool r_exclusive,
                         ScanHandle& handle);
 
 /**
@@ -236,16 +233,14 @@ extern Status read_from_scan(Token token, Storage storage,  // NOLINT
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the storage handle retrieved by register_storage() or
  * get_storage()
- * @param lkey the key to indicate the beginning of the range, null if the
- * beginning is open
- * @param len_lkey indicate the lkey length
+ * @param[in] left_key the key to indicate the beginning of the range, null if
+ * the beginning is open
  * @param l_exclusive indicate whether the lkey is exclusive
  * (i.e. the record whose key equal to lkey is not included in the result)
- * @param rkey the key to indicate the ending of the range, null if the end is
- * open
- * @param len_rkey indicate the rkey length
- * @param r_exclusive indicate whether the rkey is exclusive
- * @param result output parameter to pass the found Tuple pointers.
+ * @param[in] right_key the key to indicate the ending of the range, null if the
+ * end is open
+ * @param[in] r_exclusive indicate whether the rkey is exclusive
+ * @param[out] result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid untill commit/abort.
  * @return Status::OK success.
@@ -255,8 +250,8 @@ extern Status read_from_scan(Token token, Storage storage,  // NOLINT
  * operation.
  */
 extern Status scan_key(Token token, Storage storage,  // NOLINT
-                       const char* lkey, std::size_t len_lkey, bool l_exclusive,
-                       const char* rkey, std::size_t len_rkey, bool r_exclusive,
+                       std::string_view left_key, bool l_exclusive,
+                       std::string_view right_key, bool r_exclusive,
                        std::vector<const Tuple*>& result);
 
 /**
@@ -281,7 +276,6 @@ extern Status scan_key(Token token, Storage storage,  // NOLINT
  * @param storage [in] the storage handle retrieved by register_storage() or
  * get_storage()
  * @param key the search key
- * @param len_key indicate the key length
  * @param tuple output parameter to pass the found Tuple pointer.
  * The ownership of the address which is pointed by the tuple is in shirakami.
  * So upper layer from shirakami don't have to be care.
@@ -295,7 +289,7 @@ extern Status scan_key(Token token, Storage storage,  // NOLINT
  * operation of concurrent transaction.
  */
 extern Status search_key(Token token, Storage storage,  // NOLINT
-                         const char* key, std::size_t len_key, Tuple** tuple);
+                         std::string_view key, Tuple** tuple);
 
 /**
  * @brief Recovery by single thread.
@@ -311,9 +305,7 @@ extern Status search_key(Token token, Storage storage,  // NOLINT
  * @param storage [in] the storage handle retrieved by register_storage() or
  * get_storage()
  * @param key the key of the updated record
- * @param len_key indicate the key length
  * @param val the value of the updated record
- * @param len_val indicate the value length
  * @return Status::OK if successful
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you
  * have problem by WARN_NOT_FOUND, you should do abort.
@@ -330,9 +322,7 @@ extern Status update(Token token, Storage storage,  // NOLINT
  * @param[in] storage the storage handle retrieved by register_storage() or
  * get_storage()
  * @param key the key of the upserted record
- * @param len_key indicate the key length
  * @param val the value of the upserted record
- * @param len_val indicate the value length
  * @return Status::OK success
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did
  * insert/update/upsert, so it overwrite its local write set.

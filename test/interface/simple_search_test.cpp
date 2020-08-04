@@ -31,65 +31,60 @@ TEST_F(simple_search, search) {  // NOLINT
   Storage st{};
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND,
-            search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_search, search_search) {  // NOLINT
-  std::string k("aaa");               // NOLINT
-  std::string v("bbb");               // NOLINT
+  std::string k("aaa");                 // NOLINT
+  std::string v("bbb");                 // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-            search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_search, search_local_upsert) {  // NOLINT
-  std::string k("aaa");                    // NOLINT
-  std::string v("bbb");                    // NOLINT
+  std::string k("aaa");                       // NOLINT
+  std::string v("bbb");                       // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k, v));
   Tuple* tuple{};
-  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-            search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_search, search_upsert_search) {  // NOLINT
-  std::string k("aaa");                   // NOLINT
-  std::string v("bbb");                   // NOLINT
-  std::string v2("ccc");                  // NOLINT
+  std::string k("aaa");                        // NOLINT
+  std::string v("bbb");                        // NOLINT
+  std::string v2("ccc");                       // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   ASSERT_EQ(Status::OK, upsert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-  ASSERT_EQ(Status::OK,
-            upsert(s, st, k, v2));
-  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-            search_key(s, st, k.data(), k.size(), &tuple));
+  ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
+  ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));

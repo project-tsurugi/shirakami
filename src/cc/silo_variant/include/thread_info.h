@@ -262,7 +262,7 @@ public:
    * @param [in] len_key the key length of records.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  ReadSetObj* search_read_set(const char* key, std::size_t len_key);  // NOLINT
+  ReadSetObj* search_read_set(std::string_view key);  // NOLINT
 
   /**
    * @brief check whether it already executed search operation.

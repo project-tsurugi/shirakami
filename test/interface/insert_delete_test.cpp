@@ -28,8 +28,7 @@ TEST_F(insert_delete, insert_delete_with_16chars) {  // NOLINT
   ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> tuples{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
-                                 k.size(), false, tuples));
+  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k, false, tuples));
   EXPECT_EQ(1, tuples.size());
   for (auto&& t : tuples) {
     ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key()));
@@ -47,8 +46,7 @@ TEST_F(insert_delete, insert_delete_with_10chars) {  // NOLINT
   ASSERT_EQ(Status::OK, insert(s, st, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, k.data(), k.size(), false, k.data(),
-                                 k.size(), false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k, false, records));
   EXPECT_EQ(1, records.size());
   for (auto&& t : records) {
     ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key()));

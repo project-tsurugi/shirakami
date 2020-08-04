@@ -35,8 +35,8 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 }
 
 Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                 const char* lkey, std::size_t len_lkey, bool l_exclusive,
-                 const char* rkey, std::size_t len_rkey, bool r_exclusive,
+                 std::string_view left_key, bool l_exclusive,
+                 std::string_view right_key, bool r_exclusive,
                  ScanHandle& handle) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
@@ -44,12 +44,14 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
   std::vector<const Record*> scan_buf;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
-                                   r_exclusive, &scan_buf, true);
+  kohler_masstree::get_mtdb().scan(
+      left_key.size() == 0 ? nullptr : left_key.data(), left_key.size(),
+      l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
+      right_key.size(), r_exclusive, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_res;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,  // NOLINT
-                                 {rkey, len_rkey}, r_exclusive, scan_res);
+  yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
+                                 right_key, r_exclusive, scan_res);
   std::vector<const Record*> scan_buf;
   scan_buf.reserve(scan_res.size());
   for (auto&& elem : scan_res) {
@@ -70,16 +72,16 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
          * begin : init about right_end_point_
          */
         std::unique_ptr<char[]> tmp_rkey;  // NOLINT
-        if (len_rkey > 0) {
-          tmp_rkey = std::make_unique<char[]>(len_rkey);  // NOLINT
-          memcpy(tmp_rkey.get(), rkey, len_rkey);
+        if (!right_key.empty()) {
+          tmp_rkey = std::make_unique<char[]>(right_key.size());  // NOLINT
+          memcpy(tmp_rkey.get(), right_key.data(), right_key.size());
         } else {
           /**
            * todo : discuss when len_rkey == 0
            */
         }
         ti->get_rkey()[i] = std::move(tmp_rkey);
-        ti->get_len_rkey()[i] = len_rkey;
+        ti->get_len_rkey()[i] = right_key.size();
         ti->get_r_exclusive()[i] = r_exclusive;
         /**
          * end : init about right_end_point_
@@ -118,9 +120,12 @@ Status read_from_scan(Token token,  // NOLINT
     std::vector<const Record*> new_scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
     kohler_masstree::get_mtdb().scan(
-        tupleptr->get_key().data(), tupleptr->get_key().size(), true,
-        ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle],
-        ti->get_r_exclusive()[handle], &new_scan_buf, true);
+        tupleptr->get_key().size() == 0 ? nullptr : tupleptr->get_key().data(),
+        tupleptr->get_key().size(), true,
+        ti->get_len_rkey()[handle] == 0 ? nullptr
+                                        : ti->get_rkey()[handle].get(),
+        ti->get_len_rkey()[handle], ti->get_r_exclusive()[handle],
+        &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t> > scan_res;
     yakushima::yakushima_kvs::scan(  // NOLINT
@@ -166,8 +171,7 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  const ReadSetObj* inrs =
-      ti->search_read_set(key_view.data(), key_view.size());
+  const ReadSetObj* inrs = ti->search_read_set(key_view);
   if (inrs != nullptr) {
     *tuple = const_cast<Tuple*>(&inrs->get_rec_read().get_tuple());
     ++scan_index;
@@ -187,8 +191,8 @@ Status read_from_scan(Token token,  // NOLINT
 }
 
 Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                const char* lkey, std::size_t len_lkey, bool l_exclusive,
-                const char* rkey, std::size_t len_rkey, bool r_exclusive,
+                std::string_view left_key, bool l_exclusive,
+                std::string_view right_key, bool r_exclusive,
                 std::vector<const Tuple*>& result) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
@@ -199,12 +203,14 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
   std::vector<const Record*> scan_res;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  kohler_masstree::get_mtdb().scan(lkey, len_lkey, l_exclusive, rkey, len_rkey,
-                                   r_exclusive, &scan_res, false);
+  kohler_masstree::get_mtdb().scan(
+      left_key.size() == 0 ? nullptr : left_key.data(), left_key.size(),
+      l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
+      right_key.size(), r_exclusive, &scan_res, false);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_buf;
-  yakushima::yakushima_kvs::scan({lkey, len_lkey}, l_exclusive,  // NOLINT
-                                 {rkey, len_rkey}, r_exclusive, scan_buf);
+  yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
+                                 right_key, r_exclusive, scan_buf);
   std::vector<const Record*> scan_res;
   scan_res.reserve(scan_buf.size());
   for (auto&& elem : scan_buf) {
@@ -257,8 +263,8 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size( // NOLINT
-    Token token,  // NOLINT
+[[maybe_unused]] Status scannable_total_index_size(  // NOLINT
+    Token token,                                     // NOLINT
     [[maybe_unused]] Storage storage, ScanHandle& handle, std::size_t& size) {
   auto* ti = static_cast<ThreadInfo*>(token);
 #ifdef INDEX_KOHLER_MASSTREE

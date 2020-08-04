@@ -18,14 +18,12 @@ class simple_insert : public ::testing::Test {  // NOLINT
 public:
   void SetUp() override { init(); }  // NOLINT
 
-  void TearDown() override {
-    fin();
-  }
+  void TearDown() override { fin(); }
 };
 
 TEST_F(simple_insert, insert) {  // NOLINT
-  std::string k("aaa");       // NOLINT
-  std::string v("bbb");       // NOLINT
+  std::string k("aaa");          // NOLINT
+  std::string v("bbb");          // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
@@ -38,22 +36,22 @@ TEST_F(simple_insert, insert) {  // NOLINT
     char k2 = 0;
     ASSERT_EQ(Status::OK, insert(s, st, {&k2, 1}, v));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, search_key(s, st, &k2, 1, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, st, {&k2, 1}, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple{};
   ASSERT_EQ(Status::OK, insert(s, st, "", v));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, search_key(s, st, nullptr, 0, &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, st, "", &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_insert, long_insert) {  // NOLINT
-  std::string k("CUSTOMER");       // NOLINT
-  std::string v(                   // NOLINT
+  std::string k("CUSTOMER");          // NOLINT
+  std::string v(                      // NOLINT
       "b234567890123456789012345678901234567890123456789012345678901234567890"
       "12"
       "3456789012345678901234567890123456789012345678901234567890123456789012"

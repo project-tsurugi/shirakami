@@ -9,15 +9,14 @@
 namespace shirakami::cc_silo_variant {
 
 Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                  const char* const key, const std::size_t len_key,
-                  Tuple** tuple) {
+                  std::string_view key, Tuple** tuple) {
   auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
   if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif
-  WriteSetObj* inws{ti->search_write_set({key, len_key})};
+  WriteSetObj* inws{ti->search_write_set(key)};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
@@ -26,20 +25,21 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj* inrs{ti->search_read_set(key, len_key)};
+  ReadSetObj* inrs{ti->search_read_set(key)};
   if (inrs != nullptr) {
     *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key, len_key)};
+  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
   if (rec_ptr == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
   }
 #elif INDEX_YAKUSHIMA
-  Record** rec_double_ptr{std::get<0>(yakushima::yakushima_kvs::get<Record*>({key, len_key}))};
+  Record** rec_double_ptr{
+      std::get<0>(yakushima::yakushima_kvs::get<Record*>(key))};
   if (rec_double_ptr == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
@@ -64,4 +64,4 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return rr;
 }
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

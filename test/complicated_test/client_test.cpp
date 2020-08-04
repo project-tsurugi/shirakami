@@ -77,8 +77,7 @@ static void exec_search_key(Token token, std::size_t thnm) {
   for (auto&& itr : DataList.at(thnm)) {
     Tuple* tuple{};
     Storage storage{0};
-    search_key(token, storage, itr->get_key().data(), itr->get_key().size(),
-               &tuple);
+    search_key(token, storage, itr->get_key(), &tuple);
   }
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);
@@ -88,8 +87,8 @@ static void exec_scan_key(Token token) {
   while (true) {
     std::vector<const Tuple*> result;
     Storage storage(0);
-    scan_key(token, storage, static_cast<const char*>("a"), 1, false,
-             static_cast<const char*>("z"), 1, false, result);
+    scan_key(token, storage, {static_cast<const char*>("a"), 1}, false,
+             {static_cast<const char*>("z"), 1}, false, result);
     for (auto&& itr : result) {
       delete itr;  // NOLINT
     }

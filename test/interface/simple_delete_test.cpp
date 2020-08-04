@@ -2,7 +2,6 @@
 
 #include "gtest/gtest.h"
 #include "kvs/interface.h"
-
 #include "tuple_local.h"
 
 #ifdef CC_SILO_VARIANT
@@ -45,8 +44,7 @@ TEST_F(simple_delete, all_deletes) {  // NOLINT
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK,
-            scan_key(s, st, nullptr, 0, false, nullptr, 0, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, "", false, records));
   for (auto&& t : records) {
     ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key()));
   }
