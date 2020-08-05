@@ -24,13 +24,15 @@
 #include "compiler.h"
 #include "cpu.h"
 #include "fileio.h"
+#include "kvs/scheme.h"
 #include "log.h"
 #include "record.h"
 #include "scheme.h"
 #include "tid.h"
 
-// shirakami/include/
-#include "kvs/scheme.h"
+#ifdef INDEX_YAKUSHIMA
+#include "yakushima/include/kvs.h"
+#endif
 
 namespace shirakami::cc_silo_variant {
 
@@ -61,7 +63,8 @@ public:
   WriteSetObj& operator=(const WriteSetObj& right) = delete;  // NOLINT
   // for std::sort
   WriteSetObj& operator=(WriteSetObj&& right) {  // NOLINT
-    rec_ptr_ = right.rec_ptr_;
+    rec_ptr_ = right.rec_ptr_;  // It must copy pointer. It can't use default
+                                // move assign operator.
     op_ = right.op_;
     tuple_ = std::move(right.tuple_);
 
@@ -158,7 +161,10 @@ class ReadSetObj {  // NOLINT
 public:
   ReadSetObj() { this->rec_ptr = nullptr; }
 
-  explicit ReadSetObj(const Record* const rec_ptr) { this->rec_ptr = rec_ptr; }
+  explicit ReadSetObj(const Record* rec_ptr, bool scan = false)  // NOLINT
+      : is_scan{scan} {
+    this->rec_ptr = rec_ptr;
+  }
 
   ReadSetObj(const ReadSetObj& right) = delete;
   ReadSetObj(ReadSetObj&& right) {
@@ -187,8 +193,12 @@ public:
   }
 
 private:
-  Record rec_read;
-  const Record* rec_ptr;  // ptr to database
+  Record rec_read{};
+  const Record* rec_ptr{};  // ptr to database
+  bool is_scan{false};
+#ifdef INDEX_YAKUSHIMA
+  std::pair<yakushima::node_version64_body, yakushima::node_version64*> nv{};
+#endif
 };
 
 // Operations for retry by abort
