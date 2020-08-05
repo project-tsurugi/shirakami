@@ -15,72 +15,69 @@
 #include "epoch.h"
 #include "record.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami::cc_silo_variant::garbage_collection {
 
-class garbage_collection {
-public:
-  /**
-   * @brief Delete std::vector<Record*> kGarbageRecords at
-   * shirakami/src/gcollection.cc
-   * @pre This function should be called at terminating db.
-   * @return void
-   */
-  static void delete_all_garbage_records();
+alignas(CACHE_LINE_SIZE) inline std::array<  // NOLINT
+    std::vector<Record*>,
+    KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords;  // NOLINT
+alignas(CACHE_LINE_SIZE) inline std::array<
+    std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords;  // NOLINT
+alignas(CACHE_LINE_SIZE) inline std::array<                         // NOLINT
+    std::vector<std::pair<std::string*, epoch::epoch_t>>,
+    KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues;                   // NOLINT
+alignas(CACHE_LINE_SIZE) inline std::array<                        // NOLINT
+    std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues;  // NOLINT
 
-  /**
-   * @brief Delete first of std::pair<std::string*, epoch_t>> kGarbageValues at
-   * shirakami/src/gcollection.cc
-   * @pre This function should be called at terminating db.
-   * @return void
-   */
-  static void delete_all_garbage_values();
+/**
+ * @brief Delete std::vector<Record*> kGarbageRecords at
+ * shirakami/src/gcollection.cc
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
+extern void delete_all_garbage_records();
 
-  static std::vector<Record*>& get_garbage_records_at(  // NOLINT
-      std::size_t index) {
-    return kGarbageRecords.at(index);
-  }
+/**
+ * @brief Delete first of std::pair<std::string*, epoch_t>> kGarbageValues at
+ * shirakami/src/gcollection.cc
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
+extern void delete_all_garbage_values();
 
-  static std::vector<std::pair<std::string*, epoch::epoch_t>>&
-  get_garbage_values_at(std::size_t index) {  // NOLINT
-    return kGarbageValues.at(index);
-  }
+[[maybe_unused]] static std::vector<Record*>& get_garbage_records_at(  // NOLINT
+    std::size_t index) {
+  return kGarbageRecords.at(index);
+}
 
-  static std::mutex& get_mutex_garbage_records_at(  // NOLINT
-      std::size_t index) {
-    return kMutexGarbageRecords.at(index);
-  }
+[[maybe_unused]] static std::vector<std::pair<std::string*, epoch::epoch_t>>&
+get_garbage_values_at(std::size_t index) {  // NOLINT
+  return kGarbageValues.at(index);
+}
 
-  static std::mutex& get_mutex_garbage_values_at(std::size_t index) {  // NOLINT
-    return kMutexGarbageValues.at(index);
-  }
+[[maybe_unused]] static std::mutex& get_mutex_garbage_records_at(  // NOLINT
+    std::size_t index) {
+  return kMutexGarbageRecords.at(index);
+}
 
-  /**
-   * @brief Release all heap objects in this system.
-   * @details Do three functions: delete_all_garbage_values(),
-   * delete_all_garbage_records(), and remove_all_leaf_from_mt_db_and_release().
-   * @pre This function should be called at terminating db.
-   * @return void
-   */
-  [[maybe_unused]] static void release_all_heap_objects();
+[[maybe_unused]] static std::mutex& get_mutex_garbage_values_at(  // NOLINT
+    std::size_t index) {
+  return kMutexGarbageValues.at(index);
+}
 
-  /**
-   * @brief Remove all leaf nodes from MTDB and release those heap objects.
-   * @pre This function should be called at terminating db.
-   * @return void
-   */
-  static void remove_all_leaf_from_mt_db_and_release();
+/**
+ * @brief Release all heap objects in this system.
+ * @details Do three functions: delete_all_garbage_values(),
+ * delete_all_garbage_records(), and remove_all_leaf_from_mt_db_and_release().
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
+[[maybe_unused]] extern void release_all_heap_objects();
 
-private:
-  alignas(CACHE_LINE_SIZE) static inline std::array<  // NOLINT
-      std::vector<Record*>,
-      KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords;  // NOLINT
-  alignas(CACHE_LINE_SIZE) static inline std::array<
-      std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageRecords;  // NOLINT
-  alignas(CACHE_LINE_SIZE) static inline std::array<                  // NOLINT
-      std::vector<std::pair<std::string*, epoch::epoch_t>>,
-      KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues;                   // NOLINT
-  alignas(CACHE_LINE_SIZE) static inline std::array<                 // NOLINT
-      std::mutex, KVS_NUMBER_OF_LOGICAL_CORES> kMutexGarbageValues;  // NOLINT
-};
+/**
+ * @brief Remove all leaf nodes from MTDB and release those heap objects.
+ * @pre This function should be called at terminating db.
+ * @return void
+ */
+extern void remove_all_leaf_from_mt_db_and_release();
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant::garbage_collection

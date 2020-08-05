@@ -11,15 +11,15 @@
 #include "cc/silo_variant/include/thread_info.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami::cc_silo_variant::garbage_collection {
 
-[[maybe_unused]] void garbage_collection::release_all_heap_objects() {
-  garbage_collection::remove_all_leaf_from_mt_db_and_release();
-  garbage_collection::delete_all_garbage_records();
-  garbage_collection::delete_all_garbage_values();
+[[maybe_unused]] void release_all_heap_objects() {
+  remove_all_leaf_from_mt_db_and_release();
+  delete_all_garbage_records();
+  delete_all_garbage_values();
 }
 
-void garbage_collection::remove_all_leaf_from_mt_db_and_release() {
+void remove_all_leaf_from_mt_db_and_release() {
 #ifdef INDEX_KOHLER_MASSTREE
   std::vector<const Record*> scan_res;
   kohler_masstree::get_mtdb().scan(nullptr, 0, false, nullptr, 0, false,
@@ -42,7 +42,7 @@ void garbage_collection::remove_all_leaf_from_mt_db_and_release() {
 #endif
 }
 
-void garbage_collection::delete_all_garbage_records() {
+void delete_all_garbage_records() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
     for (auto&& itr : get_garbage_records_at(i)) {
       delete itr;  // NOLINT
@@ -51,7 +51,7 @@ void garbage_collection::delete_all_garbage_records() {
   }
 }
 
-void garbage_collection::delete_all_garbage_values() {
+void delete_all_garbage_values() {
   for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
     for (auto&& itr : get_garbage_values_at(i)) {
       delete itr.first;  // NOLINT
@@ -60,43 +60,4 @@ void garbage_collection::delete_all_garbage_values() {
   }
 }
 
-void ThreadInfo::gc_records_and_values() const {
-  // for records
-  {
-    std::mutex& mutex_for_gc_list =
-        garbage_collection::get_mutex_garbage_records_at(
-            this->gc_handle_.get_container_index());
-    if (mutex_for_gc_list.try_lock()) {
-      auto itr = this->gc_handle_.get_record_container()->begin();
-      while (itr != this->gc_handle_.get_record_container()->end()) {
-        if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
-          delete *itr;  // NOLINT
-          itr = this->gc_handle_.get_record_container()->erase(itr);
-        } else {
-          break;
-        }
-      }
-      mutex_for_gc_list.unlock();
-    }
-  }
-  // for values
-  {
-    std::mutex& mutex_for_gc_list =
-        garbage_collection::get_mutex_garbage_values_at(
-            this->gc_handle_.get_container_index());
-    if (mutex_for_gc_list.try_lock()) {
-      auto itr = this->gc_handle_.get_value_container()->begin();
-      while (itr != this->gc_handle_.get_value_container()->end()) {
-        if (itr->second <= epoch::get_reclamation_epoch()) {
-          delete itr->first;  // NOLINT
-          itr = this->gc_handle_.get_value_container()->erase(itr);
-        } else {
-          break;
-        }
-      }
-      mutex_for_gc_list.unlock();
-    }
-  }
-}
-
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant::garbage_collection
