@@ -5,15 +5,15 @@
 
 #include "cc/silo_variant/include/epoch.h"
 
-#include <xmmintrin.h> // NOLINT
+#include <xmmintrin.h>  // NOLINT
 
-#include "clock.h"
 #include "cc/silo_variant/include/thread_info_table.h"
+#include "clock.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami::cc_silo_variant::epoch {
 
-void epoch::atomic_add_global_epoch() {
+extern void atomic_add_global_epoch() {
   std::uint32_t expected = load_acquire_global_epoch();
   for (;;) {
     std::uint32_t desired = expected + 1;
@@ -25,10 +25,10 @@ void epoch::atomic_add_global_epoch() {
   }
 }
 
-bool epoch::check_epoch_loaded() {  // NOLINT
+extern bool check_epoch_loaded() {  // NOLINT
   uint64_t curEpoch = load_acquire_global_epoch();
 
-  for (auto&& itr : thread_info_table::get_thread_info_table()) { // NOLINT
+  for (auto&& itr : thread_info_table::get_thread_info_table()) {  // NOLINT
     if (itr.get_visible() && itr.get_epoch() != curEpoch) {
       return false;
     }
@@ -37,7 +37,7 @@ bool epoch::check_epoch_loaded() {  // NOLINT
   return true;
 }
 
-void epoch::epocher() {
+extern void epocher() {
   /**
    * Increment global epoch in each 40ms.
    * To increment it,
@@ -60,13 +60,4 @@ void epoch::epocher() {
   }
 }
 
-void epoch::invoke_epocher() {
-  kEpochThreadEnd.store(false, std::memory_order_release);
-  kEpochThread = std::thread(epocher);
-}
-
-std::uint32_t epoch::load_acquire_global_epoch() {  // NOLINT
-  return loadAcquire(epoch::kGlobalEpoch);
-}
-
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant::epoch

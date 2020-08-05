@@ -10,58 +10,59 @@
 
 #include "atomic_wrapper.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami::cc_silo_variant::epoch {
 
-class epoch {
-public:
-  /**
-   * @brief epoch_t
-   * @details
-   * tid_word is composed of union ...
-   * 1bits : lock
-   * 1bits : latest
-   * 1bits : absent
-   * 29bits : tid
-   * 32 bits : epoch.
-   * So epoch_t should be uint32_t.
-   */
-  using epoch_t = std::uint32_t;
+/**
+ * @brief epoch_t
+ * @details
+ * tid_word is composed of union ...
+ * 1bits : lock
+ * 1bits : latest
+ * 1bits : absent
+ * 29bits : tid
+ * 32 bits : epoch.
+ * So epoch_t should be uint32_t.
+ */
+using epoch_t = std::uint32_t;
 
-  static void atomic_add_global_epoch();
+[[maybe_unused]] inline epoch_t kGlobalEpoch;  // NOLINT
+inline epoch_t kReclamationEpoch;              // NOLINT
 
-  static bool check_epoch_loaded();  // NOLINT
+// about epoch thread
+[[maybe_unused]] inline std::thread kEpochThread;  // NOLINT
+inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
 
-  /**
-   * @brief epoch thread
-   * @pre this function is called by invoke_core_thread function.
-   */
-  static void epocher();
+[[maybe_unused]] extern void atomic_add_global_epoch();
 
-  static epoch::epoch_t get_reclamation_epoch() {  // NOLINT
-    return loadAcquire(kReclamationEpoch);
-  }
+[[maybe_unused]] extern bool check_epoch_loaded();  // NOLINT
 
-  /**
-   * @brief invoke epocher thread.
-   * @post invoke fin() to join this thread.
-   */
-  static void invoke_epocher();
+/**
+ * @brief epoch thread
+ * @pre this function is called by invoke_core_thread function.
+ */
+[[maybe_unused]] extern void epocher();
 
-  static void join_epoch_thread() { kEpochThread.join(); }
+[[maybe_unused]] static epoch::epoch_t get_reclamation_epoch() {  // NOLINT
+  return loadAcquire(kReclamationEpoch);
+}
 
-  static std::uint32_t load_acquire_global_epoch();  // NOLINT
+/**
+ * @brief invoke epocher thread.
+ * @post invoke fin() to join this thread.
+ */
+[[maybe_unused]] static void invoke_epocher() {
+  kEpochThreadEnd.store(false, std::memory_order_release);
+  kEpochThread = std::thread(epocher);
+}
 
-  static void set_epoch_thread_end(bool tf) {
-    kEpochThreadEnd.store(tf, std::memory_order_release);
-  }
+[[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
 
-private:
-  static inline epoch_t kGlobalEpoch;       // NOLINT
-  static inline epoch_t kReclamationEpoch;  // NOLINT
+[[maybe_unused]] static std::uint32_t load_acquire_global_epoch() {  // NOLINT
+  return loadAcquire(epoch::kGlobalEpoch);
+}
 
-  // about epoch thread
-  static inline std::thread kEpochThread;           // NOLINT
-  static inline std::atomic<bool> kEpochThreadEnd;  // NOLINT
-};
+[[maybe_unused]] static void set_epoch_thread_end(bool tf) {
+  kEpochThreadEnd.store(tf, std::memory_order_release);
+}
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant::epoch
