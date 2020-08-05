@@ -18,7 +18,7 @@ namespace shirakami {
 /**
  * @brief generate search/update operations.
  */
-static void gen_tx_rw(std::vector<shirakami::cc_silo_variant::OprObj>& opr_set, std::size_t tpnm,
+static void gen_tx_rw(std::vector<shirakami::cc_silo_variant::opr_obj>& opr_set, std::size_t tpnm,
                       std::size_t opnm, std::size_t rratio,
                       Xoroshiro128Plus& rnd, FastZipf& zipf) {
   using namespace shirakami;

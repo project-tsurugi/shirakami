@@ -228,7 +228,7 @@ public:
     return scan_handle_.get_rkey();
   }
 
-  std::vector<ReadSetObj>& get_read_set() {  // NOLINT
+  std::vector<read_set_obj>& get_read_set() {  // NOLINT
     return read_set;
   }
 
@@ -266,7 +266,7 @@ public:
     return visible_.load(std::memory_order_acquire);
   }
 
-  std::vector<WriteSetObj>& get_write_set() {  // NOLINT
+  std::vector<write_set_obj>& get_write_set() {  // NOLINT
     return write_set;
   }
 
@@ -286,28 +286,28 @@ public:
    * @param[in] key the key of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  ReadSetObj* search_read_set(std::string_view key);  // NOLINT
+  read_set_obj* search_read_set(std::string_view key);  // NOLINT
 
   /**
    * @brief check whether it already executed search operation.
    * @param [in] rec_ptr the pointer of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  ReadSetObj* search_read_set(const Record* rec_ptr);  // NOLINT
+  read_set_obj* search_read_set(const Record* rec_ptr);  // NOLINT
 
   /**
    * @brief check whether it already executed write operation.
    * @param [in] key the key of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  WriteSetObj* search_write_set(std::string_view key);  // NOLINT
+  write_set_obj* search_write_set(std::string_view key);  // NOLINT
 
   /**
    * @brief check whether it already executed update/insert operation.
    * @param [in] rec_ptr the pointer of record.
    * @return the pointer of element. If it is nullptr, it is not found.
    */
-  const WriteSetObj* search_write_set(const Record* rec_ptr);  // NOLINT
+  const write_set_obj* search_write_set(const Record* rec_ptr);  // NOLINT
 
   /**
    * @brief unlock records in write set.
@@ -326,8 +326,8 @@ public:
    * @pre It already locked write set between @a begin and @a end.
    * @return void
    */
-  void unlock_write_set(std::vector<WriteSetObj>::iterator begin,
-                        std::vector<WriteSetObj>::iterator end);
+  void unlock_write_set(std::vector<write_set_obj>::iterator begin,
+                        std::vector<write_set_obj>::iterator end);
 
   /**
    * @brief write-ahead logging
@@ -387,8 +387,8 @@ private:
   /**
    * about holding operation info.
    */
-  std::vector<ReadSetObj> read_set{};
-  std::vector<WriteSetObj> write_set{};
+  std::vector<read_set_obj> read_set{};
+  std::vector<write_set_obj> write_set{};
 
   /**
    * about scan operation.

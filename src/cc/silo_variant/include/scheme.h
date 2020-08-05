@@ -41,32 +41,32 @@ namespace shirakami::cc_silo_variant {
  * @details copy constructor/assign operator can't be used in this class
  * in terms of performance.
  */
-class WriteSetObj {  // NOLINT
+class write_set_obj {  // NOLINT
 public:
   // for insert/delete operation
-  WriteSetObj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
+  write_set_obj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
 
   // for update/
-  WriteSetObj(const char* const key_ptr, const std::size_t key_length,
+  write_set_obj(const char* const key_ptr, const std::size_t key_length,
               const char* const val_ptr, const std::size_t val_length,
               const OP_TYPE op, Record* const rec_ptr)
       : op_(op),
         rec_ptr_(rec_ptr),
         tuple_(key_ptr, key_length, val_ptr, val_length) {}
 
-  WriteSetObj(const WriteSetObj& right) = delete;
+  write_set_obj(const write_set_obj& right) = delete;
   // for std::sort
-  WriteSetObj(WriteSetObj&& right) = default;
+  write_set_obj(write_set_obj&& right) = default;
 
-  WriteSetObj& operator=(const WriteSetObj& right) = delete;  // NOLINT
+  write_set_obj& operator=(const write_set_obj& right) = delete;  // NOLINT
   // for std::sort
-  WriteSetObj& operator=(WriteSetObj&& right) = default;  // NOLINT
+  write_set_obj& operator=(write_set_obj&& right) = default;  // NOLINT
 
-  bool operator<(const WriteSetObj& right) const;  // NOLINT
+  bool operator<(const write_set_obj& right) const;  // NOLINT
 
-  Record* get_rec_ptr() & { return this->rec_ptr_; }  // NOLINT
+  Record* get_rec_ptr() { return this->rec_ptr_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const {  // NOLINT
     return this->rec_ptr_;
   }
 
@@ -74,9 +74,9 @@ public:
    * @brief get tuple ptr appropriately by operation type.
    * @return Tuple&
    */
-  Tuple& get_tuple() & { return get_tuple(op_); }  // NOLINT
+  Tuple& get_tuple() { return get_tuple(op_); }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const Tuple& get_tuple() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const Tuple& get_tuple() const {  // NOLINT
     return get_tuple(op_);
   }
 
@@ -84,7 +84,7 @@ public:
    * @brief get tuple ptr appropriately by operation type.
    * @return Tuple&
    */
-  Tuple& get_tuple(const OP_TYPE op) & {  // NOLINT
+  Tuple& get_tuple(const OP_TYPE op) {  // NOLINT
     if (op == OP_TYPE::UPDATE) {
       return get_tuple_to_local();
     }
@@ -96,7 +96,7 @@ public:
    * @brief get tuple ptr appropriately by operation type.
    * @return const Tuple& const
    */
-  [[nodiscard]] const Tuple& get_tuple(const OP_TYPE op) const& {  // NOLINT
+  [[nodiscard]] const Tuple& get_tuple(const OP_TYPE op) const {  // NOLINT
     if (op == OP_TYPE::UPDATE) {
       return get_tuple_to_local();
     }
@@ -108,13 +108,13 @@ public:
    * @brief get tuple ptr to local write set
    * @return Tuple&
    */
-  Tuple& get_tuple_to_local() & { return this->tuple_; }  // NOLINT
+  Tuple& get_tuple_to_local() { return this->tuple_; }  // NOLINT
 
   /**
    * @brief get tuple ptr to local write set
    * @return const Tuple&
    */
-  [[nodiscard]] const Tuple& get_tuple_to_local() const& {  // NOLINT
+  [[nodiscard]] const Tuple& get_tuple_to_local() const {  // NOLINT
     return this->tuple_;
   }
 
@@ -122,19 +122,19 @@ public:
    * @brief get tuple ptr to database(global)
    * @return Tuple&
    */
-  Tuple& get_tuple_to_db() & { return this->rec_ptr_->get_tuple(); }  // NOLINT
+  Tuple& get_tuple_to_db() { return this->rec_ptr_->get_tuple(); }  // NOLINT
 
   /**
    * @brief get tuple ptr to database(global)
    * @return const Tuple&
    */
-  [[nodiscard]] const Tuple& get_tuple_to_db() const& {  // NOLINT
+  [[nodiscard]] const Tuple& get_tuple_to_db() const {  // NOLINT
     return this->rec_ptr_->get_tuple();
   }
 
-  OP_TYPE& get_op() & { return op_; }  // NOLINT
+  OP_TYPE& get_op() { return op_; }  // NOLINT
 
-  [[nodiscard]] const OP_TYPE& get_op() const& { return op_; }  // NOLINT
+  [[nodiscard]] const OP_TYPE& get_op() const { return op_; }  // NOLINT
 
   void reset_tuple_value(std::string_view val);
 
@@ -148,12 +148,12 @@ private:
   Tuple tuple_;      // for update
 };
 
-class ReadSetObj {  // NOLINT
+class read_set_obj {  // NOLINT
 public:
-  ReadSetObj() { this->rec_ptr = nullptr; }
+  read_set_obj() { this->rec_ptr = nullptr; }
 
 #ifdef INDEX_YAKUSHIMA
-  explicit ReadSetObj(const Record* rec_ptr, bool scan = false,     // NOLINT
+  explicit read_set_obj(const Record* rec_ptr, bool scan = false,     // NOLINT
                       yakushima::node_version64_body nvb = {},      // NOLINT
                       yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
       : is_scan{scan} {
@@ -161,21 +161,21 @@ public:
     nv = std::make_pair(nvb, nv_ptr);
   }
 #elif
-  explicit ReadSetObj(const Record* rec_ptr, bool scan = false)  // NOLINT
+  explicit read_set_obj(const Record* rec_ptr, bool scan = false)  // NOLINT
       : is_scan{scan} {
     this->rec_ptr = rec_ptr;
   }
 #endif
 
-  ReadSetObj(const ReadSetObj& right) = delete;
-  ReadSetObj(ReadSetObj&& right) = default;
-  ReadSetObj(ReadSetObj&& right, bool scan) : is_scan{scan} {  // NOLINT
+  read_set_obj(const read_set_obj& right) = delete;
+  read_set_obj(read_set_obj&& right) = default;
+  read_set_obj(read_set_obj&& right, bool scan) : is_scan{scan} {  // NOLINT
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }
 
-  ReadSetObj& operator=(const ReadSetObj& right) = delete;  // NOLINT
-  ReadSetObj& operator=(ReadSetObj&& right) {               // NOLINT
+  read_set_obj& operator=(const read_set_obj& right) = delete;  // NOLINT
+  read_set_obj& operator=(read_set_obj&& right) {               // NOLINT
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
 
@@ -211,25 +211,25 @@ private:
 };
 
 // Operations for retry by abort
-class OprObj {  // NOLINT
+class opr_obj {  // NOLINT
 public:
-  OprObj() = default;
-  OprObj(const OP_TYPE type, const char* key_ptr,            // NOLINT
+  opr_obj() = default;
+  opr_obj(const OP_TYPE type, const char* key_ptr,            // NOLINT
          const std::size_t key_length)                       // NOLINT
       : type_(type), key_(key_ptr, key_length), value_() {}  // NOLINT
-  OprObj(const OP_TYPE type, const char* key_ptr,            // NOLINT
+  opr_obj(const OP_TYPE type, const char* key_ptr,            // NOLINT
          const std::size_t key_length, const char* value_ptr,
          const std::size_t value_length)
       : type_(type),                        // NOLINT
         key_(key_ptr, key_length),          // NOLINT
         value_(value_ptr, value_length) {}  // NOLINT
 
-  OprObj(const OprObj& right) = delete;
-  OprObj(OprObj&& right) = default;
-  OprObj& operator=(const OprObj& right) = delete;  // NOLINT
-  OprObj& operator=(OprObj&& right) = default;      // NOLINT
+  opr_obj(const opr_obj& right) = delete;
+  opr_obj(opr_obj&& right) = default;
+  opr_obj& operator=(const opr_obj& right) = delete;  // NOLINT
+  opr_obj& operator=(opr_obj&& right) = default;      // NOLINT
 
-  ~OprObj() = default;
+  ~opr_obj() = default;
 
   OP_TYPE get_type() { return type_; }  // NOLINT
   std::string_view get_key() {          // NOLINT

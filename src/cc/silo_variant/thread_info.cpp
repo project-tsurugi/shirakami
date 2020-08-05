@@ -117,7 +117,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
   }
 }
 
-ReadSetObj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
+read_set_obj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
   for (auto&& itr : read_set) {
     const std::string_view key_view = itr.get_rec_ptr()->get_tuple().get_key();
     if (key_view.size() == key.size() &&
@@ -128,7 +128,7 @@ ReadSetObj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
   return nullptr;
 }
 
-ReadSetObj* ThreadInfo::search_read_set(  // NOLINT
+read_set_obj* ThreadInfo::search_read_set(  // NOLINT
     const Record* const rec_ptr) {
   for (auto&& itr : read_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
@@ -137,7 +137,7 @@ ReadSetObj* ThreadInfo::search_read_set(  // NOLINT
   return nullptr;
 }
 
-WriteSetObj* ThreadInfo::search_write_set(std::string_view key) {
+write_set_obj* ThreadInfo::search_write_set(std::string_view key) {
   for (auto&& itr : write_set) {
     const Tuple* tuple;  // NOLINT
     if (itr.get_op() == OP_TYPE::UPDATE) {
@@ -155,7 +155,7 @@ WriteSetObj* ThreadInfo::search_write_set(std::string_view key) {
   return nullptr;
 }
 
-const WriteSetObj* ThreadInfo::search_write_set(  // NOLINT
+const write_set_obj* ThreadInfo::search_write_set(  // NOLINT
     const Record* rec_ptr) {
   for (auto& itr : write_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
@@ -178,8 +178,8 @@ void ThreadInfo::unlock_write_set() {
 }
 
 void ThreadInfo::unlock_write_set(  // NOLINT
-    std::vector<WriteSetObj>::iterator begin,
-    std::vector<WriteSetObj>::iterator end) {
+    std::vector<write_set_obj>::iterator begin,
+    std::vector<write_set_obj>::iterator end) {
   tid_word expected;
   tid_word desired;
 

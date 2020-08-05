@@ -16,7 +16,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif
-  WriteSetObj* inws{ti->search_write_set(key)};
+  write_set_obj* inws{ti->search_write_set(key)};
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       return Status::WARN_ALREADY_DELETE;
@@ -25,7 +25,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj* inrs{ti->search_read_set(key)};
+  read_set_obj* inrs{ti->search_read_set(key)};
   if (inrs != nullptr) {
     *tuple = &inrs->get_rec_read().get_tuple();
     return Status::WARN_READ_FROM_OWN_OPERATION;
@@ -55,7 +55,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ReadSetObj rs_ob(rec_ptr);
+  read_set_obj rs_ob(rec_ptr);
   Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
   if (rr == Status::OK) {
     ti->get_read_set().emplace_back(std::move(rs_ob));

@@ -21,7 +21,7 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               std::string_view key, std::string_view val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
-  WriteSetObj* inws{ti->search_write_set(key)};
+  write_set_obj* inws{ti->search_write_set(key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -59,7 +59,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
 
-  WriteSetObj* inws{ti->search_write_set(key)};
+  write_set_obj* inws{ti->search_write_set(key)};
   if (inws != nullptr) {
     inws->reset_tuple_value(val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -98,7 +98,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               std::string_view key, std::string_view val) {
   auto* ti = static_cast<ThreadInfo*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
-  WriteSetObj* in_ws{ti->search_write_set(key)};
+  write_set_obj* in_ws{ti->search_write_set(key)};
   if (in_ws != nullptr) {
     in_ws->reset_tuple_value(val);
     return Status::WARN_WRITE_TO_LOCAL_WRITE;

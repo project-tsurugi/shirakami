@@ -199,7 +199,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
 
   Token token{};
   Storage storage{};
-  std::vector<shirakami::cc_silo_variant::OprObj> opr_set;
+  std::vector<shirakami::cc_silo_variant::opr_obj> opr_set;
   enter(token);
 
   storeRelease(ready, 1);

@@ -9,7 +9,7 @@
 
 namespace shirakami::cc_silo_variant {
 
-bool WriteSetObj::operator<(const WriteSetObj& right) const {  // NOLINT
+bool write_set_obj::operator<(const write_set_obj& right) const {  // NOLINT
   const Tuple& this_tuple = this->get_tuple(this->get_op());
   const Tuple& right_tuple = right.get_tuple(right.get_op());
 
@@ -37,7 +37,7 @@ bool WriteSetObj::operator<(const WriteSetObj& right) const {  // NOLINT
   std::abort();
 }
 
-void WriteSetObj::reset_tuple_value(std::string_view val) {
+void write_set_obj::reset_tuple_value(std::string_view val) {
   (this->get_op() == OP_TYPE::UPDATE ? this->get_tuple_to_local()
                                      : this->get_tuple_to_db())
       .get_pimpl()

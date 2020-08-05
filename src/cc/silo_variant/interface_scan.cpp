@@ -178,7 +178,7 @@ Status read_from_scan(Token token,  // NOLINT
 #elif INDEX_KOHLER_MASSTREE
   std::string_view key_view = (*itr)->get_tuple().get_key();
 #endif
-  const WriteSetObj* inws = ti->search_write_set(key_view);
+  const write_set_obj* inws = ti->search_write_set(key_view);
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
       ++scan_index;
@@ -194,7 +194,7 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  const ReadSetObj* inrs = ti->search_read_set(key_view);
+  const read_set_obj* inrs = ti->search_read_set(key_view);
   if (inrs != nullptr) {
     *tuple = const_cast<Tuple*>(&inrs->get_rec_read().get_tuple());
     ++scan_index;
@@ -202,7 +202,7 @@ Status read_from_scan(Token token,  // NOLINT
   }
 
 #ifdef INDEX_YAKUSHIMA
-  ReadSetObj rsob(std::get<0>(*itr), true, std::get<1>(*itr),
+  read_set_obj rsob(std::get<0>(*itr), true, std::get<1>(*itr),
                   std::get<2>(*itr));
   Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
 #elif INDEX_KOHLER_MASSTREE
@@ -255,10 +255,10 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
   for (auto&& itr : scan_res) {
 #ifdef INDEX_YAKUSHIMA
-    WriteSetObj* inws =
+    write_set_obj* inws =
         ti->search_write_set(std::get<0>(itr)->get_tuple().get_key());
 #elif INDEX_KOHLER_MASSTREE
-    WriteSetObj* inws = ti->search_write_set(itr->get_tuple().get_key());
+    write_set_obj* inws = ti->search_write_set(itr->get_tuple().get_key());
 #endif
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
@@ -275,9 +275,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     }
 
 #ifdef INDEX_YAKUSHIMA
-    const ReadSetObj* inrs = ti->search_read_set(std::get<0>(itr));
+    const read_set_obj* inrs = ti->search_read_set(std::get<0>(itr));
 #elif INDEX_KOHLER_MASSTREE
-    const ReadSetObj* inrs = ti->search_read_set(itr);
+    const read_set_obj* inrs = ti->search_read_set(itr);
 #endif
     if (inrs != nullptr) {
       result.emplace_back(&inrs->get_rec_read().get_tuple());
