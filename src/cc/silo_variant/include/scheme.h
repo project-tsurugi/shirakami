@@ -153,8 +153,8 @@ public:
   ReadSetObj() { this->rec_ptr = nullptr; }
 
 #ifdef INDEX_YAKUSHIMA
-  explicit ReadSetObj(const Record* rec_ptr, bool scan = false,
-                      yakushima::node_version64_body nvb = {},
+  explicit ReadSetObj(const Record* rec_ptr, bool scan = false,     // NOLINT
+                      yakushima::node_version64_body nvb = {},      // NOLINT
                       yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
       : is_scan{scan} {
     this->rec_ptr = rec_ptr;
@@ -168,8 +168,8 @@ public:
 #endif
 
   ReadSetObj(const ReadSetObj& right) = delete;
-
-  ReadSetObj(ReadSetObj&& right, bool scan = false) : is_scan{scan} {  // NOLINT
+  ReadSetObj(ReadSetObj&& right) = default;
+  ReadSetObj(ReadSetObj&& right, bool scan) : is_scan{scan} {  // NOLINT
     rec_read = std::move(right.rec_read);
     rec_ptr = right.rec_ptr;
   }
@@ -231,11 +231,11 @@ public:
 
   ~OprObj() = default;
 
-  OP_TYPE get_type() & { return type_; }  // NOLINT
-  std::string_view get_key() & {          // NOLINT
+  OP_TYPE get_type() { return type_; }  // NOLINT
+  std::string_view get_key() {          // NOLINT
     return {key_.data(), key_.size()};
   }
-  std::string_view get_value() & {  // NOLINT
+  std::string_view get_value() {  // NOLINT
     return {value_.data(), value_.size()};
   }
 

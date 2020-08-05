@@ -24,18 +24,10 @@ public:
   }
 
   Record(const Record& right) = default;
-  Record(Record&& right) {
-    tidw_ = right.tidw_;
-    tuple_ = std::move(right.tuple_);
-  }
+  Record(Record&& right) = default;
 
   Record& operator=(const Record& right) = default;  // NOLINT
-  Record& operator=(Record&& right) {                // NOLINT
-    tidw_ = right.tidw_;
-    tuple_ = std::move(right.tuple_);
-
-    return *this;
-  }
+  Record& operator=(Record&& right) = default;       // NOLINT
 
   tid_word& get_tidw() { return tidw_; }  // NOLINT
 
@@ -52,4 +44,4 @@ private:
   Tuple tuple_;
 };
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant
