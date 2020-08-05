@@ -161,13 +161,15 @@ class ReadSetObj {  // NOLINT
 public:
   ReadSetObj() { this->rec_ptr = nullptr; }
 
-  #ifdef INDEX_YAKUSHIMA
-  explicit ReadSetObj(const Record* rec_ptr, bool scan = false, yakushima::node_version64_body  nvb = {}, yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
-          : is_scan{scan} {
+#ifdef INDEX_YAKUSHIMA
+  explicit ReadSetObj(const Record* rec_ptr, bool scan = false,
+                      yakushima::node_version64_body nvb = {},
+                      yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
+      : is_scan{scan} {
     this->rec_ptr = rec_ptr;
     nv = std::make_pair(nvb, nv_ptr);
   }
-  #elif
+#elif
   explicit ReadSetObj(const Record* rec_ptr, bool scan = false)  // NOLINT
       : is_scan{scan} {
     this->rec_ptr = rec_ptr;
@@ -189,6 +191,13 @@ public:
     return *this;
   }
 
+  [[nodiscard]] bool get_is_scan() const { return is_scan; }  // NOLINT
+
+  std::pair<yakushima::node_version64_body, yakushima::node_version64*>
+  get_nv() {  // NOLINT
+    return nv;
+  }
+
   Record& get_rec_read() { return rec_read; }  // NOLINT
 
   [[nodiscard]] const Record& get_rec_read() const {  // NOLINT
@@ -204,7 +213,7 @@ public:
 private:
   Record rec_read{};
   const Record* rec_ptr{};  // ptr to database
-  bool is_scan{false}; // NOLINT
+  bool is_scan{false};      // NOLINT
 #ifdef INDEX_YAKUSHIMA
   std::pair<yakushima::node_version64_body, yakushima::node_version64*> nv{};
 #endif

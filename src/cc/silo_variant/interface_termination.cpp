@@ -76,9 +76,17 @@ Status commit(Token token) {  // NOLINT
     check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
     if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
          itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
-        check.get_absent()  // check whether it was deleted.
-        || (check.get_lock() &&
-            (ti->search_write_set(itr->get_rec_ptr()) == nullptr))) {
+        check.get_absent() ||  // check whether it was deleted.
+        (check.get_lock() &&
+         (ti->search_write_set(itr->get_rec_ptr()) == nullptr))
+#ifdef INDEX_YAKUSHIMA
+        // phantom protection
+        ||
+        (itr->get_is_scan() &&
+         (itr->get_nv().first != itr->get_nv().second->get_stable_version()))) {
+#elif INDEX_KOHLER_MASSTREE
+    ) {
+#endif
       ti->unlock_write_set();
       abort(token);
       return Status::ERR_VALIDATION;
