@@ -56,20 +56,11 @@ public:
 
   WriteSetObj(const WriteSetObj& right) = delete;
   // for std::sort
-  WriteSetObj(WriteSetObj&& right) : op_(right.op_), rec_ptr_(right.rec_ptr_) {
-    tuple_ = std::move(right.tuple_);
-  }
+  WriteSetObj(WriteSetObj&& right) = default;
 
   WriteSetObj& operator=(const WriteSetObj& right) = delete;  // NOLINT
   // for std::sort
-  WriteSetObj& operator=(WriteSetObj&& right) {  // NOLINT
-    rec_ptr_ = right.rec_ptr_;  // It must copy pointer. It can't use default
-                                // move assign operator.
-    op_ = right.op_;
-    tuple_ = std::move(right.tuple_);
-
-    return *this;  // NOLINT
-  }
+  WriteSetObj& operator=(WriteSetObj&& right) = default;  // NOLINT
 
   bool operator<(const WriteSetObj& right) const;  // NOLINT
 
