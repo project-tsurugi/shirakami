@@ -49,13 +49,19 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
       l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
       right_key.size(), r_exclusive, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
-  std::vector<std::pair<Record**, std::size_t> > scan_res;
+  std::vector<std::pair<Record**, std::size_t>> scan_res;
+  std::vector<
+      std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
+      nvec;
   yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
-                                 right_key, r_exclusive, scan_res);
-  std::vector<const Record*> scan_buf;
+                                 right_key, r_exclusive, scan_res, &nvec);
+  std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                         yakushima::node_version64*>>
+      scan_buf;
   scan_buf.reserve(scan_res.size());
-  for (auto&& elem : scan_res) {
-    scan_buf.emplace_back((*elem.first));
+  for (std::size_t i = 0; i < scan_res.size(); ++i) {
+    scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first,
+                          nvec.at(i).second);
   }
 #endif
 
@@ -111,11 +117,18 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_INVALID_HANDLE;
   }
 
+#ifdef INDEX_YAKUSHIMA
+  std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                         yakushima::node_version64*>>& scan_buf =
+      ti->get_scan_cache()[handle];
+  std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+#elif INDEX_KOHLER_MASSTREE
   std::vector<const Record*>& scan_buf = ti->get_scan_cache()[handle];
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+#endif
 
   if (scan_buf.size() == scan_index) {
-    const Tuple* tupleptr(&scan_buf.back()->get_tuple());
+    const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> new_scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
@@ -127,15 +140,21 @@ Status read_from_scan(Token token,  // NOLINT
         ti->get_len_rkey()[handle], ti->get_r_exclusive()[handle],
         &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
-    std::vector<std::pair<Record**, std::size_t> > scan_res;
+    std::vector<std::pair<Record**, std::size_t>> scan_res;
+    std::vector<
+        std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
+        nvec;
     yakushima::yakushima_kvs::scan(  // NOLINT
         {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
         {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
-        ti->get_r_exclusive()[handle], scan_res);
-    std::vector<const Record*> new_scan_buf;
+        ti->get_r_exclusive()[handle], scan_res, &nvec);
+    std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                           yakushima::node_version64*>>
+        new_scan_buf;
     new_scan_buf.reserve(scan_res.size());
-    for (auto&& elem : scan_res) {
-      new_scan_buf.emplace_back((*elem.first));
+    for (std::size_t i = 0; i < scan_res.size(); ++i) {
+      new_scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first,
+                                nvec.at(i).second);
     }
 #endif
 
@@ -154,7 +173,11 @@ Status read_from_scan(Token token,  // NOLINT
   }
 
   auto itr = scan_buf.begin() + scan_index;
+#ifdef INDEX_YAKUSHIMA
+  std::string_view key_view = std::get<0>(*itr)->get_tuple().get_key();
+#elif INDEX_KOHLER_MASSTREE
   std::string_view key_view = (*itr)->get_tuple().get_key();
+#endif
   const WriteSetObj* inws = ti->search_write_set(key_view);
   if (inws != nullptr) {
     if (inws->get_op() == OP_TYPE::DELETE) {
@@ -178,8 +201,14 @@ Status read_from_scan(Token token,  // NOLINT
     return Status::WARN_READ_FROM_OWN_OPERATION;
   }
 
-  ReadSetObj rsob(*itr);
+#ifdef INDEX_YAKUSHIMA
+  ReadSetObj rsob(std::get<0>(*itr), true, std::get<1>(*itr),
+                  std::get<2>(*itr));
+  Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
+#elif INDEX_KOHLER_MASSTREE
+  ReadSetObj rsob(*itr, true);
   Status rr = read_record(rsob.get_rec_read(), *itr);
+#endif
   if (rr != Status::OK) {
     return rr;
   }
@@ -208,18 +237,29 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
       l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
       right_key.size(), r_exclusive, &scan_res, false);
 #elif INDEX_YAKUSHIMA
-  std::vector<std::pair<Record**, std::size_t> > scan_buf;
+  std::vector<std::pair<Record**, std::size_t>> scan_buf;
+  std::vector<
+      std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
+      nvec;
   yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
-                                 right_key, r_exclusive, scan_buf);
-  std::vector<const Record*> scan_res;
+                                 right_key, r_exclusive, scan_buf, &nvec);
+  std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                         yakushima::node_version64*>>
+      scan_res;
   scan_res.reserve(scan_buf.size());
-  for (auto&& elem : scan_buf) {
-    scan_res.emplace_back((*elem.first));
+  for (std::size_t i = 0; i < scan_buf.size(); ++i) {
+    scan_res.emplace_back(*scan_buf.at(i).first, nvec.at(i).first,
+                          nvec.at(i).second);
   }
 #endif
 
   for (auto&& itr : scan_res) {
+#ifdef INDEX_YAKUSHIMA
+    WriteSetObj* inws =
+        ti->search_write_set(std::get<0>(itr)->get_tuple().get_key());
+#elif INDEX_KOHLER_MASSTREE
     WriteSetObj* inws = ti->search_write_set(itr->get_tuple().get_key());
+#endif
     if (inws != nullptr) {
       if (inws->get_op() == OP_TYPE::DELETE) {
         return Status::WARN_ALREADY_DELETE;
@@ -234,7 +274,11 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
       continue;
     }
 
+#ifdef INDEX_YAKUSHIMA
+    const ReadSetObj* inrs = ti->search_read_set(std::get<0>(itr));
+#elif INDEX_KOHLER_MASSTREE
     const ReadSetObj* inrs = ti->search_read_set(itr);
+#endif
     if (inrs != nullptr) {
       result.emplace_back(&inrs->get_rec_read().get_tuple());
       continue;
@@ -245,9 +289,16 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // Because in herbrand semantics, the read reads last update even if the
     // update is own.
 
-    ti->get_read_set().emplace_back(const_cast<Record*>(itr));
+#ifdef INDEX_YAKUSHIMA
+    ti->get_read_set().emplace_back(const_cast<Record*>(std::get<0>(itr)), true,
+                                    std::get<1>(itr), std::get<2>(itr));
+    Status rr = read_record(ti->get_read_set().back().get_rec_read(),
+                            const_cast<Record*>(std::get<0>(itr)));
+#elif INDEX_KOHLER_MASSTREE
+    ti->get_read_set().emplace_back(const_cast<Record*>(itr), true);
     Status rr = read_record(ti->get_read_set().back().get_rec_read(),
                             const_cast<Record*>(itr));
+#endif
     if (rr != Status::OK) {
       return rr;
     }

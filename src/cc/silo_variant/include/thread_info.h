@@ -88,10 +88,19 @@ public:
       return rkey_;
     }
 
-    [[maybe_unused]] std::map<ScanHandle, std::vector<const Record*>>&
+#ifdef INDEX_YAKUSHIMA
+    [[maybe_unused]] std::map<
+        ScanHandle,
+        std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                               yakushima::node_version64*>>>&
     get_scan_cache() {  // NOLINT
       return scan_cache_;
     }
+#elif INDEX_KOHLER_MASSTREE
+    std::map<ScanHandle, std::vector<const Record*>> get_scan_cache() {
+      return scan_cache_;
+    }
+#endif
 
     [[maybe_unused]] std::map<ScanHandle, std::size_t>&
     get_scan_cache_itr() {  // NOLINT
@@ -102,7 +111,15 @@ public:
     std::map<ScanHandle, std::size_t> len_rkey_{};
     std::map<ScanHandle, bool> r_exclusive_{};
     std::map<ScanHandle, std::unique_ptr<char[]>> rkey_{};  // NOLINT
+#ifdef INDEX_YAKUSHIMA
+    std::map<
+        ScanHandle,
+        std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                               yakushima::node_version64*>>>
+        scan_cache_{};
+#elif INDEX_KOHLER_MASSTREE
     std::map<ScanHandle, std::vector<const Record*>> scan_cache_{};
+#endif
     std::map<ScanHandle, std::size_t> scan_cache_itr_{};
   };
 
@@ -125,7 +142,7 @@ public:
     Log::LogHeader latest_log_header_{};
   };
 
-  explicit ThreadInfo(const Token token) {
+  explicit ThreadInfo(Token token) {
     this->token_ = token;
     get_mrctid().reset();
   }
@@ -188,7 +205,7 @@ public:
   }
 
 #ifdef INDEX_YAKUSHIMA
-  [[nodiscard]] yakushima::Token get_yakushima_token() {
+  [[nodiscard]] yakushima::Token get_yakushima_token() {  // NOLINT
     return yakushima_token_;
   }
 #endif
@@ -215,10 +232,19 @@ public:
     return read_set;
   }
 
+#ifdef INDEX_YAKUSHIMA
+  std::map<ScanHandle,
+           std::vector<std::tuple<const Record*, yakushima::node_version64_body,
+                                  yakushima::node_version64*>>>&
+  get_scan_cache() {  // NOLINT
+    return scan_handle_.get_scan_cache();
+  }
+#elif INDEX_KOHLER_MASSTREE
   std::map<ScanHandle, std::vector<const Record*>>&
   get_scan_cache() {  // NOLINT
     return scan_handle_.get_scan_cache();
   }
+#endif
 
   std::map<ScanHandle, std::size_t>& get_scan_cache_itr() {  // NOLINT
     return scan_handle_.get_scan_cache_itr();
