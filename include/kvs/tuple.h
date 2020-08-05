@@ -20,8 +20,8 @@ public:
         std::size_t val_length);
   Tuple(const Tuple& right);
   Tuple(Tuple&& right);
-  Tuple& operator=(const Tuple& right) &;  // NOLINT
-  Tuple& operator=(Tuple&& right) &;       // NOLINT
+  Tuple& operator=(const Tuple& right);  // NOLINT
+  Tuple& operator=(Tuple&& right);       // NOLINT
 
   [[nodiscard]] std::string_view get_key() const&;    // NOLINT
   [[nodiscard]] std::string_view get_value() const&;  // NOLINT
