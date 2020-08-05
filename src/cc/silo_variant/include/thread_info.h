@@ -170,7 +170,7 @@ public:
 
   [[maybe_unused]] void display_write_set();
 
-  bool cas_visible(bool& expected, bool& desired) & {  // NOLINT
+  bool cas_visible(bool& expected, bool& desired) {  // NOLINT
     return visible_.compare_exchange_strong(expected, desired,
                                             std::memory_order_acq_rel);
   }
@@ -187,7 +187,7 @@ public:
 
   void gc_records_and_values() const;
 
-  [[nodiscard]] epoch::epoch_t get_epoch() const& {  // NOLINT
+  [[nodiscard]] epoch::epoch_t get_epoch() const {  // NOLINT
     return epoch_.load(std::memory_order_acquire);
   }
 
@@ -218,7 +218,7 @@ public:
     return log_handle_.get_log_set();
   }
 
-  tid_word& get_mrctid() & { return mrc_tid_; }  // NOLINT
+  tid_word& get_mrctid() { return mrc_tid_; }  // NOLINT
 
   std::map<ScanHandle, bool>& get_r_exclusive() {  // NOLINT
     return scan_handle_.get_r_exclusive_();
@@ -250,19 +250,19 @@ public:
     return scan_handle_.get_scan_cache_itr();
   }
 
-  [[maybe_unused]] Token& get_token() & { return token_; }  // NOLINT
+  [[maybe_unused]] Token& get_token() { return token_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const Token& get_token() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const Token& get_token() const {  // NOLINT
     return token_;
   }
 
-  bool& get_txbegan() & { return tx_began_; }  // NOLINT
+  bool& get_txbegan() { return tx_began_; }  // NOLINT
 
-  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const& {  // NOLINT
+  [[maybe_unused]] [[nodiscard]] const bool& get_txbegan() const {  // NOLINT
     return tx_began_;
   }  // NOLINT
 
-  [[nodiscard]] bool get_visible() const& {  // NOLINT
+  [[nodiscard]] bool get_visible() const {  // NOLINT
     return visible_.load(std::memory_order_acquire);
   }
 
@@ -336,9 +336,9 @@ public:
    */
   void wal(uint64_t commit_id);
 
-  [[maybe_unused]] void set_token(Token token) & { token_ = token; }
+  [[maybe_unused]] void set_token(Token token) { token_ = token; }
 
-  void set_epoch(epoch::epoch_t epoch) & {
+  void set_epoch(epoch::epoch_t epoch) {
     epoch_.store(epoch, std::memory_order_release);
   }
 
@@ -361,11 +361,11 @@ public:
   }
 #endif
 
-  void set_mrc_tid(const tid_word& tid) & { mrc_tid_ = tid; }
+  void set_mrc_tid(const tid_word& tid) { mrc_tid_ = tid; }
 
-  void set_tx_began(bool tf) & { tx_began_ = tf; }
+  void set_tx_began(bool tf) { tx_began_ = tf; }
 
-  void set_visible(bool visible) & {
+  void set_visible(bool visible) {
     visible_.store(visible, std::memory_order_release);
   }
 

@@ -24,40 +24,40 @@ public:
     /**
      * @brief Adds the argument to @var LogHeader::checksum_.
      */
-    void add_checksum(int add) &;
+    void add_checksum(int add);
 
     /**
      * @brief Computing check sum.
      * @details Compute the two's complement of the checksum.
      */
-    void compute_two_complement_of_checksum() &;
+    void compute_two_complement_of_checksum();
 
     /**
      * @brief Gets the value of @var LogHeader::checksum_.
      */
-    [[nodiscard]] unsigned int get_checksum() const&;  // NOLINT
+    [[nodiscard]] unsigned int get_checksum() const;  // NOLINT
 
     /**
      * @brief Gets the value of @var LogHeader::log_rec_num_.
      */
-    [[nodiscard]] unsigned int get_log_rec_num() const&;  // NOLINT
+    [[nodiscard]] unsigned int get_log_rec_num() const;  // NOLINT
 
     /**
      * @brief Adds the one to @var LogHeader::log_rec_num_.
      */
-    void inc_log_rec_num() &;
+    void inc_log_rec_num();
 
     /**
      * @brief Initialization
      * @details Initialize members with 0.
      */
-    void init() &;
+    void init();
 
     /**
      * @brief Sets @a LogHeader::checksum_ to the argument.
      * @param checksum
      */
-    void set_checksum(unsigned int checksum) &;
+    void set_checksum(unsigned int checksum);
 
   private:
     unsigned int checksum_{};
@@ -79,19 +79,19 @@ public:
     /**
      * @brief Compute checksum.
      */
-    unsigned int compute_checksum() &;  // NOLINT
+    unsigned int compute_checksum();  // NOLINT
 
-    tid_word& get_tid() & { return tid_; }  // NOLINT
+    tid_word& get_tid() { return tid_; }  // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] const tid_word& get_tid() const& {  // NOLINT
+    [[maybe_unused]] [[nodiscard]] const tid_word& get_tid() const {  // NOLINT
       return tid_;
     }
 
-    [[nodiscard]] const Tuple* get_tuple() const& { return tuple_; }  // NOLINT
+    [[nodiscard]] const Tuple* get_tuple() const { return tuple_; }  // NOLINT
 
-    OP_TYPE& get_op() & { return op_; }  // NOLINT
+    OP_TYPE& get_op() { return op_; }  // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] const OP_TYPE& get_op() const& {  // NOLINT
+    [[maybe_unused]] [[nodiscard]] const OP_TYPE& get_op() const {  // NOLINT
       return op_;
     }
 
@@ -117,4 +117,4 @@ private:
   static inline std::string kLogDirectory{};  // NOLINT
 };
 
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

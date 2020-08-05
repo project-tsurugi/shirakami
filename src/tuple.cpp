@@ -81,11 +81,11 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) {  // NOLINT
   return *this;
 }
 
-[[nodiscard]] std::string_view Tuple::Impl::get_key() const& {  // NOLINT
+[[nodiscard]] std::string_view Tuple::Impl::get_key() const{  // NOLINT
   return std::string_view{key_.data(), key_.size()};
 }
 
-[[nodiscard]] std::string_view Tuple::Impl::get_value() const& {  // NOLINT
+[[nodiscard]] std::string_view Tuple::Impl::get_value() const{  // NOLINT
   if (need_delete_pvalue_) {
     // common subexpression elimination
     std::string* value = pvalue_.load(std::memory_order_acquire);
@@ -94,14 +94,14 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) {  // NOLINT
   return {};
 }
 
-void Tuple::Impl::reset() & {
+void Tuple::Impl::reset() {
   if (need_delete_pvalue_) {
     delete pvalue_.load(std::memory_order_acquire);  // NOLINT
   }
 }
 
 void Tuple::Impl::set(const char* key_ptr, std::size_t key_length,
-                      const char* value_ptr, std::size_t value_length) & {
+                      const char* value_ptr, std::size_t value_length) {
   key_.assign(key_ptr, key_length);
   if (need_delete_pvalue_) {
     delete pvalue_.load(std::memory_order_acquire);  // NOLINT
@@ -113,11 +113,11 @@ void Tuple::Impl::set(const char* key_ptr, std::size_t key_length,
 }
 
 [[maybe_unused]] void Tuple::Impl::set_key(const char* key_ptr,
-                                           std::size_t key_length) & {
+                                           std::size_t key_length) {
   key_.assign(key_ptr, key_length);
 }
 
-void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length) & {
+void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length) {
   if (this->need_delete_pvalue_) {
     pvalue_.load(std::memory_order_acquire)->assign(value_ptr, value_length);
   } else {
@@ -128,7 +128,7 @@ void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length) & {
 }
 
 void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length,
-                            std::string** old_value) & {
+                            std::string** old_value) {
   if (this->need_delete_pvalue_) {
     *old_value = pvalue_.load(std::memory_order_acquire);
   } else {
@@ -165,13 +165,13 @@ Tuple& Tuple::operator=(Tuple&& right) {  // NOLINT
   return *this;
 }
 
-std::string_view Tuple::get_key() const& {  // NOLINT
+std::string_view Tuple::get_key() const{  // NOLINT
   return pimpl_->get_key();
 }
 
-std::string_view Tuple::get_value() const& {  // NOLINT
+std::string_view Tuple::get_value() const{  // NOLINT
   return pimpl_->get_value();
 }
 
-Tuple::Impl* Tuple::get_pimpl() & { return pimpl_.get(); }  // NOLINT
+Tuple::Impl* Tuple::get_pimpl() { return pimpl_.get(); }  // NOLINT
 }  // namespace shirakami
