@@ -42,7 +42,7 @@ if (ENABLE_COVERAGE)
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-    add_definitions(-DKVS_Linux)
+    add_definitions(-DSHIRAKAMI_LINUX)
 endif ()
 
 set(cc_set 0)

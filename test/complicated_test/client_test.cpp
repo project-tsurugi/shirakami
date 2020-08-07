@@ -139,9 +139,9 @@ static void test_delete(Token token, std::size_t thnm) {
 }
 
 static void test_single_operation(Token token, std::size_t thnm) {
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
   setThreadAffinity(0);
-#endif
+#endif  // SHIRAKAMI_LINUX
   test_insert(token, thnm);
   test_search(token, thnm);
   test_update(token, thnm);

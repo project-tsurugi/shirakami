@@ -19,7 +19,7 @@ namespace shirakami {
 Status kohler_masstree::insert_record(char const* key,  // NOLINT
                                       std::size_t len_key,
                                       cc_silo_variant::Record* record) {
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
   int core_pos = sched_getcpu();
   if (core_pos == -1) {
     std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
@@ -28,12 +28,12 @@ Status kohler_masstree::insert_record(char const* key,  // NOLINT
   }
   cpu_set_t current_mask = getThreadAffinity();
   setThreadAffinity(core_pos);
-#endif  // KVS_Linux
+#endif  // SHIRAKAMI_LINUX
   masstree_wrapper<cc_silo_variant::Record>::thread_init(sched_getcpu());
   Status insert_result(MTDB.insert_value(key, len_key, record));
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
   setThreadAffinity(current_mask);
-#endif  // KVS_Linux
+#endif  // SHIRAKAMI_LINUX
   return insert_result;
 }
 

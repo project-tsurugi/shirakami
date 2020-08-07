@@ -22,9 +22,9 @@
 
 #include "error.h"
 
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
 #include <linux/fs.h>
-#endif  // KVS_Linux
+#endif  // SHIRAKAMI_LINUX
 
 namespace shirakami {
 
@@ -127,13 +127,13 @@ public:
     }
   }
 
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
   [[maybe_unused]] void fdatasync() const {
     if (::fdatasync(fd()) < 0) {
       throw LibcError(errno, "fdsync failed: ");  // NOLINT
     }
   }
-#endif  // KVS_Linux
+#endif  // SHIRAKAMI_LINUX
 
   [[maybe_unused]] void fsync() const {
     if (::fsync(fd()) < 0) {
@@ -215,4 +215,4 @@ template <typename String>
   logpath += "/log/log" + std::to_string(thid);
 }
 
-} // namespace shirakami
+}  // namespace shirakami

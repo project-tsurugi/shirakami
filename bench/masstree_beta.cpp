@@ -129,7 +129,7 @@ void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
   Result& myres = std::ref(res[thid]);
 
   // this function can be used in Linux environment only.
-#ifdef KVS_Linux
+#ifdef SHIRAKAMI_LINUX
   setThreadAffinity(static_cast<const int>(thid));
 #endif
 
