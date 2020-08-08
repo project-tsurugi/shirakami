@@ -5,7 +5,7 @@
 #include "cc/silo_variant//include/interface_helper.h"
 
 #include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/thread_info_table.h"
+#include "cc/silo_variant/include/session_info_table.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
@@ -16,7 +16,7 @@
 namespace shirakami::cc_silo_variant {
 
 Status enter(Token& token) {  // NOLINT
-  Status ret_status = thread_info_table::decide_token(token);
+  Status ret_status = session_info_table::decide_token(token);
 #ifdef INDEX_YAKUSHIMA
   yakushima::Token kvs_token{};
   yakushima::yakushima_kvs::enter(kvs_token);
@@ -32,7 +32,7 @@ void fin() {
   // Stop DB operation.
   epoch::set_epoch_thread_end(true);
   epoch::join_epoch_thread();
-  thread_info_table::fin_kThreadTable();
+  session_info_table::fin_kThreadTable();
 
 #ifdef INDEX_YAKUSHIMA
   yakushima::yakushima_kvs::fin();
@@ -72,7 +72,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
    * If it already exists log files, it recoveries from those.
    */
   // single_recovery_from_log();
-  thread_info_table::init_kThreadTable();
+  session_info_table::init_kThreadTable();
   epoch::invoke_epocher();
 #ifdef INDEX_YAKUSHIMA
   yakushima::yakushima_kvs::init();
@@ -82,7 +82,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
 }
 
 Status leave(Token token) {  // NOLINT
-  for (auto&& itr : thread_info_table::get_thread_info_table()) {
+  for (auto&& itr : session_info_table::get_thread_info_table()) {
     if (&itr == static_cast<session_info*>(token)) {
       if (itr.get_visible()) {
 #ifdef INDEX_YAKUSHIMA

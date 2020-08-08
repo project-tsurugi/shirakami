@@ -1,16 +1,16 @@
 /**
- * @file thread_info_table.cpp
+ * @file session_info_table.cpp
  * @brief about entire shirakami.
  */
 
-#include "cc/silo_variant/include/thread_info_table.h"
+#include "cc/silo_variant/include/session_info_table.h"
 
 #include "cc/silo_variant/include/garbage_collection.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 
-Status thread_info_table::decide_token(Token& token) {  // NOLINT
+Status session_info_table::decide_token(Token& token) {  // NOLINT
   for (auto&& itr : kThreadTable) {
     if (!itr.get_visible()) {
       bool expected(false);
@@ -26,7 +26,7 @@ Status thread_info_table::decide_token(Token& token) {  // NOLINT
   return Status::OK;
 }
 
-void thread_info_table::init_kThreadTable() {
+void session_info_table::init_kThreadTable() {
   uint64_t ctr(0);
   for (auto&& itr : kThreadTable) {
     itr.set_visible(false);
@@ -62,7 +62,7 @@ void thread_info_table::init_kThreadTable() {
   }
 }
 
-void thread_info_table::fin_kThreadTable() {
+void session_info_table::fin_kThreadTable() {
   for (auto&& itr : kThreadTable) {
     /**
      * about holding operation info.

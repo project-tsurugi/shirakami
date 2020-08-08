@@ -29,7 +29,7 @@
 // shirakami/src/include
 #include "atomic_wrapper.h"
 #ifdef CC_SILO_VARIANT
-#include "cc/silo_variant/include/thread_info.h"
+#include "cc/silo_variant/include/session_info.h"
 #endif  // CC_SILO_VARIANT
 #include "clock.h"
 #include "cpu.h"

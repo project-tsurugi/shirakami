@@ -1,5 +1,5 @@
 /**
- * @file thread_info_table.h
+ * @file session_info_table.h
  * @brief core work about shirakami.
  */
 
@@ -7,11 +7,11 @@
 
 #include <array>
 
-#include "thread_info.h"
+#include "session_info.h"
 
 namespace shirakami::cc_silo_variant {
 
-class thread_info_table {
+class session_info_table {
 public:
   /**
    * @brief Check wheter the session is already started. This function is not

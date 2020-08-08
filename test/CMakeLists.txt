@@ -14,7 +14,7 @@
 file(GLOB TEST_SOURCES
         "cc/silo_variant/log_test.cpp"
         "cc/silo_variant/record_test.cpp"
-        "cc/silo_variant/thread_info_test.cpp"
+        "cc/silo_variant/session_info_test.cpp"
         "cc/silo_variant/tid_test.cpp"
         "clock_test.cpp"
         "complicated_test/client_test.cpp"

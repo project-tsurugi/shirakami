@@ -3,7 +3,7 @@
  * @brief about scheme
  */
 
-#include "include/thread_info.h"
+#include "include/session_info.h"
 
 #include "cc/silo_variant/include/garbage_collection.h"
 #ifdef INDEX_KOHLER_MASSTREE

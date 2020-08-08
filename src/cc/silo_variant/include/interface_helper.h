@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "thread_info.h"
+#include "session_info.h"
 
 namespace shirakami::cc_silo_variant {
 

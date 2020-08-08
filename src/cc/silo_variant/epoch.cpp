@@ -7,7 +7,7 @@
 
 #include <xmmintrin.h>  // NOLINT
 
-#include "cc/silo_variant/include/thread_info_table.h"
+#include "cc/silo_variant/include/session_info_table.h"
 #include "clock.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
@@ -28,7 +28,7 @@ void atomic_add_global_epoch() {
 bool check_epoch_loaded() {  // NOLINT
   uint64_t curEpoch = load_acquire_global_epoch();
 
-  for (auto&& itr : thread_info_table::get_thread_info_table()) {  // NOLINT
+  for (auto&& itr : session_info_table::get_thread_info_table()) {  // NOLINT
     if (itr.get_visible() && itr.get_epoch() != curEpoch) {
       return false;
     }

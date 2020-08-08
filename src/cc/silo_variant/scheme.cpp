@@ -4,7 +4,7 @@
  */
 
 #include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/thread_info.h"
+#include "cc/silo_variant/include/session_info.h"
 #include "include/tuple_local.h"
 
 namespace shirakami::cc_silo_variant {
