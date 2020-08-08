@@ -13,7 +13,7 @@
 namespace shirakami::cc_silo_variant {
 
 Status abort(Token token) {  // NOLINT
-  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
+  auto* ti = static_cast<cc_silo_variant::session_info*>(token);
 #if defined(INDEX_KOHLER_MASSTREE) || defined(INDEX_YAKUSHIMA)
   ti->remove_inserted_records_of_write_set_from_masstree();
 #endif
@@ -25,7 +25,7 @@ Status abort(Token token) {  // NOLINT
 }
 
 Status commit(Token token) {  // NOLINT
-  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
+  auto* ti = static_cast<cc_silo_variant::session_info*>(token);
   cc_silo_variant::tid_word max_rset;
   cc_silo_variant::tid_word max_wset;
 

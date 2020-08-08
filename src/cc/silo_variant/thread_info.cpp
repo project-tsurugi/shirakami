@@ -13,12 +13,12 @@
 
 namespace shirakami::cc_silo_variant {
 
-void ThreadInfo::clean_up_ops_set() {
+void session_info::clean_up_ops_set() {
   read_set.clear();
   write_set.clear();
 }
 
-void ThreadInfo::clean_up_scan_caches() {
+void session_info::clean_up_scan_caches() {
   scan_handle_.get_scan_cache().clear();
   scan_handle_.get_scan_cache_itr().clear();
   scan_handle_.get_rkey().clear();
@@ -26,9 +26,9 @@ void ThreadInfo::clean_up_scan_caches() {
   scan_handle_.get_r_exclusive_().clear();
 }
 
-[[maybe_unused]] void ThreadInfo::display_read_set() {
+[[maybe_unused]] void session_info::display_read_set() {
   std::cout << "==========" << std::endl;
-  std::cout << "start : ThreadInfo::display_read_set()" << std::endl;
+  std::cout << "start : session_info::display_read_set()" << std::endl;
   std::size_t ctr(1);
   for (auto&& itr : read_set) {
     std::cout << "Element #" << ctr << " of read set." << std::endl;
@@ -50,9 +50,9 @@ void ThreadInfo::clean_up_scan_caches() {
   std::cout << "==========" << std::endl;
 }
 
-[[maybe_unused]] void ThreadInfo::display_write_set() {
+[[maybe_unused]] void session_info::display_write_set() {
   std::cout << "==========" << std::endl;
-  std::cout << "start : ThreadInfo::display_write_set()" << std::endl;
+  std::cout << "start : session_info::display_write_set()" << std::endl;
   std::size_t ctr(1);
   for (auto&& itr : write_set) {
     std::cout << "Element #" << ctr << " of write set." << std::endl;
@@ -72,7 +72,7 @@ void ThreadInfo::clean_up_scan_caches() {
   std::cout << "==========" << std::endl;
 }
 
-Status ThreadInfo::check_delete_after_write(std::string_view key) {  // NOLINT
+Status session_info::check_delete_after_write(std::string_view key) {  // NOLINT
   for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
     // It can't use lange-based for because it use write_set.erase.
     std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
@@ -86,7 +86,7 @@ Status ThreadInfo::check_delete_after_write(std::string_view key) {  // NOLINT
   return Status::OK;
 }
 
-void ThreadInfo::gc_records_and_values() const {
+void session_info::gc_records_and_values() const {
   // for records
   {
     std::mutex& mutex_for_gc_list =
@@ -125,7 +125,7 @@ void ThreadInfo::gc_records_and_values() const {
   }
 }
 
-void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
+void session_info::remove_inserted_records_of_write_set_from_masstree() {
   for (auto&& itr : write_set) {
     if (itr.get_op() == OP_TYPE::INSERT) {
       Record* record = itr.get_rec_ptr();
@@ -156,7 +156,7 @@ void ThreadInfo::remove_inserted_records_of_write_set_from_masstree() {
   }
 }
 
-read_set_obj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
+read_set_obj* session_info::search_read_set(std::string_view key) {  // NOLINT
   for (auto&& itr : read_set) {
     const std::string_view key_view = itr.get_rec_ptr()->get_tuple().get_key();
     if (key_view.size() == key.size() &&
@@ -167,7 +167,7 @@ read_set_obj* ThreadInfo::search_read_set(std::string_view key) {  // NOLINT
   return nullptr;
 }
 
-read_set_obj* ThreadInfo::search_read_set(  // NOLINT
+read_set_obj* session_info::search_read_set(  // NOLINT
     const Record* const rec_ptr) {
   for (auto&& itr : read_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
@@ -176,7 +176,7 @@ read_set_obj* ThreadInfo::search_read_set(  // NOLINT
   return nullptr;
 }
 
-write_set_obj* ThreadInfo::search_write_set(std::string_view key) {
+write_set_obj* session_info::search_write_set(std::string_view key) {
   for (auto&& itr : write_set) {
     const Tuple* tuple;  // NOLINT
     if (itr.get_op() == OP_TYPE::UPDATE) {
@@ -194,7 +194,7 @@ write_set_obj* ThreadInfo::search_write_set(std::string_view key) {
   return nullptr;
 }
 
-const write_set_obj* ThreadInfo::search_write_set(  // NOLINT
+const write_set_obj* session_info::search_write_set(  // NOLINT
     const Record* rec_ptr) {
   for (auto& itr : write_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
@@ -203,7 +203,7 @@ const write_set_obj* ThreadInfo::search_write_set(  // NOLINT
   return nullptr;
 }
 
-void ThreadInfo::unlock_write_set() {
+void session_info::unlock_write_set() {
   tid_word expected{};
   tid_word desired{};
 
@@ -216,7 +216,7 @@ void ThreadInfo::unlock_write_set() {
   }
 }
 
-void ThreadInfo::unlock_write_set(  // NOLINT
+void session_info::unlock_write_set(  // NOLINT
     std::vector<write_set_obj>::iterator begin,
     std::vector<write_set_obj>::iterator end) {
   tid_word expected;
@@ -230,7 +230,7 @@ void ThreadInfo::unlock_write_set(  // NOLINT
   }
 }
 
-void ThreadInfo::wal(uint64_t commit_id) {
+void session_info::wal(uint64_t commit_id) {
   for (auto&& itr : write_set) {
     if (itr.get_op() == OP_TYPE::UPDATE) {
       log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(),

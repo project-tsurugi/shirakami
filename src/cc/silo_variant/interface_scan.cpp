@@ -15,7 +15,7 @@ namespace shirakami::cc_silo_variant {
 
 Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   ScanHandle handle) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
 
   auto itr = ti->get_scan_cache().find(handle);
   if (itr == ti->get_scan_cache().end()) {
@@ -38,7 +38,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                  std::string_view left_key, bool l_exclusive,
                  std::string_view right_key, bool r_exclusive,
                  ScanHandle& handle) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
@@ -108,7 +108,7 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 Status read_from_scan(Token token,  // NOLINT
                       [[maybe_unused]] Storage storage, ScanHandle handle,
                       Tuple** tuple) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
     /**
@@ -223,7 +223,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                 std::string_view left_key, bool l_exclusive,
                 std::string_view right_key, bool r_exclusive,
                 std::vector<const Tuple*>& result) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   // as a precaution
   result.clear();
@@ -317,7 +317,7 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 [[maybe_unused]] Status scannable_total_index_size(  // NOLINT
     Token token,                                     // NOLINT
     [[maybe_unused]] Storage storage, ScanHandle& handle, std::size_t& size) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif

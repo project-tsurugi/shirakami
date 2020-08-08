@@ -20,7 +20,7 @@ Status enter(Token& token) {  // NOLINT
 #ifdef INDEX_YAKUSHIMA
   yakushima::Token kvs_token{};
   yakushima::yakushima_kvs::enter(kvs_token);
-  static_cast<ThreadInfo*>(token)->set_kvs_token(kvs_token);
+  static_cast<session_info*>(token)->set_kvs_token(kvs_token);
 #endif
   return ret_status;
 }
@@ -83,11 +83,11 @@ Status init(std::string_view log_directory_path) {  // NOLINT
 
 Status leave(Token token) {  // NOLINT
   for (auto&& itr : thread_info_table::get_thread_info_table()) {
-    if (&itr == static_cast<ThreadInfo*>(token)) {
+    if (&itr == static_cast<session_info*>(token)) {
       if (itr.get_visible()) {
 #ifdef INDEX_YAKUSHIMA
         yakushima::yakushima_kvs::leave(
-            static_cast<ThreadInfo*>(token)->get_yakushima_token());
+            static_cast<session_info*>(token)->get_yakushima_token());
 #endif
         itr.set_visible(false);
         return Status::OK;
@@ -99,7 +99,7 @@ Status leave(Token token) {  // NOLINT
 }
 
 void tx_begin(Token token) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   ti->set_tx_began(true);
   ti->set_epoch(epoch::load_acquire_global_epoch());
 }
@@ -134,7 +134,7 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
   return Status::OK;
 }
 
-void write_phase(ThreadInfo* ti, const tid_word& max_r_set,
+void write_phase(session_info* ti, const tid_word& max_r_set,
                  const tid_word& max_w_set) {
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());

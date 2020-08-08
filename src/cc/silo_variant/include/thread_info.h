@@ -38,7 +38,7 @@
 
 namespace shirakami::cc_silo_variant {
 
-class ThreadInfo {
+class session_info {
 public:
   class gc_handler {
   public:
@@ -142,12 +142,12 @@ public:
     Log::LogHeader latest_log_header_{};
   };
 
-  explicit ThreadInfo(Token token) {
+  explicit session_info(Token token) {
     this->token_ = token;
     get_mrctid().reset();
   }
 
-  ThreadInfo() {
+  session_info() {
     this->visible_.store(false, std::memory_order_release);
     get_mrctid().reset();
     log_handle_.set_log_dir(MAC2STR(PROJECT_ROOT));

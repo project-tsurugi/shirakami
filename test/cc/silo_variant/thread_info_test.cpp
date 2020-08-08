@@ -24,7 +24,7 @@ TEST_F(thread_info, get_txbegan_) {  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   Storage st{};
-  auto* ti = static_cast<ThreadInfo*>(s);
+  auto* ti = static_cast<session_info*>(s);
   ASSERT_EQ(ti->get_txbegan(), false);
   // test upsert
   ASSERT_EQ(Status::OK, upsert(s, st, k, v));

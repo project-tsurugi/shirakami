@@ -24,7 +24,7 @@ public:
    */
   static void fin_kThreadTable();
 
-  static std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS>&
+  static std::array<session_info, KVS_MAX_PARALLEL_THREADS>&
   get_thread_info_table() {  // NOLINT
     return kThreadTable;
   }
@@ -35,7 +35,7 @@ public:
   static void init_kThreadTable();
 
 private:
-  static inline std::array<ThreadInfo, KVS_MAX_PARALLEL_THREADS>  // NOLINT
+  static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS>  // NOLINT
       kThreadTable;                                               // NOLINT
 };
 

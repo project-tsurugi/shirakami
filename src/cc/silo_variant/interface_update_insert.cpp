@@ -19,7 +19,7 @@ namespace shirakami::cc_silo_variant {
 
 Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               std::string_view key, std::string_view val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   write_set_obj* inws{ti->search_write_set(key)};
   if (inws != nullptr) {
@@ -56,7 +56,7 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
               std::string_view key, std::string_view val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
 
   write_set_obj* inws{ti->search_write_set(key)};
@@ -96,7 +96,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
 
 Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
               std::string_view key, std::string_view val) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   write_set_obj* in_ws{ti->search_write_set(key)};
   if (in_ws != nullptr) {

@@ -20,7 +20,7 @@ namespace shirakami::cc_silo_variant {
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
 #ifdef INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_res;
-  yakushima::yakushima_kvs::scan("", false, "", false, scan_res);
+  yakushima::yakushima_kvs::scan("", false, "", false, scan_res);  // NOLINT
 
   for (auto&& itr : scan_res) {
     delete *itr.first;  // NOLINT
@@ -39,7 +39,7 @@ namespace shirakami::cc_silo_variant {
 
 Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                      std::string_view key) {
-  auto* ti = static_cast<ThreadInfo*>(token);
+  auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   Status check = ti->check_delete_after_write(key);
 

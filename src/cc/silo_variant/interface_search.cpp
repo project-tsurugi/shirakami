@@ -10,7 +10,7 @@ namespace shirakami::cc_silo_variant {
 
 Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
                   std::string_view key, Tuple** tuple) {
-  auto* ti = static_cast<cc_silo_variant::ThreadInfo*>(token);
+  auto* ti = static_cast<cc_silo_variant::session_info*>(token);
   if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token);
 
 #ifdef INDEX_KOHLER_MASSTREE
