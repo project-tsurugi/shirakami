@@ -122,13 +122,15 @@ Status read_from_scan(Token token,  // NOLINT
                          yakushima::node_version64*>>& scan_buf =
       ti->get_scan_cache()[handle];
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+  if (scan_buf.size() == scan_index) {
+    const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
 #elif INDEX_KOHLER_MASSTREE
   std::vector<const Record*>& scan_buf = ti->get_scan_cache()[handle];
   std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+  if (scan_buf.size() == scan_index) {
+    const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
 #endif
 
-  if (scan_buf.size() == scan_index) {
-    const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> new_scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
@@ -206,7 +208,7 @@ Status read_from_scan(Token token,  // NOLINT
                   std::get<2>(*itr));
   Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
 #elif INDEX_KOHLER_MASSTREE
-  ReadSetObj rsob(*itr, true);
+  read_set_obj rsob(*itr, true);
   Status rr = read_record(rsob.get_rec_read(), *itr);
 #endif
   if (rr != Status::OK) {

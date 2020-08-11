@@ -160,7 +160,7 @@ public:
     this->rec_ptr = rec_ptr;
     nv = std::make_pair(nvb, nv_ptr);
   }
-#elif
+#elif INDEX_KOHLER_MASSTREE
   explicit read_set_obj(const Record* rec_ptr, bool scan = false)  // NOLINT
       : is_scan{scan} {
     this->rec_ptr = rec_ptr;
@@ -184,10 +184,12 @@ public:
 
   [[nodiscard]] bool get_is_scan() const { return is_scan; }  // NOLINT
 
+#ifdef INDEX_YAKUSHIMA
   std::pair<yakushima::node_version64_body, yakushima::node_version64*>
   get_nv() {  // NOLINT
     return nv;
   }
+#endif
 
   Record& get_rec_read() { return rec_read; }  // NOLINT
 

@@ -18,7 +18,6 @@ file(GLOB TEST_SOURCES
         "cc/silo_variant/tid_test.cpp"
         "clock_test.cpp"
         "complicated_test/client_test.cpp"
-        "complicated_test/phantom_protection_test.cpp"
         "complicated_test/scan_perf_test.cpp"
         "error_test.cpp"
         "interface/helper.cpp"
@@ -35,6 +34,11 @@ file(GLOB TEST_SOURCES
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
     file(GLOB INDEX_TEST_SOURCES "index/masstree_beta/masstree_beta_test.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
+endif ()
+
+if (BUILD_INDEX_YAKUSHIMA)
+    file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
 endif ()
 

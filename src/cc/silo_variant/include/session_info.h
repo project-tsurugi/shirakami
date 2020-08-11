@@ -97,7 +97,7 @@ public:
       return scan_cache_;
     }
 #elif INDEX_KOHLER_MASSTREE
-    std::map<ScanHandle, std::vector<const Record*>> get_scan_cache() {
+    std::map<ScanHandle, std::vector<const Record*>>& get_scan_cache() {
       return scan_cache_;
     }
 #endif
