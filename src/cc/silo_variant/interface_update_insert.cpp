@@ -36,8 +36,7 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_ALREADY_EXISTS;
   }
 
-  Record* rec_ptr =  // NOLINT
-      new Record(key.data(), key.size(), val.data(), val.size());
+  Record* rec_ptr = new Record(key, val);  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
   Status insert_result(
       kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
@@ -119,8 +118,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 #endif
   if (rec_ptr == nullptr) {
-    rec_ptr =  // NOLINT
-        new Record(key.data(), key.size(), val.data(), val.size());
+    rec_ptr = new Record(key, val);  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
     Status insert_result(
         kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
