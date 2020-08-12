@@ -87,8 +87,7 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  ti->get_write_set().emplace_back(key.data(), key.size(), val.data(),
-                                   val.size(), OP_TYPE::UPDATE, rec_ptr);
+  ti->get_write_set().emplace_back(key, val, OP_TYPE::UPDATE, rec_ptr);
 
   return Status::OK;
 }
@@ -135,8 +134,7 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     // so goto update.
     delete rec_ptr;  // NOLINT
   }
-  ti->get_write_set().emplace_back(key.data(), key.size(), val.data(),
-                                   val.size(), OP_TYPE::UPDATE,
+  ti->get_write_set().emplace_back(key, val, OP_TYPE::UPDATE,
                                    rec_ptr);  // NOLINT
 
   return Status::OK;

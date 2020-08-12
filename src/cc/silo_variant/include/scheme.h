@@ -47,12 +47,9 @@ public:
   write_set_obj(OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {}
 
   // for update/
-  write_set_obj(const char* const key_ptr, const std::size_t key_length,
-              const char* const val_ptr, const std::size_t val_length,
-              const OP_TYPE op, Record* const rec_ptr)
-      : op_(op),
-        rec_ptr_(rec_ptr),
-        tuple_({key_ptr, key_length}, {val_ptr, val_length}) {}
+  write_set_obj(std::string_view key, std::string_view val, const OP_TYPE op,
+                Record* const rec_ptr)
+      : op_(op), rec_ptr_(rec_ptr), tuple_(key, val) {}
 
   write_set_obj(const write_set_obj& right) = delete;
   // for std::sort
@@ -154,8 +151,8 @@ public:
 
 #ifdef INDEX_YAKUSHIMA
   explicit read_set_obj(const Record* rec_ptr, bool scan = false,     // NOLINT
-                      yakushima::node_version64_body nvb = {},      // NOLINT
-                      yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
+                        yakushima::node_version64_body nvb = {},      // NOLINT
+                        yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
       : is_scan{scan} {
     this->rec_ptr = rec_ptr;
     nv = std::make_pair(nvb, nv_ptr);
@@ -216,12 +213,12 @@ private:
 class opr_obj {  // NOLINT
 public:
   opr_obj() = default;
-  opr_obj(const OP_TYPE type, const char* key_ptr,            // NOLINT
-         const std::size_t key_length)                       // NOLINT
+  opr_obj(const OP_TYPE type, const char* key_ptr,           // NOLINT
+          const std::size_t key_length)                      // NOLINT
       : type_(type), key_(key_ptr, key_length), value_() {}  // NOLINT
-  opr_obj(const OP_TYPE type, const char* key_ptr,            // NOLINT
-         const std::size_t key_length, const char* value_ptr,
-         const std::size_t value_length)
+  opr_obj(const OP_TYPE type, const char* key_ptr,           // NOLINT
+          const std::size_t key_length, const char* value_ptr,
+          const std::size_t value_length)
       : type_(type),                        // NOLINT
         key_(key_ptr, key_length),          // NOLINT
         value_(value_ptr, value_length) {}  // NOLINT
