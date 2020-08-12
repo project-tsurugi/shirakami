@@ -52,7 +52,7 @@ public:
               const OP_TYPE op, Record* const rec_ptr)
       : op_(op),
         rec_ptr_(rec_ptr),
-        tuple_(key_ptr, key_length, val_ptr, val_length) {}
+        tuple_({key_ptr, key_length}, {val_ptr, val_length}) {}
 
   write_set_obj(const write_set_obj& right) = delete;
   // for std::sort

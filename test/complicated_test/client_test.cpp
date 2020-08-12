@@ -56,25 +56,24 @@ static void make_string(char* string, const std::size_t len) {
   string[len - 1] = '\0';  // NOLINT
 }
 
-static void exec_insert(Token token, std::size_t thnm) {
+static void exec_insert(Token token, std::size_t th_nm) {
   for (unsigned int i = 0; i < Max_insert; i++) {
     std::string key(Len_key, '0');  // NOLINT
     make_string(key.data(), Len_key);
-    std::string value(Len_val, '0');  // NOLINT
-    make_string(value.data(), Len_val);
-    Tuple* tuple =                                              // NOLINT
-        new Tuple(key.data(), Len_key, value.data(), Len_val);  // NOLINT
-    DataList.at(thnm).push_back(tuple);
+    std::string val(Len_val, '0');  // NOLINT
+    make_string(val.data(), Len_val);
+    Tuple* tuple = new Tuple(key, val);  // NOLINT
+    DataList.at(th_nm).push_back(tuple);
     Storage storage(0);
-    insert(token, storage, key, value);
+    insert(token, storage, key, val);
   }
   // Commit;
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);
 }
 
-static void exec_search_key(Token token, std::size_t thnm) {
-  for (auto&& itr : DataList.at(thnm)) {
+static void exec_search_key(Token token, std::size_t th_nm) {
+  for (auto&& itr : DataList.at(th_nm)) {
     Tuple* tuple{};
     Storage storage{0};
     search_key(token, storage, itr->get_key(), &tuple);

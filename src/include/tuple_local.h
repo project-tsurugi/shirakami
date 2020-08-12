@@ -15,8 +15,7 @@ namespace shirakami {
 class Tuple::Impl {
 public:
   Impl() {}  // NOLINT
-  Impl(const char* key_ptr, std::size_t key_length, const char* value_ptr,
-       std::size_t value_length);
+  Impl(std::string_view key, std::string_view val);
 
   Impl(const Impl& right);
   Impl(Impl&& right);

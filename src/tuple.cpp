@@ -9,11 +9,10 @@
 
 namespace shirakami {
 
-Tuple::Impl::Impl(const char* key_ptr, std::size_t key_length,
-                  const char* value_ptr, std::size_t value_length)
-    : pvalue_(new std::string(value_ptr, value_length)),  // NOLINT
+Tuple::Impl::Impl(std::string_view key, std::string_view val)
+    : pvalue_(new std::string(val.data(), val.size())),  // NOLINT
       need_delete_pvalue_(true) {
-  key_.assign(key_ptr, key_length);
+  key_.assign(key.data(), key.size());
 }
 
 Tuple::Impl::Impl(const Impl& right) : key_(right.key_) {
@@ -142,9 +141,8 @@ void Tuple::Impl::set_value(const char* value_ptr, std::size_t value_length,
 
 Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
 
-Tuple::Tuple(const char* key_ptr, std::size_t key_length, const char* val_ptr,
-             std::size_t val_length)
-    : pimpl_(std::make_unique<Impl>(key_ptr, key_length, val_ptr, val_length)) {
+Tuple::Tuple(std::string_view key, std::string_view val)
+    : pimpl_(std::make_unique<Impl>(key, val)) {
 }
 
 Tuple::Tuple(const Tuple& right) {
