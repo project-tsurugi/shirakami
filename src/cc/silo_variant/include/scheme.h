@@ -209,39 +209,4 @@ private:
 #endif
 };
 
-// Operations for retry by abort
-class opr_obj {  // NOLINT
-public:
-  opr_obj() = default;
-  opr_obj(const OP_TYPE type, const char* key_ptr,           // NOLINT
-          const std::size_t key_length)                      // NOLINT
-      : type_(type), key_(key_ptr, key_length), value_() {}  // NOLINT
-  opr_obj(const OP_TYPE type, const char* key_ptr,           // NOLINT
-          const std::size_t key_length, const char* value_ptr,
-          const std::size_t value_length)
-      : type_(type),                        // NOLINT
-        key_(key_ptr, key_length),          // NOLINT
-        value_(value_ptr, value_length) {}  // NOLINT
-
-  opr_obj(const opr_obj& right) = delete;
-  opr_obj(opr_obj&& right) = default;
-  opr_obj& operator=(const opr_obj& right) = delete;  // NOLINT
-  opr_obj& operator=(opr_obj&& right) = default;      // NOLINT
-
-  ~opr_obj() = default;
-
-  OP_TYPE get_type() { return type_; }  // NOLINT
-  std::string_view get_key() {          // NOLINT
-    return {key_.data(), key_.size()};
-  }
-  std::string_view get_value() {  // NOLINT
-    return {value_.data(), value_.size()};
-  }
-
-private:
-  OP_TYPE type_{};
-  std::string key_{};
-  std::string value_{};
-};
-
 }  // namespace shirakami::cc_silo_variant
