@@ -14,26 +14,36 @@
 namespace shirakami::cc_silo_variant {
 
 void session_info::gc_handler::gc_records() const {
-  auto itr = get_record_container()->begin();
-  while (itr != get_record_container()->end()) {
+  auto ers_bgn_itr = get_record_container()->begin();
+  auto ers_end_itr = get_record_container()->end();
+  for (auto itr = ers_bgn_itr; itr != get_record_container()->end(); ++itr) {
     if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
+      ers_end_itr = itr;
       delete *itr;  // NOLINT
-      itr = get_record_container()->erase(itr);
     } else {
       break;
     }
   }
+  if (ers_end_itr != get_record_container()->end()) {
+    // vector erase func [begin, end)
+    get_record_container()->erase(ers_bgn_itr, ers_end_itr + 1);
+  }
 }
 
 void session_info::gc_handler::gc_values() const {
-  auto itr = get_value_container()->begin();
-  while (itr != get_value_container()->end()) {
+  auto ers_bgn_itr = get_value_container()->begin();
+  auto ers_end_itr = get_value_container()->end();
+  for (auto itr = ers_bgn_itr; itr != get_value_container()->end(); ++itr) {
     if (itr->second <= epoch::get_reclamation_epoch()) {
+      ers_end_itr = itr;
       delete itr->first;  // NOLINT
-      itr = get_value_container()->erase(itr);
     } else {
       break;
     }
+  }
+  if (ers_end_itr != get_value_container()->end()) {
+    // vector erase func [begin, end)
+    get_value_container()->erase(ers_bgn_itr, ers_end_itr + 1);
   }
 }
 
