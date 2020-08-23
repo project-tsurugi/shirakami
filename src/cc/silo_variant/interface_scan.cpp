@@ -45,8 +45,8 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   std::vector<const Record*> scan_buf;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
   kohler_masstree::get_mtdb().scan(
-      left_key.size() == 0 ? nullptr : left_key.data(), left_key.size(),
-      l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
+      left_key.empty() ? nullptr : left_key.data(), left_key.size(),
+      l_exclusive, right_key.empty() ? nullptr : right_key.data(),
       right_key.size(), r_exclusive, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t>> scan_res;
@@ -135,7 +135,7 @@ Status read_from_scan(Token token,  // NOLINT
     std::vector<const Record*> new_scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
     kohler_masstree::get_mtdb().scan(
-        tupleptr->get_key().size() == 0 ? nullptr : tupleptr->get_key().data(),
+        tupleptr->get_key().empty() ? nullptr : tupleptr->get_key().data(),
         tupleptr->get_key().size(), true,
         ti->get_len_rkey()[handle] == 0 ? nullptr
                                         : ti->get_rkey()[handle].get(),
@@ -235,8 +235,8 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   std::vector<const Record*> scan_res;
   masstree_wrapper<Record>::thread_init(sched_getcpu());
   kohler_masstree::get_mtdb().scan(
-      left_key.size() == 0 ? nullptr : left_key.data(), left_key.size(),
-      l_exclusive, right_key.size() == 0 ? nullptr : right_key.data(),
+      left_key.empty() ? nullptr : left_key.data(), left_key.size(),
+      l_exclusive, right_key.empty() ? nullptr : right_key.data(),
       right_key.size(), r_exclusive, &scan_res, false);
 #elif INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t>> scan_buf;
