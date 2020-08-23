@@ -13,6 +13,30 @@
 
 namespace shirakami::cc_silo_variant {
 
+void session_info::gc_handler::gc_records() const {
+  auto itr = get_record_container()->begin();
+  while (itr != get_record_container()->end()) {
+    if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
+      delete *itr;  // NOLINT
+      itr = get_record_container()->erase(itr);
+    } else {
+      break;
+    }
+  }
+}
+
+void session_info::gc_handler::gc_values() const {
+  auto itr = get_value_container()->begin();
+  while (itr != get_value_container()->end()) {
+    if (itr->second <= epoch::get_reclamation_epoch()) {
+      delete itr->first;  // NOLINT
+      itr = get_value_container()->erase(itr);
+    } else {
+      break;
+    }
+  }
+}
+
 void session_info::clean_up_ops_set() {
   read_set.clear();
   write_set.clear();
@@ -86,31 +110,8 @@ Status session_info::check_delete_after_write(std::string_view key) {  // NOLINT
   return Status::OK;
 }
 
-void session_info::gc_records_and_values() const {
-  // for records
-  {
-    auto itr = this->gc_handle_.get_record_container()->begin();
-    while (itr != this->gc_handle_.get_record_container()->end()) {
-      if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
-        delete *itr;  // NOLINT
-        itr = this->gc_handle_.get_record_container()->erase(itr);
-      } else {
-        break;
-      }
-    }
-  }
-  // for values
-  {
-    auto itr = this->gc_handle_.get_value_container()->begin();
-    while (itr != this->gc_handle_.get_value_container()->end()) {
-      if (itr->second <= epoch::get_reclamation_epoch()) {
-        delete itr->first;  // NOLINT
-        itr = this->gc_handle_.get_value_container()->erase(itr);
-      } else {
-        break;
-      }
-    }
-  }
+void session_info::gc_records_and_values() {
+  this->gc_handle_.gc_records_and_values();
 }
 
 void session_info::remove_inserted_records_of_write_set_from_masstree() {

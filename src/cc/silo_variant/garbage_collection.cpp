@@ -13,6 +13,24 @@
 
 namespace shirakami::cc_silo_variant::garbage_collection {
 
+void delete_all_garbage_records() {
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto&& itr : get_garbage_records_at(i)) {
+      delete itr;  // NOLINT
+    }
+    get_garbage_records_at(i).clear();
+  }
+}
+
+void delete_all_garbage_values() {
+  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
+    for (auto&& itr : get_garbage_values_at(i)) {
+      delete itr.first;  // NOLINT
+    }
+    get_garbage_values_at(i).clear();
+  }
+}
+
 [[maybe_unused]] void release_all_heap_objects() {
   remove_all_leaf_from_mt_db_and_release();
   delete_all_garbage_records();
@@ -40,24 +58,6 @@ void remove_all_leaf_from_mt_db_and_release() {
 #elif INDEX_YAKUSHIMA
   yakushima::yakushima_kvs::destroy();
 #endif
-}
-
-void delete_all_garbage_records() {
-  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto&& itr : get_garbage_records_at(i)) {
-      delete itr;  // NOLINT
-    }
-    get_garbage_records_at(i).clear();
-  }
-}
-
-void delete_all_garbage_values() {
-  for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-    for (auto&& itr : get_garbage_values_at(i)) {
-      delete itr.first;  // NOLINT
-    }
-    get_garbage_values_at(i).clear();
-  }
 }
 
 }  // namespace shirakami::cc_silo_variant::garbage_collection

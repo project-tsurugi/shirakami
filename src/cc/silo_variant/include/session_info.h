@@ -42,6 +42,15 @@ class session_info {
 public:
   class gc_handler {
   public:
+    void gc_records() const;
+
+    void gc_values() const;
+
+    void gc_records_and_values() {
+      gc_records();
+      gc_values();
+    }
+
     std::size_t get_container_index() const {  // NOLINT
       return container_index_;
     }
@@ -185,7 +194,7 @@ public:
    */
   Status check_delete_after_write(std::string_view key);  // NOLINT
 
-  void gc_records_and_values() const;
+  void gc_records_and_values();
 
   [[nodiscard]] epoch::epoch_t get_epoch() const {  // NOLINT
     return epoch_.load(std::memory_order_acquire);
