@@ -61,7 +61,7 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
   return loadAcquire(epoch::kGlobalEpoch);
 }
 
-[[maybe_unused]] static void set_epoch_thread_end(bool tf) {
+[[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
   kEpochThreadEnd.store(tf, std::memory_order_release);
 }
 

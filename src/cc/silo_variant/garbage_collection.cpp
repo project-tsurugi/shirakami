@@ -8,7 +8,6 @@
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
-#include "cc/silo_variant/include/session_info.h"
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant::garbage_collection {

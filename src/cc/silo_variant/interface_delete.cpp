@@ -37,8 +37,8 @@ namespace shirakami::cc_silo_variant {
   return Status::OK;
 }
 
-Status delete_record(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                     std::string_view key) {
+Status delete_record(Token const token, [[maybe_unused]] Storage storage,  // NOLINT
+                     const std::string_view key) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   Status check = ti->check_delete_after_write(key);

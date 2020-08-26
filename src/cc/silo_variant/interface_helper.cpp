@@ -39,7 +39,7 @@ void fin() {
 #endif
 }
 
-Status init(std::string_view log_directory_path) {  // NOLINT
+Status init(const std::string_view log_directory_path) {  // NOLINT
   /**
    * The default value of log_directory is PROJECT_ROOT.
    */
@@ -81,7 +81,7 @@ Status init(std::string_view log_directory_path) {  // NOLINT
   return Status::OK;
 }
 
-Status leave(Token token) {  // NOLINT
+Status leave(Token const token) {  // NOLINT
   for (auto&& itr : session_info_table::get_thread_info_table()) {
     if (&itr == static_cast<session_info*>(token)) {
       if (itr.get_visible()) {
@@ -98,7 +98,7 @@ Status leave(Token token) {  // NOLINT
   return Status::ERR_INVALID_ARGS;
 }
 
-void tx_begin(Token token) {
+void tx_begin(Token const token) {
   auto* ti = static_cast<session_info*>(token);
   ti->set_tx_began(true);
   ti->set_epoch(epoch::load_acquire_global_epoch());

@@ -13,8 +13,9 @@
 
 namespace shirakami::cc_silo_variant {
 
-Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                  ScanHandle handle) {
+Status close_scan(Token const token,
+                  [[maybe_unused]] Storage storage,  // NOLINT
+                  ScanHandle const handle) {
   auto* ti = static_cast<session_info*>(token);
 
   auto itr = ti->get_scan_cache().find(handle);
@@ -34,9 +35,9 @@ Status close_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                 std::string_view left_key, bool l_exclusive,
-                 std::string_view right_key, bool r_exclusive,
+Status open_scan(Token const token, [[maybe_unused]] Storage storage,  // NOLINT
+                 const std::string_view left_key, const bool l_exclusive,
+                 const std::string_view right_key, const bool r_exclusive,
                  ScanHandle& handle) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
@@ -105,9 +106,9 @@ Status open_scan(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::WARN_NOT_FOUND;
 }
 
-Status read_from_scan(Token token,  // NOLINT
-                      [[maybe_unused]] Storage storage, ScanHandle handle,
-                      Tuple** tuple) {
+Status read_from_scan(Token const token,  // NOLINT
+                      [[maybe_unused]] Storage storage, ScanHandle const handle,
+                      Tuple** const tuple) {
   auto* ti = static_cast<session_info*>(token);
 
   if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
@@ -205,7 +206,7 @@ Status read_from_scan(Token token,  // NOLINT
 
 #ifdef INDEX_YAKUSHIMA
   read_set_obj rsob(std::get<0>(*itr), true, std::get<1>(*itr),
-                  std::get<2>(*itr));
+                    std::get<2>(*itr));
   Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
 #elif INDEX_KOHLER_MASSTREE
   read_set_obj rsob(*itr, true);

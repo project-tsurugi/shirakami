@@ -149,8 +149,8 @@ enum class Status : std::int32_t {
    * @brief error
    * @details
    * (commit) This means read validation failure and it already executed
-   * abort(). After this, do tx_begin to start next transaction or leave to leave
-   * the session.
+   * abort(). After this, do tx_begin to start next transaction or leave to
+   * leave the session.
    */
   ERR_VALIDATION,
   /**
@@ -163,7 +163,7 @@ enum class Status : std::int32_t {
 };
 
 inline constexpr std::string_view to_string_view(  // NOLINT
-    Status value) noexcept {
+    const Status value) noexcept {
   using namespace std::string_view_literals;
   switch (value) {
     case Status::WARN_ALREADY_DELETE:
@@ -202,7 +202,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
   std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, Status value) {  // NOLINT
+inline std::ostream& operator<<(std::ostream& out,
+                                const Status value) {  // NOLINT
   return out << to_string_view(value);
 }
 
@@ -218,7 +219,7 @@ enum class OP_TYPE : std::int32_t {
 };
 
 inline constexpr std::string_view to_string_view(  // NOLINT
-    OP_TYPE op) noexcept {
+    const OP_TYPE op) noexcept {
   using namespace std::string_view_literals;
   switch (op) {
     case OP_TYPE::ABORT:
@@ -241,7 +242,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
   std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, OP_TYPE op) {  // NOLINT
+inline std::ostream& operator<<(std::ostream& out,
+                                const OP_TYPE op) {  // NOLINT
   return out << to_string_view(op);
 }
 
