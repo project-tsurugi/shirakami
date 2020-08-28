@@ -119,7 +119,7 @@ static void waitForReady(const std::vector<char>& readys) {
   }
 }
 
-void worker(const size_t thid, char& ready, const bool& start, const bool& quit,
+void worker(const std::size_t thid, char& ready, const bool& start, const bool& quit,
             std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;

@@ -50,8 +50,8 @@ private:
 /**
  * @brief generate search/update operations.
  */
-static void gen_tx_rw(std::vector<opr_obj>& opr_set, std::size_t tpnm,
-                      std::size_t opnm, std::size_t rratio,
+static void gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t tpnm,
+                      const std::size_t opnm, const std::size_t rratio,
                       Xoroshiro128Plus& rnd, FastZipf& zipf) {
   using namespace shirakami;
   opr_set.clear();

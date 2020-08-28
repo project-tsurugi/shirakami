@@ -26,14 +26,14 @@ public:
     s.at(1) = splitMix64(s.at(0));
   }
 
-  static uint64_t splitMix64(uint64_t seed) {        // NOLINT
+  static uint64_t splitMix64(std::uint64_t seed) {        // NOLINT
     std::uint64_t z = (seed += 0x9e3779b97f4a7c15);  // NOLINT
     z = (z ^ (z >> 30U)) * 0xbf58476d1ce4e5b9;       // NOLINT
     z = (z ^ (z >> 27U)) * 0x94d049bb133111eb;       // NOLINT
     return z ^ (z >> 31U);                           // NOLINT
   }
 
-  static inline uint64_t rotl(const uint64_t x, int k) {  // NOLINT
+  static inline uint64_t rotl(const std::uint64_t x, const int k) {  // NOLINT
     return (x << k) | (x >> (64 - k));                    // NOLINT
   }
 

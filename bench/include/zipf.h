@@ -23,7 +23,8 @@ class FastZipf {
   const double threshold_;
 
 public:
-  FastZipf(Xoroshiro128Plus *rnd, double theta, size_t nr)
+  FastZipf(Xoroshiro128Plus *const rnd, const double theta,
+           const std::size_t nr)
       : rnd_(rnd),
         nr_(nr),
         alpha_(1.0 / (1.0 - theta)),
@@ -38,7 +39,8 @@ public:
   }
 
   // Use this constructor if zeta is pre-calculated.
-  FastZipf(Xoroshiro128Plus *rnd, double theta, size_t nr, double zetan)
+  FastZipf(Xoroshiro128Plus *const rnd, const double theta,
+           const std::size_t nr, const double zetan)
       : rnd_(rnd),
         nr_(nr),
         alpha_(1.0 / (1.0 - theta)),
@@ -63,7 +65,7 @@ public:
 
   [[maybe_unused]] std::uint64_t rand() { return rnd_->next(); }  // NOLINT
 
-  static double zeta(size_t nr, double theta) {  // NOLINT
+  static double zeta(const std::size_t nr, const double theta) {  // NOLINT
     double ans = 0.0;
     for (size_t i = 0; i < nr; ++i) {
       ans += std::pow(1.0 / static_cast<double>(i + 1), theta);
@@ -72,4 +74,4 @@ public:
   }
 };
 
-} // namespace shirakami
+}  // namespace shirakami

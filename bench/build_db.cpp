@@ -34,8 +34,8 @@ namespace shirakami {
 using namespace cc_silo_variant;
 #endif
 
-size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
-                                 std::size_t thread) {
+size_t decideParallelBuildNumber(const std::size_t record,  // NOLINT
+                                 const std::size_t thread) {
   // if table size is very small, it builds by single thread.
   if (record < 1000) return 1;  // NOLINT
 
@@ -54,8 +54,8 @@ size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
   return 1;
 }
 
-void parallel_build_db(std::size_t start, std::size_t end,
-                       std::size_t value_length) {
+void parallel_build_db(const std::size_t start, const std::size_t end,
+                       const std::size_t value_length) {
   Xoroshiro128Plus rnd;
   Token token{};
   enter(token);
@@ -78,8 +78,8 @@ void parallel_build_db(std::size_t start, std::size_t end,
   leave(token);
 }
 
-void build_db(std::size_t record, std::size_t thread,
-              std::size_t value_length) {
+void build_db(const std::size_t record, const std::size_t thread,
+              const std::size_t value_length) {
   printf("ycsb::build_mtdb\n");  // NOLINT
   std::vector<std::thread> thv;
 
