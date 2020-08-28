@@ -166,8 +166,6 @@ extern Status open_scan(Token token, std::string_view left_key,  // NOLINT
  * which was created at open_scan function.
  * @details The read record is returned by @result.
  * @param token [in] the token retrieved by enter()
- * @param storage [in] the storage handle retrieved by register_storage() or
- * get_storage()
  * @param handle [in] input parameters to identify the specific scan_cache.
  * @param result [out] output parmeter to pass the read record.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
@@ -210,8 +208,6 @@ extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
  * @brief This function checks the size resulted at open_scan with the @a
  * handle.
  * @param token [in] the token retrieved by enter()
- * @param storage [in] the storage handle retrieved by register_storage() or
- * get_storage()
  * @param handle [in] the handle to identify scanned result. This handle will be
  * deleted at abort function.
  * @param size [out] the size resulted at open_scan with the @a handle .
