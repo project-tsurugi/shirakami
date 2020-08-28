@@ -22,73 +22,72 @@ TEST_F(session_info_test, get_txbegan_) {  // NOLINT
   std::string v("bbb");              // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
   auto* ti = static_cast<session_info*>(s);
   ASSERT_EQ(ti->get_txbegan(), false);
   // test upsert
-  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
+  ASSERT_EQ(Status::OK, upsert(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
+  ASSERT_EQ(Status::OK, upsert(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test delete
-  ASSERT_EQ(Status::OK, delete_record(s, st, k));
+  ASSERT_EQ(Status::OK, delete_record(s, k));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, delete_record(s, st, k));
+  ASSERT_EQ(Status::OK, delete_record(s, k));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test insert
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test update
-  ASSERT_EQ(Status::OK, update(s, st, k, v));
+  ASSERT_EQ(Status::OK, update(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, update(s, st, k, v));
+  ASSERT_EQ(Status::OK, update(s, k, v));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test search
   Tuple* tuple = {};
-  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test scan
   std::vector<const Tuple*> res;
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k, false, res));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, k, false, res));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k, false, res));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, k, false, res));
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(ti->get_txbegan(), false);
   // test open_scan
   ScanHandle handle = {};
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k, false, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k, false, handle));
   ASSERT_EQ(handle, 0);
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, abort(s));
   ASSERT_EQ(ti->get_txbegan(), false);
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k, false, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k, false, handle));
   ASSERT_EQ(handle, 0);
   ASSERT_EQ(ti->get_txbegan(), true);
   ASSERT_EQ(Status::OK, commit(s));

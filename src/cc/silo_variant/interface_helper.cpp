@@ -134,11 +134,11 @@ Status read_record(Record& res, const Record* const dest) {  // NOLINT
   return Status::OK;
 }
 
-void write_phase(session_info* ti, const tid_word& max_r_set,
+void write_phase(session_info* const ti, const tid_word& max_r_set,
                  const tid_word& max_w_set) {
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-#endif // INDEX_KOHLER_MASSTREE
+#endif  // INDEX_KOHLER_MASSTREE
 
   /*
    * It calculates the smallest number that is
@@ -237,4 +237,4 @@ void write_phase(session_info* ti, const tid_word& max_r_set,
 
   ti->gc_records_and_values();
 }
-}  // namespace shirakami::silo_variant
+}  // namespace shirakami::cc_silo_variant

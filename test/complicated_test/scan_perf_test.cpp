@@ -32,7 +32,6 @@ public:
 private:
   std::array<std::uint64_t, MAX_TUPLES> key_{};
   Token s_{};
-  Storage st_{};
 };
 
 void scan_perf::DoInsert(int bgn_idx, int end_idx) {
@@ -40,7 +39,7 @@ void scan_perf::DoInsert(int bgn_idx, int end_idx) {
 
   for (int i = bgn_idx; i < end_idx; ++i) {
     EXPECT_EQ(Status::OK,
-              insert(s_, st_,
+              insert(s_,
                      {reinterpret_cast<char*>(&key_.at(i)),  // NOLINT
                       sizeof(key_.at(i))},
                      v1));
@@ -54,14 +53,14 @@ void scan_perf::DoScan() {
   Tuple* tuple{};
 
   std::uint64_t start{rdtscp()};
-  EXPECT_EQ(Status::OK, open_scan(s_, st_, "", false, "", false, handle));
+  EXPECT_EQ(Status::OK, open_scan(s_, "", false, "", false, handle));
   for (int i = 0; i < READ_TUPLES; ++i) {
-    EXPECT_EQ(Status::OK, read_from_scan(s_, st_, handle, &tuple));
+    EXPECT_EQ(Status::OK, read_from_scan(s_, handle, &tuple));
   }
   /**
    * Make sure the scan size.
    */
-  EXPECT_EQ(Status::OK, scannable_total_index_size(s_, st_, handle, scan_size));
+  EXPECT_EQ(Status::OK, scannable_total_index_size(s_, handle, scan_size));
   std::cout << "scannable_total_index_size : " << scan_size << std::endl;
   EXPECT_EQ(Status::OK, commit(s_));
   std::uint64_t end{rdtscp()};

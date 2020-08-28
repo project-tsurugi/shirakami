@@ -185,8 +185,8 @@ void waitForReady(const std::vector<char>& readys) {
   }
 }
 
-void worker(const std::size_t thid, char& ready, const bool& start, const bool& quit,
-            std::vector<Result>& res) {
+void worker(const std::size_t thid, char& ready, const bool& start,
+            const bool& quit, std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
   FastZipf zipf(&rnd, kZipfSkew, kCardinality);
@@ -198,7 +198,6 @@ void worker(const std::size_t thid, char& ready, const bool& start, const bool& 
 #endif
 
   Token token{};
-  Storage storage{};
   std::vector<shirakami::opr_obj> opr_set;
   enter(token);
 
@@ -210,9 +209,9 @@ void worker(const std::size_t thid, char& ready, const bool& start, const bool& 
     for (auto&& itr : opr_set) {
       if (itr.get_type() == OP_TYPE::SEARCH) {
         Tuple* tuple{};
-        search_key(token, storage, itr.get_key(), &tuple);
+        search_key(token, itr.get_key(), &tuple);
       } else if (itr.get_type() == OP_TYPE::UPDATE) {
-        update(token, storage, itr.get_key(), itr.get_value());
+        update(token, itr.get_key(), itr.get_value());
       }
     }
     if (commit(token) == Status::OK) {

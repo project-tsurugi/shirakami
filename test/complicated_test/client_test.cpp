@@ -57,15 +57,14 @@ static void make_string(char* string, const std::size_t len) {
 }
 
 static void exec_insert(Token token, std::size_t th_nm) {
-  for (unsigned int i = 0; i < Max_insert; i++) {
+  for (unsigned int i = 0; i < Max_insert; ++i) {
     std::string key(Len_key, '0');  // NOLINT
     make_string(key.data(), Len_key);
     std::string val(Len_val, '0');  // NOLINT
     make_string(val.data(), Len_val);
     Tuple* tuple = new Tuple(key, val);  // NOLINT
     DataList.at(th_nm).push_back(tuple);
-    Storage storage(0);
-    insert(token, storage, key, val);
+    insert(token, key, val);
   }
   // Commit;
   Status result = commit(token);
@@ -75,8 +74,7 @@ static void exec_insert(Token token, std::size_t th_nm) {
 static void exec_search_key(Token token, std::size_t th_nm) {
   for (auto&& itr : DataList.at(th_nm)) {
     Tuple* tuple{};
-    Storage storage{0};
-    search_key(token, storage, itr->get_key(), &tuple);
+    search_key(token, itr->get_key(), &tuple);
   }
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);
@@ -85,8 +83,7 @@ static void exec_search_key(Token token, std::size_t th_nm) {
 static void exec_scan_key(Token token) {
   while (true) {
     std::vector<const Tuple*> result;
-    Storage storage(0);
-    scan_key(token, storage, {static_cast<const char*>("a"), 1}, false,
+    scan_key(token, {static_cast<const char*>("a"), 1}, false,
              {static_cast<const char*>("z"), 1}, false, result);
     for (auto&& itr : result) {
       delete itr;  // NOLINT
@@ -100,8 +97,7 @@ static void exec_scan_key(Token token) {
 
 static void exec_update(Token token, std::size_t thnm) {
   for (auto&& itr : DataList.at(thnm)) {
-    Storage storage(0);
-    update(token, storage, itr->get_key(),
+    update(token, itr->get_key(),
            {static_cast<const char*>("bouya-yoikoda-nenne-shina"),
             strlen("bouya-yoikoda-nenne-shina")});
   }
@@ -110,10 +106,9 @@ static void exec_update(Token token, std::size_t thnm) {
 }
 
 static void exec_delete(Token token, std::size_t thnm) {
-  Storage storage(0);
 
   for (auto&& itr : DataList.at(thnm)) {
-    delete_record(token, storage, itr->get_key());
+    delete_record(token, itr->get_key());
   }
   Status result = commit(token);
   ASSERT_EQ(result, Status::OK);

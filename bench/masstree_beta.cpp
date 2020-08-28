@@ -20,8 +20,6 @@
 
 #include <shirakami_string.h>
 
-#include <cstring>
-
 // shirakami/test/include
 #include "result.h"
 
@@ -119,8 +117,8 @@ static void waitForReady(const std::vector<char>& readys) {
   }
 }
 
-void worker(const std::size_t thid, char& ready, const bool& start, const bool& quit,
-            std::vector<Result>& res) {
+void worker(const std::size_t thid, char& ready, const bool& start,
+            const bool& quit, std::vector<Result>& res) {
   // init work
   Xoroshiro128Plus rnd;
 #if 0
@@ -138,7 +136,6 @@ void worker(const std::size_t thid, char& ready, const bool& start, const bool& 
 
   Token token{};
   shirakami::cc_silo_variant::Record myrecord{};
-  Storage storage{};
   enter(token);
   while (likely(!loadAcquire(quit))) {
     if (FLAGS_instruction == "insert") {
@@ -148,7 +145,7 @@ void worker(const std::size_t thid, char& ready, const bool& start, const bool& 
         uint64_t keybs = __builtin_bswap64(i);
         std::string value(FLAGS_val_length, '0');  // NOLINT
         make_string(value, rnd);
-        insert(token, storage,
+        insert(token,
                {reinterpret_cast<char*>(&keybs),  // NOLINT
                 sizeof(std::uint64_t)},
                value);

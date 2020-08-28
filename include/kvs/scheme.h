@@ -26,11 +26,6 @@ namespace shirakami {
 using Token = void*;
 
 /**
- * @brief Storage Handle
- */
-using Storage = std::uint64_t;
-
-/**
  * @brief Scan Handle
  */
 using ScanHandle = std::size_t;

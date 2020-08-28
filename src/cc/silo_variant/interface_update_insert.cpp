@@ -17,8 +17,8 @@
 
 namespace shirakami::cc_silo_variant {
 
-Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-              std::string_view key, std::string_view val) {
+Status insert(Token token, const std::string_view key,  // NOLINT
+              const std::string_view val) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   write_set_obj* inws{ti->search_write_set(key)};
@@ -53,8 +53,8 @@ Status insert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::WARN_ALREADY_EXISTS;
 }
 
-Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
-              std::string_view key, std::string_view val) {
+Status update(Token token, const std::string_view key,  // NOLINT
+              const std::string_view val) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
 
@@ -92,8 +92,8 @@ Status update(Token token, [[maybe_unused]] Storage sotrage,  // NOLINT
   return Status::OK;
 }
 
-Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-              std::string_view key, std::string_view val) {
+Status upsert(Token token, const std::string_view key,  // NOLINT
+              const std::string_view val) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   write_set_obj* in_ws{ti->search_write_set(key)};
@@ -104,8 +104,9 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-  Record* rec_ptr{
-      kohler_masstree::kohler_masstree::find_record(key.data(), key.size())};
+RETRY_FIND_RECORD:
+  Record* rec_ptr =
+      kohler_masstree::kohler_masstree::find_record(key.data(), key.size());
 #elif INDEX_YAKUSHIMA
   Record** rec_double_ptr{
       std::get<0>(yakushima::yakushima_kvs::get<Record*>(key))};
@@ -132,7 +133,8 @@ Status upsert(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so goto update.
-    delete rec_ptr;  // NOLINT
+    delete rec_ptr;          // NOLINT
+    goto RETRY_FIND_RECORD;  // NOLINT
   }
   ti->get_write_set().emplace_back(key, val, OP_TYPE::UPDATE,
                                    rec_ptr);  // NOLINT

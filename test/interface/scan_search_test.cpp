@@ -29,9 +29,8 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
   std::string v("bbb");                     // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, "", false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, "", false, records));
   ASSERT_EQ(Status::OK, commit(s));
   for (auto&& itr : records) {
     std::cout << std::string(itr->get_key().data(),  // NOLINT
@@ -39,21 +38,21 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
               << std::endl;
   }
   records.clear();
-  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k2, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k3, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k4, v));
+  ASSERT_EQ(Status::OK, upsert(s, k, v));
+  ASSERT_EQ(Status::OK, upsert(s, k2, v));
+  ASSERT_EQ(Status::OK, upsert(s, k3, v));
+  ASSERT_EQ(Status::OK, upsert(s, k4, v));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, true, k4, true, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, true, k4, true, records));
   EXPECT_EQ(2, records.size());
 
   Tuple* tuple{};
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-            search_key(s, st, k2, &tuple));
+            search_key(s, k2, &tuple));
   EXPECT_NE(nullptr, tuple);
-  delete_record(s, st, k2);
+  delete_record(s, k2);
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, true, k4, true, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, true, k4, true, records));
   EXPECT_EQ(1, records.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -68,29 +67,28 @@ TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
   std::string v2("bbb");                       // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, k1, v1));
-  ASSERT_EQ(Status::OK, insert(s, st, k2, v2));
-  ASSERT_EQ(Status::OK, insert(s, st, k4, v2));
+  ASSERT_EQ(Status::OK, insert(s, k1, v1));
+  ASSERT_EQ(Status::OK, insert(s, k2, v2));
+  ASSERT_EQ(Status::OK, insert(s, k4, v2));
   ASSERT_EQ(Status::OK, commit(s));
   ScanHandle handle{};
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, open_scan(s, st, k1, false, k2, false, handle));
-  ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, open_scan(s, k1, false, k2, false, handle));
+  ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
   ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
   ASSERT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
 
   // record exists
-  ASSERT_EQ(Status::OK, search_key(s, st, k4, &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, k4, &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
 
   // record not exist
-  ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k3, &tuple));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, k3, &tuple));
 
-  ASSERT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
   ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
   ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
-  ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
 
   ASSERT_EQ(Status::OK, leave(s));

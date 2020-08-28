@@ -29,15 +29,14 @@ TEST_F(simple_scan, scan) {  // NOLINT
   std::string v("bbb");      // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, "", v));
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
-  ASSERT_EQ(Status::OK, insert(s, st, k2, v));
-  ASSERT_EQ(Status::OK, insert(s, st, k3, v));
-  ASSERT_EQ(Status::OK, insert(s, st, k6, v));
+  ASSERT_EQ(Status::OK, insert(s, "", v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k2, v));
+  ASSERT_EQ(Status::OK, insert(s, k3, v));
+  ASSERT_EQ(Status::OK, insert(s, k6, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k4, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, k4, false, records));
   uint64_t ctr(0);
   ASSERT_EQ(records.size(), 3);
   for (auto&& itr : records) {
@@ -51,7 +50,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, true, k4, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, true, k4, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto&& itr : records) {
@@ -63,7 +62,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k3, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, k3, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
   for (auto&& itr : records) {
@@ -77,7 +76,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, k3, true, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, k3, true, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto&& itr : records) {
@@ -89,7 +88,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, k3, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, k3, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto&& itr : records) {
@@ -107,7 +106,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, k6, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, k6, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 2);
   for (auto&& itr : records) {
@@ -119,7 +118,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, k6, true, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, k6, true, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 1);
   for ([[maybe_unused]] auto&& itr : records) {
@@ -133,7 +132,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     }
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, k, false, "", false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k, false, "", false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 3);
   for (auto&& itr : records) {
@@ -147,7 +146,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, "", false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, "", false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto&& itr : records) {
@@ -165,7 +164,7 @@ TEST_F(simple_scan, scan) {  // NOLINT
     ++ctr;
   }
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, k5, false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, k5, false, records));
   ctr = 0;
   ASSERT_EQ(records.size(), 5);
   for (auto&& itr : records) {
@@ -196,14 +195,13 @@ TEST_F(simple_scan, scan_with_null_char) {  // NOLINT
   std::string v("bbb");  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, upsert(s, st, k, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k2, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k3, v));
-  ASSERT_EQ(Status::OK, upsert(s, st, k4, v));
+  ASSERT_EQ(Status::OK, upsert(s, k, v));
+  ASSERT_EQ(Status::OK, upsert(s, k2, v));
+  ASSERT_EQ(Status::OK, upsert(s, k3, v));
+  ASSERT_EQ(Status::OK, upsert(s, k4, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, k2, false, k5, true, records));
+  ASSERT_EQ(Status::OK, scan_key(s, k2, false, k5, true, records));
   EXPECT_EQ(3, records.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -213,18 +211,17 @@ TEST_F(simple_scan, open_scan_test) {  // NOLINT
   std::string k1("a");                 // NOLINT
   std::string v1("0");                 // NOLINT
   Token s{};
-  Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{};
   ScanHandle handle2{};
   ASSERT_EQ(Status::WARN_NOT_FOUND,
-            open_scan(s, st, "", false, "", false, handle));
+            open_scan(s, "", false, "", false, handle));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, insert(s, st, k1, v1));
+  ASSERT_EQ(Status::OK, insert(s, k1, v1));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, open_scan(s, st, "", false, "", false, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, "", false, "", false, handle));
   ASSERT_EQ(0, handle);
-  ASSERT_EQ(Status::OK, open_scan(s, st, "", false, "", false, handle2));
+  ASSERT_EQ(Status::OK, open_scan(s, "", false, "", false, handle2));
   ASSERT_EQ(1, handle2);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -241,23 +238,22 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
   std::string v2("bbb");               // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, "", v1));
-  ASSERT_EQ(Status::OK, insert(s, st, k, v1));
-  ASSERT_EQ(Status::OK, insert(s, st, k2, v2));
-  ASSERT_EQ(Status::OK, insert(s, st, k3, v1));
-  ASSERT_EQ(Status::OK, insert(s, st, k5, v1));
-  ASSERT_EQ(Status::OK, insert(s, st, k6, v2));
+  ASSERT_EQ(Status::OK, insert(s, "", v1));
+  ASSERT_EQ(Status::OK, insert(s, k, v1));
+  ASSERT_EQ(Status::OK, insert(s, k2, v2));
+  ASSERT_EQ(Status::OK, insert(s, k3, v1));
+  ASSERT_EQ(Status::OK, insert(s, k5, v1));
+  ASSERT_EQ(Status::OK, insert(s, k6, v2));
   ScanHandle handle{};
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k4, false, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k4, false, handle));
   /**
    * test
    * if read_from_scan detects self write(update, insert), it read from owns.
    */
   ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-            read_from_scan(s, st, handle, &tuple));
-  ASSERT_EQ(Status::OK, close_scan(s, st, handle));
+            read_from_scan(s, handle, &tuple));
+  ASSERT_EQ(Status::OK, close_scan(s, handle));
   ASSERT_EQ(Status::OK, commit(s));
 
   /**
@@ -266,19 +262,19 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
    * Status::ERR_INVALID_HANDLE. if read_from_scan read all records in cache
    * taken at open_scan, it returns Status::WARN_SCAN_LIMIT.
    */
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k4, false, handle));
-  ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, st, 3, &tuple));
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k4, false, handle));
-  EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k4, false, handle));
+  ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, 3, &tuple));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k4, false, handle));
+  EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
   EXPECT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
   EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
-  EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
   EXPECT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
   EXPECT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
-  EXPECT_EQ(Status::OK, read_from_scan(s, st, handle, &tuple));
+  EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
   EXPECT_EQ(memcmp(tuple->get_key().data(), k3.data(), k3.size()), 0);
   EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
-  EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, st, handle, &tuple));
+  EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
   ASSERT_EQ(Status::OK, commit(s));
 
   /**
@@ -286,9 +282,9 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
    * if read_from_scan detects the record deleted by myself, it function
    * returns Status::WARN_ALREADY_DELETE.
    */
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k4, false, handle));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k));
-  EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, st, handle, &tuple));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k4, false, handle));
+  ASSERT_EQ(Status::OK, delete_record(s, k));
+  EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, handle, &tuple));
   ASSERT_EQ(Status::OK, abort(s));
 
   /**
@@ -297,13 +293,13 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
    * and read_from_scan, it function returns Status::ERR_ILLEGAL_STATE which
    * means reading deleted record.
    */
-  ASSERT_EQ(Status::OK, open_scan(s, st, k, false, k4, false, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, k, false, k4, false, handle));
   Token s2{};
   ASSERT_EQ(Status::OK, enter(s2));
-  ASSERT_EQ(Status::OK, delete_record(s2, st, k));
+  ASSERT_EQ(Status::OK, delete_record(s2, k));
   ASSERT_EQ(Status::OK, commit(s2));
   EXPECT_EQ(Status::WARN_CONCURRENT_DELETE,
-            read_from_scan(s, st, handle, &tuple));
+            read_from_scan(s, handle, &tuple));
 
   ASSERT_EQ(Status::OK, leave(s));
   ASSERT_EQ(Status::OK, leave(s2));
@@ -313,14 +309,13 @@ TEST_F(simple_scan, close_scan) {  // NOLINT
   std::string k1("a");             // NOLINT
   std::string v1("0");             // NOLINT
   Token s{};
-  Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
   ScanHandle handle{};
-  ASSERT_EQ(Status::OK, insert(s, st, k1, v1));
+  ASSERT_EQ(Status::OK, insert(s, k1, v1));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, open_scan(s, st, "", false, "", false, handle));
-  ASSERT_EQ(Status::OK, close_scan(s, st, handle));
-  ASSERT_EQ(Status::WARN_INVALID_HANDLE, close_scan(s, st, handle));
+  ASSERT_EQ(Status::OK, open_scan(s, "", false, "", false, handle));
+  ASSERT_EQ(Status::OK, close_scan(s, handle));
+  ASSERT_EQ(Status::WARN_INVALID_HANDLE, close_scan(s, handle));
   ASSERT_EQ(Status::OK, leave(s));
 }
 

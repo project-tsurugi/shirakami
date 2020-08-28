@@ -26,24 +26,23 @@ TEST_F(simple_insert, insert) {  // NOLINT
   std::string v("bbb");          // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
   ASSERT_EQ(Status::OK, abort(s));
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   {
     Tuple* tuple{};
     char k2 = 0;
-    ASSERT_EQ(Status::OK, insert(s, st, {&k2, 1}, v));
+    ASSERT_EQ(Status::OK, insert(s, {&k2, 1}, v));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, search_key(s, st, {&k2, 1}, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, {&k2, 1}, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s));
   }
   Tuple* tuple{};
-  ASSERT_EQ(Status::OK, insert(s, st, "", v));
+  ASSERT_EQ(Status::OK, insert(s, "", v));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, search_key(s, st, "", &tuple));
+  ASSERT_EQ(Status::OK, search_key(s, "", &tuple));
   ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
@@ -79,8 +78,7 @@ TEST_F(simple_insert, long_insert) {  // NOLINT
       "5678901234567890123456789012345678901234567890");
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(s, st, k, v));
+  ASSERT_EQ(Status::OK, insert(s, k, v));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }

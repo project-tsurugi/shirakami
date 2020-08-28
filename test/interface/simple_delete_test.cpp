@@ -24,15 +24,14 @@ TEST_F(simple_delete, delete_) {  // NOLINT
   std::string v("aaa");           // NOLINT
   std::string v2("bbb");          // NOLINT
   Token s{};
-  Storage st{};
   ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, k));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
+  ASSERT_EQ(Status::OK, upsert(s, k, v2));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, delete_record(s, st, k));
+  ASSERT_EQ(Status::OK, delete_record(s, k));
   ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
+  ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, k));
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
@@ -42,11 +41,10 @@ TEST_F(simple_delete, all_deletes) {  // NOLINT
   std::string v("bbb");               // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
-  Storage st{};
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, st, "", false, "", false, records));
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, "", false, records));
   for (auto&& t : records) {
-    ASSERT_EQ(Status::OK, delete_record(s, st, t->get_key()));
+    ASSERT_EQ(Status::OK, delete_record(s, t->get_key()));
   }
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));

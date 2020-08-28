@@ -13,9 +13,7 @@
 
 namespace shirakami::cc_silo_variant {
 
-Status close_scan(Token const token,
-                  [[maybe_unused]] Storage storage,  // NOLINT
-                  ScanHandle const handle) {
+Status close_scan(Token token, ScanHandle handle) {  // NOLINT
   auto* ti = static_cast<session_info*>(token);
 
   auto itr = ti->get_scan_cache().find(handle);
@@ -35,10 +33,9 @@ Status close_scan(Token const token,
   return Status::OK;
 }
 
-Status open_scan(Token const token, [[maybe_unused]] Storage storage,  // NOLINT
-                 const std::string_view left_key, const bool l_exclusive,
-                 const std::string_view right_key, const bool r_exclusive,
-                 ScanHandle& handle) {
+Status open_scan(Token token, const std::string_view left_key,  // NOLINT
+                 const bool l_exclusive, const std::string_view right_key,
+                 const bool r_exclusive, ScanHandle& handle) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
 
@@ -106,8 +103,7 @@ Status open_scan(Token const token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::WARN_NOT_FOUND;
 }
 
-Status read_from_scan(Token const token,  // NOLINT
-                      [[maybe_unused]] Storage storage, ScanHandle const handle,
+Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
                       Tuple** const tuple) {
   auto* ti = static_cast<session_info*>(token);
 
@@ -222,10 +218,9 @@ Status read_from_scan(Token const token,  // NOLINT
   return Status::OK;
 }
 
-Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                std::string_view left_key, bool l_exclusive,
-                std::string_view right_key, bool r_exclusive,
-                std::vector<const Tuple*>& result) {
+Status scan_key(Token token, const std::string_view left_key,  // NOLINT
+                const bool l_exclusive, const std::string_view right_key,
+                const bool r_exclusive, std::vector<const Tuple*>& result) {
   auto* ti = static_cast<session_info*>(token);
   if (!ti->get_txbegan()) tx_begin(token);
   // as a precaution
@@ -317,9 +312,9 @@ Status scan_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(  // NOLINT
-    Token token,                                     // NOLINT
-    [[maybe_unused]] Storage storage, ScanHandle& handle, std::size_t& size) {
+[[maybe_unused]] Status scannable_total_index_size(Token token,  // NOLINT
+                                                   ScanHandle handle,
+                                                   std::size_t& size) {
   auto* ti = static_cast<session_info*>(token);
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());

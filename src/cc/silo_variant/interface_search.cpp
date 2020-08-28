@@ -4,12 +4,11 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 #include "include/tuple_local.h"
-#include "kvs/interface.h"  // NOLINT
 
 namespace shirakami::cc_silo_variant {
 
-Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
-                  std::string_view key, Tuple** tuple) {
+Status search_key(Token token, const std::string_view key,  // NOLINT
+                  Tuple** const tuple) {
   auto* ti = static_cast<cc_silo_variant::session_info*>(token);
   if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token);
 
@@ -32,7 +31,8 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
   }
 
 #ifdef INDEX_KOHLER_MASSTREE
-  Record* rec_ptr{kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
+  Record* rec_ptr{
+      kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
   if (rec_ptr == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;
@@ -55,7 +55,7 @@ Status search_key(Token token, [[maybe_unused]] Storage storage,  // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 
-  read_set_obj rs_ob(rec_ptr);
+  read_set_obj rs_ob(rec_ptr); // NOLINT
   Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
   if (rr == Status::OK) {
     ti->get_read_set().emplace_back(std::move(rs_ob));

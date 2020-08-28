@@ -166,14 +166,13 @@ unsigned int Log::LogRecord::compute_checksum() {  // NOLINT
       log_set.back().get_tid().get_epoch() - 2;
 
   Token s{};
-  Storage st{};
   enter(s);
   for (auto&& itr : log_set) {
     if (itr.get_tid().get_epoch() > recovery_epoch) break;
     if (itr.get_op() == OP_TYPE::UPDATE || itr.get_op() == OP_TYPE::INSERT) {
-      upsert(s, st, itr.get_tuple()->get_key(), itr.get_tuple()->get_value());
+      upsert(s, itr.get_tuple()->get_key(), itr.get_tuple()->get_value());
     } else if (itr.get_op() == OP_TYPE::DELETE) {
-      delete_record(s, st, itr.get_tuple()->get_key());
+      delete_record(s, itr.get_tuple()->get_key());
     }
     commit(s);
   }
