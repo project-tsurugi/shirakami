@@ -102,9 +102,9 @@ Status upsert(Token token, const std::string_view key,  // NOLINT
     return Status::WARN_WRITE_TO_LOCAL_WRITE;
   }
 
+RETRY_FIND_RECORD:
 #ifdef INDEX_KOHLER_MASSTREE
   masstree_wrapper<Record>::thread_init(sched_getcpu());
-RETRY_FIND_RECORD:
   Record* rec_ptr =
       kohler_masstree::kohler_masstree::find_record(key.data(), key.size());
 #elif INDEX_YAKUSHIMA

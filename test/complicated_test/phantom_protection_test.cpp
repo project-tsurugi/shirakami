@@ -25,16 +25,15 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     key.at(i) = std::string{1, static_cast<char>(i)};  // NOLINT
   }
   std::string v{"value"};  // NOLINT
-  Storage st{};
-  ASSERT_EQ(Status::OK, insert(token.at(0), st, key.at(0), v));
-  ASSERT_EQ(Status::OK, insert(token.at(0), st, key.at(1), v));
+  ASSERT_EQ(Status::OK, insert(token.at(0), key.at(0), v));
+  ASSERT_EQ(Status::OK, insert(token.at(0), key.at(1), v));
   ASSERT_EQ(Status::OK, commit(token.at(0)));
   std::vector<const Tuple*> tuple_vec;
   ASSERT_EQ(Status::OK,
-            scan_key(token.at(0), st, "", false, "", false, tuple_vec));
+            scan_key(token.at(0), "", false, "", false, tuple_vec));
   ASSERT_EQ(tuple_vec.size(), 2);
   // interrupt to occur phantom
-  ASSERT_EQ(Status::OK, insert(token.at(1), st, key.at(2), v));
+  ASSERT_EQ(Status::OK, insert(token.at(1), key.at(2), v));
   ASSERT_EQ(Status::OK, commit(token.at(1)));
   // =====
   ASSERT_EQ(Status::ERR_VALIDATION, commit(token.at(0)));

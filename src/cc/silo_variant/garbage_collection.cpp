@@ -7,6 +7,8 @@
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
+#elif INDEX_YAKUSHIMA
+#include "yakushima/include/kvs.h"
 #endif
 #include "include/tuple_local.h"  // sizeof(Tuple)
 
