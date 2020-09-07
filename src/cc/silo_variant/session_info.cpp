@@ -133,7 +133,7 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
       kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                key_view.size());
 #elif INDEX_YAKUSHIMA
-      yakushima::yakushima_kvs::remove(get_yakushima_token(), key_view);
+      yakushima::remove(get_yakushima_token(), key_view);
 #endif
 
       /**
@@ -170,7 +170,8 @@ read_set_obj* session_info::search_read_set(  // NOLINT
   return nullptr;
 }
 
-write_set_obj* session_info::search_write_set(std::string_view key) {
+write_set_obj* session_info::search_write_set(  // NOLINT
+    std::string_view const key) {
   for (auto&& itr : write_set) {
     const Tuple* tuple;  // NOLINT
     if (itr.get_op() == OP_TYPE::UPDATE) {
@@ -189,7 +190,7 @@ write_set_obj* session_info::search_write_set(std::string_view key) {
 }
 
 const write_set_obj* session_info::search_write_set(  // NOLINT
-    const Record* rec_ptr) {
+    const Record* const rec_ptr) {
   for (auto& itr : write_set) {
     if (itr.get_rec_ptr() == rec_ptr) return &itr;
   }

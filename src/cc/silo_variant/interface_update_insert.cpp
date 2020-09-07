@@ -31,7 +31,7 @@ Status insert(Token token, const std::string_view key,  // NOLINT
   masstree_wrapper<Record>::thread_init(sched_getcpu());
   if (kohler_masstree::find_record(key.data(), key.size()) != nullptr) {
 #elif INDEX_YAKUSHIMA
-  if (std::get<0>(yakushima::yakushima_kvs::get<Record*>(key)) != nullptr) {
+  if (std::get<0>(yakushima::get<Record*>(key)) != nullptr) {
 #endif
     return Status::WARN_ALREADY_EXISTS;
   }
@@ -43,7 +43,7 @@ Status insert(Token token, const std::string_view key,  // NOLINT
   if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
   yakushima::status insert_result{
-      yakushima::yakushima_kvs::put<Record*>(key, &rec_ptr)};  // NOLINT
+      yakushima::put<Record*>(key, &rec_ptr)};  // NOLINT
   if (insert_result == yakushima::status::OK) {
 #endif
     ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
@@ -73,7 +73,7 @@ Status update(Token token, const std::string_view key,  // NOLINT
   }
 #elif INDEX_YAKUSHIMA
   Record** rec_double_ptr{
-      std::get<0>(yakushima::yakushima_kvs::get<Record*>(key))};
+      std::get<0>(yakushima::get<Record*>(key))};
   if (rec_double_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }
@@ -109,12 +109,12 @@ RETRY_FIND_RECORD:
       kohler_masstree::kohler_masstree::find_record(key.data(), key.size());
 #elif INDEX_YAKUSHIMA
   Record** rec_double_ptr{
-      std::get<0>(yakushima::yakushima_kvs::get<Record*>(key))};
+      std::get<0>(yakushima::get<Record*>(key))};
   Record* rec_ptr{};
   if (rec_double_ptr == nullptr) {
     rec_ptr = nullptr;
   } else {
-    rec_ptr = (*std::get<0>(yakushima::yakushima_kvs::get<Record*>(key)));
+    rec_ptr = (*std::get<0>(yakushima::get<Record*>(key)));
   }
 #endif
   if (rec_ptr == nullptr) {
@@ -125,7 +125,7 @@ RETRY_FIND_RECORD:
     if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
     yakushima::status insert_result{
-        yakushima::yakushima_kvs::put<Record*>(key, &rec_ptr)};  // NOLINT
+        yakushima::put<Record*>(key, &rec_ptr)};  // NOLINT
     if (insert_result == yakushima::status::OK) {
 #endif
       ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);

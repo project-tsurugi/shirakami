@@ -51,7 +51,7 @@ Status open_scan(Token token, const std::string_view left_key,  // NOLINT
   std::vector<
       std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
       nvec;
-  yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
+  yakushima::scan(left_key, l_exclusive,  // NOLINT
                                  right_key, r_exclusive, scan_res, &nvec);
   std::vector<std::tuple<const Record*, yakushima::node_version64_body,
                          yakushima::node_version64*>>
@@ -143,7 +143,7 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     std::vector<
         std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
         nvec;
-    yakushima::yakushima_kvs::scan(  // NOLINT
+    yakushima::scan(  // NOLINT
         {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
         {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
         ti->get_r_exclusive()[handle], scan_res, &nvec);
@@ -239,7 +239,7 @@ Status scan_key(Token token, const std::string_view left_key,  // NOLINT
   std::vector<
       std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
       nvec;
-  yakushima::yakushima_kvs::scan(left_key, l_exclusive,  // NOLINT
+  yakushima::scan(left_key, l_exclusive,  // NOLINT
                                  right_key, r_exclusive, scan_buf, &nvec);
   std::vector<std::tuple<const Record*, yakushima::node_version64_body,
                          yakushima::node_version64*>>

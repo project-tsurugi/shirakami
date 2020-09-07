@@ -19,7 +19,7 @@ Status enter(Token& token) {  // NOLINT
   Status ret_status = session_info_table::decide_token(token);
 #ifdef INDEX_YAKUSHIMA
   yakushima::Token kvs_token{};
-  yakushima::yakushima_kvs::enter(kvs_token);
+  yakushima::enter(kvs_token);
   static_cast<session_info*>(token)->set_kvs_token(kvs_token);
 #endif
   return ret_status;
@@ -35,7 +35,7 @@ void fin() {
   session_info_table::fin_kThreadTable();
 
 #ifdef INDEX_YAKUSHIMA
-  yakushima::yakushima_kvs::fin();
+  yakushima::fin();
 #endif
 }
 
@@ -75,7 +75,7 @@ Status init(const std::string_view log_directory_path) {  // NOLINT
   session_info_table::init_kThreadTable();
   epoch::invoke_epocher();
 #ifdef INDEX_YAKUSHIMA
-  yakushima::yakushima_kvs::init();
+  yakushima::init();
 #endif
 
   return Status::OK;
@@ -86,7 +86,7 @@ Status leave(Token const token) {  // NOLINT
     if (&itr == static_cast<session_info*>(token)) {
       if (itr.get_visible()) {
 #ifdef INDEX_YAKUSHIMA
-        yakushima::yakushima_kvs::leave(
+        yakushima::leave(
             static_cast<session_info*>(token)->get_yakushima_token());
 #endif
         itr.set_visible(false);
@@ -208,7 +208,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set,
         kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                  key_view.size());
 #elif INDEX_YAKUSHIMA
-        yakushima::yakushima_kvs::remove(ti->get_yakushima_token(), key_view);
+        yakushima::remove(ti->get_yakushima_token(), key_view);
 #endif
         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
 

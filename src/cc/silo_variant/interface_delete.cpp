@@ -20,13 +20,13 @@ namespace shirakami::cc_silo_variant {
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
 #ifdef INDEX_YAKUSHIMA
   std::vector<std::pair<Record**, std::size_t> > scan_res;
-  yakushima::yakushima_kvs::scan("", false, "", false, scan_res);  // NOLINT
+  yakushima::scan("", false, "", false, scan_res);  // NOLINT
 
   for (auto&& itr : scan_res) {
     delete *itr.first;  // NOLINT
   }
 
-  yakushima::yakushima_kvs::destroy();
+  yakushima::destroy();
 #endif
   /**
    * INDEX_KOHLER_MASSTREE case
@@ -50,7 +50,7 @@ Status delete_record(Token token, const std::string_view key) { // NOLINT
     return Status::WARN_NOT_FOUND;
   }
 #elif INDEX_YAKUSHIMA
-  Record** rec_double_ptr{yakushima::yakushima_kvs::get<Record*>(key).first};
+  Record** rec_double_ptr{yakushima::get<Record*>(key).first};
   if (rec_double_ptr == nullptr) {
     return Status::WARN_NOT_FOUND;
   }

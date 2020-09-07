@@ -39,7 +39,7 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
   }
 #elif INDEX_YAKUSHIMA
   Record** rec_double_ptr{
-      std::get<0>(yakushima::yakushima_kvs::get<Record*>(key))};
+      std::get<0>(yakushima::get<Record*>(key))};
   if (rec_double_ptr == nullptr) {
     *tuple = nullptr;
     return Status::WARN_NOT_FOUND;

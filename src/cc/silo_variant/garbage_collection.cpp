@@ -57,7 +57,7 @@ void remove_all_leaf_from_mt_db_and_release() {
                                    &scan_res, false);  // NOLINT
   if (!scan_res.empty()) std::abort();
 #elif INDEX_YAKUSHIMA
-  yakushima::yakushima_kvs::destroy();
+  yakushima::destroy();
 #endif
 }
 
