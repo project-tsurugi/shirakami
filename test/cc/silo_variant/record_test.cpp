@@ -10,16 +10,17 @@ using namespace shirakami::cc_silo_variant;
 
 namespace shirakami::testing {
 
-class record : public ::testing::Test {};
+class record : public ::testing::Test {
+};
 
 TEST_F(record, constructor) {  // NOLINT
-  {
-    Record rec{};
-    ASSERT_EQ(rec.get_tidw().get_obj(), 0);
-    Tuple& tuple = rec.get_tuple();
-    ASSERT_EQ(tuple.get_key().size(), 0);
-    ASSERT_EQ(tuple.get_value().size(), 0);
-  }
+    {
+        Record rec{};
+        ASSERT_EQ(rec.get_tidw().get_obj(), 0);
+        Tuple &tuple = rec.get_tuple();
+        ASSERT_EQ(tuple.get_key().size(), 0);
+        ASSERT_EQ(tuple.get_value().size(), 0);
+    }
 }
 
 }  // namespace shirakami::testing

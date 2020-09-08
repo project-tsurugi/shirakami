@@ -20,18 +20,18 @@ using namespace shirakami::cc_silo_variant;
 
 class tid_test : public ::testing::Test {  // NOLINT
 public:
-  void SetUp() override { init(); }  // NOLINT
+    void SetUp() override { init(); }  // NOLINT
 
-  void TearDown() override { fin(); }
+    void TearDown() override { fin(); }
 };
 
 TEST_F(tid_test, tidword) {  // NOLINT
-  // check the alignment of union
-  tid_word tidword;
-  tidword.set_epoch(1);
-  tidword.set_lock(true);
-  [[maybe_unused]] uint64_t res = tidword.get_obj();
-  // std::cout << std::bitset<64>(res) << std::endl;
+    // check the alignment of union
+    tid_word tidword;
+    tidword.set_epoch(1);
+    tidword.set_lock(true);
+    [[maybe_unused]] uint64_t res = tidword.get_obj();
+    // std::cout << std::bitset<64>(res) << std::endl;
 }
 
 }  // namespace shirakami::testing

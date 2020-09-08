@@ -28,9 +28,13 @@
 
 // shirakami/src/include
 #include "atomic_wrapper.h"
+
 #ifdef CC_SILO_VARIANT
+
 #include "cc/silo_variant/include/session_info.h"
+
 #endif  // CC_SILO_VARIANT
+
 #include "clock.h"
 #include "cpu.h"
 #include "gflags/gflags.h"
@@ -51,175 +55,177 @@ DEFINE_uint64(ops, 1, "# operations per a transaction.");             // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");        // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");              // NOLINT
 DEFINE_uint64(                                                        // NOLINT
-    cpumhz, 2000,                                                     // NOLINT
-    "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
-    "time.");                                                         // NOLINT
+        cpumhz, 2000,                                                     // NOLINT
+        "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
+        "time.");                                                         // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 
-static bool isReady(const std::vector<char>& readys);  // NOLINT
-static void waitForReady(const std::vector<char>& readys);
+static bool isReady(const std::vector<char> &readys);  // NOLINT
+static void waitForReady(const std::vector<char> &readys);
+
 static void invoke_leader();
-static void worker(size_t thid, char& ready, const bool& start,
-                   const bool& quit, std::vector<Result>& res);
+
+static void worker(size_t thid, char &ready, const bool &start,
+                   const bool &quit, std::vector<Result> &res);
 
 static void invoke_leader() {
-  alignas(CACHE_LINE_SIZE) bool start = false;
-  alignas(CACHE_LINE_SIZE) bool quit = false;
-  alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
+    alignas(CACHE_LINE_SIZE) bool start = false;
+    alignas(CACHE_LINE_SIZE) bool quit = false;
+    alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
 
-  std::vector<char> readys(kNthread);  // NOLINT
-  std::vector<std::thread> thv;
-  for (std::size_t i = 0; i < kNthread; ++i) {
-    thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
-                     std::ref(quit), std::ref(res));
-  }
-  waitForReady(readys);
-  storeRelease(start, true);
-  for (size_t i = 0; i < kExecTime; ++i) {
-    sleepMs(1000);  // NOLINT
-  }
-  storeRelease(quit, true);
-  for (auto& th : thv) th.join();
+    std::vector<char> readys(kNthread);  // NOLINT
+    std::vector<std::thread> thv;
+    for (std::size_t i = 0; i < kNthread; ++i) {
+        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
+                         std::ref(quit), std::ref(res));
+    }
+    waitForReady(readys);
+    storeRelease(start, true);
+    for (size_t i = 0; i < kExecTime; ++i) {
+        sleepMs(1000);  // NOLINT
+    }
+    storeRelease(quit, true);
+    for (auto &th : thv) th.join();
 
-  for (std::size_t i = 0; i < kNthread; ++i) {
-    res[0].addLocalAllResult(res[i]);
-  }
-  res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
-  std::cout << "end experiments, start cleanup." << std::endl;
+    for (std::size_t i = 0; i < kNthread; ++i) {
+        res[0].addLocalAllResult(res[i]);
+    }
+    res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+    std::cout << "end experiments, start cleanup." << std::endl;
 }
 
 static void load_flags() {
-  if (FLAGS_thread >= 1) {
-    kNthread = FLAGS_thread;
-  } else {
-    std::cerr << "Number of threads must be larger than 0." << std::endl;
-    exit(1);
-  }
-  if (FLAGS_record > 1) {
-    kCardinality = FLAGS_record;
-  } else {
-    std::cerr << "Number of database records(tuples) must be large than 0."
-              << std::endl;
-    exit(1);
-  }
-  constexpr std::size_t eight = 8;
-  if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
-    kKeyLength = FLAGS_key_length;
-  } else {
-    std::cerr << "Length of key must be larger than 0 and be divisible by 8."
-              << std::endl;
-    exit(1);
-  }
-  if (FLAGS_val_length > 1) {
-    kValLength = FLAGS_val_length;
-  } else {
-    std::cerr << "Length of val must be larger than 0." << std::endl;
-    exit(1);
-  }
-  if (FLAGS_ops >= 1) {
-    kNops = FLAGS_ops;
-  } else {
-    std::cerr << "Number of operations in a transaction must be larger than 0."
-              << std::endl;
-    exit(1);
-  }
-  constexpr std::size_t thousand = 100;
-  if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
-    kRRatio = FLAGS_rratio;
-  } else {
-    std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
-              << std::endl;
-    exit(1);
-  }
-  if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
-    kZipfSkew = FLAGS_skew;
-  } else {
-    std::cerr
-        << "Access skew of transaction must be in the range 0 to 0.999... ."
-        << std::endl;
-    exit(1);
-  }
-  if (FLAGS_cpumhz > 1) {
-    kCPUMHz = FLAGS_cpumhz;
-  } else {
-    std::cerr
-        << "CPU MHz of execution environment. It is used measuring some time. "
-           "It must be larger than 0."
-        << std::endl;
-    exit(1);
-  }
-  if (FLAGS_duration >= 1) {
-    kExecTime = FLAGS_duration;
-  } else {
-    std::cerr << "Duration of benchmark in seconds must be larger than 0."
-              << std::endl;
-    exit(1);
-  }
+    if (FLAGS_thread >= 1) {
+        kNthread = FLAGS_thread;
+    } else {
+        std::cerr << "Number of threads must be larger than 0." << std::endl;
+        exit(1);
+    }
+    if (FLAGS_record > 1) {
+        kCardinality = FLAGS_record;
+    } else {
+        std::cerr << "Number of database records(tuples) must be large than 0."
+                  << std::endl;
+        exit(1);
+    }
+    constexpr std::size_t eight = 8;
+    if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
+        kKeyLength = FLAGS_key_length;
+    } else {
+        std::cerr << "Length of key must be larger than 0 and be divisible by 8."
+                  << std::endl;
+        exit(1);
+    }
+    if (FLAGS_val_length > 1) {
+        kValLength = FLAGS_val_length;
+    } else {
+        std::cerr << "Length of val must be larger than 0." << std::endl;
+        exit(1);
+    }
+    if (FLAGS_ops >= 1) {
+        kNops = FLAGS_ops;
+    } else {
+        std::cerr << "Number of operations in a transaction must be larger than 0."
+                  << std::endl;
+        exit(1);
+    }
+    constexpr std::size_t thousand = 100;
+    if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
+        kRRatio = FLAGS_rratio;
+    } else {
+        std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
+                  << std::endl;
+        exit(1);
+    }
+    if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
+        kZipfSkew = FLAGS_skew;
+    } else {
+        std::cerr
+                << "Access skew of transaction must be in the range 0 to 0.999... ."
+                << std::endl;
+        exit(1);
+    }
+    if (FLAGS_cpumhz > 1) {
+        kCPUMHz = FLAGS_cpumhz;
+    } else {
+        std::cerr
+                << "CPU MHz of execution environment. It is used measuring some time. "
+                   "It must be larger than 0."
+                << std::endl;
+        exit(1);
+    }
+    if (FLAGS_duration >= 1) {
+        kExecTime = FLAGS_duration;
+    } else {
+        std::cerr << "Duration of benchmark in seconds must be larger than 0."
+                  << std::endl;
+        exit(1);
+    }
 }
 
 int main(int argc, char* argv[]) {  // NOLINT
-  gflags::SetUsageMessage(static_cast<const std::string&>(
-      "YCSB benchmark for shirakami"));  // NOLINT
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
-  load_flags();
+    gflags::SetUsageMessage(static_cast<const std::string &>(
+                                    "YCSB benchmark for shirakami"));  // NOLINT
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    load_flags();
 
-  init();  // NOLINT
-  build_db(kCardinality, kNthread, kValLength);
-  invoke_leader();
-  delete_all_records();
-  fin();
+    init();  // NOLINT
+    build_db(kCardinality, kNthread, kValLength);
+    invoke_leader();
+    delete_all_records();
+    fin();
 
-  return 0;
+    return 0;
 }
 
-bool isReady(const std::vector<char>& readys) {  // NOLINT
-  for (const char& b : readys) {                 // NOLINT
-    if (loadAcquire(b) == 0) return false;
-  }
-  return true;
+bool isReady(const std::vector<char> &readys) {  // NOLINT
+    for (const char &b : readys) {                 // NOLINT
+        if (loadAcquire(b) == 0) return false;
+    }
+    return true;
 }
 
-void waitForReady(const std::vector<char>& readys) {
-  while (!isReady(readys)) {
-    _mm_pause();
-  }
+void waitForReady(const std::vector<char> &readys) {
+    while (!isReady(readys)) {
+        _mm_pause();
+    }
 }
 
-void worker(const std::size_t thid, char& ready, const bool& start,
-            const bool& quit, std::vector<Result>& res) {
-  // init work
-  Xoroshiro128Plus rnd;
-  FastZipf zipf(&rnd, kZipfSkew, kCardinality);
-  std::reference_wrapper<Result> myres = std::ref(res[thid]);
+void worker(const std::size_t thid, char &ready, const bool &start,
+            const bool &quit, std::vector<Result> &res) {
+    // init work
+    Xoroshiro128Plus rnd;
+    FastZipf zipf(&rnd, kZipfSkew, kCardinality);
+    std::reference_wrapper<Result> myres = std::ref(res[thid]);
 
-  // this function can be used in Linux environment only.
+    // this function can be used in Linux environment only.
 #ifdef SHIRAKAMI_LINUX
-  setThreadAffinity(static_cast<const int>(thid));
+    setThreadAffinity(static_cast<const int>(thid));
 #endif
 
-  Token token{};
-  std::vector<shirakami::opr_obj> opr_set;
-  enter(token);
+    Token token{};
+    std::vector<shirakami::opr_obj> opr_set;
+    enter(token);
 
-  storeRelease(ready, 1);
-  while (!loadAcquire(start)) _mm_pause();
+    storeRelease(ready, 1);
+    while (!loadAcquire(start)) _mm_pause();
 
-  while (likely(!loadAcquire(quit))) {
-    gen_tx_rw(opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
-    for (auto&& itr : opr_set) {
-      if (itr.get_type() == OP_TYPE::SEARCH) {
-        Tuple* tuple{};
-        search_key(token, itr.get_key(), &tuple);
-      } else if (itr.get_type() == OP_TYPE::UPDATE) {
-        update(token, itr.get_key(), itr.get_value());
-      }
+    while (likely(!loadAcquire(quit))) {
+        gen_tx_rw(opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
+        for (auto &&itr : opr_set) {
+            if (itr.get_type() == OP_TYPE::SEARCH) {
+                Tuple* tuple{};
+                search_key(token, itr.get_key(), &tuple);
+            } else if (itr.get_type() == OP_TYPE::UPDATE) {
+                update(token, itr.get_key(), itr.get_value());
+            }
+        }
+        if (commit(token) == Status::OK) {
+            ++myres.get().get_local_commit_counts();
+        } else {
+            ++myres.get().get_local_abort_counts();
+            abort(token);
+        }
     }
-    if (commit(token) == Status::OK) {
-      ++myres.get().get_local_commit_counts();
-    } else {
-      ++myres.get().get_local_abort_counts();
-      abort(token);
-    }
-  }
-  leave(token);
+    leave(token);
 }

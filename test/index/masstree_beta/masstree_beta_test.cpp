@@ -1,10 +1,13 @@
 #include "cc/silo_variant/include/scheme.h"
 #include "gtest/gtest.h"
 #include "include/tuple_local.h"
+
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #elif INDEX_YAKUSHIMA
+
 #include "yakushima/include/kvs.h"
+
 #endif
 
 #ifdef INDEX_KOHLER_MASSTREE
@@ -16,7 +19,8 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class masstree : public ::testing::Test {};  // NOLINT
+class masstree : public ::testing::Test {
+};  // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
 TEST_F(masstree, insert_third) {  // NOLINT

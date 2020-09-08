@@ -3,10 +3,11 @@
 
 namespace shirakami::testing {
 
-class memory : public ::testing::Test {};
+class memory : public ::testing::Test {
+};
 
 TEST_F(memory, displayRusageRUMaxrss) {  // NOLINT
-  displayRusageRUMaxrss();
+    displayRusageRUMaxrss();
 }
 
 }  // namespace shirakami::testing

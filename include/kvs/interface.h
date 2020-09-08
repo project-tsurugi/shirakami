@@ -4,6 +4,7 @@
  */
 
 #pragma once
+
 #include "scheme.h"
 #include "tuple.h"
 
@@ -13,6 +14,7 @@
 #ifdef CC_SILO_VARIANT
 namespace shirakami::cc_silo_variant {
 #endif
+
 /**
  * @brief abort and end the transaction.
  *
@@ -93,7 +95,7 @@ extern Status delete_record(Token token, std::string_view key);  // NOLINT
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
  */
-extern Status enter(Token& token);  // NOLINT
+extern Status enter(Token &token);  // NOLINT
 
 /**
  * @brief do delete operations for all records, join core threads and delete the
@@ -117,7 +119,7 @@ extern void fin();
  * @return Status::OK
  */
 extern Status init(                                                // NOLINT
-    std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));  // NOLINT
+        std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));  // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -159,7 +161,7 @@ extern Status leave(Token token);  // NOLINT
  */
 extern Status open_scan(Token token, std::string_view left_key,  // NOLINT
                         bool l_exclusive, std::string_view right_key,
-                        bool r_exclusive, ScanHandle& handle);
+                        bool r_exclusive, ScanHandle &handle);
 
 /**
  * @brief This function reads the one records from the scan_cache
@@ -202,7 +204,7 @@ extern Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
  */
 extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
                        bool l_exclusive, std::string_view right_key,
-                       bool r_exclusive, std::vector<const Tuple*>& result);
+                       bool r_exclusive, std::vector<const Tuple*> &result);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @a
@@ -215,8 +217,8 @@ extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
  * @return Status::OK success.
  */
 [[maybe_unused]] extern Status scannable_total_index_size(  // NOLINT
-    Token token,                                            // NOLINT
-    ScanHandle handle, std::size_t& size);
+        Token token,                                            // NOLINT
+        ScanHandle handle, std::size_t &size);
 
 /**
  * @brief search with the given key and return the found tuple

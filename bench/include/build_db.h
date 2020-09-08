@@ -17,7 +17,9 @@
 #pragma once
 
 #ifdef CC_SILO_VARIANT
+
 #include "cc/silo_variant/include/scheme.h"
+
 #endif
 
 #include "kvs/scheme.h"
@@ -26,8 +28,10 @@ namespace shirakami {
 
 size_t decideParallelBuildNumber(std::size_t record,  // NOLINT
                                  std::size_t thread);
+
 void parallel_build_db(std::size_t start, std::size_t end,
                        std::size_t value_length);
+
 void build_db(std::size_t record, std::size_t thread, std::size_t value_length);
 
 }  // namespace shirakami

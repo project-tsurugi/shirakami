@@ -18,11 +18,11 @@
 namespace shirakami::cc_silo_variant::garbage_collection {
 
 alignas(CACHE_LINE_SIZE) inline std::array<  // NOLINT
-    std::vector<Record*>,
-    KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords;  // NOLINT
+        std::vector<Record*>,
+        KVS_NUMBER_OF_LOGICAL_CORES> kGarbageRecords;  // NOLINT
 alignas(CACHE_LINE_SIZE) inline std::array<                         // NOLINT
-    std::vector<std::pair<std::string*, epoch::epoch_t>>,
-    KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues;                   // NOLINT
+        std::vector<std::pair<std::string*, epoch::epoch_t>>,
+        KVS_NUMBER_OF_LOGICAL_CORES> kGarbageValues;                   // NOLINT
 
 /**
  * @brief Delete std::vector<Record*> kGarbageRecords at
@@ -40,14 +40,14 @@ extern void delete_all_garbage_records();
  */
 extern void delete_all_garbage_values();
 
-[[maybe_unused]] static std::vector<Record*>& get_garbage_records_at(  // NOLINT
-    std::size_t index) {
-  return kGarbageRecords.at(index);
+[[maybe_unused]] static std::vector<Record*> &get_garbage_records_at(  // NOLINT
+        std::size_t index) {
+    return kGarbageRecords.at(index);
 }
 
-[[maybe_unused]] static std::vector<std::pair<std::string*, epoch::epoch_t>>&
+[[maybe_unused]] static std::vector<std::pair<std::string*, epoch::epoch_t>> &
 get_garbage_values_at(std::size_t index) {  // NOLINT
-  return kGarbageValues.at(index);
+    return kGarbageValues.at(index);
 }
 
 /**
