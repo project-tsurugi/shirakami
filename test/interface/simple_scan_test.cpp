@@ -185,24 +185,17 @@ TEST_F(simple_scan, scan) {  // NOLINT
   ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(simple_scan, scan_with_null_char) {  // NOLINT
-  std::string k("a\0a", 3);                 // NOLINT
-  std::string k2("a\0aa", 4);               // NOLINT
-  std::string k3("a\0aac", 5);              // NOLINT
-  std::string k4("a\0ab", 4);               // NOLINT
-  std::string k5("a\0ac", 4);               // NOLINT
-  ASSERT_EQ(3, k.size());
+TEST_F(simple_scan, scan_with_prefixed_end) {  // NOLINT
+  std::string k("T6\000\200\000\000\n\200\000\000\001", 11);                 // NOLINT
+  std::string end("T6\001", 3);                 // NOLINT
   std::string v("bbb");  // NOLINT
   Token s{};
   ASSERT_EQ(Status::OK, enter(s));
   ASSERT_EQ(Status::OK, upsert(s, k, v));
-  ASSERT_EQ(Status::OK, upsert(s, k2, v));
-  ASSERT_EQ(Status::OK, upsert(s, k3, v));
-  ASSERT_EQ(Status::OK, upsert(s, k4, v));
   ASSERT_EQ(Status::OK, commit(s));
   std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, k2, false, k5, true, records));
-  EXPECT_EQ(3, records.size());
+  ASSERT_EQ(Status::OK, scan_key(s, "", false, end, true, records));
+  EXPECT_EQ(1, records.size());
   ASSERT_EQ(Status::OK, commit(s));
   ASSERT_EQ(Status::OK, leave(s));
 }
