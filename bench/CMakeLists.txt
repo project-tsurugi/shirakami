@@ -13,55 +13,66 @@
 # limitations under the License.
 
 file(GLOB YCSB_SOURCES
-  "ycsb.cc"
-  "masstree_build.cc"
-  "../test/result.cc"
-)
-
-file(GLOB MASSTREE_SOURCES
-  "masstree.cc"
-  "masstree_build.cc"
-  "../test/result.cc"
-)
+        "ycsb.cpp"
+        "build_db.cpp"
+        "result.cpp"
+        )
 
 add_executable(ycsb
-  ${YCSB_SOURCES}
-)
-
-add_executable(masstree
-  ${MASSTREE_SOURCES}
-)
-
+        ${YCSB_SOURCES}
+        )
 
 target_link_libraries(ycsb
-  PRIVATE kvs_charkey
-  PRIVATE kvs_charkey-impl
-  PRIVATE Threads::Threads
-  PRIVATE gflags::gflags
-)
+        PRIVATE shirakami
+        PRIVATE shirakami-impl
+        PRIVATE Threads::Threads
+        PRIVATE gflags::gflags
+        )
 
 target_include_directories(ycsb
-  PRIVATE .
-  PRIVATE ./include
-  PRIVATE ./../bench/
-  PRIVATE ./../include
-  PRIVATE ./../src/include
-  PRIVATE ./../test/include
-  PRIVATE ${gflags_INCLUDE_DIR}
-)
-target_link_libraries(masstree
-  PRIVATE kvs_charkey
-  PRIVATE kvs_charkey-impl
-  PRIVATE Threads::Threads
-  PRIVATE gflags::gflags
-)
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/bench/
+        PRIVATE ${PROJECT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/src
+        PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/test/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+        PRIVATE ${gflags_INCLUDE_DIR}
+        )
 
-target_include_directories(masstree
-  PRIVATE .
-  PRIVATE ./include
-  PRIVATE ./../bench/
-  PRIVATE ./../include
-  PRIVATE ./../src/include
-  PRIVATE ./../test/include
-  PRIVATE ${gflags_INCLUDE_DIR}
-)
+add_test(
+        NAME ycsb
+        COMMAND ycsb)
+
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB MASSTREE_SOURCES
+            "masstree_beta.cpp"
+            "build_db.cpp"
+            "result.cpp"
+            )
+
+    add_executable(masstree
+            ${MASSTREE_SOURCES}
+            )
+
+
+    target_link_libraries(masstree
+            PRIVATE shirakami
+            PRIVATE shirakami-impl
+            PRIVATE Threads::Threads
+            PRIVATE gflags::gflags
+            )
+
+    target_include_directories(masstree
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/bench/
+            PRIVATE ${PROJECT_SOURCE_DIR}/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/src
+            PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/test/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+            PRIVATE ${gflags_INCLUDE_DIR}
+            )
+endif ()

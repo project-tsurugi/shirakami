@@ -9,48 +9,29 @@
 #include <string_view>
 #include <utility>
 
-namespace kvs {
+namespace shirakami {
 
-class Tuple {
+class Tuple {  // NOLINT
 public:
-  Tuple();
-  Tuple (const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length);
-  Tuple(const Tuple& right);
-  Tuple(Tuple&& right);
-  Tuple& operator=(const Tuple& right)&;
-  Tuple& operator=(Tuple&& right)&;
-  ~Tuple();
+    class Impl;
 
-  std::string_view get_key()&;
-  std::string_view get_key() const&;
-  std::string_view get_value()&;
-  std::string_view get_value() const&;
+    Tuple();
 
-  void set(const char* key_ptr, const std::size_t key_length, const char* value_ptr, const std::size_t value_length)&;
+    Tuple(std::string_view key, std::string_view val);
 
-  /**
-   * @brief set key of data in local
-   * @details The memory area of old local data is overwritten..
-   */
-  void set_key(const char* key_ptr, const std::size_t key_length)&;
+    Tuple(const Tuple &right);
 
-  /**
-   * @brief set value of data in local
-   * @details The memory area of old local data is released immediately.
-   */
-  void set_value(const char* value_ptr, const std::size_t value_length)&;
+    Tuple(Tuple &&right);
 
-  /**
-   * @brief set value of data in global
-   * @details The memory area of old local data is managed by GabeColle.
-   * @params [out] old_value Tell the information to pass to GabeColle.
-   */
-  void set_value(const char* value_ptr, const std::size_t value_length, std::string** const old_value)&;
+    Tuple &operator=(const Tuple &right);  // NOLINT
+    Tuple &operator=(Tuple &&right);       // NOLINT
+
+    [[nodiscard]] std::string_view get_key() const;    // NOLINT
+    [[nodiscard]] std::string_view get_value() const;  // NOLINT
+    Impl* get_pimpl();                                 // NOLINT
 
 private:
-  class Impl;
-  std::unique_ptr<Impl> pimpl_;
+    std::unique_ptr<Impl> pimpl_;
 };
 
-}  // namespace kvs
-
+}  // namespace shirakami

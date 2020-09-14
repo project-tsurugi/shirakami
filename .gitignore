@@ -25,5 +25,5 @@ HTML/
 # temp files
 *.a
 *.o
-src/kvs
+src/shirakami
 /log

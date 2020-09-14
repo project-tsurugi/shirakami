@@ -14,9 +14,9 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(kvs_charkey
+project(shirakami
     VERSION 0.0.1
-    DESCRIPTION "kvs_charkey"
+    DESCRIPTION "shirakami"
     LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -29,6 +29,10 @@ option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" 
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
+option(BUILD_CC_SILO_VARIANT "Build Silo variant as CC" ON)
+option(BUILD_INDEX_KOHLER_MASSTREE "Build Kohler Masstree as index" OFF)
+option(BUILD_INDEX_YAKUSHIMA "Build yakushima as index" ON)
+
 find_package(Doxygen)
 find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
@@ -36,6 +40,9 @@ find_package(glog REQUIRED)
 find_package(Boost
   COMPONENTS filesystem)
 
+# Formatter should be first.
+include(FormatFilesWithClangFormat)
+# ===
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
@@ -51,11 +58,11 @@ add_library(api INTERFACE)
 target_include_directories(api
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/kvs_charkey>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/shirakami>
 )
 
-set(export_name "kvs_charkey")
-set(package_name "kvs_charkey")
+set(export_name "shirakami")
+set(package_name "shirakami")
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
@@ -88,10 +95,11 @@ install(
 
 add_subdirectory(src)
 add_subdirectory(bench)
+add_subdirectory(third_party)
+
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
 endif()
-add_subdirectory(third_party)

@@ -31,12 +31,12 @@ function(register_tests)
         message(FATAL_ERROR "SOURCES must be set")
     endif()
 
-    # collect non "*Test" source files: it must be linked from "*Test" files.
+    # collect non "*test" source files: it must be linked from "*test" files.
     set(TESTS_COMMON_SOURCES)
     set(HAS_MAIN_SOURCE OFF)
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
-        if(NOT fname MATCHES "Test$")
+        if(NOT fname MATCHES "test$")
             list(APPEND TESTS_COMMON_SOURCES ${src})
         endif()
         if(fname MATCHES "(^|_)main$")
@@ -44,23 +44,23 @@ function(register_tests)
         endif()
     endforeach()
 
-    # register tests for each "*Test" file as <target-name>-<file-name>
+    # register tests for each "*test" file as <target-name>-<file-name>
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
-        if(fname MATCHES "Test$")
-            if (fname MATCHES "scanPerfTest$")
-                set(test_name "${TESTS_TARGET}-${fname}.exe")
+        if(fname MATCHES "test$")
+            if (fname MATCHES "scan_perf_test$")
+                set(test_name "${TESTS_TARGET}-test_${fname}.exe")
             else()
-                set(test_name "${TESTS_TARGET}-${fname}")
+                set(test_name "${TESTS_TARGET}-test_${fname}")
             endif()
 
             add_executable(${test_name} ${src} ${TESTS_COMMON_SOURCES})
 
-            if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-              add_definitions(-DKVS_Linux)
-            endif()
-
-            target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+            target_include_directories(${test_name}
+                    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                    PRIVATE ${PROJECT_SOURCE_DIR}/src
+                    PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+                    )
 
             if(TARGET ${TESTS_TARGET})
                 target_link_libraries(${test_name} PRIVATE ${TESTS_TARGET})
@@ -90,6 +90,7 @@ function(register_tests)
                     PROPERTIES EXCLUDE_FROM_ALL ON
                 )
             endif()
+            clang_format(${test_name})
         endif()
     endforeach()
 

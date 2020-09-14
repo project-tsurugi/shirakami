@@ -12,12 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-    "*.cpp"
-    "*.cc"
-)
+        "cc/silo_variant/log_test.cpp"
+        "cc/silo_variant/record_test.cpp"
+        "cc/silo_variant/session_info_test.cpp"
+        "cc/silo_variant/tid_test.cpp"
+        "clock_test.cpp"
+        "complicated_test/client_test.cpp"
+        "complicated_test/scan_perf_test.cpp"
+        "error_test.cpp"
+        "interface/helper.cpp"
+        "interface/insert_delete_test.cpp"
+        "interface/scan_search_test.cpp"
+        "interface/simple_delete_test.cpp"
+        "interface/simple_insert_test.cpp"
+        "interface/simple_scan_test.cpp"
+        "interface/simple_search_test.cpp"
+        "interface/simple_update_test.cpp"
+        "memory_test.cpp"
+        "scheme_test.cpp"
+        "string_view_test.cpp"
+        )
+
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB INDEX_TEST_SOURCES "index/masstree_beta/masstree_beta_test.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
+endif ()
+
+if (BUILD_INDEX_YAKUSHIMA)
+    file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
+endif ()
 
 register_tests(
-    TARGET kvs_charkey
-    DEPENDS kvs_charkey-impl
-    SOURCES ${TEST_SOURCES}
+        TARGET shirakami
+        DEPENDS shirakami-impl
+        SOURCES ${TEST_SOURCES}
 )

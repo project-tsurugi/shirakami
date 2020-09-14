@@ -1,0 +1,76 @@
+name: Shirakami-CI
+
+on: [push, pull_request]
+
+jobs:
+  Build:
+    runs-on: [self-hosted, oltp]
+    timeout-minutes: 30
+
+    steps:
+      - id: Begin
+        name: Begin
+        run: |
+          echo "Begin ${GITHUB_WORKFLOW}/${GITHUB_JOB} hostname:$(hostname)"
+
+      - id: Checkout
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.SSH_KEY }}
+
+      - id: Build_masstree
+        name: Build_masstree
+        run: |
+          ./bootstrap.sh
+
+      - id: CMake_Build
+        name: CMake_Build
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DWAL=OFF -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake --build . --target all --clean-first -- -j
+
+      - id: CTest
+        name: CTest
+        continue-on-error: false
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build
+          ctest --verbose --timeout 100
+
+      - id: Clang-Tidy
+        name: Clang-Tidy
+        run: |
+          python tools/bin/run-clang-tidy.py -clang-tidy-binary clang-tidy-8 -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build/clang-tidy.log
+
+      - id: Doxygen
+        name: Doxygen
+        run: |
+          cd build
+          make doxygen 2> >(tee doxygen-error.log)
+
+      - id: Generate_Annotations
+        name: Generate_Annotations
+        uses: ./.github/actions/tsurugi-annotations-action
+        if: always()
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: Notify_Slack
+        name: Notify_Slack
+        uses: ./.github/actions/tsurugi-slack-action
+        if: always() && (contains(github.ref, '/tags/') || contains(github.ref, '/pull/') || contains(github.ref, '/heads/master'))
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          kind: 'job-result'
+          channel: 'tsurugi-dev'
+          status: ${{ job.status }}
+          step_context: ${{ toJson(steps) }}
+          username: ${{ github.workflow }}

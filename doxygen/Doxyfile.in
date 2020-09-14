@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROJECT_NAME           = "kvs_charkey - Transaction Engine"
+PROJECT_NAME           = "shirakami - Transaction Engine"
 PROJECT_NUMBER         = @VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@
 STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@ \
                          @PROJECT_SOURCE_DIR@/docs

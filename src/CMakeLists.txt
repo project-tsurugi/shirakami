@@ -1,45 +1,51 @@
 file(GLOB SOURCES
-        "*.cc"
-        "../third_party/masstree-beta/clp.o"
-        "../third_party/masstree-beta/compiler.o"
-        "../third_party/masstree-beta/kvthread.o"
-        "../third_party/masstree-beta/misc.o"
-        "../third_party/masstree-beta/string.o"
-        "../third_party/masstree-beta/straccum.o"
-        "../third_party/masstree-beta/libjson.a"
-)
+        "*.cpp"
+        )
 
-add_library(kvs_charkey
-    ${SOURCES}
-)
+if (BUILD_CC_SILO_VARIANT)
+    file(GLOB CC_SOURCES "cc/silo_variant/*.cpp")
+    set(SOURCES ${SOURCES} ${CC_SOURCES})
+endif ()
 
-set_target_properties(kvs_charkey
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    file(GLOB INDEX_SOURCES "index/masstree_beta/*.cpp")
+    set(SOURCES ${SOURCES} ${INDEX_SOURCES} index/yakushima/include/scheme.h)
+endif ()
+
+add_library(shirakami
+        ${SOURCES}
+        )
+
+target_include_directories(shirakami
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+        )
+
+find_package(Threads REQUIRED)
+
+target_link_libraries(shirakami
+        PUBLIC api
+        PRIVATE Threads::Threads
+        Boost::filesystem
+        ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
+        )
+
+set_target_properties(shirakami
         PROPERTIES
         LIBRARY_OUTPUT_NAME "kvs"
         )
 
-target_include_directories(kvs_charkey
-    PRIVATE include
-)
-
-find_package(Threads REQUIRED)
-
-target_link_libraries(kvs_charkey
-        PUBLIC api
-        PRIVATE Threads::Threads
-        Boost::filesystem
-)
-
-set_compile_options(kvs_charkey)
-install_custom(kvs_charkey ${export_name})
+set_compile_options(shirakami)
+install_custom(shirakami ${export_name})
+clang_format(shirakami)
 
 # for tests
-add_library(kvs_charkey-impl INTERFACE)
+add_library(shirakami-impl INTERFACE)
 
-target_link_libraries(kvs_charkey-impl
-)
+target_link_libraries(shirakami-impl
+        )
 
-target_include_directories(kvs_charkey-impl
-    INTERFACE include
-)
-
+target_include_directories(shirakami-impl
+        INTERFACE include
+        )
