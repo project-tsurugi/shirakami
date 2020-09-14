@@ -29,9 +29,8 @@ namespace shirakami::cc_silo_variant {
 extern Status abort(Token token);  // NOLINT
 
 /**
- * @brief close the specified scan_cache
- * @param token [in] the token retrieved by enter()
- * get_storage()
+ * @brief close the specified scan_cache.
+ * @param token [in] the token retrieved by enter().
  * @param handle [in] identify the specific scan_cache.
  * @return Status::OK It succeeded.
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
@@ -118,8 +117,7 @@ extern void fin();
  * Some files which has the same path exist.
  * @return Status::OK
  */
-extern Status init(                                                // NOLINT
-        std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));  // NOLINT
+extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));  // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -132,8 +130,7 @@ extern Status init(                                                // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed
  * update/insert/upsert, so it update the local write set object.
  */
-extern Status insert(Token token, std::string_view key,  // NOLINT // NOLINT // NOLINT // NOLINT
-                     std::string_view val);
+extern Status insert(Token token, std::string_view key, std::string_view val); // NOLINT
 
 /**
  * @brief leave session
@@ -159,8 +156,7 @@ extern Status leave(Token token);  // NOLINT
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  * @return Status::OK the some records was scanned.
  */
-extern Status open_scan(Token token, std::string_view left_key,  // NOLINT
-                        bool l_exclusive, std::string_view right_key,
+extern Status open_scan(Token token, std::string_view left_key, bool l_exclusive, std::string_view right_key, // NOLINT
                         bool r_exclusive, ScanHandle &handle);
 
 /**
@@ -180,8 +176,7 @@ extern Status open_scan(Token token, std::string_view left_key,  // NOLINT
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
  * @return Status::OK It succeeded.
  */
-extern Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
-                             Tuple** result);
+extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); // NOLINT
 
 /**
  * @brief search with the given key range and return the found tuples
@@ -202,8 +197,7 @@ extern Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
  * operation.
  */
-extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
-                       bool l_exclusive, std::string_view right_key,
+extern Status scan_key(Token token, std::string_view left_key, bool l_exclusive, std::string_view right_key, // NOLINT
                        bool r_exclusive, std::vector<const Tuple*> &result);
 
 /**
@@ -216,9 +210,7 @@ extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
-[[maybe_unused]] extern Status scannable_total_index_size(  // NOLINT
-        Token token,                                            // NOLINT
-        ScanHandle handle, std::size_t &size);
+[[maybe_unused]] extern Status scannable_total_index_size(Token token, ScanHandle handle, std::size_t &size); // NOLINT
 
 /**
  * @brief search with the given key and return the found tuple
@@ -236,8 +228,7 @@ extern Status scan_key(Token token, std::string_view left_key,  // NOLINT
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
  * operation of concurrent transaction.
  */
-extern Status search_key(Token token, std::string_view key,  // NOLINT
-                         Tuple** tuple);
+extern Status search_key(Token token, std::string_view key, Tuple** tuple); // NOLINT
 
 /**
  * @brief Recovery by single thread.
@@ -258,8 +249,7 @@ extern Status search_key(Token token, std::string_view key,  // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert,
  * so it update the value which is going to be updated.
  */
-extern Status update(Token token, std::string_view key,  // NOLINT
-                     std::string_view val);
+extern Status update(Token token, std::string_view key, std::string_view val); // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -271,7 +261,6 @@ extern Status update(Token token, std::string_view key,  // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did
  * insert/update/upsert, so it overwrite its local write set.
  */
-extern Status upsert(Token token, std::string_view key,  // NOLINT
-                     std::string_view val);
+extern Status upsert(Token token, std::string_view key, std::string_view val); // NOLINT
 
 }  // namespace shirakami
