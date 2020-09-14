@@ -31,10 +31,8 @@ Status close_scan(Token token, ScanHandle handle) {  // NOLINT
     ti->get_scan_cache().erase(itr);
     auto index_itr = ti->get_scan_cache_itr().find(handle);
     ti->get_scan_cache_itr().erase(index_itr);
-    auto r_key_itr = ti->get_rkey().find(handle);
-    ti->get_rkey().erase(r_key_itr);
-    auto len_r_key_itr = ti->get_len_rkey().find(handle);
-    ti->get_len_rkey().erase(len_r_key_itr);
+    auto r_key_itr = ti->get_r_key().find(handle);
+    ti->get_r_key().erase(r_key_itr);
     auto r_exclusive_itr = ti->get_r_end().find(handle);
     ti->get_r_end().erase(r_exclusive_itr);
 
@@ -81,15 +79,10 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
                  */
                 std::unique_ptr<char[]> tmp_rkey;  // NOLINT
                 if (!r_key.empty()) {
-                    tmp_rkey = std::make_unique<char[]>(r_key.size());  // NOLINT
-                    memcpy(tmp_rkey.get(), r_key.data(), r_key.size());
+                    ti->get_r_key()[i] = r_key;
                 } else {
-                    /**
-                     * todo : discuss when len_rkey == 0
-                     */
+                    ti->get_r_key()[i] = "";
                 }
-                ti->get_rkey()[i] = std::move(tmp_rkey);
-                ti->get_len_rkey()[i] = r_key.size();
                 ti->get_r_end()[i] = r_end;
                 /**
                  * end : init about right_end_point_
@@ -126,28 +119,24 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     if (scan_buf.size() == scan_index) {
         const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
 #elif INDEX_KOHLER_MASSTREE
-    std::vector<const Record*> &scan_buf = ti->get_scan_cache()[handle];
-    std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
-    if (scan_buf.size() == scan_index) {
-        const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
+        std::vector<const Record*> &scan_buf = ti->get_scan_cache()[handle];
+        std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
+        if (scan_buf.size() == scan_index) {
+            const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
 #endif
 
 #ifdef INDEX_KOHLER_MASSTREE
         std::vector<const Record*> new_scan_buf;
         masstree_wrapper<Record>::thread_init(sched_getcpu());
-        kohler_masstree::get_mtdb().scan(tupleptr->get_key(), scan_endpoint::EXCLUSIVE,
-                                         {ti->get_len_rkey()[handle] == 0 ? nullptr : ti->get_rkey()[handle].get(),
-                                          ti->get_len_rkey()[handle]}, ti->get_r_end()[handle],
-                                         &new_scan_buf, true);
+        kohler_masstree::get_mtdb().scan(tupleptr->get_key(), scan_endpoint::EXCLUSIVE, ti->get_r_key()[handle],
+                                         ti->get_r_end()[handle], &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
         std::vector<std::pair<Record**, std::size_t>> scan_res;
         std::vector<
                 std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
                 nvec;
-        yakushima::scan({tupleptr->get_key().data(), tupleptr->get_key().size()},
-                        parse_scan_endpoint(scan_endpoint::EXCLUSIVE),
-                        {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
-                        parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
+        yakushima::scan(tupleptr->get_key().data(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE),
+                        ti->get_r_key()[handle], parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
         std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
         new_scan_buf.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {

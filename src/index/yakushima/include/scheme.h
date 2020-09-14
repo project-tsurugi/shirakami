@@ -3,7 +3,7 @@
 //
 
 /**
- * @file scheme.h
+ * @file src/index/yakushima/include/scheme.h
  */
 
 #pragma once

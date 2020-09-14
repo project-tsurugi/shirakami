@@ -85,18 +85,13 @@ public:
 
     class scan_handler {
     public:
-        [[maybe_unused]] std::map<ScanHandle, std::size_t> &
-        get_len_rkey() {  // NOLINT
-            return len_rkey_;
-        }
-
         [[maybe_unused]] std::map<ScanHandle, scan_endpoint> &get_r_end_() {  // NOLINT
             return r_end_;
         }
 
-        [[maybe_unused]] std::map<ScanHandle, std::unique_ptr<char[]>> &  // NOLINT
-        get_rkey() {                                                     // NOLINT
-            return rkey_;
+        [[maybe_unused]] std::map<ScanHandle, std::string> &
+        get_r_key() { // NOLINT
+            return r_key_;
         }
 
 #ifdef INDEX_YAKUSHIMA
@@ -110,9 +105,11 @@ public:
         }
 
 #elif INDEX_KOHLER_MASSTREE
-        std::map<ScanHandle, std::vector<const Record*>>& get_scan_cache() {
-          return scan_cache_;
+
+        std::map<ScanHandle, std::vector<const Record*>> &get_scan_cache() {
+            return scan_cache_;
         }
+
 #endif
 
         [[maybe_unused]] std::map<ScanHandle, std::size_t> &
@@ -121,9 +118,8 @@ public:
         }
 
     private:
-        std::map<ScanHandle, std::size_t> len_rkey_{};
         std::map<ScanHandle, scan_endpoint> r_end_{};
-        std::map<ScanHandle, std::unique_ptr<char[]>> rkey_{};  // NOLINT
+        std::map<ScanHandle, std::string> r_key_{};  // NOLINT
 #ifdef INDEX_YAKUSHIMA
         std::map<
                 ScanHandle,
@@ -225,10 +221,6 @@ public:
 
 #endif
 
-    std::map<ScanHandle, std::size_t> &get_len_rkey() {  // NOLINT
-        return scan_handle_.get_len_rkey();
-    }
-
     std::vector<Log::LogRecord> &get_log_set() {  // NOLINT
         return log_handle_.get_log_set();
     }
@@ -239,8 +231,8 @@ public:
         return scan_handle_.get_r_end_();
     }
 
-    std::map<ScanHandle, std::unique_ptr<char[]>> &get_rkey() {  // NOLINT
-        return scan_handle_.get_rkey();
+    std::map<ScanHandle, std::string> &get_r_key() {  // NOLINT
+        return scan_handle_.get_r_key();
     }
 
     std::vector<read_set_obj> &get_read_set() {  // NOLINT
@@ -257,10 +249,12 @@ public:
     }
 
 #elif INDEX_KOHLER_MASSTREE
-    std::map<ScanHandle, std::vector<const Record*>>&
+
+    std::map<ScanHandle, std::vector<const Record*>> &
     get_scan_cache() {  // NOLINT
-      return scan_handle_.get_scan_cache();
+        return scan_handle_.get_scan_cache();
     }
+
 #endif
 
     std::map<ScanHandle, std::size_t> &get_scan_cache_itr() {  // NOLINT
