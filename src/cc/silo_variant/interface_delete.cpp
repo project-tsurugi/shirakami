@@ -15,6 +15,10 @@
 #endif  // CC_SILO_VARIANT
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
+#elif defined(INDEX_YAKUSHIMA)
+
+#include "index/yakushima/include/scheme.h"
+
 #endif                            // INDEX_KOHLER_MASSTREE
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
@@ -24,7 +28,7 @@ namespace shirakami::cc_silo_variant {
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
 #ifdef INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t> > scan_res;
-    yakushima::scan("", false, "", false, scan_res);  // NOLINT
+    yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
     for (auto &&itr : scan_res) {
         delete *itr.first;  // NOLINT

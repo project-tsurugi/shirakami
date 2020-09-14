@@ -145,10 +145,10 @@ extern Status leave(Token token);  // NOLINT
 /**
  * @brief This function preserve the specified range of masstree
  * @param[in] token the token retrieved by enter()
- * @param[in] left_key
- * @param[in] l_exclusive
- * @param[in] right_key
- * @param[in] r_exclusive
+ * @param[in] l_key
+ * @param[in] l_end
+ * @param[in] r_key
+ * @param[in] r_end
  * @param[out] handle the handle to identify scanned result. This handle will be
  * deleted at abort function.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
@@ -156,8 +156,8 @@ extern Status leave(Token token);  // NOLINT
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  * @return Status::OK the some records was scanned.
  */
-extern Status open_scan(Token token, std::string_view left_key, bool l_exclusive, std::string_view right_key, // NOLINT
-                        bool r_exclusive, ScanHandle &handle);
+extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+                        scan_endpoint r_end, ScanHandle &handle);
 
 /**
  * @brief This function reads the one records from the scan_cache
@@ -181,13 +181,13 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
 /**
  * @brief search with the given key range and return the found tuples
  * @param[in] token the token retrieved by enter()
- * @param[in] left_key the key to indicate the beginning of the range, null if
+ * @param[in] l_key the key to indicate the beginning of the range, null if
  * the beginning is open
- * @param l_exclusive indicate whether the lkey is exclusive
+ * @param l_end indicate whether the lkey is exclusive
  * (i.e. the record whose key equal to lkey is not included in the result)
- * @param[in] right_key the key to indicate the ending of the range, null if the
+ * @param[in] r_key the key to indicate the ending of the range, null if the
  * end is open
- * @param[in] r_exclusive indicate whether the rkey is exclusive
+ * @param[in] r_end indicate whether the rkey is exclusive
  * @param[out] result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid untill commit/abort.
@@ -197,8 +197,8 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
  * operation.
  */
-extern Status scan_key(Token token, std::string_view left_key, bool l_exclusive, std::string_view right_key, // NOLINT
-                       bool r_exclusive, std::vector<const Tuple*> &result);
+extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+                       scan_endpoint r_end, std::vector<const Tuple*> &result);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @a

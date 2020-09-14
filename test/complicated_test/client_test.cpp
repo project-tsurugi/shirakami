@@ -83,8 +83,8 @@ static void exec_search_key(Token token, std::size_t th_nm) {
 static void exec_scan_key(Token token) {
     while (true) {
         std::vector<const Tuple*> result;
-        scan_key(token, {static_cast<const char*>("a"), 1}, false,
-                 {static_cast<const char*>("z"), 1}, false, result);
+        scan_key(token, {static_cast<const char*>("a"), 1}, scan_endpoint::INCLUSIVE,
+                 {static_cast<const char*>("z"), 1}, scan_endpoint::INCLUSIVE, result);
         for (auto &&itr : result) {
             delete itr;  // NOLINT
         }

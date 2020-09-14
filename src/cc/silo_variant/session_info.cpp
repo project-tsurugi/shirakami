@@ -59,7 +59,7 @@ void session_info::clean_up_scan_caches() {
     scan_handle_.get_scan_cache_itr().clear();
     scan_handle_.get_rkey().clear();
     scan_handle_.get_len_rkey().clear();
-    scan_handle_.get_r_exclusive_().clear();
+    scan_handle_.get_r_end_().clear();
 }
 
 [[maybe_unused]] void session_info::display_read_set() {

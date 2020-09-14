@@ -90,8 +90,8 @@ public:
             return len_rkey_;
         }
 
-        [[maybe_unused]] std::map<ScanHandle, bool> &get_r_exclusive_() {  // NOLINT
-            return r_exclusive_;
+        [[maybe_unused]] std::map<ScanHandle, scan_endpoint> &get_r_end_() {  // NOLINT
+            return r_end_;
         }
 
         [[maybe_unused]] std::map<ScanHandle, std::unique_ptr<char[]>> &  // NOLINT
@@ -122,7 +122,7 @@ public:
 
     private:
         std::map<ScanHandle, std::size_t> len_rkey_{};
-        std::map<ScanHandle, bool> r_exclusive_{};
+        std::map<ScanHandle, scan_endpoint> r_end_{};
         std::map<ScanHandle, std::unique_ptr<char[]>> rkey_{};  // NOLINT
 #ifdef INDEX_YAKUSHIMA
         std::map<
@@ -235,8 +235,8 @@ public:
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
 
-    std::map<ScanHandle, bool> &get_r_exclusive() {  // NOLINT
-        return scan_handle_.get_r_exclusive_();
+    std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
+        return scan_handle_.get_r_end_();
     }
 
     std::map<ScanHandle, std::unique_ptr<char[]>> &get_rkey() {  // NOLINT

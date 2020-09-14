@@ -9,6 +9,10 @@
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
+#elif defined(INDEX_YAKUSHIMA)
+
+#include "index/yakushima/include/scheme.h"
+
 #endif
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
@@ -29,15 +33,15 @@ Status close_scan(Token token, ScanHandle handle) {  // NOLINT
     ti->get_rkey().erase(r_key_itr);
     auto len_r_key_itr = ti->get_len_rkey().find(handle);
     ti->get_len_rkey().erase(len_r_key_itr);
-    auto r_exclusive_itr = ti->get_r_exclusive().find(handle);
-    ti->get_r_exclusive().erase(r_exclusive_itr);
+    auto r_exclusive_itr = ti->get_r_end().find(handle);
+    ti->get_r_end().erase(r_exclusive_itr);
 
     return Status::OK;
 }
 
-Status open_scan(Token token, const std::string_view left_key,  // NOLINT
-                 const bool l_exclusive, const std::string_view right_key,
-                 const bool r_exclusive, ScanHandle &handle) {
+Status open_scan(Token token, const std::string_view l_key,  // NOLINT
+                 const scan_endpoint l_end, const std::string_view r_key,
+                 const scan_endpoint r_end, ScanHandle &handle) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token);
 
@@ -53,8 +57,7 @@ Status open_scan(Token token, const std::string_view left_key,  // NOLINT
     std::vector<
             std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
             nvec;
-    yakushima::scan(left_key, l_exclusive,  // NOLINT
-                    right_key, r_exclusive, scan_res, &nvec);
+    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec);
     std::vector<std::tuple<const Record*, yakushima::node_version64_body,
             yakushima::node_version64*>>
             scan_buf;
@@ -78,17 +81,17 @@ Status open_scan(Token token, const std::string_view left_key,  // NOLINT
                  * begin : init about right_end_point_
                  */
                 std::unique_ptr<char[]> tmp_rkey;  // NOLINT
-                if (!right_key.empty()) {
-                    tmp_rkey = std::make_unique<char[]>(right_key.size());  // NOLINT
-                    memcpy(tmp_rkey.get(), right_key.data(), right_key.size());
+                if (!r_key.empty()) {
+                    tmp_rkey = std::make_unique<char[]>(r_key.size());  // NOLINT
+                    memcpy(tmp_rkey.get(), r_key.data(), r_key.size());
                 } else {
                     /**
                      * todo : discuss when len_rkey == 0
                      */
                 }
                 ti->get_rkey()[i] = std::move(tmp_rkey);
-                ti->get_len_rkey()[i] = right_key.size();
-                ti->get_r_exclusive()[i] = r_exclusive;
+                ti->get_len_rkey()[i] = r_key.size();
+                ti->get_r_end()[i] = r_end;
                 /**
                  * end : init about right_end_point_
                  */
@@ -145,17 +148,14 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         std::vector<
                 std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
                 nvec;
-        yakushima::scan(  // NOLINT
-                {tupleptr->get_key().data(), tupleptr->get_key().size()}, true,
-                {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
-                ti->get_r_exclusive()[handle], scan_res, &nvec);
-        std::vector<std::tuple<const Record*, yakushima::node_version64_body,
-                yakushima::node_version64*>>
-                new_scan_buf;
+        yakushima::scan({tupleptr->get_key().data(), tupleptr->get_key().size()},
+                        parse_scan_endpoint(scan_endpoint::EXCLUSIVE),
+                        {ti->get_rkey()[handle].get(), ti->get_len_rkey()[handle]},
+                        parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
+        std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
         new_scan_buf.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            new_scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first,
-                                      nvec.at(i).second);
+            new_scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
         }
 #endif
 
@@ -220,9 +220,8 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     return Status::OK;
 }
 
-Status scan_key(Token token, const std::string_view left_key,  // NOLINT
-                const bool l_exclusive, const std::string_view right_key,
-                const bool r_exclusive, std::vector<const Tuple*> &result) {
+Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l_end,  // NOLINT
+                const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*> &result) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token);
     // as a precaution
@@ -241,8 +240,7 @@ Status scan_key(Token token, const std::string_view left_key,  // NOLINT
     std::vector<
             std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
             nvec;
-    yakushima::scan(left_key, l_exclusive,  // NOLINT
-                    right_key, r_exclusive, scan_buf, &nvec);
+    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec);
     std::vector<std::tuple<const Record*, yakushima::node_version64_body,
             yakushima::node_version64*>>
             scan_res;

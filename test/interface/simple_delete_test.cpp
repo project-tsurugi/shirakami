@@ -42,7 +42,7 @@ TEST_F(simple_delete, all_deletes) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, "", false, "", false, records));
+    ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
     for (auto &&t : records) {
         ASSERT_EQ(Status::OK, delete_record(s, t->get_key()));
     }

@@ -30,6 +30,12 @@ using Token = void*;
  */
 using ScanHandle = std::size_t;
 
+enum class scan_endpoint : char {
+    EXCLUSIVE,
+    INCLUSIVE,
+    INF,
+};
+
 /**
  * @brief the status which is after some function.
  *

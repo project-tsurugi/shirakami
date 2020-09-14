@@ -30,7 +30,7 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     ASSERT_EQ(Status::OK, commit(token.at(0)));
     std::vector<const Tuple*> tuple_vec;
     ASSERT_EQ(Status::OK,
-              scan_key(token.at(0), "", false, "", false, tuple_vec));
+              scan_key(token.at(0), "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
     ASSERT_EQ(tuple_vec.size(), 2);
     // interrupt to occur phantom
     ASSERT_EQ(Status::OK, insert(token.at(1), key.at(2), v));

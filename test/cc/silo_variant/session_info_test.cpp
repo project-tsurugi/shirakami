@@ -72,22 +72,22 @@ TEST_F(session_info_test, get_txbegan_) {  // NOLINT
     ASSERT_EQ(ti->get_txbegan(), false);
     // test scan
     std::vector<const Tuple*> res;
-    ASSERT_EQ(Status::OK, scan_key(s, k, false, k, false, res));
+    ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res));
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);
-    ASSERT_EQ(Status::OK, scan_key(s, k, false, k, false, res));
+    ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res));
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_txbegan(), false);
     // test open_scan
     ScanHandle handle = {};
-    ASSERT_EQ(Status::OK, open_scan(s, k, false, k, false, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, handle));
     ASSERT_EQ(handle, 0);
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);
-    ASSERT_EQ(Status::OK, open_scan(s, k, false, k, false, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, handle));
     ASSERT_EQ(handle, 0);
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, commit(s));

@@ -30,7 +30,7 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, "", false, "", false, records));
+    ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
     ASSERT_EQ(Status::OK, commit(s));
     for (auto &&itr : records) {
         std::cout << std::string(itr->get_key().data(),  // NOLINT
@@ -43,7 +43,7 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, k3, v));
     ASSERT_EQ(Status::OK, upsert(s, k4, v));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, scan_key(s, k, true, k4, true, records));
+    ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
@@ -52,7 +52,7 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     EXPECT_NE(nullptr, tuple);
     delete_record(s, k2);
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, scan_key(s, k, true, k4, true, records));
+    ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(1, records.size());
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
@@ -73,7 +73,7 @@ TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ScanHandle handle{};
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, open_scan(s, k1, false, k2, false, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, k1, scan_endpoint::INCLUSIVE, k2, scan_endpoint::INCLUSIVE, handle));
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
     ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);

@@ -9,7 +9,7 @@ endif ()
 
 if (BUILD_INDEX_KOHLER_MASSTREE)
     file(GLOB INDEX_SOURCES "index/masstree_beta/*.cpp")
-    set(SOURCES ${SOURCES} ${INDEX_SOURCES})
+    set(SOURCES ${SOURCES} ${INDEX_SOURCES} index/yakushima/include/scheme.h)
 endif ()
 
 add_library(shirakami
