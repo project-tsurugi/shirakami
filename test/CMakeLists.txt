@@ -30,6 +30,7 @@ file(GLOB TEST_SOURCES
         "interface/simple_update_test.cpp"
         "memory_test.cpp"
         "scheme_test.cpp"
+        "string_view_test.cpp"
         )
 
 if (BUILD_INDEX_KOHLER_MASSTREE)

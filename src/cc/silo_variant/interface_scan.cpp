@@ -8,7 +8,9 @@
 #include "cc/silo_variant/include/interface_helper.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
+
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
+
 #elif defined(INDEX_YAKUSHIMA)
 
 #include "index/yakushima/include/scheme.h"
@@ -48,10 +50,7 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> scan_buf;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
-    kohler_masstree::get_mtdb().scan(
-        left_key.empty() ? nullptr : left_key.data(), left_key.size(),
-        l_exclusive, right_key.empty() ? nullptr : right_key.data(),
-        right_key.size(), r_exclusive, &scan_buf, true);
+    kohler_masstree::get_mtdb().scan(l_key, l_end, r_key, r_end, &scan_buf, true);
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_res;
     std::vector<
@@ -127,22 +126,19 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     if (scan_buf.size() == scan_index) {
         const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
 #elif INDEX_KOHLER_MASSTREE
-        std::vector<const Record*>& scan_buf = ti->get_scan_cache()[handle];
-        std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
-        if (scan_buf.size() == scan_index) {
-          const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
+    std::vector<const Record*> &scan_buf = ti->get_scan_cache()[handle];
+    std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
+    if (scan_buf.size() == scan_index) {
+        const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
 #endif
 
 #ifdef INDEX_KOHLER_MASSTREE
         std::vector<const Record*> new_scan_buf;
         masstree_wrapper<Record>::thread_init(sched_getcpu());
-        kohler_masstree::get_mtdb().scan(
-            tupleptr->get_key().empty() ? nullptr : tupleptr->get_key().data(),
-            tupleptr->get_key().size(), true,
-            ti->get_len_rkey()[handle] == 0 ? nullptr
-                                            : ti->get_rkey()[handle].get(),
-            ti->get_len_rkey()[handle], ti->get_r_exclusive()[handle],
-            &new_scan_buf, true);
+        kohler_masstree::get_mtdb().scan(tupleptr->get_key(), scan_endpoint::EXCLUSIVE,
+                                         {ti->get_len_rkey()[handle] == 0 ? nullptr : ti->get_rkey()[handle].get(),
+                                          ti->get_len_rkey()[handle]}, ti->get_r_end()[handle],
+                                         &new_scan_buf, true);
 #elif INDEX_YAKUSHIMA
         std::vector<std::pair<Record**, std::size_t>> scan_res;
         std::vector<
@@ -231,10 +227,7 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> scan_res;
     masstree_wrapper<Record>::thread_init(sched_getcpu());
-    kohler_masstree::get_mtdb().scan(
-        left_key.empty() ? nullptr : left_key.data(), left_key.size(),
-        l_exclusive, right_key.empty() ? nullptr : right_key.data(),
-        right_key.size(), r_exclusive, &scan_res, false);
+    kohler_masstree::get_mtdb().scan(l_key, l_end, r_key, r_end, &scan_res, false);
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     std::vector<

@@ -52,12 +52,10 @@ class SearchRangeScanner {
 public:
     using Str = Masstree::Str;
 
-    SearchRangeScanner(const char* const rkey, const std::size_t len_rkey,
-                       const bool r_exclusive, std::vector<const T*>* scan_buffer,
+    SearchRangeScanner(const std::string_view r_key, const scan_endpoint r_end, std::vector<const T*>* scan_buffer,
                        bool limited_scan)
-            : rkey_(rkey),
-              len_rkey_(len_rkey),
-              r_exclusive_(r_exclusive),
+            : r_key_(r_key),
+              r_end_(r_end),
               scan_buffer_(scan_buffer),
               limited_scan_(limited_scan) {
         if (limited_scan) {
@@ -76,17 +74,16 @@ public:
             }
         }
 
-        if (rkey_ == nullptr) {
+        if (r_end_ == scan_endpoint::INF) {
             scan_buffer_->emplace_back(val);
             return true;
         }
 
         const int res_memcmp = memcmp(
-                rkey_, key.s, std::min(len_rkey_, static_cast<std::size_t>(key.len)));
-        if (res_memcmp > 0 ||
-            (res_memcmp == 0 &&
-             ((!r_exclusive_ && len_rkey_ == static_cast<std::size_t>(key.len)) ||
-              len_rkey_ > static_cast<std::size_t>(key.len)))) {
+                r_key_.data(), key.s, std::min(r_key_.size(), static_cast<std::size_t>(key.len)));
+        if (res_memcmp > 0 || (res_memcmp == 0 && ((r_end_ == scan_endpoint::INCLUSIVE &&
+                                                    r_key_.size() == static_cast<std::size_t>(key.len)) ||
+                                                   r_key_.size() > static_cast<std::size_t>(key.len)))) {
             scan_buffer_->emplace_back(val);
             return true;
         }
@@ -94,9 +91,8 @@ public:
     }
 
 private:
-    const char* const rkey_{};
-    const std::size_t len_rkey_{};
-    const bool r_exclusive_{};
+    const std::string_view r_key_{};
+    const scan_endpoint r_end_{};
     std::vector<const T*>* scan_buffer_{};
     const bool limited_scan_{false};
     static constexpr std::size_t kLimit_ = 1000;
@@ -228,20 +224,20 @@ public:
         return nullptr;
     }
 
-    void scan(const char* const lkey, const std::size_t len_lkey,
-              const bool l_exclusive, const char* const rkey,
-              const std::size_t len_rkey, const bool r_exclusive,
-              std::vector<const T*>* res, bool limited_scan) {
+    void scan(std::string_view l_key, const scan_endpoint l_end, const std::string_view r_key,
+              const scan_endpoint r_end, std::vector<const T*>* res, bool limited_scan) {
         Str mtkey;
-        if (lkey == nullptr) {
+        if (l_end == scan_endpoint::INF) {
+            l_key = "";
+        }
+        if (l_key.empty()) {
             mtkey = Str();
         } else {
-            mtkey = Str(lkey, len_lkey);
+            mtkey = Str(l_key.data(), l_key.size());
         }
 
-        SearchRangeScanner<T> scanner(rkey, len_rkey, r_exclusive, res,
-                                      limited_scan);
-        table_.scan(mtkey, !l_exclusive, scanner, *ti);
+        SearchRangeScanner<T> scanner(r_key, r_end, res, limited_scan);
+        table_.scan(mtkey, l_end != scan_endpoint::EXCLUSIVE, scanner, *ti);
     }
 
     [[maybe_unused]] void print_table() {
