@@ -31,7 +31,7 @@ jobs:
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DWAL=OFF -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-          cmake --build . --target all --clean-first -- -j8
+          cmake --build . --target all --clean-first -- -j
 
       - id: CTest
         name: CTest
