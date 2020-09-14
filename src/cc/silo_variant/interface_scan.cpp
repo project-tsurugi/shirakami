@@ -77,7 +77,6 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
                 /**
                  * begin : init about right_end_point_
                  */
-                std::unique_ptr<char[]> tmp_rkey;  // NOLINT
                 if (!r_key.empty()) {
                     ti->get_r_key()[i] = r_key;
                 } else {
@@ -135,7 +134,7 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         std::vector<
                 std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
                 nvec;
-        yakushima::scan(tupleptr->get_key().data(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE),
+        yakushima::scan(tupleptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE),
                         ti->get_r_key()[handle], parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
         std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
         new_scan_buf.reserve(scan_res.size());
