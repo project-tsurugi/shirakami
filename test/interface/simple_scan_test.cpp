@@ -219,6 +219,29 @@ TEST_F(simple_scan, open_scan_test) {  // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_scan, open_scan_test2) { // NOLINT
+    std::string k1{"a"};
+    std::string k2{"a/"};
+    std::string k3{"a/c"};
+    std::string k4{"b"};
+    std::string v{"v"};
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ScanHandle handle{};
+    ASSERT_EQ(Status::OK, insert(s, k1, v));
+    ASSERT_EQ(Status::OK, insert(s, k2, v));
+    ASSERT_EQ(Status::OK, insert(s, k3, v));
+    ASSERT_EQ(Status::OK, insert(s, k4, v));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK ,open_scan(s, k2, scan_endpoint::INCLUSIVE, k3, scan_endpoint::INCLUSIVE, handle));
+    Tuple* tuple{};
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(leave(s), Status::OK);
+}
+
 TEST_F(simple_scan, read_from_scan) {  // NOLINT
     std::string k("aaa");                // NOLINT
     std::string k2("aab");               // NOLINT
