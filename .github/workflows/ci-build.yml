@@ -36,7 +36,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 100
+          ctest --verbose --timeout 100 -j 100
 
       - id: Clang-Tidy
         name: Clang-Tidy
