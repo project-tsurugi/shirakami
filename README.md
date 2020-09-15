@@ -13,7 +13,7 @@ apt update -y && apt install -y git build-essential cmake ninja-build doxygen li
 ```sh
 # retrieve third party modules
 git submodule update --init --recursive
-# build third_party/masstree-beta
+# If you use -DBUILD_INDEX_KOHLER_MASSTREE(kohler masstree as index structure), it builds third_party/masstree-beta
 ./bootstrap.sh
 ```
 
@@ -27,6 +27,10 @@ ninja
 ```
 
 available options:
+* index (data) structure options
+  * default : `-DBUILD_INDEX_YAKUSHIMA=ON` : yakushima is upward compatible with kohler masstree.
+  * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF` : use kohler masstree as index (data) structure. 
+  If you use this option, execute `[project root]/bootstrap.sh` to build third_party/masstree-beta (kohler masstree).
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate prerequiste installation directory
