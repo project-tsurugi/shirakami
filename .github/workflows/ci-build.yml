@@ -20,11 +20,6 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.SSH_KEY }}
 
-      - id: Build_masstree
-        name: Build_masstree
-        run: |
-          ./bootstrap.sh
-
       - id: CMake_Build
         name: CMake_Build
         run: |
