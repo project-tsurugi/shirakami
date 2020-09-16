@@ -24,12 +24,20 @@ target_include_directories(shirakami
 
 find_package(Threads REQUIRED)
 
-target_link_libraries(shirakami
-        PUBLIC api
-        PRIVATE Threads::Threads
-        Boost::filesystem
-        ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
-        )
+if (BUILD_INDEX_KOHLER_MASSTREE)
+    target_link_libraries(shirakami
+            PUBLIC api
+            PRIVATE Threads::Threads
+            Boost::filesystem
+            ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
+            )
+elseif (BUILD_INDEX_YAKUSHIMA)
+    target_link_libraries(shirakami
+            PUBLIC api
+            PRIVATE Threads::Threads
+            Boost::filesystem
+            )
+endif ()
 
 set_target_properties(shirakami
         PROPERTIES
