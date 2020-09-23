@@ -6,15 +6,13 @@
 * C++ Compiler `>= C++17`
 * build related libararies - on Ubuntu, you can install with following command:
 
-```
-apt update -y && apt install -y git build-essential cmake ninja-build doxygen libgflags-dev libgoogle-glog-dev gnuplot libboost-filesystem-dev clang-tidy-8 gcovr
-```
-
 ```sh
-# retrieve third party modules
-git submodule update --init --recursive
+# clone this repository
+git clone --recurse-submodules this_repository
+cd shirakami
+sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
 # If you use -DBUILD_INDEX_KOHLER_MASSTREE(kohler masstree as index structure), it builds third_party/masstree-beta
-./bootstrap.sh
+./build_tools/bootstrap.sh
 ```
 
 ## How to build
@@ -30,7 +28,7 @@ available options:
 * index (data) structure options
   * default : `-DBUILD_INDEX_YAKUSHIMA=ON` : yakushima is upward compatible with kohler masstree.
   * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF` : use kohler masstree as index (data) structure. 
-  If you use this option, execute `[project root]/bootstrap.sh` to build third_party/masstree-beta (kohler masstree).
+  If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta (kohler masstree).
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate prerequiste installation directory
