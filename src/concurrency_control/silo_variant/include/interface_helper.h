@@ -1,5 +1,5 @@
 /**
- * @file src/cc/silo_variant/include/interface_helper.h
+ * @file src/concurrency_control/silo_variant/include/interface_helper.h
  */
 
 #pragma once

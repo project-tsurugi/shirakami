@@ -1,9 +1,9 @@
 /**
- * @file tid.cc
+ * @file tid.concurrency_control
  * @details implement about tid.
  */
 
-#include "cc/silo_variant/include/tid.h"
+#include "concurrency_control/silo_variant/include/tid.h"
 
 #include <bitset>
 #include <iostream>

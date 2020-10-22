@@ -3,7 +3,7 @@
  * @brief about garbage collection.
  */
 
-#include "cc/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 
@@ -15,7 +15,7 @@
 
 #endif
 
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant::garbage_collection {
 

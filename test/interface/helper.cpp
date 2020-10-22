@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 // shirakami-impl interface library
-#include "cc/silo_variant/include/scheme.h"
+#include "concurrency_control/silo_variant/include/scheme.h"
 #include "compiler.h"
 #include "tuple_local.h"
 

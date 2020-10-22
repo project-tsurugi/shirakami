@@ -31,7 +31,7 @@
 
 #ifdef CC_SILO_VARIANT
 
-#include "cc/silo_variant/include/session_info.h"
+#include "concurrency_control/silo_variant/include/session_info.h"
 
 #endif  // CC_SILO_VARIANT
 

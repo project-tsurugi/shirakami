@@ -23,7 +23,7 @@ public:
 
     /**
      * @brief copy assign operator
-     * @pre this is called by read_record function at xact.cc only .
+     * @pre this is called by read_record function at xact.concurrency_control only .
      */
     Impl &operator=(const Impl &right);  // NOLINT
 

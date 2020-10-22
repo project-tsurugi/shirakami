@@ -3,15 +3,15 @@
  * @brief about scheme
  */
 
-#include "include/session_info.h"
+#include "concurrency_control/silo_variant/include/session_info.h"
 
-#include "cc/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 

@@ -9,7 +9,7 @@
 #include "./ycsb_param.h"
 
 // shirakami/src/
-#include "cc/silo_variant/include/scheme.h"
+#include "concurrency_control/silo_variant/include/scheme.h"
 #include "random.h"
 #include "zipf.h"
 

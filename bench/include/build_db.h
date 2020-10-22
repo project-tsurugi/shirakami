@@ -18,7 +18,7 @@
 
 #ifdef CC_SILO_VARIANT
 
-#include "cc/silo_variant/include/scheme.h"
+#include "concurrency_control/silo_variant/include/scheme.h"
 
 #endif
 

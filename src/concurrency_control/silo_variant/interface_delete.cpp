@@ -9,19 +9,16 @@
 
 #ifdef CC_SILO_VARIANT
 
-#include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/interface_helper.h"
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/interface_helper.h"
 
 #endif  // CC_SILO_VARIANT
+
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#elif defined(INDEX_YAKUSHIMA)
-
-#include "index/yakushima/include/scheme.h"
-
 #endif                            // INDEX_KOHLER_MASSTREE
 
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 

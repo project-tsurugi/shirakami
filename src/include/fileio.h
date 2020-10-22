@@ -2,7 +2,7 @@
  * @file fileio.h
  * @brief File IO utilities.
  * @details This source is implemented by refering the source
- * https://github.com/starpos/oltp-cc-bench whose the author is Takashi Hoshino.
+ * https://github.com/starpos/oltp-concurrency_control-bench whose the author is Takashi Hoshino.
  * And Takayuki Tanabe revised.
  */
 

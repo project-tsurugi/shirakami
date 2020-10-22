@@ -4,8 +4,8 @@
 
 #ifdef CC_SILO_VARIANT
 
-#include "cc/silo_variant/include/garbage_collection.h"
-#include "cc/silo_variant/include/interface_helper.h"
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/interface_helper.h"
 
 #endif  // CC_SILO_VARIANT
 #ifdef INDEX_KOHLER_MASSTREE

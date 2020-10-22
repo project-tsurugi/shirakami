@@ -1,4 +1,4 @@
-#include "cc/silo_variant/include/record.h"
+#include "concurrency_control/silo_variant/include/record.h"
 
 #include "tuple_local.h"
 

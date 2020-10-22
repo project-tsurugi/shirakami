@@ -1,5 +1,5 @@
 /**
- * @file masstree_wrapper.cc
+ * @file masstree_wrapper.concurrency_control
  * @brief implement about masstree_wrapper
  */
 

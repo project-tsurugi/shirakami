@@ -3,7 +3,7 @@ file(GLOB SOURCES
         )
 
 if (BUILD_CC_SILO_VARIANT)
-    file(GLOB CC_SOURCES "cc/silo_variant/*.cpp")
+    file(GLOB CC_SOURCES "concurrency_control/silo_variant/*.cpp")
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 endif ()
 

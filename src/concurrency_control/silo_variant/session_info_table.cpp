@@ -3,10 +3,10 @@
  * @brief about entire shirakami.
  */
 
-#include "cc/silo_variant/include/session_info_table.h"
+#include "concurrency_control/silo_variant/include/session_info_table.h"
 
-#include "cc/silo_variant/include/garbage_collection.h"
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 

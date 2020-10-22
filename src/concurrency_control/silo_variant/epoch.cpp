@@ -3,13 +3,13 @@
  * @brief implement about epoch
  */
 
-#include "cc/silo_variant/include/epoch.h"
+#include "concurrency_control/silo_variant/include/epoch.h"
 
 #include <xmmintrin.h>  // NOLINT
 
-#include "cc/silo_variant/include/session_info_table.h"
 #include "clock.h"
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "concurrency_control/silo_variant/include/session_info_table.h"
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant::epoch {
 

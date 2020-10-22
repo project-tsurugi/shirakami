@@ -3,9 +3,9 @@
  * @brief implement about log
  */
 
-#include "cc/silo_variant/include/log.h"
+#include "concurrency_control/silo_variant/include/log.h"
 
-#include "include/tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 

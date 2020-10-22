@@ -26,7 +26,7 @@ alignas(CACHE_LINE_SIZE) inline std::array<                         // NOLINT
 
 /**
  * @brief Delete std::vector<Record*> kGarbageRecords at
- * shirakami/src/gcollection.cc
+ * shirakami/src/gcollection.concurrency_control
  * @pre This function should be called at terminating db.
  * @return void
  */
@@ -34,7 +34,7 @@ extern void delete_all_garbage_records();
 
 /**
  * @brief Delete first of std::pair<std::string*, epoch_t>> kGarbageValues at
- * shirakami/src/gcollection.cc
+ * shirakami/src/gcollection.concurrency_control
  * @pre This function should be called at terminating db.
  * @return void
  */

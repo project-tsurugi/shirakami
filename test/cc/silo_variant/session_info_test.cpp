@@ -1,4 +1,4 @@
-#include "cc/silo_variant/include/session_info.h"
+#include "concurrency_control/silo_variant/include/session_info.h"
 #include "gtest/gtest.h"
 #include "tuple_local.h"
 
