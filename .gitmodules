@@ -13,3 +13,6 @@
 [submodule "third_party/yakushima"]
 	path = third_party/yakushima
 	url = git@github.com:project-tsurugi/yakushima.git
+[submodule "third_party/msgpack-c"]
+	path = third_party/msgpack-c
+	url = https://github.com/msgpack/msgpack-c.git
