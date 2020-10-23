@@ -47,7 +47,7 @@ void session_info_table::init_kThreadTable() {
         /**
          * about logging.
          */
-#ifdef WAL
+#ifdef PWAL
         itr->log_dir_.assign(kLogDirectory);
         itr->log_dir_.append("/log");
         itr->log_dir_.append(std::to_string(ctr));
@@ -78,7 +78,7 @@ void session_info_table::fin_kThreadTable() {
          * about logging
          */
         itr.get_log_set().clear();
-#ifdef WAL
+#ifdef PWAL
         itr->log_file_.close();
 #endif
     }

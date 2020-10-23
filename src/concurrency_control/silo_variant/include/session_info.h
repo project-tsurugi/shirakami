@@ -340,12 +340,14 @@ public:
     void unlock_write_set(std::vector<write_set_obj>::iterator begin,
                           std::vector<write_set_obj>::iterator end);
 
+#ifdef PWAL
     /**
      * @brief write-ahead logging
      * @param [in] commit_id commit tid.
      * @return void
      */
     void wal(uint64_t commit_id);
+#endif
 
     [[maybe_unused]] void set_token(Token token) { token_ = token; }
 

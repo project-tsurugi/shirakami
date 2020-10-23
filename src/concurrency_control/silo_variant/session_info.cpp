@@ -226,6 +226,7 @@ void session_info::unlock_write_set(  // NOLINT
     }
 }
 
+#ifdef PWAL
 void session_info::wal(uint64_t commit_id) {
     for (auto &&itr : write_set) {
         if (itr.get_op() == OP_TYPE::UPDATE) {
@@ -300,5 +301,6 @@ void session_info::wal(uint64_t commit_id) {
     log_handle_.get_latest_log_header().init();
     log_handle_.get_log_set().clear();
 }
+#endif
 
 }  // namespace shirakami::cc_silo_variant

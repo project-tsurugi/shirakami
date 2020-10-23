@@ -41,6 +41,7 @@ void fin() {
 }
 
 Status init(const std::string_view log_directory_path) {  // NOLINT
+#if defined(PWAL) || defined(CPR)
     /**
      * The default value of log_directory is PROJECT_ROOT.
      */
@@ -69,10 +70,17 @@ Status init(const std::string_view log_directory_path) {  // NOLINT
         boost::filesystem::create_directories(log_dir);
     }
 
+#endif
+
     /**
      * If it already exists log files, it recoveries from those.
      */
-    // single_recovery_from_log();
+#if RECOVERY
+#ifdef PWAL
+    single_recovery_from_log();
+#endif
+#endif
+
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
 #ifdef INDEX_YAKUSHIMA
@@ -176,7 +184,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
     max_tid.set_epoch(ti->get_epoch());
     ti->set_mrc_tid(max_tid);
 
-#ifdef WAL
+#ifdef PWAL
     ti->wal(max_tid.get_obj());
 #endif
 

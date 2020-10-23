@@ -99,9 +99,6 @@ Status commit(Token token) {  // NOLINT
     }
 
     // Phase 4: Write & Unlock
-
-    // exec_logging(write_set, myid);
-
     cc_silo_variant::write_phase(ti, max_rset, max_wset);
 
     ti->set_tx_began(false);
