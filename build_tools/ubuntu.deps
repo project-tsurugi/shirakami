@@ -6,6 +6,7 @@ gcovr
 git
 gnuplot
 libboost-filesystem-dev
+libboost1.65-dev
 libgflags-dev
 libgoogle-glog-dev
 ninja-build

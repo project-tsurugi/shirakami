@@ -20,6 +20,10 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.SSH_KEY }}
 
+      - id: Install_dependencies_Linux
+        name: Install_dependencies_Linux
+        run: sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
+
       - id: CMake_Build
         name: CMake_Build
         run: |
