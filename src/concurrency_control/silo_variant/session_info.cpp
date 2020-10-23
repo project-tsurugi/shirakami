@@ -227,7 +227,7 @@ void session_info::unlock_write_set(  // NOLINT
 }
 
 #ifdef PWAL
-void session_info::wal(uint64_t commit_id) {
+void session_info::pwal(uint64_t commit_id) {
     for (auto &&itr : write_set) {
         if (itr.get_op() == OP_TYPE::UPDATE) {
             log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(),

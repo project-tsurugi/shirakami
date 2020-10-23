@@ -25,7 +25,7 @@
 #include "cpu.h"
 #include "fileio.h"
 #include "kvs/scheme.h"
-#include "log.h"
+#include "pwal.h"
 #include "record.h"
 #include "scheme.h"
 #include "tid.h"

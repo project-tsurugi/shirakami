@@ -3,7 +3,7 @@
  * @brief implement about log
  */
 
-#include "concurrency_control/silo_variant/include/log.h"
+#include "concurrency_control/silo_variant/include/pwal.h"
 
 #include "tuple_local.h"  // sizeof(Tuple)
 

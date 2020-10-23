@@ -1,6 +1,6 @@
 #ifdef CC_SILO_VARIANT
 
-#include "concurrency_control/silo_variant/include/log.h"
+#include "concurrency_control/silo_variant/include/pwal.h"
 
 #endif
 

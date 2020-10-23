@@ -24,7 +24,7 @@
 #include "compiler.h"
 #include "cpu.h"
 #include "fileio.h"
-#include "log.h"
+#include "pwal.h"
 #include "record.h"
 #include "scheme.h"
 #include "tid.h"
@@ -346,7 +346,7 @@ public:
      * @param [in] commit_id commit tid.
      * @return void
      */
-    void wal(uint64_t commit_id);
+    void pwal(uint64_t commit_id);
 #endif
 
     [[maybe_unused]] void set_token(Token token) { token_ = token; }

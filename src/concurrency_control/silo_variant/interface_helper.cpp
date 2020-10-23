@@ -185,7 +185,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
     ti->set_mrc_tid(max_tid);
 
 #ifdef PWAL
-    ti->wal(max_tid.get_obj());
+    ti->pwal(max_tid.get_obj());
 #endif
 
     for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();

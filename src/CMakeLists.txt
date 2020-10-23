@@ -12,6 +12,15 @@ if (BUILD_INDEX_KOHLER_MASSTREE)
     set(SOURCES ${SOURCES} ${INDEX_SOURCES} index/yakushima/include/scheme.h)
 endif ()
 
+if (BUILD_PWAL)
+    file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
+    set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
+endif ()
+
+if (BUILD_CPR)
+    # TODO : fixme
+endif ()
+
 add_library(shirakami
         ${SOURCES}
         )
