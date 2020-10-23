@@ -40,7 +40,7 @@ void fin() {
 #endif
 }
 
-Status init(const std::string_view log_directory_path) {  // NOLINT
+Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOLINT
 #if defined(PWAL) || defined(CPR)
     /**
      * The default value of log_directory is PROJECT_ROOT.
