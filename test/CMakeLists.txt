@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-        "cc/silo_variant/record_test.cpp"
-        "cc/silo_variant/session_info_test.cpp"
-        "cc/silo_variant/tid_test.cpp"
+        "concurrency_control/silo_variant/record_test.cpp"
+        "concurrency_control/silo_variant/session_info_test.cpp"
+        "concurrency_control/silo_variant/tid_test.cpp"
         "clock_test.cpp"
         "complicated_test/client_test.cpp"
         "complicated_test/scan_perf_test.cpp"
@@ -43,7 +43,12 @@ if (BUILD_INDEX_YAKUSHIMA)
 endif ()
 
 if (BUILD_PWAL)
-    file(GLOB FAULT_TOLERANCE_TESTS "cc/silo_variant/log_test.cpp")
+    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
+endif ()
+
+if (BUILD_CPR)
+    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 
