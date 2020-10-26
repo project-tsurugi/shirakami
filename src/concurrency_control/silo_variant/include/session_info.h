@@ -362,7 +362,7 @@ public:
         epoch_.store(epoch, std::memory_order_release);
     }
 
-    void set_flushed_ctid(tid_word ctid) {
+    void set_flushed_ctid(const tid_word& ctid) {
         flushed_ctid_ = ctid;
     }
 
