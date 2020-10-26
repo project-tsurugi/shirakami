@@ -220,6 +220,7 @@ public:
 
 #endif
 
+#if defined(PWAL) || defined(CPR)
     log_handler& get_log_handler() {
         return log_handle_;
     }
@@ -227,6 +228,8 @@ public:
     std::vector<Log::LogRecord> &get_log_set() {  // NOLINT
         return log_handle_.get_log_set();
     }
+
+#endif
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
 

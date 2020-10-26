@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-        "cc/silo_variant/log_test.cpp"
         "cc/silo_variant/record_test.cpp"
         "cc/silo_variant/session_info_test.cpp"
         "cc/silo_variant/tid_test.cpp"
@@ -41,6 +40,11 @@ endif ()
 if (BUILD_INDEX_YAKUSHIMA)
     file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
+endif ()
+
+if (BUILD_PWAL)
+    file(GLOB FAULT_TOLERANCE_TESTS "cc/silo_variant/log_test.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 
 register_tests(

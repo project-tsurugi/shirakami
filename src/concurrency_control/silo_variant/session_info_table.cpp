@@ -78,8 +78,8 @@ void session_info_table::fin_kThreadTable() {
         /**
          * about logging
          */
-        itr.get_log_set().clear();
 #ifdef PWAL
+        itr.get_log_set().clear();
         itr.get_log_handler().get_log_file().close();
 #endif
     }
