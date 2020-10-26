@@ -24,7 +24,6 @@
 #include "compiler.h"
 #include "cpu.h"
 #include "fileio.h"
-#include "pwal.h"
 #include "record.h"
 #include "scheme.h"
 #include "tid.h"
@@ -37,6 +36,8 @@
 #include "yakushima/include/kvs.h"
 
 #endif
+
+#include "fault_tolerance/include/pwal.h"
 
 namespace shirakami::cc_silo_variant {
 
@@ -142,10 +143,7 @@ public:
             return latest_log_header_;
         }
 
-        void set_log_dir(std::string &&str) { log_dir_ = str; }
-
     private:
-        std::string log_dir_{};
         File log_file_{};
         std::vector<Log::LogRecord> log_set_{};
         Log::LogHeader latest_log_header_{};
@@ -154,12 +152,13 @@ public:
     explicit session_info(Token token) {
         this->token_ = token;
         get_mrctid().reset();
+        get_flushed_ctid().reset();
     }
 
     session_info() {
         this->visible_.store(false, std::memory_order_release);
         get_mrctid().reset();
-        log_handle_.set_log_dir(MAC2STR(PROJECT_ROOT));
+        get_flushed_ctid().reset();
     }
 
     /**
@@ -221,12 +220,17 @@ public:
 
 #endif
 
+    log_handler& get_log_handler() {
+        return log_handle_;
+    }
+
     std::vector<Log::LogRecord> &get_log_set() {  // NOLINT
         return log_handle_.get_log_set();
     }
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
 
+    tid_word &get_flushed_ctid() { return flushed_ctid_; } // NOLINT
     std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
         return scan_handle_.get_r_end_();
     }
@@ -346,13 +350,17 @@ public:
      * @param [in] commit_id commit tid.
      * @return void
      */
-    void pwal(uint64_t commit_id);
+    void pwal(std::uint64_t commit_id, commit_property cp);
 #endif
 
     [[maybe_unused]] void set_token(Token token) { token_ = token; }
 
     void set_epoch(epoch::epoch_t epoch) {
         epoch_.store(epoch, std::memory_order_release);
+    }
+
+    void set_flushed_ctid(tid_word ctid) {
+        flushed_ctid_ = ctid;
     }
 
     void set_gc_container_index(std::size_t new_index) {
@@ -391,6 +399,7 @@ private:
 #endif
     std::atomic<epoch::epoch_t> epoch_{};
     tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
+    tid_word flushed_ctid_{};
     std::atomic<bool> visible_{};
     bool tx_began_{};
 
@@ -412,7 +421,10 @@ private:
     /**
      * about logging.
      */
+#if defined(PWAL) || defined(CPR)
     log_handler log_handle_;
+#endif
+
 };
 
 }  // namespace shirakami::cc_silo_variant

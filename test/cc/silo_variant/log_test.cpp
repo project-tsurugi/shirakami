@@ -1,6 +1,10 @@
 #ifdef CC_SILO_VARIANT
 
-#include "concurrency_control/silo_variant/include/pwal.h"
+#ifdef PWAL
+
+#include "fault_tolerance/include/pwal.h"
+
+#endif
 
 #endif
 

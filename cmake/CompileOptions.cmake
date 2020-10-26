@@ -79,7 +79,7 @@ add_definitions(-DKVS_EPOCH_TIME=40)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
 add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
-add_definitions(-DKVS_LOG_GC_THRESHOLD=1)
+add_definitions(-DKVS_LOG_GC_THRESHOLD=1000)
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
 if (BUILD_PWAL)

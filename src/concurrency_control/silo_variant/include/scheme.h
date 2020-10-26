@@ -25,7 +25,6 @@
 #include "cpu.h"
 #include "fileio.h"
 #include "kvs/scheme.h"
-#include "pwal.h"
 #include "record.h"
 #include "scheme.h"
 #include "tid.h"
@@ -33,6 +32,12 @@
 #ifdef INDEX_YAKUSHIMA
 
 #include "yakushima/include/kvs.h"
+
+#endif
+
+#ifdef PWAL
+
+#include "fault_tolerance/include/pwal.h"
 
 #endif
 

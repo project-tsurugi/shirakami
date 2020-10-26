@@ -144,7 +144,7 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
 }
 
 void write_phase(session_info* const ti, const tid_word &max_r_set,
-                 const tid_word &max_w_set) {
+                 const tid_word &max_w_set, [[maybe_unused]]commit_property cp) {
 #ifdef INDEX_KOHLER_MASSTREE
     masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif  // INDEX_KOHLER_MASSTREE
@@ -185,7 +185,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
     ti->set_mrc_tid(max_tid);
 
 #ifdef PWAL
-    ti->pwal(max_tid.get_obj());
+    ti->pwal(max_tid.get_obj(), cp);
 #endif
 
     for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();

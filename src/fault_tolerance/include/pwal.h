@@ -11,9 +11,15 @@
 #include <cstring>
 
 #include "fileio.h"
+
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
-#include "tid.h"
+
+#ifdef CC_SILO_VARIANT
+
+#include "concurrency_control/silo_variant/include/tid.h"
+
+#endif
 
 namespace shirakami::cc_silo_variant {
 

@@ -21,6 +21,37 @@
 namespace shirakami {
 
 /**
+ * @brief commit property
+ * @details This is used for args of commit command.
+ */
+enum class commit_property : char {
+    /**
+     * @brief It waits commit (durable) at commit command.
+     */
+    WAIT_FOR_COMMIT,
+    /**
+     * @brief It does not wait commit (durable) at commit command.
+     * If you need to notify commit to client, use check_commit function.
+     */
+    NOWAIT_FOR_COMMIT,
+};
+
+class commit_param {
+public:
+    commit_property get_cp() { return cp_; }
+
+    std::uint64_t get_ctid() { return ctid_; }
+
+    void set_cp(commit_property cp) { cp_ = cp; }
+
+    void set_ctid(std::uint64_t ctid) { ctid_ = ctid; }
+
+private:
+    commit_property cp_{commit_property::NOWAIT_FOR_COMMIT};
+    std::uint64_t ctid_{0};
+};
+
+/**
  * @brief Session token
  */
 using Token = void*;

@@ -28,7 +28,6 @@ Status read_record(Record &res, const Record* dest);  // NOLINT
  */
 void tx_begin(Token token);
 
-void write_phase(session_info* ti, const tid_word &max_r_set,
-                 const tid_word &max_w_set);
+void write_phase(session_info* ti, const tid_word &max_r_set, const tid_word &max_w_set, commit_property cp);
 
 }  // namespace shirakami::silo_variant

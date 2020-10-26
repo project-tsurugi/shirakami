@@ -48,6 +48,10 @@ public:
         return this->obj_ < right.get_obj();         // NOLINT : union
     }
 
+    bool operator>(const tid_word &right) const {  // NOLINT : trailing
+        return this->obj_ > right.get_obj();         // NOLINT : union
+    }
+
     uint64_t &get_obj() { return obj_; }  // NOLINT
 
     const uint64_t &get_obj() const { return obj_; }  // NOLINT

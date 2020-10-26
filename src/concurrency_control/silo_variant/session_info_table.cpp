@@ -6,6 +6,7 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
+
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
@@ -48,12 +49,12 @@ void session_info_table::init_kThreadTable() {
          * about logging.
          */
 #ifdef PWAL
-        itr->log_dir_.assign(kLogDirectory);
-        itr->log_dir_.append("/log");
-        itr->log_dir_.append(std::to_string(ctr));
-        if (!itr->log_file_.open(itr->log_dir_, O_CREAT | O_TRUNC | O_WRONLY,
-                                 0644)) {
-          ERR;
+        std::string log_dir = Log::get_kLogDirectory();
+        log_dir += "/log";
+        log_dir.append(std::to_string(ctr));
+        if (!itr.get_log_handler().get_log_file().open(log_dir, O_CREAT | O_TRUNC | O_WRONLY, 0644)) { // NOLINT
+            std::cerr << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+            exit(1);
         }
         // itr->log_file_.ftruncate(10^9); // if it want to be high performance in
         // experiments, this line is used.
@@ -79,7 +80,7 @@ void session_info_table::fin_kThreadTable() {
          */
         itr.get_log_set().clear();
 #ifdef PWAL
-        itr->log_file_.close();
+        itr.get_log_handler().get_log_file().close();
 #endif
     }
 }

@@ -3,7 +3,7 @@
  * @brief implement about log
  */
 
-#include "concurrency_control/silo_variant/include/pwal.h"
+#include "fault_tolerance/include/pwal.h"
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
@@ -180,3 +180,4 @@ unsigned int Log::LogRecord::compute_checksum() {  // NOLINT
 }
 
 }  // namespace shirakami::cc_silo_variant
+

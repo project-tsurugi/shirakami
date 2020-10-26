@@ -41,6 +41,7 @@ extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
  * @brief silo's(SOSP2013) validation protocol. If this function return ERR_
  * status, this called abort function.
  * @param token retrieved by enter()
+ * @param cp commit parameter
  * @pre executed enter -> tx_begin -> transaction operation.
  * @post execute leave to leave the session or tx_begin to start next
  * transaction.
@@ -52,7 +53,16 @@ extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
  * called abort.
  * @return Status::OK success.
  */
-extern Status commit(Token token);  // NOLINT
+extern Status commit(Token token, commit_param* cp = nullptr);  // NOLINT
+
+/**
+ * @brief check whether the transaction allocated commit_id at commit function was committed.
+ * @param token This should be the token which was used for commit function.
+ * @param commit_id This should be the commit_id which was received at commit function with @a token.
+ * @return  true This transaction was committed (durable).
+ * @return  false This transaction was not committed (durable).
+ */
+extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
 /**
  * @brief Delete the all records.

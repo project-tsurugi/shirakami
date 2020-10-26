@@ -28,7 +28,7 @@ Status abort(Token token) {  // NOLINT
     return Status::OK;
 }
 
-Status commit(Token token) {  // NOLINT
+extern Status commit(Token token, commit_param* cp) {  // NOLINT
     auto* ti = static_cast<cc_silo_variant::session_info*>(token);
     cc_silo_variant::tid_word max_rset;
     cc_silo_variant::tid_word max_wset;
@@ -99,7 +99,9 @@ Status commit(Token token) {  // NOLINT
     }
 
     // Phase 4: Write & Unlock
-    cc_silo_variant::write_phase(ti, max_rset, max_wset);
+    cc_silo_variant::write_phase(ti, max_rset, max_wset,
+                                 cp != nullptr ? cp->get_cp() : commit_property::NOWAIT_FOR_COMMIT);
+    if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());
 
     ti->set_tx_began(false);
     return Status::OK;
