@@ -1,5 +1,5 @@
 /**
- * @file log.h
+ * @file pwal.h
  * @brief Log record class.
  * @details This source is implemented by refering the source
  * https://github.com/thawk105/ccbench.
