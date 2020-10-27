@@ -110,7 +110,7 @@ Status leave(Token const token) {  // NOLINT
 void tx_begin(Token const token) {
     auto* ti = static_cast<session_info*>(token);
     ti->set_tx_began(true);
-    ti->set_epoch(epoch::load_acquire_global_epoch());
+    ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
 }
 
 Status read_record(Record &res, const Record* const dest) {  // NOLINT

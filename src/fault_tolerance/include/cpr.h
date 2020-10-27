@@ -13,6 +13,8 @@
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
+#include "concurrency_control/silo_variant/include/epoch.h"
+
 namespace shirakami::cpr {
 
 enum class phase : char {
@@ -24,6 +26,8 @@ enum class phase : char {
 
 class phase_version {
 public:
+    phase_version() : phase_{phase::REST}, version_{0} {}
+
     phase get_phase() { return phase_; }
 
     std::uint64_t get_version() { return version_; }
@@ -35,8 +39,8 @@ public:
     void set_version(std::uint64_t new_version) { version_ = new_version; }
 
 private:
-    phase phase_: 1{phase::REST};
-    std::uint64_t version_: 63{0};
+    phase phase_: 1;
+    std::uint64_t version_: 63;
 };
 
 class global_phase_version {
@@ -60,7 +64,9 @@ public:
     }
 
 private:
-    static inline std::atomic<phase_version> body;
+    static inline std::atomic<phase_version> body{phase_version()};
 };
+
+
 
 }  // namespace shirakami::cpr

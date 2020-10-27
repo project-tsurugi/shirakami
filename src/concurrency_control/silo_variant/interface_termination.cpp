@@ -4,6 +4,7 @@
 
 #ifdef CC_SILO_VARIANT
 
+#include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 
@@ -69,7 +70,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 
     // Serialization point
     asm volatile("":: : "memory");  // NOLINT
-    ti->set_epoch(cc_silo_variant::epoch::load_acquire_global_epoch());
+    ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
     asm volatile("":: : "memory");  // NOLINT
 
     // Phase 3: Validation
@@ -105,6 +106,11 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 
     ti->set_tx_began(false);
     return Status::OK;
+}
+
+extern bool check_commit(Token token, std::uint64_t commit_id) {  // NOLINT
+    auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+    return ti->get_flushed_ctid().get_obj() > commit_id;
 }
 
 }  // namespace shirakami::cc_silo_variant

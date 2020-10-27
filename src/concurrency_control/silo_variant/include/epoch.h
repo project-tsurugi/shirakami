@@ -25,14 +25,12 @@ namespace shirakami::cc_silo_variant::epoch {
  */
 using epoch_t = std::uint32_t;
 
-[[maybe_unused]] inline epoch_t kGlobalEpoch;  // NOLINT
-inline epoch_t kReclamationEpoch;              // NOLINT
+[[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch;  // NOLINT
+inline std::atomic<epoch_t> kReclamationEpoch;              // NOLINT
 
 // about epoch thread
 [[maybe_unused]] inline std::thread kEpochThread;  // NOLINT
 inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
-
-[[maybe_unused]] extern void atomic_add_global_epoch();
 
 [[maybe_unused]] extern bool check_epoch_loaded();  // NOLINT
 
@@ -43,7 +41,7 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
 [[maybe_unused]] extern void epocher();
 
 [[maybe_unused]] static epoch::epoch_t get_reclamation_epoch() {  // NOLINT
-    return loadAcquire(kReclamationEpoch);
+    return kReclamationEpoch.load(std::memory_order_acquire);
 }
 
 /**
@@ -56,10 +54,6 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
 }
 
 [[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
-
-[[maybe_unused]] static std::uint32_t load_acquire_global_epoch() {  // NOLINT
-    return loadAcquire(epoch::kGlobalEpoch);
-}
 
 [[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
     kEpochThreadEnd.store(tf, std::memory_order_release);

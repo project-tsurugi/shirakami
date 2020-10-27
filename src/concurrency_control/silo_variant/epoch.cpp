@@ -13,20 +13,8 @@
 
 namespace shirakami::cc_silo_variant::epoch {
 
-void atomic_add_global_epoch() {
-    std::uint32_t expected = load_acquire_global_epoch();
-    for (;;) {
-        std::uint32_t desired = expected + 1;
-        if (__atomic_compare_exchange_n(&(kGlobalEpoch), &(expected), desired,
-                                        false, __ATOMIC_ACQ_REL,
-                                        __ATOMIC_ACQUIRE)) {
-            break;
-        }
-    }
-}
-
 bool check_epoch_loaded() {  // NOLINT
-    uint64_t curEpoch = load_acquire_global_epoch();
+    uint64_t curEpoch = kGlobalEpoch.load(std::memory_order_acquire);
 
     for (auto &&itr : session_info_table::get_thread_info_table()) {  // NOLINT
         if (itr.get_visible() && itr.get_epoch() != curEpoch) {
@@ -55,8 +43,8 @@ void epocher() {
             _mm_pause();
         }
 
-        atomic_add_global_epoch();
-        storeRelease(kReclamationEpoch, loadAcquire(kGlobalEpoch) - 2);
+        kGlobalEpoch++;
+        kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
     }
 }
 
