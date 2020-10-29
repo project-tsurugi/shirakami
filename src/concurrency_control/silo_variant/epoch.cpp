@@ -37,7 +37,6 @@ void epocher() {
          * Increment global epoch in each PARAM_EPOCH_TIME [ms] (default: 40).
          */
         sleepMs(PARAM_EPOCH_TIME);
-#if defined(PWAL)
         /**
          * To increment global epoch, all the worker-threads need to read the latest one.
          * check_epoch_loaded() checks whether the
@@ -50,7 +49,8 @@ void epocher() {
 
         kGlobalEpoch++;
         kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
-#elif defined(CPR)
+
+#if defined(CPR)
         // Commit() phase
         cpr::global_phase_version::set_gp(cpr::phase::PREPARE);
         kGlobalEpoch++;
