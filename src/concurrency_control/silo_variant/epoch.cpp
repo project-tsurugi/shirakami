@@ -11,6 +11,12 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
+#if defined(CPR)
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
 namespace shirakami::cc_silo_variant::epoch {
 
 bool check_epoch_loaded() {  // NOLINT
@@ -26,15 +32,14 @@ bool check_epoch_loaded() {  // NOLINT
 }
 
 void epocher() {
-    /**
-     * Increment global epoch in each 40ms.
-     * To increment it,
-     * all the worker-threads need to read the latest one.
-     */
     while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
-        sleepMs(KVS_EPOCH_TIME);
-
+        /*
+         * Increment global epoch in each PARAM_EPOCH_TIME [ms] (default: 40).
+         */
+        sleepMs(PARAM_EPOCH_TIME);
+#if defined(PWAL)
         /**
+         * To increment global epoch, all the worker-threads need to read the latest one.
          * check_epoch_loaded() checks whether the
          * latest global epoch is read by all the threads
          */
@@ -45,6 +50,23 @@ void epocher() {
 
         kGlobalEpoch++;
         kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
+#elif defined(CPR)
+        // Commit() phase
+        cpr::global_phase_version::set_gp(cpr::phase::PREPARE);
+        kGlobalEpoch++;
+        for (auto &&elem : session_info_table::get_thread_info_table()) {
+            if (elem.get_visible()) {
+            }
+        }
+        // PrepareToInProg() phase
+        cpr::global_phase_version::set_gp(cpr::phase::IN_PROGRESS);
+
+        // InProgToWaitFlush() phase
+        cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
+
+        // Atomically set global phase (rest) and increment version.
+        cpr::global_phase_version::set_rest();
+#endif
     }
 }
 

@@ -21,7 +21,9 @@
 
 #endif
 
-namespace shirakami::cc_silo_variant {
+using namespace shirakami::cc_silo_variant;
+
+namespace shirakami::pwal {
 
 class Log {
 public:
@@ -121,6 +123,28 @@ public:
 
 private:
     static inline std::string kLogDirectory{};  // NOLINT
+};
+
+class pwal_handler {
+public:
+
+    tid_word &get_flushed_ctid() { return flushed_ctid_; }
+
+    std::vector<Log::LogRecord> &get_log_set() { return log_set_; }  // NOLINT
+
+    File &get_log_file() { return log_file_; }  // NOLINT
+
+    Log::LogHeader &get_latest_log_header() {  // NOLINT
+        return latest_log_header_;
+    }
+
+    void set_flushed_ctid(tid_word new_ctid) { flushed_ctid_ = new_ctid; }
+
+private:
+    File log_file_{};
+    std::vector<Log::LogRecord> log_set_{};
+    Log::LogHeader latest_log_header_{};
+    tid_word flushed_ctid_{};
 };
 
 }  // namespace shirakami::cc_silo_variant

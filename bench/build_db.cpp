@@ -28,6 +28,8 @@
 #include "random.h"
 #include "tuple_local.h"
 
+#include "kvs/interface.h"
+
 namespace shirakami {
 
 #ifdef CC_SILO_VARIANT

@@ -7,18 +7,21 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
+#include <list>
+#include <mutex>
+#include <tuple>
 
-#include "fileio.h"
-
-#include "kvs/interface.h"
-#include "kvs/scheme.h"
+#ifdef CC_SILO_VARIANT
 
 #include "concurrency_control/silo_variant/include/epoch.h"
+
+#endif
 
 namespace shirakami::cpr {
 
 enum class phase : char {
-    REST,
+    REST = 0,
     PREPARE,
     IN_PROGRESS,
     WAIT_FLUSH,
@@ -39,27 +42,34 @@ public:
     void set_version(std::uint64_t new_version) { version_ = new_version; }
 
 private:
-    phase phase_: 1;
-    std::uint64_t version_: 63;
+    phase phase_: 8;
+    std::uint64_t version_: 56;
 };
 
 class global_phase_version {
 public:
-    phase_version get_gpv() { return body.load(std::memory_order_acquire); }
+    static phase_version get_gpv() { return body.load(std::memory_order_acquire); }
 
-    void inc_version() {
+    static void inc_version() {
         phase_version new_body = body.load(std::memory_order_acquire);
         new_body.inc_version();
         body.store(new_body, std::memory_order_release);
     }
 
-    void init() {
+    static void init() {
         body.store(phase_version(), std::memory_order_release);
     }
 
-    void set_gp(phase new_phase) {
+    static void set_gp(phase new_phase) {
         phase_version new_body = body.load(std::memory_order_acquire);
         new_body.set_phase(new_phase);
+        body.store(new_body, std::memory_order_release);
+    }
+
+    static void set_rest() {
+        phase_version new_body = body.load(std::memory_order_acquire);
+        new_body.set_phase(phase::REST);
+        new_body.set_version(new_body.get_version() + 1);
         body.store(new_body, std::memory_order_release);
     }
 
@@ -67,6 +77,25 @@ private:
     static inline std::atomic<phase_version> body{phase_version()};
 };
 
+/**
+ * @brief This object is had by worker thread for concurrent prefix recovery.
+ */
+class cpr_local_handler {
+public:
+    phase get_phase() { return phase_version_.get_phase(); } // NOLINT
 
+    std::uint64_t get_version() { return phase_version_.get_version(); } // NOLINT
+
+    void set_phase_version(phase_version new_phase_version) {
+        phase_version_ = new_phase_version;
+    }
+
+private:
+    phase_version phase_version_{};
+};
+
+inline std::atomic<cc_silo_variant::epoch::epoch_t> kSafeGlobalEpoch{0};
+inline std::list<std::tuple<cc_silo_variant::epoch::epoch_t, std::function<bool()>, std::function<void()>>> kDrainList;
+inline std::mutex kDrainListMutex;
 
 }  // namespace shirakami::cpr

@@ -75,12 +75,17 @@ elseif (BUILD_INDEX_YAKUSHIMA)
 endif ()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
-add_definitions(-DKVS_EPOCH_TIME=40)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
 add_definitions(-DKVS_MAX_KEY_LENGTH=1000)
 add_definitions(-DKVS_LOG_GC_THRESHOLD=1000)
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
+
+if (NOT DEFINED PARAM_EPOCH_TIME)
+    add_definitions(-DPARAM_EPOCH_TIME=40)
+else ()
+    add_definitions(-DPARAM_EPOCH_TIME=${PARAM_EPOCH_TIME})
+endif ()
 
 if (BUILD_PWAL)
     if (BUILD_CPR)

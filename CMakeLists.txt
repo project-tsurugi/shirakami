@@ -15,9 +15,9 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(shirakami
-    VERSION 0.0.1
-    DESCRIPTION "shirakami"
-    LANGUAGES CXX)
+        VERSION 0.0.1
+        DESCRIPTION "shirakami"
+        LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -29,6 +29,7 @@ option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" 
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
+# transaction processing logic
 option(BUILD_CC_SILO_VARIANT "Build Silo variant as CC" ON)
 option(BUILD_INDEX_KOHLER_MASSTREE "Build Kohler Masstree as index" OFF)
 option(BUILD_INDEX_YAKUSHIMA "Build yakushima as index" ON)
@@ -36,12 +37,14 @@ option(BUILD_WITH_RECOVERY "Build with recovery from log files." OFF)
 option(BUILD_PWAL "Build parallel write ahead logging as logging." OFF)
 option(BUILD_CPR "Build concurrent prefix recovery as logging." OFF)
 
+option(FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD "If the command clang-format is available, format source files before each build. Turn this off if the build time is too slow." OFF)
+
 find_package(Doxygen)
 find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 find_package(Boost
-  COMPONENTS filesystem)
+        COMPONENTS filesystem)
 
 # Formatter should be first.
 include(FormatFilesWithClangFormat)
@@ -54,55 +57,55 @@ include(Tests)
 
 if (BUILD_TESTS)
     enable_testing()
-endif()
+endif ()
 
 add_library(api INTERFACE)
 
 target_include_directories(api
-    INTERFACE
+        INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/shirakami>
-)
+        )
 
 set(export_name "shirakami")
 set(package_name "shirakami")
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config.cmake
-    @ONLY
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config.cmake
+        @ONLY
 )
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config-version.cmake"
-    COMPATIBILITY SameMajorVersion
+        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config-version.cmake"
+        COMPATIBILITY SameMajorVersion
 )
 
 install_custom(api ${export_name})
 
 install(
-    FILES
+        FILES
         ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/${package_name}-config-version.cmake
-    DESTINATION
+        DESTINATION
         ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
 )
 
 install(
-    EXPORT ${package_name}
-    NAMESPACE ${package_name}-
-    FILE ${package_name}-targets.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
-    EXPORT_LINK_INTERFACE_LIBRARIES
+        EXPORT ${package_name}
+        NAMESPACE ${package_name}-
+        FILE ${package_name}-targets.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
+        EXPORT_LINK_INTERFACE_LIBRARIES
 )
 
 add_subdirectory(src)
 add_subdirectory(bench)
 add_subdirectory(third_party)
 
-if(BUILD_TESTS)
+if (BUILD_TESTS)
     add_subdirectory(test)
-endif()
+endif ()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
-endif()
+endif ()

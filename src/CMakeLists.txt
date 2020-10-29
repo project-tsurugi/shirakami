@@ -55,7 +55,10 @@ set_target_properties(shirakami
 
 set_compile_options(shirakami)
 install_custom(shirakami ${export_name})
-clang_format(shirakami)
+
+if (FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD)
+    clang_format(shirakami)
+endif ()
 
 # for tests
 add_library(shirakami-impl INTERFACE)

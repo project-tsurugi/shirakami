@@ -1,6 +1,9 @@
+
 #include "concurrency_control/silo_variant/include/session_info.h"
 #include "gtest/gtest.h"
 #include "tuple_local.h"
+
+#include "kvs/interface.h"
 
 #ifdef CC_SILO_VARIANT
 using namespace shirakami::cc_silo_variant;

@@ -79,8 +79,10 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
          itr++) {
         const cc_silo_variant::Record* rec_ptr = itr->get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-        if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
-             itr->get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
+        if ((
+                    itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
+                    itr->get_rec_read().get_tidw().get_tid() != check.get_tid()
+            ) ||
             check.get_absent() ||  // check whether it was deleted.
             (check.get_lock() &&
              (ti->search_write_set(itr->get_rec_ptr()) == nullptr))
@@ -108,9 +110,18 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     return Status::OK;
 }
 
-extern bool check_commit(Token token, std::uint64_t commit_id) {  // NOLINT
-    auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+extern bool check_commit(Token token, [[maybe_unused]]std::uint64_t commit_id) {  // NOLINT
+    [[maybe_unused]] auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+#if defined(PWAL)
     return ti->get_flushed_ctid().get_obj() > commit_id;
+#elif defined(CPR)
+    return commit_id < global_phase_version::get_gpv().get_version();
+#else
+    /**
+     * No logging method means pre-commit is commit.
+     */
+    return true;
+#endif
 }
 
 }  // namespace shirakami::cc_silo_variant

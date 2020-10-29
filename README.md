@@ -25,22 +25,28 @@ ninja
 ```
 
 available options:
-* index (data) structure options
-  * default : `-DBUILD_INDEX_YAKUSHIMA=ON` : yakushima is upward compatible with kohler masstree.
-  * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF` : use kohler masstree as index (data) structure. 
-  If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta (kohler masstree).
 * `-DBUILD_TESTS=OFF` - never build test programs
 * `-DBUILD_DOCUMENTS=OFF` - never build documents by doxygen
+* `-DBUILD_SHARED_LIBS=OFF` - create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>` - indicate prerequiste installation directory
 * `-DFORCE_INSTALL_RPATH=ON` - force set RPATH for non-default library paths
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON` - use formatting for source files
-* `-DPWAL=ON` - enable parallel write-ahead-logging
 * for debugging only
   * `-DENABLE_SANITIZER=OFF` - disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
   * `-DENABLE_UB_SANITIZER=ON` - enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
   * `-DENABLE_COVERAGE=ON` - enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
-* `-DBUILD_SHARED_LIBS=OFF` - create static libraries instead of shared libraries
-
+* index (data) structure options
+  * default : `-DBUILD_INDEX_YAKUSHIMA=ON` : yakushima is upward compatible with kohler masstree.
+  * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF` : use kohler masstree as index (data) structure. 
+  If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta 
+  (kohler masstree).
+* logging method (You can select at most one method.)
+  * `-DBUILD_PWAL=ON` - enable parallel write-ahead-logging (default: `OFF`)
+    * `-DBUILD_WITH_RECOVERY=ON` enable initialization of db from p-wal log. (default: `OFF`)
+  * `-DBUILD_CPR=ON` - enable concurrent prefix recovery (default: `OFF`)
+* parameter setting
+  * `-DPARAM_EPOCH_TIME=<epoch time (ms)>` - Epoch time related with latency of commit (durable) and span of resource 
+management. (default: `40`)
 ### install 
 
 ```sh

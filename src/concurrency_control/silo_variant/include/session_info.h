@@ -37,7 +37,17 @@
 
 #endif
 
+#if defined(PWAL)
+
 #include "fault_tolerance/include/pwal.h"
+
+#elif defined(CPR)
+
+#include "fault_tolerance/include/cpr.h"
+
+using namespace cpr;
+
+#endif
 
 namespace shirakami::cc_silo_variant {
 
@@ -133,32 +143,20 @@ public:
         std::map<ScanHandle, std::size_t> scan_cache_itr_{};
     };
 
-    class log_handler {
-    public:
-        std::vector<Log::LogRecord> &get_log_set() { return log_set_; }  // NOLINT
-
-        File &get_log_file() { return log_file_; }  // NOLINT
-
-        Log::LogHeader &get_latest_log_header() {  // NOLINT
-            return latest_log_header_;
-        }
-
-    private:
-        File log_file_{};
-        std::vector<Log::LogRecord> log_set_{};
-        Log::LogHeader latest_log_header_{};
-    };
-
     explicit session_info(Token token) {
         this->token_ = token;
         get_mrctid().reset();
+#if defined(PWAL)
         get_flushed_ctid().reset();
+#endif
     }
 
     session_info() {
         this->visible_.store(false, std::memory_order_release);
         get_mrctid().reset();
+#if defined(PWAL)
         get_flushed_ctid().reset();
+#endif
     }
 
     /**
@@ -220,8 +218,9 @@ public:
 
 #endif
 
-#if defined(PWAL) || defined(CPR)
-    log_handler& get_log_handler() {
+#if defined(PWAL)
+
+    log_handler &get_log_handler() {
         return log_handle_;
     }
 
@@ -229,11 +228,12 @@ public:
         return log_handle_.get_log_set();
     }
 
+    tid_word &get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
+
 #endif
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
 
-    tid_word &get_flushed_ctid() { return flushed_ctid_; } // NOLINT
     std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
         return scan_handle_.get_r_end_();
     }
@@ -354,16 +354,16 @@ public:
      * @return void
      */
     void pwal(std::uint64_t commit_id, commit_property cp);
+
+    void set_flushed_ctid(const tid_word &ctid) {
+        log_handle_.set_flushed_ctid(ctid);
+    }
 #endif
 
     [[maybe_unused]] void set_token(Token token) { token_ = token; }
 
     void set_epoch(epoch::epoch_t epoch) {
         epoch_.store(epoch, std::memory_order_release);
-    }
-
-    void set_flushed_ctid(const tid_word& ctid) {
-        flushed_ctid_ = ctid;
     }
 
     void set_gc_container_index(std::size_t new_index) {
@@ -389,6 +389,14 @@ public:
 
     void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
 
+#ifdef CPR
+
+    void update_pv() {
+        cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
+    }
+
+#endif
+
     void set_tx_began(bool tf) { tx_began_ = tf; }
 
     void set_visible(bool visible) {
@@ -402,7 +410,6 @@ private:
 #endif
     std::atomic<epoch::epoch_t> epoch_{};
     tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
-    tid_word flushed_ctid_{};
     std::atomic<bool> visible_{};
     bool tx_began_{};
 
@@ -424,8 +431,10 @@ private:
     /**
      * about logging.
      */
-#if defined(PWAL) || defined(CPR)
+#if defined(PWAL)
     log_handler log_handle_;
+#elif defined(CPR)
+    cpr_local_handler cpr_local_handle_;
 #endif
 
 };

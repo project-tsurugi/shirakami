@@ -11,8 +11,9 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 
-#include "boost/filesystem.hpp"
 #include "include/tuple_local.h"
+
+#include "kvs/interface.h"
 
 namespace shirakami::cc_silo_variant {
 
@@ -111,6 +112,9 @@ void tx_begin(Token const token) {
     auto* ti = static_cast<session_info*>(token);
     ti->set_tx_began(true);
     ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
+#if defined(CPR)
+    ti->update_pv();
+#endif
 }
 
 Status read_record(Record &res, const Record* const dest) {  // NOLINT

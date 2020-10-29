@@ -41,6 +41,8 @@
 #include "glog/logging.h"
 #include "tuple_local.h"
 
+#include "kvs/interface.h"
+
 using namespace shirakami;
 using namespace ycsb_param;
 #ifdef CC_SILO_VARIANT
