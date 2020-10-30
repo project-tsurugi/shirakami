@@ -10,6 +10,7 @@
 #include <functional>
 #include <list>
 #include <mutex>
+#include <thread>
 #include <tuple>
 
 #ifdef CC_SILO_VARIANT
@@ -19,6 +20,9 @@
 #endif
 
 namespace shirakami::cpr {
+
+inline std::atomic<bool> kCheckPointThreadEnd{false};
+inline std::thread kCheckPointThread;
 
 enum class phase : char {
     REST = 0,
@@ -94,8 +98,20 @@ private:
     phase_version phase_version_{};
 };
 
-inline std::atomic<cc_silo_variant::epoch::epoch_t> kSafeGlobalEpoch{0};
-inline std::list<std::tuple<cc_silo_variant::epoch::epoch_t, std::function<bool()>, std::function<void()>>> kDrainList;
-inline std::mutex kDrainListMutex;
+/**
+ * @brief This is checkpoint thread and manager of cpr.
+ */
+extern void checkpoint_thread();
+
+static void invoke_checkpoint_thread() {
+    kCheckPointThreadEnd.store(false, std::memory_order_release);
+    kCheckPointThread = std::thread(checkpoint_thread);
+}
+
+static void join_checkpoint_thread() { kCheckPointThread.join(); }
+
+static void set_checkpoint_thread_end(const bool tf) {
+    kCheckPointThreadEnd.store(tf, std::memory_order_release);
+}
 
 }  // namespace shirakami::cpr

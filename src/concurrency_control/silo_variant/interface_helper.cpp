@@ -28,6 +28,12 @@ Status enter(Token &token) {  // NOLINT
 }
 
 void fin() {
+#ifdef CPR
+    // Stop Checkpointing
+    cpr::set_checkpoint_thread_end(true);
+    cpr::join_checkpoint_thread();
+#endif
+
     delete_all_records();
     garbage_collection::release_all_heap_objects();
 
@@ -39,6 +45,7 @@ void fin() {
 #ifdef INDEX_YAKUSHIMA
     yakushima::fin();
 #endif
+
 }
 
 Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOLINT
@@ -84,8 +91,13 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
 
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
+
 #ifdef INDEX_YAKUSHIMA
     yakushima::init();
+#endif
+
+#ifdef CPR
+    cpr::invoke_checkpoint_thread();
 #endif
 
     return Status::OK;

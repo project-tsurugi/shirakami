@@ -50,23 +50,6 @@ void epocher() {
         kGlobalEpoch++;
         kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
 
-#if defined(CPR)
-        // Commit() phase
-        cpr::global_phase_version::set_gp(cpr::phase::PREPARE);
-        kGlobalEpoch++;
-        for (auto &&elem : session_info_table::get_thread_info_table()) {
-            if (elem.get_visible()) {
-            }
-        }
-        // PrepareToInProg() phase
-        cpr::global_phase_version::set_gp(cpr::phase::IN_PROGRESS);
-
-        // InProgToWaitFlush() phase
-        cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
-
-        // Atomically set global phase (rest) and increment version.
-        cpr::global_phase_version::set_rest();
-#endif
     }
 }
 
