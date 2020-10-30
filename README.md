@@ -45,12 +45,15 @@ available options:
     * `-DBUILD_WITH_RECOVERY=ON` enable initialization of db from p-wal log. (default: `OFF`)
   * `-DBUILD_CPR=ON` - enable concurrent prefix recovery (default: `OFF`)
 * parameter setting
-  * `-DKVS_LOG_GC_THRESHOLD=<# operations of group commit in a batch>` - This is one of trigger of group commit. If 
-  thread local pwal buffer has log records more than this number, it tries group commit.
-  * `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>` - It is a max size of concurrent opening session (by 
-  enter command).
-  * `-DPARAM_EPOCH_TIME=<epoch time (ms)>` - Epoch time related with latency of commit (durable) and span of resource 
+  * Silo variant
+    * `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>` - It is a max size of concurrent opening session (by 
+  enter command). (default: `500`)
+    * `-DPARAM_EPOCH_TIME=<epoch time (ms)>` - Epoch time related with latency of commit (durable) and span of resource 
 management. (default: `40`)
+  * PWAL
+    * `-DKVS_LOG_GC_THRESHOLD=<# operations of group commit in a batch>` - This is one of trigger of group commit. If 
+  thread local pwal buffer has log records more than this number, it tries group commit. (default: `1000`)
+  
 ### install 
 
 ```sh
