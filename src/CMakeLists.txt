@@ -18,7 +18,8 @@ if (BUILD_PWAL)
 endif ()
 
 if (BUILD_CPR)
-    # TODO : fixme
+    file(GLOB LOGGING_SOURCES "fault_tolerance/cpr.cpp")
+    set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
 endif ()
 
 add_library(shirakami
