@@ -115,6 +115,15 @@ public:
         }
     }
 
+    /**
+     * @pre This is called after lock() function.
+     */
+    void unlock() {
+        tid_word new_tid = get_obj();
+        new_tid.set_lock(false);
+        storeRelease(get_obj(), new_tid);
+    }
+
 private:
 };
 

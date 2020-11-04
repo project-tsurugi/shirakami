@@ -62,10 +62,23 @@ void checkpointing() {
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
 
+    phase_version pv = global_phase_version::get_gpv();
+    log_records l_recs{};
+
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
-
+        rec->get_tidw().lock();
+        if (rec->get_version() == pv.get_version() + 1) {
+            const Tuple& tup = rec->get_stable();
+            l_recs.emplace_back(tup.get_key(), tup.get_value());
+        } else {
+            const Tuple& tup = rec->get_tuple();
+            l_recs.emplace_back(tup.get_key(), tup.get_value());
+        }
+        rec->get_tidw().unlock();
     }
+
+    // todo : developing now.
 #endif
 }
 

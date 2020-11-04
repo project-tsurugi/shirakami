@@ -243,6 +243,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                  * todo : If checkpointing is in progress, it must be observable from the thread performing
                  * checkpointing.
                  */
+                yakushima::remove(ti->get_yakushima_token(), key_view);
 #endif
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());

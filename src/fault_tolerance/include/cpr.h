@@ -19,6 +19,8 @@
 
 #endif
 
+#include "msgpack-c/include/msgpack.hpp"
+
 namespace shirakami::cpr {
 
 inline std::atomic<bool> kCheckPointThreadEnd{false};
@@ -106,6 +108,30 @@ private:
      * version is durable.
      */
     std::size_t max_version_{0};
+};
+
+class log_record {
+public:
+    log_record(std::string_view key, std::string_view val) {
+        key_ = key;
+        val_ = val;
+    }
+
+private:
+    std::string key_;
+    std::string val_;
+    MSGPACK_DEFINE (key_, val_);
+};
+
+class log_records {
+public:
+    void emplace_back(std::string_view key, std::string_view val) {
+        vec.emplace_back(key, val);
+    }
+
+private:
+    std::vector<log_record> vec;
+    MSGPACK_DEFINE (vec);
 };
 
 /**
