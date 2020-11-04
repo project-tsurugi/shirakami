@@ -113,6 +113,12 @@ else ()
     add_definitions(-DPARAM_EPOCH_TIME=${PARAM_EPOCH_TIME})
 endif ()
 
+if (NOT DEFINED PARAM_CHECKPOINT_REST_EPOCH)
+    add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=40)
+else ()
+    add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=${PARAM_CHECKPOINT_REST_EPOCH})
+endif ()
+
 function(set_compile_options target_name)
     target_compile_options(${target_name}
             PRIVATE -Wall -Wextra -Werror)

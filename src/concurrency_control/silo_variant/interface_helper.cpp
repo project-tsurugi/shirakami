@@ -233,7 +233,17 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                 kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                          key_view.size());
 #elif INDEX_YAKUSHIMA
+                /**
+                 * case : no logging and pwal
+                 */
+#ifndef CPR
                 yakushima::remove(ti->get_yakushima_token(), key_view);
+#else
+                /**
+                 * todo : If checkpointing is in progress, it must be observable from the thread performing
+                 * checkpointing.
+                 */
+#endif
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
 

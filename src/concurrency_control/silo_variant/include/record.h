@@ -19,6 +19,9 @@ public:
         // init tidw
         tidw_.set_absent(true);
         tidw_.set_lock(true);
+#ifdef CPR
+        version_ = 0;
+#endif
     }
 
     Record(const Record &right) = default;
@@ -38,8 +41,22 @@ public:
 
     void set_tidw(tid_word tidw) &{ tidw_.set_obj(tidw.get_obj()); }
 
+#if defined(CPR)
+
+    Tuple &get_stable() { return stable_; }
+
+    std::uint64_t get_version() { return version_; }
+
+    void set_version(std::uint64_t new_v) { version_ = new_v; }
+
+#endif
+
 private:
     tid_word tidw_;
+#if defined(CPR)
+    std::uint64_t version_{0};
+    Tuple stable_;
+#endif
     Tuple tuple_;
 };
 

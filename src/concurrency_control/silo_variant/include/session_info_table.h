@@ -35,6 +35,12 @@ public:
     static void init_kThreadTable();
 
 private:
+    /**
+     * @details There are situations where you want to check table information and register / delete entries in the
+     * table exclusively. When using exclusive lock, contention between readers is useless. When the reader writer lock
+     * is used, the cache is frequently polluted by increasing or decreasing the reference count. Therefore, lock-free
+     * exclusive arbitration is performed for fixed-length tables.
+     */
     static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS>  // NOLINT
     kThreadTable;                                               // NOLINT
 };

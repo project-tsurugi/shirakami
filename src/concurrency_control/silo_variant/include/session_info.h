@@ -45,7 +45,7 @@
 
 #include "fault_tolerance/include/cpr.h"
 
-using namespace cpr;
+using namespace shirakami::cpr;
 
 #endif
 
@@ -390,6 +390,8 @@ public:
     void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
 
 #ifdef CPR
+
+    cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());

@@ -44,20 +44,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
          ++itr) {
         if (itr->get_op() == OP_TYPE::INSERT) continue;
         // after this, update/delete
-        expected.get_obj() = loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
-        for (;;) {
-            if (expected.get_lock()) {
-                expected.get_obj() =
-                        loadAcquire(itr->get_rec_ptr()->get_tidw().get_obj());
-            } else {
-                desired = expected;
-                desired.set_lock(true);
-                if (compareExchange(itr->get_rec_ptr()->get_tidw().get_obj(),
-                                    expected.get_obj(), desired.get_obj())) {
-                    break;
-                }
-            }
-        }
+        itr->get_rec_ptr()->get_tidw().lock();
         if (itr->get_op() == OP_TYPE::UPDATE &&  // NOLINT
             itr->get_rec_ptr()->get_tidw().get_absent()) {
             ti->unlock_write_set(ti->get_write_set().begin(), itr);
@@ -104,7 +91,10 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     // Phase 4: Write & Unlock
     cc_silo_variant::write_phase(ti, max_rset, max_wset,
                                  cp != nullptr ? cp->get_cp() : commit_property::NOWAIT_FOR_COMMIT);
+#if defined(PWAL)
     if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());
+#elif defined(CPR)
+#endif
 
     ti->set_tx_began(false);
     return Status::OK;

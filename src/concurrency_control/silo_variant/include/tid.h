@@ -100,6 +100,21 @@ public:
 
     void display();
 
+    void lock() {
+        tid_word expected;
+        tid_word desired;
+        expected.get_obj() = loadAcquire(get_obj());
+        for (;;) {
+            if (expected.get_lock()) {
+                expected.get_obj() = loadAcquire(get_obj());
+            } else {
+                desired = expected;
+                desired.set_lock(true);
+                if (compareExchange(get_obj(), expected.get_obj(), desired.get_obj())) break;
+            }
+        }
+    }
+
 private:
 };
 
