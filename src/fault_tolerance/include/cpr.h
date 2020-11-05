@@ -103,7 +103,7 @@ private:
     std::atomic<phase_version> phase_version_{};
     /**
      * @brief max version number of read/write set.
-     * @details this number means the tx depends on at most version @max_version_.
+     * @details this number means the tx depends on at most version @a max_version_.
      * So if global version is larger than @max_version_, the transactions which has @max_version_ less than global
      * version is durable.
      */
