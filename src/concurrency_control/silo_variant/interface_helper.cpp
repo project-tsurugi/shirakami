@@ -13,6 +13,8 @@
 
 #include "include/tuple_local.h"
 
+#include "fault_tolerance/include/log.h"
+
 #include "kvs/interface.h"
 
 namespace shirakami::cc_silo_variant {
@@ -84,9 +86,7 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
      * If it already exists log files, it recoveries from those.
      */
 #if RECOVERY
-#ifdef PWAL
-    single_recovery_from_log();
-#endif
+    Log::recovery_from_log();
 #endif
 
     session_info_table::init_kThreadTable();

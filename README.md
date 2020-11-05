@@ -44,7 +44,7 @@ available options:
      * enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
   * `-DENABLE_COVERAGE=ON`
      * enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
-* index (data) structure options
+* index (data) structure options (You can select at most one method.)
   * default : `-DBUILD_INDEX_YAKUSHIMA=ON`
      * yakushima is upward compatible with kohler masstree.
   * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF`

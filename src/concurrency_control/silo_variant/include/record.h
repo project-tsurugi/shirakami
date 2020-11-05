@@ -8,6 +8,7 @@
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
 #include "tid.h"
+#include "tuple_local.h"
 
 namespace shirakami::cc_silo_variant {
 

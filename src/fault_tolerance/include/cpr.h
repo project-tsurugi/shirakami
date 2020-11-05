@@ -34,8 +34,6 @@ enum class phase : char {
 
 class phase_version {
 public:
-    phase_version() : phase_{phase::REST}, version_{0} {}
-
     phase get_phase() { return phase_; }
 
     std::uint64_t get_version() { return version_; }
@@ -112,15 +110,17 @@ private:
 
 class log_record {
 public:
+    log_record() = default;
+
     log_record(std::string_view key, std::string_view val) {
         key_ = key;
         val_ = val;
     }
 
+    MSGPACK_DEFINE (key_, val_);
 private:
     std::string key_;
     std::string val_;
-    MSGPACK_DEFINE (key_, val_);
 };
 
 class log_records {
@@ -129,9 +129,9 @@ public:
         vec.emplace_back(key, val);
     }
 
+    MSGPACK_DEFINE (vec);
 private:
     std::vector<log_record> vec;
-    MSGPACK_DEFINE (vec);
 };
 
 /**
@@ -144,14 +144,14 @@ extern void checkpoint_thread();
  */
 extern void checkpointing();
 
-static void invoke_checkpoint_thread() {
+[[maybe_unused]] static void invoke_checkpoint_thread() {
     kCheckPointThreadEnd.store(false, std::memory_order_release);
     kCheckPointThread = std::thread(checkpoint_thread);
 }
 
-static void join_checkpoint_thread() { kCheckPointThread.join(); }
+[[maybe_unused]] static void join_checkpoint_thread() { kCheckPointThread.join(); }
 
-static void set_checkpoint_thread_end(const bool tf) {
+[[maybe_unused]] static void set_checkpoint_thread_end(const bool tf) {
     kCheckPointThreadEnd.store(tf, std::memory_order_release);
 }
 
