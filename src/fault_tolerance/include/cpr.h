@@ -104,7 +104,7 @@ private:
     /**
      * @brief max version number of read/write set.
      * @details this number means the tx depends on at most version @a max_version_.
-     * So if global version is larger than @max_version_, the transactions which has @max_version_ less than global
+     * So if global version is larger than @a max_version_, the transactions which has @a max_version_ less than global
      * version is durable.
      */
     std::size_t max_version_{0};
