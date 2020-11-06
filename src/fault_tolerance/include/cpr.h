@@ -117,6 +117,10 @@ public:
         val_ = val;
     }
 
+    std::string_view get_key() { return key_; }
+
+    std::string_view get_val() { return val_; }
+
     MSGPACK_DEFINE (key_, val_);
 private:
     std::string key_;
@@ -126,12 +130,14 @@ private:
 class log_records {
 public:
     void emplace_back(std::string_view key, std::string_view val) {
-        vec.emplace_back(key, val);
+        vec_.emplace_back(key, val);
     }
 
-    MSGPACK_DEFINE (vec);
+    std::vector<log_record> &get_vec() { return vec_; } // NOLINT
+
+    MSGPACK_DEFINE (vec_);
 private:
-    std::vector<log_record> vec;
+    std::vector<log_record> vec_;
 };
 
 /**

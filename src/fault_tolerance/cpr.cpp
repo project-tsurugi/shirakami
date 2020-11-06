@@ -4,6 +4,7 @@
 
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
+#include "fault_tolerance/include/log.h"
 #include "fault_tolerance/include/cpr.h"
 
 #include "clock.h"
@@ -56,7 +57,7 @@ void checkpointing() {
      */
 #ifdef INDEX_KOHLER_MASSTREE
     /**
-     * todo : kohler masstree version
+     * todo : impl for kohler masstree
      */
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
@@ -64,6 +65,17 @@ void checkpointing() {
 
     phase_version pv = global_phase_version::get_gpv();
     log_records l_recs{};
+
+    std::string checkpointing_path = Log::get_kLogDirectory();
+    checkpointing_path += "/checkpointing";
+    std::string checkpoint_path = Log::get_kLogDirectory();
+    checkpoint_path += "/checkpoint";
+    std::ofstream logf;
+    logf.open(checkpointing_path, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+    if (!logf.is_open()) {
+        std::cerr << __FILE__ << " : " << __LINE__ << " : fatal error." << std::endl;
+        exit(1);
+    }
 
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
@@ -78,8 +90,22 @@ void checkpointing() {
         rec->get_tidw().unlock();
     }
 
-    // todo : developing now.
+    msgpack::pack(logf, l_recs);
+    logf.flush();
+    logf.close();
+    if (logf.is_open()) {
+        std::cerr << __FILE__ << " : " << __LINE__ << " : fatal error." << std::endl;
+        exit(1);
+    }
+
+    try {
+        boost::filesystem::rename(checkpointing_path, checkpoint_path);
+    } catch(boost::filesystem::filesystem_error& ex) {
+        std::cout << ex.what() << std::endl;
+        exit(1);
+    }
 #endif
+
 }
 
 }

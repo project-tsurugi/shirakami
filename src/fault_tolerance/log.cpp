@@ -2,7 +2,31 @@
 // Created by thawk on 2020/11/05.
 //
 
+#include <boost/filesystem.hpp>
+#include <iostream>
+
 #include "log.h"
+
+#if defined(CC_SILO_VARIANT)
+
+#include "concurrency_control/silo_variant/include/record.h"
+
+using namespace shirakami::cc_silo_variant;
+
+#endif
+
+#if defined(INDEX_YAKUSHIMA)
+
+#include "yakushima/include/kvs.h"
+#include "yakushima/include/scheme.h"
+
+#endif
+
+#if defined(CPR)
+
+#include "cpr.h"
+
+#endif
 
 namespace shirakami {
 
@@ -103,8 +127,53 @@ namespace shirakami {
     leave(s);
 
 #elif defined(CPR)
-    // todo
+    std::string checkpoint_path = get_kLogDirectory();
+    checkpoint_path += "/checkpoint";
+
+    // check whether checkpoint file exists.
+    boost::system::error_code ec;
+    const bool find_result = boost::filesystem::exists(checkpoint_path, ec);
+    if (!find_result || ec) {
+        std::cout << "no checkpoint file to recover." << std::endl;
+        return;
+    }
+    std::cout << "checkpoint file to recover exists." << std::endl;
+
+    std::ifstream logf;
+    logf.open(checkpoint_path, std::ios_base::in | std::ios_base::binary);
+
+    std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()};
+    size_t offset{0};
+    cpr::log_records restore;
+
+    for (;;) {
+        if (offset == buffer.size()) break;
+        try {
+            auto oh = msgpack::unpack(buffer.data(), buffer.size(), offset); // NOLINT
+            auto obj = oh.get();
+            obj.convert(restore);
+        } catch (const std::bad_cast &e) {
+            std::cout << __FILE__ << " : " << __LINE__ << "cast error." << std::endl;
+            exit(1);
+        } catch (...) {
+            std::cout << __FILE__ << " : " << __LINE__ << "unknown error." << std::endl;
+            exit(1);
+        }
+
+        // recover from restore
+        std::vector<cpr::log_record> &logs = restore.get_vec();
+        for (auto &&elem : logs) {
+            Record* rec_ptr = new Record(elem.get_key(), elem.get_val()); // NOLINT
+            rec_ptr->get_tidw() = 0;
+            yakushima::status insert_result{yakushima::put<Record*>(elem.get_key(), &rec_ptr)}; // NOLINT
+            if (insert_result != yakushima::status::OK) {
+                std::cout << __FILE__ << " : " << __LINE__ << "cpr recovery error." << std::endl;
+                exit(1);
+            }
+        }
+    }
+
 #endif
 }
 
-}
+} // namespace shirakami

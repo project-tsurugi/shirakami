@@ -15,7 +15,3 @@ merge regularly.
 ### Outline
 Concurrent prefix recovery is checkpointing method ( https://www.microsoft.com/en-us/research/uploads/prod/2019/01/cpr-sigmod19.pdf ).
 
-### Future work
-- Integration of epoch framework between silo and cpr : 
-Currently Silo's epoch is used for garbage collection, and CPR's epoch is not adopted for a variant whose the 
-performance is higher than original.
