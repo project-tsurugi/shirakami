@@ -2,12 +2,15 @@
 // Created by thawk on 2020/10/30.
 //
 
+#include "concurrency_control/silo_variant/include/interface_helper.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #include "fault_tolerance/include/log.h"
 #include "fault_tolerance/include/cpr.h"
 
 #include "clock.h"
+
+#include "kvs/interface.h"
 
 using namespace shirakami::cc_silo_variant;
 using namespace shirakami::cc_silo_variant::epoch;
@@ -77,18 +80,64 @@ void checkpointing() {
         exit(1);
     }
 
+    yakushima::Token yaku_token{};
+    yakushima::enter(yaku_token);
+    std::vector<Record*> garbage{};
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
+        const Tuple &tup = rec->get_stable();
         if (rec->get_version() == pv.get_version() + 1) {
-            const Tuple& tup = rec->get_stable();
             l_recs.emplace_back(tup.get_key(), tup.get_value());
         } else {
-            const Tuple& tup = rec->get_tuple();
+            rec->set_version(rec->get_version() + 1);
             l_recs.emplace_back(tup.get_key(), tup.get_value());
+        }
+        if (!rec->get_tidw().get_latest()) {
+            /**
+             * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
+             */
+            yakushima::remove(yaku_token, tup.get_key());
+            tid_word new_tid = rec->get_tidw();
+            new_tid.set_epoch(kGlobalEpoch.load(std::memory_order_acquire));
+            storeRelease(rec->get_tidw().get_obj(), new_tid.get_obj());
+            garbage.emplace_back(rec);
         }
         rec->get_tidw().unlock();
     }
+    yakushima::leave(yaku_token);
+
+    /**
+     * release old garbage
+     */
+    auto ers_bgn_itr = garbage.begin();
+    auto ers_end_itr = garbage.end();
+    for (auto itr = ers_bgn_itr; itr != garbage.end(); ++itr) {
+        if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
+            ers_end_itr = itr;
+            delete *itr; // NOLINT
+        } else {
+            break;
+        }
+    }
+    if (ers_end_itr != garbage.end()) {
+        garbage.erase(ers_bgn_itr, ers_end_itr);
+    }
+
+    /**
+     * record garbage to some session area.
+     */
+    Token shira_token{};
+    enter(shira_token);
+    tx_begin(shira_token);
+    auto* ti = static_cast<cc_silo_variant::session_info*>(shira_token);
+    for (auto &&itr : garbage) {
+        tid_word new_tid = itr->get_tidw();
+        new_tid.set_epoch(ti->get_epoch());
+        storeRelease(itr->get_tidw().get_obj(), new_tid.get_obj());
+        ti->get_gc_record_container()->emplace_back(itr);
+    }
+    leave(shira_token);
 
     msgpack::pack(logf, l_recs);
     logf.flush();
@@ -100,7 +149,7 @@ void checkpointing() {
 
     try {
         boost::filesystem::rename(checkpointing_path, checkpoint_path);
-    } catch(boost::filesystem::filesystem_error& ex) {
+    } catch (boost::filesystem::filesystem_error &ex) {
         std::cout << ex.what() << std::endl;
         exit(1);
     }

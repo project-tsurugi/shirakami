@@ -226,8 +226,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                 break;
             }
             case OP_TYPE::DELETE: {
-                tid_word delete_tid = max_tid;
-                delete_tid.set_absent(true);
                 std::string_view key_view = rec_ptr->get_tuple().get_key();
 #ifdef INDEX_KOHLER_MASSTREE
                 kohler_masstree::get_mtdb().remove_value(key_view.data(),
@@ -238,20 +236,33 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                  */
 #ifndef CPR
                 yakushima::remove(ti->get_yakushima_token(), key_view);
+                ti->get_gc_record_container()->emplace_back(rec_ptr);
 #else
-                /**
-                 * todo : If checkpointing is in progress, it must be observable from the thread performing
-                 * checkpointing.
-                 */
-                yakushima::remove(ti->get_yakushima_token(), key_view);
+                if (ti->get_phase() == cpr::phase::REST) {
+                    yakushima::remove(ti->get_yakushima_token(), key_view);
+                    ti->get_gc_record_container()->emplace_back(rec_ptr);
+                } else {
+                    /**
+                     * This is in checkpointing phase (in-progress or wait-flush)
+                     */
+                     if (rec_ptr->get_checkpointed()) {
+                         /**
+                          * Checkpointer will process this record, so it must be observable.
+                          */
+                         yakushima::remove(ti->get_yakushima_token(), key_view);
+                         ti->get_gc_record_container()->emplace_back(rec_ptr);
+                     }
+                     /**
+                      * else : The check pointer is responsible for deleting from the index and registering garbage.
+                      */
+                }
 #endif
 #endif
+                tid_word delete_tid = max_tid;
+                delete_tid.set_latest(false);
+                delete_tid.set_absent(true);
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
 
-                /**
-                 * create information for garbage collection.
-                 */
-                ti->get_gc_record_container()->emplace_back(rec_ptr);
 
                 break;
             }

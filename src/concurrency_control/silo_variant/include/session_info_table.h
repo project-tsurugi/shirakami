@@ -40,6 +40,8 @@ private:
      * table exclusively. When using exclusive lock, contention between readers is useless. When the reader writer lock
      * is used, the cache is frequently polluted by increasing or decreasing the reference count. Therefore, lock-free
      * exclusive arbitration is performed for fixed-length tables.
+     * @attention This element may be used by CPR checkpointer, so please set KVS_MAX_PARALLEL_THREADS larger than
+     * actual number of sessions.
      */
     static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS>  // NOLINT
     kThreadTable;                                               // NOLINT

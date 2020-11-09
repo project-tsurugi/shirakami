@@ -393,6 +393,8 @@ public:
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
+    std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
+
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
     }

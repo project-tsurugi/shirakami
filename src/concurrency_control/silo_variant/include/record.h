@@ -5,23 +5,27 @@
 
 #pragma once
 
-#include "kvs/scheme.h"
-#include "kvs/tuple.h"
+#include "cpu.h"
 #include "tid.h"
 #include "tuple_local.h"
 
+#include "kvs/scheme.h"
+#include "kvs/tuple.h"
+
 namespace shirakami::cc_silo_variant {
 
-class Record {  // NOLINT
+class alignas(CACHE_LINE_SIZE) Record {  // NOLINT
 public:
     Record() {}  // NOLINT
 
     Record(std::string_view key, std::string_view val) : tuple_(key, val) {
         // init tidw
+        tidw_.set_latest(true);
         tidw_.set_absent(true);
         tidw_.set_lock(true);
 #ifdef CPR
         version_ = 0;
+        checkpointed_ = false;
 #endif
     }
 
@@ -48,6 +52,8 @@ public:
 
     std::uint64_t get_version() { return version_; }
 
+    bool get_checkpointed() { return checkpointed_; }
+
     void set_version(std::uint64_t new_v) { version_ = new_v; }
 
 #endif
@@ -55,8 +61,15 @@ public:
 private:
     tid_word tidw_;
 #if defined(CPR)
-    std::uint64_t version_{0};
+    /**
+     * @pre Only lock owner can read-write this filed.
+     */
+    std::uint32_t version_{0};
     Tuple stable_;
+    /**
+     * @brief If CPR checkpointer processed, this is true.
+     */
+    bool checkpointed_{false};
 #endif
     Tuple tuple_;
 };
