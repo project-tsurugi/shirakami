@@ -38,8 +38,6 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
 
     // Phase 2: Lock write set;
-    cc_silo_variant::tid_word expected;
-    cc_silo_variant::tid_word desired;
     for (auto itr = ti->get_write_set().begin(); itr != ti->get_write_set().end();
          ++itr) {
         if (itr->get_op() == OP_TYPE::INSERT) continue;
@@ -52,7 +50,16 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
             return Status::ERR_WRITE_TO_DELETED_RECORD;
         }
 
-        max_wset = std::max(max_wset, expected);
+#if defined(CPR)
+        // cpr verify
+        if (ti->get_phase() == cpr::phase::REST && itr->get_rec_ptr()->get_version() > ti->get_version()) {
+            ti->unlock_write_set(ti->get_write_set().begin(), itr);
+            abort(token);
+            return Status::ERR_WRITE_TO_DELETED_RECORD;
+        }
+#endif
+
+        max_wset = std::max(max_wset, itr->get_rec_ptr()->get_tidw());
     }
 
     // Serialization point

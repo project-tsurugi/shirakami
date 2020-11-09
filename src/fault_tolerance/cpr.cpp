@@ -86,18 +86,30 @@ void checkpointing() {
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
-        const Tuple &tup = rec->get_stable();
         if (rec->get_version() == pv.get_version() + 1) {
+            const Tuple &tup = rec->get_stable();
             l_recs.emplace_back(tup.get_key(), tup.get_value());
         } else {
-            rec->set_version(rec->get_version() + 1);
+            const Tuple &tup = rec->get_tuple();
             l_recs.emplace_back(tup.get_key(), tup.get_value());
+            if (rec->get_tidw().get_latest()) {
+                /**
+                 * If it is still live record, capture stable for partial checkpointing.
+                 * Partial checkpointing of cpr doesn't exist at writing this sentence. So todo.
+                 */
+                if (!(rec->get_tidw().get_epoch() == rec->get_stable_tidw().get_epoch()
+                      && rec->get_tidw().get_tid() == rec->get_stable_tidw().get_tid())) {
+                    rec->get_stable() = tup;
+                    rec->get_stable_tidw() = rec->get_tidw();
+                }
+                rec->set_version(rec->get_version() + 1);
+            }
         }
         if (!rec->get_tidw().get_latest()) {
             /**
              * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
              */
-            yakushima::remove(yaku_token, tup.get_key());
+            yakushima::remove(yaku_token, rec->get_tuple().get_key());
             tid_word new_tid = rec->get_tidw();
             new_tid.set_epoch(kGlobalEpoch.load(std::memory_order_acquire));
             storeRelease(rec->get_tidw().get_obj(), new_tid.get_obj());

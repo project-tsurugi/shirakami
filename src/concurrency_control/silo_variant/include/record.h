@@ -24,6 +24,7 @@ public:
         tidw_.set_absent(true);
         tidw_.set_lock(true);
 #ifdef CPR
+        stable_tidw_.get_obj() = 0;
         version_ = 0;
         checkpointed_ = false;
 #endif
@@ -50,17 +51,26 @@ public:
 
     Tuple &get_stable() { return stable_; }
 
+    tid_word &get_stable_tidw() { return stable_tidw_; }
+
     std::uint64_t get_version() { return version_; }
 
     bool get_checkpointed() { return checkpointed_; }
 
     void set_version(std::uint64_t new_v) { version_ = new_v; }
 
+    void set_stable_tidw(tid_word new_tid) { stable_tidw_ = new_tid; }
+
 #endif
 
 private:
     tid_word tidw_;
 #if defined(CPR)
+    /**
+     * @details Improvement from original CPR. If stable version is also latest version, it doesn't need to update
+     * stable version.
+     */
+    tid_word stable_tidw_;
     /**
      * @pre Only lock owner can read-write this filed.
      */

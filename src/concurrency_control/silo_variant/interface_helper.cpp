@@ -214,6 +214,15 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                         iws->get_tuple(iws->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(
                         new_value_view.data(), new_value_view.size(), &old_value);
+#ifdef CPR
+                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                    if (!rec_ptr->get_checkpointed()) {
+                        rec_ptr->get_stable() = rec_ptr->get_tuple();
+                        rec_ptr->get_stable_tidw() = max_tid;
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
+                }
+#endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 if (old_value != nullptr) {
                     ti->get_gc_value_container()->emplace_back(
@@ -222,6 +231,15 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                 break;
             }
             case OP_TYPE::INSERT: {
+#ifdef CPR
+                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                    if (!rec_ptr->get_checkpointed()) {
+                        rec_ptr->get_stable() = rec_ptr->get_tuple();
+                        rec_ptr->get_stable_tidw() = max_tid;
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
+                }
+#endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }
@@ -245,24 +263,32 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                     /**
                      * This is in checkpointing phase (in-progress or wait-flush)
                      */
-                     if (rec_ptr->get_checkpointed()) {
-                         /**
-                          * Checkpointer will process this record, so it must be observable.
-                          */
-                         yakushima::remove(ti->get_yakushima_token(), key_view);
-                         ti->get_gc_record_container()->emplace_back(rec_ptr);
-                     }
-                     /**
-                      * else : The check pointer is responsible for deleting from the index and registering garbage.
-                      */
+                    if (rec_ptr->get_checkpointed()) {
+                        /**
+                         * Checkpointer will process this record, so it must be observable.
+                         */
+                        yakushima::remove(ti->get_yakushima_token(), key_view);
+                        ti->get_gc_record_container()->emplace_back(rec_ptr);
+                    }
+                    /**
+                     * else : The check pointer is responsible for deleting from the index and registering garbage.
+                     */
                 }
 #endif
 #endif
                 tid_word delete_tid = max_tid;
                 delete_tid.set_latest(false);
                 delete_tid.set_absent(true);
+#ifdef CPR
+                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                    if (!rec_ptr->get_checkpointed()) {
+                        rec_ptr->get_stable() = rec_ptr->get_tuple();
+                        rec_ptr->get_stable_tidw() = delete_tid;
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
+                }
+#endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-
 
                 break;
             }

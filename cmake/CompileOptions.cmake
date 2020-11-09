@@ -89,6 +89,8 @@ elseif (BUILD_CPR)
     add_definitions(-DCPR)
     message("It uses cpr as logging method.")
     set(logging_set 1)
+else ()
+    message("It uses no logging method.")
 endif ()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
