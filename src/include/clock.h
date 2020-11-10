@@ -1,5 +1,5 @@
 /**
- * @file epoch_test.h
+ * @file clock.h
  * @brief functions about epoch_test.
  */
 
