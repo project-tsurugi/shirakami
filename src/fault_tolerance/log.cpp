@@ -24,7 +24,7 @@ using namespace shirakami::cc_silo_variant;
 
 #if defined(CPR)
 
-#include "cpr.h"
+#include "cpr_test.h"
 
 #endif
 

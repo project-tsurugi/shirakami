@@ -9,13 +9,18 @@
 
 #include "clock.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
+#include "logger.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
 #if defined(CPR)
 
-#include "fault_tolerance/include/cpr.h"
+#include "fault_tolerance/include/cpr_test.h"
 
 #endif
+
+#include "spdlog/spdlog.h"
+
+using namespace shirakami::logger;
 
 namespace shirakami::cc_silo_variant::epoch {
 
@@ -32,6 +37,8 @@ bool check_epoch_loaded() {  // NOLINT
 }
 
 void epocher() {
+    setup_spdlog();
+    SPDLOG_DEBUG("start epocher.");
     while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
         /*
          * Increment global epoch in each PARAM_EPOCH_TIME [ms] (default: 40).

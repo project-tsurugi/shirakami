@@ -43,7 +43,7 @@
 
 #elif defined(CPR)
 
-#include "fault_tolerance/include/cpr.h"
+#include "fault_tolerance/include/cpr_test.h"
 
 using namespace shirakami::cpr;
 

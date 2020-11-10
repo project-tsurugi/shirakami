@@ -3,10 +3,10 @@
 
 namespace shirakami::testing {
 
-class clock : public ::testing::Test {  // NOLINT
+class clock_test : public ::testing::Test {  // NOLINT
 };
 
-TEST_F(clock, check_clock_span) {  // NOLINT
+TEST_F(clock_test, check_clock_span) {  // NOLINT
     uint64_t start{1};
     uint64_t stop{2};
     uint64_t threshold{UINT64_MAX};
@@ -17,7 +17,7 @@ TEST_F(clock, check_clock_span) {  // NOLINT
     ASSERT_EQ(true, check_clock_span(start, stop, threshold));
 }
 
-TEST_F(clock, sleepMs) {  // NOLINT
+TEST_F(clock_test, sleepMs) {  // NOLINT
     sleepMs(1);
     // this assert means that it confirms that the above line ends normally.
     ASSERT_EQ(true, true);

@@ -49,6 +49,7 @@ function(register_tests)
         get_filename_component(fname "${src}" NAME_WE)
         if(fname MATCHES "test$")
             if (fname MATCHES "scan_perf_test$")
+                # scan_perf_test takes much time, so it doesn't register test list.
                 set(test_name "${TESTS_TARGET}-test_${fname}.exe")
             else()
                 set(test_name "${TESTS_TARGET}-test_${fname}")
@@ -61,6 +62,7 @@ function(register_tests)
                     PRIVATE ${PROJECT_SOURCE_DIR}/src
                     PRIVATE ${PROJECT_SOURCE_DIR}/third_party
                     PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
+                    PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
                     )
 
             if(TARGET ${TESTS_TARGET})

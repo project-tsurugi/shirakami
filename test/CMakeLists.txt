@@ -19,6 +19,7 @@ file(GLOB TEST_SOURCES
         "complicated_test/client_test.cpp"
         "complicated_test/scan_perf_test.cpp"
         "error_test.cpp"
+        "epoch_test.cpp"
         "interface/helper.cpp"
         "interface/insert_delete_test.cpp"
         "interface/scan_search_test.cpp"
@@ -27,6 +28,7 @@ file(GLOB TEST_SOURCES
         "interface/simple_scan_test.cpp"
         "interface/simple_search_test.cpp"
         "interface/simple_update_test.cpp"
+        "logger_test.cpp"
         "memory_test.cpp"
         "scheme_test.cpp"
         "string_view_test.cpp"
@@ -43,12 +45,12 @@ if (BUILD_INDEX_YAKUSHIMA)
 endif ()
 
 if (BUILD_PWAL)
-    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal.cpp")
+    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 
 if (BUILD_CPR)
-    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr.cpp")
+    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 

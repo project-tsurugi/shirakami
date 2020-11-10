@@ -1,6 +1,6 @@
 /**
- * @file clock.h
- * @brief functions about clock.
+ * @file epoch_test.h
+ * @brief functions about epoch_test.
  */
 
 #pragma once

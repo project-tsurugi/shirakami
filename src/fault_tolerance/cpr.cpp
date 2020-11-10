@@ -6,33 +6,38 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #include "fault_tolerance/include/log.h"
-#include "fault_tolerance/include/cpr.h"
+#include "fault_tolerance/include/cpr_test.h"
 
 #include "clock.h"
+#include "logger.h"
 
 #include "kvs/interface.h"
 
+#include "spdlog/spdlog.h"
+
 using namespace shirakami::cc_silo_variant;
 using namespace shirakami::cc_silo_variant::epoch;
+using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
 void checkpoint_thread() {
+    setup_spdlog();
+    SPDLOG_DEBUG("start checkpoint thread.");
     auto wait_worker = [](phase new_phase) {
         bool continue_loop{};
         do {
             continue_loop = false;
             for (auto &&elem : session_info_table::get_thread_info_table()) {
-                if (elem.get_visible() && elem.get_phase() == new_phase) {
-                    continue;
+                if (elem.get_visible() && elem.get_phase() != new_phase) {
+                    continue_loop = true;
+                    break;
                 }
-                continue_loop = true;
-                break;
             }
         } while (continue_loop);
     };
 
-    while (likely(kCheckPointThreadEnd.load(std::memory_order_acquire))) {
+    while (likely(!kCheckPointThreadEnd.load(std::memory_order_acquire))) {
         sleepMs(PARAM_CHECKPOINT_REST_EPOCH);
 
         /**
@@ -53,11 +58,6 @@ void checkpoint_thread() {
 }
 
 void checkpointing() {
-    /**
-     * todo
-     * 1. If checkpointing is in progress, Deleted record after logical consistency point  must be observable from this
-     * thread.
-     */
 #ifdef INDEX_KOHLER_MASSTREE
     /**
      * todo : impl for kohler masstree
@@ -65,6 +65,10 @@ void checkpointing() {
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
+    if (scan_buf.empty()) {
+        //SPDLOG_DEBUG("cpr : Database has no records. End checkpointing.");
+        return;
+    }
 
     phase_version pv = global_phase_version::get_gpv();
     log_records l_recs{};
@@ -76,7 +80,7 @@ void checkpointing() {
     std::ofstream logf;
     logf.open(checkpointing_path, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
-        std::cerr << __FILE__ << " : " << __LINE__ << " : fatal error." << std::endl;
+        SPDLOG_DEBUG("It can't open file.");
         exit(1);
     }
 
@@ -155,18 +159,21 @@ void checkpointing() {
     logf.flush();
     logf.close();
     if (logf.is_open()) {
-        std::cerr << __FILE__ << " : " << __LINE__ << " : fatal error." << std::endl;
+        SPDLOG_DEBUG("It can't close log file.");
         exit(1);
     }
 
     try {
         boost::filesystem::rename(checkpointing_path, checkpoint_path);
     } catch (boost::filesystem::filesystem_error &ex) {
-        std::cout << ex.what() << std::endl;
+        SPDLOG_DEBUG("Fail rename : {0}.", ex.what());
         exit(1);
+    } catch (...) {
+        SPDLOG_DEBUG("Fail rename : unknown.");
     }
 #endif
 
+    SPDLOG_DEBUG("End cpr checkpointing.");
 }
 
 }
