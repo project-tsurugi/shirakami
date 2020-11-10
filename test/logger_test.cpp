@@ -20,7 +20,7 @@ TEST_F(logger_test, double_initialization) {  // NOLINT
     SPDLOG_DEBUG("after double initialization.");
 }
 
-TEST_F(logger_test, no_init_output_and_output_after_init) {
+TEST_F(logger_test, no_init_output_and_output_after_init) { // NOLINT
     spdlog_debug_output();
     SPDLOG_DEBUG("after first spdlog output."); // It must not output.
     setup_spdlog();

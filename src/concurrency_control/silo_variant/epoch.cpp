@@ -14,7 +14,7 @@
 
 #if defined(CPR)
 
-#include "fault_tolerance/include/cpr_test.h"
+#include "fault_tolerance/include/cpr.h"
 
 #endif
 

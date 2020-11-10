@@ -6,7 +6,7 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #include "fault_tolerance/include/log.h"
-#include "fault_tolerance/include/cpr_test.h"
+#include "fault_tolerance/include/cpr.h"
 
 #include "clock.h"
 #include "logger.h"

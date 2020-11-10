@@ -3,7 +3,7 @@
  * @brief implement about log
  */
 
-#include "fault_tolerance/include/pwal_test.h"
+#include "fault_tolerance/include/pwal.h"
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
