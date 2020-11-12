@@ -23,8 +23,10 @@
 
 namespace shirakami::cpr {
 
-inline std::atomic<bool> kCheckPointThreadEnd{false};
-inline std::thread kCheckPointThread;
+inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
+inline std::thread kCheckPointThread; // NOLINT
+inline std::string kCheckpointingPath; // NOLINT
+inline std::string kCheckpointPath; // NOLINT
 
 enum class phase : char {
     REST = 0,
@@ -34,9 +36,9 @@ enum class phase : char {
 
 class phase_version {
 public:
-    phase get_phase() { return phase_; }
+    phase get_phase() { return phase_; } // NOLINT
 
-    std::uint64_t get_version() { return version_; }
+    [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
 
     void inc_version() { version_ += 1; }
 
@@ -51,7 +53,7 @@ private:
 
 class global_phase_version {
 public:
-    static phase_version get_gpv() { return body.load(std::memory_order_acquire); }
+    static phase_version get_gpv() { return body.load(std::memory_order_acquire); } // NOLINT
 
     static void inc_version() {
         phase_version new_body = body.load(std::memory_order_acquire);
@@ -77,7 +79,7 @@ public:
     }
 
 private:
-    static inline std::atomic<phase_version> body{phase_version()};
+    static inline std::atomic<phase_version> body{phase_version()}; // NOLINT
 };
 
 /**
@@ -106,9 +108,9 @@ public:
         val_ = val;
     }
 
-    std::string_view get_key() { return key_; }
+    std::string_view get_key() { return key_; } // NOLINT
 
-    std::string_view get_val() { return val_; }
+    std::string_view get_val() { return val_; } // NOLINT
 
     MSGPACK_DEFINE (key_, val_);
 private:
@@ -139,6 +141,10 @@ extern void checkpoint_thread();
  */
 extern void checkpointing();
 
+[[maybe_unused]] static std::string &get_checkpoint_path() { return kCheckpointPath; } // NOLINT
+
+[[maybe_unused]] static std::string &get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
+
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     kCheckPointThreadEnd.store(false, std::memory_order_release);
     kCheckPointThread = std::thread(checkpoint_thread);
@@ -149,5 +155,9 @@ extern void checkpointing();
 [[maybe_unused]] static void set_checkpoint_thread_end(const bool tf) {
     kCheckPointThreadEnd.store(tf, std::memory_order_release);
 }
+
+[[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
+
+[[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
 
 }  // namespace shirakami::cpr

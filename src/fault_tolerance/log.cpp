@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "log.h"
+#include "logger.h"
 
 #if defined(CC_SILO_VARIANT)
 
@@ -18,7 +19,6 @@ using namespace shirakami::cc_silo_variant;
 #if defined(INDEX_YAKUSHIMA)
 
 #include "yakushima/include/kvs.h"
-#include "yakushima/include/scheme.h"
 
 #endif
 
@@ -127,22 +127,19 @@ namespace shirakami {
     leave(s);
 
 #elif defined(CPR)
-    std::string checkpoint_path = get_kLogDirectory();
-    checkpoint_path += "/checkpoint";
-
     // check whether checkpoint file exists.
     boost::system::error_code ec;
-    const bool find_result = boost::filesystem::exists(checkpoint_path, ec);
+    const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
-        std::cout << "no checkpoint file to recover." << std::endl;
+        SPDLOG_DEBUG("no checkpoint file to recover.");
         return;
     }
-    std::cout << "checkpoint file to recover exists." << std::endl;
+    SPDLOG_DEBUG("checkpoint file to recover exists.");
 
     std::ifstream logf;
-    logf.open(checkpoint_path, std::ios_base::in | std::ios_base::binary);
+    logf.open(cpr::get_checkpoint_path(), std::ios_base::in | std::ios_base::binary);
 
-    std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()};
+    std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()}; // NOLINT
     size_t offset{0};
     cpr::log_records restore;
 
@@ -153,10 +150,10 @@ namespace shirakami {
             auto obj = oh.get();
             obj.convert(restore);
         } catch (const std::bad_cast &e) {
-            std::cout << __FILE__ << " : " << __LINE__ << "cast error." << std::endl;
+            SPDLOG_DEBUG("cast error.");
             exit(1);
         } catch (...) {
-            std::cout << __FILE__ << " : " << __LINE__ << "unknown error." << std::endl;
+            SPDLOG_DEBUG("unknown error.");
             exit(1);
         }
 
@@ -167,7 +164,7 @@ namespace shirakami {
             rec_ptr->get_tidw() = 0;
             yakushima::status insert_result{yakushima::put<Record*>(elem.get_key(), &rec_ptr)}; // NOLINT
             if (insert_result != yakushima::status::OK) {
-                std::cout << __FILE__ << " : " << __LINE__ << "cpr recovery error." << std::endl;
+                SPDLOG_DEBUG("cpr recovery error.");
                 exit(1);
             }
         }

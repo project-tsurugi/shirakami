@@ -93,6 +93,11 @@ else ()
     message("It uses no logging method.")
 endif ()
 
+if (BUILD_WITH_RECOVERY)
+    message("It starts with recovery.")
+    add_definitions(-DRECOVERY)
+endif ()
+
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})

@@ -57,7 +57,9 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
      */
     Log::set_kLogDirectory(log_directory_path);
     if (log_directory_path == MAC2STR(PROJECT_ROOT)) {
-        Log::get_kLogDirectory().append("/log");
+        std::string log_dir = Log::get_kLogDirectory();
+        log_dir.append("/log");
+        Log::set_kLogDirectory(log_dir);
     }
 
     /**
@@ -85,8 +87,23 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
     /**
      * If it already exists log files, it recoveries from those.
      */
-#if RECOVERY
+#if defined(RECOVERY)
     Log::recovery_from_log();
+#else
+#if defined(CPR)
+    if (boost::filesystem::exists(get_checkpoint_path())) {
+        /**
+         * If checkpoint of old database exists and it starts with no recovery, remove checkpoint to prevent confusing
+         * between invalid checkpoint and valid checkpoint.
+         */
+        boost::filesystem::remove(get_checkpoint_path());
+    }
+#endif
+
+    /**
+     * pwal case : each log file is opened with truncating at init_kThreadTable func.
+     */
+
 #endif
 
     session_info_table::init_kThreadTable();

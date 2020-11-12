@@ -66,10 +66,15 @@ function(register_tests)
                     )
 
             if(TARGET ${TESTS_TARGET})
-                target_link_libraries(${test_name} PRIVATE ${TESTS_TARGET})
+                target_link_libraries(${test_name}
+                        PRIVATE ${TESTS_TARGET}
+                        Boost::filesystem
+                        )
             endif()
             foreach(dep IN LISTS TESTS_DEPENDS)
-                target_link_libraries(${test_name} PRIVATE ${dep})
+                target_link_libraries(${test_name}
+                        PRIVATE ${dep}
+                        )
             endforeach()
 
             # link "gtest" instead of "gtest_main" only if main.cpp or *_main.cpp exists

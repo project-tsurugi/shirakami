@@ -68,20 +68,17 @@ void checkpointing() {
 #elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
+
     if (scan_buf.empty()) {
         //SPDLOG_DEBUG("cpr : Database has no records. End checkpointing.");
+        if (boost::filesystem::exists(get_checkpoint_path())) {
+            boost::filesystem::remove(get_checkpoint_path());
+        }
         return;
     }
 
-    phase_version pv = global_phase_version::get_gpv();
-    log_records l_recs{};
-
-    std::string checkpointing_path = Log::get_kLogDirectory();
-    checkpointing_path += "/checkpointing";
-    std::string checkpoint_path = Log::get_kLogDirectory();
-    checkpoint_path += "/checkpoint";
     std::ofstream logf;
-    logf.open(checkpointing_path, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+    logf.open(get_checkpointing_path(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
         SPDLOG_DEBUG("It can't open file.");
         exit(1);
@@ -90,6 +87,8 @@ void checkpointing() {
     yakushima::Token yaku_token{};
     yakushima::enter(yaku_token);
     std::vector<Record*> garbage{};
+    phase_version pv = global_phase_version::get_gpv();
+    log_records l_recs{};
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
@@ -167,7 +166,7 @@ void checkpointing() {
     }
 
     try {
-        boost::filesystem::rename(checkpointing_path, checkpoint_path);
+        boost::filesystem::rename(get_checkpointing_path(), get_checkpoint_path());
     } catch (boost::filesystem::filesystem_error &ex) {
         SPDLOG_DEBUG("Fail rename : {0}.", ex.what());
         exit(1);
@@ -175,8 +174,6 @@ void checkpointing() {
         SPDLOG_DEBUG("Fail rename : unknown.");
     }
 #endif
-
-    SPDLOG_DEBUG("End cpr checkpointing.");
 }
 
 }
