@@ -28,7 +28,7 @@ bool check_epoch_loaded() {  // NOLINT
     uint64_t curEpoch = kGlobalEpoch.load(std::memory_order_acquire);
 
     for (auto &&itr : session_info_table::get_thread_info_table()) {  // NOLINT
-        if (itr.get_visible() && itr.get_epoch() != curEpoch) {
+        if (itr.get_visible() && itr.get_txbegan() && itr.get_epoch() != curEpoch) {
             return false;
         }
     }

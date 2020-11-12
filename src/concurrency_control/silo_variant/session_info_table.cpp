@@ -48,7 +48,7 @@ void session_info_table::init_kThreadTable() {
         /**
          * about logging.
          */
-#ifdef PWAL
+#if defined(PWAL)
         std::string log_dir = Log::get_kLogDirectory();
         log_dir += "/log";
         log_dir.append(std::to_string(ctr));

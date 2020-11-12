@@ -101,6 +101,19 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 #if defined(PWAL)
     if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());
 #elif defined(CPR)
+    if (cp != nullptr) {
+        cpr::phase_version current_gpv = cpr::global_phase_version::get_gpv();
+        if (ti->get_phase() == current_gpv.get_phase() && current_gpv.get_phase() == cpr::phase::REST) {
+            cp->set_ctid(ti->get_version());
+        } else {
+            /**
+             * cpr's logical consistency point is between rest phase and in-progress phase.
+             * If tx beginning points and ending points are globally rest phase, it is before consistency point,
+             * otherwise after the point.
+             */
+            cp->set_ctid(ti->get_version() + 1);
+        }
+    }
 #endif
 
     ti->set_tx_began(false);

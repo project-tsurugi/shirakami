@@ -274,11 +274,7 @@ public:
         return token_;
     }
 
-    bool &get_txbegan() { return tx_began_; }  // NOLINT
-
-    [[maybe_unused]] [[nodiscard]] const bool &get_txbegan() const {  // NOLINT
-        return tx_began_;
-    }  // NOLINT
+    bool get_txbegan() const { return tx_began_.load(std::memory_order_acquire); }  // NOLINT
 
     [[nodiscard]] bool get_visible() const {  // NOLINT
         return visible_.load(std::memory_order_acquire);
@@ -401,7 +397,7 @@ public:
 
 #endif
 
-    void set_tx_began(bool tf) { tx_began_ = tf; }
+    void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
 
     void set_visible(bool visible) {
         visible_.store(visible, std::memory_order_release);
@@ -412,10 +408,16 @@ private:
 #ifdef INDEX_YAKUSHIMA
     yakushima::Token yakushima_token_{};
 #endif
-    std::atomic<epoch::epoch_t> epoch_{};
+    std::atomic<epoch::epoch_t> epoch_{0};
     tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
+    /**
+     * @brief If this is true, this session is live, otherwise, not live.
+     */
     std::atomic<bool> visible_{};
-    bool tx_began_{};
+    /**
+     * @brief If this is true, this session is in some tx, otherwise, not.
+     */
+    std::atomic<bool> tx_began_{};
 
     /**
      * about garbage collection

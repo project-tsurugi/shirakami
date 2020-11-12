@@ -89,23 +89,12 @@ public:
 
     std::uint64_t get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
 
-    std::size_t get_max_version() { return max_version_; }
-
     void set_phase_version(phase_version new_phase_version) {
         phase_version_.store(new_phase_version, std::memory_order_release);
     }
 
-    void set_max_version(std::size_t num) { max_version_ = num; }
-
 private:
     std::atomic<phase_version> phase_version_{};
-    /**
-     * @brief max version number of read/write set.
-     * @details this number means the tx depends on at most version @a max_version_.
-     * So if global version is larger than @a max_version_, the transactions which has @a max_version_ less than global
-     * version is durable.
-     */
-    std::size_t max_version_{0};
 };
 
 class log_record {

@@ -111,6 +111,7 @@ Status leave(Token const token) {  // NOLINT
                 yakushima::leave(
                         static_cast<session_info*>(token)->get_yakushima_token());
 #endif
+                itr.set_tx_began(false);
                 itr.set_visible(false);
                 return Status::OK;
             }
@@ -122,11 +123,18 @@ Status leave(Token const token) {  // NOLINT
 
 void tx_begin(Token const token) {
     auto* ti = static_cast<session_info*>(token);
-    ti->set_tx_began(true);
-    ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
+    if (!ti->get_txbegan()) {
+        /**
+         * This func includes loading latest global epoch used for epoch-base resource management. This means that this
+         * func is also bound of epoch-base resource management such as view management for gc to prevent segv. So this
+         * func is called once by each tx.
+         */
+        ti->set_tx_began(true);
+        ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
 #if defined(CPR)
-    ti->update_pv();
+        ti->update_pv();
 #endif
+    }
 }
 
 Status read_record(Record &res, const Record* const dest) {  // NOLINT

@@ -29,11 +29,13 @@ void checkpoint_thread() {
         do {
             continue_loop = false;
             for (auto &&elem : session_info_table::get_thread_info_table()) {
-                if (elem.get_visible() && elem.get_phase() != new_phase) {
+                if (elem.get_visible() && elem.get_txbegan() && elem.get_phase() != new_phase) {
                     continue_loop = true;
                     break;
+                    _mm_pause();
                 }
             }
+            if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
         } while (continue_loop);
     };
 
@@ -47,6 +49,7 @@ void checkpoint_thread() {
          */
         cpr::global_phase_version::set_gp(cpr::phase::IN_PROGRESS);
         wait_worker(phase::IN_PROGRESS);
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
 
         // InProgToWaitFlush() phase
         cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
