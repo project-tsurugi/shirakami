@@ -20,7 +20,7 @@ file(GLOB TEST_SOURCES
         "complicated_test/scan_perf_test.cpp"
         "error_test.cpp"
         "epoch_test.cpp"
-        "interface/helper.cpp"
+        "interface/helper_test.cpp"
         "interface/insert_delete_test.cpp"
         "interface/scan_search_test.cpp"
         "interface/simple_delete_test.cpp"
