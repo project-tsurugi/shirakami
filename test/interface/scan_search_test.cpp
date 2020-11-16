@@ -31,7 +31,7 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
     ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     for (auto &&itr : records) {
         std::cout << std::string(itr->get_key().data(),  // NOLINT
                                  itr->get_key().size())
@@ -42,19 +42,18 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, k2, v));
     ASSERT_EQ(Status::OK, upsert(s, k3, v));
     ASSERT_EQ(Status::OK, upsert(s, k4, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
-    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-              search_key(s, k2, &tuple));
+    ASSERT_EQ(Status::OK,search_key(s, k2, &tuple));
     EXPECT_NE(nullptr, tuple);
     delete_record(s, k2);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(1, records.size());
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -70,7 +69,7 @@ TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
     ASSERT_EQ(Status::OK, insert(s, k1, v1));
     ASSERT_EQ(Status::OK, insert(s, k2, v2));
     ASSERT_EQ(Status::OK, insert(s, k4, v2));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ScanHandle handle{};
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, open_scan(s, k1, scan_endpoint::INCLUSIVE, k2, scan_endpoint::INCLUSIVE, handle));
@@ -89,7 +88,7 @@ TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
     ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
 }

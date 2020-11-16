@@ -151,26 +151,6 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
     }
 }
 
-read_set_obj* session_info::search_read_set(std::string_view key) {  // NOLINT
-    for (auto &&itr : read_set) {
-        const std::string_view key_view = itr.get_rec_ptr()->get_tuple().get_key();
-        if (key_view.size() == key.size() &&
-            memcmp(key_view.data(), key.data(), key.size()) == 0) {
-            return &itr;
-        }
-    }
-    return nullptr;
-}
-
-read_set_obj* session_info::search_read_set(  // NOLINT
-        const Record* const rec_ptr) {
-    for (auto &&itr : read_set) {
-        if (itr.get_rec_ptr() == rec_ptr) return &itr;
-    }
-
-    return nullptr;
-}
-
 write_set_obj* session_info::search_write_set(  // NOLINT
         std::string_view const key) {
     for (auto &&itr : write_set) {

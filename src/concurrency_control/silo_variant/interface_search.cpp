@@ -17,18 +17,13 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
 #ifdef INDEX_KOHLER_MASSTREE
     masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif
+
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
         *tuple = &inws->get_tuple(inws->get_op());
-        return Status::WARN_READ_FROM_OWN_OPERATION;
-    }
-
-    read_set_obj* inrs{ti->search_read_set(key)};
-    if (inrs != nullptr) {
-        *tuple = &inrs->get_rec_read().get_tuple();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -39,15 +34,15 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
       *tuple = nullptr;
       return Status::WARN_NOT_FOUND;
     }
-#elif INDEX_YAKUSHIMA
-    Record** rec_double_ptr{
-            std::get<0>(yakushima::get<Record*>(key))};
+#elif defined(INDEX_YAKUSHIMA)
+    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(key))};
     if (rec_double_ptr == nullptr) {
         *tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_double_ptr};
 #endif
+
     tid_word chk_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
     if (chk_tid.get_absent()) {
         // The second condition checks

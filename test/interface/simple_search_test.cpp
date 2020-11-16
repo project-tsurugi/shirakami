@@ -28,11 +28,11 @@ TEST_F(simple_search, search) {  // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, k, &tuple));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, insert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -42,13 +42,13 @@ TEST_F(simple_search, search_search) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -61,7 +61,7 @@ TEST_F(simple_search, search_local_upsert) {  // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -72,14 +72,14 @@ TEST_F(simple_search, search_upsert_search) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, upsert(s, k, v2));
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 

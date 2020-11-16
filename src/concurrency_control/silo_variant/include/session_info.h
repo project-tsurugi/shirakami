@@ -296,20 +296,6 @@ public:
     void remove_inserted_records_of_write_set_from_masstree();
 
     /**
-     * @brief check whether it already executed search operation.
-     * @param[in] key the key of record.
-     * @return the pointer of element. If it is nullptr, it is not found.
-     */
-    read_set_obj* search_read_set(std::string_view key);  // NOLINT
-
-    /**
-     * @brief check whether it already executed search operation.
-     * @param [in] rec_ptr the pointer of record.
-     * @return the pointer of element. If it is nullptr, it is not found.
-     */
-    read_set_obj* search_read_set(const Record* rec_ptr);  // NOLINT
-
-    /**
      * @brief check whether it already executed write operation.
      * @param [in] key the key of record.
      * @return the pointer of element. If it is nullptr, it is not found.
