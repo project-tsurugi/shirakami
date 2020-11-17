@@ -48,16 +48,18 @@ available options:
   * default : `-DBUILD_INDEX_YAKUSHIMA=ON`
      * yakushima is upward compatible with kohler masstree.
   * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF`
-     * use kohler masstree as index (data) structure. 
-  If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta 
+     * It use kohler masstree as index (data) structure. 
+     If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta 
   (kohler masstree).
+     <font color="red">This option will be abolished.</font>
 * logging method (You can select at most one method.)
   * `-DBUILD_PWAL=ON` 
      * enable parallel write-ahead-logging (default: `OFF`)
-     * `-DBUILD_WITH_RECOVERY=ON` 
-        * enable initialization of db from p-wal log. (default: `OFF`)
+     <font color="red">This option will be abolished.</font>
   * `-DBUILD_CPR=ON` 
      * enable concurrent prefix recovery (default: `OFF`)
+  * `-DBUILD_WITH_RECOVERY=ON` 
+     * enable initialization of db from log. (default: `OFF`)
 * parameter setting
   * Silo variant
     * `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>` 
