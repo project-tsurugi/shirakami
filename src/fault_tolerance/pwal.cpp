@@ -7,40 +7,40 @@
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami::pwal {
 
-void Log::LogHeader::init() {
+void LogHeader::init() {
     checksum_ = 0;
     log_rec_num_ = 0;
 }
 
-void Log::LogHeader::compute_two_complement_of_checksum() {
+void LogHeader::compute_two_complement_of_checksum() {
     checksum_ ^= mask_full_bits_uint;
     ++checksum_;
 }
 
-unsigned int Log::LogHeader::get_checksum() const {  // NOLINT
+unsigned int LogHeader::get_checksum() const {  // NOLINT
     return checksum_;
 }
 
-void Log::LogHeader::add_checksum(const int add) { checksum_ += add; }
+void LogHeader::add_checksum(const int add) { checksum_ += add; }
 
-unsigned int Log::LogHeader::get_log_rec_num() const {  // NOLINT
+unsigned int LogHeader::get_log_rec_num() const {  // NOLINT
     return log_rec_num_;
 }
 
-void Log::LogHeader::inc_log_rec_num() { ++this->log_rec_num_; }
+void LogHeader::inc_log_rec_num() { ++this->log_rec_num_; }
 
-void Log::LogHeader::set_checksum(unsigned int checksum) {
+void LogHeader::set_checksum(unsigned int checksum) {
     this->checksum_ = checksum;
 }
 
-unsigned int Log::LogRecord::compute_checksum() {  // NOLINT
+unsigned int LogRecord::compute_checksum() {  // NOLINT
     // compute checksum
     // tid_word
     unsigned int chkSum = 0;
     const char* charitr = reinterpret_cast<char*>(this);  // NOLINT
-    for (std::size_t i = 0; i < sizeof(tid_word); ++i) {
+    for (std::size_t i = 0; i < sizeof(cc_silo_variant::tid_word); ++i) {
         chkSum += (*charitr);
         ++charitr;  // NOLINT
     }

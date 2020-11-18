@@ -9,6 +9,12 @@
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
+#if defined(PWAL)
+
+#include "log.h"
+
+#endif
+
 namespace shirakami::cc_silo_variant {
 
 Status session_info_table::decide_token(Token &token) {  // NOLINT

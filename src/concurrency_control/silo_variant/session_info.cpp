@@ -230,7 +230,7 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
         // write header
         log_handle_.get_log_file().write(
                 static_cast<void*>(&log_handle_.get_latest_log_header()),
-                sizeof(Log::LogHeader));
+                sizeof(pwal::LogHeader));
 
         std::array<char, 4096> buffer{};
         std::size_t offset{0};

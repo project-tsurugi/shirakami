@@ -59,7 +59,7 @@ public:
 
         void gc_values() const;
 
-        void gc_records_and_values() {
+        void gc_records_and_values() const {
             gc_records();
             gc_values();
         }
@@ -220,11 +220,11 @@ public:
 
 #if defined(PWAL)
 
-    log_handler &get_log_handler() {
+    pwal::pwal_handler &get_log_handler() { // NOLINT
         return log_handle_;
     }
 
-    std::vector<Log::LogRecord> &get_log_set() {  // NOLINT
+    std::vector<pwal::LogRecord> &get_log_set() {  // NOLINT
         return log_handle_.get_log_set();
     }
 
@@ -424,7 +424,7 @@ private:
      * about logging.
      */
 #if defined(PWAL)
-    log_handler log_handle_;
+    pwal::pwal_handler log_handle_;
 #elif defined(CPR)
     cpr_local_handler cpr_local_handle_;
 #endif

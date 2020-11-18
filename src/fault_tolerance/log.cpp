@@ -3,10 +3,8 @@
 //
 
 #include <boost/filesystem.hpp>
-#include <iostream>
 
 #include "log.h"
-#include "logger.h"
 
 #if defined(CC_SILO_VARIANT)
 
@@ -25,8 +23,15 @@ using namespace shirakami::cc_silo_variant;
 #if defined(CPR)
 
 #include "cpr.h"
+#include "logger.h"
+
+#elif defined(PWAL)
+
+#include "pwal.h"
+using namespace shirakami::pwal;
 
 #endif
+
 
 namespace shirakami {
 
@@ -122,7 +127,7 @@ namespace shirakami {
         } else if (itr.get_op() == OP_TYPE::DELETE) {
             delete_record(s, itr.get_tuple()->get_key());
         }
-        commit(s);
+        commit(s); // NOLINT
     }
     leave(s);
 
