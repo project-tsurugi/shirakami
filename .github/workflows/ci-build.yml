@@ -24,14 +24,6 @@ jobs:
         name: Install_dependencies_Linux
         run: sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
 
-      - id: CMake_Build
-        name: CMake_Build
-        run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-          cmake --build . --target all --clean-first -- -j
-
       - id: CMake_Build_with_pwal
         name: CMake_Build_with_pwal
         run: |
@@ -46,6 +38,14 @@ jobs:
           mkdir build_cpr
           cd build_cpr
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=ON ..
+          cmake --build . --target all --clean-first -- -j
+
+      - id: CMake_Build
+        name: CMake_Build
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest
