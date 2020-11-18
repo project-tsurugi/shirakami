@@ -25,6 +25,12 @@
 // shirakami/include/
 #include "kvs/interface.h"
 
+#if defined(CPR)
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
 using namespace single_thread_test;
 
 namespace shirakami::testing {
@@ -173,6 +179,15 @@ class client : public ::testing::Test {
 
 TEST_F(client, single_thread_test) {  // NOLINT
     init();                             // NOLINT
+
+#if defined(RECOVERY)
+    /**
+     * clean up before test;
+     */
+    delete_all_records();
+    cpr::wait_next_checkpoint();
+#endif
+
     test();
     fin();
 }

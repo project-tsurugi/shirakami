@@ -4,6 +4,8 @@
 #include "kvs/interface.h"
 #include "tuple_local.h"
 
+#include "boost/filesystem.hpp"
+
 #ifdef CC_SILO_VARIANT
 using namespace shirakami::cc_silo_variant;
 #endif
@@ -14,7 +16,16 @@ using namespace shirakami::cc_silo_variant;
 
 class simple_scan : public ::testing::Test {  // NOLINT
 public:
-    void SetUp() override { init(); }  // NOLINT
+    void SetUp() override {
+#if defined(RECOVERY)
+        std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        path += "/log/checkpoint";
+        if (boost::filesystem::exists(path)) {
+            boost::filesystem::remove(path);
+        }
+#endif
+        init();  // NOLINT
+    }
 
     void TearDown() override { fin(); }
 };
@@ -186,43 +197,48 @@ TEST_F(simple_scan, scan) {  // NOLINT
 }
 
 TEST_F(simple_scan, scan_with_prefixed_end) {  // NOLINT
-  std::string k("T6\000\200\000\000\n\200\000\000\001", 11);                 // NOLINT
-  std::string end("T6\001", 3);                 // NOLINT
-  std::string v("bbb");  // NOLINT
-  Token s{};
-  ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::OK, upsert(s, k, v));
-  ASSERT_EQ(Status::OK, commit(s));
-  std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, end, scan_endpoint::EXCLUSIVE, records));
-  EXPECT_EQ(1, records.size());
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, leave(s));
+    std::string k("T6\000\200\000\000\n\200\000\000\001", 11);                 // NOLINT
+    std::string end("T6\001", 3);                 // NOLINT
+    std::string v("bbb");  // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s));
+    std::vector<const Tuple*> records{};
+    ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, end, scan_endpoint::EXCLUSIVE, records));
+    EXPECT_EQ(1, records.size());
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_scan, scan_range_endpoint1) {  // NOLINT
-  // simulating 1st case in umikongo OperatorTest scan_pushdown_range
-  std::string r1("T200\x00\x80\x00\x00\xc7\x80\x00\x01\x91\x80\x00\x01\x2d\x80\x00\x00\x01", 21);                 // NOLINT
-  std::string r2("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x92\x80\x00\x01\x2e\x80\x00\x00\x02", 21);                 // NOLINT
-  std::string r3("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x93\x80\x00\x01\x2f\x80\x00\x00\x03", 21);                 // NOLINT
-  std::string r4("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x94\x80\x00\x01\x30\x80\x00\x00\x04", 21);                 // NOLINT
-  std::string r5("T200\x00\x80\x00\x00\xc9\x80\x00\x01\x95\x80\x00\x01\x31\x80\x00\x00\x05", 21);                 // NOLINT
-  std::string  b("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x93", 13);                 // NOLINT
-  std::string  e("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x94", 13);                 // NOLINT
-  std::string v("bbb");  // NOLINT
-  Token s{};
-  ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::OK, upsert(s, r1, v));
-  ASSERT_EQ(Status::OK, upsert(s, r2, v));
-  ASSERT_EQ(Status::OK, upsert(s, r3, v));
-  ASSERT_EQ(Status::OK, upsert(s, r4, v));
-  ASSERT_EQ(Status::OK, upsert(s, r5, v));
-  ASSERT_EQ(Status::OK, commit(s));
-  std::vector<const Tuple*> records{};
-  ASSERT_EQ(Status::OK, scan_key(s, b, scan_endpoint::INCLUSIVE, e, scan_endpoint::EXCLUSIVE, records));
-  EXPECT_EQ(1, records.size());
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, leave(s));
+    // simulating 1st case in umikongo OperatorTest scan_pushdown_range
+    std::string r1("T200\x00\x80\x00\x00\xc7\x80\x00\x01\x91\x80\x00\x01\x2d\x80\x00\x00\x01",
+                   21);                 // NOLINT
+    std::string r2("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x92\x80\x00\x01\x2e\x80\x00\x00\x02",
+                   21);                 // NOLINT
+    std::string r3("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x93\x80\x00\x01\x2f\x80\x00\x00\x03",
+                   21);                 // NOLINT
+    std::string r4("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x94\x80\x00\x01\x30\x80\x00\x00\x04",
+                   21);                 // NOLINT
+    std::string r5("T200\x00\x80\x00\x00\xc9\x80\x00\x01\x95\x80\x00\x01\x31\x80\x00\x00\x05",
+                   21);                 // NOLINT
+    std::string b("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x93", 13);                 // NOLINT
+    std::string e("T200\x00\x80\x00\x00\xc8\x80\x00\x01\x94", 13);                 // NOLINT
+    std::string v("bbb");  // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, r1, v));
+    ASSERT_EQ(Status::OK, upsert(s, r2, v));
+    ASSERT_EQ(Status::OK, upsert(s, r3, v));
+    ASSERT_EQ(Status::OK, upsert(s, r4, v));
+    ASSERT_EQ(Status::OK, upsert(s, r5, v));
+    ASSERT_EQ(Status::OK, commit(s));
+    std::vector<const Tuple*> records{};
+    ASSERT_EQ(Status::OK, scan_key(s, b, scan_endpoint::INCLUSIVE, e, scan_endpoint::EXCLUSIVE, records));
+    EXPECT_EQ(1, records.size());
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_scan, open_scan_test) {  // NOLINT
@@ -232,7 +248,7 @@ TEST_F(simple_scan, open_scan_test) {  // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ScanHandle handle{};
     ScanHandle handle2{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND,open_scan(s, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, insert(s, k1, v1));
     ASSERT_EQ(Status::OK, commit(s));
@@ -258,7 +274,7 @@ TEST_F(simple_scan, open_scan_test2) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, k3, v));
     ASSERT_EQ(Status::OK, insert(s, k4, v));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK ,open_scan(s, k2, scan_endpoint::INCLUSIVE, "sa0", scan_endpoint::EXCLUSIVE, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, k2, scan_endpoint::INCLUSIVE, "sa0", scan_endpoint::EXCLUSIVE, handle));
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
@@ -337,9 +353,8 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, k));
-    ASSERT_EQ(Status::OK, commit(s2));
-    EXPECT_EQ(Status::WARN_CONCURRENT_DELETE,
-              read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    EXPECT_EQ(Status::WARN_CONCURRENT_DELETE, read_from_scan(s, handle, &tuple));
 
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));

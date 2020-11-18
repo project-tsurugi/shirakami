@@ -165,10 +165,13 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
         }
 
-        if (f_check.get_absent()) {
-            return Status::WARN_CONCURRENT_DELETE;
+        if (f_check.get_absent() && f_check.get_latest()) {
+            return Status::WARN_CONCURRENT_INSERT;
             // other thread is inserting this record concurrently,
             // but it isn't committed yet.
+        }
+        if (f_check.get_absent() && !f_check.get_latest()) {
+            return Status::WARN_CONCURRENT_DELETE;
         }
 
         res.get_tuple() = dest->get_tuple();  // execute copy assign.

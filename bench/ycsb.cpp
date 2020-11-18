@@ -29,19 +29,21 @@
 // shirakami/src/include
 #include "atomic_wrapper.h"
 
-#ifdef CC_SILO_VARIANT
-
-#include "concurrency_control/silo_variant/include/session_info.h"
-
-#endif  // CC_SILO_VARIANT
-
 #include "clock.h"
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "tuple_local.h"
 
+#if defined(CPR)
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
 #include "kvs/interface.h"
+
+#include "boost/filesystem.hpp"
 
 using namespace shirakami;
 using namespace ycsb_param;
@@ -171,10 +173,19 @@ int main(int argc, char* argv[]) {  // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
+#if defined(RECOVERY)
+    /**
+     * This program doesn't assume recovery.
+     */
+     std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
+     path += "/log/checkpoint";
+     if (boost::filesystem::exists(path)) {
+         boost::filesystem::remove(path);
+     }
+#endif
     init();  // NOLINT
     build_db(kCardinality, kNthread, kValLength);
     invoke_leader();
-    delete_all_records();
     fin();
 
     return 0;
@@ -222,7 +233,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
                 update(token, itr.get_key(), itr.get_value());
             }
         }
-        if (commit(token) == Status::OK) {
+        if (commit(token) == Status::OK) { // NOLINT
             ++myres.get().get_local_commit_counts();
         } else {
             ++myres.get().get_local_abort_counts();

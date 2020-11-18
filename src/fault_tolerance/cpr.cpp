@@ -176,4 +176,17 @@ void checkpointing() {
 #endif
 }
 
+void wait_next_checkpoint() {
+    cpr::phase_version pv = cpr::global_phase_version::get_gpv();
+    switch (pv.get_phase()) {
+        case cpr::phase::REST: // NOLINT
+            while (pv.get_version() == cpr::global_phase_version::get_gpv().get_version()) _mm_pause();
+            break;
+        case cpr::phase::IN_PROGRESS:
+        case cpr::phase::WAIT_FLUSH:
+            while (pv.get_version() + 2 <= cpr::global_phase_version::get_gpv().get_version()) _mm_pause();
+            break;
+    }
+}
+
 }

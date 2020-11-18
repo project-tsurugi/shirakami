@@ -6,6 +6,7 @@
 #include <bitset>
 
 #include "atomic_wrapper.h"
+#include "logger.h"
 
 #ifdef CC_SILO_VARIANT
 
@@ -18,12 +19,15 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif                            // INDEX_KOHLER_MASSTREE
 
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "kvs/interface.h"
+
+#include "tuple_local.h"   // NOLINT
+// sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
-#ifdef INDEX_YAKUSHIMA
+#if defined(INDEX_YAKUSHIMA)
     std::vector<std::pair<Record**, std::size_t> > scan_res;
     yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 

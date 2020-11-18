@@ -160,4 +160,6 @@ extern void checkpointing();
 
 [[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
 
+[[maybe_unused]] extern void wait_next_checkpoint();
+
 }  // namespace shirakami::cpr

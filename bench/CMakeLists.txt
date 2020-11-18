@@ -27,6 +27,7 @@ target_link_libraries(ycsb
         PRIVATE shirakami-impl
         PRIVATE Threads::Threads
         PRIVATE gflags::gflags
+        Boost::filesystem
         )
 
 target_include_directories(ycsb

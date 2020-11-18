@@ -107,6 +107,7 @@ enum class Status : std::int32_t {
      * delete operation of concurrent transaction.
      */
     WARN_CONCURRENT_DELETE,
+    WARN_CONCURRENT_INSERT,
     /**
      * @brief warning
      * @details
@@ -206,6 +207,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_CANCEL_PREVIOUS_OPERATION"sv;  // NOLINT
         case Status::WARN_CONCURRENT_DELETE:
             return "WARN_CONCURRENT_DELETE"sv;  // NOLINT
+        case Status::WARN_CONCURRENT_INSERT:
+            return "WARN_CONCURRENT_INSERT"sv;  // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv;  // NOLINT
         case Status::WARN_NOT_FOUND:

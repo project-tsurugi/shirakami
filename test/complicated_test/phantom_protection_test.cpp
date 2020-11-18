@@ -1,5 +1,9 @@
+
 #include "gtest/gtest.h"
+
 #include "kvs/interface.h"
+
+#include "boost/filesystem.hpp"
 
 namespace shirakami::testing {
 
@@ -9,7 +13,16 @@ using namespace shirakami::cc_silo_variant;
 
 class phantom_protection : public ::testing::Test {
 public:
-    void SetUp() override { init(); }  // NOLINT
+    void SetUp() override {
+#if defined(RECOVERY)
+        std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        path += "/log/checkpoint";
+        if (boost::filesystem::exists(path)) {
+            boost::filesystem::remove(path);
+        }
+#endif
+        init();   // NOLINT
+    }
 
     void TearDown() override { fin(); }
 };
@@ -27,16 +40,16 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     std::string v{"value"};  // NOLINT
     ASSERT_EQ(Status::OK, insert(token.at(0), key.at(0), v));
     ASSERT_EQ(Status::OK, insert(token.at(0), key.at(1), v));
-    ASSERT_EQ(Status::OK, commit(token.at(0)));
+    ASSERT_EQ(Status::OK, commit(token.at(0))); // NOLINT
     std::vector<const Tuple*> tuple_vec;
     ASSERT_EQ(Status::OK,
               scan_key(token.at(0), "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
     ASSERT_EQ(tuple_vec.size(), 2);
     // interrupt to occur phantom
     ASSERT_EQ(Status::OK, insert(token.at(1), key.at(2), v));
-    ASSERT_EQ(Status::OK, commit(token.at(1)));
+    ASSERT_EQ(Status::OK, commit(token.at(1))); // NOLINT
     // =====
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(token.at(0)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(token.at(0))); // NOLINT
     // abort by phantom
     ASSERT_EQ(leave(token.at(0)), Status::OK);
     ASSERT_EQ(leave(token.at(1)), Status::OK);

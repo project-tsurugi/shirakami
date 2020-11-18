@@ -1,10 +1,24 @@
 #include <bitset>
 
 #include "gtest/gtest.h"
+
 #include "kvs/interface.h"
 
-// shirakami-impl interface library
 #include "tuple_local.h"
+
+#if defined(CPR)
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
+#include "boost/filesystem.hpp"
+
+#if defined(RECOVERY)
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
 
 #ifdef CC_SILO_VARIANT
 using namespace shirakami::cc_silo_variant;
@@ -18,8 +32,14 @@ class scan_search : public ::testing::Test {  // NOLINT
 public:
     void SetUp() override { init(); }  // NOLINT
 
-    void TearDown() override { fin(); }
+    void TearDown() override {
+#if defined(RECOVERY)
+        shirakami::cpr::wait_next_checkpoint();
+#endif
+        fin();
+    }
 };
+
 
 TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     std::string k("a");                       // NOLINT
@@ -30,14 +50,9 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
+    ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
+    EXPECT_EQ(0, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    for (auto &&itr : records) {
-        std::cout << std::string(itr->get_key().data(),  // NOLINT
-                                 itr->get_key().size())
-                  << std::endl;
-    }
-    records.clear();
     ASSERT_EQ(Status::OK, upsert(s, k, v));
     ASSERT_EQ(Status::OK, upsert(s, k2, v));
     ASSERT_EQ(Status::OK, upsert(s, k3, v));
@@ -47,12 +62,22 @@ TEST_F(scan_search, scan_key_search_key) {  // NOLINT
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK,search_key(s, k2, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, k2, &tuple));
     EXPECT_NE(nullptr, tuple);
     delete_record(s, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    /**
+     * cpr checkpoint thread may delete concurrently by upper 2 line's delete_record function.
+     */
+    cpr::wait_next_checkpoint();
+#endif
     ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(1, records.size());
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, k));
+    ASSERT_EQ(Status::OK, delete_record(s, k3));
+    ASSERT_EQ(Status::OK, delete_record(s, k4));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -89,7 +114,9 @@ TEST_F(scan_search, mixing_scan_and_search) {  // NOLINT
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
+    ASSERT_EQ(Status::OK, delete_record(s, k1));
+    ASSERT_EQ(Status::OK, delete_record(s, k2));
+    ASSERT_EQ(Status::OK, delete_record(s, k4));
     ASSERT_EQ(Status::OK, leave(s));
 }
 

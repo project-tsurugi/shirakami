@@ -1,13 +1,8 @@
 
-#include <xmmintrin.h>
+#include <xmmintrin.h> // NOLINT
+// It is used, but clang-tidy warn.
 
 #include "fault_tolerance/include/log.h"
-
-#ifdef CPR
-
-#include "fault_tolerance/include/cpr.h"
-
-#endif
 
 #include "logger.h"
 
@@ -27,19 +22,26 @@ public:
     void TearDown() override { fin(); }
 };
 
+#if defined(RECOVERY)
+TEST_F(cpr_test, clean_up) { // NOLINT
+    std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
+    path += "/log/checkpoint";
+    if (boost::filesystem::exists(path)) {
+        boost::filesystem::remove(path);
+    }
+}
+#endif
+
 TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     setup_spdlog();
-    delete_all_records();
-    sleep(1);
-    while (cpr::global_phase_version::get_gpv().get_version() == 0) _mm_pause(); // wait for first checkpoint.
     ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), false); // null db has no checkpoint.
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     ASSERT_EQ(upsert(token, k, k), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
-    sleep(1);
-    ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), true); // non-null db has checkpoint.
+    cpr::wait_next_checkpoint();
+    ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), true);
     ASSERT_EQ(leave(token), Status::OK);
 }
 
@@ -53,9 +55,19 @@ TEST_F(cpr_test, cpr_recovery) { // NOLINT
     ASSERT_EQ(search_key(token, k, &tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), k); // NOLINT
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
+    ASSERT_EQ(delete_record(token, tup->get_key()), Status::OK);
+    ASSERT_EQ(commit(token), Status::OK); // NOLINT
+    cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
 }
 
 #endif
+
+TEST_F(cpr_test, cpr_bound) { // NOLINT
+    setup_spdlog();
+    Token token{};
+    ASSERT_EQ(enter(token), Status::OK);
+    ASSERT_EQ(leave(token), Status::OK);
+}
 
 }  // namespace shirakami::testing

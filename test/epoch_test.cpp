@@ -22,6 +22,14 @@ public:
     void TearDown() override { fin(); }
 };
 
+#if defined(RECOVERY)
+TEST_F(epoch_test, clean_up_before_test) {  // NOLINT
+    delete_all_records();
+    cpr::wait_next_checkpoint();
+}
+
+#endif
+
 TEST_F(epoch_test, sleep_to_watch_change_epoch) {  // NOLINT
     setup_spdlog();
     epoch::epoch_t first = epoch::kGlobalEpoch.load(std::memory_order_acquire);
