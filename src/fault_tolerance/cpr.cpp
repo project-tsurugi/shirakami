@@ -122,6 +122,7 @@ void checkpointing() {
             garbage.emplace_back(rec);
         }
         rec->get_tidw().unlock();
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
     }
     yakushima::leave(yaku_token);
 
@@ -156,6 +157,8 @@ void checkpointing() {
         ti->get_gc_record_container()->emplace_back(itr);
     }
     leave(shira_token);
+
+    if (kCheckPointThreadEnd.load(std::memory_order_acquire)) return;
 
     msgpack::pack(logf, l_recs);
     logf.flush();
