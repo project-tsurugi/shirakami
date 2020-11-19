@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// shirakami/test
-#include "result.h"
-
 // shirakami/bench
 #include "./include/build_db.h"
 #include "./include/shirakami_string.h"
@@ -24,7 +21,7 @@
 // shirakami-impl interface library
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 #include "clock.h"
-#include "cpu.h"
+#include "logger.h"
 #include "random.h"
 #include "tuple_local.h"
 
@@ -47,8 +44,7 @@ size_t decideParallelBuildNumber(const std::size_t record,  // NOLINT
             return i;
         }
         if (i == 1) {
-            std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
-                      << std::endl;
+            SPDLOG_DEBUG("fatal error.");
             std::abort();
         }
     }
@@ -70,21 +66,19 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
         uint64_t keybs = __builtin_bswap64(i);
         std::string val(value_length, '0');  // NOLINT
         make_string(val, rnd);
-        insert(token,
-               {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)},  // NOLINT
-               val);
+        insert(token, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val); // NOLINT
     }
-    commit(token);
+    commit(token); // NOLINT
     leave(token);
 }
 
 void build_db(const std::size_t record, const std::size_t thread,
               const std::size_t value_length) {
-    printf("ycsb::build_mtdb\n");  // NOLINT
+    SPDLOG_DEBUG("ycsb::build_mtdb");
     std::vector<std::thread> thv;
 
     size_t max_thread{decideParallelBuildNumber(record, thread)};
-    printf("start parallel_build_db with %zu threads.\n", max_thread);  // NOLINT
+    SPDLOG_DEBUG("start parallel_build_db with {0} threads.", max_thread);
     fflush(stdout);
     for (size_t i = 0; i < max_thread; ++i) {
         thv.emplace_back(parallel_build_db, i * (record / max_thread),  // NOLINT

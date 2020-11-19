@@ -33,6 +33,7 @@
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "logger.h"
 #include "tuple_local.h"
 
 #if defined(CPR)
@@ -43,7 +44,11 @@
 
 #include "kvs/interface.h"
 
+#if defined(RECOVERY)
+
 #include "boost/filesystem.hpp"
+
+#endif
 
 using namespace shirakami;
 using namespace ycsb_param;
@@ -85,9 +90,16 @@ static void invoke_leader() {
     }
     waitForReady(readys);
     storeRelease(start, true);
+#if 0
     for (size_t i = 0; i < kExecTime; ++i) {
         sleepMs(1000);  // NOLINT
     }
+#else
+    if (sleep(kExecTime) != 0) {
+        SPDLOG_DEBUG("sleep error.");
+        exit(1);
+    }
+#endif
     storeRelease(quit, true);
     for (auto &th : thv) th.join();
 
@@ -101,12 +113,14 @@ static void invoke_leader() {
 static void load_flags() {
     if (FLAGS_thread >= 1) {
         kNthread = FLAGS_thread;
+        SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
     } else {
         std::cerr << "Number of threads must be larger than 0." << std::endl;
         exit(1);
     }
     if (FLAGS_record > 1) {
         kCardinality = FLAGS_record;
+        SPDLOG_DEBUG("FLAGS_record : {0}", FLAGS_record);
     } else {
         std::cerr << "Number of database records(tuples) must be large than 0."
                   << std::endl;
@@ -115,6 +129,7 @@ static void load_flags() {
     constexpr std::size_t eight = 8;
     if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
         kKeyLength = FLAGS_key_length;
+        SPDLOG_DEBUG("FLAGS_key_length : {0}", FLAGS_key_length);
     } else {
         std::cerr << "Length of key must be larger than 0 and be divisible by 8."
                   << std::endl;
@@ -122,12 +137,14 @@ static void load_flags() {
     }
     if (FLAGS_val_length > 1) {
         kValLength = FLAGS_val_length;
+        SPDLOG_DEBUG("FLAGS_val_length : {0}", FLAGS_val_length);
     } else {
         std::cerr << "Length of val must be larger than 0." << std::endl;
         exit(1);
     }
     if (FLAGS_ops >= 1) {
         kNops = FLAGS_ops;
+        SPDLOG_DEBUG("FLAGS_ops : {0}", FLAGS_ops);
     } else {
         std::cerr << "Number of operations in a transaction must be larger than 0."
                   << std::endl;
@@ -136,6 +153,7 @@ static void load_flags() {
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         kRRatio = FLAGS_rratio;
+        SPDLOG_DEBUG("FLAGS_rratio : {0}", FLAGS_rratio);
     } else {
         std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
                   << std::endl;
@@ -143,6 +161,7 @@ static void load_flags() {
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         kZipfSkew = FLAGS_skew;
+        SPDLOG_DEBUG("FLAGS_skew : {0}", FLAGS_skew);
     } else {
         std::cerr
                 << "Access skew of transaction must be in the range 0 to 0.999... ."
@@ -151,6 +170,7 @@ static void load_flags() {
     }
     if (FLAGS_cpumhz > 1) {
         kCPUMHz = FLAGS_cpumhz;
+        SPDLOG_DEBUG("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
     } else {
         std::cerr
                 << "CPU MHz of execution environment. It is used measuring some time. "
@@ -160,14 +180,17 @@ static void load_flags() {
     }
     if (FLAGS_duration >= 1) {
         kExecTime = FLAGS_duration;
+        SPDLOG_DEBUG("FLAGS_duration : {0}", FLAGS_duration);
     } else {
         std::cerr << "Duration of benchmark in seconds must be larger than 0."
                   << std::endl;
         exit(1);
     }
+    SPDLOG_DEBUG("Fin load_flags()");
 }
 
 int main(int argc, char* argv[]) {  // NOLINT
+    logger::setup_spdlog();
     gflags::SetUsageMessage(static_cast<const std::string &>(
                                     "YCSB benchmark for shirakami"));  // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -184,9 +207,13 @@ int main(int argc, char* argv[]) {  // NOLINT
      }
 #endif
     init();  // NOLINT
+    SPDLOG_DEBUG("Fin init");
     build_db(kCardinality, kNthread, kValLength);
+    SPDLOG_DEBUG("Fin build_db");
     invoke_leader();
+    SPDLOG_DEBUG("Fin invoke_leader");
     fin();
+    SPDLOG_DEBUG("Fin fin");
 
     return 0;
 }

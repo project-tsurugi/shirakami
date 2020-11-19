@@ -92,6 +92,10 @@ void checkpointing() {
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
+        /**
+         * You may find it redundant to take a lock. However, if it does not take the lock, it must join this thread in
+         * the view protection protocol to avoid segv.
+         */
         if (rec->get_version() == pv.get_version() + 1) {
             const Tuple &tup = rec->get_stable();
             l_recs.emplace_back(tup.get_key(), tup.get_value());
