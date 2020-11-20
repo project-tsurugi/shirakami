@@ -134,16 +134,35 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
             kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                      key_view.size());
 #elif INDEX_YAKUSHIMA
+#if defined(CPR)
+            if (get_phase() == cpr::phase::REST) {
+                /**
+                 * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
+                 */
+                yakushima::remove(get_yakushima_token(), key_view);
+                this->gc_handle_.get_record_container()->emplace_back(itr.get_rec_ptr());
+                record->set_failed_insert(false);
+            } else {
+                /**
+                 * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
+                 * But this record is locked from initialization (at read phsae) and checkpoint thread can't lock after
+                 * logical consistency point definitely.
+                 * The check pointer is responsible for deleting from the index and registering garbage.
+                 */
+                record->set_failed_insert(true);
+            }
+#else
             yakushima::remove(get_yakushima_token(), key_view);
+            this->gc_handle_.get_record_container()->emplace_back(itr.get_rec_ptr());
+#endif
 #endif
 
             /**
              * create information for garbage collection.
              */
-            this->gc_handle_.get_record_container()->emplace_back(itr.get_rec_ptr());
             tid_word deletetid;
             deletetid.set_lock(false);
-            deletetid.set_latest(false);
+            deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
             deletetid.set_absent(false);
             deletetid.set_epoch(this->get_epoch());
             storeRelease(record->get_tidw().obj_, deletetid.obj_);  // NOLINT

@@ -107,6 +107,9 @@ static void invoke_leader() {
         res[0].addLocalAllResult(res[i]);
     }
     res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+#if defined(CPR)
+    SPDLOG_DEBUG("cpr global version :\t{0}", cpr::global_phase_version::get_gpv().get_version());
+#endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
 

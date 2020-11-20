@@ -49,17 +49,21 @@ public:
 
 #if defined(CPR)
 
-    Tuple &get_stable() { return stable_; }
+    Tuple &get_stable() { return stable_; } // NOLINT
 
-    tid_word &get_stable_tidw() { return stable_tidw_; }
+    tid_word &get_stable_tidw() { return stable_tidw_; } // NOLINT
 
-    std::uint64_t get_version() { return version_; }
+    [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
 
-    bool get_checkpointed() { return checkpointed_; }
+    [[nodiscard]] bool get_failed_insert() const { return failed_insert_; } // NOLINT
+
+    [[nodiscard]] bool get_checkpointed() const { return checkpointed_; } // NOLINT
 
     void set_version(std::uint64_t new_v) { version_ = new_v; }
 
     void set_stable_tidw(tid_word new_tid) { stable_tidw_ = new_tid; }
+
+    void set_failed_insert(bool tf) { failed_insert_ = tf; }
 
 #endif
 
@@ -80,6 +84,13 @@ private:
      * @brief If CPR checkpointer processed, this is true.
      */
     bool checkpointed_{false};
+    /**
+     * @brief It is whether this record was inserted and aborted.
+     * @details If worker inserted record between cpr logical consistency point and scan by checkpoint thread, checkpoint
+     * thread may scan this record. So worker free memory of this record without coordination, checkpoint thread may
+     * cause SEGV.
+     */
+    bool failed_insert_{false};
 #endif
     Tuple tuple_;
 };

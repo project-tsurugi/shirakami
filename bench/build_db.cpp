@@ -66,9 +66,15 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
         uint64_t keybs = __builtin_bswap64(i);
         std::string val(value_length, '0');  // NOLINT
         make_string(val, rnd);
-        insert(token, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val); // NOLINT
+        if (Status::OK != insert(token, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val)) { // NOLINT
+            SPDLOG_DEBUG("fatal error.");
+            exit(1);
+        }
     }
-    commit(token); // NOLINT
+    if (Status::OK != commit(token)) { // NOLINT
+        SPDLOG_DEBUG("fatal error.");
+        exit(1);
+    }
     leave(token);
 }
 
@@ -79,7 +85,6 @@ void build_db(const std::size_t record, const std::size_t thread,
 
     size_t max_thread{decideParallelBuildNumber(record, thread)};
     SPDLOG_DEBUG("start parallel_build_db with {0} threads.", max_thread);
-    fflush(stdout);
     for (size_t i = 0; i < max_thread; ++i) {
         thv.emplace_back(parallel_build_db, i * (record / max_thread),  // NOLINT
                          (i + 1) * (record / max_thread) - 1, value_length);

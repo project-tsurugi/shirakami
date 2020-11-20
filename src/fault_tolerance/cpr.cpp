@@ -6,14 +6,11 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #include "fault_tolerance/include/log.h"
-#include "fault_tolerance/include/cpr.h"
 
 #include "clock.h"
 #include "logger.h"
 
 #include "kvs/interface.h"
-
-#include "spdlog/spdlog.h"
 
 using namespace shirakami::cc_silo_variant;
 using namespace shirakami::cc_silo_variant::epoch;
@@ -25,7 +22,7 @@ void checkpoint_thread() {
     setup_spdlog();
     SPDLOG_DEBUG("start checkpoint thread.");
     auto wait_worker = [](phase new_phase) {
-        bool continue_loop{};
+        bool continue_loop{}; // NOLINT
         do {
             continue_loop = false;
             for (auto &&elem : session_info_table::get_thread_info_table()) {
@@ -96,34 +93,45 @@ void checkpointing() {
          * You may find it redundant to take a lock. However, if it does not take the lock, it must join this thread in
          * the view protection protocol to avoid segv.
          */
-        if (rec->get_version() == pv.get_version() + 1) {
-            const Tuple &tup = rec->get_stable();
-            l_recs.emplace_back(tup.get_key(), tup.get_value());
-        } else {
-            const Tuple &tup = rec->get_tuple();
-            l_recs.emplace_back(tup.get_key(), tup.get_value());
-            if (rec->get_tidw().get_latest()) {
-                /**
-                 * If it is still live record, capture stable for partial checkpointing.
-                 * Partial checkpointing of cpr doesn't exist at writing this sentence. So todo.
-                 */
-                if (!(rec->get_tidw().get_epoch() == rec->get_stable_tidw().get_epoch()
-                      && rec->get_tidw().get_tid() == rec->get_stable_tidw().get_tid())) {
-                    rec->get_stable() = tup;
-                    rec->get_stable_tidw() = rec->get_tidw();
-                }
-                rec->set_version(rec->get_version() + 1);
-            }
-        }
-        if (!rec->get_tidw().get_latest()) {
-            /**
-             * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
-             */
+        auto remove_from_index_and_register_garbage = [&]() {
             yakushima::remove(yaku_token, rec->get_tuple().get_key());
             tid_word new_tid = rec->get_tidw();
             new_tid.set_epoch(kGlobalEpoch.load(std::memory_order_acquire));
             storeRelease(rec->get_tidw().get_obj(), new_tid.get_obj());
             garbage.emplace_back(rec);
+        };
+        if (rec->get_failed_insert()) {
+            /**
+             * This record was inserted and aborted between cpr logical consistency point and scan by this thread,
+             * so omit checkpoint processing.
+             */
+            remove_from_index_and_register_garbage();
+        } else {
+            if (rec->get_version() == pv.get_version() + 1) {
+                const Tuple &tup = rec->get_stable();
+                l_recs.emplace_back(tup.get_key(), tup.get_value());
+            } else {
+                const Tuple &tup = rec->get_tuple();
+                l_recs.emplace_back(tup.get_key(), tup.get_value());
+                if (rec->get_tidw().get_latest()) {
+                    /**
+                     * If it is still live record, capture stable for partial checkpointing.
+                     * Partial checkpointing of cpr doesn't exist at writing this sentence. So todo.
+                     */
+                    if (!(rec->get_tidw().get_epoch() == rec->get_stable_tidw().get_epoch()
+                          && rec->get_tidw().get_tid() == rec->get_stable_tidw().get_tid())) {
+                        rec->get_stable() = tup;
+                        rec->get_stable_tidw() = rec->get_tidw();
+                    }
+                    rec->set_version(rec->get_version() + 1);
+                }
+            }
+            if (!rec->get_tidw().get_latest()) {
+                /**
+                 * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
+                 */
+                 remove_from_index_and_register_garbage();
+            }
         }
         rec->get_tidw().unlock();
         if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;

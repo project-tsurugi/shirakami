@@ -285,15 +285,18 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
                 ti->get_gc_record_container()->emplace_back(rec_ptr);
 #else
                 if (ti->get_phase() == cpr::phase::REST) {
+                    /**
+                     * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
+                     */
                     yakushima::remove(ti->get_yakushima_token(), key_view);
                     ti->get_gc_record_container()->emplace_back(rec_ptr);
                 } else {
                     /**
-                     * This is in checkpointing phase (in-progress or wait-flush)
+                     * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
                      */
                     if (rec_ptr->get_checkpointed()) {
                         /**
-                         * Checkpointer will process this record, so it must be observable.
+                         * Checkpoint thread did process, so it can remove from index.
                          */
                         yakushima::remove(ti->get_yakushima_token(), key_view);
                         ti->get_gc_record_container()->emplace_back(rec_ptr);
