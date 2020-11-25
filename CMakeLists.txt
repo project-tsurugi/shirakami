@@ -46,9 +46,6 @@ find_package(glog REQUIRED)
 find_package(Boost
         COMPONENTS filesystem)
 
-# Formatter should be first.
-include(FormatFilesWithClangFormat)
-# ===
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(CompileOptions)
