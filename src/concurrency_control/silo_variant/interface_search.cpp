@@ -5,6 +5,7 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 
+#include "logger.h"
 #include "tuple_local.h"
 
 namespace shirakami::cc_silo_variant {
@@ -43,20 +44,17 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
     Record* rec_ptr{*rec_double_ptr};
 #endif
 
-    tid_word chk_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
-    if (chk_tid.get_absent()) {
-        // The second condition checks
-        // whether the record you want to read should not be read by parallel
-        // insert / delete.
-        *tuple = nullptr;
-        return Status::WARN_NOT_FOUND;
+    if (ti->get_epoch() < epoch::get_reclamation_epoch()) {
+        SPDLOG_DEBUG("fatal error");
+        exit(1);
     }
-
     read_set_obj rs_ob(rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
         ti->get_read_set().emplace_back(std::move(rs_ob));
         *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
+    } else {
+        *tuple = nullptr;
     }
     return rr;
 }

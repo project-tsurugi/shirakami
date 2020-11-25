@@ -18,12 +18,8 @@ Tuple::Impl::Impl(std::string_view key, std::string_view val)
 Tuple::Impl::Impl(const Impl &right) : key_(right.key_) {
     if (right.need_delete_pvalue_) {
         this->need_delete_pvalue_ = true;
-        this->pvalue_.store(new std::string(*right.pvalue_.load(  // NOLINT
-                std::memory_order_acquire)),
+        this->pvalue_.store(new std::string(*right.pvalue_.load(std::memory_order_acquire)), // NOLINT
                             std::memory_order_release);
-    } else {
-        this->need_delete_pvalue_ = false;
-        this->pvalue_.store(nullptr, std::memory_order_release);
     }
 }
 

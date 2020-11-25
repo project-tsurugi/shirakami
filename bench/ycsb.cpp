@@ -44,11 +44,7 @@
 
 #include "kvs/interface.h"
 
-#if defined(RECOVERY)
-
 #include "boost/filesystem.hpp"
-
-#endif
 
 using namespace shirakami;
 using namespace ycsb_param;
@@ -89,6 +85,7 @@ static void invoke_leader() {
                          std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
+    SPDLOG_DEBUG("start ycsb exp.");
     storeRelease(start, true);
 #if 0
     for (size_t i = 0; i < kExecTime; ++i) {
@@ -101,6 +98,7 @@ static void invoke_leader() {
     }
 #endif
     storeRelease(quit, true);
+    SPDLOG_DEBUG("stop ycsb exp.");
     for (auto &th : thv) th.join();
 
     for (std::size_t i = 0; i < kNthread; ++i) {
@@ -199,7 +197,6 @@ int main(int argc, char* argv[]) {  // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
-#if defined(RECOVERY)
     /**
      * This program doesn't assume recovery.
      */
@@ -208,7 +205,7 @@ int main(int argc, char* argv[]) {  // NOLINT
      if (boost::filesystem::exists(path)) {
          boost::filesystem::remove(path);
      }
-#endif
+
     init();  // NOLINT
     SPDLOG_DEBUG("Fin init");
     build_db(kCardinality, kNthread, kValLength);

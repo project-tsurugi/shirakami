@@ -45,7 +45,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
         itr->get_rec_ptr()->get_tidw().lock();
         if (itr->get_op() == OP_TYPE::UPDATE &&  // NOLINT
             itr->get_rec_ptr()->get_tidw().get_absent()) {
-            ti->unlock_write_set(ti->get_write_set().begin(), itr);
+            ti->unlock_write_set(ti->get_write_set().begin(), itr + 1);
             abort(token);
             return Status::ERR_WRITE_TO_DELETED_RECORD;
         }
@@ -53,7 +53,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 #if defined(CPR)
         // cpr verify
         if (ti->get_phase() == cpr::phase::REST && itr->get_rec_ptr()->get_version() > ti->get_version()) {
-            ti->unlock_write_set(ti->get_write_set().begin(), itr);
+            ti->unlock_write_set(ti->get_write_set().begin(), itr + 1);
             abort(token);
             return Status::ERR_WRITE_TO_DELETED_RECORD;
         }
@@ -69,25 +69,21 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 
     // Phase 3: Validation
     cc_silo_variant::tid_word check;
-    for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end();
-         itr++) {
+    for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end(); itr++) {
         const cc_silo_variant::Record* rec_ptr = itr->get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-        if ((
-                    itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
-                    itr->get_rec_read().get_tidw().get_tid() != check.get_tid()
-            ) ||
-            check.get_absent() ||  // check whether it was deleted.
-            (check.get_lock() &&
-             (ti->search_write_set(itr->get_rec_ptr()) == nullptr))
+        if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
+             itr->get_rec_read().get_tidw().get_tid() != check.get_tid())
+            ||
+            check.get_absent() // check whether it was deleted.
+            ||
+            (check.get_lock() && (ti->search_write_set(itr->get_rec_ptr()) == nullptr))
             #ifdef INDEX_YAKUSHIMA
             // phantom protection
             ||
-            (itr->get_is_scan() &&
-             (itr->get_nv().first != itr->get_nv().second->get_stable_version()))) {
-#elif INDEX_KOHLER_MASSTREE
-            ) {
+            (itr->get_is_scan() && (itr->get_nv().first != itr->get_nv().second->get_stable_version()))
 #endif
+                ) {
             ti->unlock_write_set();
             abort(token);
             return Status::ERR_VALIDATION;

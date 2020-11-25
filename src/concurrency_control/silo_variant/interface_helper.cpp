@@ -11,9 +11,9 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
 
-#include "include/tuple_local.h"
-
-#include "fault_tolerance/include/log.h"
+#if defined(PWAL) || defined(CPR)
+#include "log.h"
+#endif
 
 #include "kvs/interface.h"
 
@@ -138,7 +138,7 @@ Status leave(Token const token) {  // NOLINT
     return Status::ERR_INVALID_ARGS;
 }
 
-void tx_begin(Token const token) {
+void tx_begin(Token const token) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
         /**
@@ -165,12 +165,12 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
         }
 
-        if (f_check.get_absent() && f_check.get_latest()) {
-            return Status::WARN_CONCURRENT_INSERT;
-            // other thread is inserting this record concurrently,
-            // but it isn't committed yet.
-        }
-        if (f_check.get_absent() && !f_check.get_latest()) {
+        if (f_check.get_absent()) {
+            if (f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_INSERT;
+                // other thread is inserting this record concurrently,
+                // but it isn't committed yet.
+            }
             return Status::WARN_CONCURRENT_DELETE;
         }
 
@@ -187,8 +187,8 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
     return Status::OK;
 }
 
-void write_phase(session_info* const ti, const tid_word &max_r_set,
-                 const tid_word &max_w_set, [[maybe_unused]]commit_property cp) {
+void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_word &max_w_set,
+                 [[maybe_unused]]commit_property cp) {
 #ifdef INDEX_KOHLER_MASSTREE
     masstree_wrapper<Record>::thread_init(sched_getcpu());
 #endif  // INDEX_KOHLER_MASSTREE
@@ -238,10 +238,8 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
         switch (iws->get_op()) {
             case OP_TYPE::UPDATE: {
                 std::string* old_value{};
-                std::string_view new_value_view =
-                        iws->get_tuple(iws->get_op()).get_value();
-                rec_ptr->get_tuple().get_pimpl()->set_value(
-                        new_value_view.data(), new_value_view.size(), &old_value);
+                std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
+                rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
 #ifdef CPR
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
                     if (!rec_ptr->get_checkpointed()) {
@@ -341,4 +339,5 @@ void write_phase(session_info* const ti, const tid_word &max_r_set,
 
     ti->gc_records_and_values();
 }
+
 }  // namespace shirakami::cc_silo_variant

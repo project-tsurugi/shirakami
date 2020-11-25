@@ -36,7 +36,7 @@ void session_info::gc_handler::gc_values() const {
     auto ers_bgn_itr = get_value_container()->begin();
     auto ers_end_itr = get_value_container()->end();
     for (auto itr = ers_bgn_itr; itr != get_value_container()->end(); ++itr) {
-        if (itr->second <= epoch::get_reclamation_epoch()) {
+        if (itr->second < epoch::get_reclamation_epoch()) {
             ers_end_itr = itr;
             delete itr->first;  // NOLINT
         } else {
@@ -203,6 +203,8 @@ void session_info::unlock_write_set() {
     tid_word desired{};
 
     for (auto &itr : write_set) {
+        if (itr.get_op() == OP_TYPE::INSERT) continue;
+        // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
         Record* recptr = itr.get_rec_ptr();
         expected = loadAcquire(recptr->get_tidw().obj_);  // NOLINT
         desired = expected;
@@ -218,6 +220,8 @@ void session_info::unlock_write_set(  // NOLINT
     tid_word desired;
 
     for (auto itr = begin; itr != end; ++itr) {
+        if (itr->get_op() == OP_TYPE::INSERT) continue;
+        // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
         expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_);  // NOLINT
         desired = expected;
         desired.set_lock(false);

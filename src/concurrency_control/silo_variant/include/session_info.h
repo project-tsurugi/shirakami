@@ -394,16 +394,16 @@ private:
 #ifdef INDEX_YAKUSHIMA
     yakushima::Token yakushima_token_{};
 #endif
-    std::atomic<epoch::epoch_t> epoch_{0};
     tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
+    std::atomic<epoch::epoch_t> epoch_{0};
     /**
      * @brief If this is true, this session is live, otherwise, not live.
      */
-    std::atomic<bool> visible_{};
+    std::atomic<bool> visible_{false};
     /**
      * @brief If this is true, this session is in some tx, otherwise, not.
      */
-    std::atomic<bool> tx_began_{};
+    std::atomic<bool> tx_began_{false};
 
     /**
      * about garbage collection
