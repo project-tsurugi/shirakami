@@ -44,10 +44,6 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
     Record* rec_ptr{*rec_double_ptr};
 #endif
 
-    if (ti->get_epoch() < epoch::get_reclamation_epoch()) {
-        SPDLOG_DEBUG("fatal error");
-        exit(1);
-    }
     read_set_obj rs_ob(rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
