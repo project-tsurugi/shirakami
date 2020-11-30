@@ -22,7 +22,7 @@ cd build-release/bench
 LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb
 LD_PRELOAD=[/path/to/some memory allocator library] ./masstree
 ```
-YCSB of shirakami : Available options
+YCSB of shirakami : Available options for general workloads.
 - `-cpumhz`
   - number of cpu MHz of execution environment. It is used measuring some time.
   - default : `2000`
@@ -50,7 +50,15 @@ YCSB of shirakami : Available options
 - `-val_length`
   - byte size of val.
   - default : `4`
- 
+
+for special workloads
+- `-include_long_tx`
+  - Whether one of worker threads executes long transactions.
+  - default : `false`
+- `long_tx_ops`
+  - number of operations per a long transactions.
+  - default : `50`
+
 masstree : Available options
 - `-cpumhz`
   - number of cpu MHz of execution environment. It is used measuring some time.

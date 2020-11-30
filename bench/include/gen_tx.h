@@ -6,10 +6,10 @@
 #pragma once
 
 #include "./shirakami_string.h"
-#include "./ycsb_param.h"
 
 // shirakami/src/
 #include "concurrency_control/silo_variant/include/scheme.h"
+
 #include "random.h"
 #include "zipf.h"
 
@@ -54,9 +54,9 @@ private:
 /**
  * @brief generate search/update operations.
  */
-static void gen_tx_rw(std::vector<opr_obj> &opr_set, const std::size_t tpnm,
-                      const std::size_t opnm, const std::size_t rratio,
-                      Xoroshiro128Plus &rnd, FastZipf &zipf) {
+static void
+gen_tx_rw(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::size_t opnm, const std::size_t rratio,
+          const std::size_t val_length, Xoroshiro128Plus &rnd, FastZipf &zipf) {
     using namespace shirakami;
     opr_set.clear();
     for (std::size_t i = 0; i < opnm; ++i) {
@@ -71,7 +71,7 @@ static void gen_tx_rw(std::vector<opr_obj> &opr_set, const std::size_t tpnm,
                     std::string_view{reinterpret_cast<char*>(&keybs),  // NOLINT
                                      sizeof(uint64_t)});
         } else {
-            std::string val(ycsb_param::kValLength, '0');  // NOLINT
+            std::string val(val_length, '0');  // NOLINT
             make_string(val, rnd);
             opr_set.emplace_back(
                     OP_TYPE::UPDATE,

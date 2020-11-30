@@ -47,23 +47,34 @@
 #include "boost/filesystem.hpp"
 
 using namespace shirakami;
-using namespace ycsb_param;
+
 #ifdef CC_SILO_VARIANT
+
 using namespace shirakami::cc_silo_variant;
+
 #endif
 
-DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
-DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
-DEFINE_uint64(key_length, 8, "# length of key.");                     // NOLINT
-DEFINE_uint64(val_length, 4, "# length of value(payload).");          // NOLINT
-DEFINE_uint64(ops, 1, "# operations per a transaction.");             // NOLINT
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");        // NOLINT
-DEFINE_double(skew, 0.0, "access skew of transaction.");              // NOLINT
+/**
+ * general option.
+ */
 DEFINE_uint64(                                                        // NOLINT
         cpumhz, 2000,                                                     // NOLINT
         "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
         "time.");                                                         // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
+DEFINE_uint64(key_length, 8, "# length of key.");                     // NOLINT
+DEFINE_uint64(ops, 1, "# operations per a transaction.");             // NOLINT
+DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");        // NOLINT
+DEFINE_double(skew, 0.0, "access skew of transaction.");              // NOLINT
+DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
+DEFINE_uint64(val_length, 4, "# length of value(payload).");          // NOLINT
+
+/**
+ * special option.
+ */
+DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
+DEFINE_uint64(long_tx_ops, 50, "# operations per long tx."); // NOLINT
 
 static bool isReady(const std::vector<char> &readys);  // NOLINT
 static void waitForReady(const std::vector<char> &readys);
@@ -76,11 +87,11 @@ static void worker(size_t thid, char &ready, const bool &start,
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    alignas(CACHE_LINE_SIZE) std::vector<Result> res(kNthread);  // NOLINT
+    alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);  // NOLINT
 
-    std::vector<char> readys(kNthread);  // NOLINT
+    std::vector<char> readys(FLAGS_thread);  // NOLINT
     std::vector<std::thread> thv;
-    for (std::size_t i = 0; i < kNthread; ++i) {
+    for (std::size_t i = 0; i < FLAGS_thread; ++i) {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                          std::ref(quit), std::ref(res));
     }
@@ -88,11 +99,11 @@ static void invoke_leader() {
     SPDLOG_DEBUG("start ycsb exp.");
     storeRelease(start, true);
 #if 0
-    for (size_t i = 0; i < kExecTime; ++i) {
+    for (size_t i = 0; i < FLAGS_duration; ++i) {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(kExecTime) != 0) {
+    if (sleep(FLAGS_duration) != 0) {
         SPDLOG_DEBUG("sleep error.");
         exit(1);
     }
@@ -101,10 +112,10 @@ static void invoke_leader() {
     SPDLOG_DEBUG("stop ycsb exp.");
     for (auto &th : thv) th.join();
 
-    for (std::size_t i = 0; i < kNthread; ++i) {
+    for (std::size_t i = 0; i < FLAGS_thread; ++i) {
         res[0].addLocalAllResult(res[i]);
     }
-    res[0].displayAllResult(kCPUMHz, kExecTime, kNthread);
+    res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
     SPDLOG_DEBUG("cpr global version :\t{0}", cpr::global_phase_version::get_gpv().get_version());
 #endif
@@ -113,78 +124,52 @@ static void invoke_leader() {
 
 static void load_flags() {
     if (FLAGS_thread >= 1) {
-        kNthread = FLAGS_thread;
         SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
     } else {
-        std::cerr << "Number of threads must be larger than 0." << std::endl;
+        SPDLOG_DEBUG("Number of threads must be larger than 0.");
         exit(1);
     }
     if (FLAGS_record > 1) {
-        kCardinality = FLAGS_record;
         SPDLOG_DEBUG("FLAGS_record : {0}", FLAGS_record);
     } else {
-        std::cerr << "Number of database records(tuples) must be large than 0."
-                  << std::endl;
-        exit(1);
-    }
-    constexpr std::size_t eight = 8;
-    if (FLAGS_key_length > 1 && FLAGS_key_length % eight == 0) {
-        kKeyLength = FLAGS_key_length;
-        SPDLOG_DEBUG("FLAGS_key_length : {0}", FLAGS_key_length);
-    } else {
-        std::cerr << "Length of key must be larger than 0 and be divisible by 8."
-                  << std::endl;
+        SPDLOG_DEBUG("Number of database records(tuples) must be large than 0.");
         exit(1);
     }
     if (FLAGS_val_length > 1) {
-        kValLength = FLAGS_val_length;
         SPDLOG_DEBUG("FLAGS_val_length : {0}", FLAGS_val_length);
     } else {
-        std::cerr << "Length of val must be larger than 0." << std::endl;
+        SPDLOG_DEBUG("Length of val must be larger than 0.");
         exit(1);
     }
     if (FLAGS_ops >= 1) {
-        kNops = FLAGS_ops;
         SPDLOG_DEBUG("FLAGS_ops : {0}", FLAGS_ops);
     } else {
-        std::cerr << "Number of operations in a transaction must be larger than 0."
-                  << std::endl;
+        SPDLOG_DEBUG("Number of operations in a transaction must be larger than 0.");
         exit(1);
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
-        kRRatio = FLAGS_rratio;
         SPDLOG_DEBUG("FLAGS_rratio : {0}", FLAGS_rratio);
     } else {
-        std::cerr << "Rate of reads in a transaction must be in the range 0 to 100."
-                  << std::endl;
+        SPDLOG_DEBUG("Rate of reads in a transaction must be in the range 0 to 100.");
         exit(1);
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
-        kZipfSkew = FLAGS_skew;
         SPDLOG_DEBUG("FLAGS_skew : {0}", FLAGS_skew);
     } else {
-        std::cerr
-                << "Access skew of transaction must be in the range 0 to 0.999... ."
-                << std::endl;
+        SPDLOG_DEBUG("Access skew of transaction must be in the range 0 to 0.999... .");
         exit(1);
     }
     if (FLAGS_cpumhz > 1) {
-        kCPUMHz = FLAGS_cpumhz;
         SPDLOG_DEBUG("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
     } else {
-        std::cerr
-                << "CPU MHz of execution environment. It is used measuring some time. "
-                   "It must be larger than 0."
-                << std::endl;
+        SPDLOG_DEBUG("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.");
         exit(1);
     }
     if (FLAGS_duration >= 1) {
-        kExecTime = FLAGS_duration;
         SPDLOG_DEBUG("FLAGS_duration : {0}", FLAGS_duration);
     } else {
-        std::cerr << "Duration of benchmark in seconds must be larger than 0."
-                  << std::endl;
+        SPDLOG_DEBUG("Duration of benchmark in seconds must be larger than 0.");
         exit(1);
     }
     SPDLOG_DEBUG("Fin load_flags()");
@@ -200,15 +185,15 @@ int main(int argc, char* argv[]) {  // NOLINT
     /**
      * This program doesn't assume recovery.
      */
-     std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
-     path += "/log/checkpoint";
-     if (boost::filesystem::exists(path)) {
-         boost::filesystem::remove(path);
-     }
+    std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
+    path += "/log/checkpoint";
+    if (boost::filesystem::exists(path)) {
+        boost::filesystem::remove(path);
+    }
 
     init();  // NOLINT
     SPDLOG_DEBUG("Fin init");
-    build_db(kCardinality, kNthread, kValLength);
+    build_db(FLAGS_record, FLAGS_thread, FLAGS_val_length);
     SPDLOG_DEBUG("Fin build_db");
     invoke_leader();
     SPDLOG_DEBUG("Fin invoke_leader");
@@ -235,7 +220,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
             const bool &quit, std::vector<Result> &res) {
     // init work
     Xoroshiro128Plus rnd;
-    FastZipf zipf(&rnd, kZipfSkew, kCardinality);
+    FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
     std::reference_wrapper<Result> myres = std::ref(res[thid]);
 
     // this function can be used in Linux environment only.
@@ -245,13 +230,25 @@ void worker(const std::size_t thid, char &ready, const bool &start,
 
     Token token{};
     std::vector<shirakami::opr_obj> opr_set;
+    if (thid == 0 && FLAGS_include_long_tx) {
+        opr_set.reserve(FLAGS_long_tx_ops);
+    } else {
+        opr_set.reserve(FLAGS_ops);
+    }
     enter(token);
 
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        gen_tx_rw(opr_set, kCardinality, kNops, kRRatio, rnd, zipf);
+        if (thid == 0 && FLAGS_include_long_tx) { // NOLINT
+            /**
+             * special workloads include long batch transactions.
+             */
+            gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
+        } else {
+            gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
+        }
         for (auto &&itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
@@ -268,4 +265,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
         }
     }
     leave(token);
+    if (thid == 0 && FLAGS_include_long_tx) {
+        SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts());
+    }
 }
