@@ -264,6 +264,11 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     }
     leave(token);
     if (thid == 0 && FLAGS_include_long_tx) {
-        SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts());
+        SPDLOG_INFO("long_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
+        SPDLOG_INFO("long_tx_abort_counts:\t{0}", myres.get().get_local_commit_counts());
+        SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
+        SPDLOG_INFO("long_tx_abort_rate:\t{0}",
+                    myres.get().get_local_commit_counts() / (myres.get().get_local_commit_counts() +
+                                                             myres.get().get_local_abort_counts()));
     }
 }
