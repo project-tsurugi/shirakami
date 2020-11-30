@@ -66,18 +66,13 @@ gen_tx_rw(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::size
         // memcpy(key.get(), (std::to_string(keynm)).c_str(), kKeyLength);
         constexpr std::size_t thou = 100;
         if ((rnd.next() % thou) < rratio) {
-            opr_set.emplace_back(
-                    OP_TYPE::SEARCH,
-                    std::string_view{reinterpret_cast<char*>(&keybs),  // NOLINT
-                                     sizeof(uint64_t)});
+            opr_set.emplace_back(OP_TYPE::SEARCH,
+                                 std::string_view{reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}); // NOLINT
         } else {
             std::string val(val_length, '0');  // NOLINT
             make_string(val, rnd);
-            opr_set.emplace_back(
-                    OP_TYPE::UPDATE,
-                    std::string_view{reinterpret_cast<char*>(&keybs),  // NOLINT
-                                     sizeof(uint64_t)},
-                    val);
+            opr_set.emplace_back(OP_TYPE::UPDATE,
+                                 std::string_view{reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val); // NOLINT
         }
     }
 }
