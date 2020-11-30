@@ -81,8 +81,7 @@ static void waitForReady(const std::vector<char> &readys);
 
 static void invoke_leader();
 
-static void worker(size_t thid, char &ready, const bool &start,
-                   const bool &quit, std::vector<Result> &res);
+static void worker(size_t thid, char &ready, const bool &start, const bool &quit, std::vector<Result> &res);
 
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
@@ -92,8 +91,7 @@ static void invoke_leader() {
     std::vector<char> readys(FLAGS_thread);  // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
-        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
-                         std::ref(quit), std::ref(res));
+        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
     SPDLOG_DEBUG("start ycsb exp.");
@@ -241,7 +239,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        if (thid == 0 && FLAGS_include_long_tx) { // NOLINT
+        if (thid == 0 && FLAGS_include_long_tx) {
             /**
              * special workloads include long batch transactions.
              */
