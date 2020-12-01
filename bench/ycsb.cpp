@@ -75,6 +75,7 @@ DEFINE_uint64(val_length, 4, "# length of value(payload).");          // NOLINT
  */
 DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
 DEFINE_uint64(long_tx_ops, 50, "# operations per long tx."); // NOLINT
+DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions."); // NOLINT
 
 static bool isReady(const std::vector<char> &readys);  // NOLINT
 static void waitForReady(const std::vector<char> &readys);
@@ -243,7 +244,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
             /**
              * special workloads include long batch transactions.
              */
-            gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
+            gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, FLAGS_val_length, rnd, zipf);
         } else {
             gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
         }
@@ -267,8 +268,8 @@ void worker(const std::size_t thid, char &ready, const bool &start,
         SPDLOG_INFO("long_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
         SPDLOG_INFO("long_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
         SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
-        SPDLOG_INFO("long_tx_abort_rate:\t{0}",
-                    (double)myres.get().get_local_abort_counts() / (double)(myres.get().get_local_commit_counts() +
-                                                             myres.get().get_local_abort_counts()));
+        SPDLOG_INFO("long_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
+                                                (double) (myres.get().get_local_commit_counts() +
+                                                          myres.get().get_local_abort_counts()));
     }
 }
