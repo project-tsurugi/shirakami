@@ -61,15 +61,21 @@ batch_executing == true であれば warning を返す．そうでなければ�
   レコードメンバである batch_snap に読み込んだ値を退避させる．
   意図としては， blind write が後続して，その blind write に後続させる形でそのレコードへの CC を許容しているとき，同一 key に対する re-read 
   が（値を退避していない場合，上書きされているため）不可能となるからである．
+  代案としてローカル read set を作り，オペレーション実行ごとにそこを検査するというアプローチもあるが，バッチにおいては set size が膨れ上がり，
+  検査コストも発散するため現実的ではない．
   batch_snap はコミット時にクリアするとし，読み込み時に batch_snap がクリア状態でなければ有効なバッチ用スナップショット (re-read or read 
   own write) とする．
-  従って， batch_snap への情報はセットとして保持する（が，read/write operation ごとに走査するというようなことはない）．
+  従って， batch_snap へのポインタ情報はコミット時にクリアするためにセットとして保持する（が，read/write operation ごとに走査するという
+  ようなことはない）．
   batch_snap の br lock bit も立てておくことで，batch_snap が batch read によって生成された印とする．batch_snap は後述するが，batch 
   write によっても生成されうる．
   - short tx's read<br>
   基本的に通常の Silo.
   br lock がかかっていても Silo 的にはロック無しとみなして読み込み処理をする．
+  これでうまくいくならば，serialization order はバッチの過去か並置となる．
   bw lock or silo lock がかかっていればそれを解放待ちする．
+  bw lock がかかっているときは batch write が latest であるため，バッチが終わるのを待つか， blind write によって上書きされることを
+  待たなければいけない．
   - short tx's read verify<br>
   基本的に通常の Silo.
   br lock がかかっていても Silo 的にはロック無しとみなして read verify 処理をする．
@@ -81,9 +87,9 @@ batch_executing == true であれば warning を返す．そうでなければ�
   batch_snap 側も silo lock bit を降ろして bw lock は上がったまま tidword を更新する．
   bw lock が上がったままなので，これは batch_snap が batch_write によって生成された印となる．
   tid + 1 する理由としては short tx's read へ record update を通知する役割と，もし redo recovery と組み合わせるときにそれを可能と
-  させるためである．タイムスタンプ更新をしない場合，redo recovery において batch の serialization order が another tx と同一となり，
-  順序が不明瞭となる．
-  bw / silo lock を立てたときに batch_snap がクリア状態ではない（既に batch r or w が走った）とき，4 つのケースがある．
+  させるためである．タイムスタンプ更新をしない場合，redo recovery において batch の serialization order がアクセスしたレコードごとに
+  another tx と同一となり，順序が不明瞭となる．
+  record body 側の bw / silo lock を立てたときに batch_snap がクリア状態ではない（既に batch r or w が走った）とき，4 つのケースがある．
     - batch_snap の br lock bit が立っていて，record body, batch_snap の tid が同一のとき<br>
     batch-read-modify-write であるため，通常通り batch_snap, record body を更新する．
     - batch_snap の br lock bit が立っていて，record body, batch_snap の tid が異なるとき<br>
@@ -92,8 +98,23 @@ batch_executing == true であれば warning を返す．そうでなければ�
     batch-write の後に blind write が来ていない状態であり，通常通り batch_snap, record body を更新する．
     - batch_snap の bw lock bit が立っていて, record body, batch_snap の tid が異なるとき<br>
     batch-write の後に blind write が来ている状態であり，この write は省略する．
-    
-    todo in writing
   - short tx's write<br>
-  
-    todo in writing
+  基本的に通常の Silo.
+  前提として non-deterministic workload を想定しているため， write を打たれた時点でそれが read modify write (RMW), read other write 
+  (ROW), blind write (BW) のどれなのかは不明である．
+  従って，write ごとに read set を走査して検査しなければいけないかもしれない．
+  global boolean batch_executing が false だったら検査しなくてもよいのか？
+  false 判定した直後にバッチが走り始めて該当レコードにアクセスするかもしれないし，それを防ぐために batch, worker 間の調停を (worker が多大なるコスト
+  を払う形で)するよりも，オンライン処理はショート tx を前提にしているため，線形探索してしまう．
+  ただ，ここを高効率化するために特殊なトライロックを実装する．
+  このトライロックは bw lock, br lock, silo lock 全てがかかっていないときにのみ成功し，失敗したときは tidword を返し，返された値から
+  どのロックが立っているか検査する．
+  bw or br lock がかかっていれば blind write だけが許されるので，local read set を検査する．
+  RMW であった時点でバッチを待たなければいけないので（ロックを握りしめたまま待つわけにもいかないので）アボートする．
+  どちらもかかっていなければ silo lock がかかっている状況ということで，これはショート tx なのでリトライコストも大きくないので No-wait abort 
+  アプローチを取る．
+  - batch read / write
+  read, write ごとに local read / write セットをアペンドしていく．
+  それはトランザクション終了時に (blind write に上書きされなかったために) 立てたままである br / bw lock を下げるためであり，
+  レコードへのポインタを保持するためである．
+  オペレーションごとにセットを走査するということは無いため，アペンドするたびに繰り返される特定の処理コストが上がっていくというようなことは無い．
