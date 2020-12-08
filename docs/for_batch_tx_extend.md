@@ -1,23 +1,26 @@
 # ロング（バッチ）トランザクションのための機構
 執筆開始 : 2020/12/01 田辺
 
-## long read transaction への対策
+## long read only transaction への対策
 todo
 - Philosophy : todo
 
 ## long read write transaction への対策
-バッチ処理（ロングトランザクション）を確実にコミットさせながら，オンライン処理（ショートトランザクション）の高い性能を発揮する需要がある
-(ex. パン屋さんの原価計算処理）． 本セクションでは read / write が混在するロングトランザクションを想定し，執筆する．
+並行には一つまでしか走らないバッチ処理（ロングトランザクション）を確実にコミットさせながら，並行に多数走るオンライン処理
+（ショートトランザクション）の高い性能を発揮する需要がある(ex. パン屋さんの原価計算処理）．
+ 本セクションでは read / write が混在するロングトランザクションを想定し，執筆する．
 - Philosophy : serialization order において, long tx の過去に飛ばすか未来に飛ばす．
-Other tx が long tx をまたいだらアボートする．
+Short tx が long tx をまたいだらアボートする．
 以下non-deterministic を想定する（deterministic であれば，より柔軟に構築する）. 
 
 - long tx は read phase で読むレコードに対して事前に predicate lock (for preventing from phantom), ロックA をかける．
 Predicate にひっかかる insert は phantom 問題を起こさないために，long tx が終わるまで許容しない．
-ロック A のかかったレコードには other tx は long tx’s read が validation phase で read verify に失敗しないようにするため write 
-できない(未来を待つ)．
-Other tx がロック A を読んで no lock なレコードに書くのは許容する (read other write)．
-その場合，serialization order としては，並置か過去となる．
+ロック A のかかったレコードに対して short tx は long tx’s read view に影響を与えないため， RMW できず，Blind write はできる．
+RMW してしまうと，バッチは同一 read 結果を持つため，RMW を壊さないために write (RMW) できなくなるという制約が課されるが，
+バッチは必ず通す仕様なので，制約を課したくない．
+Blind write であれば上書きされるバージョンへ依存していないため，Blind write を未来に飛ばし，バッチには過去で自由な操作をしてもらえる．
+ Short tx がロック A を読んで no lock なレコードに書くこと (Blind write by read other write) は許容する．
+その場合 serialization order としては，Short tx がバッチと同一 view をそのレコードに対して有したので，long tx に対して並置か過去となる．
 
 - ロックA の解放待ちをしている other tx’s write が多い場合，ロックA をロック B にアップグレードし，直後のステップとなる other tx’s read 
 を許容せず，blind write だけを許容することもできる. 
@@ -38,11 +41,11 @@ Silo が write set に対して max (each (tid + 1)) する理由は read への
 ロック A は batch read lock (br lock) , ロック B は batch write lock (bw lock),は silo lock bit によるロックは silo lock と
 表記する．
 - database record metadata<br>
-Silo の並行調停は transaction id word (tidword) によってされる．latest bit / absent bit / lock bit が 1 bit, tid 29 bit, epoch 32 bit
-という割り当てが標準的である．
+Silo の並行調停は transaction id word (tidword) によってされる．
+latest bit / absent bit / lock bit が 1 bit, tid 29 bit, epoch 32 bitという割り当てが標準的である．
 br lock / bw lock は通常の silo lock とプロパティが異なるがこれをアトミックに操作したい．
 なぜなら，バッチが br lock を立てるときに concurrent short tx's write に先行された場合, 不正な payload 読み込みになる懸念があり，読み込み
-前後で lock bit が立っていないか，tid が変わっていないか等チェックすること（楽観的技術）によってアトミックな読み込みをしなければいけないが，
+前後で silo lock が立っていないか，tid が変わっていないか等チェックすること（楽観的技術）によってアトミックな読み込みをしなければいけないが，
 これは性能を short tx に割り当てる仕様であり，バッチを優先する思想に逆行する．
 後続された場合，write がバッチ read を不正にしないために，アボートしなければいけないが，Silo は read verify 終了時点で pre-commit 確定
 なため，コミットしたと勘違いして更新した部分をロールバックしなければいけなく，この仕様は後続するトランザクションへ伝搬するため，効果的ではない．
@@ -52,11 +55,9 @@ br lock / bw lock は通常の silo lock とプロパティが異なるがこれ
 batch_executing == true であれば warning を返す．そうでなければセッションを開始する．
 - トランザクションオペレーション<br>
   - batch tx phase<br>
-  batch は必ずコミットさせるため， read / validation / write phase というようなものは不要とする．local read / write set も後述していく
-  プロトコル詳細から不要である．
+  batch は必ずコミットさせるため， read / validation / write phase というようなものは不要とする．
   - batch's read<br>
   batch tx は必ずコミットするため，read verify 不要である．
-  そのため，ローカル read set は作らない．
   br lock をかけて読み込み処理を行う．
   レコードメンバである batch_snap に読み込んだ値を退避させる．
   意図としては， blind write が後続して，その blind write に後続させる形でそのレコードへの CC を許容しているとき，同一 key に対する re-read 
@@ -72,14 +73,17 @@ batch_executing == true であれば warning を返す．そうでなければ�
   - short tx's read<br>
   基本的に通常の Silo.
   br lock がかかっていても Silo 的にはロック無しとみなして読み込み処理をする．
-  これでうまくいくならば，serialization order はバッチの過去か並置となる．
+  br lock がかかっているレコードを読んでコミットできる場合は，serialization order はバッチの過去か並置となる．
   bw lock or silo lock がかかっていればそれを解放待ちする．
   bw lock がかかっているときは batch write が latest であるため，バッチが終わるのを待つか， blind write によって上書きされることを
   待たなければいけない．
   - short tx's read verify<br>
   基本的に通常の Silo.
-  br lock がかかっていても Silo 的にはロック無しとみなして read verify 処理をする．
-  bw lock or silo lock がかかっていれば通常通り検証失敗とみなすし，上書きされていても同様である．
+  br lock がかかっている場合，バッチと同じ read view を持つため，取れる serialization order はバッチと並置か過去である．
+  そのため，read verify は br lock がかかっていることを観測した時点で検証失敗するわけではないが，未来にオーダーが取れない
+  ことは確定しているため，同一レコードに対する write が local write set から検知できた場合，RMW ということでアボートする．
+  また，以降の read verify にて未来に飛ばされた blind write を読むことはできないし，未来に置こうとしている blind write 
+  を local write set に保持していてもアボートとなる．
   - batch's write<br>
   通常は bw lock, silo lock を立てて，batch_snap と record body を更新し，tid + 1 する．
   record body 側は silo lock bit を降ろして tidword を更新する．
@@ -89,6 +93,8 @@ batch_executing == true であれば warning を返す．そうでなければ�
   tid + 1 する理由としては short tx's read へ record update を通知する役割と，もし redo recovery と組み合わせるときにそれを可能と
   させるためである．タイムスタンプ更新をしない場合，redo recovery において batch の serialization order がアクセスしたレコードごとに
   another tx と同一となり，順序が不明瞭となる．
+  もし checkpoint recovery を用い，short tx's read が tid 再検証時に br / bw lock bit を検査するのであれば，
+  tid + 1 ですら不要となる．
   record body 側の bw / silo lock を立てたときに batch_snap がクリア状態ではない（既に batch r or w が走った）とき，4 つのケースがある．
     - batch_snap の br lock bit が立っていて，record body, batch_snap の tid が同一のとき<br>
     batch-read-modify-write であるため，通常通り batch_snap, record body を更新する．
