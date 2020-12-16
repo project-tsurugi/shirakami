@@ -234,26 +234,32 @@ void session_info::unlock_write_set(  // NOLINT
 void session_info::pwal(uint64_t commit_id, commit_property cp) {
     for (auto &&itr : write_set) {
         if (itr.get_op() == OP_TYPE::UPDATE) {
-            log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(),
-                                                   &itr.get_tuple_to_local());
+            log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(), &itr.get_tuple_to_local());
         } else {
             // insert/delete
-            log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(),
-                                                   &itr.get_tuple_to_db());
+            log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(), &itr.get_tuple_to_db());
         }
         log_handle_.get_latest_log_header().add_checksum(
                 log_handle_.get_log_set().back().compute_checksum());  // NOLINT
         log_handle_.get_latest_log_header().inc_log_rec_num();
     }
 
+#if defined(PWAL_ENABLE_READ_LOG)
+    for (auto &&itr : read_set) {
+        log_handle_.get_log_set().emplace_back(commit_id, OP_TYPE::SEARCH, &itr.get_rec_read().get_tuple());
+        log_handle_.get_latest_log_header().add_checksum(
+                log_handle_.get_log_set().back().compute_checksum());  // NOLINT
+        log_handle_.get_latest_log_header().inc_log_rec_num();
+    }
+#endif
+
     if (log_handle_.get_log_set().size() > KVS_LOG_GC_THRESHOLD || cp == commit_property::WAIT_FOR_COMMIT) {
         // prepare write header
         log_handle_.get_latest_log_header().compute_two_complement_of_checksum();
 
         // write header
-        log_handle_.get_log_file().write(
-                static_cast<void*>(&log_handle_.get_latest_log_header()),
-                sizeof(pwal::LogHeader));
+        log_handle_.get_log_file().write(static_cast<void*>(&log_handle_.get_latest_log_header()),
+                                         sizeof(pwal::LogHeader));
 
         std::array<char, 4096> buffer{};
         std::size_t offset{0};
