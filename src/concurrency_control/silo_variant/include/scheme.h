@@ -143,6 +143,10 @@ public:
 
     void reset_tuple_value(std::string_view val);
 
+    void set_op(OP_TYPE new_op) {
+        op_ = new_op;
+    }
+
 private:
     /**
      * for update : ptr to existing record.

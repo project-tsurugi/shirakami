@@ -25,14 +25,14 @@ TEST_F(insert_delete, insert_delete_with_16chars) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> tuples{};
     ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, tuples));
     EXPECT_EQ(1, tuples.size());
     for (auto &&t : tuples) {
         ASSERT_EQ(Status::OK, delete_record(s, t->get_key()));
     }
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -42,33 +42,51 @@ TEST_F(insert_delete, insert_delete_with_10chars) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> records{};
     ASSERT_EQ(Status::OK, scan_key(s, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, records));
     EXPECT_EQ(1, records.size());
     for (auto &&t : records) {
         ASSERT_EQ(Status::OK, delete_record(s, t->get_key()));
     }
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(insert_delete, delete_insert) {  // NOLINT
-  std::string k("testing");                       // NOLINT
-  std::string v("bbb");                              // NOLINT
-  Token s{};
-  ASSERT_EQ(Status::OK, enter(s));
-  ASSERT_EQ(Status::OK, insert(s, k, v));
-  ASSERT_EQ(Status::OK, commit(s));
-  Tuple* t{};
-  ASSERT_EQ(Status::OK, search_key(s, k, &t));
-  ASSERT_TRUE(t);
-  ASSERT_EQ(Status::OK, delete_record(s, k));
-  ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, insert(s, k, v));
-  ASSERT_EQ(Status::OK, commit(s));
-  ASSERT_EQ(Status::OK, search_key(s, k, &t));
-  ASSERT_TRUE(t);
-  ASSERT_EQ(Status::OK, leave(s));
+    std::string k("testing");                       // NOLINT
+    std::string v("bbb");                              // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    Tuple* t{};
+    ASSERT_EQ(Status::OK, search_key(s, k, &t));
+    ASSERT_TRUE(t); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, k));
+    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, insert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, search_key(s, k, &t));
+    ASSERT_TRUE(t); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(insert_delete, delete_upsert) {  // NOLINT
+    std::string k("testing");                       // NOLINT
+    std::string v("bbb");                              // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    Tuple* t{};
+    ASSERT_EQ(Status::OK, search_key(s, k, &t));
+    ASSERT_TRUE(t); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, k));
+    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, search_key(s, k, &t));
+    ASSERT_TRUE(t); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 }  // namespace shirakami::testing

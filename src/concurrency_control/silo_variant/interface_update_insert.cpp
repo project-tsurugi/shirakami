@@ -27,7 +27,11 @@ Status insert(Token token, const std::string_view key,  // NOLINT
     if (!ti->get_txbegan()) tx_begin(token);
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
-        inws->reset_tuple_value(val);
+        if (inws->get_op() == OP_TYPE::INSERT || inws->get_op() == OP_TYPE::UPDATE) {
+            inws->reset_tuple_value(val);
+        } else if (inws->get_op() == OP_TYPE::DELETE) {
+            *inws = write_set_obj{key, val, OP_TYPE::UPDATE, inws->get_rec_ptr()};
+        }
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
@@ -102,7 +106,11 @@ Status upsert(Token token, const std::string_view key,  // NOLINT
     if (!ti->get_txbegan()) tx_begin(token);
     write_set_obj* in_ws{ti->search_write_set(key)};
     if (in_ws != nullptr) {
-        in_ws->reset_tuple_value(val);
+        if (in_ws->get_op() == OP_TYPE::INSERT || in_ws->get_op() == OP_TYPE::UPDATE) {
+            in_ws->reset_tuple_value(val);
+        } else if (in_ws->get_op() == OP_TYPE::DELETE) {
+            *in_ws = write_set_obj{key, val, OP_TYPE::UPDATE, in_ws->get_rec_ptr()};
+        }
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
