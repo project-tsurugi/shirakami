@@ -10,6 +10,7 @@
 // shirakami/src/
 #include "concurrency_control/silo_variant/include/scheme.h"
 
+#include "logger.h"
 #include "random.h"
 #include "zipf.h"
 
@@ -115,10 +116,14 @@ gen_tx_scan(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::si
     opr_set.clear();
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
     uint64_t key_r_nm = key_l_nm + (scan_elem_n - 1);
+    if (key_r_nm >= tpnm) {
+        SPDLOG_DEBUG("fatal error.");
+        exit(1);
+    }
     uint64_t key_l_bs = __builtin_bswap64(key_l_nm);
     uint64_t key_r_bs = __builtin_bswap64(key_r_nm);
-    opr_set.emplace_back(OP_TYPE::SCAN, std::string_view{reinterpret_cast<char*>(key_l_bs), sizeof(uint64_t)}, // NOLINT
-                         std::string_view{reinterpret_cast<char*>(key_r_bs), sizeof(uint64_t)}); // NOLINT
+    opr_set.emplace_back(OP_TYPE::SCAN, std::string_view{reinterpret_cast<char*>(&key_l_bs), sizeof(uint64_t)}, // NOLINT
+                         std::string_view{reinterpret_cast<char*>(&key_r_bs), sizeof(uint64_t)}); // NOLINT
 }
 
 }  // namespace shirakami
