@@ -179,8 +179,12 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     }
 
 #ifdef INDEX_YAKUSHIMA
-    read_set_obj rsob(std::get<0>(*itr), true, std::get<1>(*itr),
-                      std::get<2>(*itr));
+    read_set_obj rsob(std::get<0>(*itr));
+    if (ti->get_node_set().empty() ||
+        std::get<1>(ti->get_node_set().back()) != std::get<2>(*itr)) {
+        ti->get_node_set().emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+    }
+
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
 #elif defined(INDEX_KOHLER_MASSTREE)
     read_set_obj rsob(*itr, true);
@@ -247,8 +251,12 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
         // update is own.
 
 #ifdef INDEX_YAKUSHIMA
-        ti->get_read_set().emplace_back(const_cast<Record*>(std::get<0>(itr)), true,
-                                        std::get<1>(itr), std::get<2>(itr));
+        ti->get_read_set().emplace_back(const_cast<Record*>(std::get<0>(itr)));
+        if (ti->get_node_set().empty() ||
+            std::get<1>(ti->get_node_set().back()) != std::get<2>(itr)) {
+            ti->get_node_set().emplace_back(std::get<1>(itr), std::get<2>(itr));
+        }
+
         Status rr = read_record(ti->get_read_set().back().get_rec_read(),
                                 const_cast<Record*>(std::get<0>(itr)));
 #elif defined(INDEX_KOHLER_MASSTREE)

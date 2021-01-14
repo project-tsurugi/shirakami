@@ -284,6 +284,14 @@ public:
         return write_set;
     }
 
+#ifdef INDEX_YAKUSHIMA
+
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> &get_node_set() { // NOLINT
+        return node_set;
+    }
+
+#endif
+
     /**
      * @brief Remove inserted records of write set from masstree.
      *
@@ -415,6 +423,9 @@ private:
      */
     std::vector<read_set_obj> read_set{};
     std::vector<write_set_obj> write_set{};
+#ifdef INDEX_YAKUSHIMA
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> node_set{};
+#endif
 
     /**
      * about scan operation.

@@ -161,31 +161,13 @@ class read_set_obj {  // NOLINT
 public:
     read_set_obj() { this->rec_ptr = nullptr; }
 
-#ifdef INDEX_YAKUSHIMA
-
-    explicit read_set_obj(const Record* rec_ptr, bool scan = false,     // NOLINT
-                          yakushima::node_version64_body nvb = {},      // NOLINT
-                          yakushima::node_version64* nv_ptr = nullptr)  // NOLINT
-            : is_scan{scan} {
+    explicit read_set_obj(const Record* rec_ptr) {
         this->rec_ptr = rec_ptr;
-        nv = std::make_pair(nvb, nv_ptr);
     }
-
-#elif INDEX_KOHLER_MASSTREE
-    explicit read_set_obj(const Record* rec_ptr, bool scan = false)  // NOLINT
-        : is_scan{scan} {
-      this->rec_ptr = rec_ptr;
-    }
-#endif
 
     read_set_obj(const read_set_obj &right) = delete;
 
     read_set_obj(read_set_obj &&right) = default;
-
-    read_set_obj(read_set_obj &&right, bool scan) : is_scan{scan} {  // NOLINT
-        rec_read = std::move(right.rec_read);
-        rec_ptr = right.rec_ptr;
-    }
 
     read_set_obj &operator=(const read_set_obj &right) = delete;  // NOLINT
     read_set_obj &operator=(read_set_obj &&right) {               // NOLINT
@@ -194,17 +176,6 @@ public:
 
         return *this;
     }
-
-    [[nodiscard]] bool get_is_scan() const { return is_scan; }  // NOLINT
-
-#ifdef INDEX_YAKUSHIMA
-
-    std::pair<yakushima::node_version64_body, yakushima::node_version64*>
-    get_nv() {  // NOLINT
-        return nv;
-    }
-
-#endif
 
     Record &get_rec_read() { return rec_read; }  // NOLINT
 
@@ -221,10 +192,6 @@ public:
 private:
     Record rec_read{};
     const Record* rec_ptr{};  // ptr to database
-    bool is_scan{false};      // NOLINT
-#ifdef INDEX_YAKUSHIMA
-    std::pair<yakushima::node_version64_body, yakushima::node_version64*> nv{};
-#endif
 };
 
 }  // namespace shirakami::cc_silo_variant

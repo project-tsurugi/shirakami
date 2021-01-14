@@ -76,20 +76,15 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 
     // Phase 3: Validation
     cc_silo_variant::tid_word check;
-    for (auto itr = ti->get_read_set().begin(); itr != ti->get_read_set().end(); itr++) {
-        const cc_silo_variant::Record* rec_ptr = itr->get_rec_ptr();
+    for (auto &&itr : ti->get_read_set()) {
+        const cc_silo_variant::Record* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-        if ((itr->get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
-             itr->get_rec_read().get_tidw().get_tid() != check.get_tid())
+        if ((itr.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
+             itr.get_rec_read().get_tidw().get_tid() != check.get_tid())
             ||
             check.get_absent() // check whether it was deleted.
             ||
-            (check.get_lock() && (ti->search_write_set(itr->get_rec_ptr()) == nullptr))
-            #ifdef INDEX_YAKUSHIMA
-            // phantom protection
-            ||
-            (itr->get_is_scan() && (itr->get_nv().first != itr->get_nv().second->get_stable_version()))
-#endif
+            (check.get_lock() && (ti->search_write_set(itr.get_rec_ptr()) == nullptr))
                 ) {
             ti->unlock_write_set();
             abort(token);
@@ -97,6 +92,17 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
         }
         max_rset = std::max(max_rset, check);
     }
+
+    // node verify for protect phantom
+#ifdef INDEX_YAKUSHIMA
+    for (auto &&itr : ti->get_node_set()) {
+        if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
+            ti->unlock_write_set();
+            abort(token);
+            return Status::ERR_VALIDATION;
+        }
+    }
+#endif
 
     // Phase 4: Write & Unlock
     cc_silo_variant::write_phase(ti, max_rset, max_wset,

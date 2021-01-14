@@ -52,6 +52,7 @@ void session_info::gc_handler::gc_values() const {
 void session_info::clean_up_ops_set() {
     read_set.clear();
     write_set.clear();
+    node_set.clear();
 }
 
 void session_info::clean_up_scan_caches() {
