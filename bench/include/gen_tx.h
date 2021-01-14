@@ -20,12 +20,21 @@ class opr_obj {  // NOLINT
 public:
     opr_obj() = default;
 
+    // for search
     opr_obj(const OP_TYPE type, std::string_view key)
             : type_(type), key_(key), val_() {}  // NOLINT
-    opr_obj(const OP_TYPE type, std::string_view key, std::string_view val)
-            : type_(type),
-              key_(key),    // NOLINT
-              val_(val) {}  // NOLINT
+
+    // for scan / update
+    opr_obj(const OP_TYPE type, std::string_view str1, std::string_view str2)
+            : type_(type) {
+        if (type == OP_TYPE::UPDATE) {
+            key_ = str1;
+            val_ = str2;
+        } else if (type == OP_TYPE::SCAN) {
+            scan_l_key_ = str1;
+            scan_r_key_ = str2;
+        }
+    }
 
     opr_obj(const opr_obj &right) = delete;
 
@@ -41,13 +50,35 @@ public:
         return key_;
     }
 
+    std::string_view get_scan_l_key() { // NOLINT
+        return scan_l_key_;
+    }
+
+    std::string_view get_scan_r_key() { // NOLINT
+        return scan_r_key_;
+    }
+
     std::string_view get_value() {  // NOLINT
         return val_;
+    }
+
+    void set_type(OP_TYPE op) {
+        type_ = op;
+    }
+
+    void set_scan_l_key(std::string_view key) {
+        scan_l_key_ = key;
+    }
+
+    void set_scan_r_key(std::string_view key) {
+        scan_r_key_ = key;
     }
 
 private:
     OP_TYPE type_{};
     std::string key_{};
+    std::string scan_l_key_{};
+    std::string scan_r_key_{};
     std::string val_{};
 };
 
@@ -75,6 +106,19 @@ gen_tx_rw(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::size
                                  std::string_view{reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val); // NOLINT
         }
     }
+}
+
+static void
+gen_tx_scan(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::size_t scan_elem_n, Xoroshiro128Plus &rnd,
+            FastZipf &zipf) {
+    using namespace shirakami;
+    opr_set.clear();
+    uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
+    uint64_t key_r_nm = key_l_nm + (scan_elem_n - 1);
+    uint64_t key_l_bs = __builtin_bswap64(key_l_nm);
+    uint64_t key_r_bs = __builtin_bswap64(key_r_nm);
+    opr_set.emplace_back(OP_TYPE::SCAN, std::string_view{reinterpret_cast<char*>(key_l_bs), sizeof(uint64_t)}, // NOLINT
+                         std::string_view{reinterpret_cast<char*>(key_r_bs), sizeof(uint64_t)}); // NOLINT
 }
 
 }  // namespace shirakami

@@ -77,6 +77,9 @@ DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads exec
 DEFINE_uint64(long_tx_ops, 50, "# operations per long tx."); // NOLINT
 DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions."); // NOLINT
 
+DEFINE_bool(include_scan_tx, false, "If it is true, one of # worker threads executese scan tx."); // NOLINT
+DEFINE_uint64(scan_elem_num, 100, "# elements in scan range."); // NOLINT
+
 static bool isReady(const std::vector<char> &readys);  // NOLINT
 static void waitForReady(const std::vector<char> &readys);
 
@@ -240,11 +243,18 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        if (thid == 0 && FLAGS_include_long_tx) {
+        if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
             /**
-             * special workloads include long batch transactions.
+             * special workloads.
              */
-            gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, FLAGS_val_length, rnd, zipf);
+            if (FLAGS_include_long_tx) {
+                gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, FLAGS_val_length, rnd, zipf);
+            } else if (FLAGS_include_scan_tx) {
+                gen_tx_scan(opr_set, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
+            } else {
+                SPDLOG_DEBUG("fatal error.");
+                exit(1);
+            }
         } else {
             gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
         }
@@ -254,6 +264,10 @@ void worker(const std::size_t thid, char &ready, const bool &start,
                 search_key(token, itr.get_key(), &tuple);
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 update(token, itr.get_key(), itr.get_value());
+            } else if (itr.get_type() == OP_TYPE::SCAN) {
+                std::vector<const Tuple*> scan_res;
+                scan_key(token, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),
+                         scan_endpoint::INCLUSIVE, scan_res);
             }
         }
         if (commit(token) == Status::OK) { // NOLINT
@@ -264,12 +278,24 @@ void worker(const std::size_t thid, char &ready, const bool &start,
         }
     }
     leave(token);
-    if (thid == 0 && FLAGS_include_long_tx) {
-        SPDLOG_INFO("long_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
-        SPDLOG_INFO("long_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
-        SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
-        SPDLOG_INFO("long_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
-                                                (double) (myres.get().get_local_commit_counts() +
-                                                          myres.get().get_local_abort_counts()));
+    if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
+        if (FLAGS_include_long_tx) {
+            SPDLOG_INFO("long_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
+            SPDLOG_INFO("long_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
+            SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
+            SPDLOG_INFO("long_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
+                                                    (double) (myres.get().get_local_commit_counts() +
+                                                              myres.get().get_local_abort_counts()));
+        } else if (FLAGS_include_scan_tx) {
+            SPDLOG_INFO("scan_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
+            SPDLOG_INFO("scan_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
+            SPDLOG_INFO("scan_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
+            SPDLOG_INFO("scan_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
+                                                    (double) (myres.get().get_local_commit_counts() +
+                                                              myres.get().get_local_abort_counts()));
+        } else {
+            SPDLOG_DEBUG("fatal error.");
+            exit(1);
+        }
     }
 }

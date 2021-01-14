@@ -249,6 +249,7 @@ enum class OP_TYPE : std::int32_t {
     DELETE,
     NONE,
     INSERT,
+    SCAN,
     SEARCH,
     UPDATE,
 };
@@ -269,6 +270,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "INSERT"sv;  // NOLINT
         case OP_TYPE::NONE:
             return "NONE"sv;  // NOLINT
+        case OP_TYPE::SCAN:
+            return "SCAN"sv;  // NOLINT
         case OP_TYPE::SEARCH:
             return "SEARCH"sv;  // NOLINT
         case OP_TYPE::UPDATE:
