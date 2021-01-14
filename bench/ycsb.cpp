@@ -279,23 +279,15 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     }
     leave(token);
     if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
-        if (FLAGS_include_long_tx) {
-            SPDLOG_INFO("long_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
-            SPDLOG_INFO("long_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
-            SPDLOG_INFO("long_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
-            SPDLOG_INFO("long_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
-                                                    (double) (myres.get().get_local_commit_counts() +
-                                                              myres.get().get_local_abort_counts()));
-        } else if (FLAGS_include_scan_tx) {
-            SPDLOG_INFO("scan_tx_commit_counts:\t{0}", myres.get().get_local_commit_counts());
-            SPDLOG_INFO("scan_tx_abort_counts:\t{0}", myres.get().get_local_abort_counts());
-            SPDLOG_INFO("scan_tx_throughput:\t{0}", myres.get().get_local_commit_counts() / FLAGS_duration);
-            SPDLOG_INFO("scan_tx_abort_rate:\t{0}", (double) myres.get().get_local_abort_counts() /
-                                                    (double) (myres.get().get_local_commit_counts() +
-                                                              myres.get().get_local_abort_counts()));
-        } else {
-            SPDLOG_DEBUG("fatal error.");
-            exit(1);
-        }
+        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_commit_counts:\t{0}" : "scan_tx_commit_counts:\t{0}"), // NOLINT
+                    myres.get().get_local_commit_counts());
+        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_abort_counts:\t{0}" : "scan_tx_abort_counts:\t{0}"), // NOLINT
+                    myres.get().get_local_abort_counts());
+        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_throughput:\t{0}" : "scan_tx_throughput:\t{0}"), // NOLINT
+                    myres.get().get_local_commit_counts() / FLAGS_duration);
+        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_abort_rate:\t{0}" : "scan_tx_abort_rate:\t{0}"), // NOLINT
+                    (double) myres.get().get_local_abort_counts() /
+                    (double) (myres.get().get_local_commit_counts() +
+                              myres.get().get_local_abort_counts()));
     }
 }
