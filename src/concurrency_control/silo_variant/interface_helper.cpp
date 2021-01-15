@@ -138,7 +138,7 @@ Status leave(Token const token) {  // NOLINT
     return Status::ERR_INVALID_ARGS;
 }
 
-void tx_begin(Token const token) { // NOLINT
+void tx_begin(Token const token, const bool read_only) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
         /**
@@ -148,6 +148,7 @@ void tx_begin(Token const token) { // NOLINT
          */
         ti->set_tx_began(true);
         ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
+        ti->set_read_only(read_only);
 #if defined(CPR)
         ti->update_pv();
 #endif

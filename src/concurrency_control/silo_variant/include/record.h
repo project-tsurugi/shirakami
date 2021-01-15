@@ -35,7 +35,14 @@ public:
     Record(Record &&right) = default;
 
     Record &operator=(const Record &right) = default;  // NOLINT
-    Record &operator=(Record &&right) = default;       // NOLINT
+    Record &operator=(Record &&right) {
+        set_tidw(right.get_tidw());
+        tuple_ = std::move(right.get_tuple());
+        set_snap_ptr(right.get_snap_ptr());
+        return *this;
+    }
+
+    Record* get_snap_ptr() { return snap_ptr_.load(std::memory_order_acquire); }
 
     tid_word &get_tidw() { return tidw_; }  // NOLINT
 
@@ -46,6 +53,8 @@ public:
     [[nodiscard]] const Tuple &get_tuple() const { return tuple_; }  // NOLINT
 
     void set_tidw(tid_word tidw) &{ tidw_.set_obj(tidw.get_obj()); }
+
+    void set_snap_ptr(Record* ptr) { snap_ptr_.store(ptr, std::memory_order_release); }
 
 #if defined(CPR)
 
@@ -93,6 +102,10 @@ private:
     bool failed_insert_{false};
 #endif
     Tuple tuple_;
+    /**
+     * @details This is safely snapshot for read only transaction.
+     */
+    std::atomic<Record*> snap_ptr_;
 };
 
 }  // namespace shirakami::cc_silo_variant

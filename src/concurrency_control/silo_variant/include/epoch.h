@@ -25,6 +25,11 @@ namespace shirakami::cc_silo_variant::epoch {
  */
 using epoch_t = std::int64_t;
 
+/**
+ * @details 25 epoch equals to 1 snapshot epoch.
+ */
+constexpr size_t snapshot_epoch_times = 25;
+
 [[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0};  // NOLINT
 
 /**

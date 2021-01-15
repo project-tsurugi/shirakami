@@ -210,29 +210,11 @@ public:
         return gc_handle_.get_value_container();
     }
 
-#ifdef INDEX_YAKUSHIMA
-
-    [[nodiscard]] yakushima::Token get_yakushima_token() {  // NOLINT
-        return yakushima_token_;
-    }
-
-#endif
-
-#if defined(PWAL)
-
-    pwal::pwal_handler &get_log_handler() { // NOLINT
-        return log_handle_;
-    }
-
-    std::vector<pwal::LogRecord> &get_log_set() {  // NOLINT
-        return log_handle_.get_log_set();
-    }
-
-    tid_word &get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
-
-#endif
-
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
+
+    epoch::epoch_t get_snapshot_epoch() {
+        return epoch::snapshot_epoch_times * (epoch_.load(std::memory_order_acquire) / epoch::snapshot_epoch_times);
+    }
 
     std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
         return scan_handle_.get_r_end_();
@@ -245,24 +227,6 @@ public:
     std::vector<read_set_obj> &get_read_set() {  // NOLINT
         return read_set;
     }
-
-#ifdef INDEX_YAKUSHIMA
-
-    std::map<ScanHandle,
-            std::vector<std::tuple<const Record*, yakushima::node_version64_body,
-                    yakushima::node_version64*>>> &
-    get_scan_cache() {  // NOLINT
-        return scan_handle_.get_scan_cache();
-    }
-
-#elif INDEX_KOHLER_MASSTREE
-
-    std::map<ScanHandle, std::vector<const Record*>> &
-    get_scan_cache() {  // NOLINT
-        return scan_handle_.get_scan_cache();
-    }
-
-#endif
 
     std::map<ScanHandle, std::size_t> &get_scan_cache_itr() {  // NOLINT
         return scan_handle_.get_scan_cache_itr();
@@ -283,14 +247,6 @@ public:
     std::vector<write_set_obj> &get_write_set() {  // NOLINT
         return write_set;
     }
-
-#ifdef INDEX_YAKUSHIMA
-
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> &get_node_set() { // NOLINT
-        return node_set;
-    }
-
-#endif
 
     /**
      * @brief Remove inserted records of write set from masstree.
@@ -337,21 +293,12 @@ public:
     void unlock_write_set(std::vector<write_set_obj>::iterator begin,
                           std::vector<write_set_obj>::iterator end);
 
-#ifdef PWAL
     /**
-     * @brief write-ahead logging
-     * @param [in] commit_id commit tid.
-     * @return void
+     * begin setter zone
      */
-    void pwal(std::uint64_t commit_id, commit_property cp);
-
-    void set_flushed_ctid(const tid_word &ctid) {
-        log_handle_.set_flushed_ctid(ctid);
-    }
-#endif
-
-    [[maybe_unused]] void set_token(Token token) { token_ = token; }
-
+    /**
+     * @param epoch
+     */
     void set_epoch(epoch::epoch_t epoch) {
         epoch_.store(epoch, std::memory_order_release);
     }
@@ -369,7 +316,59 @@ public:
         gc_handle_.set_value_container(cont);
     }
 
+    void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
+
+    void set_read_only(const bool tf) { read_only_ = tf; }
+
+    [[maybe_unused]] void set_token(Token token) { token_ = token; }
+
+    void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
+
+    void set_visible(bool visible) {
+        visible_.store(visible, std::memory_order_release);
+    }
+    /**
+     * end setter zone
+     */
+
+#ifdef PWAL
+
+    pwal::pwal_handler &get_log_handler() { // NOLINT
+        return log_handle_;
+    }
+
+    std::vector<pwal::LogRecord> &get_log_set() {  // NOLINT
+        return log_handle_.get_log_set();
+    }
+
+    tid_word &get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
+
+    /**
+     * @brief write-ahead logging
+     * @param [in] commit_id commit tid.
+     * @return void
+     */
+    void pwal(std::uint64_t commit_id, commit_property cp);
+
+    void set_flushed_ctid(const tid_word &ctid) {
+        log_handle_.set_flushed_ctid(ctid);
+    }
+#endif
+
 #ifdef INDEX_YAKUSHIMA
+
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> &get_node_set() { // NOLINT
+        return node_set;
+    }
+
+    std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> &
+    get_scan_cache() {  // NOLINT
+        return scan_handle_.get_scan_cache();
+    }
+
+    [[nodiscard]] yakushima::Token get_yakushima_token() {  // NOLINT
+        return yakushima_token_;
+    }
 
     void set_kvs_token(yakushima::Token new_token) {
         yakushima_token_ = new_token;
@@ -377,7 +376,14 @@ public:
 
 #endif
 
-    void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
+#ifdef INDEX_KOHLER_MASSTREE
+
+    std::map<ScanHandle, std::vector<const Record*>> &
+    get_scan_cache() {  // NOLINT
+        return scan_handle_.get_scan_cache();
+    }
+
+#endif
 
 #ifdef CPR
 
@@ -391,17 +397,8 @@ public:
 
 #endif
 
-    void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
-
-    void set_visible(bool visible) {
-        visible_.store(visible, std::memory_order_release);
-    }
-
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
-#ifdef INDEX_YAKUSHIMA
-    yakushima::Token yakushima_token_{};
-#endif
     tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
     std::atomic<epoch::epoch_t> epoch_{0};
     /**
@@ -412,7 +409,10 @@ private:
      * @brief If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
-
+    /**
+     * @brief If this is true, begun transaction by this session can only do (transaction read operations).
+     */
+    bool read_only_{false};
     /**
      * about garbage collection
      */
@@ -423,14 +423,20 @@ private:
      */
     std::vector<read_set_obj> read_set{};
     std::vector<write_set_obj> write_set{};
-#ifdef INDEX_YAKUSHIMA
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> node_set{};
-#endif
 
     /**
      * about scan operation.
      */
     scan_handler scan_handle_;
+
+    /**
+     * about indexing.
+     */
+#ifdef INDEX_YAKUSHIMA
+    yakushima::Token yakushima_token_{};
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> node_set{};
+#endif
+
     /**
      * about logging.
      */

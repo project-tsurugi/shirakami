@@ -167,7 +167,10 @@ public:
 
     read_set_obj(const read_set_obj &right) = delete;
 
-    read_set_obj(read_set_obj &&right) = default;
+    read_set_obj(read_set_obj &&right) {
+        rec_read = std::move(right.rec_read);
+        rec_ptr = right.rec_ptr;
+    }
 
     read_set_obj &operator=(const read_set_obj &right) = delete;  // NOLINT
     read_set_obj &operator=(read_set_obj &&right) {               // NOLINT
