@@ -28,7 +28,7 @@ Status read_record(Record &res, const Record* dest);  // NOLINT
  * @param [int] read_only
  * @return void
  */
-void tx_begin(Token token, const bool read_only = false);
+void tx_begin(Token token, bool read_only = false);
 
 void write_phase(session_info* ti, const tid_word &max_r_set, const tid_word &max_w_set, commit_property cp);
 

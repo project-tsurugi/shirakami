@@ -30,19 +30,35 @@ public:
 #endif
     }
 
-    Record(const Record &right) = default;
+    Record(const Record &right) {
+        set_tidw(right.get_tidw());
+        tuple_ = right.get_tuple();
+        set_snap_ptr(right.get_snap_ptr());
+    }
 
-    Record(Record &&right) = default;
-
-    Record &operator=(const Record &right) = default;  // NOLINT
-    Record &operator=(Record &&right) {
+    Record(Record &&right) {
         set_tidw(right.get_tidw());
         tuple_ = std::move(right.get_tuple());
+        set_snap_ptr(right.get_snap_ptr());
+        right.set_snap_ptr(nullptr);
+    }
+
+    Record &operator=(const Record &right) { // NOLINT
+        set_tidw(right.get_tidw());
+        tuple_ = right.get_tuple();
         set_snap_ptr(right.get_snap_ptr());
         return *this;
     }
 
-    Record* get_snap_ptr() { return snap_ptr_.load(std::memory_order_acquire); }
+    Record &operator=(Record &&right) { // NOLINT
+        set_tidw(right.get_tidw());
+        tuple_ = std::move(right.get_tuple());
+        set_snap_ptr(right.get_snap_ptr());
+        right.set_snap_ptr(nullptr);
+        return *this;
+    }
+
+    [[nodiscard]] Record* get_snap_ptr() const { return snap_ptr_.load(std::memory_order_acquire); } // NOLINT
 
     tid_word &get_tidw() { return tidw_; }  // NOLINT
 
@@ -105,7 +121,7 @@ private:
     /**
      * @details This is safely snapshot for read only transaction.
      */
-    std::atomic<Record*> snap_ptr_;
+    std::atomic<Record*> snap_ptr_{nullptr};
 };
 
 }  // namespace shirakami::cc_silo_variant

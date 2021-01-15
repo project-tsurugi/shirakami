@@ -138,7 +138,7 @@ Status leave(Token const token) {  // NOLINT
     return Status::ERR_INVALID_ARGS;
 }
 
-void tx_begin(Token const token, const bool read_only) { // NOLINT
+void tx_begin(Token const token, bool const read_only) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
         /**
