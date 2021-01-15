@@ -21,15 +21,6 @@ namespace shirakami::cc_silo_variant {
  */
 Status read_record(Record &res, const Record* dest);  // NOLINT
 
-/**
- * @brief Transaction begins.
- * @details Get an epoch accessible to this transaction.
- * @param [in] token
- * @param [in] read_only
- * @return void
- */
-void tx_begin(Token token, bool read_only = false);
-
 void write_phase(session_info* ti, const tid_word &max_r_set, const tid_word &max_w_set, commit_property cp);
 
 }  // namespace shirakami::silo_variant

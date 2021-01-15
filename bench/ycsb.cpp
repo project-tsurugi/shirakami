@@ -265,6 +265,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 update(token, itr.get_key(), itr.get_value());
             } else if (itr.get_type() == OP_TYPE::SCAN) {
+                tx_begin(token, true);
                 std::vector<const Tuple*> scan_res;
                 scan_key(token, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),
                          scan_endpoint::INCLUSIVE, scan_res);

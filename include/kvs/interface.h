@@ -249,6 +249,15 @@ extern Status search_key(Token token, std::string_view key, Tuple** tuple); // N
 [[maybe_unused]] extern void single_recovery_from_log();
 
 /**
+ * @brief Transaction begins.
+ * @details Get an epoch accessible to this transaction.
+ * @param [in] token
+ * @param [in] read_only
+ * @return void
+ */
+void tx_begin(Token token, bool read_only = false); // NOLINT
+
+/**
  * @brief update the record for the given key
  * @param token [in] the token retrieved by enter()
  * @param key the key of the updated record
