@@ -1,9 +1,12 @@
+
 #include "concurrency_control/silo_variant//include/interface_helper.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif
+
+#include "kvs/interface.h"
 
 #include "logger.h"
 #include "tuple_local.h"

@@ -255,7 +255,7 @@ extern Status search_key(Token token, std::string_view key, Tuple** tuple); // N
  * @param [in] read_only
  * @return void
  */
-void tx_begin(Token token, bool read_only = false); // NOLINT
+extern void tx_begin(Token token, bool read_only = false); // NOLINT
 
 /**
  * @brief update the record for the given key

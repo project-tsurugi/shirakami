@@ -17,6 +17,8 @@
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
 #endif                            // INDEX_KOHLER_MASSTREE
 
+#include "kvs/interface.h"
+
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {

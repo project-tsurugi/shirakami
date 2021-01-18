@@ -2,6 +2,8 @@
  * @file helper.cpp
  */
 
+#include "logger.h"
+
 #include "concurrency_control/silo_variant//include/interface_helper.h"
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
@@ -237,6 +239,19 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
          ++iws) {
         Record* rec_ptr = iws->get_rec_ptr();
         switch (iws->get_op()) {
+            case OP_TYPE::INSERT: {
+#ifdef CPR
+                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                    if (!rec_ptr->get_checkpointed()) {
+                        rec_ptr->get_stable() = rec_ptr->get_tuple();
+                        rec_ptr->get_stable_tidw() = max_tid;
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
+                }
+#endif
+                storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
+                break;
+            }
             case OP_TYPE::UPDATE: {
                 std::string* old_value{};
                 std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
@@ -252,37 +267,41 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 if (old_value != nullptr) {
+                    /**
+                     * For safely snap
+                     */
+                    /**
+                     * For GC
+                     */
                     ti->get_gc_value_container()->emplace_back(
                             std::make_pair(old_value, ti->get_epoch()));
+                } else {
+                    /**
+                     *  null insert is not expected.
+                     */
+                     SPDLOG_DEBUG("fatal error.");
+                     exit(1);
                 }
-                break;
-            }
-            case OP_TYPE::INSERT: {
-#ifdef CPR
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    if (!rec_ptr->get_checkpointed()) {
-                        rec_ptr->get_stable() = rec_ptr->get_tuple();
-                        rec_ptr->get_stable_tidw() = max_tid;
-                        rec_ptr->set_version(ti->get_version() + 1);
-                    }
-                }
-#endif
-                storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }
             case OP_TYPE::DELETE: {
                 std::string_view key_view = rec_ptr->get_tuple().get_key();
+
+                /**
+                 * about removing index
+                 */
 #ifdef INDEX_KOHLER_MASSTREE
                 kohler_masstree::get_mtdb().remove_value(key_view.data(),
                                                          key_view.size());
 #elif INDEX_YAKUSHIMA
+#ifndef CPR
                 /**
                  * case : no logging and pwal
                  */
-#ifndef CPR
                 yakushima::remove(ti->get_yakushima_token(), key_view);
                 ti->get_gc_record_container()->emplace_back(rec_ptr);
 #else
+                // todo : sefely snap opt with cpr
                 if (ti->get_phase() == cpr::phase::REST) {
                     /**
                      * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
@@ -306,9 +325,14 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 }
 #endif
 #endif
+                /**
+                 * end about removing index
+                 */
+
                 tid_word delete_tid = max_tid;
                 delete_tid.set_latest(false);
                 delete_tid.set_absent(true);
+
 #ifdef CPR
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
                     if (!rec_ptr->get_checkpointed()) {
@@ -318,6 +342,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     }
                 }
 #endif
+
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
 
                 break;
