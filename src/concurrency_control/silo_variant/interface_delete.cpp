@@ -6,7 +6,6 @@
 #include <bitset>
 
 #include "atomic_wrapper.h"
-#include "logger.h"
 
 #ifdef CC_SILO_VARIANT
 
@@ -21,7 +20,6 @@
 
 #include "kvs/interface.h"
 
-#include "tuple_local.h"   // NOLINT
 // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
@@ -32,7 +30,11 @@ namespace shirakami::cc_silo_variant {
     yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
     for (auto &&itr : scan_res) {
-        delete *itr.first;  // NOLINT
+        Record* rec_ptr = *itr.first;
+        if (rec_ptr->get_snap_ptr() != nullptr) {
+            delete rec_ptr->get_snap_ptr(); // NOLINT
+        }
+        delete rec_ptr;  // NOLINT
     }
 
     yakushima::destroy();

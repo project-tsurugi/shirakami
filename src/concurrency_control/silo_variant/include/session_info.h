@@ -224,6 +224,10 @@ public:
         return read_set;
     }
 
+    bool get_read_only () {
+        return read_only_;
+    }
+
     std::map<ScanHandle, std::size_t> &get_scan_cache_itr() {  // NOLINT
         return scan_handle_.get_scan_cache_itr();
     }

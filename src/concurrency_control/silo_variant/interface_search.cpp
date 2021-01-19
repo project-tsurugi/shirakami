@@ -8,6 +8,7 @@
 
 #include "kvs/interface.h"
 
+#include "concurrency_control/silo_variant/include/snapshot_interface.h"
 #include "tuple_local.h"
 
 namespace shirakami::cc_silo_variant {
@@ -15,7 +16,11 @@ namespace shirakami::cc_silo_variant {
 Status search_key(Token token, const std::string_view key,  // NOLINT
                   Tuple** const tuple) {
     auto* ti = static_cast<cc_silo_variant::session_info*>(token);
-    if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token); // NOLINT
+    if (!ti->get_txbegan()) {
+        cc_silo_variant::tx_begin(token); // NOLINT
+    } else if (ti->get_read_only()) {
+        return snapshot_interface::lookup_snapshot(token, key, tuple);
+    }
 
 #ifdef INDEX_KOHLER_MASSTREE
     masstree_wrapper<Record>::thread_init(sched_getcpu());
