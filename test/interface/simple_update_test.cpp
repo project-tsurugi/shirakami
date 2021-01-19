@@ -2,14 +2,15 @@
 #include <future>
 
 #include "gtest/gtest.h"
+
 #include "kvs/interface.h"
 
-// shirakami-impl simple_update library
+#include "concurrency_control/silo_variant/include/epoch.h"
+#include "concurrency_control/silo_variant/include/record.h"
+#include "clock.h"
 #include "tuple_local.h"
 
-#ifdef CC_SILO_VARIANT
-using namespace shirakami::cc_silo_variant;
-#endif
+#include "yakushima/include/kvs.h"
 
 namespace shirakami::testing {
 
@@ -29,20 +30,20 @@ TEST_F(simple_update, update) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, insert(s, k, v));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
     ASSERT_EQ(
             memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()),
             0);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, update(s, k, v2));
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, k, &tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
-    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -60,7 +61,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
             ASSERT_EQ(Status::OK, insert(s, k,
                                          {reinterpret_cast<char*>(&v),  // NOLINT
                                           sizeof(std::int64_t)}));
-            ASSERT_EQ(Status::OK, commit(s));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
 
@@ -79,7 +80,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
             ASSERT_EQ(Status::OK, upsert(s, k,
                                          {reinterpret_cast<char*>(&v),  // NOLINT
                                           sizeof(std::int64_t)}));
-            rc = (Status::OK == commit(s));
+            rc = (Status::OK == commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
 
@@ -93,7 +94,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
             std::int64_t v{*reinterpret_cast<std::int64_t*>(  // NOLINT
                     const_cast<char*>(tuple->get_value().data()))};
             ASSERT_EQ(10, v);
-            ASSERT_EQ(Status::OK, commit(s));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
     };
@@ -119,6 +120,31 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
     }
     r1.wait();
     S::verify();
+}
+
+TEST_F(simple_update, update_twice_for_creating_snap) {  // NOLINT
+    std::string k("aaa");          // NOLINT
+    std::string v("aaa");          // NOLINT
+    std::string v2("bbb");         // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+    epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
+    while (epoch::get_snap_epoch(ce) == epoch::get_snap_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire))) {
+        sleepMs(1);
+    }
+    // change snap epoch
+    ASSERT_EQ(Status::OK, enter(s));
+    // it must create snap version
+    ASSERT_EQ(Status::OK, update(s, k, v2));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+    Record* rec_ptr{*std::get<0>(yakushima::get<Record*>(k))};
+    ASSERT_NE(rec_ptr, nullptr);
+    ASSERT_EQ(rec_ptr->get_tuple().get_value(), std::string_view(v2));
+    ASSERT_EQ(rec_ptr->get_snap_ptr()->get_tuple().get_value(), std::string_view(v));
 }
 
 }  // namespace shirakami::testing

@@ -8,7 +8,6 @@
 
 #include "kvs/interface.h"
 
-#include "logger.h"
 #include "tuple_local.h"
 
 namespace shirakami::cc_silo_variant {
@@ -16,7 +15,7 @@ namespace shirakami::cc_silo_variant {
 Status search_key(Token token, const std::string_view key,  // NOLINT
                   Tuple** const tuple) {
     auto* ti = static_cast<cc_silo_variant::session_info*>(token);
-    if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token);
+    if (!ti->get_txbegan()) cc_silo_variant::tx_begin(token); // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
     masstree_wrapper<Record>::thread_init(sched_getcpu());
