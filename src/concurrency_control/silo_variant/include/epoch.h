@@ -54,19 +54,23 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
     return kReclamationEpoch.load(std::memory_order_acquire);
 }
 
+[[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
+    kEpochThreadEnd.store(tf, std::memory_order_release);
+}
+
 /**
  * @brief invoke epocher thread.
  * @post invoke fin() to join this thread.
  */
 [[maybe_unused]] static void invoke_epocher() {
-    kEpochThreadEnd.store(false, std::memory_order_release);
+    set_epoch_thread_end(false);
     kEpochThread = std::thread(epocher);
 }
 
 [[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
 
-[[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
-    kEpochThreadEnd.store(tf, std::memory_order_release);
+[[maybe_unused]] static epoch_t get_snap_epoch(epoch_t epo) { // NOLINT
+    return epoch::snapshot_epoch_times * (epo / epoch::snapshot_epoch_times);
 }
 
 }  // namespace shirakami::cc_silo_variant::epoch

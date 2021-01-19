@@ -8,6 +8,7 @@
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
+#include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
@@ -44,6 +45,8 @@ void fin() {
     // Stop DB operation.
     epoch::set_epoch_thread_end(true);
     epoch::join_epoch_thread();
+    snapshot_manager::set_snapshot_manager_thread_end(true);
+    snapshot_manager::join_snapshot_manager_thread();
     session_info_table::fin_kThreadTable();
 
 #ifdef INDEX_YAKUSHIMA
@@ -110,6 +113,7 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
 
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
+    snapshot_manager::invoke_snapshot_manager();
 
 #ifdef INDEX_YAKUSHIMA
     yakushima::init();
@@ -126,6 +130,7 @@ Status leave(Token const token) {  // NOLINT
     for (auto &&itr : session_info_table::get_thread_info_table()) {
         if (&itr == static_cast<session_info*>(token)) {
             if (itr.get_visible()) {
+                itr.gc_records_and_values();
 #ifdef INDEX_YAKUSHIMA
                 yakushima::leave(
                         static_cast<session_info*>(token)->get_yakushima_token());
@@ -238,6 +243,36 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
     for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
          ++iws) {
         Record* rec_ptr = iws->get_rec_ptr();
+        auto safely_snap_work = [&rec_ptr, &ti] {
+            std::string_view old_value = rec_ptr->get_tuple().get_value();
+            if (epoch::get_snap_epoch(ti->get_epoch()) != epoch::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
+                // update safely snap
+                if (rec_ptr->get_snap_ptr() == nullptr) {
+                    // create safely snap
+                    Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), old_value); // NOLINT
+                    new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
+                    new_rec->get_tidw().set_latest(true);
+                    new_rec->get_tidw().set_lock(false);
+                    new_rec->get_tidw().set_absent(false);
+                    rec_ptr->set_snap_ptr(new_rec);
+                } else {
+                    // modify safely snap
+                    rec_ptr->get_snap_ptr()->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
+                    std::string* snap_old_value{};
+                    rec_ptr->get_snap_ptr()->get_tuple().get_pimpl()->set_value(old_value.data(),
+                                                                                old_value.size(), &snap_old_value);
+                    if (snap_old_value != nullptr) {
+                        ti->get_gc_value_container()->emplace_back(std::make_pair(snap_old_value, ti->get_epoch()));
+                    } else {
+                        /**
+                         *  null insert is not expected.
+                         */
+                        SPDLOG_DEBUG("fatal error."); // NOLINT
+                        exit(1);
+                    }
+                }
+            }
+        };
         switch (iws->get_op()) {
             case OP_TYPE::INSERT: {
 #ifdef CPR
@@ -253,9 +288,19 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 break;
             }
             case OP_TYPE::UPDATE: {
+                safely_snap_work();
                 std::string* old_value{};
                 std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
+                if (old_value != nullptr) {
+                    ti->get_gc_value_container()->emplace_back(std::make_pair(old_value, ti->get_epoch()));
+                } else {
+                    /**
+                     *  null insert is not expected.
+                     */
+                    SPDLOG_DEBUG("fatal error.");
+                    exit(1);
+                }
 #ifdef CPR
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
                     if (!rec_ptr->get_checkpointed()) {
@@ -265,26 +310,16 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     }
                 }
 #endif
+
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
-                if (old_value != nullptr) {
-                    /**
-                     * For safely snap
-                     */
-                    /**
-                     * For GC
-                     */
-                    ti->get_gc_value_container()->emplace_back(
-                            std::make_pair(old_value, ti->get_epoch()));
-                } else {
-                    /**
-                     *  null insert is not expected.
-                     */
-                     SPDLOG_DEBUG("fatal error.");
-                     exit(1);
-                }
                 break;
             }
             case OP_TYPE::DELETE: {
+                safely_snap_work();
+                tid_word delete_tid = max_tid;
+                delete_tid.set_latest(false);
+                delete_tid.set_absent(true);
+
                 std::string_view key_view = rec_ptr->get_tuple().get_key();
 
                 /**
@@ -298,8 +333,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 /**
                  * case : no logging and pwal
                  */
-                yakushima::remove(ti->get_yakushima_token(), key_view);
-                ti->get_gc_record_container()->emplace_back(rec_ptr);
 #else
                 // todo : sefely snap opt with cpr
                 if (ti->get_phase() == cpr::phase::REST) {
@@ -329,10 +362,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                  * end about removing index
                  */
 
-                tid_word delete_tid = max_tid;
-                delete_tid.set_latest(false);
-                delete_tid.set_absent(true);
-
 #ifdef CPR
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
                     if (!rec_ptr->get_checkpointed()) {
@@ -342,28 +371,25 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     }
                 }
 #endif
-
-                storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-
+                if (rec_ptr->get_snap_ptr() == nullptr) {
+                    // if no snapshot, it can immediately remove.
+                    yakushima::remove(ti->get_yakushima_token(), key_view);
+                    ti->get_gc_record_container()->emplace_back(rec_ptr);
+                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                } else {
+                    snapshot_manager::remove_rec_cont_mutex.lock();
+                    snapshot_manager::remove_rec_cont.emplace_back(rec_ptr);
+                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                    snapshot_manager::remove_rec_cont_mutex.unlock();
+                }
                 break;
             }
             default:
-                std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
-                          << std::endl;
+                SPDLOG_DEBUG("fatal error.");
                 std::abort();
         }
     }
 
-    /**
-     * about holding operation info.
-     */
-    ti->clean_up_ops_set();
-    /**
-     * about scan operation.
-     */
-    ti->clean_up_scan_caches();
-
-    ti->gc_records_and_values();
 }
 
 }  // namespace shirakami::cc_silo_variant

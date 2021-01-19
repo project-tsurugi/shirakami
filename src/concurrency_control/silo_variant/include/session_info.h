@@ -212,10 +212,6 @@ public:
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
 
-    epoch::epoch_t get_snapshot_epoch() {
-        return epoch::snapshot_epoch_times * (epoch_.load(std::memory_order_acquire) / epoch::snapshot_epoch_times);
-    }
-
     std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
         return scan_handle_.get_r_end_();
     }

@@ -107,6 +107,17 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     // Phase 4: Write & Unlock
     cc_silo_variant::write_phase(ti, max_rset, max_wset,
                                  cp != nullptr ? cp->get_cp() : commit_property::NOWAIT_FOR_COMMIT);
+    /**
+     * about holding operation info.
+     */
+    ti->clean_up_ops_set();
+    /**
+     * about scan operation.
+     */
+    ti->clean_up_scan_caches();
+
+    ti->gc_records_and_values();
+
 #if defined(PWAL)
     if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());
 #elif defined(CPR)

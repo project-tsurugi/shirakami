@@ -18,8 +18,6 @@
 
 #endif
 
-#include "spdlog/spdlog.h"
-
 using namespace shirakami::logger;
 
 namespace shirakami::cc_silo_variant::epoch {
