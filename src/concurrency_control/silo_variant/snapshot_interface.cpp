@@ -57,6 +57,8 @@ READ_PROCESS_START:
         }
     }
 
+#if 0
+    // todo : impl now
     if (rec_ptr->get_snap_ptr() == nullptr) {
         // case : There is no snapshot to see.
         if (tid.get_lock()) {
@@ -69,6 +71,8 @@ READ_PROCESS_START:
     } else {
         // case : There is no snapshot to see.
     }
+#endif
+
     return Status::OK;
 }
 
