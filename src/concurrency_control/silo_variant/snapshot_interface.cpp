@@ -57,13 +57,13 @@ Status lookup_snapshot(Token token, std::string_view key, Tuple** const ret_tupl
      * Because the position that can be interrupted is the second, it is always from the main version,
      * and this transaction does not have to read it.
      */
-    for (Record* snap_ptr = rec_ptr->get_snap_ptr();; snap_ptr = snap_ptr->get_snap_ptr()) {
-        if (snap_ptr == nullptr) return Status::WARN_NOT_FOUND;
+    for (Record* snap_ptr = rec_ptr->get_snap_ptr(); snap_ptr != nullptr; snap_ptr = snap_ptr->get_snap_ptr()) {
         if (epoch::get_snap_epoch(ti->get_epoch()) > epoch::get_snap_epoch(snap_ptr->get_tidw().get_epoch())) {
             *ret_tuple = &snap_ptr->get_tuple();
             return Status::OK;
         }
     }
+    return Status::WARN_NOT_FOUND; // snap_ptr == nullptr
 }
 
 }
