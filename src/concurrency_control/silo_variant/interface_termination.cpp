@@ -25,7 +25,7 @@ Status abort(Token token) {  // NOLINT
     ti->clean_up_ops_set();
     ti->clean_up_scan_caches();
     ti->set_tx_began(false);
-    ti->gc_records_and_values();
+    ti->gc();
     return Status::OK;
 }
 
@@ -116,7 +116,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
      */
     ti->clean_up_scan_caches();
 
-    ti->gc_records_and_values();
+    ti->gc();
 
 #if defined(PWAL)
     if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());

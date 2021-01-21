@@ -4,14 +4,11 @@
  */
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/session_info_table.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 
 #include "index/masstree_beta/include/masstree_beta_wrapper.h"
-
-#elif INDEX_YAKUSHIMA
-
-#include "yakushima/include/kvs.h"
 
 #endif
 
@@ -19,28 +16,29 @@
 
 namespace shirakami::cc_silo_variant::garbage_collection {
 
-void delete_all_garbage_records() {
-    for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-        for (auto &&itr : get_garbage_records_at(i)) {
-            delete itr;  // NOLINT
-        }
-        get_garbage_records_at(i).clear();
-    }
-}
-
-void delete_all_garbage_values() {
-    for (auto i = 0; i < KVS_NUMBER_OF_LOGICAL_CORES; ++i) {
-        for (auto &&itr : get_garbage_values_at(i)) {
-            delete itr.first;  // NOLINT
-        }
-        get_garbage_values_at(i).clear();
-    }
-}
-
 [[maybe_unused]] void release_all_heap_objects() {
     remove_all_leaf_from_mt_db_and_release();
-    delete_all_garbage_records();
-    delete_all_garbage_values();
+    std::vector<std::thread> thv;
+    for (auto &&elem : session_info_table::get_thread_info_table()) {
+        thv.emplace_back([&elem] {
+            // delete all garbage records
+            for (auto &&r : elem.get_gc_record_container()) {
+                delete r; // NOLINT
+            }
+            elem.get_gc_record_container().clear();
+            // delete all garbage values
+            for (auto &&v : elem.get_gc_value_container()) {
+                delete v.first; // NOLINT
+            }
+            elem.get_gc_value_container().clear();
+            // delete all garbage snap
+            for (auto &&s : elem.get_gc_snap_cont()) {
+                delete s.second; // NOLINT
+            }
+            elem.get_gc_snap_cont().clear();
+        });
+    }
+    for (auto &&th : thv) th.join();
 }
 
 void remove_all_leaf_from_mt_db_and_release() {

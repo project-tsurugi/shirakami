@@ -130,7 +130,7 @@ Status leave(Token const token) {  // NOLINT
     for (auto &&itr : session_info_table::get_thread_info_table()) {
         if (&itr == static_cast<session_info*>(token)) {
             if (itr.get_visible()) {
-                itr.gc_records_and_values();
+                itr.gc();
 #ifdef INDEX_YAKUSHIMA
                 yakushima::leave(
                         static_cast<session_info*>(token)->get_yakushima_token());
@@ -247,30 +247,20 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
             std::string_view old_value = rec_ptr->get_tuple().get_value();
             if (epoch::get_snap_epoch(ti->get_epoch()) != epoch::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
                 // update safely snap
+                Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), old_value); // NOLINT
+                new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
+                new_rec->get_tidw().set_latest(true);
+                new_rec->get_tidw().set_lock(false);
+                new_rec->get_tidw().set_absent(false);
                 if (rec_ptr->get_snap_ptr() == nullptr) {
                     // create safely snap
-                    Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), old_value); // NOLINT
-                    new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
-                    new_rec->get_tidw().set_latest(true);
-                    new_rec->get_tidw().set_lock(false);
-                    new_rec->get_tidw().set_absent(false);
                     rec_ptr->set_snap_ptr(new_rec);
                 } else {
-                    // modify safely snap
-                    rec_ptr->get_snap_ptr()->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
-                    std::string* snap_old_value{};
-                    rec_ptr->get_snap_ptr()->get_tuple().get_pimpl()->set_value(old_value.data(),
-                                                                                old_value.size(), &snap_old_value);
-                    if (snap_old_value != nullptr) {
-                        ti->get_gc_value_container()->emplace_back(std::make_pair(snap_old_value, ti->get_epoch()));
-                    } else {
-                        /**
-                         *  null insert is not expected.
-                         */
-                        SPDLOG_DEBUG("fatal error."); // NOLINT
-                        exit(1);
-                    }
+                    // create safely snap and insert at second.
+                    new_rec->set_snap_ptr(rec_ptr->get_snap_ptr());
+                    rec_ptr->set_snap_ptr(new_rec);
                 }
+                ti->get_gc_snap_cont().emplace_back(std::make_pair(ti->get_epoch(), new_rec));
             }
         };
         switch (iws->get_op()) {
@@ -293,7 +283,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
                 if (old_value != nullptr) {
-                    ti->get_gc_value_container()->emplace_back(std::make_pair(old_value, ti->get_epoch()));
+                    ti->get_gc_value_container().emplace_back(std::make_pair(old_value, ti->get_epoch()));
                 } else {
                     /**
                      *  null insert is not expected.
@@ -340,7 +330,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                      * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
                      */
                     yakushima::remove(ti->get_yakushima_token(), key_view);
-                    ti->get_gc_record_container()->emplace_back(rec_ptr);
+                    ti->get_gc_record_container().emplace_back(rec_ptr);
                 } else {
                     /**
                      * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
@@ -350,7 +340,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                          * Checkpoint thread did process, so it can remove from index.
                          */
                         yakushima::remove(ti->get_yakushima_token(), key_view);
-                        ti->get_gc_record_container()->emplace_back(rec_ptr);
+                        ti->get_gc_record_container().emplace_back(rec_ptr);
                     }
                     /**
                      * else : The check pointer is responsible for deleting from the index and registering garbage.
@@ -374,7 +364,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 if (rec_ptr->get_snap_ptr() == nullptr) {
                     // if no snapshot, it can immediately remove.
                     yakushima::remove(ti->get_yakushima_token(), key_view);
-                    ti->get_gc_record_container()->emplace_back(rec_ptr);
+                    ti->get_gc_record_container().emplace_back(rec_ptr);
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                 } else {
                     snapshot_manager::remove_rec_cont_mutex.lock();

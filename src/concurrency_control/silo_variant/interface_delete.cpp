@@ -30,11 +30,7 @@ namespace shirakami::cc_silo_variant {
     yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
     for (auto &&itr : scan_res) {
-        Record* rec_ptr = *itr.first;
-        if (rec_ptr->get_snap_ptr() != nullptr) {
-            delete rec_ptr->get_snap_ptr(); // NOLINT
-        }
-        delete rec_ptr;  // NOLINT
+        delete *itr.first;  // NOLINT
     }
 
     yakushima::destroy();

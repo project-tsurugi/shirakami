@@ -34,22 +34,12 @@ Status session_info_table::decide_token(Token &token) {  // NOLINT
 }
 
 void session_info_table::init_kThreadTable() {
+#if defined(PWAL)
     uint64_t ctr(0);
+#endif
     for (auto &&itr : kThreadTable) {
         itr.set_visible(false);
         itr.set_tx_began(false);
-
-        /**
-         * about garbage collection.
-         * note : the length of kGarbageRecords is KVS_NUMBER_OF_LOGICAL_CORES.
-         * So it needs surplus operation.
-         */
-        std::size_t gc_index = ctr % KVS_NUMBER_OF_LOGICAL_CORES;
-        itr.set_gc_container_index(gc_index);
-        itr.set_gc_record_container(
-                &garbage_collection::get_garbage_records_at(gc_index));
-        itr.set_gc_value_container(
-                &garbage_collection::get_garbage_values_at(gc_index));
 
         /**
          * about logging.
@@ -64,8 +54,8 @@ void session_info_table::init_kThreadTable() {
         }
         // itr->log_file_.ftruncate(10^9); // if it want to be high performance in
         // experiments, this line is used.
-#endif
         ++ctr;
+#endif
     }
 }
 

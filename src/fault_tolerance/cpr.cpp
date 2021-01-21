@@ -160,13 +160,13 @@ void checkpointing() {
      */
     Token shira_token{};
     enter(shira_token);
-    tx_begin(shira_token);
+    tx_begin(shira_token); // NOLINT
     auto* ti = static_cast<cc_silo_variant::session_info*>(shira_token);
     for (auto &&itr : garbage) {
         tid_word new_tid = itr->get_tidw();
         new_tid.set_epoch(ti->get_epoch());
         storeRelease(itr->get_tidw().get_obj(), new_tid.get_obj());
-        ti->get_gc_record_container()->emplace_back(itr);
+        ti->get_gc_record_container().emplace_back(itr);
     }
     leave(shira_token);
 

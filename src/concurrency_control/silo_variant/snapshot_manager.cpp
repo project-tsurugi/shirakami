@@ -56,7 +56,6 @@ void snapshot_manager_func() {
         if (!release_rec_cont.empty()) {
             for (auto &&elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
-                    delete elem.second->get_snap_ptr(); // NOLINT
                     delete elem.second; // NOLINT
                 } else {
                     break;

@@ -15,10 +15,10 @@
 
 namespace shirakami::cc_silo_variant {
 
-void session_info::gc_handler::gc_records() const {
-    auto ers_bgn_itr = get_record_container()->begin();
-    auto ers_end_itr = get_record_container()->end();
-    for (auto itr = ers_bgn_itr; itr != get_record_container()->end(); ++itr) {
+void session_info::gc_handler::gc_records() {
+    auto ers_bgn_itr = get_record_container().begin();
+    auto ers_end_itr = get_record_container().end();
+    for (auto itr = ers_bgn_itr; itr != get_record_container().end(); ++itr) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
             ers_end_itr = itr;
             delete *itr;  // NOLINT
@@ -26,16 +26,16 @@ void session_info::gc_handler::gc_records() const {
             break;
         }
     }
-    if (ers_end_itr != get_record_container()->end()) {
+    if (ers_end_itr != get_record_container().end()) {
         // vector erase func [begin, end)
-        get_record_container()->erase(ers_bgn_itr, ers_end_itr + 1);
+        get_record_container().erase(ers_bgn_itr, ers_end_itr + 1);
     }
 }
 
-void session_info::gc_handler::gc_values() const {
-    auto ers_bgn_itr = get_value_container()->begin();
-    auto ers_end_itr = get_value_container()->end();
-    for (auto itr = ers_bgn_itr; itr != get_value_container()->end(); ++itr) {
+void session_info::gc_handler::gc_values() {
+    auto ers_bgn_itr = get_value_container().begin();
+    auto ers_end_itr = get_value_container().end();
+    for (auto itr = ers_bgn_itr; itr != get_value_container().end(); ++itr) {
         if (itr->second < epoch::get_reclamation_epoch()) {
             ers_end_itr = itr;
             delete itr->first;  // NOLINT
@@ -43,14 +43,19 @@ void session_info::gc_handler::gc_values() const {
             break;
         }
     }
-    if (ers_end_itr != get_value_container()->end()) {
+    if (ers_end_itr != get_value_container().end()) {
         // vector erase func [begin, end)
-        get_value_container()->erase(ers_bgn_itr, ers_end_itr + 1);
+        get_value_container().erase(ers_bgn_itr, ers_end_itr + 1);
     }
+}
+
+void session_info::gc_handler::gc_snap() {
+// todo
 }
 
 void session_info::clean_up_ops_set() {
     read_set.clear();
+    read_only_tuples_.clear();
     write_set.clear();
     node_set.clear();
 }
@@ -122,8 +127,8 @@ Status session_info::check_delete_after_write(std::string_view key) {  // NOLINT
     return Status::OK;
 }
 
-void session_info::gc_records_and_values() {
-    this->gc_handle_.gc_records_and_values();
+void session_info::gc() {
+    this->gc_handle_.gc();
 }
 
 void session_info::remove_inserted_records_of_write_set_from_masstree() {
@@ -141,7 +146,7 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
                  * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
                  */
                 yakushima::remove(get_yakushima_token(), key_view);
-                this->gc_handle_.get_record_container()->emplace_back(itr.get_rec_ptr());
+                this->get_gc_record_container().emplace_back(itr.get_rec_ptr());
                 record->set_failed_insert(false);
             } else {
                 /**
@@ -154,7 +159,7 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
             }
 #else
             yakushima::remove(get_yakushima_token(), key_view);
-            this->gc_handle_.get_record_container()->emplace_back(itr.get_rec_ptr());
+            this->gc_handle_.get_record_container().emplace_back(itr.get_rec_ptr());
 #endif
 #endif
 

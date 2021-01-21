@@ -55,43 +55,37 @@ class session_info {
 public:
     class gc_handler {
     public:
-        void gc_records() const;
+        void gc_records();
 
-        void gc_values() const;
+        void gc_snap();
 
-        void gc_records_and_values() const {
+        void gc_values();
+
+        void gc() {
             gc_records();
             gc_values();
+            gc_snap();
         }
 
-        std::size_t get_container_index() const {  // NOLINT
-            return container_index_;
-        }
-
-        std::vector<Record*>* get_record_container() const {  // NOLINT
+        std::vector<Record*> &get_record_container() {  // NOLINT
             return record_container_;
         }
 
-        [[nodiscard]] std::vector<std::pair<std::string*, epoch::epoch_t>>*
-        get_value_container() const {  // NOLINT
+        std::vector<std::pair<std::string*, epoch::epoch_t>> &get_value_container() {  // NOLINT
             return value_container_;
         }
 
-        void set_container_index(std::size_t index) { container_index_ = index; }
-
-        void set_record_container(std::vector<Record*>* cont) {
-            record_container_ = cont;
-        }
-
-        void set_value_container(
-                std::vector<std::pair<std::string*, epoch::epoch_t>>* cont) {
-            value_container_ = cont;
+        std::vector<std::pair<epoch::epoch_t, Record*>> &get_snap_cont_() { // NOLINT
+            return snap_cont_;
         }
 
     private:
-        std::size_t container_index_{};  // common to record and value;
-        std::vector<Record*>* record_container_{};
-        std::vector<std::pair<std::string*, epoch::epoch_t>>* value_container_{};
+        std::vector<Record*> record_container_{};
+        std::vector<std::pair<std::string*, epoch::epoch_t>> value_container_{};
+        /**
+         * @brief container for snapshot.
+         */
+        std::vector<std::pair<epoch::epoch_t, Record*>> snap_cont_{};
     };
 
     class scan_handler {
@@ -191,23 +185,22 @@ public:
      */
     Status check_delete_after_write(std::string_view key);  // NOLINT
 
-    void gc_records_and_values();
+    void gc();
 
     [[nodiscard]] epoch::epoch_t get_epoch() const {  // NOLINT
         return epoch_.load(std::memory_order_acquire);
     }
 
-    [[maybe_unused]] std::size_t get_gc_container_index() {  // NOLINT
-        return gc_handle_.get_container_index();
-    }
-
-    std::vector<Record*>* get_gc_record_container() {  // NOLINT
+    std::vector<Record*> &get_gc_record_container() {  // NOLINT
         return gc_handle_.get_record_container();
     }
 
-    std::vector<std::pair<std::string*, epoch::epoch_t>>*
-    get_gc_value_container() {  // NOLINT
+    std::vector<std::pair<std::string*, epoch::epoch_t>> &get_gc_value_container() {  // NOLINT
         return gc_handle_.get_value_container();
+    }
+
+    std::vector<std::pair<epoch::epoch_t, Record*>> &get_gc_snap_cont() { // NOLINT
+        return gc_handle_.get_snap_cont_();
     }
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
@@ -224,7 +217,7 @@ public:
         return read_set;
     }
 
-    bool get_read_only () {
+    bool get_read_only() const { // NOLINT
         return read_only_;
     }
 
@@ -246,6 +239,10 @@ public:
 
     std::vector<write_set_obj> &get_write_set() {  // NOLINT
         return write_set;
+    }
+
+    std::vector<Tuple> &get_read_only_tuples() { // NOLINT
+        return read_only_tuples_;
     }
 
     /**
@@ -301,19 +298,6 @@ public:
      */
     void set_epoch(epoch::epoch_t epoch) {
         epoch_.store(epoch, std::memory_order_release);
-    }
-
-    void set_gc_container_index(std::size_t new_index) {
-        gc_handle_.set_container_index(new_index);
-    }
-
-    void set_gc_record_container(std::vector<Record*>* cont) {  // NOLINT
-        gc_handle_.set_record_container(cont);
-    }
-
-    void set_gc_value_container(  // NOLINT
-            std::vector<std::pair<std::string*, epoch::epoch_t>>* cont) {
-        gc_handle_.set_value_container(cont);
     }
 
     void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
@@ -413,6 +397,7 @@ private:
      * @brief If this is true, begun transaction by this session can only do (transaction read operations).
      */
     bool read_only_{false};
+    std::vector<Tuple> read_only_tuples_{};
     /**
      * about garbage collection
      */
