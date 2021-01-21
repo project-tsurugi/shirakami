@@ -50,7 +50,24 @@ void session_info::gc_handler::gc_values() {
 }
 
 void session_info::gc_handler::gc_snap() {
-// todo
+    auto ers_bgn_itr = get_snap_cont_().begin();
+    auto ers_end_itr = get_snap_cont_().end();
+
+    epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
+    epoch::epoch_t maybe_smallest_e = ce - 1;
+    for (auto itr = ers_bgn_itr; itr != get_snap_cont_().end(); ++itr) {
+        if (epoch::get_snap_epoch(itr->first + epoch::snapshot_epoch_times) <=
+            epoch::get_snap_epoch(maybe_smallest_e)) {
+            ers_end_itr = itr;
+            delete itr->second; // NOLINT
+        } else {
+            break;
+        }
+    }
+    if (ers_end_itr != get_snap_cont_().end()) {
+        // vector erase func [begin, end)
+        get_snap_cont_().erase(ers_bgn_itr, ers_end_itr + 1);
+    }
 }
 
 void session_info::clean_up_ops_set() {
