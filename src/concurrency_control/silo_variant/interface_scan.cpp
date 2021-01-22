@@ -6,6 +6,7 @@
 #include <map>
 
 #include "concurrency_control/silo_variant/include/interface_helper.h"
+#include "concurrency_control/silo_variant/include/snapshot_interface.h"
 
 #ifdef INDEX_KOHLER_MASSTREE
 
@@ -45,7 +46,7 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
                  const scan_endpoint r_end, ScanHandle &handle) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token);
+    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
 
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> scan_buf;
@@ -205,7 +206,12 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
 Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l_end,  // NOLINT
                 const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*> &result) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token);
+    if (!ti->get_txbegan()) {
+        tx_begin(token); // NOLINT
+    } else if (ti->get_read_only()) {
+        return snapshot_interface::scan_key(token, l_key, l_end, r_key, r_end, result);
+    }
+
     // as a precaution
     result.clear();
     auto rset_init_size = ti->get_read_set().size();
@@ -218,17 +224,12 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
     yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec);
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> scan_res;
-    scan_res.reserve(scan_buf.size());
-    for (std::size_t i = 0; i < scan_buf.size(); ++i) {
-        scan_res.emplace_back(*scan_buf.at(i).first, nvec.at(i).first, nvec.at(i).second);
-    }
 #endif
 
-    for (auto &&itr : scan_res) {
+    for (auto itr = scan_buf.begin(); itr != scan_buf.end(); ++itr) {
 #ifdef INDEX_YAKUSHIMA
         write_set_obj* inws =
-                ti->search_write_set(std::get<0>(itr)->get_tuple().get_key());
+                ti->search_write_set((*itr->first)->get_tuple().get_key());
 #elif defined(INDEX_KOHLER_MASSTREE)
         write_set_obj* inws = ti->search_write_set(itr->get_tuple().get_key());
 #endif
@@ -253,14 +254,15 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
         // update is own.
 
 #ifdef INDEX_YAKUSHIMA
-        ti->get_read_set().emplace_back(const_cast<Record*>(std::get<0>(itr)));
+        ti->get_read_set().emplace_back(const_cast<Record*>((*itr->first)));
         if (ti->get_node_set().empty() ||
-            std::get<1>(ti->get_node_set().back()) != std::get<2>(itr)) {
-            ti->get_node_set().emplace_back(std::get<1>(itr), std::get<2>(itr));
+            std::get<1>(ti->get_node_set().back()) != nvec.at(itr - scan_buf.begin()).second) {
+            ti->get_node_set().emplace_back(nvec.at(itr - scan_buf.begin()).first,
+                                            nvec.at(itr - scan_buf.begin()).second);
         }
 
         Status rr = read_record(ti->get_read_set().back().get_rec_read(),
-                                const_cast<Record*>(std::get<0>(itr)));
+                                const_cast<Record*>((*itr->first)));
 #elif defined(INDEX_KOHLER_MASSTREE)
         ti->get_read_set().emplace_back(const_cast<Record*>(itr), true);
         Status rr = read_record(ti->get_read_set().back().get_rec_read(),

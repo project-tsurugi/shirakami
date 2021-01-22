@@ -7,6 +7,8 @@
 #include "concurrency_control/silo_variant/include/snapshot_interface.h"
 #include "concurrency_control/silo_variant/include/session_info.h"
 
+#include "index/yakushima/include/scheme.h"
+
 using namespace shirakami;
 using namespace cc_silo_variant;
 
@@ -64,6 +66,21 @@ Status lookup_snapshot(Token token, std::string_view key, Tuple** const ret_tupl
         }
     }
     return Status::WARN_NOT_FOUND; // snap_ptr == nullptr
+}
+
+Status
+scan_key([[maybe_unused]]Token token, [[maybe_unused]] const std::string_view l_key,
+         [[maybe_unused]] const scan_endpoint l_end, [[maybe_unused]] const std::string_view r_key,
+         [[maybe_unused]]const scan_endpoint r_end, [[maybe_unused]] std::vector<const Tuple*> &result) {
+#if 0
+    // todo : impl now
+    // as a precaution
+    result.clear();
+
+    std::vector<std::pair<Record**, std::size_t>> scan_buf;
+    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf); // NOLINT
+#endif
+    return Status::OK;
 }
 
 }
