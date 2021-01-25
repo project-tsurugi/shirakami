@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {  // NOLINT
 
     init();  // NOLINT
     SPDLOG_DEBUG("Fin init");
-    build_db(FLAGS_record, FLAGS_thread, FLAGS_val_length);
+    build_db(FLAGS_record, FLAGS_val_length);
     SPDLOG_DEBUG("Fin build_db");
     invoke_leader();
     SPDLOG_DEBUG("Fin invoke_leader");

@@ -19,7 +19,6 @@
 #include "./include/shirakami_string.h"
 
 // shirakami-impl interface library
-#include "concurrency_control/silo_variant/include/interface_helper.h"
 #include "clock.h"
 #include "logger.h"
 #include "random.h"
@@ -33,13 +32,12 @@ namespace shirakami {
 using namespace cc_silo_variant;
 #endif
 
-size_t decideParallelBuildNumber(const std::size_t record,  // NOLINT
-                                 const std::size_t thread) {
+size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     // if table size is very small, it builds by single thread.
     if (record < 1000) return 1;  // NOLINT
 
     // else
-    for (size_t i = thread; i > 0; --i) {
+    for (size_t i = std::thread::hardware_concurrency(); i > 0; --i) {
         if (record % i == 0) {
             return i;
         }
@@ -59,7 +57,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     enter(token);
 
 #ifdef CC_SILO_VARIANT
-    cc_silo_variant::tx_begin(token);
+    cc_silo_variant::tx_begin(token); // NOLINT
 #endif
 
     for (uint64_t i = start; i <= end; ++i) {
@@ -78,12 +76,11 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     leave(token);
 }
 
-void build_db(const std::size_t record, const std::size_t thread,
-              const std::size_t value_length) {
+void build_db(const std::size_t record, const std::size_t value_length) {
     SPDLOG_DEBUG("ycsb::build_mtdb");
     std::vector<std::thread> thv;
 
-    size_t max_thread{decideParallelBuildNumber(record, thread)};
+    size_t max_thread{decideParallelBuildNumber(record)};
     SPDLOG_DEBUG("start parallel_build_db with {0} threads.", max_thread);
     for (size_t i = 0; i < max_thread; ++i) {
         thv.emplace_back(parallel_build_db, i * (record / max_thread),  // NOLINT
