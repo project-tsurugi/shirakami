@@ -49,7 +49,7 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::open_scan(token, l_key, l_end, r_key, r_end, handle);
+        return snapshot_interface::open_scan(ti, l_key, l_end, r_key, r_end, handle);
     }
 
 #ifdef INDEX_KOHLER_MASSTREE
@@ -213,7 +213,7 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::scan_key(token, l_key, l_end, r_key, r_end, result);
+        return snapshot_interface::scan_key(ti, l_key, l_end, r_key, r_end, result);
     }
 
     // as a precaution

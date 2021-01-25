@@ -14,9 +14,8 @@ using namespace cc_silo_variant;
 namespace shirakami::cc_silo_variant::snapshot_interface {
 
 extern Status
-open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
           scan_endpoint r_end, ScanHandle &handle) {
-    auto* ti = static_cast<session_info*>(token);
 
     std::vector<std::pair<Record**, std::size_t>> scan_res;
     yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res); // NOLINT
@@ -60,9 +59,7 @@ open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_
     return Status::WARN_NOT_FOUND;
 }
 
-Status lookup_snapshot(Token token, std::string_view key, Tuple** const ret_tuple) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
-
+Status lookup_snapshot(session_info* ti, std::string_view key, Tuple** const ret_tuple) { // NOLINT
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(key))};
     if (rec_d_ptr == nullptr) {
         // There is no record which has the key.
@@ -73,9 +70,7 @@ Status lookup_snapshot(Token token, std::string_view key, Tuple** const ret_tupl
     return read_record(ti, *rec_d_ptr, ret_tuple);
 }
 
-extern Status read_from_scan(Token token, const ScanHandle handle, Tuple** const tuple) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
-
+extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** const tuple) { // NOLINT
     /**
      * Check whether the handle is valid.
      */
@@ -158,9 +153,9 @@ extern Status read_record(session_info* const ti, Record* const rec_ptr, Tuple**
 }
 
 Status
-scan_key(Token token, const std::string_view l_key, const scan_endpoint l_end, const std::string_view r_key, // NOLINT
+scan_key(session_info* ti, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
+         const std::string_view r_key,
          const scan_endpoint r_end, std::vector<const Tuple*> &result) {
-    auto* ti = static_cast<session_info*>(token);
     // as a precaution
     result.clear();
 

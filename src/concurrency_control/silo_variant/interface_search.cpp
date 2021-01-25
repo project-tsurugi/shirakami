@@ -19,7 +19,7 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
     if (!ti->get_txbegan()) {
         cc_silo_variant::tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::lookup_snapshot(token, key, tuple);
+        return snapshot_interface::lookup_snapshot(ti, key, tuple);
     }
 
 #ifdef INDEX_KOHLER_MASSTREE

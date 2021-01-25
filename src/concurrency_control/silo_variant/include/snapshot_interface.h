@@ -16,16 +16,16 @@ namespace shirakami::cc_silo_variant::snapshot_interface {
  * @param ret_tuple
  * @return
  */
-extern Status lookup_snapshot(Token token, std::string_view key, Tuple** ret_tuple); // NOLINT
+extern Status lookup_snapshot(session_info* ti, std::string_view key, Tuple** ret_tuple); // NOLINT
 
-extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+extern Status open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                         scan_endpoint r_end, ScanHandle &handle);
 
-extern Status read_from_scan(Token token, ScanHandle handle, Tuple** tuple); // NOLINT
+extern Status read_from_scan(session_info* ti, ScanHandle handle, Tuple** tuple); // NOLINT
 
 extern Status read_record(session_info* ti, Record* rec_ptr, Tuple** tuple); // NOLINT
 
-extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+extern Status scan_key(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                        scan_endpoint r_end, std::vector<const Tuple*> &result);
 
 } // namespace shirakami::cc_silo_variant::snapshot_interface
