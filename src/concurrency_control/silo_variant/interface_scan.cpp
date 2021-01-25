@@ -46,7 +46,11 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
                  const scan_endpoint r_end, ScanHandle &handle) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (!ti->get_txbegan()) {
+        tx_begin(token); // NOLINT
+    } else if (ti->get_read_only()) {
+        return snapshot_interface::open_scan(token, l_key, l_end, r_key, r_end, handle);
+    }
 
 #ifdef INDEX_KOHLER_MASSTREE
     std::vector<const Record*> scan_buf;
@@ -117,23 +121,23 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> &scan_buf = ti->get_scan_cache()[handle];
     std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
     if (scan_buf.size() == scan_index) {
-        const Tuple* tupleptr(&std::get<0>(scan_buf.back())->get_tuple());
+        const Tuple* tuple_ptr(&std::get<0>(scan_buf.back())->get_tuple());
 #elif defined(INDEX_KOHLER_MASSTREE)
         std::vector<const Record*> &scan_buf = ti->get_scan_cache()[handle];
         std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
         if (scan_buf.size() == scan_index) {
-            const Tuple* tupleptr(&(scan_buf.back())->get_tuple());
+            const Tuple* tuple_ptr(&(scan_buf.back())->get_tuple());
 #endif
 
 #if defined(INDEX_KOHLER_MASSTREE)
         std::vector<const Record*> new_scan_buf;
         masstree_wrapper<Record>::thread_init(sched_getcpu());
-        kohler_masstree::get_mtdb().scan(tupleptr->get_key(), scan_endpoint::EXCLUSIVE, ti->get_r_key()[handle],
+        kohler_masstree::get_mtdb().scan(tuple_ptr->get_key(), scan_endpoint::EXCLUSIVE, ti->get_r_key()[handle],
                                          ti->get_r_end()[handle], &new_scan_buf, true);
 #elif defined(INDEX_YAKUSHIMA)
         std::vector<std::pair<Record**, std::size_t>> scan_res;
         std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
-        yakushima::scan(tupleptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE), ti->get_r_key()[handle],
+        yakushima::scan(tuple_ptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE), ti->get_r_key()[handle],
                         parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
         std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
         new_scan_buf.reserve(scan_res.size());
