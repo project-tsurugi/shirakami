@@ -11,7 +11,7 @@ namespace shirakami::cc_silo_variant::snapshot_interface {
 
 /**
  * @pre This func is called by search_key.
- * @param token
+ * @param ti
  * @param key
  * @param ret_tuple
  * @return
