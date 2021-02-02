@@ -26,7 +26,7 @@ namespace shirakami::cc_silo_variant {
 Status insert(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token);
+    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::INSERT || inws->get_op() == OP_TYPE::UPDATE) {
@@ -52,9 +52,19 @@ Status insert(Token token, const std::string_view key,  // NOLINT
         kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
     if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
+    yakushima::node_version64* nvp{};
     yakushima::status insert_result{
-            yakushima::put<Record*>(key, &rec_ptr)};  // NOLINT
+            yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+                                    static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)}; // NOLINT
     if (insert_result == yakushima::status::OK) {
+        Status check_node_set_res{ti->update_node_set(nvp)};
+        if (check_node_set_res == Status::ERR_PHANTOM) {
+            /**
+             * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
+             * by another transaction.
+             */
+            return Status::ERR_PHANTOM;
+        }
 #endif
         ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
         return Status::OK;
@@ -66,7 +76,7 @@ Status insert(Token token, const std::string_view key,  // NOLINT
 Status update(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token);
+    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
 
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
@@ -105,7 +115,7 @@ Status update(Token token, const std::string_view key,  // NOLINT
 Status upsert(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) tx_begin(token);
+    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     write_set_obj* in_ws{ti->search_write_set(key)};
     if (in_ws != nullptr) {
         if (in_ws->get_op() == OP_TYPE::INSERT || in_ws->get_op() == OP_TYPE::UPDATE) {
@@ -138,9 +148,19 @@ RETRY_FIND_RECORD:
             kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
         if (insert_result == Status::OK) {
 #elif INDEX_YAKUSHIMA
+        yakushima::node_version64* nvp{};
         yakushima::status insert_result{
-                yakushima::put<Record*>(key, &rec_ptr)};  // NOLINT
+                yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+                                        static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)}; // NOLINT
         if (insert_result == yakushima::status::OK) {
+            Status check_node_set_res{ti->update_node_set(nvp)};
+            if (check_node_set_res == Status::ERR_PHANTOM) {
+                /**
+                 * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
+                 * by another transaction.
+                 */
+                return Status::ERR_PHANTOM;
+            }
 #endif
             ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
             return Status::OK;

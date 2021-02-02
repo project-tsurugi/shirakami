@@ -358,6 +358,15 @@ public:
         yakushima_token_ = new_token;
     }
 
+    /**
+     * @pre This function is called by insert functions.
+     * @brief It is a function for preventing from phantom problems which is occurred by itself.
+     * @param nvp
+     * @return Status::OK success.
+     * @return Status::ERR_PHANTOM It fails because its insert operation occur a phantom problem by itself.
+     */
+    Status update_node_set(yakushima::node_version64* nvp);
+
 #endif
 
 #ifdef INDEX_KOHLER_MASSTREE

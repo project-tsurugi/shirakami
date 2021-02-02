@@ -252,6 +252,20 @@ void session_info::unlock_write_set(  // NOLINT
     }
 }
 
+Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
+    for (auto &&elem : node_set) {
+        if (std::get<1>(elem) == nvp) {
+            yakushima::node_version64_body nvb = nvp->get_stable_version();
+            if (std::get<0>(elem).get_vinsert_delete() + 1 != nvb.get_vinsert_delete()) {
+                return Status::ERR_PHANTOM;
+            }
+            std::get<0>(elem) = nvb; // update
+            return Status::OK;
+        }
+    }
+    return Status::OK;
+}
+
 #ifdef PWAL
 
 void session_info::pwal(uint64_t commit_id, commit_property cp) {

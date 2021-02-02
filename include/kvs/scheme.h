@@ -21,7 +21,7 @@
 namespace shirakami {
 
 /**
- * @brief commit property
+
  * @details This is used for args of commit command.
  */
 enum class commit_property : char {
@@ -38,9 +38,9 @@ enum class commit_property : char {
 
 class commit_param {
 public:
-    commit_property get_cp() { return cp_; }
+    commit_property get_cp() { return cp_; } // NOLINT
 
-    std::uint64_t get_ctid() { return ctid_; }
+    [[maybe_unused]] [[nodiscard]] std::uint64_t get_ctid() const { return ctid_; } // NOLINT
 
     void set_cp(commit_property cp) { cp_ = cp; }
 
@@ -161,6 +161,11 @@ enum class Status : std::int32_t {
     OK,
     /**
      * @brief error
+     * @details It is the error due to phantom problems.
+     */
+    ERR_PHANTOM,
+    /**
+     * @brief error
      * @details
      * (init) The args as a log directory path is invalid.
      */
@@ -223,6 +228,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_WRITE_TO_LOCAL_WRITE"sv;  // NOLINT
         case Status::OK:
             return "OK"sv;  // NOLINT
+        case Status::ERR_PHANTOM:
+            return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_INVALID_ARGS:
             return "ERR_INVALID_ARGS"sv;  // NOLINT
         case Status::ERR_NOT_FOUND:
@@ -237,8 +244,7 @@ inline constexpr std::string_view to_string_view(  // NOLINT
     std::abort();
 }
 
-inline std::ostream &operator<<(std::ostream &out,
-                                const Status value) {  // NOLINT
+inline std::ostream &operator<<(std::ostream &out, const Status value) {  // NOLINT
     return out << to_string_view(value);
 }
 
@@ -280,8 +286,7 @@ inline constexpr std::string_view to_string_view(  // NOLINT
     std::abort();
 }
 
-inline std::ostream &operator<<(std::ostream &out,
-                                const OP_TYPE op) {  // NOLINT
+inline std::ostream &operator<<(std::ostream &out, const OP_TYPE op) {  // NOLINT
     return out << to_string_view(op);
 }
 
