@@ -365,7 +365,7 @@ public:
      * @return Status::OK success.
      * @return Status::ERR_PHANTOM It fails because its insert operation occur a phantom problem by itself.
      */
-    Status update_node_set(yakushima::node_version64* nvp);
+    Status update_node_set(yakushima::node_version64* nvp); // NOLINT
 
 #endif
 
