@@ -63,12 +63,17 @@ void snapshot_manager_func() {
         }
 
         if (!release_rec_cont.empty()) {
+            std::size_t erase_num{0};
             for (auto &&elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
+                    ++erase_num;
                     delete elem.second; // NOLINT
                 } else {
                     break;
                 }
+            }
+            if (erase_num != 0) {
+                release_rec_cont.erase(release_rec_cont.begin(), release_rec_cont.begin() + erase_num);
             }
         }
     }
