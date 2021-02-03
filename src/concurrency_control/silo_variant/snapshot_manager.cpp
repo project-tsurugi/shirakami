@@ -18,8 +18,6 @@
 namespace shirakami::cc_silo_variant::snapshot_manager {
 
 void snapshot_manager_func() {
-    yakushima::Token yaku_token{};
-    bool yaku_entered{false};
 
     while (likely(!snapshot_manager_thread_end.load(std::memory_order_acquire))) {
         sleepMs(1);
@@ -27,6 +25,14 @@ void snapshot_manager_func() {
         epoch::epoch_t maybe_smallest_ew = epoch::kGlobalEpoch.load(std::memory_order_acquire);
         if (maybe_smallest_ew != 0) --maybe_smallest_ew;
         if (!remove_rec_cont.empty()) {
+            yakushima::Token yaku_token{};
+            bool yaku_entered{false};
+            std::size_t erase_num{0};
+
+            /**
+             * TODO : enhancement.
+             * This parts (remove_rec_cont_mutex) can be r-w lock, but now mutex lock.
+             */
             remove_rec_cont_mutex.lock();
             for (auto &&elem : remove_rec_cont) {
                 if (elem->get_snap_ptr() == nullptr) {
@@ -40,17 +46,20 @@ void snapshot_manager_func() {
                         yaku_entered = true;
                     }
                     yakushima::remove(yaku_token, elem->get_tuple().get_key());
+                    ++erase_num;
                     release_rec_cont.emplace_back(std::make_pair(maybe_smallest_ew, elem));
                 } else {
                     break;
                 }
             }
+            if (erase_num != 0) {
+                remove_rec_cont.erase(remove_rec_cont.begin(), remove_rec_cont.begin() + erase_num);
+            }
             remove_rec_cont_mutex.unlock();
-        }
 
-        if (yaku_entered) {
-            yakushima::leave(yaku_token);
-            yaku_entered = false;
+            if (yaku_entered) {
+                yakushima::leave(yaku_token);
+            }
         }
 
         if (!release_rec_cont.empty()) {
