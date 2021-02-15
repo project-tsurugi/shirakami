@@ -7,10 +7,6 @@
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif
-
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
@@ -153,10 +149,6 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
         if (itr.get_op() == OP_TYPE::INSERT) {
             Record* record = itr.get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
-#ifdef INDEX_KOHLER_MASSTREE
-            kohler_masstree::get_mtdb().remove_value(key_view.data(),
-                                                     key_view.size());
-#elif INDEX_YAKUSHIMA
 #if defined(CPR)
             if (get_phase() == cpr::phase::REST) {
                 /**
@@ -177,7 +169,6 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
 #else
             yakushima::remove(get_yakushima_token(), key_view);
             this->gc_handle_.get_record_container().emplace_back(itr.get_rec_ptr());
-#endif
 #endif
 
             /**

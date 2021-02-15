@@ -13,9 +13,7 @@ namespace shirakami::cc_silo_variant {
 
 Status abort(Token token) {  // NOLINT
     auto* ti = static_cast<cc_silo_variant::session_info*>(token);
-#if defined(INDEX_KOHLER_MASSTREE) || defined(INDEX_YAKUSHIMA)
     ti->remove_inserted_records_of_write_set_from_masstree();
-#endif
     ti->clean_up_ops_set();
     ti->clean_up_scan_caches();
     ti->set_tx_began(false);
@@ -88,7 +86,6 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     }
 
     // node verify for protect phantom
-#ifdef INDEX_YAKUSHIMA
     for (auto &&itr : ti->get_node_set()) {
         if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
             ti->unlock_write_set();
@@ -96,7 +93,6 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
             return Status::ERR_VALIDATION;
         }
     }
-#endif
 
     // Phase 4: Write & Unlock
     cc_silo_variant::write_phase(ti, max_rset, max_wset,

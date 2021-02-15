@@ -58,11 +58,6 @@ void checkpoint_thread() {
 }
 
 void checkpointing() {
-#ifdef INDEX_KOHLER_MASSTREE
-    /**
-     * todo : impl for kohler masstree
-     */
-#elif INDEX_YAKUSHIMA
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
 
@@ -188,7 +183,6 @@ void checkpointing() {
     } catch (...) {
         SPDLOG_DEBUG("Fail rename : unknown.");
     }
-#endif
 }
 
 void wait_next_checkpoint() {

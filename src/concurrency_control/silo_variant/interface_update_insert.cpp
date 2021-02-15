@@ -30,21 +30,11 @@ Status insert(Token token, const std::string_view key,  // NOLINT
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    if (kohler_masstree::find_record(key.data(), key.size()) != nullptr) {
-#elif INDEX_YAKUSHIMA
     if (std::get<0>(yakushima::get<Record*>(key)) != nullptr) {
-#endif
         return Status::WARN_ALREADY_EXISTS;
     }
 
     Record* rec_ptr = new Record(key, val);  // NOLINT
-#ifdef INDEX_KOHLER_MASSTREE
-    Status insert_result(
-        kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
-    if (insert_result == Status::OK) {
-#elif INDEX_YAKUSHIMA
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{
             yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
@@ -58,7 +48,6 @@ Status insert(Token token, const std::string_view key,  // NOLINT
              */
             return Status::ERR_PHANTOM;
         }
-#endif
         ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
         return Status::OK;
     }
@@ -77,21 +66,12 @@ Status update(Token token, const std::string_view key,  // NOLINT
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    Record* rec_ptr{
-        kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
-    if (rec_ptr == nullptr) {
-      return Status::WARN_NOT_FOUND;
-    }
-#elif INDEX_YAKUSHIMA
     Record** rec_double_ptr{
             std::get<0>(yakushima::get<Record*>(key))};
     if (rec_double_ptr == nullptr) {
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_double_ptr};
-#endif
     tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
     if (check_tid.get_absent()) {
         // The second condition checks
@@ -120,11 +100,6 @@ Status upsert(Token token, const std::string_view key,  // NOLINT
     }
 
 RETRY_FIND_RECORD:
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    Record* rec_ptr =
-        kohler_masstree::kohler_masstree::find_record(key.data(), key.size());
-#elif INDEX_YAKUSHIMA
     Record** rec_double_ptr{
             std::get<0>(yakushima::get<Record*>(key))};
     Record* rec_ptr{};
@@ -133,14 +108,8 @@ RETRY_FIND_RECORD:
     } else {
         rec_ptr = (*std::get<0>(yakushima::get<Record*>(key)));
     }
-#endif
     if (rec_ptr == nullptr) {
         rec_ptr = new Record(key, val);  // NOLINT
-#ifdef INDEX_KOHLER_MASSTREE
-        Status insert_result(
-            kohler_masstree::insert_record(key.data(), key.size(), rec_ptr));
-        if (insert_result == Status::OK) {
-#elif INDEX_YAKUSHIMA
         yakushima::node_version64* nvp{};
         yakushima::status insert_result{
                 yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
@@ -154,7 +123,6 @@ RETRY_FIND_RECORD:
                  */
                 return Status::ERR_PHANTOM;
             }
-#endif
             ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
             return Status::OK;
         }

@@ -9,11 +9,7 @@
 
 #include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
-#ifdef INDEX_YAKUSHIMA
-
 #include "yakushima/include/kvs.h"
-
-#endif
 
 namespace shirakami::cc_silo_variant::snapshot_manager {
 
