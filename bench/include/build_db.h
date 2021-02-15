@@ -16,11 +16,7 @@
 
 #pragma once
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/scheme.h"
-
-#endif
 
 #include "kvs/scheme.h"
 

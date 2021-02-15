@@ -1,10 +1,6 @@
-#ifdef CC_SILO_VARIANT
-
 #ifdef PWAL
 
 #include "fault_tolerance/include/pwal.h"
-
-#endif
 
 #endif
 

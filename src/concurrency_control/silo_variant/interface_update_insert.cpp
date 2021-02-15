@@ -7,15 +7,8 @@
 
 #include "atomic_wrapper.h"
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
-
-#endif  // CC_SILO_VARIANT
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif                            // INDEX_KOHLER_MASSTREE
 
 #include "kvs/interface.h"
 

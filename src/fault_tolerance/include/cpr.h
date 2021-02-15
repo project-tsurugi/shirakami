@@ -13,11 +13,7 @@
 #include <thread>
 #include <tuple>
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/epoch.h"
-
-#endif
 
 #include "msgpack-c/include/msgpack.hpp"
 

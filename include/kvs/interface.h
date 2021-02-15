@@ -11,9 +11,7 @@
 #define STRING(macro) #macro          // NOLINT
 #define MAC2STR(macro) STRING(macro)  // NOLINT
 
-#ifdef CC_SILO_VARIANT
 namespace shirakami::cc_silo_variant {
-#endif
 
 /**
  * @brief abort and end the transaction.

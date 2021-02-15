@@ -2,15 +2,9 @@
 
 #include "atomic_wrapper.h"
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
-
-#endif  // CC_SILO_VARIANT
-#ifdef INDEX_KOHLER_MASSTREE
-#endif                            // INDEX_KOHLER_MASSTREE
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
 #include "kvs/interface.h"        // NOLINT

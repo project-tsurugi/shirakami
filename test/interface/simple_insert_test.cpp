@@ -6,9 +6,7 @@
 // shirakami-impl interface library
 #include "tuple_local.h"
 
-#ifdef CC_SILO_VARIANT
 using namespace shirakami::cc_silo_variant;
-#endif
 
 namespace shirakami::testing {
 

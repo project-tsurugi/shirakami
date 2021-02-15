@@ -3,10 +3,9 @@ file(GLOB SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/fault_tolerance/log.cpp"
         )
 
-if (BUILD_CC_SILO_VARIANT)
-    file(GLOB CC_SOURCES "concurrency_control/silo_variant/*.cpp")
-    set(SOURCES ${SOURCES} ${CC_SOURCES})
-endif ()
+# about cc
+file(GLOB CC_SOURCES "concurrency_control/silo_variant/*.cpp")
+set(SOURCES ${SOURCES} ${CC_SOURCES})
 
 if (BUILD_PWAL)
     file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")

@@ -7,12 +7,8 @@
 
 #include "atomic_wrapper.h"
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
-
-#endif  // CC_SILO_VARIANT
 
 #include "kvs/interface.h"
 

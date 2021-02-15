@@ -2,10 +2,6 @@
 #include "concurrency_control/silo_variant//include/interface_helper.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif
-
 #include "kvs/interface.h"
 
 #include "concurrency_control/silo_variant/include/snapshot_interface.h"
@@ -22,10 +18,6 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
         return snapshot_interface::lookup_snapshot(ti, key, tuple);
     }
 
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-#endif
-
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -35,21 +27,12 @@ Status search_key(Token token, const std::string_view key,  // NOLINT
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-#ifdef INDEX_KOHLER_MASSTREE
-    Record* rec_ptr{
-        kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
-    if (rec_ptr == nullptr) {
-      *tuple = nullptr;
-      return Status::WARN_NOT_FOUND;
-    }
-#elif defined(INDEX_YAKUSHIMA)
     Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(key))};
     if (rec_double_ptr == nullptr) {
         *tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_double_ptr};
-#endif
 
     read_set_obj rs_ob(rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);

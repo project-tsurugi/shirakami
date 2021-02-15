@@ -15,11 +15,7 @@
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
-#ifdef CC_SILO_VARIANT
-
 #include "concurrency_control/silo_variant/include/tid.h"
-
-#endif
 
 namespace shirakami::pwal {
 

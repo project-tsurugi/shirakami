@@ -6,19 +6,13 @@
 
 #include "log.h"
 
-#if defined(CC_SILO_VARIANT)
-
+// about cc
 #include "concurrency_control/silo_variant/include/record.h"
 
 using namespace shirakami::cc_silo_variant;
 
-#endif
-
-#if defined(INDEX_YAKUSHIMA)
-
+// about index
 #include "yakushima/include/kvs.h"
-
-#endif
 
 #if defined(CPR)
 
