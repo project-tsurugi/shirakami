@@ -29,11 +29,7 @@
 #include "scheme.h"
 #include "tid.h"
 
-#ifdef INDEX_YAKUSHIMA
-
 #include "yakushima/include/kvs.h"
-
-#endif
 
 #ifdef PWAL
 

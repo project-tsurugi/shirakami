@@ -8,11 +8,6 @@ if (BUILD_CC_SILO_VARIANT)
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 endif ()
 
-if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_SOURCES "index/masstree_beta/*.cpp")
-    set(SOURCES ${SOURCES} ${INDEX_SOURCES} index/yakushima/include/scheme.h)
-endif ()
-
 if (BUILD_PWAL)
     file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
     set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
@@ -38,20 +33,11 @@ target_include_directories(shirakami
 
 find_package(Threads REQUIRED)
 
-if (BUILD_INDEX_KOHLER_MASSTREE)
-    target_link_libraries(shirakami
-            PUBLIC api
-            PRIVATE Threads::Threads
-            Boost::filesystem
-            ${PROJECT_SOURCE_DIR}/third_party/masstree-beta/libjson.a
-            )
-elseif (BUILD_INDEX_YAKUSHIMA)
-    target_link_libraries(shirakami
-            PUBLIC api
-            PRIVATE Threads::Threads
-            Boost::filesystem
-            )
-endif ()
+target_link_libraries(shirakami
+        PUBLIC api
+        PRIVATE Threads::Threads
+        Boost::filesystem
+        )
 
 set_target_properties(shirakami
         PROPERTIES

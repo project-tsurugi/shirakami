@@ -10,10 +10,6 @@
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 #include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif
-
 #if defined(PWAL) || defined(CPR)
 #include "log.h"
 #endif
@@ -24,11 +20,9 @@ namespace shirakami::cc_silo_variant {
 
 Status enter(Token &token) {  // NOLINT
     Status ret_status = session_info_table::decide_token(token);
-#ifdef INDEX_YAKUSHIMA
     yakushima::Token kvs_token{};
     yakushima::enter(kvs_token);
     static_cast<session_info*>(token)->set_kvs_token(kvs_token);
-#endif
     return ret_status;
 }
 
@@ -49,9 +43,7 @@ void fin() {
     snapshot_manager::join_snapshot_manager_thread();
     session_info_table::fin_kThreadTable();
 
-#ifdef INDEX_YAKUSHIMA
     yakushima::fin();
-#endif
 
 }
 
@@ -115,9 +107,7 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
 
-#ifdef INDEX_YAKUSHIMA
     yakushima::init();
-#endif
 
 #ifdef CPR
     cpr::invoke_checkpoint_thread();
@@ -131,10 +121,7 @@ Status leave(Token const token) {  // NOLINT
         if (&itr == static_cast<session_info*>(token)) {
             if (itr.get_visible()) {
                 itr.gc();
-#ifdef INDEX_YAKUSHIMA
-                yakushima::leave(
-                        static_cast<session_info*>(token)->get_yakushima_token());
-#endif
+                yakushima::leave(static_cast<session_info*>(token)->get_yakushima_token());
                 itr.set_tx_began(false);
                 itr.set_visible(false);
                 return Status::OK;
@@ -197,10 +184,6 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
 
 void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_word &max_w_set,
                  [[maybe_unused]]commit_property cp) {
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-#endif  // INDEX_KOHLER_MASSTREE
-
     /*
      * It calculates the smallest number that is
      * (a) larger than the TID of any record read or written by the transaction,
@@ -315,10 +298,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 /**
                  * about removing index
                  */
-#ifdef INDEX_KOHLER_MASSTREE
-                kohler_masstree::get_mtdb().remove_value(key_view.data(),
-                                                         key_view.size());
-#elif INDEX_YAKUSHIMA
 #ifndef CPR
                 /**
                  * case : no logging and pwal
@@ -346,7 +325,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                      * else : The check pointer is responsible for deleting from the index and registering garbage.
                      */
                 }
-#endif
 #endif
                 /**
                  * end about removing index

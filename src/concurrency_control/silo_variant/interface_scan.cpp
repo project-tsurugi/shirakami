@@ -8,15 +8,7 @@
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 #include "concurrency_control/silo_variant/include/snapshot_interface.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
-
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-
-#elif defined(INDEX_YAKUSHIMA)
-
 #include "index/yakushima/include/scheme.h"
-
-#endif
 
 #include "kvs/interface.h"
 
@@ -52,25 +44,15 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         return snapshot_interface::open_scan(ti, l_key, l_end, r_key, r_end, handle);
     }
 
-#ifdef INDEX_KOHLER_MASSTREE
-    std::vector<const Record*> scan_buf;
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    kohler_masstree::get_mtdb().scan(l_key, l_end, r_key, r_end, &scan_buf, true);
-#elif defined(INDEX_YAKUSHIMA)
     std::vector<std::pair<Record**, std::size_t>> scan_res;
-    std::vector<
-            std::pair<yakushima::node_version64_body, yakushima::node_version64*>>
-            nvec;
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
     yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec);
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body,
-            yakushima::node_version64*>>
-            scan_buf;
+    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> scan_buf;
     scan_buf.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
         scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first,
                               nvec.at(i).second);
     }
-#endif
 
     if (!scan_buf.empty()) {
         /**
@@ -161,11 +143,7 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     }
 
     auto itr = scan_buf.begin() + scan_index;
-#ifdef INDEX_YAKUSHIMA
     std::string_view key_view = std::get<0>(*itr)->get_tuple().get_key();
-#elif defined(INDEX_KOHLER_MASSTREE)
-    std::string_view key_view = (*itr)->get_tuple().get_key();
-#endif
     /**
      * Check read-own-write
      */
@@ -185,7 +163,6 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-#ifdef INDEX_YAKUSHIMA
     read_set_obj rsob(std::get<0>(*itr));
     if (ti->get_node_set().empty() ||
         std::get<1>(ti->get_node_set().back()) != std::get<2>(*itr)) {
@@ -193,10 +170,6 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     }
 
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
-#elif defined(INDEX_KOHLER_MASSTREE)
-    read_set_obj rsob(*itr, true);
-    Status rr = read_record(rsob.get_rec_read(), *itr);
-#endif
     if (rr != Status::OK) {
         return rr;
     }
@@ -220,23 +193,12 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     result.clear();
     auto rset_init_size = ti->get_read_set().size();
 
-#ifdef INDEX_KOHLER_MASSTREE
-    std::vector<const Record*> scan_res;
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    kohler_masstree::get_mtdb().scan(l_key, l_end, r_key, r_end, &scan_res, false);
-#elif defined(INDEX_YAKUSHIMA)
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
     yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec);
-#endif
 
     for (auto itr = scan_buf.begin(); itr != scan_buf.end(); ++itr) {
-#ifdef INDEX_YAKUSHIMA
-        write_set_obj* inws =
-                ti->search_write_set((*itr->first)->get_tuple().get_key());
-#elif defined(INDEX_KOHLER_MASSTREE)
-        write_set_obj* inws = ti->search_write_set(itr->get_tuple().get_key());
-#endif
+        write_set_obj* inws = ti->search_write_set((*itr->first)->get_tuple().get_key());
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::DELETE) {
                 return Status::WARN_ALREADY_DELETE;
@@ -257,7 +219,6 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
         // Because in herbrand semantics, the read reads last update even if the
         // update is own.
 
-#ifdef INDEX_YAKUSHIMA
         ti->get_read_set().emplace_back(const_cast<Record*>((*itr->first)));
         if (ti->get_node_set().empty() ||
             std::get<1>(ti->get_node_set().back()) != nvec.at(itr - scan_buf.begin()).second) {
@@ -267,11 +228,6 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
 
         Status rr = read_record(ti->get_read_set().back().get_rec_read(),
                                 const_cast<Record*>((*itr->first)));
-#elif defined(INDEX_KOHLER_MASSTREE)
-        ti->get_read_set().emplace_back(const_cast<Record*>(itr), true);
-        Status rr = read_record(ti->get_read_set().back().get_rec_read(),
-                                const_cast<Record*>(itr));
-#endif
         if (rr != Status::OK) {
             return rr;
         }
@@ -291,9 +247,6 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
                                                    ScanHandle handle,
                                                    std::size_t &size) {
     auto* ti = static_cast<session_info*>(token);
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-#endif
 
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
         /**

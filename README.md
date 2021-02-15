@@ -11,8 +11,6 @@
 git clone --recurse-submodules this_repository
 cd shirakami
 sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
-# If you use -DBUILD_INDEX_KOHLER_MASSTREE(kohler masstree as index structure), it builds third_party/masstree-beta
-./build_tools/bootstrap.sh
 ```
 
 ## How to build
@@ -44,14 +42,6 @@ available options:
      * enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
   * `-DENABLE_COVERAGE=ON`
      * enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
-* index (data) structure options (You can select at most one method.)
-  * default : `-DBUILD_INDEX_YAKUSHIMA=ON`
-     * yakushima is upward compatible with kohler masstree.
-  * `-DBUILD_INDEX_KOHLER_MASSTREE=ON -DBUILD_INDEX_YAKUSHIMA=OFF`
-     * It use kohler masstree as index (data) structure. 
-     If you use this option, execute `[project root]/build_tools/bootstrap.sh` to build third_party/masstree-beta 
-  (kohler masstree).
-     <font color="red">This option will be abolished.</font>
 * logging method (You can select at most one method.)
   * `-DBUILD_PWAL=ON` 
      * enable parallel write-ahead-logging (default: `OFF`)

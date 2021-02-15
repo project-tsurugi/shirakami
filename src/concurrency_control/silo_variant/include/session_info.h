@@ -31,11 +31,7 @@
 // shirakami/include/
 #include "kvs/scheme.h"
 
-#ifdef INDEX_YAKUSHIMA
-
 #include "yakushima/include/kvs.h"
-
-#endif
 
 #if defined(PWAL)
 
@@ -99,23 +95,10 @@ public:
             return r_key_;
         }
 
-#ifdef INDEX_YAKUSHIMA
-
-        [[maybe_unused]] std::map<
-                ScanHandle,
-                std::vector<std::tuple<const Record*, yakushima::node_version64_body,
-                        yakushima::node_version64*>>> &
+        [[maybe_unused]] std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> &
         get_scan_cache() {  // NOLINT
             return scan_cache_;
         }
-
-#elif INDEX_KOHLER_MASSTREE
-
-        std::map<ScanHandle, std::vector<const Record*>> &get_scan_cache() {
-            return scan_cache_;
-        }
-
-#endif
 
         [[maybe_unused]] std::map<ScanHandle, std::size_t> &
         get_scan_cache_itr() {  // NOLINT
@@ -125,15 +108,7 @@ public:
     private:
         std::map<ScanHandle, scan_endpoint> r_end_{};
         std::map<ScanHandle, std::string> r_key_{};  // NOLINT
-#ifdef INDEX_YAKUSHIMA
-        std::map<
-                ScanHandle,
-                std::vector<std::tuple<const Record*, yakushima::node_version64_body,
-                        yakushima::node_version64*>>>
-                scan_cache_{};
-#elif INDEX_KOHLER_MASSTREE
-        std::map<ScanHandle, std::vector<const Record*>> scan_cache_{};
-#endif
+        std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> scan_cache_{};
         std::map<ScanHandle, std::size_t> scan_cache_itr_{};
     };
 
@@ -339,8 +314,6 @@ public:
     }
 #endif
 
-#ifdef INDEX_YAKUSHIMA
-
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> &get_node_set() { // NOLINT
         return node_set;
     }
@@ -366,17 +339,6 @@ public:
      * @return Status::ERR_PHANTOM It fails because its insert operation occur a phantom problem by itself.
      */
     Status update_node_set(yakushima::node_version64* nvp); // NOLINT
-
-#endif
-
-#ifdef INDEX_KOHLER_MASSTREE
-
-    std::map<ScanHandle, std::vector<const Record*>> &
-    get_scan_cache() {  // NOLINT
-        return scan_handle_.get_scan_cache();
-    }
-
-#endif
 
 #ifdef CPR
 
@@ -426,10 +388,8 @@ private:
     /**
      * about indexing.
      */
-#ifdef INDEX_YAKUSHIMA
     yakushima::Token yakushima_token_{};
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> node_set{};
-#endif
 
     /**
      * about logging.

@@ -6,12 +6,6 @@
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
 
-#ifdef INDEX_KOHLER_MASSTREE
-
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-
-#endif
-
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant::garbage_collection {
@@ -42,24 +36,7 @@ namespace shirakami::cc_silo_variant::garbage_collection {
 }
 
 void remove_all_leaf_from_mt_db_and_release() {
-#ifdef INDEX_KOHLER_MASSTREE
-    std::vector<const Record*> scan_res;
-    kohler_masstree::get_mtdb().scan("", scan_endpoint::INF, "", scan_endpoint::INF, &scan_res, false);  // NOLINT
-    for (auto &&itr : scan_res) {
-        std::string_view key_view = itr->get_tuple().get_key();
-        kohler_masstree::get_mtdb().remove_value(key_view.data(), key_view.size());
-        delete itr;  // NOLINT
-    }
-
-    /**
-     * check whether index_kohler_masstree::get_mtdb() is empty.
-     */
-    scan_res.clear();
-    kohler_masstree::get_mtdb().scan("", scan_endpoint::INF, "", scan_endpoint::INF, &scan_res, false);  // NOLINT
-    if (!scan_res.empty()) std::abort();
-#elif INDEX_YAKUSHIMA
     yakushima::destroy();
-#endif
 }
 
 }  // namespace shirakami::cc_silo_variant::garbage_collection

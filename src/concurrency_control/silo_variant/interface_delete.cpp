@@ -14,10 +14,6 @@
 
 #endif  // CC_SILO_VARIANT
 
-#ifdef INDEX_KOHLER_MASSTREE
-#include "index/masstree_beta/include/masstree_beta_wrapper.h"
-#endif                            // INDEX_KOHLER_MASSTREE
-
 #include "kvs/interface.h"
 
 // sizeof(Tuple)
@@ -25,7 +21,6 @@
 namespace shirakami::cc_silo_variant {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
-#if defined(INDEX_YAKUSHIMA)
     std::vector<std::pair<Record**, std::size_t> > scan_res;
     yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
@@ -34,13 +29,7 @@ namespace shirakami::cc_silo_variant {
     }
 
     yakushima::destroy();
-#endif
-    /**
-     * INDEX_KOHLER_MASSTREE case
-     * Since the destructor of the stored value is also called by the destructor
-     * of kohler masstree, there is no need to do anything with
-     * INDEX_KOHLER_MASSTREE.
-     */
+
     return Status::OK;
 }
 
@@ -49,20 +38,11 @@ Status delete_record(Token token, const std::string_view key) { // NOLINT
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     Status check = ti->check_delete_after_write(key);
 
-#ifdef INDEX_KOHLER_MASSTREE
-    masstree_wrapper<Record>::thread_init(sched_getcpu());
-    Record* rec_ptr{
-        kohler_masstree::get_mtdb().get_value(key.data(), key.size())};
-    if (rec_ptr == nullptr) {
-      return Status::WARN_NOT_FOUND;
-    }
-#elif INDEX_YAKUSHIMA
     Record** rec_double_ptr{yakushima::get<Record*>(key).first};
     if (rec_double_ptr == nullptr) {
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_double_ptr};
-#endif
     tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
     if (check_tid.get_absent()) {
         // The second condition checks

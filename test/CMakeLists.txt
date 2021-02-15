@@ -34,15 +34,9 @@ file(GLOB TEST_SOURCES
         "string_view_test.cpp"
         )
 
-if (BUILD_INDEX_KOHLER_MASSTREE)
-    file(GLOB INDEX_TEST_SOURCES "index/masstree_beta/masstree_beta_test.cpp")
-    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
-endif ()
-
-if (BUILD_INDEX_YAKUSHIMA)
-    file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
-    set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
-endif ()
+# about index
+file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
+set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
 
 if (BUILD_PWAL)
     file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")
