@@ -48,6 +48,19 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         auto itr = ti->get_scan_cache().find(i);
         if (itr == ti->get_scan_cache().end()) {
             handle = i;
+            ti->get_scan_cache_itr()[handle] = 0;
+            /**
+             * begin : init about right_end_point_
+             */
+            if (!r_key.empty()) {
+                ti->get_r_key()[handle] = r_key;
+            } else {
+                ti->get_r_key()[handle] = "";
+            }
+            ti->get_r_end()[handle] = r_end;
+            /**
+             * end : init about right_end_point_
+             */
             break;
         }
         if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
@@ -63,23 +76,10 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         return Status::WARN_NOT_FOUND;
     }
 
-    ti->get_scan_cache_itr()[handle] = 0;
-    /**
-     * begin : init about right_end_point_
-     */
-    if (!r_key.empty()) {
-        ti->get_r_key()[handle] = r_key;
-    } else {
-        ti->get_r_key()[handle] = "";
+    ti->get_scan_cache()[handle].reserve(scan_res.size());
+    for (std::size_t i = 0; i < scan_res.size(); ++i) {
+        ti->get_scan_cache()[handle].emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
     }
-    ti->get_r_end()[handle] = r_end;
-    /**
-     * end : init about right_end_point_
-     */
-     ti->get_scan_cache()[handle].reserve(scan_res.size());
-     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-         ti->get_scan_cache()[handle].emplace_back(*scan_res.at(i).first, nvec.at(i).first,nvec.at(i).second);
-     }
 
     return Status::OK;
 }
@@ -104,23 +104,14 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
         yakushima::scan(tuple_ptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE), ti->get_r_key()[handle],
                         parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
-        std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
-        new_scan_buf.reserve(scan_res.size());
-        for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            new_scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
-        }
-
-        if (!new_scan_buf.empty()) {
-            /**
-             * scan could find any records.
-             */
-            scan_buf.assign(new_scan_buf.begin(), new_scan_buf.end());
-            scan_index = 0;
-        } else {
-            /**
-             * scan couldn't find any records.
-             */
+        if (scan_res.empty()) {
             return Status::WARN_SCAN_LIMIT;
+        }
+        scan_index = 0;
+        scan_buf.clear();
+        scan_buf.reserve(scan_res.size());
+        for (std::size_t i = 0; i < scan_res.size(); ++i) {
+            scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
         }
     }
 

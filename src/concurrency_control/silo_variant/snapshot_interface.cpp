@@ -17,46 +17,44 @@ extern Status
 open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
           scan_endpoint r_end, ScanHandle &handle) {
 
-    std::vector<std::pair<Record**, std::size_t>> scan_res;
-    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res); // NOLINT
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> scan_buf;
-    scan_buf.reserve(scan_res.size());
-    for (auto &elem : scan_res) {
-        scan_buf.emplace_back(*elem.first, yakushima::node_version64_body{}, nullptr);
+    for (ScanHandle i = 0;; ++i) {
+        auto itr = ti->get_scan_cache().find(i);
+        if (itr == ti->get_scan_cache().end()) {
+            handle = i;
+            ti->get_scan_cache_itr()[handle] = 0;
+            /**
+             * begin : init about right_end_point_
+             */
+            if (!r_key.empty()) {
+                ti->get_r_key()[handle] = r_key;
+            } else {
+                ti->get_r_key()[handle] = "";
+            }
+            ti->get_r_end()[handle] = r_end;
+            /**
+             * end : init about right_end_point_
+             */
+            break;
+        }
+        if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
     }
 
-    if (!scan_buf.empty()) {
+    std::vector<std::pair<Record**, std::size_t>> scan_res;
+    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res); // NOLINT
+    if (scan_res.empty()) {
         /**
-         * scan could find any records.
+         * scan couldn't find any records.
          */
-        for (ScanHandle i = 0;; ++i) {
-            auto itr = ti->get_scan_cache().find(i);
-            if (itr == ti->get_scan_cache().end()) {
-                ti->get_scan_cache()[i] = std::move(scan_buf);
-                ti->get_scan_cache_itr()[i] = 0;
-                /**
-                 * begin : init about right_end_point_
-                 */
-                if (!r_key.empty()) {
-                    ti->get_r_key()[i] = r_key;
-                } else {
-                    ti->get_r_key()[i] = "";
-                }
-                ti->get_r_end()[i] = r_end;
-                /**
-                 * end : init about right_end_point_
-                 */
-                handle = i;
-                break;
-            }
-            if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
-        }
-        return Status::OK;
+        return Status::WARN_NOT_FOUND;
     }
     /**
-     * scan couldn't find any records.
+     * scan could find any records.
      */
-    return Status::WARN_NOT_FOUND;
+    for (auto &elem : scan_res) {
+        ti->get_scan_cache()[handle].emplace_back(*elem.first, yakushima::node_version64_body{}, nullptr);
+    }
+
+    return Status::OK;
 }
 
 Status lookup_snapshot(session_info* ti, std::string_view key, Tuple** const ret_tuple) { // NOLINT
@@ -86,19 +84,16 @@ extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** 
         std::vector<std::pair<Record**, std::size_t>> scan_res;
         yakushima::scan(tuple_ptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE), // NOLINT
                         ti->get_r_key()[handle], parse_scan_endpoint(ti->get_r_end()[handle]), scan_res);
-        std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> new_scan_buf;
-        new_scan_buf.reserve(scan_res.size());
-        for (auto &&elem : scan_res) {
-            new_scan_buf.emplace_back(*elem.first, yakushima::node_version64_body{}, nullptr);
-        }
-
-        if (!new_scan_buf.empty()) {
-            // scan could find any records.
-            scan_buf.assign(new_scan_buf.begin(), new_scan_buf.end());
-            scan_index = 0;
-        } else {
+        if (scan_res.empty()) {
             // scan couldn't find any records.
             return Status::WARN_SCAN_LIMIT;
+        }
+        // scan could find any records.
+        scan_index = 0;
+        scan_buf.clear();
+        scan_buf.reserve(scan_res.size());
+        for (auto &&elem : scan_res) {
+            scan_buf.emplace_back(*elem.first, yakushima::node_version64_body{}, nullptr);
         }
     }
 
