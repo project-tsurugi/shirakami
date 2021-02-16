@@ -44,48 +44,44 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         return snapshot_interface::open_scan(ti, l_key, l_end, r_key, r_end, handle);
     }
 
+    for (ScanHandle i = 0;; ++i) {
+        auto itr = ti->get_scan_cache().find(i);
+        if (itr == ti->get_scan_cache().end()) {
+            handle = i;
+            break;
+        }
+        if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
+    }
+
     std::vector<std::pair<Record**, std::size_t>> scan_res;
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
     yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec);
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> scan_buf;
-    scan_buf.reserve(scan_res.size());
-    for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first,
-                              nvec.at(i).second);
+    if (scan_res.empty()) {
+        /**
+         * scan couldn't find any records.
+         */
+        return Status::WARN_NOT_FOUND;
     }
 
-    if (!scan_buf.empty()) {
-        /**
-         * scan could find any records.
-         */
-        for (ScanHandle i = 0;; ++i) {
-            auto itr = ti->get_scan_cache().find(i);
-            if (itr == ti->get_scan_cache().end()) {
-                ti->get_scan_cache()[i] = std::move(scan_buf);
-                ti->get_scan_cache_itr()[i] = 0;
-                /**
-                 * begin : init about right_end_point_
-                 */
-                if (!r_key.empty()) {
-                    ti->get_r_key()[i] = r_key;
-                } else {
-                    ti->get_r_key()[i] = "";
-                }
-                ti->get_r_end()[i] = r_end;
-                /**
-                 * end : init about right_end_point_
-                 */
-                handle = i;
-                break;
-            }
-            if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
-        }
-        return Status::OK;
-    }
+    ti->get_scan_cache_itr()[handle] = 0;
     /**
-     * scan couldn't find any records.
+     * begin : init about right_end_point_
      */
-    return Status::WARN_NOT_FOUND;
+    if (!r_key.empty()) {
+        ti->get_r_key()[handle] = r_key;
+    } else {
+        ti->get_r_key()[handle] = "";
+    }
+    ti->get_r_end()[handle] = r_end;
+    /**
+     * end : init about right_end_point_
+     */
+     ti->get_scan_cache()[handle].reserve(scan_res.size());
+     for (std::size_t i = 0; i < scan_res.size(); ++i) {
+         ti->get_scan_cache()[handle].emplace_back(*scan_res.at(i).first, nvec.at(i).first,nvec.at(i).second);
+     }
+
+    return Status::OK;
 }
 
 Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
