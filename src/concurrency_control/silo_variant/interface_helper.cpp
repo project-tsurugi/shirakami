@@ -157,6 +157,7 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
 
     for (;;) {
         while (f_check.get_lock()) {
+            _mm_pause();
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
         }
 

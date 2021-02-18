@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+#include <xmmintrin.h>
 
 #include "epoch.h"
 
@@ -106,6 +107,7 @@ public:
         expected.get_obj() = loadAcquire(get_obj());
         for (;;) {
             if (expected.get_lock()) {
+                _mm_pause();
                 expected.get_obj() = loadAcquire(get_obj());
             } else {
                 desired = expected;
