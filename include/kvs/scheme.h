@@ -75,84 +75,87 @@ enum class scan_endpoint : char {
  */
 enum class Status : std::int32_t {
     /**
-     * @brief warning
+     * @brief warning.
      * @details
-     * (delete_all_records) There are no records.
-     * (read_from_scan) The read targets was deleted by delete operation of this
-     * transaction. (scan_key) The read targets was deleted by delete operation of
-     * this transaction. (search_key) The read targets was deleted by delete
-     * operation of this transaction.
+     * @a delete_all_records : There are no records. @n
+     * @a read_from_scan : The read targets was deleted by delete operation of own transaction. @n
+     * @a scan_key : The read targets was deleted by delete operation of own transaction. @n
+     * @a search_key : The read targets was deleted by delete operation of own transaction. @n
      */
     WARN_ALREADY_DELETE,
     /**
-     * @brief warning
+     * @brief warning.
      * @details
-     * (insert) The records whose key is the same as @a key exists in MTDB, so
-     * this function returned immediately.
+     * @a insert : The records whose key is the same as @a key exists in MTDB, so this function returned immediately. @n
      */
     WARN_ALREADY_EXISTS,
     /**
-     * @brief warning
+     * @brief warning.
      * @details
-     * (delete_record) it canceled an update/insert operation before this function
-     * and did delete operation.
+     * @a delete_record : it canceled an update/insert operation before this function and did delete operation. @n
      */
     WARN_CANCEL_PREVIOUS_OPERATION,
     /**
-     * @brief warning
+     * @brief warning.
      * @details
-     * (scan_key) The read targets was deleted by delete operation of concurrent
-     * transaction. (search_key) The read targets was deleted by delete operation
-     * of concurrent transaction. (read_from_scan) The read targets was deleted by
-     * delete operation of concurrent transaction.
+     * @a read_from_scan : The read targets was deleted by delete operation of concurrent transaction. @n
+     * @a read_record : The read targets was deleted by delete operation of concurrent transaction. @n
+     * @a scan_key : The read targets was deleted by delete operation of concurrent transaction. @n
+     * @a search_key : The read targets was deleted by delete operation of concurrent transaction. @n
      */
     WARN_CONCURRENT_DELETE,
+    /**
+     * @brief warning.
+     * @details
+     * @a read_record : The expected operation could not be performed because a record being inserted in
+     * parallel was detected. @n
+     * @a read_from_scan : The expected operation could not be performed because a record being inserted in
+     * parallel was detected. @n
+     */
     WARN_CONCURRENT_INSERT,
     /**
-     * @brief warning
+     * @brief warning.
      * @details
-     * (close_scan) The handle is invalid.
-     * (read_from_scan) The handle is invalid.
+     * @a close_scan : The handle is invalid. @n
+     * @a read_from_scan : The handle is invalid. @n
      */
     WARN_INVALID_HANDLE,
     /**
      * @brief warning
      * @details
-     * (delete_record) No corresponding record in masstree. If you have problem by
-     * WARN_NOT_FOUND, you should do abort. (open_scan) The scan couldn't find any
-     * records. (search_key) No corresponding record in masstree. If you have
-     * problem by WARN_NOT_FOUND, you should do abort. (update) No corresponding
-     * record in masstree. If you have problem by WARN_NOT_FOUND, you should do
-     * abort.
+     * @a delete_record : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
+     * @a open_scan : The scan couldn't find any records. @n
+     * @a search_key : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
+     * @a update : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
      */
     WARN_NOT_FOUND,
     /**
      * @brief warning
      * @details
-     * (leave) If the session is already ended.
+     * @a leave : If the session is already ended. @n
      */
     WARN_NOT_IN_A_SESSION,
     /**
      * @brief waring
      * @details
-     * (read_from_scan) It read the records from it's preceding write
-     * (insert/update/upsert) operation in the same tx.
+     * @a read_from_scan : It read the records from it's preceding write @n
+     * @a insert : operation in the same tx. @n
+     * @a update : operation in the same tx. @n
+     * @a upsert : operation in the same tx. @n
      */
     WARN_READ_FROM_OWN_OPERATION,
     /**
      * @brief warning
      * @details
-     * (open_scan) The scan could find some records but could not preserve result
-     * due to capacity limitation. (read_from_scan) It have read all records in
-     * the scan_cache.
+     * @a open_scan : The scan could find some records but could not preserve result due to capacity limitation. @n
+     * @a read_from_scan : It have read all records in range of open_scan. @n
      */
     WARN_SCAN_LIMIT,
     /**
      * @brief warning
      * @details
-     * (update) It already executed update/insert, so it up date the value which
-     * is going to be updated. (upsert) It already did insert/update/upsert, so it
-     * overwrite its local write set.
+     * @a update : It already executed update/insert, so it up date the value which is going to be updated. @n
+     * @a upsert : It already did insert/update/upsert, so it overwrite its local write set. @n
      */
     WARN_WRITE_TO_LOCAL_WRITE,
     /**
@@ -167,35 +170,34 @@ enum class Status : std::int32_t {
     /**
      * @brief error
      * @details
-     * (init) The args as a log directory path is invalid.
+     * @a init : The args as a log directory path is invalid. @n
      */
     ERR_INVALID_ARGS,
     /**
      * @brief error
      * @details
-     * (get_storage) If the storage is not registered with the given name.
-     * (delete_storage) If the storage is not registered with the given name.
+     * @a delete_storage : If the storage is not registered with the given name. @n
+     * @a get_storage : If the storage is not registered with the given name. @n
      */
     ERR_NOT_FOUND,
     /**
      * @brief error
      * @details
-     * (enter) There are no capacity of session.
+     * @a enter : There are no capacity of session. @n
      */
     ERR_SESSION_LIMIT,
     /**
      * @brief error
      * @details
-     * (commit) This means read validation failure and it already executed
-     * abort(). After this, do tx_begin to start next transaction or leave to
-     * leave the session.
+     * @a commit : This means read validation failure and it already executed abort(). After this, do tx_begin to start
+     * next transaction or leave to leave the session. @n
      */
     ERR_VALIDATION,
     /**
      * @brief error
      * @details
-     * (commit) This transaction was interrupted by some delete transaction
-     * between read phase and validation phase. So it called abort.
+     * @a commit : This transaction was interrupted by some delete transaction between read phase and validation phase.
+     * So it called abort. @n
      */
     ERR_WRITE_TO_DELETED_RECORD,
 };
