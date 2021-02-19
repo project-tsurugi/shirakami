@@ -127,7 +127,7 @@ extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
  * @param [in] token the token retrieved by enter()
  * @param [in] key the key of the inserted record
  * @param [in] val the value of the inserted record
- * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was iserted by this function was
+ * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was inserted by this function was
  * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key exists in db, so this function
@@ -195,71 +195,61 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * Returned tuple pointers are valid until commit/abort.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
- * operation of this transaction.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
- * operation.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation.
+ * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
  */
 extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                        scan_endpoint r_end, std::vector<const Tuple*> &result);
 
 /**
- * @brief This function checks the size resulted at open_scan with the @a
- * handle.
- * @param token [in] the token retrieved by enter()
- * @param handle [in] the handle to identify scanned result. This handle will be
- * deleted at abort function.
- * @param size [out] the size resulted at open_scan with the @a handle .
+ * @brief This function checks the size resulted at open_scan with the @b handle.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] handle the handle to identify scanned result. This handle will be deleted at abort function.
+ * @param [out] size the size resulted at open_scan with the @a handle .
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
 [[maybe_unused]] extern Status scannable_total_index_size(Token token, ScanHandle handle, std::size_t &size); // NOLINT
 
 /**
- * @brief search with the given key and return the found tuple
- * @param token [in] the token retrieved by enter()
- * @param key the search key
- * @param tuple output parameter to pass the found Tuple pointer.
+ * @brief It searches with the given key and return the found tuple.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] key the search key
+ * @param [out] tuple output parameter to pass the found Tuple pointer.
  * The ownership of the address which is pointed by the tuple is in shirakami.
  * So upper layer from shirakami don't have to be care.
  * nullptr when nothing is found for the given key.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
- * operation of this transaction.
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you
- * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
- * operation of concurrent transaction.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation of concurrent transaction.
+ * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by other's insert.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert)
+ * operation in the same tx.
  */
 extern Status search_key(Token token, std::string_view key, Tuple** tuple); // NOLINT
-
-/**
- * @brief Recovery by single thread.
- * @details This function isn't thread safe.
- * @pre It must decide correct wal directory name decided by
- * change_wal_directory function before it executes recovery.
- */
-[[maybe_unused]] extern void single_recovery_from_log();
 
 /**
  * @brief Transaction begins.
  * @details Get an epoch accessible to this transaction.
  * @param [in] token
- * @param [in] read_only
+ * @param [in] read_only If this is true, it uses read only mode which transactional reads read stale snapshot.
+ * @attention If you specify read_only is true, you can not execute transactional write operation in this transaction.
  * @return void
  */
 extern void tx_begin(Token token, bool read_only = false); // NOLINT
 
 /**
- * @brief update the record for the given key
- * @param token [in] the token retrieved by enter()
- * @param key the key of the updated record
- * @param val the value of the updated record
+ * @brief It updates the record for the given key.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] key the key of the updated record
+ * @param [in] val the value of the updated record
  * @return Status::OK if successful
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you
- * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert,
- * so it update the value which is going to be updated.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should
+ * do abort.
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, so it update the value which is going
+ * to be updated.
  */
 extern Status update(Token token, std::string_view key, std::string_view val); // NOLINT
 
@@ -269,9 +259,10 @@ extern Status update(Token token, std::string_view key, std::string_view val); /
  * @param[in] token the token retrieved by enter()
  * @param key the key of the upserted record
  * @param val the value of the upserted record
+ * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was inserted by this function was
+ * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did
- * insert/update/upsert, so it overwrite its local write set.
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, so it overwrite its local write set.
  */
 extern Status upsert(Token token, std::string_view key, std::string_view val); // NOLINT
 

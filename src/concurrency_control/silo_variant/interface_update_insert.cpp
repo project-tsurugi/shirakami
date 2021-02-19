@@ -122,6 +122,7 @@ RETRY_FIND_RECORD:
                  * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
                  * by another transaction.
                  */
+                 abort(token);
                 return Status::ERR_PHANTOM;
             }
             ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);

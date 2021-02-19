@@ -138,7 +138,8 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
 
     // as a precaution
     result.clear();
-    auto rset_init_size = ti->get_read_set().size();
+    auto read_set_init_size{ti->get_read_set().size()};
+    auto node_set_init_size{ti->get_node_set().size()};
 
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
@@ -186,16 +187,21 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
 
         Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>((*itr->first)));
         if (rr != Status::OK) {
-            if (rset_init_size != ti->get_read_set().size()) {
+            // cancel this scan.
+            if (read_set_init_size != ti->get_read_set().size()) {
                 ti->get_read_set().erase(ti->get_read_set().begin(),
-                                         ti->get_read_set().begin() + (rset_init_size - ti->get_read_set().size()));
+                                         ti->get_read_set().begin() + (read_set_init_size - ti->get_read_set().size()));
+            }
+            if (node_set_init_size != ti->get_node_set().size()) {
+                ti->get_node_set().erase(ti->get_node_set().begin(),
+                                         ti->get_node_set().begin() + (node_set_init_size - ti->get_node_set().size()));
             }
             return rr;
         }
     }
 
-    if (rset_init_size != ti->get_read_set().size()) {
-        for (auto itr = ti->get_read_set().begin() + rset_init_size;
+    if (read_set_init_size != ti->get_read_set().size()) {
+        for (auto itr = ti->get_read_set().begin() + read_set_init_size;
              itr != ti->get_read_set().end(); ++itr) {
             result.emplace_back(&itr->get_rec_read().get_tuple());
         }
