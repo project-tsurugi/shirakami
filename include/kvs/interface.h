@@ -41,14 +41,14 @@ extern Status abort(Token token);  // NOLINT
 extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
 
 /**
- * @brief It tries commit. If this function return ERR_... status, this called abort function implicitly. Otherwise, it
- * commits.
- * @param [in] token retrieved by enter()
- * @param [in][out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
+ * @brief It tries commit.
+ * @details If this function return ERR_... status, this called abort function implicitly. Otherwise, it commits.
+ * @param [in] token retrieved by enter().
+ * @param [in, out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
  * @pre executed enter (-> tx_begin -> transaction operation).
  * @post execute leave to leave the session or transactional operations (ex. tx_begin, search, update, ...etc)  to start
  * next transaction.
- * @return Statsu::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update operations was interrupted by some
  * delete transaction between read phase and validation phase. So it called abort.
  * @return Status::ERR_VALIDATION This means read validation failure and it already executed abort(). After this,
