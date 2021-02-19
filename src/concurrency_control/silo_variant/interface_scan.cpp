@@ -185,7 +185,13 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
         }
 
         Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>((*itr->first)));
-        if (rr != Status::OK) return rr;
+        if (rr != Status::OK) {
+            if (rset_init_size != ti->get_read_set().size()) {
+                ti->get_read_set().erase(ti->get_read_set().begin(),
+                                         ti->get_read_set().begin() + (rset_init_size - ti->get_read_set().size()));
+            }
+            return rr;
+        }
     }
 
     if (rset_init_size != ti->get_read_set().size()) {

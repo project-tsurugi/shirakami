@@ -158,7 +158,7 @@ extern Status leave(Token token);  // NOLINT
  * @param[out] handle the handle to identify scanned result. This handle will be
  * deleted at abort function.
  * @attention This scan limits range which is specified by @b l_key, @b l_end, @b r_key, and @b r_end.
- * @return Status::OK the some records was scanned.
+ * @return Status::OK success.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
@@ -167,37 +167,33 @@ extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end
                         scan_endpoint r_end, ScanHandle &handle);
 
 /**
- * @brief This function reads the one records from the scan_cache
- * which was created at open_scan function.
+ * @brief This function reads the one records from the scan_cache which was created at open_scan function.
  * @details The read record is returned by @result.
- * @param token [in] the token retrieved by enter()
- * @param handle [in] input parameters to identify the specific scan_cache.
- * @param result [out] output parmeter to pass the read record.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
- * operation of this transaction.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete
- * operation.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] handle input parameters to identify the specific scan_cache.
+ * @param [out] result output parmeter to pass the read record.
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
+ * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by previous delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation of other transaction.
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
- * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's
- * preceding write (insert/update/upsert) operation in the same tx.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert)
+ * operation in the same tx.
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
- * @return Status::OK It succeeded.
  */
 extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); // NOLINT
 
 /**
  * @brief search with the given key range and return the found tuples
- * @param[in] token the token retrieved by enter()
- * @param[in] l_key the key to indicate the beginning of the range, null if
- * the beginning is open
- * @param l_end indicate whether the lkey is exclusive
- * (i.e. the record whose key equal to lkey is not included in the result)
- * @param[in] r_key the key to indicate the ending of the range, null if the
- * end is open
- * @param[in] r_end indicate whether the rkey is exclusive
- * @param[out] result output parameter to pass the found Tuple pointers.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] l_key the key to indicate the beginning of the range, null if the beginning is open
+ * @param [in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key equal to lkey is not included in the result).
+ * @param [in] r_key the key to indicate the ending of the range, null if the end is open
+ * @param [in] r_end indicate whether the @b r_key is exclusive
+ * @param [out] result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
- * Returned tuple pointers are valid untill commit/abort.
+ * Returned tuple pointers are valid until commit/abort.
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete
  * operation of this transaction.
