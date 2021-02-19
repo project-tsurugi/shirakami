@@ -44,7 +44,7 @@ extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
  * @brief It tries commit.
  * @details If this function return ERR_... status, this called abort function implicitly. Otherwise, it commits.
  * @param [in] token retrieved by enter().
- * @param [in, out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
+ * @param [in,out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
  * @pre executed enter (-> tx_begin -> transaction operation).
  * @post execute leave to leave the session or transactional operations (ex. tx_begin, search, update, ...etc)  to start
  * next transaction.
@@ -82,19 +82,17 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @param key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::WARN_NOT_FOUND No corresponding record in masstree. If you
- * have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an previous update / insert / upsert operation before
+ * this function and did delete operation.
+ * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem by this, you should do abort.
  * @return Status::OK success.
- * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert
- * operation before this fucntion and did delete operation.
  */
 extern Status delete_record(Token token, std::string_view key);  // NOLINT
 
 /**
  * @brief enter session
  * @param[out] token output parameter to return the token
- * @pre Maximum degree of parallelism of this function without leave is the size
- * of kThreadTable, KVS_MAX_PARALLEL_THREADS.
+ * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.
  * @post When it ends this session, do leave(Token token).
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
@@ -105,11 +103,11 @@ extern Status enter(Token &token);  // NOLINT
  * @brief do delete operations for all records, join core threads and delete the
  * remaining garbage (heap) objects.
  * @pre It already did init() and invoked core threads.
- * @details It do delete operations for all records.
- * init() did invoking core threads detached. So it should join those threads.
+ * @details It do delete operations for all records. init() did invoking core threads detached. So it should join those
+ * threads.
  * This function serves that joining after doing those delete operations.
- * Then, it delete the remaining garbage (heap) object by using private
- * interface.
+ * Then, it delete the remaining garbage (heap) object by using private interface.
+ * @return void
  */
 extern void fin();
 
@@ -126,14 +124,16 @@ extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
  * @brief insert the record with given key/value
- * @param token [in] the token retrieved by enter()
- * @param key the key of the inserted record
- * @param val the value of the inserted record
- * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @a
- * key exists in MTDB, so this function returned immediately.
+ * @param [in] token the token retrieved by enter()
+ * @param [in] key the key of the inserted record
+ * @param [in] val the value of the inserted record
+ * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was iserted by this function was
+ * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed
- * update/insert/upsert, so it update the local write set object.
+ * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key exists in db, so this function
+ * returned immediately.
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, so it update the local write
+ * set object.
  */
 extern Status insert(Token token, std::string_view key, std::string_view val); // NOLINT
 
@@ -141,9 +141,10 @@ extern Status insert(Token token, std::string_view key, std::string_view val); /
  * @brief leave session
  * @details It return the objects which was got at enter function to
  * kThreadTable.
- * @param token retrieved by enter()
- * @return Status::OK if successful
- * @return Status::WARN_NOT_IN_A_SESSION If the session is already ended.
+ * @param [in] token retrieved by enter()
+ * @return Status::ERR_INVALID_ARGS The @b token is invalid.
+ * @return Status::OK success.
+ * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
  */
 extern Status leave(Token token);  // NOLINT
 
@@ -156,10 +157,11 @@ extern Status leave(Token token);  // NOLINT
  * @param[in] r_end
  * @param[out] handle the handle to identify scanned result. This handle will be
  * deleted at abort function.
+ * @attention This scan limits range which is specified by @b l_key, @b l_end, @b r_key, and @b r_end.
+ * @return Status::OK the some records was scanned.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
- * @return Status::OK the some records was scanned.
  */
 extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                         scan_endpoint r_end, ScanHandle &handle);

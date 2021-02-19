@@ -44,7 +44,6 @@ void fin() {
     session_info_table::fin_kThreadTable();
 
     yakushima::fin();
-
 }
 
 Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOLINT

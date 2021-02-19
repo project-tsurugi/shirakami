@@ -40,15 +40,16 @@ Status insert(Token token, const std::string_view key,  // NOLINT
             yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
                                     static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)}; // NOLINT
     if (insert_result == yakushima::status::OK) {
+        ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_PHANTOM) {
             /**
              * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
              * by another transaction.
              */
+             abort(token);
             return Status::ERR_PHANTOM;
         }
-        ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
         return Status::OK;
     }
     delete rec_ptr;  // NOLINT
