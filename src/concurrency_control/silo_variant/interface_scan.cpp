@@ -12,6 +12,7 @@
 
 #include "kvs/interface.h"
 
+#include "logger.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami::cc_silo_variant {
@@ -26,10 +27,6 @@ Status close_scan(Token token, ScanHandle handle) {  // NOLINT
     ti->get_scan_cache().erase(itr);
     auto index_itr = ti->get_scan_cache_itr().find(handle);
     ti->get_scan_cache_itr().erase(index_itr);
-    auto r_key_itr = ti->get_r_key().find(handle);
-    ti->get_r_key().erase(r_key_itr);
-    auto r_exclusive_itr = ti->get_r_end().find(handle);
-    ti->get_r_end().erase(r_exclusive_itr);
 
     return Status::OK;
 }
@@ -48,19 +45,7 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         auto itr = ti->get_scan_cache().find(i);
         if (itr == ti->get_scan_cache().end()) {
             handle = i;
-            ti->get_scan_cache_itr()[handle] = 0;
-            /**
-             * begin : init about right_end_point_
-             */
-            if (!r_key.empty()) {
-                ti->get_r_key()[handle] = r_key;
-            } else {
-                ti->get_r_key()[handle] = "";
-            }
-            ti->get_r_end()[handle] = r_end;
-            /**
-             * end : init about right_end_point_
-             */
+            ti->get_scan_cache_itr()[i] = 0;
             break;
         }
         if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
@@ -98,21 +83,7 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> &scan_buf = ti->get_scan_cache()[handle];
     std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
     if (scan_buf.size() == scan_index) {
-        const Tuple* tuple_ptr(&std::get<0>(scan_buf.back())->get_tuple());
-
-        std::vector<std::pair<Record**, std::size_t>> scan_res;
-        std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
-        yakushima::scan(tuple_ptr->get_key(), parse_scan_endpoint(scan_endpoint::EXCLUSIVE), ti->get_r_key()[handle],
-                        parse_scan_endpoint(ti->get_r_end()[handle]), scan_res, &nvec);
-        if (scan_res.empty()) {
-            return Status::WARN_SCAN_LIMIT;
-        }
-        scan_index = 0;
-        scan_buf.clear();
-        scan_buf.reserve(scan_res.size());
-        for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            scan_buf.emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
-        }
+        return Status::WARN_SCAN_LIMIT;
     }
 
     auto itr = scan_buf.begin() + scan_index;
@@ -122,8 +93,8 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
      */
     const write_set_obj* inws = ti->search_write_set(key_view);
     if (inws != nullptr) {
+        ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
-            ++scan_index;
             return Status::WARN_ALREADY_DELETE;
         }
         if (inws->get_op() == OP_TYPE::UPDATE) {
@@ -132,7 +103,6 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
             // insert/delete
             *tuple = const_cast<Tuple*>(&inws->get_tuple_to_db());
         }
-        ++scan_index;
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -142,10 +112,14 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         ti->get_node_set().emplace_back(std::get<1>(*itr), std::get<2>(*itr));
     }
 
-    Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
-    if (rr != Status::OK) {
-        return rr;
+    // pre-verify of phantom problem.
+    if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
+        cc_silo_variant::abort(token);
+        return Status::ERR_PHANTOM;
     }
+
+    Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
+    if (rr != Status::OK) return rr;
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     ++scan_index;
@@ -173,24 +147,29 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     for (auto itr = scan_buf.begin(); itr != scan_buf.end(); ++itr) {
         write_set_obj* inws = ti->search_write_set((*itr->first)->get_tuple().get_key());
         if (inws != nullptr) {
+            /**
+             * If the record was already update/insert in the same transaction,
+             * the result which is record pointer is notified to caller but
+             * don't execute re-read (read_record function).
+             * Because in herbrand semantics, the read reads last update even if the
+             * update is own.
+             */
             if (inws->get_op() == OP_TYPE::DELETE) {
-                return Status::WARN_ALREADY_DELETE;
+                /**
+                 * This transaction deleted this record, so this scan does not include this record in range.
+                 */
+                continue;
             }
             if (inws->get_op() == OP_TYPE::UPDATE) {
                 result.emplace_back(&inws->get_tuple_to_local());
             } else if (inws->get_op() == OP_TYPE::INSERT) {
                 result.emplace_back(&inws->get_tuple_to_db());
             } else {
-                // error
+                SPDLOG_DEBUG("It must not reach this points");
+                exit(1);
             }
             continue;
         }
-
-        // if the record was already update/insert in the same transaction,
-        // the result which is record pointer is notified to caller but
-        // don't execute re-read (read_record function).
-        // Because in herbrand semantics, the read reads last update even if the
-        // update is own.
 
         ti->get_read_set().emplace_back(const_cast<Record*>((*itr->first)));
         if (ti->get_node_set().empty() ||
@@ -199,11 +178,14 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
                                             nvec.at(itr - scan_buf.begin()).second);
         }
 
-        Status rr = read_record(ti->get_read_set().back().get_rec_read(),
-                                const_cast<Record*>((*itr->first)));
-        if (rr != Status::OK) {
-            return rr;
+        // pre-verify of phantom problem.
+        if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
+            cc_silo_variant::abort(token);
+            return Status::ERR_PHANTOM;
         }
+
+        Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>((*itr->first)));
+        if (rr != Status::OK) return rr;
     }
 
     if (rset_init_size != ti->get_read_set().size()) {

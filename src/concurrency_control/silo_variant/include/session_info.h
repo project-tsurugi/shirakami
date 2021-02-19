@@ -86,15 +86,6 @@ public:
 
     class scan_handler {
     public:
-        [[maybe_unused]] std::map<ScanHandle, scan_endpoint> &get_r_end_() {  // NOLINT
-            return r_end_;
-        }
-
-        [[maybe_unused]] std::map<ScanHandle, std::string> &
-        get_r_key() { // NOLINT
-            return r_key_;
-        }
-
         [[maybe_unused]] std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> &
         get_scan_cache() {  // NOLINT
             return scan_cache_;
@@ -106,8 +97,6 @@ public:
         }
 
     private:
-        std::map<ScanHandle, scan_endpoint> r_end_{};
-        std::map<ScanHandle, std::string> r_key_{};  // NOLINT
         std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> scan_cache_{};
         std::map<ScanHandle, std::size_t> scan_cache_itr_{};
     };
@@ -179,14 +168,6 @@ public:
     }
 
     tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
-
-    std::map<ScanHandle, shirakami::scan_endpoint> &get_r_end() {  // NOLINT
-        return scan_handle_.get_r_end_();
-    }
-
-    std::map<ScanHandle, std::string> &get_r_key() {  // NOLINT
-        return scan_handle_.get_r_key();
-    }
 
     std::vector<read_set_obj> &get_read_set() {  // NOLINT
         return read_set;

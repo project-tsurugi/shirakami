@@ -138,7 +138,7 @@ enum class Status : std::int32_t {
     /**
      * @brief waring
      * @details
-     * @a read_from_scan : It read the records from it's preceding write @n
+     * @a read_from_scan : It read the records from own preceding write. @n
      * @a insert : operation in the same tx. @n
      * @a update : operation in the same tx. @n
      * @a upsert : operation in the same tx. @n
@@ -164,7 +164,9 @@ enum class Status : std::int32_t {
     OK,
     /**
      * @brief error
-     * @details It is the error due to phantom problems.
+     * @details
+     * @a read_from_scan : It is the error due to phantom problems. @n
+     * @a scan_key : It is the error due to phantom problems. @n
      */
     ERR_PHANTOM,
     /**

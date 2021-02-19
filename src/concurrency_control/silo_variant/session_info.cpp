@@ -76,8 +76,6 @@ void session_info::clean_up_ops_set() {
 void session_info::clean_up_scan_caches() {
     scan_handle_.get_scan_cache().clear();
     scan_handle_.get_scan_cache_itr().clear();
-    scan_handle_.get_r_key().clear();
-    scan_handle_.get_r_end_().clear();
 }
 
 [[maybe_unused]] void session_info::display_read_set() {
