@@ -3,7 +3,11 @@
 
 #include "kvs/interface.h"
 
+#ifdef RECOVERY
+
 #include "boost/filesystem.hpp"
+
+#endif
 
 namespace shirakami::testing {
 
@@ -47,7 +51,7 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     ASSERT_EQ(Status::OK, insert(token.at(1), key.at(2), v));
     ASSERT_EQ(Status::OK, commit(token.at(1))); // NOLINT
     // =====
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(token.at(0))); // NOLINT
+    ASSERT_EQ(Status::ERR_PHANTOM, commit(token.at(0))); // NOLINT
     // abort by phantom
     ASSERT_EQ(leave(token.at(0)), Status::OK);
     ASSERT_EQ(leave(token.at(1)), Status::OK);

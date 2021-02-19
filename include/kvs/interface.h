@@ -1,6 +1,6 @@
 /**
  * @file include/kvs/interface.h
- * @brief transaction engine interface
+ * @brief transaction execution engine interface.
  */
 
 #pragma once
@@ -8,74 +8,71 @@
 #include "scheme.h"
 #include "tuple.h"
 
+/**
+ * @brief It is for logging to decide file name.
+ */
 #define STRING(macro) #macro          // NOLINT
+/**
+ * @brief It is for logging to decide file name.
+ */
 #define MAC2STR(macro) STRING(macro)  // NOLINT
 
 namespace shirakami::cc_silo_variant {
 
 /**
- * @brief abort and end the transaction.
- *
- * do local set/cache clear, try gc.
+ * @brief transactional termination command about abort.
+ * @details It aborts, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
- * @pre it did enter -> ... -> tx_begin -> some access
- * operation(update/insert/search/delete) or no operation
- * @post execute leave to leave the session or tx_begin to start next
- * transaction.
+ * @pre it did enter -> ... -> (tx_begin ->) some transactional operations (update/insert/search/delete) or no
+ * operation.
+ * @post execute leave to leave the session or transactional operations (delete_record, insert, open_scan, ...etc) to
+ * start next transaction.
  * @return Status::OK success.
  */
 extern Status abort(Token token);  // NOLINT
 
 /**
- * @brief close the specified scan_cache.
- * @param token [in] the token retrieved by enter().
- * @param handle [in] identify the specific scan_cache.
- * @return Status::OK It succeeded.
- * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
+ * @brief close the scan which was opened at open_scan.
+ * @param [in] token the token retrieved by enter().
+ * @param [in] handle identify the specific scan which was opened at open_scan.
+ * @return Status::OK success.
+ * @return Status::WARN_INVALID_HANDLE The @b handle is invalid.
  */
 extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
 
 /**
- * @brief silo's(SOSP2013) validation protocol. If this function return ERR_
- * status, this called abort function.
- * @param token retrieved by enter()
- * @param cp commit parameter
- * @pre executed enter -> tx_begin -> transaction operation.
- * @post execute leave to leave the session or tx_begin to start next
- * transaction.
- * @return Status::ERR_VALIDATION This means read validation failure and it
- * already executed abort(). After this, do tx_begin to start next transaction
- * or leave to leave the session.
- * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction was interrupted
- * by some delete transaction between read phase and validation phase. So it
- * called abort.
+ * @brief It tries commit. If this function return ERR_... status, this called abort function implicitly. Otherwise, it
+ * commits.
+ * @param [in] token retrieved by enter()
+ * @param [in][out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
+ * @pre executed enter (-> tx_begin -> transaction operation).
+ * @post execute leave to leave the session or transactional operations (ex. tx_begin, search, update, ...etc)  to start
+ * next transaction.
+ * @return Statsu::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
+ * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update operations was interrupted by some
+ * delete transaction between read phase and validation phase. So it called abort.
+ * @return Status::ERR_VALIDATION This means read validation failure and it already executed abort(). After this,
+ * do tx_begin to start next transaction or leave to leave the session.
  * @return Status::OK success.
  */
 extern Status commit(Token token, commit_param* cp = nullptr);  // NOLINT
 
 /**
- * @brief check whether the transaction allocated commit_id at commit function was committed.
- * @param token This should be the token which was used for commit function.
- * @param commit_id This should be the commit_id which was received at commit function with @a token.
+ * @brief It checks whether the transaction allocated commit_id at commit function was committed.
+ * @param [in] token This should be the token which was used for commit function.
+ * @param [in] commit_id This should be the commit_id which was received at commit function with @b token.
  * @return  true This transaction was committed (durable).
  * @return  false This transaction was not committed (durable).
  */
 extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
 /**
- * @brief Delete the all records.
- * @pre This function is called by a single thread and does't
- * allow moving of other threads.
- * @details This function executes tx_begin(Token token)
- * internaly, so it doesn't need to call tx_begin(Token token).
- * Also it doesn't need to call enter/leave around calling this
- * function. Because this function calls enter/leave
- * appropriately.
- * @return Status::WARN_ALREADY_DELETE There are no records.
- * @return Status::OK success
- * @return Return value of commit function. If it return this,
- * you can retry delete_all_records meaning to resume this
+ * @brief Delete the all records in all tables.
+ * @pre This function is called by a single thread and does't allow moving of other threads. This is not transactional
+ * operation.
+ * @details  It doesn't need to call tx_begin(Token token). Also it doesn't need to call enter/leave around calling this
  * function.
+ * @return Status::OK success
  */
 [[maybe_unused]] extern Status delete_all_records();  // NOLINT
 

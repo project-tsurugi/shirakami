@@ -90,7 +90,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
         if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
             ti->unlock_write_set();
             abort(token);
-            return Status::ERR_VALIDATION;
+            return Status::ERR_PHANTOM;
         }
     }
 
