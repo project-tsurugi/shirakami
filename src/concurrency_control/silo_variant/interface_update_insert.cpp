@@ -20,6 +20,8 @@ Status insert(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
+
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::INSERT || inws->get_op() == OP_TYPE::UPDATE) {
@@ -60,6 +62,7 @@ Status update(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
     write_set_obj* inws{ti->search_write_set(key)};
     if (inws != nullptr) {
@@ -90,6 +93,7 @@ Status upsert(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
     write_set_obj* in_ws{ti->search_write_set(key)};
     if (in_ws != nullptr) {
         if (in_ws->get_op() == OP_TYPE::INSERT || in_ws->get_op() == OP_TYPE::UPDATE) {

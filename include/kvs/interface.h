@@ -84,6 +84,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @post nothing. This function never do abort.
  * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an previous update / insert / upsert operation before
  * this function and did delete operation.
+ * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem by this, you should do abort.
  * @return Status::OK success.
  */
@@ -132,6 +133,7 @@ extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
  * @return Status::OK success
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key exists in db, so this function
  * returned immediately.
+ * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, so it update the local write
  * set object.
  */
@@ -232,11 +234,13 @@ extern Status search_key(Token token, std::string_view key, Tuple** tuple); // N
 
 /**
  * @brief Transaction begins.
- * @details Get an epoch accessible to this transaction.
+ * @attention This function basically does not have to be called. Because it is called automatically internally using
+ * the @b read_only (false) argument.
+ * @details To determine the GC-capable epoch, determine the epoch at the start of the transaction. Specify true for
+ * read_only to execute a fast read only transaction that just reads snapshots.
  * @param [in] token
  * @param [in] read_only If this is true, it uses read only mode which transactional reads read stale snapshot.
  * @attention If you specify read_only is true, you can not execute transactional write operation in this transaction.
- * @return void
  */
 extern void tx_begin(Token token, bool read_only = false); // NOLINT
 
@@ -246,6 +250,7 @@ extern void tx_begin(Token token, bool read_only = false); // NOLINT
  * @param [in] key the key of the updated record
  * @param [in] val the value of the updated record
  * @return Status::OK if successful
+ * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should
  * do abort.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, so it update the value which is going
@@ -262,6 +267,7 @@ extern Status update(Token token, std::string_view key, std::string_view val); /
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was inserted by this function was
  * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
+ * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, so it overwrite its local write set.
  */
 extern Status upsert(Token token, std::string_view key, std::string_view val); // NOLINT

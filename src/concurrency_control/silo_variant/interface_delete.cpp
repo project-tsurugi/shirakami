@@ -32,6 +32,7 @@ namespace shirakami::cc_silo_variant {
 Status delete_record(Token token, const std::string_view key) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
     Status check = ti->check_delete_after_write(key);
 
     Record** rec_double_ptr{yakushima::get<Record*>(key).first};
