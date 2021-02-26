@@ -26,26 +26,35 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
+// rocksdb
+#include "rocksdb/db.h"
+
 using namespace shirakami;
+using namespace ROCKSDB_NAMESPACE;
 
 /**
  * general option.
  */
-DEFINE_uint64(                                                        // NOLINT
-        cpumhz, 2000,                                                     // NOLINT
-        "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
-        "time.");                                                         // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
+DEFINE_uint32(bench_type, 0, "Do benchmarking for specific type. " // NOLINT
+                             "0 is insert benchmarking.");
 
 /**
- * special option.
+ * rocks db options
  */
+DEFINE_uint64(rocksdb_memtable_memory_budget, 512 * 1024 * 1024, // NOLINT
+              "Use for Options::optimizeLevelStyleCompaction.");
+DEFINE_string(rocksdb_path, "/tmp/rocksdbtest", "Path to db for benchmarking."); // NOLINT
+DEFINE_uint64(rocksdb_options_IncreaseParallelism, 16, // NOLINT
+              "The argument of ROCKSDB_NAMESPACE::Options.IncreaseParallelism.");
+
+DB* db; // NOLINT
 
 static bool isReady(const std::vector<char> &readys);  // NOLINT
-static void waitForReady(const std::vector<char> &readys);
-
 static void invoke_leader();
+
+static void waitForReady(const std::vector<char> &readys);
 
 static void worker(size_t thid, char &ready, const bool &start, const bool &quit, std::uint64_t &res);
 
@@ -73,7 +82,7 @@ static void invoke_leader() {
     for (auto &&elem : res) {
         sum += elem;
     }
-    SPDLOG_INFO("Throughput: {0} /s", sum / FLAGS_duration);
+    SPDLOG_INFO("Throughput[ops/s]: {0}", sum / FLAGS_duration);
 }
 
 static void load_flags() {
@@ -81,12 +90,6 @@ static void load_flags() {
         SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
     } else {
         SPDLOG_DEBUG("Number of threads must be larger than 0.");
-        exit(1);
-    }
-    if (FLAGS_cpumhz > 1) {
-        SPDLOG_DEBUG("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
-    } else {
-        SPDLOG_DEBUG("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.");
         exit(1);
     }
     if (FLAGS_duration >= 1) {
@@ -104,10 +107,21 @@ int main(int argc, char* argv[]) {  // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
-    SPDLOG_DEBUG("hoge");
+    Options options;
+    options.IncreaseParallelism(FLAGS_rocksdb_options_IncreaseParallelism);
+    options.OptimizeLevelStyleCompaction(FLAGS_rocksdb_memtable_memory_budget);
+    options.create_if_missing = true;
+    auto s = DB::Open(options, FLAGS_rocksdb_path, &db);
+    if (!s.ok()) {
+        SPDLOG_INFO("Fail to open db.");
+        exit(1);
+    }
+
+    SPDLOG_DEBUG("create db.");
     invoke_leader();
     SPDLOG_DEBUG("Fin invoke_leader");
 
+    delete db; // NOLINT
     return 0;
 }
 
@@ -124,6 +138,21 @@ void waitForReady(const std::vector<char> &readys) {
     }
 }
 
+void bench_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor) {
+    std::string_view key{reinterpret_cast<const char*>(&insert_cursor), sizeof(insert_cursor)}; // NOLINT
+    std::string_view val{key};
+    auto s = db->Put(WriteOptions(), key, val);
+    if (!s.ok()) {
+        SPDLOG_INFO("error at put.");
+        exit(1);
+    }
+    ++insert_cursor;
+    if (insert_cursor == insert_end) {
+        SPDLOG_INFO("Happen round-trip problem by too long experiment time.");
+        exit(1);
+    }
+}
+
 void worker(const std::size_t thid, char &ready, const bool &start,
             const bool &quit, std::uint64_t &res) {
     // init work
@@ -133,10 +162,24 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     // this function can be used in Linux environment only.
     setThreadAffinity(static_cast<const int>(thid));
 
+    // some prepare
+    std::uint64_t insert_start{(UINT64_MAX / FLAGS_thread) * (thid)};
+    std::uint64_t insert_end{(UINT64_MAX / FLAGS_thread) * (thid + 1) - 1};
+    std::uint64_t insert_cursor{insert_start};
+
+    // ready
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
+        switch (FLAGS_bench_type) { // NOLINT
+            case 0:
+                bench_insert_process(insert_end, insert_cursor);
+                break;
+            default:
+                break;
+        }
+        ++sum;
     }
     res = sum;
 }
