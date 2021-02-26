@@ -23,6 +23,15 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GHA_PAT }}
 
+      - id: CMake_Build_RocksDB
+        name: CMake_Build_RocksDB
+        run: |
+          cd third_party/rocksdb/
+          mkdir -p build
+          cd build
+          cmake ..
+          make -j
+
       - id: CMake_Build_with_pwal
         name: CMake_Build_with_pwal
         run: |
