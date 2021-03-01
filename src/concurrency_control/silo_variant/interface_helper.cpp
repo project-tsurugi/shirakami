@@ -167,14 +167,15 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             return Status::OK;
         };
 
-        auto repeat_num{0};
+        std::size_t repeat_num{0};
         while (f_check.get_lock()) {
             _mm_pause();
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
             Status s{check_concurrent_others_write()};
             if (s != Status::OK) return s;
             ++repeat_num;
-            if (repeat_num > 100) return Status::WARN_CONCURRENT_INSERT;
+            constexpr std::size_t repeat_threshold{100};
+            if (repeat_num > repeat_threshold) return Status::WARN_CONCURRENT_INSERT;
         }
 
         Status s{check_concurrent_others_write()};
