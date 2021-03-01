@@ -35,19 +35,26 @@ using namespace ROCKSDB_NAMESPACE;
 /**
  * general option.
  */
+DEFINE_uint32(bench_type, 0, "Do benchmarking for specific type. " // NOLINT
+                             "0 is insert benchmarking."
+                             "1 is batch insert benchmarking."
+);
+DEFINE_uint32(batch_insert_num, 1, "The # of insertion as a batch."); // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
-DEFINE_uint32(bench_type, 0, "Do benchmarking for specific type. " // NOLINT
-                             "0 is insert benchmarking.");
 
 /**
  * rocks db options
  */
 DEFINE_uint64(rocksdb_memtable_memory_budget, 512 * 1024 * 1024, // NOLINT
               "Use for Options::optimizeLevelStyleCompaction.");
-DEFINE_string(rocksdb_path, "/tmp/rocksdbtest", "Path to db for benchmarking."); // NOLINT
-DEFINE_uint64(rocksdb_options_IncreaseParallelism, 16, // NOLINT
+DEFINE_uint64(rocksdb_options_increase_parallelism, 16, // NOLINT
               "The argument of ROCKSDB_NAMESPACE::Options.IncreaseParallelism.");
+DEFINE_bool(rocksdb_options_create_if_missing, true, // NOLINT
+            "The value of ROCKSDB_NAMESPACE::Options.create_if_missing.");
+DEFINE_bool(rocksdb_options_direct_io_for_flush_and_compaction, false, // NOLINT
+            "The value of ROCKSDB_NAMESPACE::Options.direct_io_for_flush_and_compaction.");
+DEFINE_string(rocksdb_path, "/tmp/rocksdbtest", "Path to db for benchmarking."); // NOLINT
 
 DB* db; // NOLINT
 
@@ -101,6 +108,13 @@ static void load_flags() {
     SPDLOG_DEBUG("Fin load_flags()");
 }
 
+void set_rocksdb_options(Options &options) {
+    options.IncreaseParallelism(FLAGS_rocksdb_options_increase_parallelism);
+    options.OptimizeLevelStyleCompaction(FLAGS_rocksdb_memtable_memory_budget);
+    options.create_if_missing = FLAGS_rocksdb_options_create_if_missing;
+    options.use_direct_io_for_flush_and_compaction = FLAGS_rocksdb_options_direct_io_for_flush_and_compaction;
+}
+
 int main(int argc, char* argv[]) {  // NOLINT
     logger::setup_spdlog();
     gflags::SetUsageMessage(static_cast<const std::string &>("RocksDB benchmark"));  // NOLINT
@@ -108,20 +122,19 @@ int main(int argc, char* argv[]) {  // NOLINT
     load_flags();
 
     Options options;
-    options.IncreaseParallelism(FLAGS_rocksdb_options_IncreaseParallelism);
-    options.OptimizeLevelStyleCompaction(FLAGS_rocksdb_memtable_memory_budget);
-    options.create_if_missing = true;
+    set_rocksdb_options(options);
     auto s = DB::Open(options, FLAGS_rocksdb_path, &db);
     if (!s.ok()) {
-        SPDLOG_INFO("Fail to open db.");
+        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
         exit(1);
     }
 
-    SPDLOG_DEBUG("create db.");
+    SPDLOG_INFO("Create db.");
     invoke_leader();
-    SPDLOG_DEBUG("Fin invoke_leader");
+    SPDLOG_INFO("Fin measurement.");
 
     delete db; // NOLINT
+    SPDLOG_INFO("Fin deleting db.");
     return 0;
 }
 
@@ -143,10 +156,32 @@ void bench_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor
     std::string_view val{key};
     auto s = db->Put(WriteOptions(), key, val);
     if (!s.ok()) {
-        SPDLOG_INFO("error at put.");
+        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
         exit(1);
     }
     ++insert_cursor;
+    if (insert_cursor == insert_end) {
+        SPDLOG_INFO("Happen round-trip problem by too long experiment time.");
+        exit(1);
+    }
+}
+
+void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor) {
+    std::vector<std::uint64_t> vec;
+    vec.reserve(FLAGS_batch_insert_num);
+    WriteBatch batch; // NOLINT
+    for (auto i = 0; i < FLAGS_batch_insert_num; ++i) {
+        vec.emplace_back(insert_cursor);
+        std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
+        std::string_view val{key};
+        batch.Put(key, val);
+        ++insert_cursor;
+    }
+    Status s = db->Write(WriteOptions(), &batch);
+    if (!s.ok()) {
+        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        exit(1);
+    }
     if (insert_cursor == insert_end) {
         SPDLOG_INFO("Happen round-trip problem by too long experiment time.");
         exit(1);
@@ -175,6 +210,9 @@ void worker(const std::size_t thid, char &ready, const bool &start,
         switch (FLAGS_bench_type) { // NOLINT
             case 0:
                 bench_insert_process(insert_end, insert_cursor);
+                break;
+            case 1:
+                bench_batch_insert_process(insert_end, insert_cursor);
                 break;
             default:
                 break;
