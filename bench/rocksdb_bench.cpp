@@ -170,7 +170,7 @@ void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_
     std::vector<std::uint64_t> vec;
     vec.reserve(FLAGS_batch_insert_num);
     WriteBatch batch; // NOLINT
-    for (auto i = 0; i < FLAGS_batch_insert_num; ++i) {
+    for (std::size_t i = 0; i < FLAGS_batch_insert_num; ++i) {
         vec.emplace_back(insert_cursor);
         std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
         std::string_view val{key};
