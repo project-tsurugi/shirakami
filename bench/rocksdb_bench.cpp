@@ -38,8 +38,10 @@ using namespace ROCKSDB_NAMESPACE;
 DEFINE_uint32(bench_type, 0, "Do benchmarking for specific type. " // NOLINT
                              "0 is insert benchmarking."
                              "1 is batch insert benchmarking."
+                             "2 is update benchmarking."
+                             "3 is batch update benchmarking."
 );
-DEFINE_uint32(batch_insert_num, 1, "The # of insertion as a batch."); // NOLINT
+DEFINE_uint32(batch_write_num, 1, "The # of insertion as a batch."); // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
 
@@ -168,9 +170,9 @@ void bench_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor
 
 void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor) {
     std::vector<std::uint64_t> vec;
-    vec.reserve(FLAGS_batch_insert_num);
+    vec.reserve(FLAGS_batch_write_num);
     WriteBatch batch; // NOLINT
-    for (std::size_t i = 0; i < FLAGS_batch_insert_num; ++i) {
+    for (std::size_t i = 0; i < FLAGS_batch_write_num; ++i) {
         vec.emplace_back(insert_cursor);
         std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
         std::string_view val{key};
@@ -188,6 +190,34 @@ void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_
     }
 }
 
+void bench_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd) {
+    std::uint64_t kv{write_start + (rnd.next() % (UINT64_MAX / FLAGS_thread))};
+    std::string_view key{reinterpret_cast<const char*>(&kv), sizeof(kv)}; // NOLINT
+    std::string_view val{key};
+    auto s = db->Put(WriteOptions(), key, val);
+    if (!s.ok()) {
+        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        exit(1);
+    }
+}
+
+void bench_batch_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd) {
+    std::vector<std::uint64_t> vec;
+    vec.reserve(FLAGS_batch_write_num);
+    WriteBatch batch; // NOLINT
+    for (std::size_t i = 0; i < FLAGS_batch_write_num; ++i) {
+        vec.emplace_back(write_start + (rnd.next() % (UINT64_MAX / FLAGS_thread)));
+        std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
+        std::string_view val{key};
+        batch.Put(key, val);
+    }
+    Status s = db->Write(WriteOptions(), &batch);
+    if (!s.ok()) {
+        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        exit(1);
+    }
+}
+
 void worker(const std::size_t thid, char &ready, const bool &start,
             const bool &quit, std::uint64_t &res) {
     // init work
@@ -198,9 +228,9 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     setThreadAffinity(static_cast<const int>(thid));
 
     // some prepare
-    std::uint64_t insert_start{(UINT64_MAX / FLAGS_thread) * (thid)};
-    std::uint64_t insert_end{(UINT64_MAX / FLAGS_thread) * (thid + 1) - 1};
-    std::uint64_t insert_cursor{insert_start};
+    std::uint64_t write_start{(UINT64_MAX / FLAGS_thread) * (thid)};
+    std::uint64_t write_end{(UINT64_MAX / FLAGS_thread) * (thid + 1) - 1};
+    std::uint64_t insert_cursor{write_start};
 
     // ready
     storeRelease(ready, 1);
@@ -209,11 +239,16 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     while (likely(!loadAcquire(quit))) {
         switch (FLAGS_bench_type) { // NOLINT
             case 0:
-                bench_insert_process(insert_end, insert_cursor);
+                bench_insert_process(write_end, insert_cursor);
                 break;
             case 1:
-                bench_batch_insert_process(insert_end, insert_cursor);
+                bench_batch_insert_process(write_end, insert_cursor);
                 break;
+            case 2:
+                bench_update_process(write_start, rnd);
+                break;
+            case 3:
+                bench_batch_update_process(write_start, rnd);
             default:
                 break;
         }
