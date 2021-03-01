@@ -28,6 +28,7 @@ file(GLOB TEST_SOURCES
         "interface/simple_scan_test.cpp"
         "interface/simple_search_test.cpp"
         "interface/simple_update_test.cpp"
+        "interface/scan_insert_test.cpp"
         "logger_test.cpp"
         "memory_test.cpp"
         "scheme_test.cpp"
