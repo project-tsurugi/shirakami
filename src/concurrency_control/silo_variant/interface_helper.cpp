@@ -155,19 +155,31 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
     f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
     for (;;) {
+        auto check_concurrent_others_write = [&f_check] {
+            if (f_check.get_absent()) {
+                if (f_check.get_latest()) {
+                    return Status::WARN_CONCURRENT_INSERT;
+                    // other thread is inserting this record concurrently,
+                    // but it isn't committed yet.
+                }
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+            return Status::OK;
+        };
+
+        auto repeat_num{0};
         while (f_check.get_lock()) {
             _mm_pause();
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+            Status s{check_concurrent_others_write()};
+            if (s != Status::OK) return s;
+            ++repeat_num;
+            if (repeat_num > 100) return Status::WARN_CONCURRENT_INSERT;
         }
 
-        if (f_check.get_absent()) {
-            if (f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_INSERT;
-                // other thread is inserting this record concurrently,
-                // but it isn't committed yet.
-            }
-            return Status::WARN_CONCURRENT_DELETE;
-        }
+        Status s{check_concurrent_others_write()};
+        if (s != Status::OK) return s;
+
 
         res.get_tuple() = dest->get_tuple();  // execute copy assign.
 

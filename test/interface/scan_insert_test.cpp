@@ -50,7 +50,7 @@ TEST_F(scan_insert_test, insert_record_after_select_doesnt_find) {  // NOLINT
       k1, scan_endpoint::INCLUSIVE,
       handle)
   );
-  ASSERT_EQ(Status::WARN_NOT_FOUND, read_from_scan(
+  ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, read_from_scan(
       s1,
       handle,
       &t)
