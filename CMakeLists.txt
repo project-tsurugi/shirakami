@@ -37,12 +37,12 @@ option(BUILD_CPR "Build concurrent prefix recovery as logging." OFF)
 
 option(FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD "If the command clang-format is available, format source files before each build. Turn this off if the build time is too slow." OFF)
 
+find_package(Boost
+        COMPONENTS filesystem)
 find_package(Doxygen)
 find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
-find_package(Boost
-        COMPONENTS filesystem)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

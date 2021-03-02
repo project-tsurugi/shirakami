@@ -13,6 +13,14 @@ cd shirakami
 sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
 ```
 
+## Dockerfile
+
+```dockerfile
+FROM ubuntu:18.04
+
+RUN apt update -y && apt install -y $(cat build_tools/ubuntu.deps)
+```
+
 ## How to build
 
 ```sh

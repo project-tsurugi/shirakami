@@ -27,10 +27,10 @@
 #include "glog/logging.h"
 
 // rocksdb
-#include "rocksdb/db.h"
+#include <rocksdb/db.h>
 
 using namespace shirakami;
-using namespace ROCKSDB_NAMESPACE;
+using namespace rocksdb;
 
 /**
  * general option.

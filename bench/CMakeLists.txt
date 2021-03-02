@@ -59,13 +59,12 @@ add_executable(rocksdb_bench
 target_link_libraries(rocksdb_bench
         PRIVATE gflags::gflags
         PRIVATE Threads::Threads
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/rocksdb/build/librocksdb.a
+        PRIVATE librocksdb.so
         )
 
 target_include_directories(rocksdb_bench
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/rocksdb/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )

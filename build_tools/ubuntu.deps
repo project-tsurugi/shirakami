@@ -7,6 +7,12 @@ git
 gnuplot
 libboost-filesystem-dev
 libboost1.65-dev
+libbz2-dev
 libgflags-dev
 libgoogle-glog-dev
+liblz4-1
+librocksdb-dev
+libsnappy1v5
+libzstd1
 ninja-build
+zlib1g-dev
