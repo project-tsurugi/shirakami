@@ -4,7 +4,7 @@
 
 * CMake `>= 3.10`
 * C++ Compiler `>= C++17`
-* build related libararies - on Ubuntu, you can install with following command:
+* Build related libararies - on Ubuntu, you can install with following command:
 
 ```sh
 # clone this repository
@@ -30,72 +30,79 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
 ninja
 ```
 
-available options:
+Available options:
 * `-DBUILD_TESTS=OFF`
-   * never build test programs
+   * Never build test programs
 * `-DBUILD_DOCUMENTS=OFF`
-   * never build documents by doxygen
+   * Never build documents by doxygen
 * `-DBUILD_SHARED_LIBS=OFF`
-   * create static libraries instead of shared libraries
+   * Create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>`
-   * indicate prerequiste installation directory
+   * Indicate prerequiste installation directory
 * `-DFORCE_INSTALL_RPATH=ON`
-   * force set RPATH for non-default library paths
+   * Force set RPATH for non-default library paths
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON`
-   * use formatting for source files
-* for debugging only
+   * Use formatting for source files
+* For debugging only
   * `-DENABLE_SANITIZER=OFF` 
-     * disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
+     * Disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug`)
   * `-DENABLE_UB_SANITIZER=ON`
-     * enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
+     * Enable undefined behavior sanitizer (requires `-DENABLE_SANITIZER=ON`)
   * `-DENABLE_COVERAGE=ON`
-     * enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
-* logging method (You can select at most one method.)
+     * Enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug`)
+* Logging method (You can select at most one method.)
   * `-DBUILD_PWAL=ON` 
-     * enable parallel write-ahead-logging (default: `OFF`)
+     * Enable parallel write-ahead-logging (default: `OFF`)
      <font color="red">This option will be abolished because we plan to use mainly cpr as logging
       method.</font>
       * `-DPWAL_ENABLE_READ_LOG=ON`
-        * enable to log read log with write log to verify whether committed schedule is valid.
+        * Enable to log read log with write log to verify whether committed schedule is valid.
   * `-DBUILD_CPR=ON` 
-     * enable concurrent prefix recovery (default: `OFF`)
+     * Enable concurrent prefix recovery.
+     * Default: `OFF`
   * `-DBUILD_WITH_RECOVERY=ON` 
-     * enable initialization of db from log. (default: `OFF`)
-* parameter setting
+     * Enable initialization of db from log. (default: `OFF`)
+* Parameter setting
   * Silo variant
     * `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>` 
-       * It is a max size of concurrent opening session (by 
-  enter command). (default: `500`)
+       * It is a max size of concurrent opening session (by enter command).
+       * Default: `500`
     * `-DPARAM_EPOCH_TIME=<epoch time (ms)>` 
        * Epoch time related with latency of commit (durable) and span of resource 
-management. (default: `40`)
+management.
+       * Default: `40`
+    * `-DPARAM_RETRY_READ`
+       * The number of retry read without give-up due to conflicts at reading record.
+       * Default : `0`
   * PWAL
     * `-DKVS_LOG_GC_THRESHOLD=<# operations of group commit in a batch>` 
        * This is one of trigger of group commit. If 
-  thread local pwal buffer has log records more than this number, it tries group commit. (default: `1000`)
+  thread local pwal buffer has log records more than this number, it tries group commit.
+       * Default: `1000`
   * CPR
     * `-DPARAM_CHECKPOINT_REST_EPOCH=<time (ms)>` 
-      * The rest time after each checkpoint. (default: `40`)
+      * The rest time after each checkpoint.
+      * Default: `40`
   
-### install 
+### Install 
 
 ```sh
 ninja install
 ```
 
-### run tests
+### Run tests
 
 ```sh
 ctest -V
 ```
 
-### generate documents
+### Generate documents
 
 ```sh
 ninja doxygen
 ```
 
-### code coverage
+### Code coverage
 
 Run cmake with `-DENABLE_COVERAGE=ON` and run tests.
 Dump the coverage information into html files with the following steps:
