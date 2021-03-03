@@ -71,7 +71,8 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
             Tuple* t{};
-            ASSERT_EQ(Status::OK, search_key(s, k, &t));
+            Status res{search_key(s, k, &t)};
+            while (res != Status::OK) res = search_key(s, k, &t);
             ASSERT_NE(nullptr, t);
             v = *reinterpret_cast<std::int64_t*>(  // NOLINT
                     const_cast<char*>(t->get_value().data()));
