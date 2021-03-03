@@ -68,7 +68,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
 /**
  * @brief Delete the all records in all tables.
- * @pre This function is called by a single thread and does't allow moving of other threads. This is not transactional
+ * @pre This function is called by a single thread and doesn't allow moving of other threads. This is not transactional
  * operation.
  * @details  It doesn't need to call tx_begin(Token token). Also it doesn't need to call enter/leave around calling this
  * function.
@@ -173,11 +173,13 @@ extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end
  * @details The read record is returned by @result.
  * @param [in] token the token retrieved by enter()
  * @param [in] handle input parameters to identify the specific scan_cache.
- * @param [out] result output parmeter to pass the read record.
+ * @param [out] result output parameter to pass the read record.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by previous delete operation of this transaction.
+ * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation of other transaction.
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert)
  * operation in the same tx.
@@ -189,7 +191,7 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * @brief search with the given key range and return the found tuples
  * @param [in] token the token retrieved by enter()
  * @param [in] l_key the key to indicate the beginning of the range, null if the beginning is open
- * @param [in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key equal to lkey is not included in the result).
+ * @param [in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key equal to l_key is not included in the result).
  * @param [in] r_key the key to indicate the ending of the range, null if the end is open
  * @param [in] r_end indicate whether the @b r_key is exclusive
  * @param [out] result output parameter to pass the found Tuple pointers.
@@ -200,6 +202,7 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation.
  * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other updater, and it could not complete search.
  */
 extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                        scan_endpoint r_end, std::vector<const Tuple*> &result);
@@ -226,6 +229,7 @@ extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end,
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of this transaction.
  * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation of concurrent transaction.
  * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by other's insert.
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other updater, and it could not complete search.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert)
  * operation in the same tx.

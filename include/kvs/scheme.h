@@ -114,6 +114,10 @@ enum class Status : std::int32_t {
      */
     WARN_CONCURRENT_INSERT,
     /**
+     * @brief warning
+     */
+    WARN_CONCURRENT_UPDATE,
+    /**
      * @brief warning.
      * @details
      * @a close_scan : The handle is invalid. @n
@@ -218,6 +222,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_CONCURRENT_DELETE"sv;  // NOLINT
         case Status::WARN_CONCURRENT_INSERT:
             return "WARN_CONCURRENT_INSERT"sv;  // NOLINT
+        case Status::WARN_CONCURRENT_UPDATE:
+            return "WARN_CONCURRENT_UPDATE"sv;  // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv;  // NOLINT
         case Status::WARN_NOT_FOUND:

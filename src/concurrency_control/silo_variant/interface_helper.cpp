@@ -167,20 +167,35 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             return Status::OK;
         };
 
+        auto return_some_others_write_status = [&f_check] {
+            if (f_check.get_absent() && f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_INSERT;
+            }
+            if (f_check.get_absent() && !f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+            return Status::WARN_CONCURRENT_UPDATE;
+        };
+
+#if PARAM_RETRY_READ > 0
         std::size_t repeat_num{0};
+#endif
         while (f_check.get_lock()) {
+#if PARAM_RETRY_READ == 0
+            return return_some_others_write_status();
+#else
+            if (repeat_num >= PARAM_RETRY_READ) {
+                return return_some_others_write_status();
+            }
+#endif
             _mm_pause();
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
             Status s{check_concurrent_others_write()};
             if (s != Status::OK) return s;
+#if PARAM_RETRY_READ > 0
             ++repeat_num;
-            constexpr std::size_t repeat_threshold{100};
-            if (repeat_num > repeat_threshold) return Status::WARN_CONCURRENT_INSERT;
+#endif
         }
-
-        Status s{check_concurrent_others_write()};
-        if (s != Status::OK) return s;
-
 
         res.get_tuple() = dest->get_tuple();  // execute copy assign.
 

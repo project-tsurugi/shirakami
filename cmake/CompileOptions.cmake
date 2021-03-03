@@ -86,6 +86,10 @@ cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
+# Begin : parameter settings
+
+# Begin : about kvs
+
 if (NOT DEFINED KVS_LOG_GC_THRESHOLD)
     add_definitions(-DKVS_LOG_GC_THRESHOLD=1000)
 else ()
@@ -98,17 +102,35 @@ else ()
     add_definitions(-DKVS_MAX_PARALLEL_THREADS=${KVS_MAX_PARALLEL_THREADS})
 endif ()
 
+# End : about kvs
+
+# Begin : about cc
+
 if (NOT DEFINED PARAM_EPOCH_TIME)
     add_definitions(-DPARAM_EPOCH_TIME=40)
 else ()
     add_definitions(-DPARAM_EPOCH_TIME=${PARAM_EPOCH_TIME})
 endif ()
 
+if (NOT DEFINED PARAM_RETRY_READ)
+    add_definitions(-DPARAM_RETRY_READ=0)
+else ()
+    add_definitions(-DPARAM_RETRY_READ=${PARAM_RETRY_READ})
+endif ()
+
+# End : about cc
+
+# Begin : about logging
+
 if (NOT DEFINED PARAM_CHECKPOINT_REST_EPOCH)
     add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=40)
 else ()
     add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=${PARAM_CHECKPOINT_REST_EPOCH})
 endif ()
+
+# End : about logging
+
+# End : parameter settings
 
 function(set_compile_options target_name)
     target_compile_options(${target_name}

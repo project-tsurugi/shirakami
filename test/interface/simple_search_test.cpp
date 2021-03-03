@@ -81,4 +81,23 @@ TEST_F(simple_search, search_upsert_search) {  // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+// Begin tests to do multiple transactions concurrently by one thread.
+
+TEST_F(simple_search, search_concurrent_insert) {  // NOLINT
+    std::string k("k"); // NOLINT
+    std::string v("k"); // NOLINT
+    std::array<Token, 2> token_ar{};
+    ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK, upsert(token_ar.at(0), k, v));
+    Tuple* tuple{};
+    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, search_key(token_ar.at(1), k, &tuple));
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
+    ASSERT_EQ(Status::OK, commit(token_ar.at(1))); // NOLINT
+    ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
+}
+
+// End tests to do multiple transactions concurrently by one thread.
+
 }  // namespace shirakami::testing
