@@ -156,8 +156,8 @@ void waitForReady(const std::vector<char> &readys) {
 void bench_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor) {
     std::string_view key{reinterpret_cast<const char*>(&insert_cursor), sizeof(insert_cursor)}; // NOLINT
     std::string_view val{key};
-    rocksdb::Slice rkey{key};
-    rocksdb::Slice rval{val};
+    rocksdb::Slice rkey{key.data(), key.size()};
+    rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
         SPDLOG_INFO("rocksdb's error code {0}.", s.code());
@@ -178,8 +178,8 @@ void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_
         vec.emplace_back(insert_cursor);
         std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
         std::string_view val{key};
-        rocksdb::Slice rkey{key};
-        rocksdb::Slice rval{val};
+        rocksdb::Slice rkey{key.data(), key.size()};
+        rocksdb::Slice rval{val.data(), val.size()};
         batch.Put(rkey, rval);
         ++insert_cursor;
     }
@@ -198,8 +198,8 @@ void bench_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd) {
     std::uint64_t kv{write_start + (rnd.next() % (UINT64_MAX / FLAGS_thread))};
     std::string_view key{reinterpret_cast<const char*>(&kv), sizeof(kv)}; // NOLINT
     std::string_view val{key};
-    rocksdb::Slice rkey{key};
-    rocksdb::Slice rval{val};
+    rocksdb::Slice rkey{key.data(), key.size()};
+    rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
         SPDLOG_INFO("rocksdb's error code {0}.", s.code());
@@ -215,8 +215,8 @@ void bench_batch_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd
         vec.emplace_back(write_start + (rnd.next() % (UINT64_MAX / FLAGS_thread)));
         std::string_view key{reinterpret_cast<const char*>(&vec.at(i)), sizeof(vec.at(i))}; // NOLINT
         std::string_view val{key};
-        rocksdb::Slice rkey{key};
-        rocksdb::Slice rval{val};
+        rocksdb::Slice rkey{key.data(), key.size()};
+        rocksdb::Slice rval{val.data(), val.size()};
         batch.Put(rkey, rval);
     }
     Status s = db->Write(WriteOptions(), &batch);
