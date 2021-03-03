@@ -23,31 +23,6 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GHA_PAT }}
 
-      - id: CMake_Build_RocksDB
-        name: CMake_Build_RocksDB
-        run: |
-          cd third_party/rocksdb/
-          mkdir -p build
-          cd build
-          cmake ..
-          make -j
-
-      - id: CMake_Build_with_pwal
-        name: CMake_Build_with_pwal
-        run: |
-          mkdir build_pwal
-          cd build_pwal
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_PWAL=ON ..
-          cmake --build . --target all --clean-first -- -j
-
-      - id: CMake_Build_with_pwal_and_read_log
-        name: CMake_Build_with_pwal_and_read_log
-        run: |
-          mkdir build_pwal_and_read_log
-          cd build_pwal_and_read_log
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_PWAL=ON -DPWAL_ENABLE_READ_LOG=ON ..
-          cmake --build . --target all --clean-first -- -j
-
       - id: CMake_Build_with_cpr
         name: CMake_Build_with_cpr
         run: |
