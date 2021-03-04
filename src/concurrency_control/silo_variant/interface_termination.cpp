@@ -47,7 +47,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
         if (ti->get_phase() == cpr::phase::REST && itr->get_rec_ptr()->get_version() > ti->get_version()) {
             ti->unlock_write_set(ti->get_write_set().begin(), itr + 1);
             abort(token);
-            return Status::ERR_WRITE_TO_DELETED_RECORD;
+            return Status::ERR_CPR_ORDER_VIOLATION;
         }
 #endif
 
