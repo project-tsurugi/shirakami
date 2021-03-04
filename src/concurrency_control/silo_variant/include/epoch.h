@@ -12,6 +12,8 @@
 
 namespace shirakami::cc_silo_variant::epoch {
 
+// todo resolve about round-trip problem for epoch.
+
 /**
  * @brief epoch_t
  * @details

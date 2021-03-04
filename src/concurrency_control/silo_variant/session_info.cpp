@@ -251,7 +251,7 @@ Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
             std::get<0>(elem) = nvb; // update
             // return Status::OK;
             /**
-             * TODO : discussion.
+             * note : discussion.
              * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
              * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
              * Even if you find a match, you have to search for everything because there may be other matches.

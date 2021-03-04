@@ -47,6 +47,10 @@ private:
     std::uint64_t version_: 56;
 };
 
+/**
+ * @brief Shared global phase version.
+ * @todo Measures for round-trip of version counter.
+ */
 class global_phase_version {
 public:
     static phase_version get_gpv() { return body.load(std::memory_order_acquire); } // NOLINT
