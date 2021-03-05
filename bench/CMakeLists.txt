@@ -52,19 +52,21 @@ file(GLOB ROCKSDB_SOURCES
         "rocksdb_bench.cpp"
         )
 
-add_executable(rocksdb_bench
-        ${ROCKSDB_SOURCES}
-        )
+if (BUILD_ROCKSDB_BENCH)
+    add_executable(rocksdb_bench
+            ${ROCKSDB_SOURCES}
+            )
 
-target_link_libraries(rocksdb_bench
-        PRIVATE gflags::gflags
-        PRIVATE Threads::Threads
-        PRIVATE librocksdb.so
-        )
+    target_link_libraries(rocksdb_bench
+            PRIVATE gflags::gflags
+            PRIVATE Threads::Threads
+            PRIVATE librocksdb.so
+            )
 
-target_include_directories(rocksdb_bench
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
-        PRIVATE ${gflags_INCLUDE_DIR}
-        )
+    target_include_directories(rocksdb_bench
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/src/include
+            PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
+            PRIVATE ${gflags_INCLUDE_DIR}
+            )
+endif ()

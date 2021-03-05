@@ -83,7 +83,12 @@ management.
     * `-DPARAM_CHECKPOINT_REST_EPOCH=<time (ms)>` 
       * The rest time after each checkpoint.
       * Default: `40`
-  
+* Benchmarking (project_root/bench)
+  * RocksDB
+    * `-DBUILD_ROCKSDB_BENCH=ON`
+      * Build project_root/bench/rocksdb_bench.
+      * Default: `OFF`
+        
 ### Install 
 
 ```sh
