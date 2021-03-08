@@ -305,6 +305,7 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
     ScanHandle handle{};
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
     /**
      * test
      * if read_from_scan detects self write(update, insert), it read from owns.
@@ -321,8 +322,10 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
      * taken at open_scan, it returns Status::WARN_SCAN_LIMIT.
      */
     ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
     ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, 3, &tuple));
     ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
     EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
     EXPECT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
@@ -341,6 +344,7 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
      * returns Status::WARN_ALREADY_DELETE.
      */
     ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
     ASSERT_EQ(Status::OK, delete_record(s, k));
     EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, handle, &tuple));
     ASSERT_EQ(Status::OK, abort(s));
@@ -352,12 +356,13 @@ TEST_F(simple_scan, read_from_scan) {  // NOLINT
      * means reading deleted record.
      */
     ASSERT_EQ(Status::OK, open_scan(s, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    EXPECT_EQ(Status::ERR_PHANTOM, read_from_scan(s, handle, &tuple));
-
+    Status ret{read_from_scan(s, handle, &tuple)};
+    ASSERT_TRUE(ret == Status::ERR_PHANTOM || ret == Status::WARN_CONCURRENT_DELETE); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));
 }

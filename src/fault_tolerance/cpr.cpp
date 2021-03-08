@@ -4,6 +4,7 @@
 
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 #include "concurrency_control/silo_variant/include/session_info_table.h"
+#include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #include "fault_tolerance/include/log.h"
 
@@ -20,7 +21,6 @@ namespace shirakami::cpr {
 
 void checkpoint_thread() {
     setup_spdlog();
-    SPDLOG_DEBUG("start checkpoint thread.");
     auto wait_worker = [](phase new_phase) {
         bool continue_loop{}; // NOLINT
         do {
@@ -81,6 +81,16 @@ void checkpointing() {
     std::vector<Record*> garbage{};
     phase_version pv = global_phase_version::get_gpv();
     log_records l_recs{};
+    Token shira_token{};
+    enter(shira_token);
+    /**
+     * The Snapshot Transaction Manager aligns the work of removing snapshots from the index and freeing memory with
+     * the progress of the epoch.
+     * If this thread does not coordinate with it, it can access the freed memory.
+     * Therefore, by joining this thread to the session and starting a transaction in a pseudo manner, the view of
+     * memory is protected.
+     */
+    tx_begin(shira_token); // NOLINT
     for (auto &&itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
@@ -89,11 +99,14 @@ void checkpointing() {
          * the view protection protocol to avoid segv.
          */
         auto remove_from_index_and_register_garbage = [&]() {
-            yakushima::remove(yaku_token, rec->get_tuple().get_key());
             tid_word new_tid = rec->get_tidw();
             new_tid.set_epoch(kGlobalEpoch.load(std::memory_order_acquire));
+            if (rec->get_snap_ptr() == nullptr) {
+                // if no snapshot, it can immediately remove.
+                yakushima::remove(yaku_token, rec->get_tuple().get_key());
+                garbage.emplace_back(rec);
+            }
             storeRelease(rec->get_tidw().get_obj(), new_tid.get_obj());
-            garbage.emplace_back(rec);
         };
         if (rec->get_failed_insert()) {
             /**
@@ -101,37 +114,77 @@ void checkpointing() {
              * so omit checkpoint processing.
              */
             remove_from_index_and_register_garbage();
+            rec->get_tidw().unlock();
         } else {
-            if (rec->get_version() == pv.get_version() + 1) {
-                const Tuple &tup = rec->get_stable();
-                l_recs.emplace_back(tup.get_key(), tup.get_value());
-            } else {
-                const Tuple &tup = rec->get_tuple();
-                l_recs.emplace_back(tup.get_key(), tup.get_value());
-                if (rec->get_tidw().get_latest()) {
-                    /**
-                     * If it is still live record, capture stable for partial checkpointing.
-                     * Partial checkpointing of cpr doesn't exist at writing this sentence. So todo.
-                     */
-                    if (!(rec->get_tidw().get_epoch() == rec->get_stable_tidw().get_epoch()
-                          && rec->get_tidw().get_tid() == rec->get_stable_tidw().get_tid())) {
-                        rec->get_stable() = tup;
-                        rec->get_stable_tidw() = rec->get_tidw();
+            if (
+                    (
+                            /**
+                             * Do not include records inserted after the checkpoint boundary and before this thread
+                             * scans the index.
+                             */
+                            rec->get_tidw().get_latest() &&
+                            rec->get_not_include_version() != -1 &&
+                            pv.get_version() != static_cast<uint64_t >(rec->get_not_include_version())
+                    ) ||
+                    (
+                            /**
+                             * Do not include records that were deleted before the checkpoint boundary but were left in
+                             * the index for the snapshot transaction.
+                             */
+                            rec->get_tidw().get_absent() &&
+                            !rec->get_tidw().get_latest() &&
+                            rec->get_not_include_version() != -1 &&
+                            pv.get_version() < static_cast<uint64_t>(rec->get_not_include_version())
+                    )
+                    ) {
+                // Begin : copy record
+                /**
+                 * todo : It can be expected to be faster by refining it.
+                 * After all, while cooperating with the worker thread to save the value, various processing is
+                 * done after acquiring the lock. This is due to various complicated processing and arbitration, but
+                 * it can be expected to be faster by refining it.
+                 */
+                if (rec->get_version() == pv.get_version() + 1) {
+                    const Tuple &tup = rec->get_stable();
+                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                } else {
+                    const Tuple &tup = rec->get_tuple();
+                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    if (rec->get_tidw().get_latest()) {
+                        /**
+                         * Update only the version number to prevent other workers from making redundant copies after
+                         * releasing the lock.
+                         */
+                        rec->set_version(pv.get_version() + 1);
                     }
-                    rec->set_version(rec->get_version() + 1);
                 }
+                // End : copy record
             }
             if (!rec->get_tidw().get_latest()) {
                 /**
                  * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
                  */
-                 remove_from_index_and_register_garbage();
+                remove_from_index_and_register_garbage();
+            }
+            if (rec->get_snap_ptr() == nullptr) {
+                rec->get_tidw().unlock();
+            } else {
+                snapshot_manager::remove_rec_cont_mutex.lock();
+                rec->get_tidw().unlock();
+                snapshot_manager::remove_rec_cont.emplace_back(rec);
+                /**
+                 * Important : This thread is not involved in the progress of the epoch.
+                 * Therefore, from the moment you pass this rec pointer to snapshot_manager, the pointer is inaccessible.
+                 * If you accessed, it may cause segmentation fault.
+                 */
+                snapshot_manager::remove_rec_cont_mutex.unlock();
             }
         }
-        rec->get_tidw().unlock();
         if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
     }
     yakushima::leave(yaku_token);
+    commit(shira_token); // NOLINT
+    leave(shira_token);
 
     /**
      * release old garbage
@@ -153,7 +206,6 @@ void checkpointing() {
     /**
      * record garbage to some session area.
      */
-    Token shira_token{};
     enter(shira_token);
     tx_begin(shira_token); // NOLINT
     auto* ti = static_cast<cc_silo_variant::session_info*>(shira_token);
@@ -167,6 +219,9 @@ void checkpointing() {
 
     if (kCheckPointThreadEnd.load(std::memory_order_acquire)) return;
 
+    /**
+     * Starting logging and flushing
+     */
     msgpack::pack(logf, l_recs);
     logf.flush();
     logf.close();

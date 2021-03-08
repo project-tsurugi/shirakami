@@ -37,7 +37,7 @@ void snapshot_manager_func() {
                     exit(1);
                 }
                 if (epoch::get_snap_epoch(elem->get_snap_ptr()->get_tidw().get_epoch()) !=
-                    epoch::get_snap_epoch(maybe_smallest_ew)) {
+                    epoch::get_snap_epoch(maybe_smallest_ew)) { // todo : measures for round-trip of epoch.
                     if (!yaku_entered) {
                         yakushima::enter(yaku_token);
                         yaku_entered = true;

@@ -7,8 +7,9 @@
 
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/record.h"
+
 #include "clock.h"
-#include "tuple_local.h"
+#include "logger.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -50,17 +51,16 @@ TEST_F(simple_update, update) {  // NOLINT
 TEST_F(simple_update, concurrent_updates) {  // NOLINT
     struct S {
         static void prepare() {
-            std::string k0("a");  // NOLINT
             std::string k("aa");  // NOLINT
             std::int64_t v{0};
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, insert(s, k0,
-                                         {reinterpret_cast<char*>(&v),  // NOLINT
-                                          sizeof(std::int64_t)}));
             ASSERT_EQ(Status::OK, insert(s, k,
                                          {reinterpret_cast<char*>(&v),  // NOLINT
                                           sizeof(std::int64_t)}));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            Tuple* t{};
+            ASSERT_EQ(Status::OK, search_key(s, k, &t));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
@@ -72,13 +72,18 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
             ASSERT_EQ(Status::OK, enter(s));
             Tuple* t{};
             Status res{search_key(s, k, &t)};
-            while (res != Status::OK) res = search_key(s, k, &t);
+            while (res == Status::WARN_CONCURRENT_UPDATE) {
+                res = search_key(s, k, &t);
+            }
+            if (res != Status::OK) {
+                SPDLOG_DEBUG("fatal error");
+                exit(1);
+            }
             ASSERT_NE(nullptr, t);
-            v = *reinterpret_cast<std::int64_t*>(  // NOLINT
-                    const_cast<char*>(t->get_value().data()));
+            v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data())); // NOLINT
             v++;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));  // NOLINT
-            ASSERT_EQ(Status::OK, upsert(s, k,
+            ASSERT_EQ(Status::OK, update(s, k,
                                          {reinterpret_cast<char*>(&v),  // NOLINT
                                           sizeof(std::int64_t)}));
             rc = (Status::OK == commit(s)); // NOLINT

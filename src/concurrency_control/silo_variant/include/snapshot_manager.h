@@ -16,6 +16,7 @@
 namespace shirakami::cc_silo_variant::snapshot_manager {
 
 // Elements in this container will be removed from index
+// todo, enhancement  : It will use oneTBB container.
 [[maybe_unused]] inline std::vector<Record*> remove_rec_cont; // NOLINT
 [[maybe_unused]] inline std::mutex remove_rec_cont_mutex; // NOLINT
 // Memory used by elements in this container will be released.

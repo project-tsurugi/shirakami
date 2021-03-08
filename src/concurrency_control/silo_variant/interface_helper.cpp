@@ -11,7 +11,9 @@
 #include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #if defined(PWAL) || defined(CPR)
+
 #include "log.h"
+
 #endif
 
 #include "kvs/interface.h"
@@ -155,6 +157,17 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
     f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
     for (;;) {
+        auto return_some_others_write_status = [&f_check] {
+            if (f_check.get_absent() && f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_INSERT;
+            }
+            if (f_check.get_absent() && !f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+            return Status::WARN_CONCURRENT_UPDATE;
+        };
+
+#if PARAM_RETRY_READ > 0
         auto check_concurrent_others_write = [&f_check] {
             if (f_check.get_absent()) {
                 if (f_check.get_latest()) {
@@ -167,17 +180,6 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             return Status::OK;
         };
 
-        auto return_some_others_write_status = [&f_check] {
-            if (f_check.get_absent() && f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_INSERT;
-            }
-            if (f_check.get_absent() && !f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_DELETE;
-            }
-            return Status::WARN_CONCURRENT_UPDATE;
-        };
-
-#if PARAM_RETRY_READ > 0
         std::size_t repeat_num{0};
 #endif
         while (f_check.get_lock()) {
@@ -187,14 +189,20 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             if (repeat_num >= PARAM_RETRY_READ) {
                 return return_some_others_write_status();
             }
-#endif
             _mm_pause();
             f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
             Status s{check_concurrent_others_write()};
             if (s != Status::OK) return s;
-#if PARAM_RETRY_READ > 0
             ++repeat_num;
 #endif
+        }
+
+        if (f_check.get_absent()) {
+            /**
+             * Detected records that were deleted but remained in the index so that CPR threads could be found, or read
+             * only snapshot transactions could be found.
+             */
+            return Status::WARN_CONCURRENT_DELETE;
         }
 
         res.get_tuple() = dest->get_tuple();  // execute copy assign.
@@ -277,13 +285,25 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
         switch (iws->get_op()) {
             case OP_TYPE::INSERT: {
 #ifdef CPR
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    if (!rec_ptr->get_checkpointed()) {
-                        rec_ptr->get_stable() = rec_ptr->get_tuple();
-                        rec_ptr->get_stable_tidw() = max_tid;
-                        rec_ptr->set_version(ti->get_version() + 1);
-                    }
+                /**
+                 * When this transaction started in the rest phase, cpr thread never started scanning.
+                 */
+                if (ti->get_phase() != cpr::phase::REST) {
+                    /**
+                     * If this transaction have a serialization point after the checkpoint boundary and before the scan
+                     * of the cpr thread, the cpr thread will include it even though it should not be included in the
+                     * checkpoint.
+                     * Since this transaction inserted this record with a lock, it is guaranteed that the checkpoint
+                     * thread has never been reached.
+                     */
+                    rec_ptr->set_not_include_version(ti->get_version());
                 }
+                /**
+                 * else : The rest phase is before the checkpoint boundary. The fact that this worker thread started
+                 * in the rest phase means that the checkpoint thread is in the rest phase or in-progress phase and
+                 * has not started scanning. Therefore, this record is always observed in the next scanning of the
+                 * checkpoint thread.
+                 */
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
@@ -304,14 +324,11 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 }
 #ifdef CPR
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    if (!rec_ptr->get_checkpointed()) {
-                        rec_ptr->get_stable() = rec_ptr->get_tuple();
-                        rec_ptr->get_stable_tidw() = max_tid;
-                        rec_ptr->set_version(ti->get_version() + 1);
-                    }
+                    rec_ptr->get_stable() = rec_ptr->get_tuple();
+                    rec_ptr->get_stable_tidw() = max_tid;
+                    rec_ptr->set_version(ti->get_version() + 1);
                 }
 #endif
-
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }
@@ -323,50 +340,45 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
 
                 std::string_view key_view = rec_ptr->get_tuple().get_key();
 
-                /**
-                 * about removing index
-                 */
-#ifndef CPR
-                /**
-                 * case : no logging and pwal
-                 */
-#else
-                // todo : sefely snap opt with cpr
+#ifdef CPR
                 if (ti->get_phase() == cpr::phase::REST) {
                     /**
-                     * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
+                     * This worker started in rest phase, meaning checkpoint thread does not scan yet.
                      */
-                    yakushima::remove(ti->get_yakushima_token(), key_view);
-                    ti->get_gc_record_container().emplace_back(rec_ptr);
+                    if (rec_ptr->get_snap_ptr() == nullptr) {
+                        yakushima::remove(ti->get_yakushima_token(), key_view);
+                        ti->get_gc_record_container().emplace_back(rec_ptr);
+                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                    } else {
+                        rec_ptr->set_not_include_version(ti->get_version());
+                        snapshot_manager::remove_rec_cont_mutex.lock();
+                        snapshot_manager::remove_rec_cont.emplace_back(rec_ptr);
+                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                        snapshot_manager::remove_rec_cont_mutex.unlock();
+                    }
                 } else {
                     /**
                      * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
                      */
-                    if (rec_ptr->get_checkpointed()) {
+                    if (ti->get_version() + 1 == rec_ptr->get_version()) {
                         /**
                          * Checkpoint thread did process, so it can remove from index.
                          */
                         yakushima::remove(ti->get_yakushima_token(), key_view);
                         ti->get_gc_record_container().emplace_back(rec_ptr);
-                    }
-                    /**
-                     * else : The check pointer is responsible for deleting from the index and registering garbage.
-                     */
-                }
-#endif
-                /**
-                 * end about removing index
-                 */
-
-#ifdef CPR
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    if (!rec_ptr->get_checkpointed()) {
+                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                    } else {
+                        /**
+                         * else : The check pointer is responsible for deleting from the index and registering garbage.
+                         */
                         rec_ptr->get_stable() = rec_ptr->get_tuple();
                         rec_ptr->get_stable_tidw() = delete_tid;
                         rec_ptr->set_version(ti->get_version() + 1);
+                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     }
                 }
-#endif
+
+#else
                 if (rec_ptr->get_snap_ptr() == nullptr) {
                     // if no snapshot, it can immediately remove.
                     yakushima::remove(ti->get_yakushima_token(), key_view);
@@ -378,6 +390,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     snapshot_manager::remove_rec_cont_mutex.unlock();
                 }
+#endif
                 break;
             }
             default:

@@ -26,7 +26,7 @@ public:
 #ifdef CPR
         stable_tidw_.get_obj() = 0;
         version_ = 0;
-        checkpointed_ = false;
+        not_include_version_ = -1;
 #endif
     }
 
@@ -82,13 +82,15 @@ public:
 
     [[nodiscard]] bool get_failed_insert() const { return failed_insert_; } // NOLINT
 
-    [[nodiscard]] bool get_checkpointed() const { return checkpointed_; } // NOLINT
+    std::int64_t get_not_include_version() { return not_include_version_; } // NOLINT
 
     void set_version(std::uint64_t new_v) { version_ = new_v; }
 
     void set_stable_tidw(tid_word new_tid) { stable_tidw_ = new_tid; }
 
     void set_failed_insert(bool tf) { failed_insert_ = tf; }
+
+    void set_not_include_version(std::int64_t num) { not_include_version_ = num; }
 
 #endif
 
@@ -102,13 +104,17 @@ private:
     tid_word stable_tidw_;
     /**
      * @pre Only lock owner can read-write this filed.
+     * @todo consider type of member and round-trip
      */
     std::uint32_t version_{0};
-    Tuple stable_;
     /**
-     * @brief If CPR checkpointer processed, this is true.
+     * @details If inserting transaction have a serialization point after the checkpoint boundary and before the scan of
+     * the cpr thread, the cpr thread will include it even though it should not be included in the checkpoint.
+     * To prevent that, do not include this record in this version of the checkpoint. If this value is -1, it can be ignored.
+     * @todo consider type of member and round-trip
      */
-    bool checkpointed_{false};
+    std::int64_t not_include_version_{-1};
+    Tuple stable_;
     /**
      * @brief It is whether this record was inserted and aborted.
      * @details If worker inserted record between cpr logical consistency point and scan by checkpoint thread, checkpoint
