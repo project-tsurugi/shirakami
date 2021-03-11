@@ -31,8 +31,6 @@ void snapshot_manager_func() {
         yakushima::Token yaku_token{};
         bool yaku_entered{false};
         while (!remove_rec_cont.empty() || cache_for_queue != nullptr) {
-            Record* old_cache_for_queue{cache_for_queue};// Detects whether processing is attempted for the same cache twice.
-
             Record* elem{};
             if (cache_for_queue != nullptr) {
                 elem = cache_for_queue;
@@ -49,10 +47,10 @@ void snapshot_manager_func() {
                 exit(1);
             }
             if (snapshot_manager::get_snap_epoch(
-                        elem->get_snap_ptr()->get_tidw().get_epoch()) !=
+                    elem->get_snap_ptr()->get_tidw().get_epoch()) !=
                 snapshot_manager::get_snap_epoch(
                         maybe_smallest_ew)) {// todo : measures for
-                                             // round-trip of epoch.
+                // round-trip of epoch.
                 if (!yaku_entered) {
                     yakushima::enter(yaku_token);
                     yaku_entered = true;
@@ -64,10 +62,6 @@ void snapshot_manager_func() {
                 cache_for_queue = elem;
                 break;
             }
-
-            if (old_cache_for_queue == nullptr && old_cache_for_queue == cache_for_queue) {
-                break;
-            }
         }
         if (yaku_entered) {
             yakushima::leave(yaku_token);
@@ -75,7 +69,7 @@ void snapshot_manager_func() {
 
         if (!release_rec_cont.empty()) {
             std::size_t erase_num{0};
-            for (auto&& elem : release_rec_cont) {
+            for (auto &&elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
                     ++erase_num;
                     delete elem.second;// NOLINT
@@ -93,8 +87,8 @@ void snapshot_manager_func() {
     /**
      * Free memory before shutdown.
      */
-    for (auto&& elem : release_rec_cont) {
-        delete elem.second;
+    for (auto &&elem : release_rec_cont) {
+        delete elem.second; // NOLINT
     }
 }
 
