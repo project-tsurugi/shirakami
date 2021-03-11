@@ -169,15 +169,8 @@ void checkpointing() {
             if (rec->get_snap_ptr() == nullptr) {
                 rec->get_tidw().unlock();
             } else {
-                snapshot_manager::remove_rec_cont_mutex.lock();
                 rec->get_tidw().unlock();
-                snapshot_manager::remove_rec_cont.emplace_back(rec);
-                /**
-                 * Important : This thread is not involved in the progress of the epoch.
-                 * Therefore, from the moment you pass this rec pointer to snapshot_manager, the pointer is inaccessible.
-                 * If you accessed, it may cause segmentation fault.
-                 */
-                snapshot_manager::remove_rec_cont_mutex.unlock();
+                snapshot_manager::remove_rec_cont.push(rec);
             }
         }
         if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;

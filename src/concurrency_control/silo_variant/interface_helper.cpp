@@ -351,10 +351,8 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     } else {
                         rec_ptr->set_not_include_version(ti->get_version());
-                        snapshot_manager::remove_rec_cont_mutex.lock();
-                        snapshot_manager::remove_rec_cont.emplace_back(rec_ptr);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                        snapshot_manager::remove_rec_cont_mutex.unlock();
+                        snapshot_manager::remove_rec_cont.push(rec_ptr);
                     }
                 } else {
                     /**
