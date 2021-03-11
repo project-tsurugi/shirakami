@@ -3,17 +3,23 @@
  * @file snapshot_manager.cpp
  */
 
+#include "concurrency_control/silo_variant/include/snapshot_manager.h"
+
 #include "clock.h"
 #include "compiler.h"
 #include "logger.h"
-
-#include "concurrency_control/silo_variant/include/snapshot_manager.h"
-
 #include "yakushima/include/kvs.h"
 
 namespace shirakami::cc_silo_variant::snapshot_manager {
-
 void snapshot_manager_func() {
+    // Memory used by elements in this container will be released.
+    std::vector<std::pair<epoch::epoch_t, Record*>> release_rec_cont;
+    /**
+     * If the queue does not have a front reference function and it is not the time to process what was retrieved, 
+     * it is necessary to carry it over to the next consideration. 
+     * In other words, it is necessary when processing according to order in a container that stores ordered elements.
+     */
+    Record* cache_for_queue{nullptr};
 
     while (likely(!snapshot_manager_thread_end.load(std::memory_order_acquire))) {
         // todo parametrize  for build options.
@@ -21,59 +27,75 @@ void snapshot_manager_func() {
 
         epoch::epoch_t maybe_smallest_ew = epoch::kGlobalEpoch.load(std::memory_order_acquire);
         if (maybe_smallest_ew != 0) --maybe_smallest_ew;
-        if (!remove_rec_cont.empty()) {
-            yakushima::Token yaku_token{};
-            bool yaku_entered{false};
-            std::size_t erase_num{0};
 
-            /**
-             * TODO : enhancement.
-             * This parts (remove_rec_cont_mutex) can be r-w lock, but now mutex lock.
-             */
-            remove_rec_cont_mutex.lock();
-            for (auto &&elem : remove_rec_cont) {
-                if (elem->get_snap_ptr() == nullptr) {
-                    SPDLOG_DEBUG("fatal error.");
-                    exit(1);
-                }
-                if (epoch::get_snap_epoch(elem->get_snap_ptr()->get_tidw().get_epoch()) !=
-                    epoch::get_snap_epoch(maybe_smallest_ew)) { // todo : measures for round-trip of epoch.
-                    if (!yaku_entered) {
-                        yakushima::enter(yaku_token);
-                        yaku_entered = true;
-                    }
-                    yakushima::remove(yaku_token, elem->get_tuple().get_key());
-                    ++erase_num;
-                    release_rec_cont.emplace_back(std::make_pair(maybe_smallest_ew, elem));
-                } else {
+        yakushima::Token yaku_token{};
+        bool yaku_entered{false};
+        while (!remove_rec_cont.empty() || cache_for_queue != nullptr) {
+            Record* old_cache_for_queue{cache_for_queue};// Detects whether processing is attempted for the same cache twice.
+
+            Record* elem{};
+            if (cache_for_queue != nullptr) {
+                elem = cache_for_queue;
+                cache_for_queue = nullptr;
+            } else {
+                if (!remove_rec_cont.try_pop(elem)) {
+                    // Although there is an element in the contents, it failed to take out. Is there a false positive for the act of taking from the container?
                     break;
                 }
             }
-            if (erase_num != 0) {
-                remove_rec_cont.erase(remove_rec_cont.begin(), remove_rec_cont.begin() + erase_num);
-            }
-            remove_rec_cont_mutex.unlock();
 
-            if (yaku_entered) {
-                yakushima::leave(yaku_token);
+            if (elem->get_snap_ptr() == nullptr) {
+                SPDLOG_DEBUG("fatal error.");
+                exit(1);
             }
+            if (snapshot_manager::get_snap_epoch(
+                        elem->get_snap_ptr()->get_tidw().get_epoch()) !=
+                snapshot_manager::get_snap_epoch(
+                        maybe_smallest_ew)) {// todo : measures for
+                                             // round-trip of epoch.
+                if (!yaku_entered) {
+                    yakushima::enter(yaku_token);
+                    yaku_entered = true;
+                }
+                yakushima::remove(yaku_token, elem->get_tuple().get_key());
+                release_rec_cont.emplace_back(
+                        std::make_pair(maybe_smallest_ew, elem));
+            } else {
+                cache_for_queue = elem;
+                break;
+            }
+
+            if (old_cache_for_queue == nullptr && old_cache_for_queue == cache_for_queue) {
+                break;
+            }
+        }
+        if (yaku_entered) {
+            yakushima::leave(yaku_token);
         }
 
         if (!release_rec_cont.empty()) {
             std::size_t erase_num{0};
-            for (auto &&elem : release_rec_cont) {
+            for (auto&& elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
                     ++erase_num;
-                    delete elem.second; // NOLINT
+                    delete elem.second;// NOLINT
                 } else {
                     break;
                 }
             }
             if (erase_num != 0) {
-                release_rec_cont.erase(release_rec_cont.begin(), release_rec_cont.begin() + erase_num);
+                release_rec_cont.erase(release_rec_cont.begin(),
+                                       release_rec_cont.begin() + erase_num);
             }
         }
     }
+
+    /**
+     * Free memory before shutdown.
+     */
+    for (auto&& elem : release_rec_cont) {
+        delete elem.second;
+    }
 }
 
-} //  namespace shirakami::cc_silo_variant::snapshot_manager
+}//  namespace shirakami::cc_silo_variant::snapshot_manager

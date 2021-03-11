@@ -75,7 +75,7 @@ management.
        * The number of retry read without give-up due to conflicts at reading record.
        * Default : `0`
   * PWAL
-    * `-DKVS_LOG_GC_THRESHOLD=<# operations of group commit in a batch>` 
+    * `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>` 
        * This is one of trigger of group commit. If 
   thread local pwal buffer has log records more than this number, it tries group commit.
        * Default: `1000`

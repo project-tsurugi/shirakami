@@ -82,19 +82,13 @@ if (BUILD_WITH_RECOVERY)
     add_definitions(-DRECOVERY)
 endif ()
 
-cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
-add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
-add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
-
 # Begin : parameter settings
 
 # Begin : about kvs
 
-if (NOT DEFINED KVS_LOG_GC_THRESHOLD)
-    add_definitions(-DKVS_LOG_GC_THRESHOLD=1000)
-else ()
-    add_definitions(-DKVS_LOG_GC_THRESHOLD=${KVS_LOG_GC_THRESHOLD})
-endif ()
+cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
+add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
+add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
 if (NOT DEFINED KVS_MAX_PARALLEL_THREADS)
     add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
@@ -118,6 +112,12 @@ else ()
     add_definitions(-DPARAM_RETRY_READ=${PARAM_RETRY_READ})
 endif ()
 
+if (NOT DEFINED PARAM_SNAPSHOT_EPOCH)
+    add_definitions(-DPARAM_SNAPSHOT_EPOCH=25)
+    else ()
+    add_definitions(-DPARAM_SNAPSHOT_EPOCH=${PARAM_SNAPSHOT_EPOCH})
+    endif()
+    
 # End : about cc
 
 # Begin : about logging
@@ -126,6 +126,12 @@ if (NOT DEFINED PARAM_CHECKPOINT_REST_EPOCH)
     add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=40)
 else ()
     add_definitions(-DPARAM_CHECKPOINT_REST_EPOCH=${PARAM_CHECKPOINT_REST_EPOCH})
+endif ()
+
+if (NOT DEFINED PARAM_PWAL_LOG_GCOMMIT_THRESHOLD)
+    add_definitions(-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=1000)
+else ()
+    add_definitions(-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=${PARAM_PWAL_LOG_GCOMMIT_THRESHOLD})
 endif ()
 
 # End : about logging

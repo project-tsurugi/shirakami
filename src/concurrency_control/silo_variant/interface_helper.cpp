@@ -264,7 +264,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
         Record* rec_ptr = iws->get_rec_ptr();
         auto safely_snap_work = [&rec_ptr, &ti] {
             std::string_view old_value = rec_ptr->get_tuple().get_value();
-            if (epoch::get_snap_epoch(ti->get_epoch()) != epoch::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
+            if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
                 // update safely snap
                 Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), old_value); // NOLINT
                 new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
@@ -385,10 +385,8 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     ti->get_gc_record_container().emplace_back(rec_ptr);
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                 } else {
-                    snapshot_manager::remove_rec_cont_mutex.lock();
-                    snapshot_manager::remove_rec_cont.emplace_back(rec_ptr);
+                    snapshot_manager::remove_rec_cont.push(rec_ptr);
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                    snapshot_manager::remove_rec_cont_mutex.unlock();
                 }
 #endif
                 break;

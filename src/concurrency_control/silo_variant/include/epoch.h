@@ -27,11 +27,6 @@ namespace shirakami::cc_silo_variant::epoch {
  */
 using epoch_t = std::int64_t;
 
-/**
- * @details 25 epoch equals to 1 snapshot epoch.
- */
-constexpr size_t snapshot_epoch_times = 25;
-
 [[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0};  // NOLINT
 
 /**
@@ -70,9 +65,5 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
 }
 
 [[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
-
-[[maybe_unused]] static epoch_t get_snap_epoch(epoch_t epo) { // NOLINT
-    return epoch::snapshot_epoch_times * (epo / epoch::snapshot_epoch_times);
-}
 
 }  // namespace shirakami::cc_silo_variant::epoch

@@ -34,8 +34,9 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(shirakami
         PUBLIC api
+        PRIVATE Boost::filesystem
+        PRIVATE tbb
         PRIVATE Threads::Threads
-        Boost::filesystem
         )
 
 set_target_properties(shirakami

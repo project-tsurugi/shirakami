@@ -7,6 +7,7 @@
 
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/record.h"
+#include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #include "clock.h"
 #include "logger.h"
@@ -138,7 +139,7 @@ TEST_F(simple_update, update_twice_for_creating_snap) {  // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
-    while (epoch::get_snap_epoch(ce) == epoch::get_snap_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire))) {
+    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire))) {
         sleepMs(1);
     }
     // change snap epoch

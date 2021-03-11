@@ -3,9 +3,9 @@
  * @brief about scheme
  */
 
-#include "concurrency_control/silo_variant/include/session_info.h"
-
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
+#include "concurrency_control/silo_variant/include/session_info.h"
+#include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
@@ -52,8 +52,8 @@ void session_info::gc_handler::gc_snap() {
     epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
     epoch::epoch_t maybe_smallest_e = ce - 1;
     for (auto itr = ers_bgn_itr; itr != get_snap_cont_().end(); ++itr) {
-        if (epoch::get_snap_epoch(itr->first + epoch::snapshot_epoch_times) <=
-            epoch::get_snap_epoch(maybe_smallest_e)) {
+        if (snapshot_manager::get_snap_epoch(itr->first + snapshot_manager::snapshot_epoch_times) <=
+            snapshot_manager::get_snap_epoch(maybe_smallest_e)) {
             ers_end_itr = itr;
             delete itr->second; // NOLINT
         } else {
@@ -286,7 +286,7 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
     }
 #endif
 
-    if (log_handle_.get_log_set().size() > KVS_LOG_GC_THRESHOLD || cp == commit_property::WAIT_FOR_COMMIT) {
+    if (log_handle_.get_log_set().size() > PARAM_PWAL_LOG_GCOMMIT_THRESHOLD || cp == commit_property::WAIT_FOR_COMMIT) {
         // prepare write header
         log_handle_.get_latest_log_header().compute_two_complement_of_checksum();
 
