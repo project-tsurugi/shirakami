@@ -381,4 +381,64 @@ TEST_F(simple_scan, close_scan) {  // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_scan, scan_range_endpoint2) {  // NOLINT
+    // simulating dump failure with jogasaki-tpcc
+    std::string r1("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x01", // NOLINT
+            34);                 // NOLINT
+    std::string r2("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x02", // NOLINT
+            34);                 // NOLINT
+    std::string r3("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x03", // NOLINT
+            34);                 // NOLINT
+    std::string r4("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x02\x80\x00\x00\x00\x00\x00\x00\x01", // NOLINT
+            34);                 // NOLINT
+    std::string r5("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x02\x80\x00\x00\x00\x00\x00\x00\x02", // NOLINT
+            34);                 // NOLINT
+    std::string r6("CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00\x00\x00\x02\x80\x00\x00\x00\x00\x00\x00\x03", // NOLINT
+            34);                 // NOLINT
+    std::string e("CUSTOMER0\x01", 11); // NOLINT
+    std::string v("bbb");  // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, r1, v));
+    ASSERT_EQ(Status::OK, upsert(s, r2, v));
+    ASSERT_EQ(Status::OK, upsert(s, r3, v));
+    ASSERT_EQ(Status::OK, upsert(s, r4, v));
+    ASSERT_EQ(Status::OK, upsert(s, r5, v));
+    ASSERT_EQ(Status::OK, upsert(s, r6, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ScanHandle handle{};
+    Tuple* tuple{};
+    {
+        ASSERT_EQ(Status::OK, open_scan(s, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r1.data(), r1.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r2.data(), r2.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r3.data(), r3.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r4.data(), r4.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r5.data(), r5.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r6.data(), r6.size()), 0);
+        EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    }
+
+    {
+        ASSERT_EQ(Status::OK, open_scan(s, r3, scan_endpoint::EXCLUSIVE, e, scan_endpoint::EXCLUSIVE, handle));
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r4.data(), r4.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r5.data(), r5.size()), 0);
+        ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+        EXPECT_EQ(memcmp(tuple->get_key().data(), r6.data(), r6.size()), 0);
+        EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    }
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 }  // namespace shirakami::testing
