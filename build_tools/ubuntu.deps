@@ -13,6 +13,7 @@ libgoogle-glog-dev
 liblz4-1
 librocksdb-dev
 libsnappy1v5
+libspdlog-dev
 libtbb-dev
 libzstd1
 ninja-build
