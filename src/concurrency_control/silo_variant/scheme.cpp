@@ -10,31 +10,7 @@
 namespace shirakami::cc_silo_variant {
 
 bool write_set_obj::operator<(const write_set_obj &right) const {  // NOLINT
-    const Tuple &this_tuple = this->get_tuple(this->get_op());
-    const Tuple &right_tuple = right.get_tuple(right.get_op());
-
-    const char* this_key_ptr(this_tuple.get_key().data());
-    const char* right_key_ptr(right_tuple.get_key().data());
-    std::size_t this_key_size(this_tuple.get_key().size());
-    std::size_t right_key_size(right_tuple.get_key().size());
-
-    if (this_key_size < right_key_size) {
-        return memcmp(this_key_ptr, right_key_ptr, this_key_size) <= 0;
-    }
-
-    if (this_key_size > right_key_size) {
-        return memcmp(this_key_ptr, right_key_ptr, right_key_size) < 0;
-    }
-    int ret = memcmp(this_key_ptr, right_key_ptr, this_key_size);
-    if (ret < 0) {
-        return true;
-    }
-    if (ret > 0) {
-        return false;
-    }
-    std::cout << __FILE__ << " : " << __LINE__
-              << " : Unique key is not allowed now." << std::endl;
-    std::abort();
+    return this->get_rec_ptr() < right.get_rec_ptr();
 }
 
 void write_set_obj::reset_tuple_value(std::string_view val) {
