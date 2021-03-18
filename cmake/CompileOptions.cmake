@@ -45,13 +45,15 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     add_definitions(-DSHIRAKAMI_LINUX)
 endif ()
 
+cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
+
 # about concurrency control
 add_definitions(-DCC_SILO_VARIANT)
 message("It uses silo variant cc as concurrency control protocols.")
 
 # about index
 add_definitions(-DINDEX_YAKUSHIMA)
-add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=250)
+add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=${cores})
 add_definitions(-DYAKUSHIMA_EPOCH_TIME=40)
 message("It uses yakushima as index structure.")
 
@@ -86,12 +88,10 @@ endif ()
 
 # Begin : about kvs
 
-cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
-add_definitions(-DKVS_NUMBER_OF_LOGICAL_CORES=${cores})
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
 if (NOT DEFINED KVS_MAX_PARALLEL_THREADS)
-    add_definitions(-DKVS_MAX_PARALLEL_THREADS=500)
+    add_definitions(-DKVS_MAX_PARALLEL_THREADS=${cores})
 else ()
     add_definitions(-DKVS_MAX_PARALLEL_THREADS=${KVS_MAX_PARALLEL_THREADS})
 endif ()
