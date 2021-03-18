@@ -11,11 +11,11 @@
 /**
  * @brief It is for logging to decide file name.
  */
-#define STRING(macro) #macro          // NOLINT
+#define STRING(macro) #macro // NOLINT
 /**
  * @brief It is for logging to decide file name.
  */
-#define MAC2STR(macro) STRING(macro)  // NOLINT
+#define MAC2STR(macro) STRING(macro) // NOLINT
 
 namespace shirakami::cc_silo_variant {
 
@@ -29,7 +29,7 @@ namespace shirakami::cc_silo_variant {
  * start next transaction.
  * @return Status::OK success.
  */
-extern Status abort(Token token);  // NOLINT
+extern Status abort(Token token); // NOLINT
 
 /**
  * @brief close the scan which was opened at open_scan.
@@ -38,7 +38,7 @@ extern Status abort(Token token);  // NOLINT
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE The @b handle is invalid.
  */
-extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
+extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 
 /**
  * @brief It tries commit.
@@ -55,7 +55,7 @@ extern Status close_scan(Token token, ScanHandle handle);  // NOLINT
  * do tx_begin to start next transaction or leave to leave the session.
  * @return Status::OK success.
  */
-extern Status commit(Token token, commit_param* cp = nullptr);  // NOLINT
+extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
 
 /**
  * @brief It checks whether the transaction allocated commit_id at commit function was committed.
@@ -74,7 +74,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * function.
  * @return Status::OK success
  */
-[[maybe_unused]] extern Status delete_all_records();  // NOLINT
+[[maybe_unused]] extern Status delete_all_records(); // NOLINT
 
 /**
  * @brief delete the record for the given key
@@ -88,7 +88,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem by this, you should do abort.
  * @return Status::OK success.
  */
-extern Status delete_record(Token token, std::string_view key);  // NOLINT
+extern Status delete_record(Token token, std::string_view key); // NOLINT
 
 /**
  * @brief enter session
@@ -98,7 +98,7 @@ extern Status delete_record(Token token, std::string_view key);  // NOLINT
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
  */
-extern Status enter(Token &token);  // NOLINT
+extern Status enter(Token& token); // NOLINT
 
 /**
  * @brief do delete operations for all records, join core threads and delete the
@@ -121,7 +121,7 @@ extern void fin();
  * Some files which has the same path exist.
  * @return Status::OK
  */
-extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));  // NOLINT
+extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT)); // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -148,7 +148,7 @@ extern Status insert(Token token, std::string_view key, std::string_view val); /
  * @return Status::OK success.
  * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
  */
-extern Status leave(Token token);  // NOLINT
+extern Status leave(Token token); // NOLINT
 
 /**
  * @brief This function preserve the specified range of masstree
@@ -166,7 +166,7 @@ extern Status leave(Token token);  // NOLINT
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  */
 extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
-                        scan_endpoint r_end, ScanHandle &handle);
+                        scan_endpoint r_end, ScanHandle& handle);
 
 /**
  * @brief This function reads the one records from the scan_cache which was created at open_scan function.
@@ -205,7 +205,7 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other updater, and it could not complete search.
  */
 extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
-                       scan_endpoint r_end, std::vector<const Tuple*> &result);
+                       scan_endpoint r_end, std::vector<const Tuple*>& result);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
@@ -215,7 +215,7 @@ extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end,
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
-[[maybe_unused]] extern Status scannable_total_index_size(Token token, ScanHandle handle, std::size_t &size); // NOLINT
+[[maybe_unused]] extern Status scannable_total_index_size(Token token, ScanHandle handle, std::size_t& size); // NOLINT
 
 /**
  * @brief It searches with the given key and return the found tuple.
@@ -276,4 +276,29 @@ extern Status update(Token token, std::string_view key, std::string_view val); /
  */
 extern Status upsert(Token token, std::string_view key, std::string_view val); // NOLINT
 
-}  // namespace shirakami
+
+/**
+ * About sequence function
+ */
+using SequenceId = std::size_t;
+using SequenceValue = std::int64_t;
+using SequenceVersion = std::size_t;
+
+extern Status create_sequence(SequenceId* id);
+
+// associate sequence version/value with the transaction on the session given by `token`
+extern Status update_sequence(
+        Token token,
+        SequenceId id,
+        SequenceVersion version,
+        SequenceValue vlaue);
+
+extern Status read_sequence(
+        SequenceId id,
+        SequenceVersion* version,
+        SequenceValue* value);
+
+extern Status delete_sequence(
+        SequenceId id);
+
+} // namespace shirakami::cc_silo_variant
