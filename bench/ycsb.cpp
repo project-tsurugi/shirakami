@@ -277,27 +277,27 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     leave(token);
     if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
         if (FLAGS_include_long_tx) {
-            printf("long_tx_commit_counts:\t%lu\n"
+            printf("long_tx_commit_counts:\t%lu\n" // NOLINT
                    "long_tx_abort_counts:\t%lu\n"
                    "long_tx_throughput:\t%lu\n"
                    "long_tx_abort_rate:\t%lf\n",
                    myres.get().get_local_commit_counts(),
                    myres.get().get_local_abort_counts(),
                    myres.get().get_local_commit_counts() / FLAGS_duration,
-                   (double) myres.get().get_local_abort_counts() /
-                           (double) (myres.get().get_local_commit_counts() +
-                                     myres.get().get_local_abort_counts()));
+                   static_cast<double>(myres.get().get_local_abort_counts()) /
+                           static_cast<double>(myres.get().get_local_commit_counts() +
+                                               myres.get().get_local_abort_counts()));
         } else if (FLAGS_include_scan_tx) {
-            printf("scan_tx_commit_counts:\t%lu\n"
+            printf("scan_tx_commit_counts:\t%lu\n" // NOLINT
                    "scan_tx_abort_counts:\t%lu\n"
                    "scan_tx_throughput:\t%lu\n"
                    "scan_tx_abort_rate:\t%lf\n",
                    myres.get().get_local_commit_counts(),
                    myres.get().get_local_abort_counts(),
                    myres.get().get_local_commit_counts() / FLAGS_duration,
-                   (double) myres.get().get_local_abort_counts() /
-                           (double) (myres.get().get_local_commit_counts() +
-                                     myres.get().get_local_abort_counts()));
+                   static_cast<double>(myres.get().get_local_abort_counts()) /
+                           static_cast<double>(myres.get().get_local_commit_counts() +
+                                               myres.get().get_local_abort_counts()));
         }
     }
 }

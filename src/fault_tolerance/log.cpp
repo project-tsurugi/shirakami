@@ -15,7 +15,6 @@
 #if defined(CPR)
 
 #include "cpr.h"
-#include "logger.h"
 
 #elif defined(PWAL)
 
@@ -23,6 +22,8 @@
 using namespace shirakami::pwal;
 
 #endif
+
+#include "logger.h"
 
 using namespace shirakami;
 using namespace shirakami::logger;
