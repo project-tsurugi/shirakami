@@ -14,7 +14,7 @@
 
 // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 [[maybe_unused]] Status delete_all_records() {  // NOLINT
     std::vector<std::pair<Record**, std::size_t> > scan_res;

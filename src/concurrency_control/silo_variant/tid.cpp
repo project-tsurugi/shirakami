@@ -8,7 +8,7 @@
 #include <bitset>
 #include <iostream>
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 void tid_word::display() {
     std::cout << "obj_ : " << std::bitset<sizeof(obj_) * 8>(obj_)  // NOLINT

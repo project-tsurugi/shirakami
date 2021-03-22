@@ -12,7 +12,7 @@
 #include "kvs/scheme.h"
 #include "kvs/tuple.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) Record {  // NOLINT
 public:

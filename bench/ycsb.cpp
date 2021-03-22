@@ -48,8 +48,6 @@
 
 using namespace shirakami;
 
-using namespace shirakami::cc_silo_variant;
-
 /**
  * general option.
  */

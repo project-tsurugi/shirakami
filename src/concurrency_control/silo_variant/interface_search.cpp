@@ -7,13 +7,13 @@
 #include "concurrency_control/silo_variant/include/snapshot_interface.h"
 #include "tuple_local.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status search_key(Token token, const std::string_view key,  // NOLINT
                   Tuple** const tuple) {
-    auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+    auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
-        cc_silo_variant::tx_begin(token); // NOLINT
+        tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::lookup_snapshot(ti, key, tuple);
     }

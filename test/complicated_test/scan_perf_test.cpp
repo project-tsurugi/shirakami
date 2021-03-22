@@ -6,7 +6,7 @@
 
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 constexpr const int MAX_TUPLES = 1000000;
 constexpr const int READ_TUPLES = 100;

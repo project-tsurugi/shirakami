@@ -7,7 +7,7 @@
 #include "record.h"
 #include "session_info.h"
 
-namespace shirakami::cc_silo_variant::snapshot_interface {
+namespace shirakami::snapshot_interface {
 
 /**
  * @pre This func is called by search_key.

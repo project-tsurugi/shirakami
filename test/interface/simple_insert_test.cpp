@@ -6,11 +6,10 @@
 // shirakami-impl interface library
 #include "tuple_local.h"
 
-using namespace shirakami::cc_silo_variant;
 
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 class simple_insert : public ::testing::Test {  // NOLINT
 public:

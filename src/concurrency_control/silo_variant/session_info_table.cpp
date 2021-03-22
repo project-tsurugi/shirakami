@@ -15,7 +15,7 @@
 
 #endif
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status session_info_table::decide_token(Token &token) {  // NOLINT
     for (auto &&itr : kThreadTable) {

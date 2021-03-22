@@ -15,7 +15,7 @@
 #include "logger.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status close_scan(Token token, ScanHandle handle) {  // NOLINT
     auto* ti = static_cast<session_info*>(token);
@@ -114,7 +114,7 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
 
     // pre-verify of phantom problem.
     if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
-        cc_silo_variant::abort(token);
+        abort(token);
         return Status::ERR_PHANTOM;
     }
 
@@ -181,7 +181,7 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
 
         // pre-verify of phantom problem.
         if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
-            cc_silo_variant::abort(token);
+            abort(token);
             return Status::ERR_PHANTOM;
         }
 

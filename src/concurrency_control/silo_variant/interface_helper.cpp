@@ -18,7 +18,7 @@
 
 #include "kvs/interface.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status enter(Token &token) {  // NOLINT
     Status ret_status = session_info_table::decide_token(token);

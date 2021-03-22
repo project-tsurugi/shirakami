@@ -17,7 +17,7 @@
  */
 #define MAC2STR(macro) STRING(macro) // NOLINT
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 /**
  * @brief transactional termination command about abort.
@@ -360,4 +360,4 @@ extern Status read_sequence(
 extern Status delete_sequence(
         SequenceId id);
 
-} // namespace shirakami::cc_silo_variant
+} // namespace shirakami

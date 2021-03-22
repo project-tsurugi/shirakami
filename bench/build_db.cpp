@@ -28,8 +28,6 @@
 
 namespace shirakami {
 
-using namespace cc_silo_variant;
-
 size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     // if table size is very small, it builds by single thread.
     if (record < 1000) return 1;  // NOLINT
@@ -54,7 +52,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     Token token{};
     enter(token);
 
-    cc_silo_variant::tx_begin(token); // NOLINT
+    tx_begin(token); // NOLINT
 
     for (uint64_t i = start; i <= end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);

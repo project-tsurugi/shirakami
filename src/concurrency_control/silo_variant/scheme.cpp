@@ -7,7 +7,7 @@
 #include "concurrency_control/silo_variant/include/session_info.h"
 #include "tuple_local.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 bool write_set_obj::operator<(const write_set_obj &right) const {  // NOLINT
     return this->get_rec_ptr() < right.get_rec_ptr();

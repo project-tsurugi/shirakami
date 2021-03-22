@@ -14,7 +14,7 @@
 #include "epoch.h"
 #include "record.h"
 
-namespace shirakami::cc_silo_variant::snapshot_manager
+namespace shirakami::snapshot_manager
 {
 /**
  * @details 25 epoch equals to 1 snapshot epoch.

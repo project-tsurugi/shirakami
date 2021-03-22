@@ -10,7 +10,7 @@
 
 #include "atomic_wrapper.h"
 
-namespace shirakami::cc_silo_variant::epoch {
+namespace shirakami::epoch {
 
 // todo resolve about round-trip problem for epoch.
 

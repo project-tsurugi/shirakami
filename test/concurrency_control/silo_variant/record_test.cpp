@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 namespace shirakami::testing {
 

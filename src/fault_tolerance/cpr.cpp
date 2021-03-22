@@ -13,8 +13,7 @@
 
 #include "kvs/interface.h"
 
-using namespace shirakami::cc_silo_variant;
-using namespace shirakami::cc_silo_variant::epoch;
+using namespace shirakami::epoch;
 using namespace shirakami::logger;
 
 namespace shirakami::cpr {
@@ -201,7 +200,7 @@ void checkpointing() {
      */
     enter(shira_token);
     tx_begin(shira_token); // NOLINT
-    auto* ti = static_cast<cc_silo_variant::session_info*>(shira_token);
+    auto* ti = static_cast<session_info*>(shira_token);
     for (auto &&itr : garbage) {
         tid_word new_tid = itr->get_tidw();
         new_tid.set_epoch(ti->get_epoch());

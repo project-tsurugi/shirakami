@@ -37,7 +37,7 @@
 
 #endif
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 /**
  * @brief element of write set.

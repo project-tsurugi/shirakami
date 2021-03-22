@@ -10,11 +10,9 @@
 
 #endif
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 namespace shirakami::testing {
-
-using namespace shirakami::cc_silo_variant;
 
 class scan_insert_test : public ::testing::Test {  // NOLINT
 public:

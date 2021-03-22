@@ -10,7 +10,7 @@
 #include "logger.h"
 #include "yakushima/include/kvs.h"
 
-namespace shirakami::cc_silo_variant::snapshot_manager {
+namespace shirakami::snapshot_manager {
 void snapshot_manager_func() {
     // Memory used by elements in this container will be released.
     std::vector<std::pair<epoch::epoch_t, Record*>> release_rec_cont;

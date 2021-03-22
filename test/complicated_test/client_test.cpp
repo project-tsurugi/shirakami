@@ -35,7 +35,7 @@ using namespace single_thread_test;
 
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 std::array<std::vector<Tuple*>, Nthread> DataList{};  // NOLINT
 

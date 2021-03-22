@@ -5,11 +5,9 @@
 
 #include "kvs/interface.h"
 
-using namespace shirakami::cc_silo_variant;
-
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 class session_info_test : public ::testing::Test {
 public:

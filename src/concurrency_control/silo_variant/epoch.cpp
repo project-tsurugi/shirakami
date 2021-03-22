@@ -20,7 +20,7 @@
 
 using namespace shirakami::logger;
 
-namespace shirakami::cc_silo_variant::epoch {
+namespace shirakami::epoch {
 
 bool check_epoch_loaded() {  // NOLINT
     epoch_t curEpoch = kGlobalEpoch.load(std::memory_order_acquire);

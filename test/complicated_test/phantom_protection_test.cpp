@@ -11,7 +11,7 @@
 
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 class phantom_protection : public ::testing::Test {
 public:

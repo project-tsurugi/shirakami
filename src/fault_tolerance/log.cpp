@@ -9,7 +9,7 @@
 // about cc
 #include "concurrency_control/silo_variant/include/record.h"
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 // about index
 #include "yakushima/include/kvs.h"

@@ -9,7 +9,7 @@
 
 #include "session_info.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 class session_info_table {
 public:

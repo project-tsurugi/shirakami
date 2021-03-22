@@ -45,7 +45,7 @@ using namespace shirakami::cpr;
 
 #endif
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 class session_info {
 public:

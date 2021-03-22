@@ -16,7 +16,7 @@
 
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 class simple_update : public ::testing::Test {  // NOLINT
 public:

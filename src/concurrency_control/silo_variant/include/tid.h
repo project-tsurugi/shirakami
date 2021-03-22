@@ -10,7 +10,7 @@
 
 #include "epoch.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami{
 
 class tid_word {  // NOLINT
 public:

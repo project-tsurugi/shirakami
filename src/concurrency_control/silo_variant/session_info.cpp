@@ -9,7 +9,7 @@
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 void session_info::gc_handler::gc_records() {
     auto ers_bgn_itr = get_record_container().begin();

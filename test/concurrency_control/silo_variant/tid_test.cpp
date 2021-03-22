@@ -10,11 +10,9 @@
 #include "compiler.h"
 #include "tuple_local.h"
 
-using namespace shirakami::cc_silo_variant;
-
 namespace shirakami::testing {
 
-using namespace shirakami::cc_silo_variant;
+using namespace shirakami;
 
 class tid_test : public ::testing::Test {  // NOLINT
 public:

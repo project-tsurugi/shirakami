@@ -15,7 +15,6 @@
 #include "cpr.h"
 #endif
 
-using namespace shirakami::cc_silo_variant;
 
 namespace shirakami {
 

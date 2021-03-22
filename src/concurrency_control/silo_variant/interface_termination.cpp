@@ -9,10 +9,10 @@
 #include "include/tuple_local.h"  // sizeof(Tuple)
 #include "kvs/interface.h"        // NOLINT
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status abort(Token token) {  // NOLINT
-    auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+    auto* ti = static_cast<session_info*>(token);
     ti->remove_inserted_records_of_write_set_from_masstree();
     ti->clean_up_ops_set();
     ti->clean_up_scan_caches();
@@ -22,9 +22,9 @@ Status abort(Token token) {  // NOLINT
 }
 
 extern Status commit(Token token, commit_param* cp) {  // NOLINT
-    auto* ti = static_cast<cc_silo_variant::session_info*>(token);
-    cc_silo_variant::tid_word max_rset;
-    cc_silo_variant::tid_word max_wset;
+    auto* ti = static_cast<session_info*>(token);
+    tid_word max_rset;
+    tid_word max_wset;
 
     // Phase 1: Sort lock list;
     std::sort(ti->get_write_set().begin(), ti->get_write_set().end());
@@ -67,9 +67,9 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
      */
 
     // Phase 3: Validation
-    cc_silo_variant::tid_word check;
+    tid_word check;
     for (auto &&itr : ti->get_read_set()) {
-        const cc_silo_variant::Record* rec_ptr = itr.get_rec_ptr();
+        const Record* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
         if ((itr.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
              itr.get_rec_read().get_tidw().get_tid() != check.get_tid())
@@ -95,7 +95,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
     }
 
     // Phase 4: Write & Unlock
-    cc_silo_variant::write_phase(ti, max_rset, max_wset,
+    write_phase(ti, max_rset, max_wset,
                                  cp != nullptr ? cp->get_cp() : commit_property::NOWAIT_FOR_COMMIT);
     /**
      * about holding operation info.
@@ -131,7 +131,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
 }
 
 extern bool check_commit(Token token, [[maybe_unused]]std::uint64_t commit_id) {  // NOLINT
-    [[maybe_unused]] auto* ti = static_cast<cc_silo_variant::session_info*>(token);
+    [[maybe_unused]] auto* ti = static_cast<session_info*>(token);
 #if defined(PWAL)
     return ti->get_flushed_ctid().get_obj() > commit_id;
 #elif defined(CPR)
@@ -144,4 +144,4 @@ extern bool check_commit(Token token, [[maybe_unused]]std::uint64_t commit_id) {
 #endif
 }
 
-}  // namespace shirakami::cc_silo_variant
+}  // namespace shirakami

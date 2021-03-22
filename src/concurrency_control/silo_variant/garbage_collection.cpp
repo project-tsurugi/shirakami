@@ -8,7 +8,7 @@
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant::garbage_collection {
+namespace shirakami::garbage_collection {
 
 [[maybe_unused]] void release_all_heap_objects() {
     remove_all_leaf_from_mt_db_and_release();

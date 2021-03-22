@@ -15,7 +15,7 @@
 #include "epoch.h"
 #include "record.h"
 
-namespace shirakami::cc_silo_variant::garbage_collection {
+namespace shirakami::garbage_collection {
 
 /**
  * @brief Release all heap objects in this system.

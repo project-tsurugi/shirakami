@@ -14,7 +14,7 @@
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 Status insert(Token token, const std::string_view key,  // NOLINT
               const std::string_view val) {

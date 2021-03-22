@@ -6,7 +6,7 @@
 
 #include "session_info.h"
 
-namespace shirakami::cc_silo_variant {
+namespace shirakami {
 
 /**
  * @brief read record by using dest given by caller and store read info to res

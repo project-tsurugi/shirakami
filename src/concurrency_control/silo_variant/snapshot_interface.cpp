@@ -10,9 +10,8 @@
 #include "index/yakushima/include/scheme.h"
 
 using namespace shirakami;
-using namespace cc_silo_variant;
 
-namespace shirakami::cc_silo_variant::snapshot_interface {
+namespace shirakami::snapshot_interface {
 
 extern Status
 open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key,// NOLINT
@@ -185,4 +184,4 @@ scan_key(session_info* ti, const std::string_view l_key, const scan_endpoint l_e
     return Status::OK;
 }
 
-}// namespace shirakami::cc_silo_variant::snapshot_interface
+}// namespace shirakami::snapshot_interface
