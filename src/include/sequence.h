@@ -46,7 +46,7 @@ public:
      * @pre It is called by create_sequence function.
      */
     static void create_initial_value(SequenceId id) {
-        std::unique_lock{sequence_map::get_smmutex()};
+        std::unique_lock lock{sequence_map::get_smmutex()};
 #if defined(CPR)
         sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value, sequence_map::non_exist_value, 0};
 #else
@@ -87,7 +87,7 @@ public:
     }
 
 private:
-    static inline std::map<SequenceId, value_type> sm_;
+    static inline std::map<SequenceId, value_type> sm_; // NOLINT
     static inline SequenceId created_num_{0};
     static inline std::mutex smmutex_;
 };
