@@ -19,6 +19,8 @@
 
 namespace shirakami::cpr {
 
+using version_type = std::uint64_t;
+
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
 inline std::thread kCheckPointThread; // NOLINT
 inline std::string kCheckpointingPath; // NOLINT
@@ -34,17 +36,17 @@ class phase_version {
 public:
     phase get_phase() { return phase_; } // NOLINT
 
-    [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
+    [[nodiscard]] version_type get_version() const { return version_; } // NOLINT
 
     void inc_version() { version_ += 1; }
 
     void set_phase(phase new_phase) { phase_ = new_phase; }
 
-    void set_version(std::uint64_t new_version) { version_ = new_version; }
+    void set_version(version_type new_version) { version_ = new_version; }
 
 private:
     phase phase_: 8;
-    std::uint64_t version_: 56;
+    version_type version_: 56;
 };
 
 /**
@@ -89,7 +91,7 @@ class cpr_local_handler {
 public:
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
 
-    std::uint64_t get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
+    version_type get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
 
     void set_phase_version(phase_version new_phase_version) {
         phase_version_.store(new_phase_version, std::memory_order_release);

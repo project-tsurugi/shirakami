@@ -119,6 +119,12 @@ enum class Status : std::int32_t {
     WARN_CONCURRENT_UPDATE,
     /**
      * @brief warning.
+     * @details The process could not be executed because the invariant was violated if the process was being executed. 
+     * But it's not a fatal problem. It's just a warning.
+     */
+    WARN_INVARIANT,
+    /**
+     * @brief warning.
      * @details
      * @a close_scan : The handle is invalid. @n
      * @a read_from_scan : The handle is invalid. @n
@@ -225,6 +231,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_CONCURRENT_INSERT"sv;  // NOLINT
         case Status::WARN_CONCURRENT_UPDATE:
             return "WARN_CONCURRENT_UPDATE"sv;  // NOLINT
+        case Status::WARN_INVARIANT:
+            return "WARN_INVARIANT"sv;  // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv;  // NOLINT
         case Status::WARN_NOT_FOUND:

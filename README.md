@@ -54,7 +54,7 @@ Available options:
   * `-DBUILD_PWAL=ON` 
      * Enable parallel write-ahead-logging (default: `OFF`)
      <font color="red">This option will be abolished because we plan to use mainly cpr as logging
-      method.</font>
+      method. So this option have a bug because our development hasn't caught up.</font>
       * `-DPWAL_ENABLE_READ_LOG=ON`
         * Enable to log read log with write log to verify whether committed schedule is valid.
   * `-DBUILD_CPR=ON` 
