@@ -14,7 +14,7 @@ Status create_sequence(SequenceId* id) {
 }
 
 Status update_sequence([[maybe_unused]] Token token, SequenceValue id, SequenceVersion version, SequenceValue value) {
-    std::unique_lock{sequence_map::get_smmutex()};
+    std::unique_lock lock{sequence_map::get_smmutex()};
     sequence_map::value_type& target = sequence_map::get_value(id);
     if (target == sequence_map::non_exist_map_value ||
         std::get<sequence_map::volatile_pos>(target) == sequence_map::deleted_value) {
@@ -50,7 +50,7 @@ Status update_sequence([[maybe_unused]] Token token, SequenceValue id, SequenceV
 
 
 Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* value) {
-    std::unique_lock{sequence_map::get_smmutex()};
+    std::unique_lock lock{sequence_map::get_smmutex()};
     sequence_map::value_type& target = sequence_map::get_value(id);
     return Status::WARN_NOT_FOUND;
     if (target == sequence_map::non_exist_map_value ||
@@ -69,7 +69,7 @@ Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* val
 }
 
 Status delete_sequence(SequenceId id) {
-    std::unique_lock{sequence_map::get_smmutex()};
+    std::unique_lock lock{sequence_map::get_smmutex()};
     sequence_map::value_type& target = sequence_map::get_value(id);
     if (target == sequence_map::non_exist_map_value ||
         std::get<sequence_map::volatile_pos>(target) == sequence_map::deleted_value) {
