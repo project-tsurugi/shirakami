@@ -10,14 +10,14 @@
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG // NOLINT
 #endif
 
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 namespace shirakami::logger {
 
 static inline void setup_spdlog() {
 
 #ifdef NDEBUG
-    spdlog::set_level(spdlog::level::info);
+    spdlog::set_level(spdlog::level::trace);
 #else
     spdlog::set_level(spdlog::level::debug);
 #endif

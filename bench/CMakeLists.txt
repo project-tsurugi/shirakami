@@ -40,7 +40,6 @@ target_include_directories(ycsb
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
@@ -66,7 +65,6 @@ if (BUILD_ROCKSDB_BENCH)
     target_include_directories(rocksdb_bench
             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
             PRIVATE ${PROJECT_SOURCE_DIR}/src/include
-            PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
             PRIVATE ${gflags_INCLUDE_DIR}
             )
 endif ()

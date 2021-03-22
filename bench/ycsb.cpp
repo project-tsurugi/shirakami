@@ -47,46 +47,47 @@
 #include "boost/filesystem.hpp"
 
 using namespace shirakami;
+using namespace spdlog;
 
 /**
  * general option.
  */
-DEFINE_uint64(                                                        // NOLINT
-        cpumhz, 2000,                                                     // NOLINT
-        "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
-        "time.");                                                         // NOLINT
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
-DEFINE_uint64(key_length, 8, "# length of key.");                     // NOLINT
-DEFINE_uint64(ops, 1, "# operations per a transaction.");             // NOLINT
-DEFINE_uint64(record, 100, "# database records(tuples).");            // NOLINT
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");        // NOLINT
-DEFINE_double(skew, 0.0, "access skew of transaction.");              // NOLINT
-DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
-DEFINE_uint64(val_length, 4, "# length of value(payload).");          // NOLINT
+DEFINE_uint64(                                                           // NOLINT
+        cpumhz, 2000,                                                    // NOLINT
+        "# cpu MHz of execution environment. It is used measuring some " // NOLINT
+        "time.");                                                        // NOLINT
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
+DEFINE_uint64(key_length, 8, "# length of key.");                        // NOLINT
+DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
+DEFINE_uint64(record, 100, "# database records(tuples).");               // NOLINT
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
+DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
+DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
+DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
 
 /**
  * special option.
  */
 DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
-DEFINE_uint64(long_tx_ops, 50, "# operations per long tx."); // NOLINT
-DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions."); // NOLINT
+DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");                                     // NOLINT
+DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions.");                       // NOLINT
 
 DEFINE_bool(include_scan_tx, false, "If it is true, one of # worker threads executese scan tx."); // NOLINT
-DEFINE_uint64(scan_elem_num, 100, "# elements in scan range."); // NOLINT
+DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");                                   // NOLINT
 
-static bool isReady(const std::vector<char> &readys);  // NOLINT
-static void waitForReady(const std::vector<char> &readys);
+static bool isReady(const std::vector<char>& readys); // NOLINT
+static void waitForReady(const std::vector<char>& readys);
 
 static void invoke_leader();
 
-static void worker(size_t thid, char &ready, const bool &start, const bool &quit, std::vector<Result> &res);
+static void worker(size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res);
 
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread);  // NOLINT
+    alignas(CACHE_LINE_SIZE) std::vector<Result> res(FLAGS_thread); // NOLINT
 
-    std::vector<char> readys(FLAGS_thread);  // NOLINT
+    std::vector<char> readys(FLAGS_thread); // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
@@ -106,7 +107,7 @@ static void invoke_leader() {
 #endif
     storeRelease(quit, true);
     SPDLOG_DEBUG("stop ycsb exp.");
-    for (auto &th : thv) th.join();
+    for (auto& th : thv) th.join();
 
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
         res[0].addLocalAllResult(res[i]);
@@ -171,10 +172,10 @@ static void load_flags() {
     SPDLOG_DEBUG("Fin load_flags()");
 }
 
-int main(int argc, char* argv[]) {  // NOLINT
-    logger::setup_spdlog();
-    gflags::SetUsageMessage(static_cast<const std::string &>(
-                                    "YCSB benchmark for shirakami"));  // NOLINT
+int main(int argc, char* argv[]) { // NOLINT
+    shirakami::logger::setup_spdlog();
+    gflags::SetUsageMessage(static_cast<const std::string&>(
+            "YCSB benchmark for shirakami")); // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
@@ -187,7 +188,7 @@ int main(int argc, char* argv[]) {  // NOLINT
         boost::filesystem::remove(path);
     }
 
-    init();  // NOLINT
+    init(); // NOLINT
     SPDLOG_DEBUG("Fin init");
     build_db(FLAGS_record, FLAGS_val_length);
     SPDLOG_DEBUG("Fin build_db");
@@ -199,21 +200,21 @@ int main(int argc, char* argv[]) {  // NOLINT
     return 0;
 }
 
-bool isReady(const std::vector<char> &readys) {  // NOLINT
-    for (const char &b : readys) {                 // NOLINT
+bool isReady(const std::vector<char>& readys) { // NOLINT
+    for (const char& b : readys) {              // NOLINT
         if (loadAcquire(b) == 0) return false;
     }
     return true;
 }
 
-void waitForReady(const std::vector<char> &readys) {
+void waitForReady(const std::vector<char>& readys) {
     while (!isReady(readys)) {
         _mm_pause();
     }
 }
 
-void worker(const std::size_t thid, char &ready, const bool &start,
-            const bool &quit, std::vector<Result> &res) {
+void worker(const std::size_t thid, char& ready, const bool& start,
+            const bool& quit, std::vector<Result>& res) {
     // init work
     Xoroshiro128Plus rnd;
     FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
@@ -252,7 +253,7 @@ void worker(const std::size_t thid, char &ready, const bool &start,
         } else {
             gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
         }
-        for (auto &&itr : opr_set) {
+        for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
                 search_key(token, itr.get_key(), &tuple);
@@ -274,15 +275,28 @@ void worker(const std::size_t thid, char &ready, const bool &start,
     }
     leave(token);
     if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
-        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_commit_counts:\t{0}" : "scan_tx_commit_counts:\t{0}"), // NOLINT
-                    myres.get().get_local_commit_counts());
-        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_abort_counts:\t{0}" : "scan_tx_abort_counts:\t{0}"), // NOLINT
-                    myres.get().get_local_abort_counts());
-        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_throughput:\t{0}" : "scan_tx_throughput:\t{0}"), // NOLINT
-                    myres.get().get_local_commit_counts() / FLAGS_duration);
-        SPDLOG_INFO((FLAGS_include_long_tx ? "long_tx_abort_rate:\t{0}" : "scan_tx_abort_rate:\t{0}"), // NOLINT
-                    (double) myres.get().get_local_abort_counts() /
-                    (double) (myres.get().get_local_commit_counts() +
-                              myres.get().get_local_abort_counts()));
+        if (FLAGS_include_long_tx) {
+            printf("long_tx_commit_counts:\t%lu\n"
+                   "long_tx_abort_counts:\t%lu\n"
+                   "long_tx_throughput:\t%lu\n"
+                   "long_tx_abort_rate:\t%lf\n",
+                   myres.get().get_local_commit_counts(),
+                   myres.get().get_local_abort_counts(),
+                   myres.get().get_local_commit_counts() / FLAGS_duration,
+                   (double) myres.get().get_local_abort_counts() /
+                           (double) (myres.get().get_local_commit_counts() +
+                                     myres.get().get_local_abort_counts()));
+        } else if (FLAGS_include_scan_tx) {
+            printf("scan_tx_commit_counts:\t%lu\n"
+                   "scan_tx_abort_counts:\t%lu\n"
+                   "scan_tx_throughput:\t%lu\n"
+                   "scan_tx_abort_rate:\t%lf\n",
+                   myres.get().get_local_commit_counts(),
+                   myres.get().get_local_abort_counts(),
+                   myres.get().get_local_commit_counts() / FLAGS_duration,
+                   (double) myres.get().get_local_abort_counts() /
+                           (double) (myres.get().get_local_commit_counts() +
+                                     myres.get().get_local_abort_counts()));
+        }
     }
 }
