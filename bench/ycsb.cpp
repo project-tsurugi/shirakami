@@ -47,6 +47,7 @@
 #include "boost/filesystem.hpp"
 
 using namespace shirakami;
+using namespace shirakami::logger;
 using namespace spdlog;
 
 /**
@@ -93,7 +94,7 @@ static void invoke_leader() {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
-    SPDLOG_DEBUG("start ycsb exp.");
+    shirakami_logger->debug("start ycsb exp.");
     storeRelease(start, true);
 #if 0
     for (size_t i = 0; i < FLAGS_duration; ++i) {
@@ -101,12 +102,12 @@ static void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        SPDLOG_DEBUG("sleep error.");
+        shirakami_logger->debug("sleep error.");
         exit(1);
     }
 #endif
     storeRelease(quit, true);
-    SPDLOG_DEBUG("stop ycsb exp.");
+    shirakami_logger->debug("stop ycsb exp.");
     for (auto& th : thv) th.join();
 
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
@@ -114,62 +115,62 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    SPDLOG_DEBUG("cpr global version :\t{0}", cpr::global_phase_version::get_gpv().get_version());
+    shirakami_logger->debug("cpr global version :\t{0}", cpr::global_phase_version::get_gpv().get_version());
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
 
 static void load_flags() {
     if (FLAGS_thread >= 1) {
-        SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
+        shirakami_logger->debug("FLAGS_thread : {0}", FLAGS_thread);
     } else {
-        SPDLOG_DEBUG("Number of threads must be larger than 0.");
+        shirakami_logger->debug("Number of threads must be larger than 0.");
         exit(1);
     }
     if (FLAGS_record > 1) {
-        SPDLOG_DEBUG("FLAGS_record : {0}", FLAGS_record);
+        shirakami_logger->debug("FLAGS_record : {0}", FLAGS_record);
     } else {
-        SPDLOG_DEBUG("Number of database records(tuples) must be large than 0.");
+        shirakami_logger->debug("Number of database records(tuples) must be large than 0.");
         exit(1);
     }
     if (FLAGS_val_length > 1) {
-        SPDLOG_DEBUG("FLAGS_val_length : {0}", FLAGS_val_length);
+        shirakami_logger->debug("FLAGS_val_length : {0}", FLAGS_val_length);
     } else {
-        SPDLOG_DEBUG("Length of val must be larger than 0.");
+        shirakami_logger->debug("Length of val must be larger than 0.");
         exit(1);
     }
     if (FLAGS_ops >= 1) {
-        SPDLOG_DEBUG("FLAGS_ops : {0}", FLAGS_ops);
+        shirakami_logger->debug("FLAGS_ops : {0}", FLAGS_ops);
     } else {
-        SPDLOG_DEBUG("Number of operations in a transaction must be larger than 0.");
+        shirakami_logger->debug("Number of operations in a transaction must be larger than 0.");
         exit(1);
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
-        SPDLOG_DEBUG("FLAGS_rratio : {0}", FLAGS_rratio);
+        shirakami_logger->debug("FLAGS_rratio : {0}", FLAGS_rratio);
     } else {
-        SPDLOG_DEBUG("Rate of reads in a transaction must be in the range 0 to 100.");
+        shirakami_logger->debug("Rate of reads in a transaction must be in the range 0 to 100.");
         exit(1);
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
-        SPDLOG_DEBUG("FLAGS_skew : {0}", FLAGS_skew);
+        shirakami_logger->debug("FLAGS_skew : {0}", FLAGS_skew);
     } else {
-        SPDLOG_DEBUG("Access skew of transaction must be in the range 0 to 0.999... .");
+        shirakami_logger->debug("Access skew of transaction must be in the range 0 to 0.999... .");
         exit(1);
     }
     if (FLAGS_cpumhz > 1) {
-        SPDLOG_DEBUG("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
+        shirakami_logger->debug("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
     } else {
-        SPDLOG_DEBUG("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.");
+        shirakami_logger->debug("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.");
         exit(1);
     }
     if (FLAGS_duration >= 1) {
-        SPDLOG_DEBUG("FLAGS_duration : {0}", FLAGS_duration);
+        shirakami_logger->debug("FLAGS_duration : {0}", FLAGS_duration);
     } else {
-        SPDLOG_DEBUG("Duration of benchmark in seconds must be larger than 0.");
+        shirakami_logger->debug("Duration of benchmark in seconds must be larger than 0.");
         exit(1);
     }
-    SPDLOG_DEBUG("Fin load_flags()");
+    shirakami_logger->debug("Fin load_flags()");
 }
 
 int main(int argc, char* argv[]) { // NOLINT
@@ -189,13 +190,13 @@ int main(int argc, char* argv[]) { // NOLINT
     }
 
     init(); // NOLINT
-    SPDLOG_DEBUG("Fin init");
+    shirakami_logger->debug("Fin init");
     build_db(FLAGS_record, FLAGS_val_length);
-    SPDLOG_DEBUG("Fin build_db");
+    shirakami_logger->debug("Fin build_db");
     invoke_leader();
-    SPDLOG_DEBUG("Fin invoke_leader");
+    shirakami_logger->debug("Fin invoke_leader");
     fin();
-    SPDLOG_DEBUG("Fin fin");
+    shirakami_logger->debug("Fin fin");
 
     return 0;
 }
@@ -247,7 +248,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
             } else {
-                SPDLOG_DEBUG("fatal error.");
+                shirakami_logger->debug("fatal error.");
                 exit(1);
             }
         } else {

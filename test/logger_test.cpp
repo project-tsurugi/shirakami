@@ -11,21 +11,21 @@ class logger_test : public ::testing::Test {  // NOLINT
 };
 
 void spdlog_debug_output() {
-    SPDLOG_DEBUG("spdlog_debug_output_func.");
+    shirakami_logger->debug("spdlog_debug_output_func.");
 }
 
 TEST_F(logger_test, double_initialization) {  // NOLINT
     setup_spdlog();
     setup_spdlog();
-    SPDLOG_DEBUG("after double initialization.");
+    shirakami_logger->debug("after double initialization.");
 }
 
 TEST_F(logger_test, no_init_output_and_output_after_init) { // NOLINT
     spdlog_debug_output();
-    SPDLOG_DEBUG("after first spdlog output."); // It must not output.
+    shirakami_logger->debug("after first spdlog output."); // It must not output.
     setup_spdlog();
     spdlog_debug_output();
-    SPDLOG_DEBUG("after second spdlog output.");
+    shirakami_logger->debug("after second spdlog output.");
 }
 
 }  // namespace shirakami::testing

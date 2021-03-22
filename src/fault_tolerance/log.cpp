@@ -9,8 +9,6 @@
 // about cc
 #include "concurrency_control/silo_variant/include/record.h"
 
-using namespace shirakami;
-
 // about index
 #include "yakushima/include/kvs.h"
 
@@ -26,6 +24,8 @@ using namespace shirakami::pwal;
 
 #endif
 
+using namespace shirakami;
+using namespace shirakami::logger;
 
 namespace shirakami {
 
@@ -130,10 +130,10 @@ namespace shirakami {
     boost::system::error_code ec;
     const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
-        SPDLOG_DEBUG("no checkpoint file to recover.");
+        shirakami_logger->debug("no checkpoint file to recover.");
         return;
     }
-    SPDLOG_DEBUG("checkpoint file to recover exists.");
+    shirakami_logger->debug("checkpoint file to recover exists.");
 
     std::ifstream logf;
     logf.open(cpr::get_checkpoint_path(), std::ios_base::in | std::ios_base::binary);
@@ -149,10 +149,10 @@ namespace shirakami {
             auto obj = oh.get();
             obj.convert(restore);
         } catch (const std::bad_cast &e) {
-            SPDLOG_DEBUG("cast error.");
+            shirakami_logger->debug("cast error.");
             exit(1);
         } catch (...) {
-            SPDLOG_DEBUG("unknown error.");
+            shirakami_logger->debug("unknown error.");
             exit(1);
         }
 
@@ -163,7 +163,7 @@ namespace shirakami {
             rec_ptr->get_tidw() = 0;
             yakushima::status insert_result{yakushima::put<Record*>(elem.get_key(), &rec_ptr)}; // NOLINT
             if (insert_result != yakushima::status::OK) {
-                SPDLOG_DEBUG("cpr recovery error.");
+                shirakami_logger->debug("cpr recovery error.");
                 exit(1);
             }
         }

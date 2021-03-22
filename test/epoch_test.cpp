@@ -36,7 +36,7 @@ TEST_F(epoch_test, sleep_to_watch_change_epoch) {  // NOLINT
     sleep(1);
     epoch::epoch_t second = epoch::kGlobalEpoch.load(std::memory_order_acquire);
     ASSERT_NE(first, second);
-    SPDLOG_DEBUG("first epoch {0}, second epoch {1}", first, second);
+    shirakami_logger->debug("first epoch {0}, second epoch {1}", first, second);
 }
 
 TEST_F(epoch_test, check_no_or_one_change_epoch) { // NOLINT
@@ -47,7 +47,7 @@ TEST_F(epoch_test, check_no_or_one_change_epoch) { // NOLINT
     sleep(1);
     epoch::epoch_t second = epoch::kGlobalEpoch.load(std::memory_order_acquire);
     ASSERT_NE(first, second);
-    SPDLOG_DEBUG("first epoch {0}, second epoch {1}", first, second);
+    shirakami_logger->debug("first epoch {0}, second epoch {1}", first, second);
     tx_begin(token); // load latest epoch
     first = epoch::kGlobalEpoch.load(std::memory_order_acquire);
     sleep(1);
@@ -57,7 +57,7 @@ TEST_F(epoch_test, check_no_or_one_change_epoch) { // NOLINT
      */
     second = epoch::kGlobalEpoch.load(std::memory_order_acquire);
     ASSERT_EQ(second - first <= 1, true);
-    SPDLOG_DEBUG("first epoch {0}, second epoch {1}", first, second);
+    shirakami_logger->debug("first epoch {0}, second epoch {1}", first, second);
     ASSERT_EQ(leave(token), Status::OK);
 }
 

@@ -18,6 +18,8 @@
 
 #include "kvs/interface.h"
 
+using namespace shirakami::logger;
+
 namespace shirakami {
 
 Status enter(Token &token) {  // NOLINT
@@ -319,7 +321,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                     /**
                      *  null insert is not expected.
                      */
-                    SPDLOG_DEBUG("fatal error.");
+                    shirakami_logger->debug("fatal error.");
                     exit(1);
                 }
 #ifdef CPR
@@ -390,7 +392,7 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 break;
             }
             default:
-                SPDLOG_DEBUG("fatal error.");
+                shirakami_logger->debug("fatal error.");
                 std::abort();
         }
     }

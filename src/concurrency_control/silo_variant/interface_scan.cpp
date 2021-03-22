@@ -15,6 +15,8 @@
 #include "logger.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
+using namespace shirakami::logger;
+
 namespace shirakami {
 
 Status close_scan(Token token, ScanHandle handle) {  // NOLINT
@@ -166,7 +168,7 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
             } else if (inws->get_op() == OP_TYPE::INSERT) {
                 result.emplace_back(&inws->get_tuple_to_db());
             } else {
-                SPDLOG_DEBUG("It must not reach this points");
+                shirakami_logger->debug("It must not reach this points");
                 exit(1);
             }
             continue;

@@ -61,7 +61,7 @@ void checkpointing() {
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
 
     if (scan_buf.empty()) {
-        //SPDLOG_DEBUG("cpr : Database has no records. End checkpointing.");
+        //shirakami_logger->debug("cpr : Database has no records. End checkpointing.");
         if (boost::filesystem::exists(get_checkpoint_path())) {
             boost::filesystem::remove(get_checkpoint_path());
         }
@@ -71,7 +71,7 @@ void checkpointing() {
     std::ofstream logf;
     logf.open(get_checkpointing_path(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
-        SPDLOG_DEBUG("It can't open file.");
+        shirakami_logger->debug("It can't open file.");
         exit(1);
     }
 
@@ -218,17 +218,17 @@ void checkpointing() {
     logf.flush();
     logf.close();
     if (logf.is_open()) {
-        SPDLOG_DEBUG("It can't close log file.");
+        shirakami_logger->debug("It can't close log file.");
         exit(1);
     }
 
     try {
         boost::filesystem::rename(get_checkpointing_path(), get_checkpoint_path());
     } catch (boost::filesystem::filesystem_error &ex) {
-        SPDLOG_DEBUG("Fail rename : {0}.", ex.what());
+        shirakami_logger->debug("Fail rename : {0}.", ex.what());
         exit(1);
     } catch (...) {
-        SPDLOG_DEBUG("Fail rename : unknown.");
+        shirakami_logger->debug("Fail rename : unknown.");
     }
 }
 

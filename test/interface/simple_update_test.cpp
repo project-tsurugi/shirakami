@@ -14,6 +14,8 @@
 
 #include "yakushima/include/kvs.h"
 
+using namespace shirakami::logger;
+
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -77,7 +79,7 @@ TEST_F(simple_update, concurrent_updates) {  // NOLINT
                 res = search_key(s, k, &t);
             }
             if (res != Status::OK) {
-                SPDLOG_DEBUG("fatal error");
+                shirakami_logger->debug("fatal error");
                 exit(1);
             }
             ASSERT_NE(nullptr, t);

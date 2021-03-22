@@ -10,6 +10,8 @@
 #include "logger.h"
 #include "yakushima/include/kvs.h"
 
+using namespace shirakami::logger;
+
 namespace shirakami::snapshot_manager {
 void snapshot_manager_func() {
     // Memory used by elements in this container will be released.
@@ -43,7 +45,7 @@ void snapshot_manager_func() {
             }
 
             if (elem->get_snap_ptr() == nullptr) {
-                SPDLOG_DEBUG("fatal error.");
+                shirakami_logger->debug("fatal error.");
                 exit(1);
             }
             if (snapshot_manager::get_snap_epoch(

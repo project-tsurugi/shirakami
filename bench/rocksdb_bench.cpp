@@ -30,7 +30,9 @@
 #include <rocksdb/db.h>
 
 using namespace shirakami;
+using namespace shirakami::logger;
 using namespace rocksdb;
+using namespace spdlog;
 
 /**
  * general option.
@@ -78,36 +80,36 @@ static void invoke_leader() {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res.at(i)));
     }
     waitForReady(readys);
-    SPDLOG_DEBUG("start rocksdb exp.");
+    shirakami_logger->debug("start rocksdb exp.");
     storeRelease(start, true);
     for (size_t i = 0; i < FLAGS_duration; ++i) {
         sleepMs(1000);  // NOLINT
     }
     storeRelease(quit, true);
-    SPDLOG_DEBUG("stop rocksdb exp.");
+    shirakami_logger->debug("stop rocksdb exp.");
     for (auto &th : thv) th.join();
 
     std::uint64_t sum{0};
     for (auto &&elem : res) {
         sum += elem;
     }
-    SPDLOG_INFO("Throughput[ops/s]: {0}", sum / FLAGS_duration);
+    shirakami_logger->info("Throughput[ops/s]: {0}", sum / FLAGS_duration);
 }
 
 static void load_flags() {
     if (FLAGS_thread >= 1) {
-        SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
+        shirakami_logger->debug("FLAGS_thread : {0}", FLAGS_thread);
     } else {
-        SPDLOG_DEBUG("Number of threads must be larger than 0.");
+        shirakami_logger->debug("Number of threads must be larger than 0.");
         exit(1);
     }
     if (FLAGS_duration >= 1) {
-        SPDLOG_DEBUG("FLAGS_duration : {0}", FLAGS_duration);
+        shirakami_logger->debug("FLAGS_duration : {0}", FLAGS_duration);
     } else {
-        SPDLOG_DEBUG("Duration of benchmark in seconds must be larger than 0.");
+        shirakami_logger->debug("Duration of benchmark in seconds must be larger than 0.");
         exit(1);
     }
-    SPDLOG_DEBUG("Fin load_flags()");
+    shirakami_logger->debug("Fin load_flags()");
 }
 
 void set_rocksdb_options(Options &options) {
@@ -118,7 +120,7 @@ void set_rocksdb_options(Options &options) {
 }
 
 int main(int argc, char* argv[]) {  // NOLINT
-    logger::setup_spdlog();
+    shirakami::logger::setup_spdlog();
     gflags::SetUsageMessage(static_cast<const std::string &>("RocksDB benchmark"));  // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
@@ -127,16 +129,16 @@ int main(int argc, char* argv[]) {  // NOLINT
     set_rocksdb_options(options);
     auto s = DB::Open(options, FLAGS_rocksdb_path, &db);
     if (!s.ok()) {
-        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        shirakami_logger->debug("rocksdb's error code %d.", s.code());
         exit(1);
     }
 
-    SPDLOG_INFO("Create db.");
+    shirakami_logger->info("Create db.");
     invoke_leader();
-    SPDLOG_INFO("Fin measurement.");
+    shirakami_logger->info("Fin measurement.");
 
     delete db; // NOLINT
-    SPDLOG_INFO("Fin deleting db.");
+    shirakami_logger->info("Fin deleting db.");
     return 0;
 }
 
@@ -160,12 +162,12 @@ void bench_insert_process(std::uint64_t insert_end, std::uint64_t &insert_cursor
     rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
-        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        shirakami_logger->debug("rocksdb's error code {0}.", s.code());
         exit(1);
     }
     ++insert_cursor;
     if (insert_cursor == insert_end) {
-        SPDLOG_INFO("Happen round-trip problem by too long experiment time.");
+        shirakami_logger->debug("Happen round-trip problem by too long experiment time.");
         exit(1);
     }
 }
@@ -185,11 +187,11 @@ void bench_batch_insert_process(std::uint64_t insert_end, std::uint64_t &insert_
     }
     Status s = db->Write(WriteOptions(), &batch);
     if (!s.ok()) {
-        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        shirakami_logger->debug("rocksdb's error code {0}.", s.code());
         exit(1);
     }
     if (insert_cursor == insert_end) {
-        SPDLOG_INFO("Happen round-trip problem by too long experiment time.");
+        shirakami_logger->debug("Happen round-trip problem by too long experiment time.");
         exit(1);
     }
 }
@@ -202,7 +204,7 @@ void bench_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd) {
     rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
-        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        shirakami_logger->debug("rocksdb's error code {0}.", s.code());
         exit(1);
     }
 }
@@ -221,7 +223,7 @@ void bench_batch_update_process(std::uint64_t write_start, Xoroshiro128Plus &rnd
     }
     Status s = db->Write(WriteOptions(), &batch);
     if (!s.ok()) {
-        SPDLOG_INFO("rocksdb's error code {0}.", s.code());
+        shirakami_logger->debug("rocksdb's error code {0}.", s.code());
         exit(1);
     }
 }
