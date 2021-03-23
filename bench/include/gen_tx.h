@@ -14,8 +14,6 @@
 #include "random.h"
 #include "zipf.h"
 
-using namespace shirakami::logger;
-
 namespace shirakami {
 
 // Operations for retry by abort
@@ -119,7 +117,7 @@ gen_tx_scan(std::vector<opr_obj> &opr_set, const std::size_t tpnm, const std::si
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
     uint64_t key_r_nm = key_l_nm + (scan_elem_n - 1);
     if (key_r_nm >= tpnm) {
-        shirakami_logger->debug("fatal error.");
+        shirakami::logger::shirakami_logger->debug("fatal error.");
         exit(1);
     }
     uint64_t key_l_bs = __builtin_bswap64(key_l_nm);

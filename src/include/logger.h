@@ -15,8 +15,8 @@
 
 namespace shirakami::logger {
 
-static inline auto loggersink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-static inline auto shirakami_logger = std::make_shared<spdlog::async_logger>("shirakami_logger", loggersink, 8192);
+static inline auto loggersink = std::make_shared<spdlog::sinks::stdout_sink_mt>();                                  // NOLINT
+static inline auto shirakami_logger = std::make_shared<spdlog::async_logger>("shirakami_logger", loggersink, 8192); // NOLINT
 
 static inline void setup_spdlog() {
 
@@ -25,7 +25,6 @@ static inline void setup_spdlog() {
 #else
     spdlog::set_level(spdlog::level::debug);
 #endif
-
 }
 
 } // namespace shirakami::logger

@@ -15,7 +15,6 @@
 #include "cpr.h"
 #endif
 
-using namespace shirakami::logger;
 
 namespace shirakami {
 
@@ -81,7 +80,7 @@ public:
         SequenceId ret = created_num_;
         ++created_num_;
         if (created_num_ == SIZE_MAX) {
-            shirakami_logger->debug("fatal error"); // todo round-trip
+            shirakami::logger::shirakami_logger->debug("fatal error"); // todo round-trip
             exit(1);
         }
         return ret;

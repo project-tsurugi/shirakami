@@ -297,7 +297,7 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum, const b
         exit(1);
     }
     std::uint64_t end_ts{rdtscp()};
-    shirakami_logger->info("Finish consume time[us]: {0}", (end_ts - begin_ts) / FLAGS_cpumhz / 1000);
+    shirakami_logger->info("Finish consume time[us]: {0}", (end_ts - begin_ts) / FLAGS_cpumhz / 1000); // NOLINT
 
     // begin ingestion
     IngestExternalFileOptions ifo;
@@ -305,11 +305,11 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum, const b
     s = db->IngestExternalFile({FLAGS_bt4_sst_path}, ifo);
     if (!s.ok()) {
         shirakami_logger->info("Error while ingesting file.{0}", s.getState());
-        delete db;
+        delete db; // NOLINT
         exit(1);
     }
     end_ts = rdtscp();
-    shirakami_logger->info("Ingesting consume time[us]: {0}", (end_ts - begin_ts) / FLAGS_cpumhz / 1000);
+    shirakami_logger->info("Ingesting consume time[us]: {0}", (end_ts - begin_ts) / FLAGS_cpumhz / 1000); // NOLINT
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
