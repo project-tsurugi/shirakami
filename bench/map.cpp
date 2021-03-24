@@ -61,7 +61,7 @@ void std_map_bench(const std::vector<std::uint64_t>& data) {
         std_map[elem] = elem;
     }
     std::uint64_t end{rdtscp()};
-    shirakami_logger->info("std_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000));
+    shirakami_logger->info("std_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)); // NOLINT
 }
 
 void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
@@ -71,7 +71,7 @@ void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
         map[elem] = elem;
     }
     std::uint64_t end{rdtscp()};
-    shirakami_logger->info("std_unordered_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end-begin) /FLAGS_cpumhz / 1000));
+    shirakami_logger->info("std_unordered_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end-begin) /FLAGS_cpumhz / 1000)); // NOLINT
 }
 
 void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
@@ -81,7 +81,7 @@ void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
         map[elem] = elem;
     }
     std::uint64_t end{rdtscp()};
-    shirakami_logger->info("hopscotch_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end-begin) /FLAGS_cpumhz / 1000));
+    shirakami_logger->info("hopscotch_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end-begin) /FLAGS_cpumhz / 1000)); // NOLINT
 }
 
 void prepare_data(std::vector<std::uint64_t>& data) {
