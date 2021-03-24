@@ -17,6 +17,7 @@
 #include <xmmintrin.h>
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "atomic_wrapper.h"
 #include "clock.h"
@@ -41,7 +42,7 @@ DEFINE_uint64(                                                               // 
         cpumhz, 2100,                                                        // NOLINT
         "# cpu MHz of execution environment. It is used measuring some "     // NOLINT
         "time.");                                                            // NOLINT
-DEFINE_uint64(elem_num, 1 * 1000 * 1000, "Insert # elements to some map."); // NOLINT
+DEFINE_uint64(elem_num, 5 * 1000 * 1000, "Insert # elements to some map."); // NOLINT
 
 static void load_flags() {
     if (FLAGS_cpumhz > 1) {
@@ -61,6 +62,16 @@ void std_map_bench(const std::vector<std::uint64_t>& data) {
     }
     std::uint64_t end{rdtscp()};
     shirakami_logger->info("std_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000));
+}
+
+void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
+    std::unordered_map<std::uint64_t, std::uint64_t> map;
+    std::uint64_t begin{rdtscp()};
+    for (auto&& elem : data) {
+        map[elem] = elem;
+    }
+    std::uint64_t end{rdtscp()};
+    shirakami_logger->info("std_unordered_map_throughput[ops/us]:\t{0}", FLAGS_elem_num / ((end-begin) /FLAGS_cpumhz / 1000));
 }
 
 void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
@@ -94,6 +105,7 @@ int main(int argc, char* argv[]) { // NOLINT
     std::vector<std::uint64_t> data;
     prepare_data(data);
     std_map_bench(data);
+    std_unordered_map_bench(data);
     hopscotch_map_bench(data);
 
     return 0;
