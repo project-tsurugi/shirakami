@@ -104,6 +104,7 @@ add_subdirectory(third_party)
 
 if (BUILD_TESTS)
     add_subdirectory(test)
+    add_subdirectory(third_party/hopscotch-map)
 endif ()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)

@@ -33,6 +33,7 @@ file(GLOB TEST_SOURCES
         "memory_test.cpp"
         "scheme_test.cpp"
         "string_view_test.cpp"
+        "third_party/hopscotch_map_test.cpp"
         )
 
 # about index
