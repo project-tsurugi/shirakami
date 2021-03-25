@@ -18,13 +18,31 @@ using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
+tsl::hopscotch_map<std::string, std::vector<Record*>>& cpr_local_handler::get_diff_update_set() {
+    version_type cv{get_version()};
+    if ((cv % 2 == 0 && get_phase() == phase::REST) ||
+        (cv % 2 == 1 && get_phase() != phase::REST)) {
+            return diff_update_set.at(0);
+    }
+    return diff_update_set.at(1);
+}
+
+tsl::hopscotch_map<std::string, std::vector<Record*>>& cpr_local_handler::get_diff_update_set_exclusive() {
+    version_type cv{get_version()};
+    if ((cv % 2 == 0 && get_phase() == phase::REST) ||
+        (cv % 2 == 1 && get_phase() != phase::REST)) {
+            return diff_update_set_exclusive.at(0);
+    }
+    return diff_update_set_exclusive.at(1);
+}
+
 void checkpoint_thread() {
     setup_spdlog();
     auto wait_worker = [](phase new_phase) {
         bool continue_loop{}; // NOLINT
         do {
             continue_loop = false;
-            for (auto &&elem : session_info_table::get_thread_info_table()) {
+            for (auto&& elem : session_info_table::get_thread_info_table()) {
                 if (elem.get_visible() && elem.get_txbegan() && elem.get_phase() != new_phase) {
                     continue_loop = true;
                     break;
@@ -90,7 +108,7 @@ void checkpointing() {
      * memory is protected.
      */
     tx_begin(shira_token); // NOLINT
-    for (auto &&itr : scan_buf) {
+    for (auto&& itr : scan_buf) {
         Record* rec = *itr.first;
         rec->get_tidw().lock();
         /**
@@ -123,8 +141,7 @@ void checkpointing() {
                              */
                             rec->get_tidw().get_latest() &&
                             rec->get_not_include_version() != -1 &&
-                            pv.get_version() != static_cast<uint64_t >(rec->get_not_include_version())
-                    ) ||
+                            pv.get_version() != static_cast<uint64_t>(rec->get_not_include_version())) ||
                     (
                             /**
                              * Do not include records that were deleted before the checkpoint boundary but were left in
@@ -133,9 +150,7 @@ void checkpointing() {
                             rec->get_tidw().get_absent() &&
                             !rec->get_tidw().get_latest() &&
                             rec->get_not_include_version() != -1 &&
-                            pv.get_version() < static_cast<uint64_t>(rec->get_not_include_version())
-                    )
-                    ) {
+                            pv.get_version() < static_cast<uint64_t>(rec->get_not_include_version()))) {
                 // Begin : copy record
                 /**
                  * todo : It can be expected to be faster by refining it.
@@ -144,10 +159,10 @@ void checkpointing() {
                  * it can be expected to be faster by refining it.
                  */
                 if (rec->get_version() == pv.get_version() + 1) {
-                    const Tuple &tup = rec->get_stable();
+                    const Tuple& tup = rec->get_stable();
                     l_recs.emplace_back(tup.get_key(), tup.get_value());
                 } else {
-                    const Tuple &tup = rec->get_tuple();
+                    const Tuple& tup = rec->get_tuple();
                     l_recs.emplace_back(tup.get_key(), tup.get_value());
                     if (rec->get_tidw().get_latest()) {
                         /**
@@ -201,7 +216,7 @@ void checkpointing() {
     enter(shira_token);
     tx_begin(shira_token); // NOLINT
     auto* ti = static_cast<session_info*>(shira_token);
-    for (auto &&itr : garbage) {
+    for (auto&& itr : garbage) {
         tid_word new_tid = itr->get_tidw();
         new_tid.set_epoch(ti->get_epoch());
         storeRelease(itr->get_tidw().get_obj(), new_tid.get_obj());
@@ -224,7 +239,7 @@ void checkpointing() {
 
     try {
         boost::filesystem::rename(get_checkpointing_path(), get_checkpoint_path());
-    } catch (boost::filesystem::filesystem_error &ex) {
+    } catch (boost::filesystem::filesystem_error& ex) {
         shirakami_logger->debug("Fail rename : {0}.", ex.what());
         exit(1);
     } catch (...) {
@@ -245,4 +260,4 @@ void wait_next_checkpoint() {
     }
 }
 
-}
+} // namespace shirakami::cpr

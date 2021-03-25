@@ -41,6 +41,8 @@
 
 #include "fault_tolerance/include/cpr.h"
 
+#include <tsl/hopscotch_map.h>
+
 using namespace shirakami::cpr;
 
 #endif
@@ -63,15 +65,15 @@ public:
             gc_snap();
         }
 
-        std::vector<Record*> &get_record_container() {  // NOLINT
+        std::vector<Record*>& get_record_container() { // NOLINT
             return record_container_;
         }
 
-        std::vector<std::pair<std::string*, epoch::epoch_t>> &get_value_container() {  // NOLINT
+        std::vector<std::pair<std::string*, epoch::epoch_t>>& get_value_container() { // NOLINT
             return value_container_;
         }
 
-        std::vector<std::pair<epoch::epoch_t, Record*>> &get_snap_cont_() { // NOLINT
+        std::vector<std::pair<epoch::epoch_t, Record*>>& get_snap_cont_() { // NOLINT
             return snap_cont_;
         }
 
@@ -86,13 +88,13 @@ public:
 
     class scan_handler {
     public:
-        [[maybe_unused]] std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> &
-        get_scan_cache() {  // NOLINT
+        [[maybe_unused]] std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>&
+        get_scan_cache() { // NOLINT
             return scan_cache_;
         }
 
-        [[maybe_unused]] std::map<ScanHandle, std::size_t> &
-        get_scan_cache_itr() {  // NOLINT
+        [[maybe_unused]] std::map<ScanHandle, std::size_t>&
+        get_scan_cache_itr() { // NOLINT
             return scan_cache_itr_;
         }
 
@@ -134,7 +136,7 @@ public:
 
     [[maybe_unused]] void display_write_set();
 
-    bool cas_visible(bool &expected, bool &desired) {  // NOLINT
+    bool cas_visible(bool& expected, bool& desired) { // NOLINT
         return visible_.compare_exchange_strong(expected, desired,
                                                 std::memory_order_acq_rel);
     }
@@ -147,29 +149,29 @@ public:
      * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert
      * operation before this delete_record operation.
      */
-    Status check_delete_after_write(std::string_view key);  // NOLINT
+    Status check_delete_after_write(std::string_view key); // NOLINT
 
     void gc();
 
-    [[nodiscard]] epoch::epoch_t get_epoch() const {  // NOLINT
+    [[nodiscard]] epoch::epoch_t get_epoch() const { // NOLINT
         return epoch_.load(std::memory_order_acquire);
     }
 
-    std::vector<Record*> &get_gc_record_container() {  // NOLINT
+    std::vector<Record*>& get_gc_record_container() { // NOLINT
         return gc_handle_.get_record_container();
     }
 
-    std::vector<std::pair<std::string*, epoch::epoch_t>> &get_gc_value_container() {  // NOLINT
+    std::vector<std::pair<std::string*, epoch::epoch_t>>& get_gc_value_container() { // NOLINT
         return gc_handle_.get_value_container();
     }
 
-    std::vector<std::pair<epoch::epoch_t, Record*>> &get_gc_snap_cont() { // NOLINT
+    std::vector<std::pair<epoch::epoch_t, Record*>>& get_gc_snap_cont() { // NOLINT
         return gc_handle_.get_snap_cont_();
     }
 
-    tid_word &get_mrctid() { return mrc_tid_; }  // NOLINT
+    tid_word& get_mrctid() { return mrc_tid_; } // NOLINT
 
-    std::vector<read_set_obj> &get_read_set() {  // NOLINT
+    std::vector<read_set_obj>& get_read_set() { // NOLINT
         return read_set;
     }
 
@@ -177,27 +179,27 @@ public:
         return read_only_;
     }
 
-    std::map<ScanHandle, std::size_t> &get_scan_cache_itr() {  // NOLINT
+    std::map<ScanHandle, std::size_t>& get_scan_cache_itr() { // NOLINT
         return scan_handle_.get_scan_cache_itr();
     }
 
-    [[maybe_unused]] Token &get_token() { return token_; }  // NOLINT
+    [[maybe_unused]] Token& get_token() { return token_; } // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] const Token &get_token() const {  // NOLINT
+    [[maybe_unused]] [[nodiscard]] const Token& get_token() const { // NOLINT
         return token_;
     }
 
-    bool get_txbegan() const { return tx_began_.load(std::memory_order_acquire); }  // NOLINT
+    bool get_txbegan() const { return tx_began_.load(std::memory_order_acquire); } // NOLINT
 
-    [[nodiscard]] bool get_visible() const {  // NOLINT
+    [[nodiscard]] bool get_visible() const { // NOLINT
         return visible_.load(std::memory_order_acquire);
     }
 
-    std::vector<write_set_obj> &get_write_set() {  // NOLINT
+    std::vector<write_set_obj>& get_write_set() { // NOLINT
         return write_set;
     }
 
-    std::vector<Tuple> &get_read_only_tuples() { // NOLINT
+    std::vector<Tuple>& get_read_only_tuples() { // NOLINT
         return read_only_tuples_;
     }
 
@@ -217,14 +219,14 @@ public:
      * @param [in] key the key of record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search_write_set(std::string_view key);  // NOLINT
+    write_set_obj* search_write_set(std::string_view key); // NOLINT
 
     /**
      * @brief check whether it already executed update/insert operation.
      * @param [in] rec_ptr the pointer of record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    const write_set_obj* search_write_set(const Record* rec_ptr);  // NOLINT
+    const write_set_obj* search_write_set(const Record* rec_ptr); // NOLINT
 
     /**
      * @brief unlock records in write set.
@@ -256,7 +258,7 @@ public:
         epoch_.store(epoch, std::memory_order_release);
     }
 
-    void set_mrc_tid(const tid_word &tid) { mrc_tid_ = tid; }
+    void set_mrc_tid(const tid_word& tid) { mrc_tid_ = tid; }
 
     void set_read_only(const bool tf) { read_only_ = tf; }
 
@@ -273,15 +275,15 @@ public:
 
 #ifdef PWAL
 
-    pwal::pwal_handler &get_log_handler() { // NOLINT
+    pwal::pwal_handler& get_log_handler() { // NOLINT
         return log_handle_;
     }
 
-    std::vector<pwal::LogRecord> &get_log_set() {  // NOLINT
+    std::vector<pwal::LogRecord>& get_log_set() { // NOLINT
         return log_handle_.get_log_set();
     }
 
-    tid_word &get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
+    tid_word& get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
 
     /**
      * @brief write-ahead logging
@@ -290,21 +292,21 @@ public:
      */
     void pwal(std::uint64_t commit_id, commit_property cp);
 
-    void set_flushed_ctid(const tid_word &ctid) {
+    void set_flushed_ctid(const tid_word& ctid) {
         log_handle_.set_flushed_ctid(ctid);
     }
 #endif
 
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> &get_node_set() { // NOLINT
+    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>>& get_node_set() { // NOLINT
         return node_set;
     }
 
-    std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> &
-    get_scan_cache() {  // NOLINT
+    std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>&
+    get_scan_cache() { // NOLINT
         return scan_handle_.get_scan_cache();
     }
 
-    [[nodiscard]] yakushima::Token get_yakushima_token() {  // NOLINT
+    [[nodiscard]] yakushima::Token get_yakushima_token() { // NOLINT
         return yakushima_token_;
     }
 
@@ -321,11 +323,29 @@ public:
      */
     Status update_node_set(yakushima::node_version64* nvp); // NOLINT
 
-#ifdef CPR
+#if defined(CPR)
+
+    /**
+     * @pre In this function, the worker thread selects the appropriate container from the mechanism 
+     * that switches the container that stores information from time to time. Do not call from CPR manager.
+     * CPR managers have different criteria for choosing containers.
+     */
+    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
+
+    /**
+     * @pre In this function, the worker thread selects the appropriate container from the mechanism 
+     * that switches the container that stores information from time to time. Do not call from CPR manager.
+     * CPR managers have different criteria for choosing containers.
+     */
+    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set_exclusive() { return cpr_local_handle_.get_diff_update_set_exclusive(); }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
+
+    void regi_diff_upd_set(Record* record);
+
+    void regi_diff_upd_set_ex(Record* record);
 
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
@@ -335,7 +355,7 @@ public:
 
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
-    tid_word mrc_tid_{};  // most recently chosen tid, for calculate new tids.
+    tid_word mrc_tid_{}; // most recently chosen tid, for calculate new tids.
     std::atomic<epoch::epoch_t> epoch_{0};
     /**
      * @brief If this is true, this session is live, otherwise, not live.
@@ -380,7 +400,6 @@ private:
 #elif defined(CPR)
     cpr_local_handler cpr_local_handle_;
 #endif
-
 };
 
-}  // namespace shirakami::cc_silo_variant
+} // namespace shirakami

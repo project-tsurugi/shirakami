@@ -87,7 +87,8 @@ function(register_tests)
                 else()
                     target_link_libraries(${test_name}
                             PRIVATE ${TESTS_TARGET}
-                            Boost::filesystem
+                            PRIVATE Boost::filesystem
+                            PRIVATE tsl::hopscotch_map
                             )
                 endif()
             endif()

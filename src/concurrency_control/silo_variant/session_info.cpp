@@ -356,4 +356,18 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #endif
 
+#if defined(CPR)
+
+void session_info::regi_diff_upd_set(Record* record) {
+    auto& map{get_diff_update_set()};
+    map[std::string{record->get_tuple().get_key()}].emplace_back(record);
+}
+
+void session_info::regi_diff_upd_set_ex(Record* record) {
+    auto& map{get_diff_update_set_exclusive()};
+    map[std::string{record->get_tuple().get_key()}].emplace_back(record);
+}
+
+#endif
+
 }  // namespace shirakami::cc_silo_variant

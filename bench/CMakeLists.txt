@@ -23,11 +23,12 @@ add_executable(ycsb
         )
 
 target_link_libraries(ycsb
+        PRIVATE gflags::gflags
         PRIVATE shirakami
         PRIVATE shirakami-impl
+        PRIVATE tsl::hopscotch_map
+        PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
-        PRIVATE gflags::gflags
-        Boost::filesystem
         )
 
 target_include_directories(ycsb

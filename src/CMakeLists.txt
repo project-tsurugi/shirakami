@@ -34,6 +34,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(shirakami
         PUBLIC api
         PRIVATE Boost::filesystem
+        PRIVATE tsl::hopscotch_map
         PRIVATE tbb
         PRIVATE Threads::Threads
         )

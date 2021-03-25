@@ -14,17 +14,20 @@
 #include <tuple>
 
 #include "concurrency_control/silo_variant/include/epoch.h"
+#include "concurrency_control/silo_variant/include/record.h"
 
 #include "msgpack-c/include/msgpack.hpp"
+
+#include <tsl/hopscotch_map.h>
 
 namespace shirakami::cpr {
 
 using version_type = std::uint64_t;
 
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
-inline std::thread kCheckPointThread; // NOLINT
-inline std::string kCheckpointingPath; // NOLINT
-inline std::string kCheckpointPath; // NOLINT
+inline std::thread kCheckPointThread;                 // NOLINT
+inline std::string kCheckpointingPath;                // NOLINT
+inline std::string kCheckpointPath;                   // NOLINT
 
 enum class phase : char {
     REST = 0,
@@ -45,8 +48,8 @@ public:
     void set_version(version_type new_version) { version_ = new_version; }
 
 private:
-    phase phase_: 8;
-    version_type version_: 56;
+    phase phase_ : 8;
+    version_type version_ : 56;
 };
 
 /**
@@ -89,6 +92,10 @@ private:
  */
 class cpr_local_handler {
 public:
+    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set();
+
+    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set_exclusive();
+
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
 
     version_type get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
@@ -98,6 +105,34 @@ public:
     }
 
 private:
+    /**
+     * @brief A set of keys updated by this worker thread.
+     * @details The CPR manager aggregates this set of each worker thread and considers it a delta update.
+     * The element with index 0 is used under the following conditions.
+     * -When version is even and rest phase.
+     * -When version is odd and not rest phase.
+     * The element of index 1 is used under the following conditions.
+     * -When version is even and not rest phase.
+     * -When version is odd and rest phase.
+     * Clearing the element is issued by the CPR manager.
+     * The reason why index 1 is a vector will be described. 
+     * The operation of deleting a record inserted in the same CPR logical boundary partition can occur 
+     * multiple times in the same partition.
+     * If the record corresponding to the key has already been registered, 
+     * if the information is to be deleted by overwriting, 
+     * the part corresponding to the information must be searched from the update history of all worker 
+     * threads and the cancellation operation must be performed.
+     */
+    std::array<tsl::hopscotch_map<std::string, std::vector<Record*>>, 2> diff_update_set; // NOLINT
+    /**
+     * @brief A set of keys deleted at version which the key was inserted by this worker thread.
+     * @details When insertion / deletion is performed in the same logical boundary division in CPR, 
+     * the operation aggregated at the boundary is the deletion operation.
+     * If the deleted record is not a record inserted by this worker thread, 
+     * it is expensive to search for the corresponding record from the update differences of all worker threads and cancel the registration, 
+     * so record the set to be canceled. The CPR manager then aggregates it and cancels it in bulk.
+     */
+    std::array<tsl::hopscotch_map<std::string, std::vector<Record*>>, 2> diff_update_set_exclusive; // NOLINT
     std::atomic<phase_version> phase_version_{};
 };
 
@@ -114,7 +149,8 @@ public:
 
     std::string_view get_val() { return val_; } // NOLINT
 
-    MSGPACK_DEFINE (key_, val_);
+    MSGPACK_DEFINE(key_, val_);
+
 private:
     std::string key_;
     std::string val_;
@@ -126,9 +162,10 @@ public:
         vec_.emplace_back(key, val);
     }
 
-    std::vector<log_record> &get_vec() { return vec_; } // NOLINT
+    std::vector<log_record>& get_vec() { return vec_; } // NOLINT
 
-    MSGPACK_DEFINE (vec_);
+    MSGPACK_DEFINE(vec_);
+
 private:
     std::vector<log_record> vec_;
 };
@@ -143,9 +180,9 @@ extern void checkpoint_thread();
  */
 extern void checkpointing();
 
-[[maybe_unused]] static std::string &get_checkpoint_path() { return kCheckpointPath; } // NOLINT
+[[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
 
-[[maybe_unused]] static std::string &get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
+[[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
 
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     kCheckPointThreadEnd.store(false, std::memory_order_release);
@@ -164,4 +201,4 @@ extern void checkpointing();
 
 [[maybe_unused]] extern void wait_next_checkpoint();
 
-}  // namespace shirakami::cpr
+} // namespace shirakami::cpr
