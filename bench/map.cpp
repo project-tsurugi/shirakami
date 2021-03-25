@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) { // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
-
+    setThreadAffinity(0); // NOLINT
     std::vector<std::uint64_t> data;
     prepare_data(data);
     std_map_bench(data);
