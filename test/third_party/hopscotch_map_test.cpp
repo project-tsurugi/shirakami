@@ -37,4 +37,19 @@ TEST_F(hopscotch_map_test, basic_operation) { // NOLINT
     ASSERT_EQ(map.erase(kv.at(0).first), 0);
 }
 
+TEST_F(hopscotch_map_test, api_clear) { // NOLINT
+    tsl::hopscotch_map<std::string, std::string> map;
+    // prepare data
+    std::array<std::pair<std::string, std::string>, 3> kv{std::make_pair("k1", "v1"), std::make_pair("k2", "v2"), std::make_pair("k3", "v3")};
+    // initialize map
+    for (auto&& elem : kv) {
+        map[elem.first] = elem.second;
+    }
+    // check map size
+    ASSERT_EQ(map.size(), kv.size());
+    map.clear();
+    // check map size
+    ASSERT_EQ(map.size(), 0);
+}
+
 } // namespace shirakami::testing
