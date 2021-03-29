@@ -13,6 +13,8 @@
 #include <thread>
 #include <tuple>
 
+#include "logger.h"
+
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/record.h"
 
@@ -24,10 +26,19 @@ namespace shirakami::cpr {
 
 using version_type = std::uint64_t;
 
+#ifndef PARAM_CPR_USE_FULL_SCAN
+using register_count_type = std::uint64_t;
+constexpr register_count_type register_count_type_max = UINT64_MAX;
+#endif
+
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
 inline std::thread kCheckPointThread;                 // NOLINT
 inline std::string kCheckpointingPath;                // NOLINT
 inline std::string kCheckpointPath;                   // NOLINT
+
+#ifndef PARAM_CPR_USE_FULL_SCAN
+inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
+#endif
 
 enum class phase : char {
     REST = 0,
@@ -92,9 +103,9 @@ private:
  */
 class cpr_local_handler {
 public:
-    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set();
-
-    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set_exclusive();
+#ifndef PARAM_CPR_USE_FULL_SCAN
+    tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set();
+#endif
 
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
 
@@ -105,6 +116,7 @@ public:
     }
 
 private:
+#ifndef PARAM_CPR_USE_FULL_SCAN
     /**
      * @brief A set of keys updated by this worker thread.
      * @details The CPR manager aggregates this set of each worker thread and considers it a delta update.
@@ -115,24 +127,26 @@ private:
      * -When version is even and not rest phase.
      * -When version is odd and rest phase.
      * Clearing the element is issued by the CPR manager.
-     * The reason why index 1 is a vector will be described. 
+     * The pointer of pair.second should be set by nullptr if the record is deleted.
+     * The reason will be described. 
      * The operation of deleting a record inserted in the same CPR logical boundary partition can occur 
      * multiple times in the same partition.
      * If the record corresponding to the key has already been registered, 
      * if the information is to be deleted by overwriting, 
      * the part corresponding to the information must be searched from the update history of all worker 
      * threads and the cancellation operation must be performed.
+     * When the CPR manager collects information on all workers, 
+     * it is necessary to specify the order relationship for the same record. 
+     * That is why pair.first is defined.
+     * @todo TODO. Using std :: string for the key is redundant. In the future this will be static_cast <uint64_t> (record *). 
+     * In that case, two things must be considered so that the pointer is not confused.
+     * 1. Does the record with the same key point to another pointer?
+     * 2. Do records with different keys point to the same pointer?
+     * This can be resolved so that the physical memory reuse associated with the physical deletion of records crosses the boundaries of CPR. 
+     *  Since it is highly optimized, it is future work.
      */
-    std::array<tsl::hopscotch_map<std::string, std::vector<Record*>>, 2> diff_update_set; // NOLINT
-    /**
-     * @brief A set of keys deleted at version which the key was inserted by this worker thread.
-     * @details When insertion / deletion is performed in the same logical boundary division in CPR, 
-     * the operation aggregated at the boundary is the deletion operation.
-     * If the deleted record is not a record inserted by this worker thread, 
-     * it is expensive to search for the corresponding record from the update differences of all worker threads and cancel the registration, 
-     * so record the set to be canceled. The CPR manager then aggregates it and cancels it in bulk.
-     */
-    std::array<tsl::hopscotch_map<std::string, std::vector<Record*>>, 2> diff_update_set_exclusive; // NOLINT
+    std::array<tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, 2> diff_update_set; // NOLINT
+#endif
     std::atomic<phase_version> phase_version_{};
 };
 
@@ -200,5 +214,22 @@ extern void checkpointing();
 [[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
 
 [[maybe_unused]] extern void wait_next_checkpoint();
+
+#ifndef PARAM_CPR_USE_FULL_SCAN
+
+[[maybe_unused]] static register_count_type fetch_add_register_count(std::size_t index) {
+    register_count_type ret = kRegisterCount.at(index).fetch_add(1);
+    if (ret == register_count_type_max) {
+        shirakami::logger::shirakami_logger->debug("wrap round error");
+        exit(1);
+        /**
+         * It is unlikely that there will be as many writes as the maximum number of data types at the checkpoint interval.
+         * If so, it is better to set the checkpoint interval shorter than it is now.
+         */
+    }
+    return ret;
+}
+
+#endif
 
 } // namespace shirakami::cpr

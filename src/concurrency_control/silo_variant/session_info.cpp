@@ -3,11 +3,11 @@
  * @brief about scheme
  */
 
-#include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/session_info.h"
+#include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami {
 
@@ -17,7 +17,7 @@ void session_info::gc_handler::gc_records() {
     for (auto itr = ers_bgn_itr; itr != get_record_container().end(); ++itr) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
             ers_end_itr = itr;
-            delete *itr;  // NOLINT
+            delete *itr; // NOLINT
         } else {
             break;
         }
@@ -34,7 +34,7 @@ void session_info::gc_handler::gc_values() {
     for (auto itr = ers_bgn_itr; itr != get_value_container().end(); ++itr) {
         if (itr->second < epoch::get_reclamation_epoch()) {
             ers_end_itr = itr;
-            delete itr->first;  // NOLINT
+            delete itr->first; // NOLINT
         } else {
             break;
         }
@@ -82,11 +82,11 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
     std::cout << "start : session_info::display_read_set()" << std::endl;
     std::size_t ctr(1);
-    for (auto &&itr : read_set) {
+    for (auto&& itr : read_set) {
         std::cout << "Element #" << ctr << " of read set." << std::endl;
         std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
-        Record &record = itr.get_rec_read();
-        Tuple &tuple = record.get_tuple();
+        Record& record = itr.get_rec_read();
+        Tuple& tuple = record.get_tuple();
         std::cout << "tidw_ :vv" << record.get_tidw() << std::endl;
         std::string_view key_view;
         std::string_view value_view;
@@ -106,7 +106,7 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
     std::cout << "start : session_info::display_write_set()" << std::endl;
     std::size_t ctr(1);
-    for (auto &&itr : write_set) {
+    for (auto&& itr : write_set) {
         std::cout << "Element #" << ctr << " of write set." << std::endl;
         std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
         std::cout << "op_ : " << itr.get_op() << std::endl;
@@ -124,7 +124,7 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
 }
 
-Status session_info::check_delete_after_write(std::string_view key) {  // NOLINT
+Status session_info::check_delete_after_write(std::string_view key) { // NOLINT
     for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
         // It can't use lange-based for because it use write_set.erase.
         std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
@@ -143,7 +143,7 @@ void session_info::gc() {
 }
 
 void session_info::remove_inserted_records_of_write_set_from_masstree() {
-    for (auto &&itr : write_set) {
+    for (auto&& itr : write_set) {
         if (itr.get_op() == OP_TYPE::INSERT) {
             Record* record = itr.get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
@@ -177,15 +177,15 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
             deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
             deletetid.set_absent(false);
             deletetid.set_epoch(this->get_epoch());
-            storeRelease(record->get_tidw().obj_, deletetid.obj_);  // NOLINT
+            storeRelease(record->get_tidw().obj_, deletetid.obj_); // NOLINT
         }
     }
 }
 
-write_set_obj* session_info::search_write_set(  // NOLINT
+write_set_obj* session_info::search_write_set( // NOLINT
         std::string_view const key) {
-    for (auto &&itr : write_set) {
-        const Tuple* tuple;  // NOLINT
+    for (auto&& itr : write_set) {
+        const Tuple* tuple; // NOLINT
         if (itr.get_op() == OP_TYPE::UPDATE) {
             tuple = &itr.get_tuple_to_local();
         } else {
@@ -201,9 +201,9 @@ write_set_obj* session_info::search_write_set(  // NOLINT
     return nullptr;
 }
 
-const write_set_obj* session_info::search_write_set(  // NOLINT
+const write_set_obj* session_info::search_write_set( // NOLINT
         const Record* const rec_ptr) {
-    for (auto &itr : write_set) {
+    for (auto& itr : write_set) {
         if (itr.get_rec_ptr() == rec_ptr) return &itr;
     }
 
@@ -214,18 +214,18 @@ void session_info::unlock_write_set() {
     tid_word expected{};
     tid_word desired{};
 
-    for (auto &itr : write_set) {
+    for (auto& itr : write_set) {
         if (itr.get_op() == OP_TYPE::INSERT) continue;
         // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
         Record* recptr = itr.get_rec_ptr();
-        expected = loadAcquire(recptr->get_tidw().obj_);  // NOLINT
+        expected = loadAcquire(recptr->get_tidw().obj_); // NOLINT
         desired = expected;
         desired.set_lock(false);
-        storeRelease(recptr->get_tidw().obj_, desired.obj_);  // NOLINT
+        storeRelease(recptr->get_tidw().obj_, desired.obj_); // NOLINT
     }
 }
 
-void session_info::unlock_write_set(  // NOLINT
+void session_info::unlock_write_set( // NOLINT
         std::vector<write_set_obj>::iterator begin,
         std::vector<write_set_obj>::iterator end) {
     tid_word expected;
@@ -234,15 +234,15 @@ void session_info::unlock_write_set(  // NOLINT
     for (auto itr = begin; itr != end; ++itr) {
         if (itr->get_op() == OP_TYPE::INSERT) continue;
         // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-        expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_);  // NOLINT
+        expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_); // NOLINT
         desired = expected;
         desired.set_lock(false);
-        storeRelease(itr->get_rec_ptr()->get_tidw().obj_, desired.obj_);  // NOLINT
+        storeRelease(itr->get_rec_ptr()->get_tidw().obj_, desired.obj_); // NOLINT
     }
 }
 
 Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
-    for (auto &&elem : node_set) {
+    for (auto&& elem : node_set) {
         if (std::get<1>(elem) == nvp) {
             yakushima::node_version64_body nvb = nvp->get_stable_version();
             if (std::get<0>(elem).get_vinsert_delete() + 1 != nvb.get_vinsert_delete()) {
@@ -265,7 +265,7 @@ Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
 #ifdef PWAL
 
 void session_info::pwal(uint64_t commit_id, commit_property cp) {
-    for (auto &&itr : write_set) {
+    for (auto&& itr : write_set) {
         if (itr.get_op() == OP_TYPE::UPDATE) {
             log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(), &itr.get_tuple_to_local());
         } else {
@@ -273,15 +273,15 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
             log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(), &itr.get_tuple_to_db());
         }
         log_handle_.get_latest_log_header().add_checksum(
-                log_handle_.get_log_set().back().compute_checksum());  // NOLINT
+                log_handle_.get_log_set().back().compute_checksum()); // NOLINT
         log_handle_.get_latest_log_header().inc_log_rec_num();
     }
 
 #if defined(PWAL_ENABLE_READ_LOG)
-    for (auto &&itr : read_set) {
+    for (auto&& itr : read_set) {
         log_handle_.get_log_set().emplace_back(commit_id, OP_TYPE::SEARCH, &itr.get_rec_read().get_tuple());
         log_handle_.get_latest_log_header().add_checksum(
-                log_handle_.get_log_set().back().compute_checksum());  // NOLINT
+                log_handle_.get_log_set().back().compute_checksum()); // NOLINT
         log_handle_.get_latest_log_header().inc_log_rec_num();
     }
 #endif
@@ -312,7 +312,7 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
         };
 
         // write log record
-        for (auto &&itr : log_handle_.get_log_set()) {
+        for (auto&& itr : log_handle_.get_log_set()) {
             // write tx id, op(operation type)
             write_batch(static_cast<void*>(&itr), sizeof(itr.get_tid()) + sizeof(itr.get_op()));
 
@@ -337,7 +337,7 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
             // write val_body
             if (itr.get_op() != OP_TYPE::DELETE) {
                 if (value_size != 0) {
-                    write_batch(static_cast<const void*>(value_view.data()), value_size);  // NOLINT
+                    write_batch(static_cast<const void*>(value_view.data()), value_size); // NOLINT
                 }
             }
 
@@ -358,16 +358,19 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #if defined(CPR)
 
+#ifndef PARAM_CPR_USE_FULL_SCAN
 void session_info::regi_diff_upd_set(Record* record) {
     auto& map{get_diff_update_set()};
-    map[std::string{record->get_tuple().get_key()}].emplace_back(record);
-}
-
-void session_info::regi_diff_upd_set_ex(Record* record) {
-    auto& map{get_diff_update_set_exclusive()};
-    map[std::string{record->get_tuple().get_key()}].emplace_back(record);
+    version_type cv{get_version()};
+    if ((cv % 2 == 0 && get_phase() == phase::REST) ||
+        (cv % 2 == 1 && get_phase() != phase::REST)) {
+        map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count(0), record};
+    }
+    map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count(1), record};
 }
 
 #endif
 
-}  // namespace shirakami::cc_silo_variant
+#endif
+
+} // namespace shirakami

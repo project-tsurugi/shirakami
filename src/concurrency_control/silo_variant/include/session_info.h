@@ -330,22 +330,13 @@ public:
      * that switches the container that stores information from time to time. Do not call from CPR manager.
      * CPR managers have different criteria for choosing containers.
      */
-    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
-
-    /**
-     * @pre In this function, the worker thread selects the appropriate container from the mechanism 
-     * that switches the container that stores information from time to time. Do not call from CPR manager.
-     * CPR managers have different criteria for choosing containers.
-     */
-    tsl::hopscotch_map<std::string, std::vector<Record*>>& get_diff_update_set_exclusive() { return cpr_local_handle_.get_diff_update_set_exclusive(); }
+    tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
 
     void regi_diff_upd_set(Record* record);
-
-    void regi_diff_upd_set_ex(Record* record);
 
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());

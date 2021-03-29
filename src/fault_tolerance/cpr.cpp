@@ -18,22 +18,13 @@ using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
-tsl::hopscotch_map<std::string, std::vector<Record*>>& cpr_local_handler::get_diff_update_set() {
+tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& cpr_local_handler::get_diff_update_set() {
     version_type cv{get_version()};
     if ((cv % 2 == 0 && get_phase() == phase::REST) ||
         (cv % 2 == 1 && get_phase() != phase::REST)) {
             return diff_update_set.at(0);
     }
     return diff_update_set.at(1);
-}
-
-tsl::hopscotch_map<std::string, std::vector<Record*>>& cpr_local_handler::get_diff_update_set_exclusive() {
-    version_type cv{get_version()};
-    if ((cv % 2 == 0 && get_phase() == phase::REST) ||
-        (cv % 2 == 1 && get_phase() != phase::REST)) {
-            return diff_update_set_exclusive.at(0);
-    }
-    return diff_update_set_exclusive.at(1);
 }
 
 void checkpoint_thread() {
