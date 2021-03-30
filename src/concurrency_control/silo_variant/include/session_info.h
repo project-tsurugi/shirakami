@@ -325,6 +325,7 @@ public:
 
 #if defined(CPR)
 
+#ifndef PARAM_CPR_USE_FULL_SCAN
     /**
      * @pre In this function, the worker thread selects the appropriate container from the mechanism 
      * that switches the container that stores information from time to time. Do not call from CPR manager.
@@ -332,11 +333,15 @@ public:
      */
     tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
 
+    tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>& get_diff_update_set(std::size_t index) { return cpr_local_handle_.get_diff_update_set(index); }
+
+#endif
+
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
 
-    void regi_diff_upd_set(Record* record);
+    void regi_diff_upd_set(Record* record, OP_TYPE op_type);
 
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());

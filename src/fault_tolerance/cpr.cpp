@@ -1,5 +1,5 @@
 //
-// Created by thawk on 2020/10/30.
+// created by thawk on 2020/10/30.
 //
 
 #include "concurrency_control/silo_variant/include/interface_helper.h"
@@ -18,14 +18,31 @@ using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
+#ifndef PARAM_CPR_USE_FULL_SCAN
+
+void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf) {
+    phase_version pv = global_phase_version::get_gpv();
+    auto index{pv.get_version() % 2 == 0 ? 0 : 1};
+    for (auto&& table_elem : session_info_table::get_thread_info_table()) {
+        auto absorbed_map = table_elem.get_diff_update_set(index);
+        for (auto map_elem = absorbed_map.begin(); map_elem != absorbed_map.end(); ++map_elem) {
+            if (aggregate_buf[map_elem.key()].first < map_elem.value().first) {
+                aggregate_buf[map_elem.key()] = map_elem.value(); // merge
+            }
+        }
+    }
+}
+
 tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& cpr_local_handler::get_diff_update_set() {
     version_type cv{get_version()};
     if ((cv % 2 == 0 && get_phase() == phase::REST) ||
         (cv % 2 == 1 && get_phase() != phase::REST)) {
-            return diff_update_set.at(0);
+        return diff_update_set.at(0);
     }
     return diff_update_set.at(1);
 }
+
+#endif
 
 void checkpoint_thread() {
     setup_spdlog();
@@ -48,29 +65,38 @@ void checkpoint_thread() {
         sleepMs(PARAM_CHECKPOINT_REST_EPOCH);
 
         /**
-         * PrepareToInProg() phase.
-         * Originally, there are 4 phase : rest, prepare, in_progress, wait_flush.
-         * But in shirakami, it removes prepare phase to improve performance.
+         * preparetoinprog() phase.
+         * originally, there are 4 phase : rest, prepare, IN_PROGRESS, WAIT_FLUSH.
+         * but in shirakami, it removes prepare phase to improve performance.
          */
         cpr::global_phase_version::set_gp(cpr::phase::IN_PROGRESS);
         wait_worker(phase::IN_PROGRESS);
         if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
 
-        // InProgToWaitFlush() phase
+        // inprogtowaitflush() phase
         cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
         checkpointing();
 
-        // Atomically set global phase (rest) and increment version.
+        // atomically set global phase (rest) and increment version.
         cpr::global_phase_version::set_rest();
     }
 }
 
 void checkpointing() {
+#ifdef PARAM_CPR_USE_FULL_SCAN
     std::vector<std::pair<Record**, std::size_t>> scan_buf;
     yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
+#else
+    tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>> aggregate_buf;
+    aggregate_diff_update_set(aggregate_buf);
+#endif
 
+#ifdef PARAM_CPR_USE_FULL_SCAN
     if (scan_buf.empty()) {
-        //shirakami_logger->debug("cpr : Database has no records. End checkpointing.");
+#else
+    if (aggregate_buf.empty()) {
+#endif
+        //shirakami_logger->debug("cpr : database has no records. end checkpointing.");
         if (boost::filesystem::exists(get_checkpoint_path())) {
             boost::filesystem::remove(get_checkpoint_path());
         }
@@ -80,7 +106,7 @@ void checkpointing() {
     std::ofstream logf;
     logf.open(get_checkpointing_path(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
-        shirakami_logger->debug("It can't open file.");
+        shirakami_logger->debug("it can't open file.");
         exit(1);
     }
 
@@ -92,18 +118,23 @@ void checkpointing() {
     Token shira_token{};
     enter(shira_token);
     /**
-     * The Snapshot Transaction Manager aligns the work of removing snapshots from the index and freeing memory with
+     * the snapshot transaction manager aligns the work of removing snapshots from the index and freeing memory with
      * the progress of the epoch.
-     * If this thread does not coordinate with it, it can access the freed memory.
-     * Therefore, by joining this thread to the session and starting a transaction in a pseudo manner, the view of
+     * if this thread does not coordinate with it, it can access the freed memory.
+     * therefore, by joining this thread to the session and starting a transaction in a pseudo manner, the view of
      * memory is protected.
      */
     tx_begin(shira_token); // NOLINT
+#ifdef PARAM_CPR_USE_FULL_SCAN
     for (auto&& itr : scan_buf) {
         Record* rec = *itr.first;
+#else
+    for (auto&& itr : aggregate_buf) {
+        Record* rec = itr.second.second;
+#endif
         rec->get_tidw().lock();
         /**
-         * You may find it redundant to take a lock. However, if it does not take the lock, it must join this thread in
+         * you may find it redundant to take a lock. however, if it does not take the lock, it must join this thread in
          * the view protection protocol to avoid segv.
          */
         auto remove_from_index_and_register_garbage = [&]() {
@@ -118,7 +149,7 @@ void checkpointing() {
         };
         if (rec->get_failed_insert()) {
             /**
-             * This record was inserted and aborted between cpr logical consistency point and scan by this thread,
+             * this record was inserted and aborted between cpr logical consistency point and scan by this thread,
              * so omit checkpoint processing.
              */
             remove_from_index_and_register_garbage();
@@ -127,7 +158,7 @@ void checkpointing() {
             if (
                     (
                             /**
-                             * Do not include records inserted after the checkpoint boundary and before this thread
+                             * do not include records inserted after the checkpoint boundary and before this thread
                              * scans the index.
                              */
                             rec->get_tidw().get_latest() &&
@@ -135,18 +166,18 @@ void checkpointing() {
                             pv.get_version() != static_cast<uint64_t>(rec->get_not_include_version())) ||
                     (
                             /**
-                             * Do not include records that were deleted before the checkpoint boundary but were left in
+                             * do not include records that were deleted before the checkpoint boundary but were left in
                              * the index for the snapshot transaction.
                              */
                             rec->get_tidw().get_absent() &&
                             !rec->get_tidw().get_latest() &&
                             rec->get_not_include_version() != -1 &&
                             pv.get_version() < static_cast<uint64_t>(rec->get_not_include_version()))) {
-                // Begin : copy record
+                // begin : copy record
                 /**
-                 * todo : It can be expected to be faster by refining it.
-                 * After all, while cooperating with the worker thread to save the value, various processing is
-                 * done after acquiring the lock. This is due to various complicated processing and arbitration, but
+                 * todo : it can be expected to be faster by refining it.
+                 * after all, while cooperating with the worker thread to save the value, various processing is
+                 * done after acquiring the lock. this is due to various complicated processing and arbitration, but
                  * it can be expected to be faster by refining it.
                  */
                 if (rec->get_version() == pv.get_version() + 1) {
@@ -157,17 +188,17 @@ void checkpointing() {
                     l_recs.emplace_back(tup.get_key(), tup.get_value());
                     if (rec->get_tidw().get_latest()) {
                         /**
-                         * Update only the version number to prevent other workers from making redundant copies after
+                         * update only the version number to prevent other workers from making redundant copies after
                          * releasing the lock.
                          */
                         rec->set_version(pv.get_version() + 1);
                     }
                 }
-                // End : copy record
+                // end : copy record
             }
             if (!rec->get_tidw().get_latest()) {
                 /**
-                 * This record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
+                 * this record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
                  */
                 remove_from_index_and_register_garbage();
             }
@@ -218,23 +249,23 @@ void checkpointing() {
     if (kCheckPointThreadEnd.load(std::memory_order_acquire)) return;
 
     /**
-     * Starting logging and flushing
+     * starting logging and flushing
      */
     msgpack::pack(logf, l_recs);
     logf.flush();
     logf.close();
     if (logf.is_open()) {
-        shirakami_logger->debug("It can't close log file.");
+        shirakami_logger->debug("it can't close log file.");
         exit(1);
     }
 
     try {
         boost::filesystem::rename(get_checkpointing_path(), get_checkpoint_path());
     } catch (boost::filesystem::filesystem_error& ex) {
-        shirakami_logger->debug("Fail rename : {0}.", ex.what());
+        shirakami_logger->debug("fail rename : {0}.", ex.what());
         exit(1);
     } catch (...) {
-        shirakami_logger->debug("Fail rename : unknown.");
+        shirakami_logger->debug("fail rename : unknown.");
     }
 }
 

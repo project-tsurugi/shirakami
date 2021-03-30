@@ -104,7 +104,14 @@ private:
 class cpr_local_handler {
 public:
 #ifndef PARAM_CPR_USE_FULL_SCAN
+    static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf);
+
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set();
+
+    tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set(std::size_t index) {
+        return diff_update_set.at(index);
+    }
+
 #endif
 
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT

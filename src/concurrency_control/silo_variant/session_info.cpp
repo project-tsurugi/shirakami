@@ -359,14 +359,10 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 #if defined(CPR)
 
 #ifndef PARAM_CPR_USE_FULL_SCAN
-void session_info::regi_diff_upd_set(Record* record) {
+void session_info::regi_diff_upd_set(Record* record, OP_TYPE op_type) {
     auto& map{get_diff_update_set()};
     version_type cv{get_version()};
-    if ((cv % 2 == 0 && get_phase() == phase::REST) ||
-        (cv % 2 == 1 && get_phase() != phase::REST)) {
-        map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count(0), record};
-    }
-    map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count(1), record};
+    map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count((cv % 2 == 0 && get_phase() == phase::REST) || (cv % 2 == 1 && get_phase() != phase::REST) ? 0 : 1), op_type != OP_TYPE::DELETE ? record : nullptr};
 }
 
 #endif

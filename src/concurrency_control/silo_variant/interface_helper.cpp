@@ -22,7 +22,7 @@ using namespace shirakami::logger;
 
 namespace shirakami {
 
-Status enter(Token &token) {  // NOLINT
+Status enter(Token& token) { // NOLINT
     Status ret_status = session_info_table::decide_token(token);
     yakushima::Token kvs_token{};
     yakushima::enter(kvs_token);
@@ -50,7 +50,7 @@ void fin() {
     yakushima::fin();
 }
 
-Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOLINT
+Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
 #if defined(PWAL) || defined(CPR)
     /**
      * The default value of log_directory is PROJECT_ROOT.
@@ -119,8 +119,8 @@ Status init([[maybe_unused]]const std::string_view log_directory_path) {  // NOL
     return Status::OK;
 }
 
-Status leave(Token const token) {  // NOLINT
-    for (auto &&itr : session_info_table::get_thread_info_table()) {
+Status leave(Token const token) { // NOLINT
+    for (auto&& itr : session_info_table::get_thread_info_table()) {
         if (&itr == static_cast<session_info*>(token)) {
             if (itr.get_visible()) {
                 itr.gc();
@@ -152,9 +152,9 @@ void tx_begin(Token const token, bool const read_only) { // NOLINT
     }
 }
 
-Status read_record(Record &res, const Record* const dest) {  // NOLINT
+Status read_record(Record& res, const Record* const dest) { // NOLINT
     tid_word f_check;
-    tid_word s_check;  // first_check, second_check for occ
+    tid_word s_check; // first_check, second_check for occ
 
     f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
@@ -207,7 +207,7 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
             return Status::WARN_CONCURRENT_DELETE;
         }
 
-        res.get_tuple() = dest->get_tuple();  // execute copy assign.
+        res.get_tuple() = dest->get_tuple(); // execute copy assign.
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
         if (f_check == s_check) {
@@ -220,8 +220,8 @@ Status read_record(Record &res, const Record* const dest) {  // NOLINT
     return Status::OK;
 }
 
-void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_word &max_w_set,
-                 [[maybe_unused]]commit_property cp) {
+void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
+                 [[maybe_unused]] commit_property cp) {
     /*
      * It calculates the smallest number that is
      * (a) larger than the TID of any record read or written by the transaction,
@@ -264,6 +264,11 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
     for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
          ++iws) {
         Record* rec_ptr = iws->get_rec_ptr();
+#ifdef CPR
+#ifndef PARAM_CPR_USE_FULL_SCAN
+        ti->regi_diff_upd_set(rec_ptr, iws->get_op());
+#endif
+#endif
         auto safely_snap_work = [&rec_ptr, &ti] {
             std::string_view old_value = rec_ptr->get_tuple().get_value();
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
@@ -396,7 +401,6 @@ void write_phase(session_info* const ti, const tid_word &max_r_set, const tid_wo
                 std::abort();
         }
     }
-
 }
 
-}  // namespace shirakami::cc_silo_variant
+} // namespace shirakami
