@@ -145,7 +145,7 @@ private:
      * When the CPR manager collects information on all workers, 
      * it is necessary to specify the order relationship for the same record. 
      * That is why pair.first is defined.
-     * @todo TODO. Using std :: string for the key is redundant. In the future this will be static_cast <uint64_t> (record *). 
+     * @todo TODO. Using std :: string for the key is redundant. In the future this will be static_cast(uint64_t)(record *). 
      * In that case, two things must be considered so that the pointer is not confused.
      * 1. Does the record with the same key point to another pointer?
      * 2. Do records with different keys point to the same pointer?
