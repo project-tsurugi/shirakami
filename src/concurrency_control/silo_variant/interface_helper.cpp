@@ -51,6 +51,7 @@ void fin() {
 }
 
 Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
+// start about logging
 #if defined(PWAL) || defined(CPR)
     /**
      * The default value of log_directory is PROJECT_ROOT.
@@ -87,6 +88,7 @@ Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOL
 #endif
 
 #endif
+// end about logging
 
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
@@ -276,7 +278,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 /**
                  * When this transaction started in the rest phase, cpr thread never started scanning.
                  */
-                if (ti->get_phase() != cpr::phase::REST) {
+                if (ti->get_phase() == cpr::phase::REST) {
                     /**
                      * If this transaction have a serialization point after the checkpoint boundary and before the scan
                      * of the cpr thread, the cpr thread will include it even though it should not be included in the
@@ -284,7 +286,9 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                      * Since this transaction inserted this record with a lock, it is guaranteed that the checkpoint
                      * thread has never been reached.
                      */
-                    rec_ptr->set_not_include_version(ti->get_version());
+                    rec_ptr->set_version(ti->get_version());
+                } else {
+                    rec_ptr->set_version(ti->get_version() + 1);
                 }
                 /**
                  * else : The rest phase is before the checkpoint boundary. The fact that this worker thread started
@@ -340,7 +344,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                         ti->get_gc_record_container().emplace_back(rec_ptr);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     } else {
-                        rec_ptr->set_not_include_version(ti->get_version());
+                        rec_ptr->set_version(ti->get_version());
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                         snapshot_manager::remove_rec_cont.push(rec_ptr);
                     }

@@ -107,7 +107,7 @@ void checkpointing() {
     std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(global_phase_version::get_gpv().get_version())};
     logf.open(fname, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
-        shirakami_logger->debug("it can't open file.");
+        shirakami_logger->debug("It can't open file.");
         exit(1);
     }
 
@@ -157,23 +157,14 @@ void checkpointing() {
             rec->get_tidw().unlock();
         } else {
             if (
-                    (
+                    !(
                             /**
                              * do not include records inserted after the checkpoint boundary and before this thread
                              * scans the index.
                              */
                             rec->get_tidw().get_latest() &&
-                            rec->get_not_include_version() != -1 &&
-                            pv.get_version() != static_cast<uint64_t>(rec->get_not_include_version())) ||
-                    (
-                            /**
-                             * do not include records that were deleted before the checkpoint boundary but were left in
-                             * the index for the snapshot transaction.
-                             */
-                            rec->get_tidw().get_absent() &&
-                            !rec->get_tidw().get_latest() &&
-                            rec->get_not_include_version() != -1 &&
-                            pv.get_version() < static_cast<uint64_t>(rec->get_not_include_version()))) {
+                            rec->get_version() == pv.get_version() + 1 &&
+                            rec->get_stable_tidw() == 0)) {
                 // begin : copy record
                 /**
                  * todo : it can be expected to be faster by refining it.
@@ -181,19 +172,42 @@ void checkpointing() {
                  * done after acquiring the lock. this is due to various complicated processing and arbitration, but
                  * it can be expected to be faster by refining it.
                  */
-                if (rec->get_version() == pv.get_version() + 1) {
-                    const Tuple& tup = rec->get_stable();
-                    l_recs.emplace_back(tup.get_key(), tup.get_value());
-                } else {
-                    const Tuple& tup = rec->get_tuple();
-                    l_recs.emplace_back(tup.get_key(), tup.get_value());
-                    if (rec->get_tidw().get_latest()) {
+                tid_word unlocked_current_tw{rec->get_tidw()};
+                unlocked_current_tw.unlock();
+                if (rec->get_stable_tidw().get_latest() ||
+                    !rec->get_stable_tidw().get_latest() && rec->get_stable_tidw() == unlocked_current_tw) {
                         /**
-                         * update only the version number to prevent other workers from making redundant copies after
-                         * releasing the lock.
+                         * rec->get_stable_tidw().get_latest() means live record.
+                         * !rec->get_stable_tidw().get_latest() && rec->get_stable_tidw() == unlocked_current_tw means
+                         * this record deleted after logical boundary of cpr so it must include old value for logging.
                          */
-                        rec->set_version(pv.get_version() + 1);
-                    }
+                    if (rec->get_version() == pv.get_version() + 1 && rec->get_stable_tidw() != 0) {
+                        /**
+                         * rec->get_version() == pv.get_version() + 1 && rec->get_stable_tidw() == 0 
+                         * means records inserted between the time the logical boundary was crossed and 
+                         *  the time the scan was performed.
+                         */
+                        const Tuple& tup = rec->get_stable();
+                        l_recs.emplace_back(tup.get_key(), tup.get_value());
+                        /**
+                         * The next line is the code to omit when there is no update until the next checkpoint.
+                         */
+                        rec->set_stable_tidw(unlocked_current_tw);
+                    } else if (rec->get_version() != pv.get_version() && rec->get_stable_tidw() != unlocked_current_tw) {
+                        const Tuple& tup = rec->get_tuple();
+                        l_recs.emplace_back(tup.get_key(), tup.get_value());
+                        if (rec->get_tidw().get_latest()) {
+                            /**
+                             * update only the version number to prevent other workers from making redundant copies after
+                             * releasing the lock.
+                             */
+                            rec->set_version(pv.get_version() + 1);
+                            /**
+                             * The next line is the code to omit when there is no update until the next checkpoint.
+                             */
+                            rec->set_stable_tidw(unlocked_current_tw);
+                        }
+                    } // else : Old checkpointing captured.
                 }
                 // end : copy record
             }

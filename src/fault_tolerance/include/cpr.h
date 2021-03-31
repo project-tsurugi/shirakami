@@ -163,15 +163,27 @@ public:
     log_record(std::string_view key, std::string_view val) {
         key_ = key;
         val_ = val;
+        delete_op_ = false;
+    }
+
+    log_record(std::string_view key, bool delete_op) {
+        key_ = key;
+        val_.clear();
+        delete_op_ = delete_op;
     }
 
     std::string_view get_key() { return key_; } // NOLINT
 
     std::string_view get_val() { return val_; } // NOLINT
 
-    MSGPACK_DEFINE(key_, val_);
+    MSGPACK_DEFINE(delete_op_, key_, val_);
 
 private:
+    /**
+     * @details If this is true, this log means delete. If this is false, 
+     * this log means update.
+     */
+    bool delete_op_{false};
     std::string key_;
     std::string val_;
 };
@@ -180,6 +192,10 @@ class log_records {
 public:
     void emplace_back(std::string_view key, std::string_view val) {
         vec_.emplace_back(key, val);
+    }
+
+    void emplace_back(std::string_view key, bool delete_op) {
+        vec_.emplace_back(key, delete_op);
     }
 
     std::vector<log_record>& get_vec() { return vec_; } // NOLINT

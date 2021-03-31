@@ -101,19 +101,12 @@ private:
      * @details Improvement from original CPR. If stable version is also latest version, it doesn't need to update
      * stable version.
      */
-    tid_word stable_tidw_;
+    tid_word stable_tidw_{0};
     /**
      * @pre Only lock owner can read-write this filed.
      * @todo consider type of member and round-trip
      */
-    std::uint32_t version_{0};
-    /**
-     * @details If inserting transaction have a serialization point after the checkpoint boundary and before the scan of
-     * the cpr thread, the cpr thread will include it even though it should not be included in the checkpoint.
-     * To prevent that, do not include this record in this version of the checkpoint. If this value is -1, it can be ignored.
-     * @todo consider type of member and round-trip
-     */
-    std::int64_t not_include_version_{-1};
+    cpr::version_type version_{0};
     Tuple stable_;
     /**
      * @brief It is whether this record was inserted and aborted.
