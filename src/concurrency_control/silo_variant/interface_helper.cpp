@@ -270,10 +270,9 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
 #endif
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
-            std::string_view old_value = rec_ptr->get_tuple().get_value();
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
                 // update safely snap
-                Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), old_value); // NOLINT
+                Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), rec_ptr->get_tuple().get_value()); // NOLINT
                 new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
                 new_rec->get_tidw().set_latest(true);
                 new_rec->get_tidw().set_lock(false);
@@ -317,6 +316,15 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
             }
             case OP_TYPE::UPDATE: {
                 safely_snap_work();
+#ifdef CPR
+                // update about cpr
+                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                    rec_ptr->get_stable() = rec_ptr->get_tuple();
+                    rec_ptr->get_stable_tidw() = max_tid;
+                    rec_ptr->set_version(ti->get_version() + 1);
+                }
+#endif
+                // update value
                 std::string* old_value{};
                 std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
@@ -329,13 +337,6 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                     shirakami_logger->debug("fatal error.");
                     exit(1);
                 }
-#ifdef CPR
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    rec_ptr->get_stable() = rec_ptr->get_tuple();
-                    rec_ptr->get_stable_tidw() = max_tid;
-                    rec_ptr->set_version(ti->get_version() + 1);
-                }
-#endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }
