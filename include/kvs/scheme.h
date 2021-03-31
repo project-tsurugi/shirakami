@@ -124,6 +124,12 @@ enum class Status : std::int32_t {
      */
     WARN_INVARIANT,
     /**
+     * @brief warning
+     * @details
+     * @a init : The args as a log directory path is invalid. @n
+     */
+    WARN_INVALID_ARGS,
+    /**
      * @brief warning.
      * @details
      * @a close_scan : The handle is invalid. @n
@@ -173,12 +179,6 @@ enum class Status : std::int32_t {
      */
     OK,
     ERR_CPR_ORDER_VIOLATION,
-    /**
-     * @brief error
-     * @details
-     * @a init : The args as a log directory path is invalid. @n
-     */
-    ERR_INVALID_ARGS,
     /**
      * @brief error
      * @details
@@ -233,6 +233,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_CONCURRENT_UPDATE"sv;  // NOLINT
         case Status::WARN_INVARIANT:
             return "WARN_INVARIANT"sv;  // NOLINT
+        case Status::WARN_INVALID_ARGS:
+            return "WARN_INVALID_ARGS"sv;  // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv;  // NOLINT
         case Status::WARN_NOT_FOUND:
@@ -249,8 +251,6 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "OK"sv;  // NOLINT
         case Status::ERR_CPR_ORDER_VIOLATION:
             return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
-        case Status::ERR_INVALID_ARGS:
-            return "ERR_INVALID_ARGS"sv;  // NOLINT
         case Status::ERR_NOT_FOUND:
             return "ERR_NOT_FOUND"sv;  // NOLINT
         case Status::ERR_SESSION_LIMIT:

@@ -44,7 +44,7 @@ TEST_F(helper, leave) {  // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::WARN_NOT_IN_A_SESSION, leave(s));
-    ASSERT_EQ(Status::ERR_INVALID_ARGS, leave(nullptr));
+    ASSERT_EQ(Status::WARN_INVALID_ARGS, leave(nullptr));
 }
 
 }  // namespace shirakami::testing

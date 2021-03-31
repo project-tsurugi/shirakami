@@ -26,7 +26,6 @@ public:
         kLogDirectory.assign(new_directory);
 #if defined(CPR)
         cpr::set_checkpoint_path(kLogDirectory + "/checkpoint");
-        cpr::set_checkpointing_path(kLogDirectory + "/checkpointing");
 #endif
     }
 

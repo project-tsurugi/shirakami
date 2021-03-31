@@ -72,37 +72,19 @@ Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOL
          * check whether it is directory.
          */
         if (!boost::filesystem::is_directory(log_dir)) {
-            return Status::ERR_INVALID_ARGS;
+            return Status::WARN_INVALID_ARGS;
         }
-    } else {
-        /**
-         * directory which has log_directory_path as a file path doesn't exist.
-         * it can create.
-         */
-        boost::filesystem::create_directories(log_dir);
-    }
-
-#endif
-
-    /**
-     * If it already exists log files, it recoveries from those.
-     */
 #if defined(RECOVERY)
-    Log::recovery_from_log();
-#else
-#if defined(CPR)
-    if (boost::filesystem::exists(get_checkpoint_path())) {
         /**
-         * If checkpoint of old database exists and it starts with no recovery, remove checkpoint to prevent confusing
-         * between invalid checkpoint and valid checkpoint.
+         * If it already exists log files, it recoveries from those.
          */
-        boost::filesystem::remove(get_checkpoint_path());
+        Log::recovery_from_log();
+#else
+        boost::filesystem::remove_all(log_dir);
     }
-#endif
+    boost::filesystem::create_directories(log_dir);
 
-    /**
-     * pwal case : each log file is opened with truncating at init_kThreadTable func.
-     */
+#endif
 
 #endif
 
@@ -132,7 +114,7 @@ Status leave(Token const token) { // NOLINT
             return Status::WARN_NOT_IN_A_SESSION;
         }
     }
-    return Status::ERR_INVALID_ARGS;
+    return Status::WARN_INVALID_ARGS;
 }
 
 void tx_begin(Token const token, bool const read_only) { // NOLINT

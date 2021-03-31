@@ -33,7 +33,6 @@ constexpr register_count_type register_count_type_max = UINT64_MAX;
 
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
 inline std::thread kCheckPointThread;                 // NOLINT
-inline std::string kCheckpointingPath;                // NOLINT
 inline std::string kCheckpointPath;                   // NOLINT
 
 #ifndef PARAM_CPR_USE_FULL_SCAN
@@ -203,8 +202,6 @@ extern void checkpointing();
 
 [[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
 
-[[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
-
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     kCheckPointThreadEnd.store(false, std::memory_order_release);
     kCheckPointThread = std::thread(checkpoint_thread);
@@ -217,8 +214,6 @@ extern void checkpointing();
 }
 
 [[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
-
-[[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
 
 [[maybe_unused]] extern void wait_next_checkpoint();
 

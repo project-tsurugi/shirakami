@@ -22,6 +22,8 @@ TEST_F(scheme, to_string_view_Status) {  // NOLINT
     ASSERT_EQ("WARN_CANCEL_PREVIOUS_OPERATION"sv, to_string_view(status));
     status = Status::WARN_CONCURRENT_DELETE;
     ASSERT_EQ("WARN_CONCURRENT_DELETE"sv, to_string_view(status));
+    status = Status::WARN_INVALID_ARGS;
+    ASSERT_EQ("WARN_INVALID_ARGS"sv, to_string_view(status));
     status = Status::WARN_INVALID_HANDLE;
     ASSERT_EQ("WARN_INVALID_HANDLE"sv, to_string_view(status));
     status = Status::WARN_NOT_FOUND;
@@ -36,8 +38,6 @@ TEST_F(scheme, to_string_view_Status) {  // NOLINT
     ASSERT_EQ("WARN_WRITE_TO_LOCAL_WRITE"sv, to_string_view(status));
     status = Status::OK;
     ASSERT_EQ("OK"sv, to_string_view(status));
-    status = Status::ERR_INVALID_ARGS;
-    ASSERT_EQ("ERR_INVALID_ARGS"sv, to_string_view(status));
     status = Status::ERR_NOT_FOUND;
     ASSERT_EQ("ERR_NOT_FOUND"sv, to_string_view(status));
     status = Status::ERR_SESSION_LIMIT;

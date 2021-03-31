@@ -104,7 +104,8 @@ void checkpointing() {
     }
 
     std::ofstream logf;
-    logf.open(get_checkpointing_path(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+    std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(global_phase_version::get_gpv().get_version())};
+    logf.open(fname, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
     if (!logf.is_open()) {
         shirakami_logger->debug("it can't open file.");
         exit(1);
@@ -257,15 +258,6 @@ void checkpointing() {
     if (logf.is_open()) {
         shirakami_logger->debug("it can't close log file.");
         exit(1);
-    }
-
-    try {
-        boost::filesystem::rename(get_checkpointing_path(), get_checkpoint_path());
-    } catch (boost::filesystem::filesystem_error& ex) {
-        shirakami_logger->debug("fail rename : {0}.", ex.what());
-        exit(1);
-    } catch (...) {
-        shirakami_logger->debug("fail rename : unknown.");
     }
 }
 
