@@ -147,27 +147,8 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
         if (itr.get_op() == OP_TYPE::INSERT) {
             Record* record = itr.get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
-#if defined(CPR)
-            if (get_phase() == cpr::phase::REST) {
-                /**
-                 * This is in rest phase or in-progress phase, meaning checkpoint thread does not scan yet.
-                 */
-                yakushima::remove(get_yakushima_token(), key_view);
-                this->get_gc_record_container().emplace_back(itr.get_rec_ptr());
-                record->set_failed_insert(false);
-            } else {
-                /**
-                 * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
-                 * But this record is locked from initialization (at read phsae) and checkpoint thread can't lock after
-                 * logical consistency point definitely.
-                 * The check pointer is responsible for deleting from the index and registering garbage.
-                 */
-                record->set_failed_insert(true);
-            }
-#else
             yakushima::remove(get_yakushima_token(), key_view);
             this->gc_handle_.get_record_container().emplace_back(itr.get_rec_ptr());
-#endif
 
             /**
              * create information for garbage collection.
@@ -358,14 +339,11 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #if defined(CPR)
 
-#ifndef PARAM_CPR_USE_FULL_SCAN
 void session_info::regi_diff_upd_set(Record* record, OP_TYPE op_type) {
     auto& map{get_diff_update_set()};
     version_type cv{get_version()};
     map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count((cv % 2 == 0 && get_phase() == phase::REST) || (cv % 2 == 1 && get_phase() != phase::REST) ? 0 : 1), op_type != OP_TYPE::DELETE ? record : nullptr};
 }
-
-#endif
 
 #endif
 

@@ -18,8 +18,6 @@ using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
-#ifndef PARAM_CPR_USE_FULL_SCAN
-
 void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf) {
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
@@ -30,6 +28,7 @@ void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<registe
                 aggregate_buf[map_elem.key()] = map_elem.value(); // merge
             }
         }
+        absorbed_map.clear(); // clean up.
     }
 }
 
@@ -41,8 +40,6 @@ tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& cpr_lo
     }
     return diff_update_set.at(1);
 }
-
-#endif
 
 void checkpoint_thread() {
     setup_spdlog();
@@ -83,25 +80,8 @@ void checkpoint_thread() {
 }
 
 void checkpointing() {
-#ifdef PARAM_CPR_USE_FULL_SCAN
-    std::vector<std::pair<Record**, std::size_t>> scan_buf;
-    yakushima::scan({}, yakushima::scan_endpoint::INF, {}, yakushima::scan_endpoint::INF, scan_buf); // NOLINT
-#else
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>> aggregate_buf;
     aggregate_diff_update_set(aggregate_buf);
-#endif
-
-#ifdef PARAM_CPR_USE_FULL_SCAN
-    if (scan_buf.empty()) {
-#else
-    if (aggregate_buf.empty()) {
-#endif
-        //shirakami_logger->debug("cpr : database has no records. end checkpointing.");
-        if (boost::filesystem::exists(get_checkpoint_path())) {
-            boost::filesystem::remove(get_checkpoint_path());
-        }
-        return;
-    }
 
     std::ofstream logf;
     std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(global_phase_version::get_gpv().get_version())};
@@ -113,7 +93,6 @@ void checkpointing() {
 
     yakushima::Token yaku_token{};
     yakushima::enter(yaku_token);
-    std::vector<Record*> garbage{};
     phase_version pv = global_phase_version::get_gpv();
     log_records l_recs{};
     Token shira_token{};
@@ -126,139 +105,51 @@ void checkpointing() {
      * memory is protected.
      */
     tx_begin(shira_token); // NOLINT
-#ifdef PARAM_CPR_USE_FULL_SCAN
-    for (auto&& itr : scan_buf) {
-        Record* rec = *itr.first;
-#else
+    auto* ti = static_cast<session_info*>(shira_token);
     for (auto&& itr : aggregate_buf) {
         Record* rec = itr.second.second;
-#endif
+        if (rec == nullptr) {
+            l_recs.emplace_back(std::string_view(itr.first));
+            continue;
+        }
         rec->get_tidw().lock();
-        /**
-         * you may find it redundant to take a lock. however, if it does not take the lock, it must join this thread in
-         * the view protection protocol to avoid segv.
-         */
-        auto remove_from_index_and_register_garbage = [&]() {
-            tid_word new_tid = rec->get_tidw();
-            new_tid.set_epoch(kGlobalEpoch.load(std::memory_order_acquire));
-            if (rec->get_snap_ptr() == nullptr) {
-                // if no snapshot, it can immediately remove.
-                yakushima::remove(yaku_token, rec->get_tuple().get_key());
-                garbage.emplace_back(rec);
-            }
-            storeRelease(rec->get_tidw().get_obj(), new_tid.get_obj());
-        };
-        if (rec->get_failed_insert()) {
+        // begin : copy record
+        if (rec->get_version() == pv.get_version()) {
+            const Tuple& tup = rec->get_tuple();
+            l_recs.emplace_back(tup.get_key(), tup.get_value());
             /**
-             * this record was inserted and aborted between cpr logical consistency point and scan by this thread,
-             * so omit checkpoint processing.
-             */
-            remove_from_index_and_register_garbage();
-            rec->get_tidw().unlock();
-        } else {
-            if (
-                    !(
-                            /**
-                             * do not include records inserted after the checkpoint boundary and before this thread
-                             * scans the index.
-                             */
-                            rec->get_tidw().get_latest() &&
-                            rec->get_version() == pv.get_version() + 1 &&
-                            rec->get_stable_tidw() == 0)) {
-                // begin : copy record
-                /**
-                 * todo : it can be expected to be faster by refining it.
-                 * after all, while cooperating with the worker thread to save the value, various processing is
-                 * done after acquiring the lock. this is due to various complicated processing and arbitration, but
-                 * it can be expected to be faster by refining it.
-                 */
-                tid_word unlocked_current_tw{rec->get_tidw()};
-                unlocked_current_tw.unlock();
-                if (rec->get_stable_tidw().get_latest() ||
-                    !rec->get_stable_tidw().get_latest() && rec->get_stable_tidw() == unlocked_current_tw) {
-                        /**
-                         * rec->get_stable_tidw().get_latest() means live record.
-                         * !rec->get_stable_tidw().get_latest() && rec->get_stable_tidw() == unlocked_current_tw means
-                         * this record deleted after logical boundary of cpr so it must include old value for logging.
-                         */
-                    if (rec->get_version() == pv.get_version() + 1 && rec->get_stable_tidw() != 0) {
-                        /**
-                         * rec->get_version() == pv.get_version() + 1 && rec->get_stable_tidw() == 0 
-                         * means records inserted between the time the logical boundary was crossed and 
-                         *  the time the scan was performed.
-                         */
-                        const Tuple& tup = rec->get_stable();
-                        l_recs.emplace_back(tup.get_key(), tup.get_value());
-                        /**
-                         * The next line is the code to omit when there is no update until the next checkpoint.
-                         */
-                        rec->set_stable_tidw(unlocked_current_tw);
-                    } else if (rec->get_version() != pv.get_version() && rec->get_stable_tidw() != unlocked_current_tw) {
-                        const Tuple& tup = rec->get_tuple();
-                        l_recs.emplace_back(tup.get_key(), tup.get_value());
-                        if (rec->get_tidw().get_latest()) {
-                            /**
-                             * update only the version number to prevent other workers from making redundant copies after
-                             * releasing the lock.
-                             */
-                            rec->set_version(pv.get_version() + 1);
-                            /**
-                             * The next line is the code to omit when there is no update until the next checkpoint.
-                             */
-                            rec->set_stable_tidw(unlocked_current_tw);
-                        }
-                    } // else : Old checkpointing captured.
+              * update only the version number to prevent other workers from making 
+              * redundant copies after releasing the lock.
+              */
+            rec->set_version(pv.get_version() + 1);
+        } else if (rec->get_version() == pv.get_version() + 1) {
+            const Tuple& tup = rec->get_stable();
+            l_recs.emplace_back(tup.get_key(), tup.get_value());
+
+            // for deleted record
+            tid_word c_tid = rec->get_tidw();
+            if (!c_tid.get_latest() && c_tid.get_absent()) {
+                c_tid.set_epoch(ti->get_epoch());
+                storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
+                if (rec->get_snap_ptr() == nullptr) {
+                    yakushima::remove(yaku_token, rec->get_tuple().get_key());
+                    ti->get_gc_record_container().emplace_back(rec);
+                } else {
+                    snapshot_manager::remove_rec_cont.push(rec);
                 }
-                // end : copy record
             }
-            if (!rec->get_tidw().get_latest()) {
-                /**
-                 * this record was deleted by operation, but deletion is postponed due to not arriving checkpointer.
-                 */
-                remove_from_index_and_register_garbage();
-            }
-            if (rec->get_snap_ptr() == nullptr) {
-                rec->get_tidw().unlock();
-            } else {
-                rec->get_tidw().unlock();
-                snapshot_manager::remove_rec_cont.push(rec);
-            }
-        }
-        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
-    }
-    yakushima::leave(yaku_token);
-    commit(shira_token); // NOLINT
-    leave(shira_token);
-
-    /**
-     * release old garbage
-     */
-    auto ers_bgn_itr = garbage.begin();
-    auto ers_end_itr = garbage.end();
-    for (auto itr = ers_bgn_itr; itr != garbage.end(); ++itr) {
-        if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
-            ers_end_itr = itr;
-            delete *itr; // NOLINT
         } else {
-            break;
+            shirakami_logger->debug("fatal error");
+            exit(1);
         }
-    }
-    if (ers_end_itr != garbage.end()) {
-        garbage.erase(ers_bgn_itr, ers_end_itr);
+        // end : copy record
+
+
+        // unlock record
+        rec->get_tidw().unlock();
     }
 
-    /**
-     * record garbage to some session area.
-     */
-    enter(shira_token);
-    tx_begin(shira_token); // NOLINT
-    auto* ti = static_cast<session_info*>(shira_token);
-    for (auto&& itr : garbage) {
-        tid_word new_tid = itr->get_tidw();
-        new_tid.set_epoch(ti->get_epoch());
-        storeRelease(itr->get_tidw().get_obj(), new_tid.get_obj());
-        ti->get_gc_record_container().emplace_back(itr);
-    }
+    yakushima::leave(yaku_token);
     leave(shira_token);
 
     if (kCheckPointThreadEnd.load(std::memory_order_acquire)) return;

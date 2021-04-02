@@ -26,18 +26,14 @@ namespace shirakami::cpr {
 
 using version_type = std::uint64_t;
 
-#ifndef PARAM_CPR_USE_FULL_SCAN
 using register_count_type = std::uint64_t;
 constexpr register_count_type register_count_type_max = UINT64_MAX;
-#endif
 
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
 inline std::thread kCheckPointThread;                 // NOLINT
 inline std::string kCheckpointPath;                   // NOLINT
 
-#ifndef PARAM_CPR_USE_FULL_SCAN
 inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
-#endif
 
 enum class phase : char {
     REST = 0,
@@ -102,7 +98,6 @@ private:
  */
 class cpr_local_handler {
 public:
-#ifndef PARAM_CPR_USE_FULL_SCAN
     static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf);
 
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set();
@@ -110,8 +105,6 @@ public:
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set(std::size_t index) {
         return diff_update_set.at(index);
     }
-
-#endif
 
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
 
@@ -122,7 +115,6 @@ public:
     }
 
 private:
-#ifndef PARAM_CPR_USE_FULL_SCAN
     /**
      * @brief A set of keys updated by this worker thread.
      * @details The CPR manager aggregates this set of each worker thread and considers it a delta update.
@@ -152,7 +144,7 @@ private:
      *  Since it is highly optimized, it is future work.
      */
     std::array<tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, 2> diff_update_set; // NOLINT
-#endif
+
     std::atomic<phase_version> phase_version_{};
 };
 
@@ -160,16 +152,19 @@ class log_record {
 public:
     log_record() = default;
 
-    log_record(std::string_view key, std::string_view val) {
+    /**
+     * @brief for delete operation.
+     */
+    log_record(std::string_view const key) {
+        key_ = key;
+        val_.clear();
+        delete_op_ = true;
+    }
+
+    log_record(std::string_view const key, std::string_view const val) {
         key_ = key;
         val_ = val;
         delete_op_ = false;
-    }
-
-    log_record(std::string_view key, bool delete_op) {
-        key_ = key;
-        val_.clear();
-        delete_op_ = delete_op;
     }
 
     std::string_view get_key() { return key_; } // NOLINT
@@ -190,12 +185,12 @@ private:
 
 class log_records {
 public:
-    void emplace_back(std::string_view key, std::string_view val) {
+    void emplace_back(std::string_view const key, std::string_view const val) {
         vec_.emplace_back(key, val);
     }
 
-    void emplace_back(std::string_view key, bool delete_op) {
-        vec_.emplace_back(key, delete_op);
+    void emplace_back(std::string_view const key) {
+        vec_.emplace_back(key);
     }
 
     std::vector<log_record>& get_vec() { return vec_; } // NOLINT
@@ -233,8 +228,6 @@ extern void checkpointing();
 
 [[maybe_unused]] extern void wait_next_checkpoint();
 
-#ifndef PARAM_CPR_USE_FULL_SCAN
-
 [[maybe_unused]] static register_count_type fetch_add_register_count(std::size_t index) {
     register_count_type ret = kRegisterCount.at(index).fetch_add(1);
     if (ret == register_count_type_max) {
@@ -247,7 +240,5 @@ extern void checkpointing();
     }
     return ret;
 }
-
-#endif
 
 } // namespace shirakami::cpr

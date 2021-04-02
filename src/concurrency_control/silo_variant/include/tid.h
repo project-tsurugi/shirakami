@@ -53,6 +53,8 @@ public:
         return this->obj_ > right.get_obj();         // NOLINT : union
     }
 
+    bool empty() { return obj_ == 0; } // NOLINT
+
     uint64_t &get_obj() { return obj_; }  // NOLINT
 
     const uint64_t &get_obj() const { return obj_; }  // NOLINT

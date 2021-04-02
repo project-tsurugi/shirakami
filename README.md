@@ -83,9 +83,6 @@ management.
     * `-DPARAM_CHECKPOINT_REST_EPOCH=<time (ms)>` 
       * The rest time after each checkpoint.
       * Default: `40`
-    * `-DPARAM_CPR_USE_FULL_SCAN=0 or 1`
-      * If this option is 1, the set of records to access is obtained by a full scan of the index. If this option is 0, each transitive write will record a pointer to a key and record, and the check pointer will use that set.0 is recommended for read-heavy workloads. 1 is recommended for write-heavy workloads.
-      * Default: `1`
 
 * Benchmarking (project_root/bench)
   * RocksDB

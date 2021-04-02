@@ -134,10 +134,6 @@ else ()
     add_definitions(-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=${PARAM_PWAL_LOG_GCOMMIT_THRESHOLD})
 endif ()
 
-if (PARAM_CPR_USE_FULL_SCAN)
-    add_definitions(-DPARAM_CPR_USE_FULL_SCAN)
-endif ()
-
 # End : about logging
 
 # End : parameter settings

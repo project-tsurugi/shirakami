@@ -24,9 +24,7 @@ public:
         tidw_.set_absent(true);
         tidw_.set_lock(true);
 #ifdef CPR
-        stable_tidw_.get_obj() = 0;
         version_ = 0;
-        not_include_version_ = -1;
 #endif
     }
 
@@ -76,21 +74,9 @@ public:
 
     Tuple &get_stable() { return stable_; } // NOLINT
 
-    tid_word &get_stable_tidw() { return stable_tidw_; } // NOLINT
-
     [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
 
-    [[nodiscard]] bool get_failed_insert() const { return failed_insert_; } // NOLINT
-
-    std::int64_t get_not_include_version() { return not_include_version_; } // NOLINT
-
     void set_version(std::uint64_t new_v) { version_ = new_v; }
-
-    void set_stable_tidw(tid_word new_tid) { stable_tidw_ = new_tid; }
-
-    void set_failed_insert(bool tf) { failed_insert_ = tf; }
-
-    void set_not_include_version(std::int64_t num) { not_include_version_ = num; }
 
 #endif
 
@@ -98,23 +84,11 @@ private:
     tid_word tidw_;
 #if defined(CPR)
     /**
-     * @details Improvement from original CPR. If stable version is also latest version, it doesn't need to update
-     * stable version.
-     */
-    tid_word stable_tidw_{0};
-    /**
      * @pre Only lock owner can read-write this filed.
      * @todo consider type of member and round-trip
      */
-    cpr::version_type version_{0};
+    std::uint64_t version_{0};
     Tuple stable_;
-    /**
-     * @brief It is whether this record was inserted and aborted.
-     * @details If worker inserted record between cpr logical consistency point and scan by checkpoint thread, checkpoint
-     * thread may scan this record. So worker free memory of this record without coordination, checkpoint thread may
-     * cause SEGV.
-     */
-    bool failed_insert_{false};
 #endif
     Tuple tuple_;
     /**

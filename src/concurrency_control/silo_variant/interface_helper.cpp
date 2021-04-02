@@ -192,6 +192,7 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
         }
 
         res.get_tuple() = dest->get_tuple(); // execute copy assign.
+        // todo optimization by shallow copy
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
         if (f_check == s_check) {
@@ -249,9 +250,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
          ++iws) {
         Record* rec_ptr = iws->get_rec_ptr();
 #ifdef CPR
-#ifndef PARAM_CPR_USE_FULL_SCAN
         ti->regi_diff_upd_set(rec_ptr, iws->get_op());
-#endif
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
@@ -290,12 +289,6 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 } else {
                     rec_ptr->set_version(ti->get_version() + 1);
                 }
-                /**
-                 * else : The rest phase is before the checkpoint boundary. The fact that this worker thread started
-                 * in the rest phase means that the checkpoint thread is in the rest phase or in-progress phase and
-                 * has not started scanning. Therefore, this record is always observed in the next scanning of the
-                 * checkpoint thread.
-                 */
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
@@ -306,7 +299,6 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 // update about cpr
                 if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
                     rec_ptr->get_stable() = rec_ptr->get_tuple();
-                    rec_ptr->get_stable_tidw() = max_tid;
                     rec_ptr->set_version(ti->get_version() + 1);
                 }
 #endif
@@ -364,7 +356,6 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                          * else : The check pointer is responsible for deleting from the index and registering garbage.
                          */
                         rec_ptr->get_stable() = rec_ptr->get_tuple();
-                        rec_ptr->get_stable_tidw() = delete_tid;
                         rec_ptr->set_version(ti->get_version() + 1);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     }

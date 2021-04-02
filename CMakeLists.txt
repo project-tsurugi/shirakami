@@ -35,9 +35,6 @@ option(BUILD_PWAL "Build parallel write ahead logging as logging." OFF)
 option(PWAL_ENABLE_READ_LOG "PWAL log read (/ write) informations to verify whether committed schedule is valid." OFF)
 option(BUILD_CPR "Build concurrent prefix recovery as logging." OFF)
 
-# logging
-option(PARAM_CPR_USE_FULL_SCAN "Whether CPR uses full scan for collecting records." ON)
-
 # benchmark
 option(BUILD_ROCKSDB_BENCH "Build rocksdb benchmark." OFF)
 
