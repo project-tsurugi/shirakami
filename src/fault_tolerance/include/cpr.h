@@ -18,6 +18,8 @@
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/record.h"
 
+#include "kvs/interface.h"
+
 #include "msgpack-c/include/msgpack.hpp"
 
 #include <tsl/hopscotch_map.h>
@@ -32,6 +34,7 @@ constexpr register_count_type register_count_type_max = UINT64_MAX;
 inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
 inline std::thread kCheckPointThread;                 // NOLINT
 inline std::string kCheckpointPath;                   // NOLINT
+inline std::string kCheckpointingPath;                   // NOLINT
 
 inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
 
@@ -100,10 +103,18 @@ class cpr_local_handler {
 public:
     static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf);
 
+    static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& aggregate_buf);
+
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set();
+
+    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set();
 
     tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set(std::size_t index) {
         return diff_update_set.at(index);
+    }
+
+    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) {
+        return diff_update_sequence_set.at(index);
     }
 
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
@@ -145,6 +156,7 @@ private:
      */
     std::array<tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, 2> diff_update_set; // NOLINT
 
+    std::array<tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>, 2> diff_update_sequence_set; // NOLINT
     std::atomic<phase_version> phase_version_{};
 };
 
@@ -183,6 +195,22 @@ private:
     std::string val_;
 };
 
+class log_record_of_seq{
+public:
+    log_record_of_seq() = default;
+
+    log_record_of_seq(SequenceValue key, std::pair<SequenceVersion, SequenceValue> val) {
+        key_ = key;
+        val_ = val;
+    }
+
+    MSGPACK_DEFINE(key_, val_);
+
+private:
+    SequenceValue key_;
+    std::pair<SequenceVersion, SequenceValue> val_;
+};
+
 class log_records {
 public:
     void emplace_back(std::string_view const key, std::string_view const val) {
@@ -193,12 +221,17 @@ public:
         vec_.emplace_back(key);
     }
 
+    void emplace_back_seq(log_record_of_seq elem) {
+        vec_of_seq_.emplace_back(elem);
+    }
+
     std::vector<log_record>& get_vec() { return vec_; } // NOLINT
 
     MSGPACK_DEFINE(vec_);
 
 private:
     std::vector<log_record> vec_;
+    std::vector<log_record_of_seq> vec_of_seq_;
 };
 
 /**
@@ -213,6 +246,8 @@ extern void checkpointing();
 
 [[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
 
+[[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
+
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     kCheckPointThreadEnd.store(false, std::memory_order_release);
     kCheckPointThread = std::thread(checkpoint_thread);
@@ -226,7 +261,13 @@ extern void checkpointing();
 
 [[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
 
+[[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
+
 [[maybe_unused]] extern void wait_next_checkpoint();
+
+[[maybe_unused]] static void clear_register_count(std::size_t index) {
+    kRegisterCount.at(index).store(0, std::memory_order_release);
+}
 
 [[maybe_unused]] static register_count_type fetch_add_register_count(std::size_t index) {
     register_count_type ret = kRegisterCount.at(index).fetch_add(1);

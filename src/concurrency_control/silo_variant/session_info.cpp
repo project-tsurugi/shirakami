@@ -345,6 +345,11 @@ void session_info::regi_diff_upd_set(Record* record, OP_TYPE op_type) {
     map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count((cv % 2 == 0 && get_phase() == phase::REST) || (cv % 2 == 1 && get_phase() != phase::REST) ? 0 : 1), op_type != OP_TYPE::DELETE ? record : nullptr};
 }
 
+void session_info::regi_diff_upd_seq_set(SequenceValue id, std::pair<SequenceVersion, SequenceValue> ver_val) {
+    auto& map{get_diff_update_sequence_set()};
+    map[id] = ver_val;
+}
+
 #endif
 
 } // namespace shirakami

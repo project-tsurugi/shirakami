@@ -30,6 +30,7 @@ Status update_sequence([[maybe_unused]] Token token, SequenceValue id, SequenceV
     };
 #if defined(CPR)
     auto* ti = static_cast<session_info*>(token);
+    ti->regi_diff_upd_seq_set(id, std::make_pair(version, value));
     if (ti->get_phase() == cpr::phase::REST) {
         // update volatile pos
         simple_update();
@@ -68,7 +69,7 @@ Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* val
     return Status::OK;
 }
 
-Status delete_sequence(SequenceId id) {
+Status delete_sequence([[maybe_unused]] Token token, SequenceId id) {
     std::unique_lock lock{sequence_map::get_smmutex()};
     sequence_map::value_type& target = sequence_map::get_value(id);
     if (target == sequence_map::non_exist_map_value ||
@@ -80,6 +81,8 @@ Status delete_sequence(SequenceId id) {
      */
 #if defined(CPR)
     target = sequence_map::value_type{sequence_map::deleted_value, std::get<sequence_map::durable_pos>(target), std::get<sequence_map::cpr_version_pos>(target)};
+    auto* ti = static_cast<session_info*>(token);
+    ti->regi_diff_upd_seq_set(id, sequence_map::deleted_value);
 #else
     target = sequence_map::value_type{sequence_map::deleted_value, std::get<sequence_map::durable_pos>(target)};
 #endif
