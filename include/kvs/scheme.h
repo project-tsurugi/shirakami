@@ -61,6 +61,11 @@ using Token = void*;
  */
 using ScanHandle = std::size_t;
 
+/**
+ * @brief Storage Handle
+ */
+using Storage = std::uint64_t;
+
 enum class scan_endpoint : char {
     EXCLUSIVE,
     INCLUSIVE,

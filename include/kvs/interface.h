@@ -20,6 +20,38 @@
 namespace shirakami {
 
 /**
+ * @brief Create one table and return its handler.
+ * @param [out] storage output parameter to pass the storage handle, that is used for the subsequent calls related with the storage.
+ * @return Status::OK if successful.
+ * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum value of the handler.
+ */
+extern Status register_storage(Storage& storage);
+
+/**
+ * @brief Confirm existence of the storage.
+ * @param [in] storage input parameter to confirm existence of the storage.
+ * @return Status::OK if existence.
+ * @return Status::WARN_NOT_FOUND if not existence.
+ */
+extern Status exist_storage(Storage storage);
+
+/**
+ * @brief delete existing storage and records under the storage.
+ * @param [in] storage the storage handle retrieved with register_storage().
+ * @return Status::OK if successful.
+ * @return Status::WARN_INVALID_HANDLE if the storage is not registered with the given name.
+ */
+extern Status delete_storage(Storage storage);
+
+/**
+ * @brief Get a list of existing storage.
+ * @param [out] out the list of existing storage.
+ * @return Status::OK if successful.
+ * @return Status::WARN_NOT_FOUND if no storage.
+ */
+extern Status list_storage(std::vector<Storage> &out);
+
+/**
  * @brief transactional termination command about abort.
  * @details It aborts, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
