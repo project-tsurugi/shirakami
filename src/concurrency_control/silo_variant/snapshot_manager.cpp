@@ -21,7 +21,7 @@ void snapshot_manager_func() {
      * it is necessary to carry it over to the next consideration. 
      * In other words, it is necessary when processing according to order in a container that stores ordered elements.
      */
-    Record* cache_for_queue{nullptr};
+    std::pair<std::string, Record*> cache_for_queue{"", nullptr};
 
     while (likely(!snapshot_manager_thread_end.load(std::memory_order_acquire))) {
         // todo parametrize  for build options.
@@ -32,11 +32,11 @@ void snapshot_manager_func() {
 
         yakushima::Token yaku_token{};
         bool yaku_entered{false};
-        while (!remove_rec_cont.empty() || cache_for_queue != nullptr) {
-            Record* elem{};
-            if (cache_for_queue != nullptr) {
+        while (!remove_rec_cont.empty() || cache_for_queue.second != nullptr) {
+            std::pair<std::string, Record*> elem{};
+            if (cache_for_queue.second != nullptr) {
                 elem = cache_for_queue;
-                cache_for_queue = nullptr;
+                cache_for_queue = {"", nullptr};
             } else {
                 if (!remove_rec_cont.try_pop(elem)) {
                     // Although there is an element in the contents, it failed to take out. Is there a false positive for the act of taking from the container?
@@ -44,12 +44,12 @@ void snapshot_manager_func() {
                 }
             }
 
-            if (elem->get_snap_ptr() == nullptr) {
+            if (elem.second->get_snap_ptr() == nullptr) {
                 shirakami_logger->debug("fatal error.");
                 exit(1);
             }
             if (snapshot_manager::get_snap_epoch(
-                    elem->get_snap_ptr()->get_tidw().get_epoch()) !=
+                    elem.second->get_snap_ptr()->get_tidw().get_epoch()) !=
                 snapshot_manager::get_snap_epoch(
                         maybe_smallest_ew)) {// todo : measures for
                 // round-trip of epoch.
@@ -57,9 +57,9 @@ void snapshot_manager_func() {
                     yakushima::enter(yaku_token);
                     yaku_entered = true;
                 }
-                yakushima::remove(yaku_token, elem->get_tuple().get_key());
+                yakushima::remove(yaku_token, elem.first, elem.second->get_tuple().get_key());
                 release_rec_cont.emplace_back(
-                        std::make_pair(maybe_smallest_ew, elem));
+                        std::make_pair(maybe_smallest_ew, elem.second));
             } else {
                 cache_for_queue = elem;
                 break;

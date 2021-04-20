@@ -6,22 +6,28 @@
 #include <bitset>
 
 #include "atomic_wrapper.h"
+#include "storage.h"
 
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 // sizeof(Tuple)
 
 namespace shirakami {
 
-[[maybe_unused]] Status delete_all_records() {  // NOLINT
-    std::vector<std::pair<Record**, std::size_t> > scan_res;
-    yakushima::scan("", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
+[[maybe_unused]] Status delete_all_records() { // NOLINT
+    std::vector<Storage> storage_list;
+    list_storage(storage_list);
+    for (auto&& elem : storage_list) {
+        std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+        constexpr std::size_t v_index{1};
+        yakushima::scan({reinterpret_cast<char*>(&elem), sizeof(elem)}, "", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
-    for (auto &&itr : scan_res) {
-        delete *itr.first;  // NOLINT
+        for (auto&& itr : scan_res) {
+            delete *std::get<v_index>(itr); // NOLINT
+        }
     }
 
     yakushima::destroy();
@@ -29,13 +35,13 @@ namespace shirakami {
     return Status::OK;
 }
 
-Status delete_record(Token token, const std::string_view key) { // NOLINT
+Status delete_record(Token token, Storage storage, const std::string_view key) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
     Status check = ti->check_delete_after_write(key);
 
-    Record** rec_double_ptr{yakushima::get<Record*>(key).first};
+    Record** rec_double_ptr{yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key).first}; // NOLINT
     if (rec_double_ptr == nullptr) {
         return Status::WARN_NOT_FOUND;
     }
@@ -48,8 +54,8 @@ Status delete_record(Token token, const std::string_view key) { // NOLINT
         return Status::WARN_NOT_FOUND;
     }
 
-    ti->get_write_set().emplace_back(OP_TYPE::DELETE, rec_ptr);
+    ti->get_write_set().emplace_back(storage, OP_TYPE::DELETE, rec_ptr);
     return check;
 }
 
-}  // namespace shirakami::cc_silo_variant
+} // namespace shirakami

@@ -24,7 +24,7 @@
 #include "random.h"
 #include "tuple_local.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 using namespace spdlog;
 using namespace shirakami::logger;
@@ -33,7 +33,7 @@ namespace shirakami {
 
 size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     // if table size is very small, it builds by single thread.
-    if (record < 1000) return 1;  // NOLINT
+    if (record < 1000) return 1; // NOLINT
 
     // else
     for (size_t i = std::thread::hardware_concurrency(); i > 0; --i) {
@@ -59,9 +59,9 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
 
     for (uint64_t i = start; i <= end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
-        std::string val(value_length, '0');  // NOLINT
+        std::string val(value_length, '0'); // NOLINT
         make_string(val, rnd);
-        if (Status::OK != insert(token, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val)) { // NOLINT
+        if (Status::OK != insert(token, storage, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val)) { // NOLINT
             shirakami_logger->debug("fatal error.");
             exit(1);
         }
@@ -74,17 +74,18 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
 }
 
 void build_db(const std::size_t record, const std::size_t value_length) {
+    register_storage(storage);
     shirakami_logger->debug("ycsb::build_mtdb");
     std::vector<std::thread> thv;
 
     size_t max_thread{decideParallelBuildNumber(record)};
     shirakami_logger->debug("start parallel_build_db with {0} threads.", max_thread);
     for (size_t i = 0; i < max_thread; ++i) {
-        thv.emplace_back(parallel_build_db, i * (record / max_thread),  // NOLINT
+        thv.emplace_back(parallel_build_db, i * (record / max_thread), // NOLINT
                          (i + 1) * (record / max_thread) - 1, value_length);
     }
 
-    for (auto &th : thv) th.join();
+    for (auto& th : thv) th.join();
 }
 
-}  // namespace shirakami
+} // namespace shirakami

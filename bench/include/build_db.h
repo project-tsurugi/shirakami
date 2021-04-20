@@ -18,9 +18,11 @@
 
 #include "concurrency_control/silo_variant/include/scheme.h"
 
-#include "kvs/scheme.h"
+#include "shirakami/scheme.h"
 
 namespace shirakami {
+
+static inline Storage storage;
 
 size_t decideParallelBuildNumber(std::size_t record); // NOLINT
 

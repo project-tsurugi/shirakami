@@ -1,5 +1,5 @@
+#include "shirakami/interface.h"
 #include "gtest/gtest.h"
-#include "kvs/interface.h"
 
 // shirakami-impl interface library
 #include "tsc.h"
@@ -10,6 +10,7 @@ using namespace shirakami;
 
 constexpr const int MAX_TUPLES = 1000000;
 constexpr const int READ_TUPLES = 100;
+Storage storage;
 
 class scan_perf : public ::testing::Test {
 public:
@@ -17,10 +18,10 @@ public:
 
     void DoScan();
 
-    Token &get_s() { return s_; }  // NOLINT
+    Token& get_s() { return s_; } // NOLINT
 
     void SetUp() override {
-        init();  // NOLINT
+        init(); // NOLINT
         for (int i = 0; i < MAX_TUPLES; ++i) {
             key_.at(i) = i;
         }
@@ -34,14 +35,10 @@ private:
 };
 
 void scan_perf::DoInsert(int bgn_idx, int end_idx) {
-    std::string v1("a");  // NOLINT
+    std::string v1("a"); // NOLINT
 
     for (int i = bgn_idx; i < end_idx; ++i) {
-        EXPECT_EQ(Status::OK,
-                  insert(s_,
-                         {reinterpret_cast<char*>(&key_.at(i)),  // NOLINT
-                          sizeof(key_.at(i))},
-                         v1));
+        EXPECT_EQ(Status::OK, insert(s_, storage, {reinterpret_cast<char*>(&key_.at(i)), sizeof(key_.at(i))}, v1)); // NOLINT
     }
     EXPECT_EQ(Status::OK, commit(s_));
 }
@@ -52,7 +49,7 @@ void scan_perf::DoScan() {
     Tuple* tuple{};
 
     std::uint64_t start{rdtscp()};
-    EXPECT_EQ(Status::OK, open_scan(s_, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
+    EXPECT_EQ(Status::OK, open_scan(s_, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
     for (int i = 0; i < READ_TUPLES; ++i) {
         EXPECT_EQ(Status::OK, read_from_scan(s_, handle, &tuple));
     }
@@ -66,10 +63,11 @@ void scan_perf::DoScan() {
     std::cout << "Result : " << end - start << " [clocks]" << std::endl;
 }
 
-TEST_F(scan_perf, read_from_scan) {  // NOLINT
+TEST_F(scan_perf, read_from_scan) { // NOLINT
+    register_storage(storage);
     EXPECT_EQ(Status::OK, enter(get_s()));
 
-    DoInsert(0, 100);  // NOLINT
+    DoInsert(0, 100); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 100 records."
               << std::endl;
     DoScan();
@@ -77,7 +75,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(100, 1000);  // NOLINT
+    DoInsert(100, 1000); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 1K records."
               << std::endl;
     DoScan();
@@ -85,7 +83,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(1000, 10000);  // NOLINT
+    DoInsert(1000, 10000); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 10K records."
               << std::endl;
     DoScan();
@@ -93,7 +91,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(10000, 20000);  // NOLINT
+    DoInsert(10000, 20000); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 20K records."
               << std::endl;
     DoScan();
@@ -101,7 +99,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(20000, 40000);  // NOLINT
+    DoInsert(20000, 40000); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 40K records."
               << std::endl;
     DoScan();
@@ -109,7 +107,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(40000, 80000);  // NOLINT
+    DoInsert(40000, 80000); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 80K records."
               << std::endl;
     DoScan();
@@ -117,7 +115,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(80000, 160000);  // NOLINT
+    DoInsert(80000, 160000); // NOLINT
     std::cout
             << "Perform 100 records read_from_scan on a table with 160K records."
             << std::endl;
@@ -126,7 +124,7 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     /**
      * Prepare for next experiments.
      */
-    DoInsert(160000, 320000);  // NOLINT
+    DoInsert(160000, 320000); // NOLINT
     std::cout
             << "Perform 100 records read_from_scan on a table with 320K records."
             << std::endl;
@@ -135,4 +133,4 @@ TEST_F(scan_perf, read_from_scan) {  // NOLINT
     EXPECT_EQ(Status::OK, leave(get_s()));
 }
 
-}  // namespace shirakami::testing
+} // namespace shirakami::testing

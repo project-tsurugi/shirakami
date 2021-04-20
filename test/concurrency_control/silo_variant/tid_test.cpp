@@ -1,4 +1,4 @@
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include <array>
 #include <bitset>

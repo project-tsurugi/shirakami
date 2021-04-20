@@ -18,7 +18,7 @@
 #include "concurrency_control/silo_variant/include/epoch.h"
 #include "concurrency_control/silo_variant/include/record.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include "msgpack-c/include/msgpack.hpp"
 
@@ -101,15 +101,15 @@ private:
  */
 class cpr_local_handler {
 public:
-    static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& aggregate_buf);
+    static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& aggregate_buf);
 
     static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& aggregate_buf);
 
-    tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set();
+    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set();
 
     tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set();
 
-    tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>& get_diff_update_set(std::size_t index) {
+    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set(std::size_t index) {
         return diff_update_set.at(index);
     }
 
@@ -154,7 +154,7 @@ private:
      * This can be resolved so that the physical memory reuse associated with the physical deletion of records crosses the boundaries of CPR. 
      *  Since it is highly optimized, it is future work.
      */
-    std::array<tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, 2> diff_update_set; // NOLINT
+    std::array<tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>, 2> diff_update_set; // NOLINT
 
     std::array<tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>, 2> diff_update_sequence_set; // NOLINT
     std::atomic<phase_version> phase_version_{};
@@ -181,9 +181,11 @@ public:
 
     std::string_view get_key() { return key_; } // NOLINT
 
+    std::string_view get_storage() { return storage_; } // NOLINT
+
     std::string_view get_val() { return val_; } // NOLINT
 
-    MSGPACK_DEFINE(delete_op_, key_, val_);
+    MSGPACK_DEFINE(delete_op_, storage_, key_, val_);
 
 private:
     /**
@@ -191,6 +193,7 @@ private:
      * this log means update.
      */
     bool delete_op_{false};
+    std::string storage_;
     std::string key_;
     std::string val_;
 };

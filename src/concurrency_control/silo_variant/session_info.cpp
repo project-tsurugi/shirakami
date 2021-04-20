@@ -147,7 +147,7 @@ void session_info::remove_inserted_records_of_write_set_from_masstree() {
         if (itr.get_op() == OP_TYPE::INSERT) {
             Record* record = itr.get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
-            yakushima::remove(get_yakushima_token(), key_view);
+            yakushima::remove(get_yakushima_token(), itr.get_storage(), key_view);
             this->gc_handle_.get_record_container().emplace_back(itr.get_rec_ptr());
 
             /**
@@ -339,10 +339,10 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #if defined(CPR)
 
-void session_info::regi_diff_upd_set(Record* record, OP_TYPE op_type) {
+void session_info::regi_diff_upd_set(std::string_view storage, Record* record, OP_TYPE op_type) {
     auto& map{get_diff_update_set()};
     version_type cv{get_version()};
-    map[std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count((cv % 2 == 0 && get_phase() == phase::REST) || (cv % 2 == 1 && get_phase() != phase::REST) ? 0 : 1), op_type != OP_TYPE::DELETE ? record : nullptr};
+    map[std::string(storage)][std::string{record->get_tuple().get_key()}] = {cpr::fetch_add_register_count((cv % 2 == 0 && get_phase() == phase::REST) || (cv % 2 == 1 && get_phase() != phase::REST) ? 0 : 1), op_type != OP_TYPE::DELETE ? record : nullptr};
 }
 
 void session_info::regi_diff_upd_seq_set(SequenceValue id, std::pair<SequenceVersion, SequenceValue> ver_val) {

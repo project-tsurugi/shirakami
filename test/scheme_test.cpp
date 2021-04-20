@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
 
-#include "kvs/scheme.h"
+#include "shirakami/scheme.h"
 
 using namespace shirakami;
 

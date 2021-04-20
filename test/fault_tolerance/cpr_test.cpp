@@ -6,7 +6,7 @@
 
 #include "logger.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -15,9 +15,14 @@ using namespace shirakami::logger;
 
 namespace shirakami::testing {
 
+Storage storage;
+
 class cpr_test : public ::testing::Test {
 public:
-    void SetUp() override { init(); } // NOLINT
+    void SetUp() override { 
+        init(); 
+        register_storage(storage);
+    }
 
     void TearDown() override { fin(); }
 };
@@ -38,7 +43,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
-    ASSERT_EQ(upsert(token, k, k), Status::OK);
+    ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), true);

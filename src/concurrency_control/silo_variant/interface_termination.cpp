@@ -7,7 +7,7 @@
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
-#include "kvs/interface.h"        // NOLINT
+#include "shirakami/interface.h"        // NOLINT
 
 namespace shirakami {
 

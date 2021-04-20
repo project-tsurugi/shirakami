@@ -4,7 +4,7 @@
 
 #include "logger.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include "spdlog/spdlog.h"
 

@@ -10,16 +10,16 @@
 
 #include "index/yakushima/include/scheme.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include "logger.h"
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h" // sizeof(Tuple)
 
 using namespace shirakami::logger;
 
 namespace shirakami {
 
-Status close_scan(Token token, ScanHandle handle) {  // NOLINT
+Status close_scan(Token token, ScanHandle handle) { // NOLINT
     auto* ti = static_cast<session_info*>(token);
 
     auto itr = ti->get_scan_cache().find(handle);
@@ -33,14 +33,14 @@ Status close_scan(Token token, ScanHandle handle) {  // NOLINT
     return Status::OK;
 }
 
-Status open_scan(Token token, const std::string_view l_key,  // NOLINT
+Status open_scan(Token token, Storage storage, const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
-                 const scan_endpoint r_end, ScanHandle &handle) {
+                 const scan_endpoint r_end, ScanHandle& handle) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::open_scan(ti, l_key, l_end, r_key, r_end, handle);
+        return snapshot_interface::open_scan(ti, storage, l_key, l_end, r_key, r_end, handle);
     }
 
     for (ScanHandle i = 0;; ++i) {
@@ -53,9 +53,12 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
         if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
     }
 
-    std::vector<std::pair<Record**, std::size_t>> scan_res;
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    constexpr std::size_t index_rec_ptr{1};
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
-    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec);
+    constexpr std::size_t index_nvec_body{0};
+    constexpr std::size_t index_nvec_ptr{1};
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec); // NOLINT
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -65,13 +68,13 @@ Status open_scan(Token token, const std::string_view l_key,  // NOLINT
 
     ti->get_scan_cache()[handle].reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        ti->get_scan_cache()[handle].emplace_back(*scan_res.at(i).first, nvec.at(i).first, nvec.at(i).second);
+        ti->get_scan_cache()[handle].emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i)), std::get<index_nvec_ptr>(nvec.at(i)));
     }
 
     return Status::OK;
 }
 
-Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
+Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple** const tuple) {
     auto* ti = static_cast<session_info*>(token);
 
@@ -82,8 +85,8 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
         return Status::WARN_INVALID_HANDLE;
     }
 
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>> &scan_buf = ti->get_scan_cache()[handle];
-    std::size_t &scan_index = ti->get_scan_cache_itr()[handle];
+    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>& scan_buf = ti->get_scan_cache()[handle];
+    std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     if (scan_buf.size() == scan_index) {
         return Status::WARN_SCAN_LIMIT;
     }
@@ -129,13 +132,13 @@ Status read_from_scan(Token token, ScanHandle handle,  // NOLINT
     return Status::OK;
 }
 
-Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l_end,  // NOLINT
-                const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*> &result) {
+Status scan_key(Token token, Storage storage, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
+                const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*>& result) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::scan_key(ti, l_key, l_end, r_key, r_end, result);
+        return snapshot_interface::scan_key(ti, storage, l_key, l_end, r_key, r_end, result);
     }
 
     // as a precaution
@@ -143,12 +146,15 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     auto read_set_init_size{ti->get_read_set().size()};
     auto node_set_init_size{ti->get_node_set().size()};
 
-    std::vector<std::pair<Record**, std::size_t>> scan_buf;
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
+    constexpr std::size_t scan_buf_rec_ptr{1};
     std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
-    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec);
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec); // NOLINT
 
-    for (auto itr = scan_buf.begin(); itr != scan_buf.end(); ++itr) {
-        write_set_obj* inws = ti->search_write_set((*itr->first)->get_tuple().get_key());
+    std::int64_t index_ctr{-1};
+    for (auto&& elem : scan_buf) {
+        ++index_ctr;
+        write_set_obj* inws = ti->search_write_set((*std::get<scan_buf_rec_ptr>(elem))->get_tuple().get_key());
         if (inws != nullptr) {
             /**
              * If the record was already update/insert in the same transaction,
@@ -174,11 +180,11 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
             continue;
         }
 
-        ti->get_read_set().emplace_back(const_cast<Record*>((*itr->first)));
+        ti->get_read_set().emplace_back(const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
         if (ti->get_node_set().empty() ||
-            std::get<1>(ti->get_node_set().back()) != nvec.at(itr - scan_buf.begin()).second) {
-            ti->get_node_set().emplace_back(nvec.at(itr - scan_buf.begin()).first,
-                                            nvec.at(itr - scan_buf.begin()).second);
+            std::get<1>(ti->get_node_set().back()) != nvec.at(index_ctr).second) {
+            ti->get_node_set().emplace_back(nvec.at(index_ctr).first,
+                                            nvec.at(index_ctr).second);
         }
 
         // pre-verify of phantom problem.
@@ -187,7 +193,7 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
             return Status::ERR_PHANTOM;
         }
 
-        Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>((*itr->first)));
+        Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
         if (rr != Status::OK) {
             // cancel this scan.
             if (read_set_init_size != ti->get_read_set().size()) {
@@ -212,9 +218,9 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(Token token,  // NOLINT
+[[maybe_unused]] Status scannable_total_index_size(Token token, // NOLINT
                                                    ScanHandle handle,
-                                                   std::size_t &size) {
+                                                   std::size_t& size) {
     auto* ti = static_cast<session_info*>(token);
 
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
@@ -228,4 +234,4 @@ Status scan_key(Token token, const std::string_view l_key, const scan_endpoint l
     return Status::OK;
 }
 
-}  // namespace shirakami::cc_silo_variant
+} // namespace shirakami

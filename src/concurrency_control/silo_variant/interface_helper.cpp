@@ -16,7 +16,7 @@
 
 #endif
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 using namespace shirakami::logger;
 
@@ -88,89 +88,89 @@ Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOL
 #endif
 
 #endif
-// end about logging
+        // end about logging
 
-    session_info_table::init_kThreadTable();
-    epoch::invoke_epocher();
-    snapshot_manager::invoke_snapshot_manager();
+        session_info_table::init_kThreadTable();
+        epoch::invoke_epocher();
+        snapshot_manager::invoke_snapshot_manager();
 
-    yakushima::init();
+        yakushima::init();
 
 #ifdef CPR
-    cpr::invoke_checkpoint_thread();
+        cpr::invoke_checkpoint_thread();
 #endif
 
-    return Status::OK;
-}
-
-Status leave(Token const token) { // NOLINT
-    for (auto&& itr : session_info_table::get_thread_info_table()) {
-        if (&itr == static_cast<session_info*>(token)) {
-            if (itr.get_visible()) {
-                itr.gc();
-                yakushima::leave(static_cast<session_info*>(token)->get_yakushima_token());
-                itr.set_tx_began(false);
-                itr.set_visible(false);
-                return Status::OK;
-            }
-            return Status::WARN_NOT_IN_A_SESSION;
-        }
+        return Status::OK;
     }
-    return Status::WARN_INVALID_ARGS;
-}
 
-void tx_begin(Token const token, bool const read_only) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
-    if (!ti->get_txbegan()) {
-        /**
+    Status leave(Token const token) { // NOLINT
+        for (auto&& itr : session_info_table::get_thread_info_table()) {
+            if (&itr == static_cast<session_info*>(token)) {
+                if (itr.get_visible()) {
+                    itr.gc();
+                    yakushima::leave(static_cast<session_info*>(token)->get_yakushima_token());
+                    itr.set_tx_began(false);
+                    itr.set_visible(false);
+                    return Status::OK;
+                }
+                return Status::WARN_NOT_IN_A_SESSION;
+            }
+        }
+        return Status::WARN_INVALID_ARGS;
+    }
+
+    void tx_begin(Token const token, bool const read_only) { // NOLINT
+        auto* ti = static_cast<session_info*>(token);
+        if (!ti->get_txbegan()) {
+            /**
          * This func includes loading latest global epoch used for epoch-base resource management. This means that this
          * func is also bound of epoch-base resource management such as view management for gc to prevent segv. So this
          * func is called once by each tx.
          */
-        ti->set_tx_began(true);
-        ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
-        ti->set_read_only(read_only);
+            ti->set_tx_began(true);
+            ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
+            ti->set_read_only(read_only);
 #if defined(CPR)
-        ti->update_pv();
+            ti->update_pv();
 #endif
+        }
     }
-}
 
-Status read_record(Record& res, const Record* const dest) { // NOLINT
-    tid_word f_check;
-    tid_word s_check; // first_check, second_check for occ
+    Status read_record(Record & res, const Record* const dest) { // NOLINT
+        tid_word f_check;
+        tid_word s_check; // first_check, second_check for occ
 
-    f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+        f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
-    for (;;) {
-        auto return_some_others_write_status = [&f_check] {
-            if (f_check.get_absent() && f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_INSERT;
-            }
-            if (f_check.get_absent() && !f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_DELETE;
-            }
-            return Status::WARN_CONCURRENT_UPDATE;
-        };
+        for (;;) {
+            auto return_some_others_write_status = [&f_check] {
+                if (f_check.get_absent() && f_check.get_latest()) {
+                    return Status::WARN_CONCURRENT_INSERT;
+                }
+                if (f_check.get_absent() && !f_check.get_latest()) {
+                    return Status::WARN_CONCURRENT_DELETE;
+                }
+                return Status::WARN_CONCURRENT_UPDATE;
+            };
 
 #if PARAM_RETRY_READ > 0
-        auto check_concurrent_others_write = [&f_check] {
-            if (f_check.get_absent()) {
-                if (f_check.get_latest()) {
-                    return Status::WARN_CONCURRENT_INSERT;
-                    // other thread is inserting this record concurrently,
-                    // but it isn't committed yet.
+            auto check_concurrent_others_write = [&f_check] {
+                if (f_check.get_absent()) {
+                    if (f_check.get_latest()) {
+                        return Status::WARN_CONCURRENT_INSERT;
+                        // other thread is inserting this record concurrently,
+                        // but it isn't committed yet.
+                    }
+                    return Status::WARN_CONCURRENT_DELETE;
                 }
-                return Status::WARN_CONCURRENT_DELETE;
-            }
-            return Status::OK;
-        };
+                return Status::OK;
+            };
 
-        std::size_t repeat_num{0};
+            std::size_t repeat_num{0};
 #endif
-        while (f_check.get_lock()) {
+            while (f_check.get_lock()) {
 #if PARAM_RETRY_READ == 0
-            return return_some_others_write_status();
+                return return_some_others_write_status();
 #else
             if (repeat_num >= PARAM_RETRY_READ) {
                 return return_some_others_write_status();
@@ -181,177 +181,179 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
             if (s != Status::OK) return s;
             ++repeat_num;
 #endif
-        }
+            }
 
-        if (f_check.get_absent()) {
-            /**
+            if (f_check.get_absent()) {
+                /**
              * Detected records that were deleted but remained in the index so that CPR threads could be found, or read
              * only snapshot transactions could be found.
              */
-            return Status::WARN_CONCURRENT_DELETE;
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+
+            res.get_tuple() = dest->get_tuple(); // execute copy assign.
+            // todo optimization by shallow copy
+
+            s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
+            if (f_check == s_check) {
+                break;
+            }
+            f_check = s_check;
         }
 
-        res.get_tuple() = dest->get_tuple(); // execute copy assign.
-        // todo optimization by shallow copy
-
-        s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-        if (f_check == s_check) {
-            break;
-        }
-        f_check = s_check;
+        res.set_tidw(f_check);
+        return Status::OK;
     }
 
-    res.set_tidw(f_check);
-    return Status::OK;
-}
-
-void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
-                 [[maybe_unused]] commit_property cp) {
-    /*
+    void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
+                     [[maybe_unused]] commit_property cp) {
+        /*
      * It calculates the smallest number that is
      * (a) larger than the TID of any record read or written by the transaction,
      * (b) larger than the worker's most recently chosen TID,
      * and (C) in the current global epoch.
      */
-    tid_word tid_a;
-    tid_word tid_b;
-    tid_word tid_c;
+        tid_word tid_a;
+        tid_word tid_b;
+        tid_word tid_c;
 
-    /*
+        /*
      * calculates (a)
      * about read_set
      */
-    tid_a = std::max(max_w_set, max_r_set);
-    tid_a.inc_tid();
+        tid_a = std::max(max_w_set, max_r_set);
+        tid_a.inc_tid();
 
-    /*
+        /*
      * calculates (b)
      * larger than the worker's most recently chosen TID,
      */
-    tid_b = ti->get_mrctid();
-    tid_b.inc_tid();
+        tid_b = ti->get_mrctid();
+        tid_b.inc_tid();
 
-    /* calculates (c) */
-    tid_c.set_epoch(ti->get_epoch());
+        /* calculates (c) */
+        tid_c.set_epoch(ti->get_epoch());
 
-    /* compare a, b, c */
-    tid_word max_tid = std::max({tid_a, tid_b, tid_c});
-    max_tid.set_lock(false);
-    max_tid.set_absent(false);
-    max_tid.set_latest(true);
-    max_tid.set_epoch(ti->get_epoch());
-    ti->set_mrc_tid(max_tid);
+        /* compare a, b, c */
+        tid_word max_tid = std::max({tid_a, tid_b, tid_c});
+        max_tid.set_lock(false);
+        max_tid.set_absent(false);
+        max_tid.set_latest(true);
+        max_tid.set_epoch(ti->get_epoch());
+        ti->set_mrc_tid(max_tid);
 
 #ifdef PWAL
-    ti->pwal(max_tid.get_obj(), cp);
+        ti->pwal(max_tid.get_obj(), cp);
 #endif
 
-    for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
-         ++iws) {
-        Record* rec_ptr = iws->get_rec_ptr();
+        for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
+             ++iws) {
+            Record* rec_ptr = iws->get_rec_ptr();
 #ifdef CPR
-        ti->regi_diff_upd_set(rec_ptr, iws->get_op());
+            ti->regi_diff_upd_set(iws->get_storage(), rec_ptr, iws->get_op());
 #endif
-        auto safely_snap_work = [&rec_ptr, &ti] {
-            if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
-                // update safely snap
-                Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), rec_ptr->get_tuple().get_value()); // NOLINT
-                new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
-                new_rec->get_tidw().set_latest(true);
-                new_rec->get_tidw().set_lock(false);
-                new_rec->get_tidw().set_absent(false);
-                if (rec_ptr->get_snap_ptr() == nullptr) {
-                    // create safely snap
-                    rec_ptr->set_snap_ptr(new_rec);
-                } else {
-                    // create safely snap and insert at second.
-                    new_rec->set_snap_ptr(rec_ptr->get_snap_ptr());
-                    rec_ptr->set_snap_ptr(new_rec);
+            auto safely_snap_work = [&rec_ptr, &ti] {
+                if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
+                    // update safely snap
+                    Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), rec_ptr->get_tuple().get_value()); // NOLINT
+                    new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
+                    new_rec->get_tidw().set_latest(true);
+                    new_rec->get_tidw().set_lock(false);
+                    new_rec->get_tidw().set_absent(false);
+                    if (rec_ptr->get_snap_ptr() == nullptr) {
+                        // create safely snap
+                        rec_ptr->set_snap_ptr(new_rec);
+                    } else {
+                        // create safely snap and insert at second.
+                        new_rec->set_snap_ptr(rec_ptr->get_snap_ptr());
+                        rec_ptr->set_snap_ptr(new_rec);
+                    }
+                    ti->get_gc_snap_cont().emplace_back(std::make_pair(ti->get_epoch(), new_rec));
                 }
-                ti->get_gc_snap_cont().emplace_back(std::make_pair(ti->get_epoch(), new_rec));
-            }
-        };
-        switch (iws->get_op()) {
-            case OP_TYPE::INSERT: {
+            };
+            switch (iws->get_op()) {
+                case OP_TYPE::INSERT: {
 #ifdef CPR
-                /**
+                    /**
                  * When this transaction started in the rest phase, cpr thread never started scanning.
                  */
-                if (ti->get_phase() == cpr::phase::REST) {
-                    /**
+                    if (ti->get_phase() == cpr::phase::REST) {
+                        /**
                      * If this transaction have a serialization point after the checkpoint boundary and before the scan
                      * of the cpr thread, the cpr thread will include it even though it should not be included in the
                      * checkpoint.
                      * Since this transaction inserted this record with a lock, it is guaranteed that the checkpoint
                      * thread has never been reached.
                      */
-                    rec_ptr->set_version(ti->get_version());
-                } else {
-                    rec_ptr->set_version(ti->get_version() + 1);
-                }
+                        rec_ptr->set_version(ti->get_version());
+                    } else {
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
 #endif
-                storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
-                break;
-            }
-            case OP_TYPE::UPDATE: {
-                safely_snap_work();
+                    storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
+                    break;
+                }
+                case OP_TYPE::UPDATE: {
+                    safely_snap_work();
 #ifdef CPR
-                // update about cpr
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
-                    rec_ptr->get_stable() = rec_ptr->get_tuple();
-                    rec_ptr->set_version(ti->get_version() + 1);
-                }
+                    // update about cpr
+                    if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                        rec_ptr->get_stable() = rec_ptr->get_tuple();
+                        rec_ptr->set_version(ti->get_version() + 1);
+                    }
 #endif
-                // update value
-                std::string* old_value{};
-                std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
-                rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
-                if (old_value != nullptr) {
-                    ti->get_gc_value_container().emplace_back(std::make_pair(old_value, ti->get_epoch()));
-                } else {
-                    /**
+                    // update value
+                    std::string* old_value{};
+                    std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
+                    rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
+                    if (old_value != nullptr) {
+                        ti->get_gc_value_container().emplace_back(std::make_pair(old_value, ti->get_epoch()));
+                    } else {
+                        /**
                      *  null insert is not expected.
                      */
-                    shirakami_logger->debug("fatal error.");
-                    exit(1);
+                        shirakami_logger->debug("fatal error.");
+                        exit(1);
+                    }
+                    storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
+                    break;
                 }
-                storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
-                break;
-            }
-            case OP_TYPE::DELETE: {
-                safely_snap_work();
-                tid_word delete_tid = max_tid;
-                delete_tid.set_latest(false);
-                delete_tid.set_absent(true);
+                case OP_TYPE::DELETE: {
+                    safely_snap_work();
+                    tid_word delete_tid = max_tid;
+                    delete_tid.set_latest(false);
+                    delete_tid.set_absent(true);
 
-                std::string_view key_view = rec_ptr->get_tuple().get_key();
+                    std::string_view key_view = rec_ptr->get_tuple().get_key();
 
 #ifdef CPR
-                if (ti->get_phase() == cpr::phase::REST) {
-                    /**
+                    if (ti->get_phase() == cpr::phase::REST) {
+                        /**
                      * This worker started in rest phase, meaning checkpoint thread does not scan yet.
                      */
-                    if (rec_ptr->get_snap_ptr() == nullptr) {
-                        yakushima::remove(ti->get_yakushima_token(), key_view);
+                        if (rec_ptr->get_snap_ptr() == nullptr) {
+                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
                         ti->get_gc_record_container().emplace_back(rec_ptr);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     } else {
                         rec_ptr->set_version(ti->get_version());
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                        snapshot_manager::remove_rec_cont.push(rec_ptr);
+                        snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
                     }
-                } else {
-                    /**
+                }
+                    else {
+                        /**
                      * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
                      */
-                    if (ti->get_version() + 1 == rec_ptr->get_version()) {
-                        /**
+                        if (ti->get_version() + 1 == rec_ptr->get_version()) {
+                            /**
                          * Checkpoint thread did process, so it can remove from index.
                          */
-                        yakushima::remove(ti->get_yakushima_token(), key_view);
+                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
                         ti->get_gc_record_container().emplace_back(rec_ptr);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                    } else {
+                    }
+                    else {
                         /**
                          * else : The check pointer is responsible for deleting from the index and registering garbage.
                          */
@@ -359,26 +361,27 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                         rec_ptr->set_version(ti->get_version() + 1);
                         storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     }
-                }
+            }
 
 #else
                 if (rec_ptr->get_snap_ptr() == nullptr) {
                     // if no snapshot, it can immediately remove.
-                    yakushima::remove(ti->get_yakushima_token(), key_view);
-                    ti->get_gc_record_container().emplace_back(rec_ptr);
-                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                } else {
-                    snapshot_manager::remove_rec_cont.push(rec_ptr);
+                    yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view);
+                ti->get_gc_record_container().emplace_back(rec_ptr);
+                storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+            }
+                else {
+                    snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                 }
 #endif
-                break;
-            }
-            default:
-                shirakami_logger->debug("fatal error.");
-                std::abort();
+            break;
         }
+        default:
+            shirakami_logger->debug("fatal error.");
+            std::abort();
     }
+}
 }
 
 } // namespace shirakami

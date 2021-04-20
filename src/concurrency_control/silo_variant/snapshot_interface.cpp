@@ -2,19 +2,19 @@
 // Created by thawk on 2021/01/19.
 //
 
-#include "kvs/tuple.h"
-
 #include "concurrency_control/silo_variant/include/snapshot_interface.h"
 #include "concurrency_control/silo_variant/include/snapshot_manager.h"
 
 #include "index/yakushima/include/scheme.h"
+
+#include "shirakami/tuple.h"
 
 using namespace shirakami;
 
 namespace shirakami::snapshot_interface {
 
 extern Status
-open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::string_view r_key,// NOLINT
+open_scan(session_info* ti, Storage storage, std::string_view l_key, scan_endpoint l_end, std::string_view r_key,// NOLINT
           scan_endpoint r_end, ScanHandle& handle) {
 
     for (ScanHandle i = 0;; ++i) {
@@ -27,8 +27,9 @@ open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::st
         if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
     }
 
-    std::vector<std::pair<Record**, std::size_t>> scan_res;
-    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res);// NOLINT
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    constexpr std::size_t scan_res_rec_ptr{1};
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res);// NOLINT
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -39,14 +40,14 @@ open_scan(session_info* ti, std::string_view l_key, scan_endpoint l_end, std::st
      * scan could find any records.
      */
     for (auto& elem : scan_res) {
-        ti->get_scan_cache()[handle].emplace_back(*elem.first, yakushima::node_version64_body{}, nullptr);
+        ti->get_scan_cache()[handle].emplace_back(*std::get<scan_res_rec_ptr>(elem), yakushima::node_version64_body{}, nullptr);
     }
 
     return Status::OK;
 }
 
-Status lookup_snapshot(session_info* ti, std::string_view key, Tuple** const ret_tuple) {// NOLINT
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(key))};
+Status lookup_snapshot(session_info* ti, Storage storage, std::string_view key, Tuple** const ret_tuple) {// NOLINT
+    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     if (rec_d_ptr == nullptr) {
         // There is no record which has the key.
         *ret_tuple = nullptr;
@@ -121,18 +122,19 @@ extern Status read_record(session_info* const ti, Record* const rec_ptr, Tuple**
 }
 
 Status
-scan_key(session_info* ti, const std::string_view l_key, const scan_endpoint l_end,// NOLINT
+scan_key(session_info* ti, Storage storage, const std::string_view l_key, const scan_endpoint l_end,// NOLINT
          const std::string_view r_key,
          const scan_endpoint r_end, std::vector<const Tuple*>& result) {
     // as a precaution
     result.clear();
 
-    std::vector<std::pair<Record**, std::size_t>> scan_buf;
-    yakushima::scan(l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf);// NOLINT
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
+    constexpr std::size_t scan_buf_rec_ptr{1};
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf);// NOLINT
 
     if (scan_buf.empty()) return Status::WARN_NOT_FOUND;
     for (auto&& elem : scan_buf) {
-        Record* rec_ptr = *elem.first;
+        Record* rec_ptr = *std::get<scan_buf_rec_ptr>(elem);
         tid_word tid{};
         // phase 1 : decide to see main record or snapshot.
         bool cont_next_scan_buf{false};

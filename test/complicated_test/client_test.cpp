@@ -22,8 +22,7 @@
 #include "test_param.h"
 #include "tuple_local.h"
 
-// shirakami/include/
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #if defined(CPR)
 
@@ -38,6 +37,7 @@ namespace shirakami::testing {
 using namespace shirakami;
 
 std::array<std::vector<Tuple*>, Nthread> DataList{};  // NOLINT
+Storage storage;
 
 /**
  * @brief delete DataList object.
@@ -68,7 +68,7 @@ static void exec_insert(Token token, std::size_t th_nm) {
         make_string(val.data(), Len_val);
         Tuple* tuple = new Tuple(key, val);  // NOLINT
         DataList.at(th_nm).push_back(tuple);
-        insert(token, key, val);
+        insert(token, storage, key, val);
     }
     // Commit;
     Status result = commit(token);
@@ -78,7 +78,7 @@ static void exec_insert(Token token, std::size_t th_nm) {
 static void exec_search_key(Token token, std::size_t th_nm) {
     for (auto &&itr : DataList.at(th_nm)) {
         Tuple* tuple{};
-        search_key(token, itr->get_key(), &tuple);
+        search_key(token, storage, itr->get_key(), &tuple);
     }
     Status result = commit(token);
     ASSERT_EQ(result, Status::OK);
@@ -87,7 +87,7 @@ static void exec_search_key(Token token, std::size_t th_nm) {
 static void exec_scan_key(Token token) {
     while (true) {
         std::vector<const Tuple*> result;
-        scan_key(token, {static_cast<const char*>("a"), 1}, scan_endpoint::INCLUSIVE,
+        scan_key(token, storage, {static_cast<const char*>("a"), 1}, scan_endpoint::INCLUSIVE,
                  {static_cast<const char*>("z"), 1}, scan_endpoint::INCLUSIVE, result);
         for (auto &&itr : result) {
             delete itr;  // NOLINT
@@ -101,7 +101,7 @@ static void exec_scan_key(Token token) {
 
 static void exec_update(Token token, std::size_t thnm) {
     for (auto &&itr : DataList.at(thnm)) {
-        update(token, itr->get_key(),
+        update(token, storage, itr->get_key(),
                {static_cast<const char*>("bouya-yoikoda-nenne-shina"),
                 strlen("bouya-yoikoda-nenne-shina")});
     }
@@ -112,7 +112,7 @@ static void exec_update(Token token, std::size_t thnm) {
 static void exec_delete(Token token, std::size_t thnm) {
 
     for (auto &&itr : DataList.at(thnm)) {
-        delete_record(token, itr->get_key());
+        delete_record(token, storage, itr->get_key());
     }
     Status result = commit(token);
     ASSERT_EQ(result, Status::OK);
@@ -177,6 +177,7 @@ class client : public ::testing::Test {
 
 TEST_F(client, single_thread_test) {  // NOLINT
     init();                             // NOLINT
+    register_storage(storage);
 
 #if defined(RECOVERY)
     /**

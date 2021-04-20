@@ -52,4 +52,12 @@ TEST_F(hopscotch_map_test, api_clear) { // NOLINT
     ASSERT_EQ(map.size(), 0);
 }
 
+TEST_F(hopscotch_map_test, double_layer) { // NOLINT
+    tsl::hopscotch_map<std::uint64_t, tsl::hopscotch_map<std::string, std::string>> map;
+    // prepare data
+    map[0]["a"] = "va";
+    ASSERT_EQ(map[0]["a"], "va");
+    ASSERT_EQ(map.begin().key(), 0);
+    ASSERT_EQ(map.begin().value().begin().key(), "a");
+}
 } // namespace shirakami::testing

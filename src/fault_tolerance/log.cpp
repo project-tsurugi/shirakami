@@ -162,7 +162,7 @@ namespace shirakami {
         for (auto &&elem : logs) {
             Record* rec_ptr = new Record(elem.get_key(), elem.get_val()); // NOLINT
             rec_ptr->get_tidw() = 0;
-            yakushima::status insert_result{yakushima::put<Record*>(elem.get_key(), &rec_ptr)}; // NOLINT
+            yakushima::status insert_result{yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr)}; // NOLINT
             if (insert_result != yakushima::status::OK) {
                 shirakami_logger->debug("cpr recovery error.");
                 exit(1);

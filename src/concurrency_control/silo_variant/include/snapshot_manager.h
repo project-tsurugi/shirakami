@@ -23,7 +23,7 @@ constexpr size_t snapshot_epoch_times = PARAM_SNAPSHOT_EPOCH;
 
 // Elements in this container will be removed from index
 // todo, enhancement  : It will use oneTBB container.
-[[maybe_unused]] inline concurrent_queue<Record*> remove_rec_cont;  // NOLINT
+[[maybe_unused]] inline concurrent_queue<std::pair<std::string, Record*>> remove_rec_cont;  // NOLINT
 
 // about epoch thread
 [[maybe_unused]] inline std::thread snapshot_manager_thread;  // NOLINT

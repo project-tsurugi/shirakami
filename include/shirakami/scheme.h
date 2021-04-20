@@ -1,5 +1,5 @@
 /**
- * @file include/kvs/scheme.h
+ * @file include/shirakami/scheme.h
  */
 
 #pragma once

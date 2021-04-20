@@ -3,7 +3,7 @@
  * @brief about tuple
  */
 
-#include "kvs/tuple.h"
+#include "shirakami/tuple.h"
 
 #include "include/tuple_local.h"
 

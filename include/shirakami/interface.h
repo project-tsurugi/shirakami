@@ -1,9 +1,11 @@
 /**
- * @file include/kvs/interface.h
+ * @file include/shirakami/interface.h
  * @brief transaction execution engine interface.
  */
 
 #pragma once
+
+#include <vector>
 
 #include "scheme.h"
 #include "tuple.h"
@@ -21,7 +23,7 @@ namespace shirakami {
 
 /**
  * @brief Create one table and return its handler.
- * @param [out] storage output parameter to pass the storage handle, that is used for the subsequent calls related with the storage.
+ * @param[out] storage output parameter to pass the storage handle, that is used for the subsequent calls related with the storage.
  * @return Status::OK if successful.
  * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum value of the handler.
  */
@@ -29,7 +31,7 @@ extern Status register_storage(Storage& storage);
 
 /**
  * @brief Confirm existence of the storage.
- * @param [in] storage input parameter to confirm existence of the storage.
+ * @param[in] storage input parameter to confirm existence of the storage.
  * @return Status::OK if existence.
  * @return Status::WARN_NOT_FOUND if not existence.
  */
@@ -37,7 +39,7 @@ extern Status exist_storage(Storage storage);
 
 /**
  * @brief delete existing storage and records under the storage.
- * @param [in] storage the storage handle retrieved with register_storage().
+ * @param[in] storage the storage handle retrieved with register_storage().
  * @return Status::OK if successful.
  * @return Status::WARN_INVALID_HANDLE if the storage is not registered with the given name.
  */
@@ -45,7 +47,7 @@ extern Status delete_storage(Storage storage);
 
 /**
  * @brief Get a list of existing storage.
- * @param [out] out the list of existing storage.
+ * @param[out] out the list of existing storage.
  * @return Status::OK if successful.
  * @return Status::WARN_NOT_FOUND if no storage.
  */
@@ -65,8 +67,8 @@ extern Status abort(Token token); // NOLINT
 
 /**
  * @brief close the scan which was opened at open_scan.
- * @param [in] token the token retrieved by enter().
- * @param [in] handle identify the specific scan which was opened at open_scan.
+ * @param[in] token the token retrieved by enter().
+ * @param[in] handle identify the specific scan which was opened at open_scan.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE The @b handle is invalid.
  */
@@ -75,8 +77,8 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 /**
  * @brief It tries commit.
  * @details If this function return ERR_... status, this called abort function implicitly. Otherwise, it commits.
- * @param [in] token retrieved by enter().
- * @param [in,out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
+ * @param[in] token retrieved by enter().
+ * @param[in,out] cp commit parameter to notify commit timestamp and wait obeyed to commit_param.commit_property.
  * @pre executed enter (-> tx_begin -> transaction operation).
  * @post execute leave to leave the session or transactional operations (ex. tx_begin, search, update, ...etc)  to start
  * next transaction.
@@ -91,8 +93,8 @@ extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
 
 /**
  * @brief It checks whether the transaction allocated commit_id at commit function was committed.
- * @param [in] token This should be the token which was used for commit function.
- * @param [in] commit_id This should be the commit_id which was received at commit function with @b token.
+ * @param[in] token This should be the token which was used for commit function.
+ * @param[in] commit_id This should be the commit_id which was received at commit function with @b token.
  * @return  true This transaction was committed (durable).
  * @return  false This transaction was not committed (durable).
  */
@@ -110,8 +112,9 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
 /**
  * @brief delete the record for the given key
- * @param token [in] the token retrieved by enter()
- * @param key the key of the record for deletion
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
  * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an previous update / insert / upsert operation before
@@ -120,7 +123,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem by this, you should do abort.
  * @return Status::OK success.
  */
-extern Status delete_record(Token token, std::string_view key); // NOLINT
+extern Status delete_record(Token token, Storage storage, std::string_view key); // NOLINT
 
 /**
  * @brief enter session
@@ -157,9 +160,10 @@ extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
 
 /**
  * @brief insert the record with given key/value
- * @param [in] token the token retrieved by enter()
- * @param [in] key the key of the inserted record
- * @param [in] val the value of the inserted record
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] key the key of the inserted record
+ * @param[in] val the value of the inserted record
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was inserted by this function was
  * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
@@ -169,13 +173,13 @@ extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT));
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, so it update the local write
  * set object.
  */
-extern Status insert(Token token, std::string_view key, std::string_view val); // NOLINT
+extern Status insert(Token token, Storage storage, std::string_view key, std::string_view val); // NOLINT
 
 /**
  * @brief leave session
  * @details It return the objects which was got at enter function to
  * kThreadTable.
- * @param [in] token retrieved by enter()
+ * @param[in] token retrieved by enter()
  * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  * @return Status::OK success.
  * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
@@ -185,6 +189,7 @@ extern Status leave(Token token); // NOLINT
 /**
  * @brief This function preserve the specified range of masstree
  * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
  * @param[in] l_key
  * @param[in] l_end
  * @param[in] r_key
@@ -197,15 +202,15 @@ extern Status leave(Token token); // NOLINT
  * not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  */
-extern Status open_scan(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+extern Status open_scan(Token token, Storage storage, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                         scan_endpoint r_end, ScanHandle& handle);
 
 /**
  * @brief This function reads the one records from the scan_cache which was created at open_scan function.
  * @details The read record is returned by @result.
- * @param [in] token the token retrieved by enter()
- * @param [in] handle input parameters to identify the specific scan_cache.
- * @param [out] result output parameter to pass the read record.
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle input parameters to identify the specific scan_cache.
+ * @param[out] result output parameter to pass the read record.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by previous delete operation of this transaction.
@@ -221,12 +226,13 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
 
 /**
  * @brief search with the given key range and return the found tuples
- * @param [in] token the token retrieved by enter()
- * @param [in] l_key the key to indicate the beginning of the range, null if the beginning is open
- * @param [in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key equal to l_key is not included in the result).
- * @param [in] r_key the key to indicate the ending of the range, null if the end is open
- * @param [in] r_end indicate whether the @b r_key is exclusive
- * @param [out] result output parameter to pass the found Tuple pointers.
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] l_key the key to indicate the beginning of the range, null if the beginning is open
+ * @param[in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key equal to l_key is not included in the result).
+ * @param[in] r_key the key to indicate the ending of the range, null if the end is open
+ * @param[in] r_end indicate whether the @b r_key is exclusive
+ * @param[out] result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid until commit/abort.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, so it called abort().
@@ -236,14 +242,14 @@ extern Status read_from_scan(Token token, ScanHandle handle, Tuple** result); //
  * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other updater, and it could not complete search.
  */
-extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+extern Status scan_key(Token token, Storage storage, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
                        scan_endpoint r_end, std::vector<const Tuple*>& result);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
- * @param [in] token the token retrieved by enter()
- * @param [in] handle the handle to identify scanned result. This handle will be deleted at abort function.
- * @param [out] size the size resulted at open_scan with the @a handle .
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle the handle to identify scanned result. This handle will be deleted at abort function.
+ * @param[out] size the size resulted at open_scan with the @a handle .
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
  */
@@ -251,9 +257,10 @@ extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end,
 
 /**
  * @brief It searches with the given key and return the found tuple.
- * @param [in] token the token retrieved by enter()
- * @param [in] key the search key
- * @param [out] tuple output parameter to pass the found Tuple pointer.
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] key the search key
+ * @param[out] tuple output parameter to pass the found Tuple pointer.
  * The ownership of the address which is pointed by the tuple is in shirakami.
  * So upper layer from shirakami don't have to be care.
  * nullptr when nothing is found for the given key.
@@ -266,7 +273,7 @@ extern Status scan_key(Token token, std::string_view l_key, scan_endpoint l_end,
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding write (insert/update/upsert)
  * operation in the same tx.
  */
-extern Status search_key(Token token, std::string_view key, Tuple** tuple); // NOLINT
+extern Status search_key(Token token, Storage storage, std::string_view key, Tuple** tuple); // NOLINT
 
 /**
  * @brief Transaction begins.
@@ -274,17 +281,18 @@ extern Status search_key(Token token, std::string_view key, Tuple** tuple); // N
  * the @b read_only (false) argument.
  * @details To determine the GC-capable epoch, determine the epoch at the start of the transaction. Specify true for
  * read_only to execute a fast read only transaction that just reads snapshots.
- * @param [in] token
- * @param [in] read_only If this is true, it uses read only mode which transactional reads read stale snapshot.
+ * @param[in] token
+ * @param[in] read_only If this is true, it uses read only mode which transactional reads read stale snapshot.
  * @attention If you specify read_only is true, you can not execute transactional write operation in this transaction.
  */
 extern void tx_begin(Token token, bool read_only = false); // NOLINT
 
 /**
  * @brief It updates the record for the given key.
- * @param [in] token the token retrieved by enter()
- * @param [in] key the key of the updated record
- * @param [in] val the value of the updated record
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] key the key of the updated record
+ * @param[in] val the value of the updated record
  * @return Status::OK if successful
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should
@@ -292,21 +300,22 @@ extern void tx_begin(Token token, bool read_only = false); // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, so it update the value which is going
  * to be updated.
  */
-extern Status update(Token token, std::string_view key, std::string_view val); // NOLINT
+extern Status update(Token token, Storage storage, std::string_view key, std::string_view val); // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
  * record does not exist
  * @param[in] token the token retrieved by enter()
- * @param key the key of the upserted record
- * @param val the value of the upserted record
+ * @param[in] storage the handle of storage.
+ * @param[in] key the key of the upserted record
+ * @param[in] val the value of the upserted record
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which was inserted by this function was
  * also read by previous scan operations, and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in read only mode.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, so it overwrite its local write set.
  */
-extern Status upsert(Token token, std::string_view key, std::string_view val); // NOLINT
+extern Status upsert(Token token, Storage storage, std::string_view key, std::string_view val); // NOLINT
 
 
 /**

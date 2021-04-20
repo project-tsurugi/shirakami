@@ -1,7 +1,6 @@
 
 #include "gtest/gtest.h"
 
-#include "kvs/interface.h"
 
 #ifdef RECOVERY
 
@@ -9,10 +8,12 @@
 
 #endif
 
+#include "shirakami/interface.h"
 namespace shirakami::testing {
 
 using namespace shirakami;
 
+Storage storage;
 class phantom_protection : public ::testing::Test {
 public:
     void SetUp() override {
@@ -23,13 +24,14 @@ public:
             boost::filesystem::remove(path);
         }
 #endif
-        init();   // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 };
 
-TEST_F(phantom_protection, phantom) {  // NOLINT
+TEST_F(phantom_protection, phantom) { // NOLINT
+    register_storage(storage);
     constexpr std::size_t token_length{2};
     std::array<Token, token_length> token{};
     ASSERT_EQ(enter(token.at(0)), Status::OK);
@@ -37,18 +39,18 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     constexpr std::size_t key_length{3};
     std::array<std::string, 3> key;
     for (std::size_t i = 0; i < key_length; ++i) {
-        key.at(i) = std::string{1, static_cast<char>(i)};  // NOLINT
+        key.at(i) = std::string{1, static_cast<char>(i)}; // NOLINT
     }
-    std::string v{"value"};  // NOLINT
-    ASSERT_EQ(Status::OK, insert(token.at(0), key.at(0), v));
-    ASSERT_EQ(Status::OK, insert(token.at(0), key.at(1), v));
+    std::string v{"value"}; // NOLINT
+    ASSERT_EQ(Status::OK, insert(token.at(0), storage, key.at(0), v));
+    ASSERT_EQ(Status::OK, insert(token.at(0), storage, key.at(1), v));
     ASSERT_EQ(Status::OK, commit(token.at(0))); // NOLINT
     std::vector<const Tuple*> tuple_vec;
     ASSERT_EQ(Status::OK,
-              scan_key(token.at(0), "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
+              scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
     ASSERT_EQ(tuple_vec.size(), 2);
     // interrupt to occur phantom
-    ASSERT_EQ(Status::OK, insert(token.at(1), key.at(2), v));
+    ASSERT_EQ(Status::OK, insert(token.at(1), storage, key.at(2), v));
     ASSERT_EQ(Status::OK, commit(token.at(1))); // NOLINT
     // =====
     ASSERT_EQ(Status::ERR_PHANTOM, commit(token.at(0))); // NOLINT
@@ -57,4 +59,4 @@ TEST_F(phantom_protection, phantom) {  // NOLINT
     ASSERT_EQ(leave(token.at(1)), Status::OK);
 }
 
-}  // namespace shirakami::testing
+} // namespace shirakami::testing

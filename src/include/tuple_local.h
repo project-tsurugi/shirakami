@@ -8,7 +8,7 @@
 #include <atomic>
 #include <string>
 
-#include "kvs/tuple.h"
+#include "shirakami/tuple.h"
 
 namespace shirakami {
 

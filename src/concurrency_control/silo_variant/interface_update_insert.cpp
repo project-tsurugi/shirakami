@@ -10,13 +10,13 @@
 #include "concurrency_control/silo_variant/include/garbage_collection.h"
 #include "concurrency_control/silo_variant/include/interface_helper.h"
 
-#include "kvs/interface.h"
+#include "shirakami/interface.h"
 
 #include "tuple_local.h"  // sizeof(Tuple)
 
 namespace shirakami {
 
-Status insert(Token token, const std::string_view key,  // NOLINT
+Status insert(Token token, Storage storage, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
@@ -27,22 +27,22 @@ Status insert(Token token, const std::string_view key,  // NOLINT
         if (inws->get_op() == OP_TYPE::INSERT || inws->get_op() == OP_TYPE::UPDATE) {
             inws->reset_tuple_value(val);
         } else if (inws->get_op() == OP_TYPE::DELETE) {
-            *inws = write_set_obj{key, val, OP_TYPE::UPDATE, inws->get_rec_ptr()};
+            *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE, inws->get_rec_ptr()};
         }
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
-    if (std::get<0>(yakushima::get<Record*>(key)) != nullptr) {
+    if (std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key)) != nullptr) { // NOLINT
         return Status::WARN_ALREADY_EXISTS;
     }
 
     Record* rec_ptr = new Record(key, val);  // NOLINT
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{
-            yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+            yakushima::put<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
                                     static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)}; // NOLINT
     if (insert_result == yakushima::status::OK) {
-        ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
+        ti->get_write_set().emplace_back(storage, OP_TYPE::INSERT, rec_ptr);
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_PHANTOM) {
             /**
@@ -58,7 +58,7 @@ Status insert(Token token, const std::string_view key,  // NOLINT
     return Status::WARN_ALREADY_EXISTS;
 }
 
-Status update(Token token, const std::string_view key,  // NOLINT
+Status update(Token token, Storage storage, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
@@ -71,7 +71,7 @@ Status update(Token token, const std::string_view key,  // NOLINT
     }
 
     Record** rec_double_ptr{
-            std::get<0>(yakushima::get<Record*>(key))};
+            std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     if (rec_double_ptr == nullptr) {
         return Status::WARN_NOT_FOUND;
     }
@@ -84,12 +84,12 @@ Status update(Token token, const std::string_view key,  // NOLINT
         return Status::WARN_NOT_FOUND;
     }
 
-    ti->get_write_set().emplace_back(key, val, OP_TYPE::UPDATE, rec_ptr);
+    ti->get_write_set().emplace_back(storage, key, val, OP_TYPE::UPDATE, rec_ptr);
 
     return Status::OK;
 }
 
-Status upsert(Token token, const std::string_view key,  // NOLINT
+Status upsert(Token token, Storage storage, const std::string_view key,  // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
@@ -99,25 +99,25 @@ Status upsert(Token token, const std::string_view key,  // NOLINT
         if (in_ws->get_op() == OP_TYPE::INSERT || in_ws->get_op() == OP_TYPE::UPDATE) {
             in_ws->reset_tuple_value(val);
         } else if (in_ws->get_op() == OP_TYPE::DELETE) {
-            *in_ws = write_set_obj{key, val, OP_TYPE::UPDATE, in_ws->get_rec_ptr()};
+            *in_ws = write_set_obj{storage, key, val, OP_TYPE::UPDATE, in_ws->get_rec_ptr()};
         }
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
 RETRY_FIND_RECORD:
     Record** rec_double_ptr{
-            std::get<0>(yakushima::get<Record*>(key))};
+            std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     Record* rec_ptr{};
     if (rec_double_ptr == nullptr) {
         rec_ptr = nullptr;
     } else {
-        rec_ptr = (*std::get<0>(yakushima::get<Record*>(key)));
+        rec_ptr = (*std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))); // NOLINT
     }
     if (rec_ptr == nullptr) {
         rec_ptr = new Record(key, val);  // NOLINT
         yakushima::node_version64* nvp{};
         yakushima::status insert_result{
-                yakushima::put<Record*>(key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+                yakushima::put<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
                                         static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)}; // NOLINT
         if (insert_result == yakushima::status::OK) {
             Status check_node_set_res{ti->update_node_set(nvp)};
@@ -129,7 +129,7 @@ RETRY_FIND_RECORD:
                  abort(token);
                 return Status::ERR_PHANTOM;
             }
-            ti->get_write_set().emplace_back(OP_TYPE::INSERT, rec_ptr);
+            ti->get_write_set().emplace_back(storage, OP_TYPE::INSERT, rec_ptr);
             return Status::OK;
         }
         // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -137,8 +137,7 @@ RETRY_FIND_RECORD:
         delete rec_ptr;          // NOLINT
         goto RETRY_FIND_RECORD;  // NOLINT
     }
-    ti->get_write_set().emplace_back(key, val, OP_TYPE::UPDATE,
-                                     rec_ptr);  // NOLINT
+    ti->get_write_set().emplace_back(storage, key, val, OP_TYPE::UPDATE, rec_ptr);  // NOLINT
 
     return Status::OK;
 }  // namespace shirakami::silo_variant

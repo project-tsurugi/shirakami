@@ -9,8 +9,8 @@
 #include "tid.h"
 #include "tuple_local.h"
 
-#include "kvs/scheme.h"
-#include "kvs/tuple.h"
+#include "shirakami/scheme.h"
+#include "shirakami/tuple.h"
 
 namespace shirakami {
 
