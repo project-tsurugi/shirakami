@@ -15,7 +15,7 @@
 #include "kvs/interface.h"
 #include "kvs/scheme.h"
 
-#include "concurrency_control/silo_variant/include/tid.h"
+#include "concurrency_control/include/tid.h"
 
 namespace shirakami::pwal {
 
@@ -69,7 +69,7 @@ class LogRecord {
 public:
     LogRecord() = default;
 
-    LogRecord(const cc_silo_variant::tid_word &tid, const OP_TYPE op, const Tuple* const tuple)
+    LogRecord(const tid_word &tid, const OP_TYPE op, const Tuple* const tuple)
             : tid_(tid), op_(op), tuple_(tuple) {}
 
     bool operator<(const LogRecord &right) {  // NOLINT
@@ -81,9 +81,9 @@ public:
      */
     unsigned int compute_checksum();  // NOLINT
 
-    cc_silo_variant::tid_word &get_tid() { return tid_; }  // NOLINT
+    tid_word &get_tid() { return tid_; }  // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] const cc_silo_variant::tid_word &get_tid() const {  // NOLINT
+    [[maybe_unused]] [[nodiscard]] const tid_word &get_tid() const {  // NOLINT
         return tid_;
     }
 
@@ -98,7 +98,7 @@ public:
     [[maybe_unused]] void set_tuple(Tuple* tuple) { this->tuple_ = tuple; }
 
 private:
-    cc_silo_variant::tid_word tid_{};
+    tid_word tid_{};
     OP_TYPE op_{OP_TYPE::NONE};
     const Tuple* tuple_{nullptr};
 };
@@ -106,7 +106,7 @@ private:
 class pwal_handler {
 public:
 
-    cc_silo_variant::tid_word &get_flushed_ctid() { return flushed_ctid_; } // NOLINT
+    tid_word &get_flushed_ctid() { return flushed_ctid_; } // NOLINT
 
     std::vector<LogRecord> &get_log_set() { return log_set_; }  // NOLINT
 
@@ -116,13 +116,13 @@ public:
         return latest_log_header_;
     }
 
-    void set_flushed_ctid(const cc_silo_variant::tid_word& new_ctid) { flushed_ctid_ = new_ctid; }
+    void set_flushed_ctid(const tid_word& new_ctid) { flushed_ctid_ = new_ctid; }
 
 private:
     File log_file_{};
     std::vector<LogRecord> log_set_{};
     LogHeader latest_log_header_{};
-    cc_silo_variant::tid_word flushed_ctid_{};
+    tid_word flushed_ctid_{};
 };
 
-}  // namespace shirakami::cc_silo_variant
+}  // namespace shirakami

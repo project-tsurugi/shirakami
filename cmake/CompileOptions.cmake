@@ -47,10 +47,6 @@ endif ()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 
-# about concurrency control
-add_definitions(-DCC_SILO_VARIANT)
-message("It uses silo variant cc as concurrency control protocols.")
-
 # about index
 add_definitions(-DINDEX_YAKUSHIMA)
 add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=${cores})

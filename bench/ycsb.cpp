@@ -244,7 +244,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
              * special workloads.
              */
             if (FLAGS_include_long_tx) {
-                gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, FLAGS_val_length, rnd, zipf);
+                gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
             } else {
@@ -252,14 +252,14 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 exit(1);
             }
         } else {
-            gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, FLAGS_val_length, rnd, zipf);
+            gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
         }
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
                 search_key(token, storage, itr.get_key(), &tuple);
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                update(token, storage, itr.get_key(), itr.get_value());
+                update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);
                 std::vector<const Tuple*> scan_res;

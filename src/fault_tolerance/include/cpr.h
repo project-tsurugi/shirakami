@@ -15,8 +15,8 @@
 
 #include "logger.h"
 
-#include "concurrency_control/silo_variant/include/epoch.h"
-#include "concurrency_control/silo_variant/include/record.h"
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/record.h"
 
 #include "shirakami/interface.h"
 

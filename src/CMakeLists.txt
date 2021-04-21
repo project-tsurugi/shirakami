@@ -4,7 +4,7 @@ file(GLOB SOURCES
         )
 
 # about cc
-file(GLOB CC_SOURCES "concurrency_control/silo_variant/*.cpp")
+file(GLOB CC_SOURCES "concurrency_control/*.cpp")
 set(SOURCES ${SOURCES} ${CC_SOURCES})
 
 if (BUILD_PWAL)

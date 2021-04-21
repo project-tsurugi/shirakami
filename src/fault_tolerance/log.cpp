@@ -7,7 +7,7 @@
 #include "log.h"
 
 // about cc
-#include "concurrency_control/silo_variant/include/record.h"
+#include "concurrency_control/include/record.h"
 
 // about index
 #include "yakushima/include/kvs.h"

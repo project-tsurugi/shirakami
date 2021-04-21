@@ -40,7 +40,7 @@ unsigned int LogRecord::compute_checksum() {  // NOLINT
     // tid_word
     unsigned int chkSum = 0;
     const char* charitr = reinterpret_cast<char*>(this);  // NOLINT
-    for (std::size_t i = 0; i < sizeof(cc_silo_variant::tid_word); ++i) {
+    for (std::size_t i = 0; i < sizeof(tid_word); ++i) {
         chkSum += (*charitr);
         ++charitr;  // NOLINT
     }
@@ -84,5 +84,5 @@ unsigned int LogRecord::compute_checksum() {  // NOLINT
 }
 
 
-}  // namespace shirakami::cc_silo_variant
+}  // namespace shirakami
 

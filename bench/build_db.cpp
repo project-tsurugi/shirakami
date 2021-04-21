@@ -36,17 +36,7 @@ size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     if (record < 1000) return 1; // NOLINT
 
     // else
-    for (size_t i = std::thread::hardware_concurrency(); i > 0; --i) {
-        if (record % i == 0) {
-            return i;
-        }
-        if (i == 1) {
-            shirakami_logger->debug("fatal error.");
-            std::abort();
-        }
-    }
-
-    return 1;
+    return std::thread::hardware_concurrency();
 }
 
 void parallel_build_db(const std::size_t start, const std::size_t end,
@@ -59,9 +49,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
 
     for (uint64_t i = start; i <= end; ++i) {
         uint64_t keybs = __builtin_bswap64(i);
-        std::string val(value_length, '0'); // NOLINT
-        make_string(val, rnd);
-        if (Status::OK != insert(token, storage, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, val)) { // NOLINT
+        if (Status::OK != insert(token, storage, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, std::string(value_length, '0'))) { // NOLINT
             shirakami_logger->debug("fatal error.");
             exit(1);
         }
@@ -81,8 +69,7 @@ void build_db(const std::size_t record, const std::size_t value_length) {
     size_t max_thread{decideParallelBuildNumber(record)};
     shirakami_logger->debug("start parallel_build_db with {0} threads.", max_thread);
     for (size_t i = 0; i < max_thread; ++i) {
-        thv.emplace_back(parallel_build_db, i * (record / max_thread), // NOLINT
-                         (i + 1) * (record / max_thread) - 1, value_length);
+        thv.emplace_back(parallel_build_db, i * (record / max_thread), i != max_thread - 1 ? (i + 1) * (record / max_thread) - 1 : record - 1, value_length);
     }
 
     for (auto& th : thv) th.join();

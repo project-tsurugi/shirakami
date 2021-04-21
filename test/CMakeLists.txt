@@ -12,33 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
-        "concurrency_control/silo_variant/record_test.cpp"
-        "concurrency_control/silo_variant/session_info_test.cpp"
-        "concurrency_control/silo_variant/tid_test.cpp"
-        "clock_test.cpp"
-        "complicated_test/client_test.cpp"
-        "complicated_test/scan_perf_test.cpp"
-        "error_test.cpp"
-        "epoch_test.cpp"
-        "interface/helper_test.cpp"
-        "interface/insert_delete_test.cpp"
-        "interface/scan_search_test.cpp"
-        "interface/simple_delete_test.cpp"
-        "interface/simple_insert_test.cpp"
-        "interface/simple_scan_test.cpp"
-        "interface/simple_search_test.cpp"
-        "interface/simple_update_test.cpp"
-        "interface/scan_insert_test.cpp"
-        "logger_test.cpp"
-        "memory_test.cpp"
-        "scheme_test.cpp"
-        "string_view_test.cpp"
-        "third_party/hopscotch_map_test.cpp"
+        "concurrency_control/*.cpp"
+        "third_party/*.cpp"
         )
-
-# about index
-file(GLOB INDEX_TEST_SOURCES "complicated_test/phantom_protection_test.cpp")
-set(TEST_SOURCES ${TEST_SOURCES} ${INDEX_TEST_SOURCES})
 
 if (BUILD_PWAL)
     file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")

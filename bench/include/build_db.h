@@ -16,14 +16,20 @@
 
 #pragma once
 
-#include "concurrency_control/silo_variant/include/scheme.h"
+#include "concurrency_control/include/scheme.h"
 
 #include "shirakami/scheme.h"
 
 namespace shirakami {
 
+/**
+ * @brief One storage for ycsb experiments.
+ */
 static inline Storage storage;
 
+/**
+ * @brief Determine the number of parallels to use for the build.
+ */
 size_t decideParallelBuildNumber(std::size_t record); // NOLINT
 
 void parallel_build_db(std::size_t start, std::size_t end, std::size_t value_length);

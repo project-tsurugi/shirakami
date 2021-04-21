@@ -2,9 +2,9 @@
 // created by thawk on 2020/10/30.
 //
 
-#include "concurrency_control/silo_variant/include/interface_helper.h"
-#include "concurrency_control/silo_variant/include/session_info_table.h"
-#include "concurrency_control/silo_variant/include/snapshot_manager.h"
+#include "concurrency_control/include/interface_helper.h"
+#include "concurrency_control/include/session_info_table.h"
+#include "concurrency_control/include/snapshot_manager.h"
 
 #include "fault_tolerance/include/log.h"
 
