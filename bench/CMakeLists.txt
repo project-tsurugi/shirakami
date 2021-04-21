@@ -27,6 +27,7 @@ target_link_libraries(ycsb
         PRIVATE shirakami
         PRIVATE shirakami-impl
         PRIVATE tsl::hopscotch_map
+        PRIVATE tbb
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
         )
