@@ -392,6 +392,7 @@ extern Status read_sequence(
 
 /**
  * @brief delete the sequence
+ * @param[in] token
  * @param id the sequence id that will be deleted
  * @return Status::OK if the deletion was successful
  * @return otherwise if any error occurs
@@ -399,6 +400,7 @@ extern Status read_sequence(
  * Typical usage is in DDL to unregister sequence objects.
  */
 extern Status delete_sequence(
+        Token token,
         SequenceId id);
 
 } // namespace shirakami

@@ -13,7 +13,7 @@
 
 #if defined(CPR)
 
-#include "cpr.h"
+#include "fault_tolerance/include/cpr.h"
 
 #endif
 
@@ -23,24 +23,24 @@ namespace shirakami {
 class sequence_map {
 public:
     /**
-     * @details The first of std::pair<std::pair<SequenceVersion, SequenceValue>, std::pair<SequenceVersion, SequenceValue>> is not durable, and the second of that is durable.
+     * @details The first of std::pair<std::pair<SequenceVersion, SequenceValue>, 
+     * std::pair<SequenceVersion, SequenceValue>> is not durable, and the second of that is durable.
      */
 #if defined(CPR)
-    using value_type = std::tuple<std::pair<SequenceVersion, SequenceValue>, std::pair<SequenceVersion, SequenceValue>, cpr::version_type>;
-    static constexpr std::pair<SequenceVersion, SequenceValue> initial_value{1, 0};
-    static constexpr std::pair<SequenceVersion, SequenceValue> non_exist_value{0, 0};
-    static constexpr std::pair<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
+    using value_type = std::tuple<std::tuple<SequenceVersion, SequenceValue>, std::tuple<SequenceVersion, SequenceValue>, cpr::version_type>;
+    static constexpr std::size_t volatile_pos{0};
+    static constexpr std::size_t durable_pos{1};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{1, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{0, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
     static constexpr std::size_t cpr_version_pos{2};
     static constexpr value_type non_exist_map_value{non_exist_value, non_exist_value, 0};
 #else
-    using value_type = std::pair<std::pair<SequenceVersion, SequenceValue>, std::pair<SequenceVersion, SequenceValue>>;
-    static constexpr std::pair<SequenceVersion, SequenceValue> initial_value{1, 0};
-    static constexpr std::pair<SequenceVersion, SequenceValue> non_exist_value{0, 0};
-    static constexpr std::pair<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
-    static constexpr value_type non_exist_map_value{non_exist_value, non_exist_value};
+    using value_type = std::tuple<SequenceVersion, SequenceValue>;
+    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{1, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{0, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
 #endif
-    static constexpr std::size_t volatile_pos{0};
-    static constexpr std::size_t durable_pos{1};
     static constexpr std::size_t version_pos{0};
     static constexpr std::size_t value_pos{1};
 
@@ -48,11 +48,11 @@ public:
      * @pre It is called by create_sequence function.
      */
     static void create_initial_value(SequenceId id) {
-        std::unique_lock lock{sequence_map::get_smmutex()};
+        std::unique_lock lock{sequence_map::get_sm_mtx()};
 #if defined(CPR)
         sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value, sequence_map::non_exist_value, 0};
 #else
-        sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value, sequence_map::non_exist_value};
+        sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value};
 #endif
     }
 
@@ -60,8 +60,8 @@ public:
         return sm_;
     }
 
-    static std::mutex& get_smmutex() {
-        return smmutex_;
+    static std::mutex& get_sm_mtx() {
+        return sm_mtx_;
     }
 
     /**
@@ -79,9 +79,8 @@ public:
     }
 
     static SequenceId fetch_add_created_num() {
-        SequenceId ret = created_num_;
-        ++created_num_;
-        if (created_num_ == SIZE_MAX) {
+        SequenceId ret{created_num_.fetch_add(1)};
+        if (ret == SIZE_MAX) {
             shirakami::logger::shirakami_logger->debug("fatal error"); // todo round-trip
             exit(1);
         }
@@ -90,8 +89,8 @@ public:
 
 private:
     static inline std::map<SequenceId, value_type> sm_; // NOLINT
-    static inline SequenceId created_num_{0};
-    static inline std::mutex smmutex_;
+    static inline std::atomic<SequenceId> created_num_{0};
+    static inline std::mutex sm_mtx_;
 };
 
 } // namespace shirakami

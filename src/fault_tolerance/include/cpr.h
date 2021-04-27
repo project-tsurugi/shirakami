@@ -103,17 +103,17 @@ class cpr_local_handler {
 public:
     static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& aggregate_buf);
 
-    static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& aggregate_buf);
+    static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& aggregate_buf);
 
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set();
 
-    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set();
+    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set();
 
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set(std::size_t index) {
         return diff_update_set.at(index);
     }
 
-    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) {
+    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) {
         return diff_update_sequence_set.at(index);
     }
 
@@ -156,7 +156,7 @@ private:
      */
     std::array<tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>, 2> diff_update_set; // NOLINT
 
-    std::array<tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>, 2> diff_update_sequence_set; // NOLINT
+    std::array<tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>, 2> diff_update_sequence_set; // NOLINT
     std::atomic<phase_version> phase_version_{};
 };
 
@@ -202,7 +202,7 @@ class log_record_of_seq{
 public:
     log_record_of_seq() = default;
 
-    log_record_of_seq(SequenceValue key, std::pair<SequenceVersion, SequenceValue> val) {
+    log_record_of_seq(SequenceValue key, std::tuple<SequenceVersion, SequenceValue> val) {
         key_ = key;
         val_ = val;
     }
@@ -211,7 +211,7 @@ public:
 
 private:
     SequenceValue key_;
-    std::pair<SequenceVersion, SequenceValue> val_;
+    std::tuple<SequenceVersion, SequenceValue> val_;
 };
 
 class log_records {

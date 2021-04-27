@@ -25,7 +25,7 @@ void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_ma
         auto absorbed_set = table_elem.get_diff_update_set(index);
         for (auto absorbed_storage = absorbed_set.begin(); absorbed_storage != absorbed_set.end(); ++absorbed_storage) {
             for (auto map_elem = absorbed_storage.value().begin(); map_elem != absorbed_storage.value().end(); ++map_elem) {
-                if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) || // not found storage in aggregate_buf
+                if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) ||                                                                                                              // not found storage in aggregate_buf
                     (aggregate_buf.find(absorbed_storage.key()) != aggregate_buf.end() && aggregate_buf[absorbed_storage.key()].find(map_elem.key()) != aggregate_buf[absorbed_storage.key()].end()) || // found storage but not found elem in aggregate_buf
                     aggregate_buf[absorbed_storage.key()][map_elem.key()].first < map_elem.value().first) {
                     aggregate_buf[absorbed_storage.key()][map_elem.key()] = map_elem.value(); // merge
@@ -38,13 +38,13 @@ void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_ma
     clear_register_count(index);
 }
 
-void aggregate_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& aggregate_buf) {
+void aggregate_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& aggregate_buf) {
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
         auto absorbed_map = table_elem.get_diff_update_sequence_set(index);
         for (auto map_elem = absorbed_map.begin(); map_elem != absorbed_map.end(); ++map_elem) {
-            if (aggregate_buf.find(map_elem.key()) == aggregate_buf.end() || map_elem.value().first > aggregate_buf[map_elem.key()].first) {
+            if (aggregate_buf.find(map_elem.key()) == aggregate_buf.end() || std::get<0>(map_elem.value()) > std::get<0>(aggregate_buf[map_elem.key()])) {
                 aggregate_buf[map_elem.key()] = map_elem.value();
             }
         }
@@ -61,7 +61,7 @@ tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<regist
     return diff_update_set.at(1);
 }
 
-tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& cpr_local_handler::get_diff_update_sequence_set() {
+tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& cpr_local_handler::get_diff_update_sequence_set() {
     version_type cv{get_version()};
     if ((cv % 2 == 0 && get_phase() == phase::REST) ||
         (cv % 2 == 1 && get_phase() != phase::REST)) {
@@ -111,7 +111,7 @@ void checkpoint_thread() {
 void checkpointing() {
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>> aggregate_buf;
     aggregate_diff_update_set(aggregate_buf);
-    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>> aggregate_buf_seq;
+    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>> aggregate_buf_seq;
     aggregate_update_sequence_set(aggregate_buf_seq);
 
     std::ofstream logf;
@@ -142,49 +142,50 @@ void checkpointing() {
         tx_begin(shira_token); // NOLINT
         auto* ti = static_cast<session_info*>(shira_token);
         for (auto itr_storage = aggregate_buf.begin(); itr_storage != aggregate_buf.end(); ++itr_storage) {
-        for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
-            Record* rec = itr.value().second;
-            
-            if (rec == nullptr) {
-                l_recs.emplace_back(std::string_view(itr.key()));
-                continue;
-            }
-            rec->get_tidw().lock();
-            // begin : copy record
-            if (rec->get_version() == pv.get_version()) {
-                const Tuple& tup = rec->get_tuple();
-                l_recs.emplace_back(tup.get_key(), tup.get_value());
-                /**
+            for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
+                Record* rec = itr.value().second;
+
+                if (rec == nullptr) {
+                    l_recs.emplace_back(std::string_view(itr.key()));
+                    continue;
+                }
+                rec->get_tidw().lock();
+                // begin : copy record
+                if (rec->get_version() == pv.get_version()) {
+                    const Tuple& tup = rec->get_tuple();
+                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    /**
               * update only the version number to prevent other workers from making 
               * redundant copies after releasing the lock.
               */
-                rec->set_version(pv.get_version() + 1);
-            } else if (rec->get_version() == pv.get_version() + 1) {
-                const Tuple& tup = rec->get_stable();
-                l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    rec->set_version(pv.get_version() + 1);
+                } else if (rec->get_version() == pv.get_version() + 1) {
+                    const Tuple& tup = rec->get_stable();
+                    l_recs.emplace_back(tup.get_key(), tup.get_value());
 
-                // for deleted record
-                tid_word c_tid = rec->get_tidw();
-                if (!c_tid.get_latest() && c_tid.get_absent()) {
-                    c_tid.set_epoch(ti->get_epoch());
-                    storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
-                    if (rec->get_snap_ptr() == nullptr) {
-                        yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
-                        ti->get_gc_record_container().emplace_back(rec);
-                    } else {
-                        snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
+                    // for deleted record
+                    tid_word c_tid = rec->get_tidw();
+                    if (!c_tid.get_latest() && c_tid.get_absent()) {
+                        c_tid.set_epoch(ti->get_epoch());
+                        storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
+                        if (rec->get_snap_ptr() == nullptr) {
+                            yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
+                            ti->get_gc_record_container().emplace_back(rec);
+                        } else {
+                            snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
+                        }
                     }
+                } else {
+                    shirakami_logger->debug("fatal error");
+                    exit(1);
                 }
-            } else {
-                shirakami_logger->debug("fatal error");
-                exit(1);
+                // end : copy record
+
+
+                // unlock record
+                rec->get_tidw().unlock();
             }
-            // end : copy record
-
-
-            // unlock record
-            rec->get_tidw().unlock();
-        }}
+        }
 
         yakushima::leave(yaku_token);
         leave(shira_token);
@@ -192,7 +193,7 @@ void checkpointing() {
 
     if (aggregate_buf_seq.size() > 0) {
         for (auto&& elem : aggregate_buf_seq) {
-            l_recs.emplace_back_seq({elem.first, elem.second});
+            l_recs.emplace_back_seq({std::get<0>(elem), std::get<1>(elem)});
         }
     }
 

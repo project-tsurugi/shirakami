@@ -13,6 +13,7 @@
 # limitations under the License.
 file(GLOB TEST_SOURCES
         "concurrency_control/*.cpp"
+        "sequence/*.cpp"
         "third_party/*.cpp"
         )
 

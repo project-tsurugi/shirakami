@@ -332,11 +332,11 @@ public:
      */
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
 
-    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set() { return cpr_local_handle_.get_diff_update_sequence_set(); }
+    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set() { return cpr_local_handle_.get_diff_update_sequence_set(); }
 
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>>& get_diff_update_set(std::size_t index) { return cpr_local_handle_.get_diff_update_set(index); }
 
-    tsl::hopscotch_map<SequenceValue, std::pair<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) { return cpr_local_handle_.get_diff_update_sequence_set(index); }
+    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) { return cpr_local_handle_.get_diff_update_sequence_set(index); }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
@@ -344,7 +344,7 @@ public:
 
     void regi_diff_upd_set(std::string_view storage, Record* record, OP_TYPE op_type);
 
-    void regi_diff_upd_seq_set(SequenceValue id, std::pair<SequenceVersion, SequenceValue> ver_val);
+    void regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val);
 
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
