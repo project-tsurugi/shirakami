@@ -14,29 +14,33 @@ namespace shirakami {
 
 class Tuple::Impl {
 public:
-    Impl() {}  // NOLINT
+    Impl() {} // NOLINT
     Impl(std::string_view key, std::string_view val);
 
-    Impl(const Impl &right);
+    Impl(const Impl& right);
 
-    Impl(Impl &&right);
+    Impl(Impl&& right);
 
     /**
      * @brief copy assign operator
      * @pre this is called by read_record function at xact.concurrency_control only .
      */
-    Impl &operator=(const Impl &right);  // NOLINT
+    Impl& operator=(const Impl& right); // NOLINT
 
-    Impl &operator=(Impl &&right);  // NOLINT
+    Impl& operator=(Impl&& right); // NOLINT
 
     ~Impl() {
         if (this->need_delete_pvalue_) {
-            delete pvalue_.load(std::memory_order_acquire);  // NOLINT
+            delete pvalue_.load(std::memory_order_acquire); // NOLINT
         }
     }
 
-    [[nodiscard]] std::string_view get_key() const;    // NOLINT
-    [[nodiscard]] std::string_view get_value() const;  // NOLINT
+    [[nodiscard]] std::string_view get_key() const; // NOLINT
+
+    [[nodiscard]] std::string_view get_value() const; // NOLINT
+
+    [[nodiscard]] const std::string* get_val_ptr() const { return pvalue_.load(std::memory_order_acquire); }
+
     void reset();
 
     /**
@@ -52,6 +56,11 @@ public:
      */
     void set(const char* key_ptr, std::size_t key_length, const char* value_ptr,
              std::size_t value_length);
+
+    /**
+     * @brief For reading record not to deep copy value.
+     */
+    void set(std::string_view key, const std::string* value);
 
     /**
      * @brief set key of data in local
@@ -85,4 +94,4 @@ private:
     bool need_delete_pvalue_{false};
 };
 
-}  // namespace shirakami
+} // namespace shirakami
