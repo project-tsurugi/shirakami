@@ -94,7 +94,7 @@ static void invoke_leader() {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
-    printf("start ycsb exp.\n");
+    printf("start ycsb exp.\n"); // NOLINT
     storeRelease(start, true);
 #if 0
     for (size_t i = 0; i < FLAGS_duration; ++i) {
@@ -102,12 +102,12 @@ static void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        printf("sleep error.\n");
+        printf("sleep error.\n"); // NOLINT
         exit(1);
     }
 #endif
     storeRelease(quit, true);
-    printf("stop ycsb exp.\n");
+    printf("stop ycsb exp.\n"); // NOLINT
     for (auto& th : thv) th.join();
 
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
@@ -115,62 +115,62 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    printf("cpr global version :\t%zu\n", cpr::global_phase_version::get_gpv().get_version());
+    printf("cpr global version :\t%zu\n", cpr::global_phase_version::get_gpv().get_version()); // NOLINT
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
 
 static void load_flags() {
     if (FLAGS_thread >= 1) {
-        printf("FLAGS_thread : %zu\n", FLAGS_thread);
+        printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        printf("Number of threads must be larger than 0.\n");
+        printf("Number of threads must be larger than 0.\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_record > 1) {
-        printf("FLAGS_record : %zu\n", FLAGS_record);
+        printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        printf("Number of database records(tuples) must be large than 0.\n");
+        printf("Number of database records(tuples) must be large than 0.\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_val_length > 1) {
-        printf("FLAGS_val_length : %zu\n", FLAGS_val_length);
+        printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        printf("Length of val must be larger than 0.\n");
+        printf("Length of val must be larger than 0.\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_ops >= 1) {
-        printf("FLAGS_ops : %zu\n", FLAGS_ops);
+        printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        printf("Number of operations in a transaction must be larger than 0.\n");
+        printf("Number of operations in a transaction must be larger than 0.\n"); // NOLINT
         exit(1);
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
-        printf("FLAGS_rratio : %zu\n", FLAGS_rratio);
+        printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        printf("Rate of reads in a transaction must be in the range 0 to 100.\n");
+        printf("Rate of reads in a transaction must be in the range 0 to 100.\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
-        printf("FLAGS_skew : %f\n", FLAGS_skew);
+        printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        printf("Access skew of transaction must be in the range 0 to 0.999... .\n");
+        printf("Access skew of transaction must be in the range 0 to 0.999... .\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_cpumhz > 1) {
-        printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz);
+        printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        printf("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.\n");
+        printf("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.\n"); // NOLINT
         exit(1);
     }
     if (FLAGS_duration >= 1) {
-        printf("FLAGS_duration : %zu\n", FLAGS_duration);
+        printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        printf("Duration of benchmark in seconds must be larger than 0.\n");
+        printf("Duration of benchmark in seconds must be larger than 0.\n"); // NOLINT
         exit(1);
     }
-    printf("Fin load_flags()\n");
+    printf("Fin load_flags()\n"); // NOLINT
 }
 
 int main(int argc, char* argv[]) try { // NOLINT
@@ -192,13 +192,13 @@ int main(int argc, char* argv[]) try { // NOLINT
     std::string log_dir = MAC2STR(PROJECT_ROOT);
     log_dir.append("/log_of_bench/ycsb");
     init(log_dir); // NOLINT
-    printf("Fin init\n");
+    printf("Fin init\n"); // NOLINT
     build_db(FLAGS_record, FLAGS_val_length);
-    printf("Fin build_db\n");
+    printf("Fin build_db\n"); // NOLINT
     invoke_leader();
-    printf("Fin invoke_leader\n");
+    printf("Fin invoke_leader\n"); // NOLINT
     fin();
-    printf("Fin fin\n");
+    printf("Fin fin\n"); // NOLINT
 
     spdlog::drop_all();
     return 0;
@@ -253,7 +253,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
             } else {
-                printf("%s : fatal error.\n", __FILE__);
+                printf("%s : fatal error.\n", __FILE__); // NOLINT
                 exit(1);
             }
         } else {
