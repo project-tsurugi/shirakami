@@ -325,6 +325,8 @@ public:
 
 #if defined(CPR)
 
+    void clear_diff_set() { return cpr_local_handle_.clear_diff_set(); }
+
     /**
      * @pre In this function, the worker thread selects the appropriate container from the mechanism 
      * that switches the container that stores information from time to time. Do not call from CPR manager.

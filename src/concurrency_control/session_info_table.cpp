@@ -77,6 +77,10 @@ void session_info_table::fin_kThreadTable() {
         itr.get_log_set().clear();
         itr.get_log_handler().get_log_file().close();
 #endif
+
+#ifdef CPR
+        itr.clear_diff_set();
+#endif
     }
 }
 

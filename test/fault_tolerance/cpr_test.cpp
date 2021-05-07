@@ -46,7 +46,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
-    ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), true);
+    ASSERT_EQ(boost::filesystem::exists(Log::get_kLogDirectory() + "/sst0"), true);
     ASSERT_EQ(leave(token), Status::OK);
 }
 

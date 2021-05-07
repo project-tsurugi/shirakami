@@ -30,7 +30,7 @@ Status enter(Token& token) { // NOLINT
     return ret_status;
 }
 
-void fin() {
+void fin() try {
 #ifdef CPR
     // Stop Checkpointing
     cpr::set_checkpoint_thread_end(true);
@@ -48,6 +48,8 @@ void fin() {
     session_info_table::fin_kThreadTable();
 
     yakushima::fin();
+} catch (std::exception& e) {
+    std::cerr << "fin() : " << e.what() << std::endl;
 }
 
 Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
@@ -332,16 +334,15 @@ Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOL
                      * This worker started in rest phase, meaning checkpoint thread does not scan yet.
                      */
                         if (rec_ptr->get_snap_ptr() == nullptr) {
-                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
-                        ti->get_gc_record_container().emplace_back(rec_ptr);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                            yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
+                            ti->get_gc_record_container().emplace_back(rec_ptr);
+                            storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                        } else {
+                            rec_ptr->set_version(ti->get_version());
+                            storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                            snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
+                        }
                     } else {
-                        rec_ptr->set_version(ti->get_version());
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                        snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
-                    }
-                }
-                    else {
                         /**
                      * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
                      */
@@ -349,39 +350,37 @@ Status init([[maybe_unused]] const std::string_view log_directory_path) { // NOL
                             /**
                          * Checkpoint thread did process, so it can remove from index.
                          */
-                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
-                        ti->get_gc_record_container().emplace_back(rec_ptr);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                    }
-                    else {
-                        /**
+                            yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
+                            ti->get_gc_record_container().emplace_back(rec_ptr);
+                            storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                        } else {
+                            /**
                          * else : The check pointer is responsible for deleting from the index and registering garbage.
                          */
-                        rec_ptr->get_stable() = rec_ptr->get_tuple();
-                        rec_ptr->set_version(ti->get_version() + 1);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                            rec_ptr->get_stable() = rec_ptr->get_tuple();
+                            rec_ptr->set_version(ti->get_version() + 1);
+                            storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                        }
                     }
-            }
 
 #else
                 if (rec_ptr->get_snap_ptr() == nullptr) {
                     // if no snapshot, it can immediately remove.
                     yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view);
-                ti->get_gc_record_container().emplace_back(rec_ptr);
-                storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-            }
-                else {
+                    ti->get_gc_record_container().emplace_back(rec_ptr);
+                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                } else {
                     snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
                     storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                 }
 #endif
-            break;
+                    break;
+                }
+                default:
+                    shirakami_logger->debug("fatal error.");
+                    std::abort();
+            }
         }
-        default:
-            shirakami_logger->debug("fatal error.");
-            std::abort();
     }
-}
-}
 
 } // namespace shirakami

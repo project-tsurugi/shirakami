@@ -9,12 +9,10 @@
 #include "fault_tolerance/include/log.h"
 
 #include "clock.h"
-#include "logger.h"
 
 #include "shirakami/interface.h"
 
 using namespace shirakami::epoch;
-using namespace shirakami::logger;
 
 namespace shirakami::cpr {
 
@@ -71,7 +69,6 @@ tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& c
 }
 
 void checkpoint_thread() {
-    setup_spdlog();
     auto wait_worker = [](phase new_phase) {
         bool continue_loop{}; // NOLINT
         do {
@@ -118,7 +115,7 @@ void checkpointing() {
     if (aggregate_buf.size() + aggregate_buf_seq.size() != 0) {
         logf.open(cpr::get_checkpointing_path(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
         if (!logf.is_open()) {
-            shirakami_logger->debug("It can't open file.");
+            std::cerr << "It can't open file." << std::endl;
             exit(1);
         }
     } else {
@@ -145,6 +142,19 @@ void checkpointing() {
             for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
                 Record* rec = itr.value().second;
 
+                auto for_deleted_record = [&ti, &rec, &yaku_token, &itr_storage] {
+                    tid_word c_tid = rec->get_tidw();
+                    if (!c_tid.get_latest() && c_tid.get_absent()) {
+                        c_tid.set_epoch(ti->get_epoch());
+                        storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
+                        if (rec->get_snap_ptr() == nullptr) {
+                            yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
+                            ti->get_gc_record_container().emplace_back(rec);
+                        } else {
+                            snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
+                        }
+                    }
+                };
                 if (rec == nullptr) {
                     l_recs.emplace_back(std::string_view(itr.key()));
                     continue;
@@ -162,22 +172,12 @@ void checkpointing() {
                 } else if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
                     l_recs.emplace_back(tup.get_key(), tup.get_value());
-
-                    // for deleted record
-                    tid_word c_tid = rec->get_tidw();
-                    if (!c_tid.get_latest() && c_tid.get_absent()) {
-                        c_tid.set_epoch(ti->get_epoch());
-                        storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
-                        if (rec->get_snap_ptr() == nullptr) {
-                            yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
-                            ti->get_gc_record_container().emplace_back(rec);
-                        } else {
-                            snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
-                        }
-                    }
+                    for_deleted_record();
                 } else {
-                    shirakami_logger->debug("fatal error");
-                    exit(1);
+                    const Tuple& tup = rec->get_tuple();
+                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    rec->set_version(ti->get_version() + 1);
+                    for_deleted_record();
                 }
                 // end : copy record
 
@@ -204,7 +204,7 @@ void checkpointing() {
     logf.flush();
     logf.close();
     if (logf.is_open()) {
-        shirakami_logger->debug("it can't close log file.");
+        std::cerr << "it can't close log file." << std::endl;
         exit(1);
     }
 
@@ -212,10 +212,10 @@ void checkpointing() {
     try {
         boost::filesystem::rename(get_checkpointing_path(), fname);
     } catch (boost::filesystem::filesystem_error& ex) {
-        shirakami_logger->debug("filesystem_error.");
+        std::cerr << "filesystem_error." << std::endl;
         exit(1);
     } catch (...) {
-        shirakami_logger->debug("unknown error.");
+        std::cerr << "unknown error" << std::endl;
         exit(1);
     }
 }
