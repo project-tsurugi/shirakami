@@ -24,6 +24,9 @@ namespace shirakami {
 /**
  * @brief Create one table and return its handler.
  * @param[out] storage output parameter to pass the storage handle, that is used for the subsequent calls related with the storage.
+ * Until delete_storage is called for the first time, multiple register_storage calls assign Storage value monotonically.
+ * That is, Storage value assigned by register_storage is larger than the one assigned by previous call as long as no delete_storage is called.
+ * Once delete_storage is called, Storage value can be recycled and there is no guarantee on the monotonicity.
  * @return Status::OK if successful.
  * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum value of the handler.
  */
