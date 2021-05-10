@@ -23,8 +23,8 @@
 
 // shirakami/bench
 #include "build_db.h"
+#include "gen_key.h"
 #include "gen_tx.h"
-#include "shirakami_string.h"
 
 // shirakami/src/include
 #include "atomic_wrapper.h"
@@ -58,12 +58,12 @@ DEFINE_uint64(                                                           // NOLI
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
         "time.");                                                        // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
-DEFINE_uint64(key_length, 8, "# length of key.");                        // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
-DEFINE_uint64(record, 100, "# database records(tuples).");               // NOLINT
+DEFINE_uint64(record, 10, "# database records(tuples).");               // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
+DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8.");   // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
 
 /**
@@ -191,14 +191,10 @@ int main(int argc, char* argv[]) try { // NOLINT
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
     log_dir.append("/log_of_bench/ycsb");
-    init(log_dir); // NOLINT
-    printf("Fin init\n"); // NOLINT
-    build_db(FLAGS_record, FLAGS_val_length);
-    printf("Fin build_db\n"); // NOLINT
+    init(log_dir);        // NOLINT
+    build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length);
     invoke_leader();
-    printf("Fin invoke_leader\n"); // NOLINT
     fin();
-    printf("Fin fin\n"); // NOLINT
 
     spdlog::drop_all();
     return 0;
@@ -249,27 +245,42 @@ void worker(const std::size_t thid, char& ready, const bool& start,
              * special workloads.
              */
             if (FLAGS_include_long_tx) {
-                gen_tx_rw(opr_set, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
+                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
             } else if (FLAGS_include_scan_tx) {
-                gen_tx_scan(opr_set, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
+                gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
             } else {
                 printf("%s : fatal error.\n", __FILE__); // NOLINT
                 exit(1);
             }
         } else {
-            gen_tx_rw(opr_set, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
+            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
         }
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
-                search_key(token, storage, itr.get_key(), &tuple);
+                auto ret = search_key(token, storage, itr.get_key(), &tuple);
+
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
+                auto ret = update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);
                 std::vector<const Tuple*> scan_res;
-                scan_key(token, storage, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),
-                         scan_endpoint::INCLUSIVE, scan_res);
+                //                scan_key(token, storage, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),scan_endpoint::INCLUSIVE, scan_res);
+                scan_key(token, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, scan_res);
+                std::cout << "list" << std::endl;
+                for (auto&& it : scan_res) {
+                    std::cout << it->get_key() << std::endl;
+                    std::flush(std::cout);
+                }
+                exit(1);
+#ifndef NDEBUG
+                if (scan_res.size() != FLAGS_scan_elem_num) {
+                    std::cerr << __FILE__ << " : " << __LINE__ << " : " << scan_res.size() << std::endl;
+                    exit(1);
+                } else {
+                    std::cout << "ok" << std::endl;
+                }
+#endif
             }
         }
         if (commit(token) == Status::OK) { // NOLINT

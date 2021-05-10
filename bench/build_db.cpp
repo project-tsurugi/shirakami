@@ -16,7 +16,7 @@
 
 // shirakami/bench
 #include "./include/build_db.h"
-#include "./include/shirakami_string.h"
+#include "./include/gen_key.h"
 
 // shirakami-impl interface library
 #include "clock.h"
@@ -39,7 +39,7 @@ size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     return std::thread::hardware_concurrency();
 }
 
-void parallel_build_db(const std::size_t start, const std::size_t end,
+void parallel_build_db(const std::size_t start, const std::size_t end, const std::size_t key_length,
                        const std::size_t value_length) {
     Xoroshiro128Plus rnd;
     Token token{};
@@ -48,28 +48,19 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     tx_begin(token); // NOLINT
 
     for (uint64_t i = start; i <= end; ++i) {
-        uint64_t keybs = __builtin_bswap64(i);
-        if (Status::OK != insert(token, storage, {reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}, std::string(value_length, '0'))) { // NOLINT
-            shirakami_logger->debug("fatal error.");
-            exit(1);
-        }
+        assert(Status::OK == insert(token, storage, make_key(key_length, i), std::string(value_length, '0'))); // NOLINT
     }
-    if (Status::OK != commit(token)) { // NOLINT
-        shirakami_logger->debug("fatal error.");
-        exit(1);
-    }
+    assert(Status::OK == commit(token)); // NOLINT
     leave(token);
 }
 
-void build_db(const std::size_t record, const std::size_t value_length) {
+void build_db(const std::size_t record, const std::size_t key_length, const std::size_t value_length) {
     register_storage(storage);
-    shirakami_logger->debug("ycsb::build_mtdb");
     std::vector<std::thread> thv;
 
     size_t max_thread{decideParallelBuildNumber(record)};
-    shirakami_logger->debug("start parallel_build_db with {0} threads.", max_thread);
     for (size_t i = 0; i < max_thread; ++i) {
-        thv.emplace_back(parallel_build_db, i * (record / max_thread), i != max_thread - 1 ? (i + 1) * (record / max_thread) - 1 : record - 1, value_length);
+        thv.emplace_back(parallel_build_db, i * (record / max_thread), i != max_thread - 1 ? (i + 1) * (record / max_thread) - 1 : record - 1, key_length, value_length);
     }
 
     for (auto& th : thv) th.join();

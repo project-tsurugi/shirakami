@@ -5,11 +5,10 @@
 
 #pragma once
 
-#include "./shirakami_string.h"
-
 // shirakami/src/
 #include "concurrency_control/include/scheme.h"
 
+#include "gen_key.h"
 #include "logger.h"
 #include "random.h"
 #include "zipf.h"
@@ -25,15 +24,11 @@ public:
     opr_obj(const OP_TYPE type, std::string_view key)
         : type_(type), key_(key) {} // NOLINT
 
-    // for scan / update
+    // for scan
     opr_obj(const OP_TYPE type, std::string_view str1, std::string_view str2)
         : type_(type) {
-        if (type == OP_TYPE::UPDATE) {
-            key_ = str1;
-        } else if (type == OP_TYPE::SCAN) {
             scan_l_key_ = str1;
             scan_r_key_ = str2;
-        }
     }
 
     opr_obj(const opr_obj& right) = delete;
@@ -81,25 +76,22 @@ private:
  * @brief generate search/update operations.
  */
 static void
-gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t tpnm, const std::size_t opnm, const std::size_t rratio, Xoroshiro128Plus& rnd, FastZipf& zipf) {
+gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm, const std::size_t opnm, const std::size_t rratio, Xoroshiro128Plus& rnd, FastZipf& zipf) {
     using namespace shirakami;
     opr_set.clear();
     for (std::size_t i = 0; i < opnm; ++i) {
-        uint64_t keynm = zipf() % tpnm;
-        uint64_t keybs = __builtin_bswap64(keynm);
+        std::uint64_t keynm = zipf() % tpnm;
         constexpr std::size_t thou = 100;
         if ((rnd.next() % thou) < rratio) {
-            opr_set.emplace_back(OP_TYPE::SEARCH,
-                                 std::string_view{reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}); // NOLINT
+            opr_set.emplace_back(OP_TYPE::SEARCH, make_key(key_len, keynm)); // NOLINT
         } else {
-            opr_set.emplace_back(OP_TYPE::UPDATE,
-                                 std::string_view{reinterpret_cast<char*>(&keybs), sizeof(uint64_t)}); // NOLINT
+            opr_set.emplace_back(OP_TYPE::UPDATE, make_key(key_len, keynm)); // NOLINT
         }
     }
 }
 
 static void
-gen_tx_scan(std::vector<opr_obj>& opr_set, const std::size_t tpnm, const std::size_t scan_elem_n, Xoroshiro128Plus& rnd,FastZipf& zipf) {
+gen_tx_scan(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm, const std::size_t scan_elem_n, Xoroshiro128Plus& rnd, FastZipf& zipf) {
     using namespace shirakami;
     opr_set.clear();
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
@@ -108,10 +100,7 @@ gen_tx_scan(std::vector<opr_obj>& opr_set, const std::size_t tpnm, const std::si
         shirakami::logger::shirakami_logger->debug("fatal error.");
         exit(1);
     }
-    uint64_t key_l_bs = __builtin_bswap64(key_l_nm);
-    uint64_t key_r_bs = __builtin_bswap64(key_r_nm);
-    opr_set.emplace_back(OP_TYPE::SCAN, std::string_view{reinterpret_cast<char*>(&key_l_bs), sizeof(uint64_t)}, // NOLINT
-                         std::string_view{reinterpret_cast<char*>(&key_r_bs), sizeof(uint64_t)});               // NOLINT
+    opr_set.emplace_back(OP_TYPE::SCAN, make_key(key_len, key_l_nm), make_key(key_len, key_r_nm));
 }
 
 } // namespace shirakami
