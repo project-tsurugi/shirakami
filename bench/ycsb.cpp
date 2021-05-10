@@ -133,6 +133,9 @@ static void load_flags() {
         printf("Number of database records(tuples) must be large than 0.\n"); // NOLINT
         exit(1);
     }
+    if (FLAGS_key_length > 0) {
+        printf("FLAGS_key_length : %zu\n", FLAGS_key_length); // NOLINT
+    }
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
@@ -258,18 +261,19 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
+                uint64_t ctr{0};
                 for (;;) {
 
                     auto ret = search_key(token, storage, itr.get_key(), &tuple);
                     if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
 #ifndef NDEBUG
-                    assert(ret == Status::WARN_CONCURRENT_UPDATE);
+                    assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
 #endif
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 auto ret = update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK || ret == Status::WARN_WRITE_TO_LOCAL_WRITE);
+                assert(ret == Status::OK || ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);

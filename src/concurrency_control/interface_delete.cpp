@@ -25,8 +25,27 @@ namespace shirakami {
         constexpr std::size_t v_index{1};
         yakushima::scan({reinterpret_cast<char*>(&elem), sizeof(elem)}, "", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
-        for (auto&& itr : scan_res) {
-            delete *std::get<v_index>(itr); // NOLINT
+        if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
+                                          // single thread clean up
+                                          std::cout << "start single thread clean up " << scan_res.size() << std::endl;
+            for (auto&& itr : scan_res) {
+                delete *std::get<v_index>(itr); // NOLINT
+            }
+        } else {
+                                          std::cout << "start multi  thread clean up " << scan_res.size() << std::endl;
+            // multi threads clean up
+            auto process = [&scan_res]([[maybe_unused]] std::size_t const begin, [[maybe_unused]] std::size_t const end) {
+                for (std::size_t i = begin; i < end; ++i) {
+                    delete *std::get<v_index>(scan_res[i]); // NOLINT
+                }
+            };
+            std::size_t th_size = std::thread::hardware_concurrency();
+            std::vector<std::thread> th_vc;
+            th_vc.reserve(th_size);
+            for (std::size_t i = 0; i < th_size; ++i) {
+                th_vc.emplace_back(process, i * (scan_res.size() / th_size), i != th_size - 1 ? (i + 1) * (scan_res.size() / th_size) : scan_res.size());
+            }
+            for (auto&& th : th_vc) th.join();
         }
     }
 

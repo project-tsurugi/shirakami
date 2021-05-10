@@ -47,10 +47,10 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(simple_insert, long_insert) { // NOLINT
+TEST_F(simple_insert, long_value_insert) { // NOLINT
     register_storage(storage);
-    std::string k("CUSTOMER");       // NOLINT
-    std::string v(                   // NOLINT
+    std::string k("CUSTOMER"); // NOLINT
+    std::string v(             // NOLINT
             "b234567890123456789012345678901234567890123456789012345678901234567890"
             "12"
             "3456789012345678901234567890123456789012345678901234567890123456789012"
@@ -83,4 +83,18 @@ TEST_F(simple_insert, long_insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_insert, long_key_insert) { // NOLINT
+    register_storage(storage);
+    std::string k(56, '0'); // NOLINT
+    k += "a";
+    std::string v("v");
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    Tuple* tuple;
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
 } // namespace shirakami::testing
