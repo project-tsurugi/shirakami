@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 file(GLOB TEST_SOURCES
+        "bench/*.cpp"
         "concurrency_control/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
