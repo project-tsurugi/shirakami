@@ -49,7 +49,6 @@ cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 
 # about index
 add_definitions(-DINDEX_YAKUSHIMA)
-add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=${cores})
 add_definitions(-DYAKUSHIMA_EPOCH_TIME=40)
 message("It uses yakushima as index structure.")
 
@@ -87,9 +86,11 @@ endif ()
 add_definitions(-DPROJECT_ROOT=${PROJECT_SOURCE_DIR})
 
 if (NOT DEFINED KVS_MAX_PARALLEL_THREADS)
-    add_definitions(-DKVS_MAX_PARALLEL_THREADS=${cores})
+    add_definitions(-DKVS_MAX_PARALLEL_THREADS=300)
+    add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=300)
 else ()
     add_definitions(-DKVS_MAX_PARALLEL_THREADS=${KVS_MAX_PARALLEL_THREADS})
+    add_definitions(-DYAKUSHIMA_MAX_PARALLEL_SESSIONS=${KVS_MAX_PARALLEL_THREADS})
 endif ()
 
 # End : about kvs

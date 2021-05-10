@@ -54,12 +54,12 @@ using namespace spdlog;
  * general option.
  */
 DEFINE_uint64(                                                           // NOLINT
-        cpumhz, 2000,                                                    // NOLINT
+        cpumhz, 2100,                                                    // NOLINT
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
         "time.");                                                        // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
-DEFINE_uint64(record, 10, "# database records(tuples).");               // NOLINT
+DEFINE_uint64(record, 10, "# database records(tuples).");                // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) try { // NOLINT
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
     log_dir.append("/log_of_bench/ycsb");
-    init(log_dir);        // NOLINT
+    init(log_dir); // NOLINT
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length);
     invoke_leader();
     fin();
@@ -258,10 +258,19 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
-                auto ret = search_key(token, storage, itr.get_key(), &tuple);
+                for (;;) {
 
+                    auto ret = search_key(token, storage, itr.get_key(), &tuple);
+                    if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
+#ifndef NDEBUG
+                    assert(ret == Status::WARN_CONCURRENT_UPDATE);
+#endif
+                }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 auto ret = update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
+#ifndef NDEBUG
+                assert(ret == Status::OK || ret == Status::WARN_WRITE_TO_LOCAL_WRITE);
+#endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);
                 std::vector<const Tuple*> scan_res;
