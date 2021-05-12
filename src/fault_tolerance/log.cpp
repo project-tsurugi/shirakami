@@ -51,13 +51,13 @@ namespace shirakami {
 
         const std::size_t fix_size = sizeof(tid_word) + sizeof(OP_TYPE);
         while (sizeof(LogHeader) ==
-               logfile.read(reinterpret_cast<void*>(&log_header),  // NOLINT
+               logfile.read(reinterpret_cast<void*>(&log_header), // NOLINT
                             sizeof(LogHeader))) {
             std::vector<LogRecord> log_tmp_buf;
             for (unsigned int j = 0; j < log_header.get_log_rec_num(); ++j) {
                 if (fix_size != logfile.read(static_cast<void*>(&log), fix_size)) break;
-                std::unique_ptr<char[]> key_ptr;    // NOLINT
-                std::unique_ptr<char[]> value_ptr;  // NOLINT
+                std::unique_ptr<char[]> key_ptr;   // NOLINT
+                std::unique_ptr<char[]> value_ptr; // NOLINT
                 std::size_t key_length{};
                 std::size_t value_length{};
                 // read key_length
@@ -67,7 +67,7 @@ namespace shirakami {
                 }
                 // read key_body
                 if (key_length > 0) {
-                    key_ptr = std::make_unique<char[]>(key_length);  // NOLINT
+                    key_ptr = std::make_unique<char[]>(key_length); // NOLINT
                     if (key_length !=
                         logfile.read(static_cast<void*>(key_ptr.get()), key_length)) {
                         break;
@@ -81,7 +81,7 @@ namespace shirakami {
                 }
                 // read value_body
                 if (value_length > 0) {
-                    value_ptr = std::make_unique<char[]>(value_length);  // NOLINT
+                    value_ptr = std::make_unique<char[]>(value_length); // NOLINT
                     if (value_length !=
                         logfile.read(static_cast<void*>(value_ptr.get()), value_length)) {
                         break;
@@ -93,7 +93,7 @@ namespace shirakami {
                 log_tmp_buf.emplace_back(std::move(log));
             }
             if (log_header.get_checksum() == 0) {
-                for (auto &&itr : log_tmp_buf) {
+                for (auto&& itr : log_tmp_buf) {
                     log_set.emplace_back(std::move(itr));
                 }
             } else {
@@ -115,7 +115,7 @@ namespace shirakami {
 
     Token s{};
     enter(s);
-    for (auto &&itr : log_set) {
+    for (auto&& itr : log_set) {
         if (itr.get_tid().get_epoch() > recovery_epoch) break;
         if (itr.get_op() == OP_TYPE::UPDATE || itr.get_op() == OP_TYPE::INSERT) {
             upsert(s, itr.get_tuple()->get_key(), itr.get_tuple()->get_value());
@@ -127,47 +127,81 @@ namespace shirakami {
     leave(s);
 
 #elif defined(CPR)
+    auto process_from_file = [](std::string fname) {
+        std::ifstream logf;
+        logf.open(fname, std::ios_base::in | std::ios_base::binary);
+
+        std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()}; // NOLINT
+        size_t offset{0};
+        cpr::log_records restore;
+
+        yakushima::Token token{};
+        yakushima::enter(token);
+        for (;;) {
+            if (offset == buffer.size()) break;
+            try {
+                auto oh = msgpack::unpack(buffer.data(), buffer.size(), offset); // NOLINT
+                auto obj = oh.get();
+                obj.convert(restore);
+            } catch (const std::bad_cast& e) {
+                shirakami_logger->debug("cast error.");
+                exit(1);
+            } catch (...) {
+                shirakami_logger->debug("unknown error.");
+                exit(1);
+            }
+
+            // recover from restore
+            std::vector<cpr::log_record>& logs = restore.get_vec();
+            for (auto&& elem : logs) {
+                Record* rec_ptr = new Record(elem.get_key(), elem.get_val()); // NOLINT
+                rec_ptr->get_tidw() = 0;
+                yakushima::create_storage(elem.get_storage()); // it may already exist.
+                if (std::get<0>(yakushima::get<Record*>(elem.get_storage(), elem.get_key())) == nullptr) {
+                    // no record, so simply do
+                    if (elem.get_delete_op()) {
+                        yakushima::remove(token, elem.get_storage(), elem.get_key());
+                    } else {
+                        yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
+                    }
+                } else {
+                    // exist record
+                    if (elem.get_delete_op()) {
+                        yakushima::remove(token, elem.get_storage(), elem.get_key());
+                    } else {
+                        // todo. we impl yakushima's update func. but now, the func is not impled. so remove and put.
+                        yakushima::remove(token, elem.get_storage(), elem.get_key());
+                        yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
+                    }
+                }
+            }
+        }
+        yakushima::leave(token);
+    };
+
     // check whether checkpoint file exists.
     boost::system::error_code ec;
     const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
         shirakami_logger->debug("no checkpoint file to recover.");
-        return;
     }
     shirakami_logger->debug("checkpoint file to recover exists.");
+    process_from_file(cpr::get_checkpoint_path());
 
-    std::ifstream logf;
-    logf.open(cpr::get_checkpoint_path(), std::ios_base::in | std::ios_base::binary);
-
-    std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()}; // NOLINT
-    size_t offset{0};
-    cpr::log_records restore;
-
+    // for sst files
+    cpr::version_type ver{0};
     for (;;) {
-        if (offset == buffer.size()) break;
-        try {
-            auto oh = msgpack::unpack(buffer.data(), buffer.size(), offset); // NOLINT
-            auto obj = oh.get();
-            obj.convert(restore);
-        } catch (const std::bad_cast &e) {
-            shirakami_logger->debug("cast error.");
-            exit(1);
-        } catch (...) {
-            shirakami_logger->debug("unknown error.");
-            exit(1);
-        }
+        std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(ver)};
 
-        // recover from restore
-        std::vector<cpr::log_record> &logs = restore.get_vec();
-        for (auto &&elem : logs) {
-            Record* rec_ptr = new Record(elem.get_key(), elem.get_val()); // NOLINT
-            rec_ptr->get_tidw() = 0;
-            yakushima::status insert_result{yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr)}; // NOLINT
-            if (insert_result != yakushima::status::OK) {
-                shirakami_logger->debug("cpr recovery error.");
-                exit(1);
-            }
+        // check existing
+        boost::system::error_code ec;
+        const bool find_result = boost::filesystem::exists(fname, ec);
+        if (!find_result || ec) {
+            return;
         }
+        process_from_file(fname);
+
+        ++ver;
     }
 
 #endif

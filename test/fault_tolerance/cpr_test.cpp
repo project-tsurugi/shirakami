@@ -20,7 +20,6 @@ Storage storage;
 class cpr_test : public ::testing::Test {
 public:
     void SetUp() override {
-        register_storage(storage);
     }
 
     void TearDown() override { fin(); }
@@ -31,6 +30,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     log_dir.append("/test/tid_test_log");
     init(false, log_dir); // NOLINT
     setup_spdlog();
+    register_storage(storage);
     ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), false); // null db has no checkpoint.
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
@@ -42,7 +42,6 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     ASSERT_EQ(leave(token), Status::OK);
 }
 
-#if 0
 TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
     log_dir.append("/test/tid_test_log");
@@ -51,17 +50,17 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     Tuple* tup{};
-    ASSERT_EQ(search_key(token, k, &tup), Status::OK);
+    ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), k); // NOLINT
+    std::string tup_key{tup->get_key()};
     ASSERT_EQ(commit(token), Status::OK);      // NOLINT
-    ASSERT_EQ(delete_record(token, tup->get_key()), Status::OK);
+    ASSERT_EQ(delete_record(token, storage, tup_key), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
 }
-#endif
 
-TEST_F(cpr_test, cpr_bound) { // NOLINT
+TEST_F(cpr_test, cpr_bound) {                   // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
     log_dir.append("/test/tid_test_log");
     init(false, log_dir); // NOLINT

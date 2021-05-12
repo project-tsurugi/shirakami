@@ -174,23 +174,27 @@ public:
     /**
      * @brief for delete operation.
      */
-    log_record(std::string_view const key) {
+    log_record(std::string_view const storage, std::string_view const key) {
+        storage_ = storage;
         key_ = key;
         val_.clear();
         delete_op_ = true;
     }
 
-    log_record(std::string_view const key, std::string_view const val) {
+    log_record(std::string_view const storage, std::string_view const key, std::string_view const val) {
+        storage_ = storage;
         key_ = key;
         val_ = val;
         delete_op_ = false;
     }
 
-    std::string_view get_key() { return key_; } // NOLINT
+    bool get_delete_op() const { return delete_op_; }
 
-    std::string_view get_storage() { return storage_; } // NOLINT
+    std::string_view get_key() const { return key_; } // NOLINT
 
-    std::string_view get_val() { return val_; } // NOLINT
+    std::string_view get_storage() const { return storage_; } // NOLINT
+
+    std::string_view get_val() const { return val_; } // NOLINT
 
     MSGPACK_DEFINE(delete_op_, storage_, key_, val_);
 
@@ -223,12 +227,12 @@ private:
 
 class log_records {
 public:
-    void emplace_back(std::string_view const key, std::string_view const val) {
-        vec_.emplace_back(key, val);
+    void emplace_back(std::string_view const storage, std::string_view const key, std::string_view const val) {
+        vec_.emplace_back(storage, key, val);
     }
 
-    void emplace_back(std::string_view const key) {
-        vec_.emplace_back(key);
+    void emplace_back(std::string_view const storage, std::string_view const key) {
+        vec_.emplace_back(storage, key);
     }
 
     void emplace_back_seq(log_record_of_seq elem) {

@@ -156,14 +156,14 @@ void checkpointing() {
                     }
                 };
                 if (rec == nullptr) {
-                    l_recs.emplace_back(std::string_view(itr.key()));
+                    l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()));
                     continue;
                 }
                 rec->get_tidw().lock();
                 // begin : copy record
                 if (rec->get_version() == pv.get_version()) {
                     const Tuple& tup = rec->get_tuple();
-                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
                     /**
               * update only the version number to prevent other workers from making 
               * redundant copies after releasing the lock.
@@ -171,11 +171,11 @@ void checkpointing() {
                     rec->set_version(pv.get_version() + 1);
                 } else if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
-                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
                     for_deleted_record();
                 } else {
                     const Tuple& tup = rec->get_tuple();
-                    l_recs.emplace_back(tup.get_key(), tup.get_value());
+                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
                     rec->set_version(ti->get_version() + 1);
                     for_deleted_record();
                 }
