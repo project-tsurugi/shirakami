@@ -77,6 +77,9 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple** const tuple) {
     auto* ti = static_cast<session_info*>(token);
+    if (ti->get_read_only()) {
+        return snapshot_interface::read_from_scan(ti, handle, tuple);
+    }
 
     /**
      * Check whether the handle is valid.

@@ -35,13 +35,7 @@ TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // trying to wait enough
-#ifdef CPR
-    shirakami::cpr::wait_next_checkpoint();
-#endif
     std::this_thread::sleep_for(3s);
-#ifdef CPR
-    shirakami::cpr::wait_next_checkpoint();
-#endif
 
     tx_begin(s, true);
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));

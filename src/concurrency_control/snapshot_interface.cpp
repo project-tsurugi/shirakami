@@ -72,6 +72,7 @@ extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** 
     }
 
     auto itr = scan_buf.begin() + scan_index;
+    ++scan_index;
     return read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple);
 }
 
