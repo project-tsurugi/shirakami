@@ -22,7 +22,10 @@ public:
         register_storage(st);
     }
 
-    void TearDown() override { fin(); }
+    void TearDown() override {
+        delete_storage(st);
+        fin();
+    }
 };
 
 TEST_F(simple_upsert, upsert) { // NOLINT
