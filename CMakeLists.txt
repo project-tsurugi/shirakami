@@ -30,7 +30,6 @@ option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 
 # transaction processing logic
-option(BUILD_WITH_RECOVERY "Build with recovery from log files." OFF)
 option(BUILD_PWAL "Build parallel write ahead logging as logging." OFF)
 option(PWAL_ENABLE_READ_LOG "PWAL log read (/ write) informations to verify whether committed schedule is valid." OFF)
 option(BUILD_CPR "Build concurrent prefix recovery as logging." OFF)

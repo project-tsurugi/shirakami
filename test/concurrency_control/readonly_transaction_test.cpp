@@ -19,15 +19,19 @@ Storage storage;
 
 class readonly_transaction_test : public ::testing::Test { // NOLINT
 public:
-    void SetUp() override { init(); } // NOLINT
+    void SetUp() override {
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/readonly_transaction_test_log");
+        init(false, log_dir); // NOLINT
+    }
 
     void TearDown() override { fin(); }
 };
 
 TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
     register_storage(storage);
-    std::string k{"k"};   // NOLINT
-    std::string v{"v"};     // NOLINT
+    std::string k{"k"}; // NOLINT
+    std::string v{"v"}; // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ScanHandle handle{};

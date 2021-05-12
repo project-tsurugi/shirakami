@@ -154,12 +154,13 @@ extern void fin();
  * @brief initialize shirakami environment
  * @details When it starts to use this system, in other words, it starts to
  * build database, it must be executed first.
+ * @param[in] enable_recovery whether it is enable recovery from existing log.
  * @param[in] log_directory_path of WAL directory.
  * @return Status::ERR_INVALID_ARGS The args as a log directory path is invalid.
  * Some files which has the same path exist.
  * @return Status::OK
  */
-extern Status init(std::string_view log_directory_path = MAC2STR(PROJECT_ROOT)); // NOLINT
+extern Status init(bool enable_recovery = false, std::string_view log_directory_path = MAC2STR(PROJECT_ROOT)); // NOLINT
 
 /**
  * @brief insert the record with given key/value

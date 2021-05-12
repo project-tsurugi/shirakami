@@ -18,14 +18,9 @@ namespace shirakami::testing {
 class scan_insert_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-#if defined(RECOVERY)
-        std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        path += "/log/checkpoint";
-        if (boost::filesystem::exists(path)) {
-            boost::filesystem::remove(path);
-        }
-#endif
-        init(); // NOLINT
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/scan_insert_test_log");
+        init(false, log_dir); // NOLINT
     }
 
     void TearDown() override { fin(); }

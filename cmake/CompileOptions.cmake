@@ -74,11 +74,6 @@ else ()
     message("It uses no logging method.")
 endif ()
 
-if (BUILD_WITH_RECOVERY)
-    message("It starts with recovery.")
-    add_definitions(-DRECOVERY)
-endif ()
-
 # Begin : parameter settings
 
 # Begin : about kvs

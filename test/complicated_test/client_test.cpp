@@ -18,9 +18,9 @@
 #include <thread>
 
 #include "cpu.h"
-#include "gtest/gtest.h"
 #include "test_param.h"
 #include "tuple_local.h"
+#include "gtest/gtest.h"
 
 #include "shirakami/interface.h"
 
@@ -36,7 +36,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-std::array<std::vector<Tuple*>, Nthread> DataList{};  // NOLINT
+std::array<std::vector<Tuple*>, Nthread> DataList{}; // NOLINT
 Storage storage;
 
 /**
@@ -45,28 +45,28 @@ Storage storage;
  */
 static void delete_DataList() {
     for (unsigned int i = 0; i < Nthread; ++i) {
-        for (auto &&itr : DataList.at(i)) {
-            delete itr;  // NOLINT
+        for (auto&& itr : DataList.at(i)) {
+            delete itr; // NOLINT
         }
     }
 }
 
 static void make_string(char* string, const std::size_t len) {
     for (unsigned int i = 0; i < len - 1; ++i) {
-        string[i] = rand() % 24 + 'a';  // NOLINT
+        string[i] = rand() % 24 + 'a'; // NOLINT
     }
     // if you use printf function with %s format later,
     // the end of aray must be null chara.
-    string[len - 1] = '\0';  // NOLINT
+    string[len - 1] = '\0'; // NOLINT
 }
 
 static void exec_insert(Token token, std::size_t th_nm) {
     for (unsigned int i = 0; i < Max_insert; ++i) {
-        std::string key(Len_key, '0');  // NOLINT
+        std::string key(Len_key, '0'); // NOLINT
         make_string(key.data(), Len_key);
-        std::string val(Len_val, '0');  // NOLINT
+        std::string val(Len_val, '0'); // NOLINT
         make_string(val.data(), Len_val);
-        Tuple* tuple = new Tuple(key, val);  // NOLINT
+        Tuple* tuple = new Tuple(key, val); // NOLINT
         DataList.at(th_nm).push_back(tuple);
         insert(token, storage, key, val);
     }
@@ -76,7 +76,7 @@ static void exec_insert(Token token, std::size_t th_nm) {
 }
 
 static void exec_search_key(Token token, std::size_t th_nm) {
-    for (auto &&itr : DataList.at(th_nm)) {
+    for (auto&& itr : DataList.at(th_nm)) {
         Tuple* tuple{};
         search_key(token, storage, itr->get_key(), &tuple);
     }
@@ -89,8 +89,8 @@ static void exec_scan_key(Token token) {
         std::vector<const Tuple*> result;
         scan_key(token, storage, {static_cast<const char*>("a"), 1}, scan_endpoint::INCLUSIVE,
                  {static_cast<const char*>("z"), 1}, scan_endpoint::INCLUSIVE, result);
-        for (auto &&itr : result) {
-            delete itr;  // NOLINT
+        for (auto&& itr : result) {
+            delete itr; // NOLINT
         }
         Status commit_result = commit(token);
         ASSERT_EQ(commit_result, Status::OK);
@@ -100,7 +100,7 @@ static void exec_scan_key(Token token) {
 }
 
 static void exec_update(Token token, std::size_t thnm) {
-    for (auto &&itr : DataList.at(thnm)) {
+    for (auto&& itr : DataList.at(thnm)) {
         update(token, storage, itr->get_key(),
                {static_cast<const char*>("bouya-yoikoda-nenne-shina"),
                 strlen("bouya-yoikoda-nenne-shina")});
@@ -111,7 +111,7 @@ static void exec_update(Token token, std::size_t thnm) {
 
 static void exec_delete(Token token, std::size_t thnm) {
 
-    for (auto &&itr : DataList.at(thnm)) {
+    for (auto&& itr : DataList.at(thnm)) {
         delete_record(token, storage, itr->get_key());
     }
     Status result = commit(token);
@@ -139,7 +139,7 @@ static void test_delete(Token token, std::size_t thnm) {
 static void test_single_operation(Token token, std::size_t thnm) {
 #ifdef SHIRAKAMI_LINUX
     setThreadAffinity(0);
-#endif  // SHIRAKAMI_LINUX
+#endif // SHIRAKAMI_LINUX
     test_insert(token, thnm);
     test_search(token, thnm);
     test_update(token, thnm);
@@ -164,10 +164,10 @@ static void worker(const size_t thid) {
 static void test() {
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < Nthread; ++i) {
-        thv.emplace_back(worker, i);  // NOLINT
+        thv.emplace_back(worker, i); // NOLINT
     }
 
-    for (auto &th : thv) th.join();
+    for (auto& th : thv) th.join();
 
     delete_DataList();
 }
@@ -175,8 +175,10 @@ static void test() {
 class client : public ::testing::Test {
 };
 
-TEST_F(client, single_thread_test) {  // NOLINT
-    init();                             // NOLINT
+TEST_F(client, single_thread_test) {            // NOLINT
+    std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+    log_dir.append("/test/client_test_log");
+    init(false, log_dir); // NOLINT
     register_storage(storage);
 
 #if defined(RECOVERY)
@@ -191,4 +193,4 @@ TEST_F(client, single_thread_test) {  // NOLINT
     fin();
 }
 
-}  // namespace shirakami::testing
+} // namespace shirakami::testing

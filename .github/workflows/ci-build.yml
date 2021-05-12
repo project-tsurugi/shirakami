@@ -23,6 +23,11 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GHA_PAT }}
 
+      - id: Make_build_dir
+        name: Make_build_dir
+        run: |
+          mkdir -p build
+
       - id: CMake_Build_with_cpr
         name: CMake_Build_with_cpr
         run: |
@@ -47,6 +52,8 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
+          ctest --verbose --timeout 100 -j 100
+          cd ../build_cpr
           ctest --verbose --timeout 100 -j 100
 
       - id: Clang-Tidy

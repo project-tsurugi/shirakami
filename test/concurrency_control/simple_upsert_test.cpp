@@ -18,7 +18,9 @@ Storage st{};
 class simple_upsert : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init();
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/simple_upsert_test_log");
+        init(false, log_dir); // NOLINT
         register_storage(st);
     }
 

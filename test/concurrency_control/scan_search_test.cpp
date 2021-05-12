@@ -26,7 +26,11 @@ namespace shirakami::testing {
 
 class scan_search : public ::testing::Test { // NOLINT
 public:
-    void SetUp() override { init(); } // NOLINT
+    void SetUp() override {
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/scan_search_test_log");
+        init(false, log_dir); // NOLINT
+    }
 
     void TearDown() override {
 #if defined(RECOVERY)

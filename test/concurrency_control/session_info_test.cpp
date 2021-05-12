@@ -11,7 +11,11 @@ using namespace shirakami;
 
 class session_info_test : public ::testing::Test {
 public:
-    void SetUp() override { init(); } // NOLINT
+    void SetUp() override {
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/session_info_test_log");
+        init(false, log_dir); // NOLINT
+    }
 
     void TearDown() override { fin(); }
 };

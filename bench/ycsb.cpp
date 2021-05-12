@@ -193,8 +193,8 @@ int main(int argc, char* argv[]) try { // NOLINT
     }
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/log_of_bench/ycsb");
-    init(log_dir); // NOLINT
+    log_dir.append("/build/bench/ycsb_log");
+    init(false, log_dir); // NOLINT
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length);
     invoke_leader();
     fin();

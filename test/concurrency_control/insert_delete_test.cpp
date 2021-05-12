@@ -10,7 +10,11 @@ using namespace shirakami;
 
 class insert_delete : public ::testing::Test { // NOLINT
 public:
-    void SetUp() override { init(); } // NOLINT
+    void SetUp() override {
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/insert_delete_test_log");
+        init(false, log_dir); // NOLINT
+    }
 
     void TearDown() override { fin(); }
 };

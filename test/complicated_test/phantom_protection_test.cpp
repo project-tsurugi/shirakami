@@ -17,14 +17,9 @@ Storage storage;
 class phantom_protection : public ::testing::Test {
 public:
     void SetUp() override {
-#if defined(RECOVERY)
-        std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        path += "/log/checkpoint";
-        if (boost::filesystem::exists(path)) {
-            boost::filesystem::remove(path);
-        }
-#endif
-        init(); // NOLINT
+        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
+        log_dir.append("/test/phantom_protection_test_log");
+        init(false, log_dir); // NOLINT
     }
 
     void TearDown() override { fin(); }
