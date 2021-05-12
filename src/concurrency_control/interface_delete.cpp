@@ -26,13 +26,11 @@ namespace shirakami {
         yakushima::scan({reinterpret_cast<char*>(&elem), sizeof(elem)}, "", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
 
         if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
-                                          // single thread clean up
-                                          std::cout << "start single thread clean up " << scan_res.size() << std::endl;
+                                                                          // single thread clean up
             for (auto&& itr : scan_res) {
                 delete *std::get<v_index>(itr); // NOLINT
             }
         } else {
-                                          std::cout << "start multi  thread clean up " << scan_res.size() << std::endl;
             // multi threads clean up
             auto process = [&scan_res]([[maybe_unused]] std::size_t const begin, [[maybe_unused]] std::size_t const end) {
                 for (std::size_t i = begin; i < end; ++i) {
