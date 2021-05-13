@@ -218,6 +218,10 @@ public:
         val_ = val;
     }
 
+    SequenceValue get_id() { return key_; }
+
+    std::tuple<SequenceVersion, SequenceValue> get_val() { return val_; }
+
     MSGPACK_DEFINE(key_, val_);
 
 private:
@@ -241,7 +245,9 @@ public:
 
     std::vector<log_record>& get_vec() { return vec_; } // NOLINT
 
-    MSGPACK_DEFINE(vec_);
+    std::vector<log_record_of_seq>& get_vec_seq() { return vec_of_seq_; } // NOLINT
+
+    MSGPACK_DEFINE(vec_, vec_of_seq_);
 
 private:
     std::vector<log_record> vec_;

@@ -27,7 +27,7 @@ public:
 
 TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/tid_test_log");
+    log_dir.append("/test/cpr_test_log");
     init(false, log_dir); // NOLINT
     setup_spdlog();
     register_storage(storage);
@@ -44,7 +44,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
 
 TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/tid_test_log");
+    log_dir.append("/test/cpr_test_log");
     init(true, log_dir); // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
@@ -62,7 +62,7 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
 
 TEST_F(cpr_test, cpr_bound) {                   // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/tid_test_log");
+    log_dir.append("/test/cpr_test_log");
     init(false, log_dir); // NOLINT
     setup_spdlog();
     Token token{};

@@ -30,16 +30,14 @@ public:
     using value_type = std::tuple<std::tuple<SequenceVersion, SequenceValue>, std::tuple<SequenceVersion, SequenceValue>, cpr::version_type>;
     static constexpr std::size_t volatile_pos{0};
     static constexpr std::size_t durable_pos{1};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{1, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{0, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{0, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{SIZE_MAX, 0};
     static constexpr std::size_t cpr_version_pos{2};
     static constexpr value_type non_exist_map_value{non_exist_value, non_exist_value, 0};
 #else
     using value_type = std::tuple<SequenceVersion, SequenceValue>;
-    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{1, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{0, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> deleted_value{SIZE_MAX, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{0, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{SIZE_MAX, 0};
 #endif
     static constexpr std::size_t version_pos{0};
     static constexpr std::size_t value_pos{1};
@@ -66,8 +64,23 @@ public:
 
     /**
      * @pre It has acquired lock.
+     * @param[in] id 
+     * @param[out] val
+     * @return Status::OK found.
+     * @return Status::WARN_NOT_FOUND not found.
      */
-    static value_type& get_value(SequenceId id) {
+    static Status get_value(SequenceId id, value_type& val) {
+        if (sm_.find(id) == sm_.end()) {
+            return Status::WARN_NOT_FOUND;
+        }
+        val = sm_[id];
+        return Status::OK;
+    }
+
+    /**
+     * @pre It has acquired lock.
+     */
+    static value_type& get_value_ref(SequenceId id) {
         return sm_[id];
     }
 

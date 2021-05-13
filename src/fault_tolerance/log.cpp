@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 
 #include "log.h"
+#include "sequence.h"
 
 // about cc
 #include "concurrency_control/include/record.h"
@@ -175,6 +176,21 @@ namespace shirakami {
                     }
                 }
             }
+
+#if defined(CPR)
+            // recover from restore about sequence
+            std::vector<cpr::log_record_of_seq>& logs_seq = restore.get_vec_seq();
+            for (auto&& elem : logs_seq) {
+                std::unique_lock{sequence_map::get_sm_mtx()};
+                /**
+                 * Since the values ​​are aggregated for each generation, you can easily overwrite them.
+                 */
+                sequence_map::get_sm()[elem.get_id()] = sequence_map::value_type{elem.get_val(), elem.get_val(), 0};
+            }
+#endif
+            /**
+              * else. In no logging mode, durable value is nothing.
+              */
         }
         yakushima::leave(token);
     };
