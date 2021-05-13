@@ -59,9 +59,7 @@ Available options:
         * Enable to log read log with write log to verify whether committed schedule is valid.
   * `-DBUILD_CPR=ON` 
      * Enable concurrent prefix recovery.
-     * Default: `OFF`
-  * `-DBUILD_WITH_RECOVERY=ON` 
-     * Enable initialization of db from log. (default: `OFF`)
+     * Default: `ON`
 * Parameter setting
   * Silo variant
     * `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>` 
