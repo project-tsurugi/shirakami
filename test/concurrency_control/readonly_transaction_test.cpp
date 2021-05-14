@@ -3,13 +3,19 @@
 
 #include "gtest/gtest.h"
 
-// shirakami-impl interface library
+#include "clock.h"
 #include "tuple_local.h"
 
+#include "concurrency_control/include/snapshot_manager.h"
+
 #ifdef CPR
+
 #include "fault_tolerance/include/cpr.h"
+
 #endif
+
 #include "shirakami/interface.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -21,7 +27,7 @@ class readonly_transaction_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/readonly_transaction_test_log");
+        log_dir.append("/build/test_log/readonly_transaction_test_log");
         init(false, log_dir); // NOLINT
     }
 
@@ -39,7 +45,10 @@ TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // trying to wait enough
-    std::this_thread::sleep_for(3s);
+    epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
+    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire))) {
+        sleepMs(1);
+    }
 
     tx_begin(s, true);
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));

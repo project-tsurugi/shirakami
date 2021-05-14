@@ -14,6 +14,8 @@
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "concurrency_control/*.cpp"
+        "concurrency_control/scan/*.cpp"
+        "concurrency_control/update/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
         )
