@@ -39,6 +39,9 @@ inline std::string kCheckpointingPath;                     // NOLINT
 
 inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
 
+
+// global variables setter / getter
+
 enum class phase : char {
     REST = 0,
     IN_PROGRESS,
@@ -255,24 +258,10 @@ private:
     std::vector<log_record_of_seq> vec_of_seq_;
 };
 
-/**
- * @brief This is checkpoint thread and manager of cpr.
- */
-extern void checkpoint_thread();
-
-/**
- * @brief Checkpointing for entire database.
- */
-extern void checkpointing();
-
+// about global variables.
 [[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
 
 [[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
-
-[[maybe_unused]] static void invoke_checkpoint_thread() {
-    kCheckPointThreadEnd.store(false, std::memory_order_release);
-    kCheckPointThread = std::thread(checkpoint_thread);
-}
 
 [[maybe_unused]] static void join_checkpoint_thread() try {
     kCheckPointThread.join();
@@ -296,6 +285,22 @@ extern void checkpointing();
 
 [[maybe_unused]] static void clear_register_count(std::size_t index) {
     kRegisterCount.at(index).store(0, std::memory_order_release);
+}
+
+/**
+ * @brief This is checkpoint thread and manager of cpr.
+ */
+extern void checkpoint_thread();
+
+/**
+ * @brief Checkpointing for entire database.
+ */
+extern void checkpointing();
+
+[[maybe_unused]] static void invoke_checkpoint_thread() {
+    kCheckPointThreadEnd.store(false, std::memory_order_release);
+    set_checkpoint_thread_end_force(true);
+    kCheckPointThread = std::thread(checkpoint_thread);
 }
 
 [[maybe_unused]] static register_count_type fetch_add_register_count(std::size_t index) {

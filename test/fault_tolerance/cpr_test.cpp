@@ -2,6 +2,8 @@
 #include <xmmintrin.h> // NOLINT
 // It is used, but clang-tidy warn.
 
+#include "concurrency_control/include/session_info.h"
+
 #include "fault_tolerance/include/log.h"
 
 #include "logger.h"
@@ -35,9 +37,16 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+    auto* ti = static_cast<session_info*>(token);
+    std::size_t sst_num{};
+    if (ti->get_phase() == cpr::phase::REST) {
+        sst_num = ti->get_version();
+    } else {
+        sst_num = ti->get_version() + 1;
+    }
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
-    ASSERT_EQ(boost::filesystem::exists(Log::get_kLogDirectory() + "/sst0"), true);
+    ASSERT_EQ(boost::filesystem::exists(log_dir + "/sst" + std::to_string(sst_num)), true);
     ASSERT_EQ(leave(token), Status::OK);
     fin(false);
 }

@@ -1,3 +1,7 @@
+/**
+ * @file scan_search_test.cpp
+ */
+
 #include <bitset>
 
 #include "gtest/gtest.h"

@@ -36,6 +36,8 @@ bool check_epoch_loaded() {  // NOLINT
 
 void epocher() {
     setup_spdlog();
+    // initialization considering after fin()
+    kGlobalEpoch.store(0, std::memory_order_release);
     while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
         /*
          * Increment global epoch in each PARAM_EPOCH_TIME [ms] (default: 40).

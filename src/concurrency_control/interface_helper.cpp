@@ -90,7 +90,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     boost::filesystem::create_directories(log_dir);
 
 #endif
-    // end about logging
+// end about logging
 
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();

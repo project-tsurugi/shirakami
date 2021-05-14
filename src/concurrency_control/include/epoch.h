@@ -60,7 +60,10 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
  * @post invoke fin() to join this thread.
  */
 [[maybe_unused]] static void invoke_epocher() {
+    // It may be redundant, but needs to restore if this is called after fin in the same program.
     set_epoch_thread_end(false);
+    kReclamationEpoch.store(-2, std::memory_order_release);
+
     kEpochThread = std::thread(epocher);
 }
 
