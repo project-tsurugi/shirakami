@@ -115,9 +115,11 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
     }
 
     read_set_obj rsob(std::get<0>(*itr));
+    bool add_node_set{false};
     if (ti->get_node_set().empty() ||
         std::get<1>(ti->get_node_set().back()) != std::get<2>(*itr)) {
         ti->get_node_set().emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+        add_node_set = true;
     }
 
     // pre-verify of phantom problem.
@@ -127,7 +129,12 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
     }
 
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
-    if (rr != Status::OK) return rr;
+    if (rr != Status::OK) {
+        if (add_node_set) {
+            ti->get_node_set().erase(ti->get_node_set().end() - 1);
+        }
+        return rr;
+    }
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     ++scan_index;

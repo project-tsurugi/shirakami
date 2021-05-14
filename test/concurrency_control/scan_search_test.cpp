@@ -56,7 +56,13 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
+#endif
     EXPECT_EQ(0, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
@@ -64,11 +70,23 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k3, v));
     ASSERT_EQ(Status::OK, upsert(s, storage, k4, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
+#endif
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, k2, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, &tuple));
+#endif
     EXPECT_NE(nullptr, tuple);
     delete_record(s, storage, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -78,7 +96,13 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
      */
     cpr::wait_next_checkpoint();
 #endif
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
+#endif
     EXPECT_EQ(1, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
@@ -106,18 +130,36 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ScanHandle handle{};
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k1, scan_endpoint::INCLUSIVE, k2, scan_endpoint::INCLUSIVE, handle));
+#ifdef CPR
+    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+#endif
     ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
 
-    // record exists
+// record exists
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, k4, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k4, &tuple));
+#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
 
     // record not exist
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k3, &tuple));
 
+#ifdef CPR
+    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+#endif
     ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));

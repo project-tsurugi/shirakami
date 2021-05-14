@@ -35,15 +35,33 @@ TEST_F(simple_insert, long_key_insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, make_key(key_length, key_num), v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple;
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, make_key(key_length, key_num), &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, make_key(key_length, key_num), &tuple));
+#endif
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     key_length = 64; // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, make_key(key_length, key_num), v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, make_key(key_length, key_num), &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, make_key(key_length, key_num), &tuple));
+#endif
     std::string str_key = make_key(key_length, key_num);
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, str_key, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, str_key, &tuple));
+#endif
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));

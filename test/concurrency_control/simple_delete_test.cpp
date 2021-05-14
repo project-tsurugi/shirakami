@@ -45,7 +45,13 @@ TEST_F(simple_delete, all_deletes) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
+#endif
     for (auto&& t : records) {
         ASSERT_EQ(Status::OK, delete_record(s, storage, t->get_key()));
     }

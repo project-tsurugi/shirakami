@@ -44,14 +44,26 @@ TEST_F(simple_update, update) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, k, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+#endif
     ASSERT_EQ(
             memcmp(tuple->get_value().data(), v.data(), tuple->get_value().size()),
             0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#ifdef CPR
+    while (Status::OK != search_key(s, storage, k, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

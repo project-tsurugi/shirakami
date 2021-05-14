@@ -63,14 +63,32 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     // range : k, k2, k3
     ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, 3, &tuple));
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
-    // range : k, k2, k3
+// range : k, k2, k3
+#ifdef CPR
+    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+        ;
+    }
+#else
     EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+#endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
+#ifdef CPR
+    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+        ;
+    }
+#else
     EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+#endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
+#ifdef CPR
+    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+        ;
+    }
+#else
     EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+#endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k3.data(), k3.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
     EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
@@ -99,7 +117,14 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, storage, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    Status ret{read_from_scan(s, handle, &tuple)};
+#ifdef CPR
+    Status ret = read_from_scan(s, handle, &tuple);
+    while (ret == Status::WARN_CONCURRENT_UPDATE) {
+        ret = read_from_scan(s, handle, &tuple);
+    }
+#else
+    Status ret = read_from_scan(s, handle, &tuple);
+#endif
     ASSERT_TRUE(ret == Status::ERR_PHANTOM || ret == Status::WARN_CONCURRENT_DELETE); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));

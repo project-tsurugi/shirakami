@@ -41,8 +41,13 @@ TEST_F(phantom_protection, phantom) { // NOLINT
     ASSERT_EQ(Status::OK, insert(token.at(0), storage, key.at(1), v));
     ASSERT_EQ(Status::OK, commit(token.at(0))); // NOLINT
     std::vector<const Tuple*> tuple_vec;
-    ASSERT_EQ(Status::OK,
-              scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
+#if defined(CPR)
+    while (Status::OK != scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec)) {
+        ;
+    }
+#else
+    ASSERT_EQ(Status::OK, scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
+#endif
     ASSERT_EQ(tuple_vec.size(), 2);
     // interrupt to occur phantom
     ASSERT_EQ(Status::OK, insert(token.at(1), storage, key.at(2), v));

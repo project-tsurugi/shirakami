@@ -43,7 +43,13 @@ TEST_F(simple_upsert, upsert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s));
+#ifdef CPR
+    while (Status::OK != search_key(s, st, k, &tuple)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, search_key(s, st, k, &tuple));
+#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()),
               0);
     ASSERT_EQ(Status::OK, commit(s));

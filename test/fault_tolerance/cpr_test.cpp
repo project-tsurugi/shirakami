@@ -59,7 +59,13 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     Tuple* tup{};
+#ifdef CPR
+    while (Status::OK != search_key(token, storage, k, &tup)) {
+        ;
+    }
+#else
     ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
+#endif
     ASSERT_EQ(std::string(tup->get_key()), k); // NOLINT
     std::string tup_key{tup->get_key()};
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
