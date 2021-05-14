@@ -142,13 +142,14 @@ extern Status enter(Token& token); // NOLINT
  * @brief do delete operations for all records, join core threads and delete the
  * remaining garbage (heap) objects.
  * @pre It already did init() and invoked core threads.
+ * @param[in] force_shut_down_cpr If true, interrupt cpr logging and shut down. Otherwise wait for the end of logging.
  * @details It do delete operations for all records. init() did invoking core threads detached. So it should join those
  * threads.
  * This function serves that joining after doing those delete operations.
  * Then, it delete the remaining garbage (heap) object by using private interface.
  * @return void
  */
-extern void fin();
+extern void fin(bool force_shut_down_cpr = true);
 
 /**
  * @brief initialize shirakami environment

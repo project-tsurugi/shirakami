@@ -21,7 +21,7 @@ class readonly_transaction_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/test/readonly_transaction_test_log");
+        log_dir.append("/build/readonly_transaction_test_log");
         init(false, log_dir); // NOLINT
     }
 

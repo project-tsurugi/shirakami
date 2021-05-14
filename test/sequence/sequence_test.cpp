@@ -21,11 +21,6 @@ using namespace shirakami;
 class sequence_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-#if 0
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/test/sequence_test_log");
-        init(false, log_dir); // NOLINT
-#endif
         init();
     }
     void TearDown() override { fin(); }

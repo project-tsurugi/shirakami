@@ -99,6 +99,7 @@ void checkpoint_thread() {
         // inprogtowaitflush() phase
         cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
         checkpointing();
+        if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) break;
 
         // atomically set global phase (rest) and increment version.
         cpr::global_phase_version::set_rest();
@@ -108,8 +109,10 @@ void checkpoint_thread() {
 void checkpointing() {
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>> aggregate_buf;
     aggregate_diff_update_set(aggregate_buf);
+    if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
     tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>> aggregate_buf_seq;
     aggregate_update_sequence_set(aggregate_buf_seq);
+    if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
 
     std::ofstream logf;
     if (aggregate_buf.size() + aggregate_buf_seq.size() != 0) {
@@ -140,6 +143,7 @@ void checkpointing() {
         auto* ti = static_cast<session_info*>(shira_token);
         for (auto itr_storage = aggregate_buf.begin(); itr_storage != aggregate_buf.end(); ++itr_storage) {
             for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
+                if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
                 Record* rec = itr.value().second;
 
                 auto for_deleted_record = [&ti, &rec, &yaku_token, &itr_storage] {
@@ -193,6 +197,7 @@ void checkpointing() {
 
     if (aggregate_buf_seq.size() > 0) {
         for (auto&& elem : aggregate_buf_seq) {
+            if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
             l_recs.emplace_back_seq({std::get<0>(elem), std::get<1>(elem)});
         }
     }
@@ -201,6 +206,7 @@ void checkpointing() {
      * starting logging and flushing
      */
     msgpack::pack(logf, l_recs);
+    if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
     logf.flush();
     logf.close();
     if (logf.is_open()) {
@@ -208,6 +214,7 @@ void checkpointing() {
         exit(1);
     }
 
+    if (kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
     std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(global_phase_version::get_gpv().get_version())};
     try {
         boost::filesystem::rename(get_checkpointing_path(), fname);

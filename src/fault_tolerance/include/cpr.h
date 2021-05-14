@@ -31,10 +31,11 @@ using version_type = std::uint64_t;
 using register_count_type = std::uint64_t;
 constexpr register_count_type register_count_type_max = UINT64_MAX;
 
-inline std::atomic<bool> kCheckPointThreadEnd{false}; // NOLINT
-inline std::thread kCheckPointThread;                 // NOLINT
-inline std::string kCheckpointPath;                   // NOLINT
-inline std::string kCheckpointingPath;                // NOLINT
+inline std::atomic<bool> kCheckPointThreadEnd{false};      // NOLINT
+inline std::atomic<bool> kCheckPointThreadEndForce{false}; // NOLINT
+inline std::thread kCheckPointThread;                      // NOLINT
+inline std::string kCheckpointPath;                        // NOLINT
+inline std::string kCheckpointingPath;                     // NOLINT
 
 inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
 
@@ -105,7 +106,7 @@ public:
 
     static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& aggregate_buf);
 
-    void clear_diff_set() { 
+    void clear_diff_set() {
         diff_update_set.at(0).clear();
         diff_update_set.at(1).clear();
         diff_update_sequence_set.at(0).clear();
@@ -281,6 +282,10 @@ extern void checkpointing();
 
 [[maybe_unused]] static void set_checkpoint_thread_end(const bool tf) {
     kCheckPointThreadEnd.store(tf, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_checkpoint_thread_end_force(const bool tf) {
+    kCheckPointThreadEndForce.store(tf, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }

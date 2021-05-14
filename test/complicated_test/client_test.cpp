@@ -177,7 +177,7 @@ class client : public ::testing::Test {
 
 TEST_F(client, single_thread_test) {            // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/client_test_log");
+    log_dir.append("/build/client_test_log");
     init(false, log_dir); // NOLINT
     register_storage(storage);
 

@@ -18,7 +18,7 @@ class phantom_protection : public ::testing::Test {
 public:
     void SetUp() override {
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/test/phantom_protection_test_log");
+        log_dir.append("/build/phantom_protection_test_log");
         init(false, log_dir); // NOLINT
     }
 

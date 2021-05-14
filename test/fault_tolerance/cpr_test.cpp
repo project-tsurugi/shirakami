@@ -19,15 +19,14 @@ Storage storage;
 
 class cpr_test : public ::testing::Test {
 public:
-    void SetUp() override {
-    }
+    void SetUp() override {}
 
-    void TearDown() override { fin(); }
+    void TearDown() override {}
 };
 
 TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/cpr_test_log");
+    log_dir.append("/build/cpr_test_log");
     init(false, log_dir); // NOLINT
     setup_spdlog();
     register_storage(storage);
@@ -40,11 +39,12 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(boost::filesystem::exists(Log::get_kLogDirectory() + "/sst0"), true);
     ASSERT_EQ(leave(token), Status::OK);
+    fin(false);
 }
 
 TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/cpr_test_log");
+    log_dir.append("/build/cpr_test_log");
     init(true, log_dir); // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
@@ -53,21 +53,12 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), k); // NOLINT
     std::string tup_key{tup->get_key()};
-    ASSERT_EQ(commit(token), Status::OK);      // NOLINT
+    ASSERT_EQ(commit(token), Status::OK); // NOLINT
     ASSERT_EQ(delete_record(token, storage, tup_key), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
-}
-
-TEST_F(cpr_test, cpr_bound) {                   // NOLINT
-    std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/test/cpr_test_log");
-    init(false, log_dir); // NOLINT
-    setup_spdlog();
-    Token token{};
-    ASSERT_EQ(enter(token), Status::OK);
-    ASSERT_EQ(leave(token), Status::OK);
+    fin();
 }
 
 } // namespace shirakami::testing

@@ -30,10 +30,11 @@ Status enter(Token& token) { // NOLINT
     return ret_status;
 }
 
-void fin() try {
+void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 #ifdef CPR
     // Stop Checkpointing
     cpr::set_checkpoint_thread_end(true);
+    cpr::set_checkpoint_thread_end_force(force_shut_down_cpr);
     cpr::join_checkpoint_thread();
 #endif
 
