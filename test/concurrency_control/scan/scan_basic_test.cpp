@@ -40,7 +40,13 @@ TEST_F(simple_scan, basic) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k6, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> records{};
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, records));
+#endif
     uint64_t ctr(0);
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
@@ -54,7 +60,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::INCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::INCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
@@ -66,7 +78,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k3, scan_endpoint::INCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k3, scan_endpoint::INCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
@@ -80,7 +98,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k3, scan_endpoint::EXCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k3, scan_endpoint::EXCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
@@ -110,7 +134,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, k6, scan_endpoint::INCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, k6, scan_endpoint::INCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
@@ -122,7 +152,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, k6, scan_endpoint::EXCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, k6, scan_endpoint::EXCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 1);
     for ([[maybe_unused]] auto&& itr : records) {
@@ -136,7 +172,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         }
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, "", scan_endpoint::INF, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, "", scan_endpoint::INF, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
@@ -150,7 +192,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 5);
     for (auto&& itr : records) {
@@ -168,7 +216,13 @@ TEST_F(simple_scan, basic) { // NOLINT
         ++ctr;
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+#if defined(CPR)
+    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, k5, scan_endpoint::INCLUSIVE, records)) {
+        ;
+    }
+#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, k5, scan_endpoint::INCLUSIVE, records));
+#endif
     ctr = 0;
     ASSERT_EQ(records.size(), 5);
     for (auto&& itr : records) {
