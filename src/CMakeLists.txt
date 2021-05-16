@@ -36,6 +36,8 @@ target_link_libraries(shirakami
         PRIVATE Boost::filesystem
         PRIVATE tsl::hopscotch_map
         PRIVATE tbb
+        PRIVATE tbbmalloc
+        PRIVATE tbbmalloc_proxy
         PRIVATE Threads::Threads
         )
 

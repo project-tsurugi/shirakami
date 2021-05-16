@@ -47,9 +47,16 @@ void parallel_build_db(const std::size_t start, const std::size_t end, const std
 
     tx_begin(token); // NOLINT
 
+
+    std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
         auto ret = insert(token, storage, make_key(key_length, i), std::string(value_length, '0'));
         assert(ret == Status::OK); // NOLINT
+        ++ctr;
+        if (ctr > 10) { // NOLINT
+            commit(token);
+            ctr = 0;
+        }
     }
     auto ret = commit(token);
     assert(ret == Status::OK); // NOLINT

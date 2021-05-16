@@ -28,6 +28,8 @@ target_link_libraries(ycsb
         PRIVATE shirakami-impl
         PRIVATE tsl::hopscotch_map
         PRIVATE tbb
+        PRIVATE tbbmalloc
+        PRIVATE tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
         )

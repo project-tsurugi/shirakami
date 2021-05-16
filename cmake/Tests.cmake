@@ -107,7 +107,10 @@ function(register_tests)
             endif()
             target_link_libraries(${test_name} 
             PRIVATE Threads::Threads
-            PRIVATE tbb)
+            PRIVATE tbb
+            PRIVATE tbbmalloc
+            PRIVATE tbbmalloc_proxy
+            )
 
             set_compile_options(${test_name})
 
