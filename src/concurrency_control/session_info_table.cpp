@@ -3,10 +3,10 @@
  * @brief about entire shirakami.
  */
 
-#include "concurrency_control/include/garbage_collection.h"
 #include "concurrency_control/include/session_info_table.h"
+#include "concurrency_control/include/garbage_collection.h"
 
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h" // sizeof(Tuple)
 
 #if defined(PWAL)
 
@@ -16,8 +16,8 @@
 
 namespace shirakami {
 
-Status session_info_table::decide_token(Token &token) {  // NOLINT
-    for (auto &&itr : kThreadTable) {
+Status session_info_table::decide_token(Token& token) { // NOLINT
+    for (auto&& itr : kThreadTable) {
         if (!itr.get_visible()) {
             bool expected(false);
             bool desired(true);
@@ -36,7 +36,7 @@ void session_info_table::init_kThreadTable() {
 #if defined(PWAL)
     uint64_t ctr(0);
 #endif
-    for (auto &&itr : kThreadTable) {
+    for (auto&& itr : kThreadTable) {
         itr.set_visible(false);
         itr.set_tx_began(false);
 
@@ -55,11 +55,14 @@ void session_info_table::init_kThreadTable() {
         // experiments, this line is used.
         ++ctr;
 #endif
+#if defined(CPR)
+        itr.reserve_diff_set(); // NOLINT
+#endif
     }
 }
 
 void session_info_table::fin_kThreadTable() {
-    for (auto &&itr : kThreadTable) {
+    for (auto&& itr : kThreadTable) {
         /**
          * about holding operation info.
          */
@@ -84,4 +87,4 @@ void session_info_table::fin_kThreadTable() {
     }
 }
 
-}  // namespace shirakami
+} // namespace shirakami

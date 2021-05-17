@@ -348,6 +348,8 @@ public:
 
     void regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val);
 
+    void reserve_diff_set() { return cpr_local_handle_.reserve_diff_set(); }
+
     void update_pv() {
         cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
     }

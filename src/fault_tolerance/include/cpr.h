@@ -105,8 +105,13 @@ private:
  */
 class cpr_local_handler {
 public:
-    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>;
-    using diff_upd_seq_set_type = tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>;
+#if defined(CPR_DIFF_HOPSCOTCH)
+    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, std::hash<std::string>>;
+#elif defined(CPR_DIFF_UM)
+    using diff_upd_set_type = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<register_count_type, Record*>>>;
+#endif
+    using diff_upd_seq_set_type = tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>, std::hash<SequenceValue>>;
+    constexpr static std::size_t reserve_num = PARAM_CPR_DIFF_SET_RESERVE_NUM;
 
     void clear_diff_set() {
         diff_upd_set_ar.at(0).clear();
@@ -130,6 +135,13 @@ public:
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
 
     version_type get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
+
+    void reserve_diff_set() {
+        diff_upd_set_ar.at(0).reserve(reserve_num);
+        diff_upd_set_ar.at(1).reserve(reserve_num);
+        diff_upd_seq_set_ar.at(0).reserve(reserve_num);
+        diff_upd_seq_set_ar.at(1).reserve(reserve_num);
+    }
 
     void set_phase_version(phase_version new_phase_version) {
         phase_version_.store(new_phase_version, std::memory_order_release);

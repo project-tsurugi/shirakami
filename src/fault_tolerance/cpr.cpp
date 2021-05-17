@@ -22,6 +22,7 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
         auto absorbed_set = table_elem.get_diff_upd_set(index);
         for (auto absorbed_storage = absorbed_set.begin(); absorbed_storage != absorbed_set.end(); ++absorbed_storage) {
+#if defined(CPR_DIFF_HOPSCOTCH)
             for (auto map_elem = absorbed_storage.value().begin(); map_elem != absorbed_storage.value().end(); ++map_elem) {
                 if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) ||                                                                                                              // not found storage in aggregate_buf
                     (aggregate_buf.find(absorbed_storage.key()) != aggregate_buf.end() && aggregate_buf[absorbed_storage.key()].find(map_elem.key()) != aggregate_buf[absorbed_storage.key()].end()) || // found storage but not found elem in aggregate_buf
@@ -30,8 +31,19 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
                 }
             }
             absorbed_storage.value().clear();
+#elif defined(CPR_DIFF_UM)
+            for (auto map_elem = absorbed_storage->second.begin(); map_elem != absorbed_storage->second.end(); ++map_elem) {
+                if ((aggregate_buf.find(absorbed_storage->first) == aggregate_buf.end()) ||                                                                                                                 // not found storage in aggregate_buf
+                    (aggregate_buf.find(absorbed_storage->first) != aggregate_buf.end() && aggregate_buf[absorbed_storage->first].find(map_elem->first) != aggregate_buf[absorbed_storage->first].end()) || // found storage but not found elem in aggregate_buf
+                    aggregate_buf[absorbed_storage->first][map_elem->first].first < map_elem->second.first) {
+                    aggregate_buf[absorbed_storage->first][map_elem->first] = map_elem->second; // merge
+                }
+            }
+            absorbed_storage->second.clear();
+#endif
         }
-        absorbed_set.clear(); // clean up.
+        absorbed_set.clear();                                 // clean up.
+        absorbed_set.reserve(cpr_local_handler::reserve_num); // reserve for next
     }
     clear_register_count(index);
 }
@@ -46,7 +58,8 @@ void aggregate_diff_upd_seq_set(cpr_local_handler::diff_upd_seq_set_type& aggreg
                 aggregate_buf[map_elem.key()] = map_elem.value();
             }
         }
-        absorbed_map.clear(); // clean up.
+        absorbed_map.clear();                                 // clean up.
+        absorbed_map.reserve(cpr_local_handler::reserve_num); // reserve for next
     }
 }
 
@@ -105,10 +118,10 @@ void checkpoint_thread() {
 }
 
 void checkpointing() {
-    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>> aggregate_buf;
+    cpr_local_handler::diff_upd_set_type aggregate_buf;
     aggregate_diff_upd_set(aggregate_buf);
     if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
-    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>> aggregate_buf_seq;
+    cpr_local_handler::diff_upd_seq_set_type aggregate_buf_seq;
     aggregate_diff_upd_seq_set(aggregate_buf_seq);
     if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
 
@@ -140,9 +153,17 @@ void checkpointing() {
         tx_begin(shira_token); // NOLINT
         auto* ti = static_cast<session_info*>(shira_token);
         for (auto itr_storage = aggregate_buf.begin(); itr_storage != aggregate_buf.end(); ++itr_storage) {
+#if defined(CPR_DIFF_HOPSCOTCH)
             for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
+#elif defined(CPR_DIFF_UM)
+            for (auto itr = itr_storage->second.begin(); itr != itr_storage->second.end(); ++itr) {
+#endif
                 if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
+#if defined(CPR_DIFF_HOPSCOTCH)
                 Record* rec = itr.value().second;
+#elif defined(CPR_DIFF_UM)
+                Record* rec = itr->second.second;
+#endif
 
                 auto for_deleted_record = [&ti, &rec, &yaku_token, &itr_storage] {
                     tid_word c_tid = rec->get_tidw();
@@ -150,34 +171,58 @@ void checkpointing() {
                         c_tid.set_epoch(ti->get_epoch());
                         storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
                         if (rec->get_snap_ptr() == nullptr) {
+#if defined(CPR_DIFF_HOPSCOTCH)
                             yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
+#elif defined(CPR_DIFF_UM)
+                            yakushima::remove(yaku_token, itr_storage->first, rec->get_tuple().get_key());
+#endif
                             ti->get_gc_record_container().emplace_back(rec);
                         } else {
+#if defined(CPR_DIFF_HOPSCOTCH)
                             snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
+#elif defined(CPR_DIFF_UM)
+                            snapshot_manager::remove_rec_cont.push({itr_storage->first, rec});
+#endif
                         }
                     }
                 };
                 if (rec == nullptr) {
+#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()));
+#elif defined(CPR_DIFF_UM)
+#endif
+                    l_recs.emplace_back(itr_storage->first, std::string_view(itr->first));
                     continue;
                 }
                 rec->get_tidw().lock();
                 // begin : copy record
                 if (rec->get_version() == pv.get_version()) {
                     const Tuple& tup = rec->get_tuple();
+#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
+#elif defined(CPR_DIFF_UM)
+                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
+#endif
                     /**
-              * update only the version number to prevent other workers from making 
-              * redundant copies after releasing the lock.
-              */
+                     * update only the version number to prevent other workers from making 
+                     * redundant copies after releasing the lock.
+                     */
                     rec->set_version(pv.get_version() + 1);
                 } else if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
+#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
+#elif defined(CPR_DIFF_UM)
+                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
+#endif
                     for_deleted_record();
                 } else {
                     const Tuple& tup = rec->get_tuple();
+#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
+#elif defined(CPR_DIFF_UM)
+                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
+#endif
                     rec->set_version(ti->get_version() + 1);
                     for_deleted_record();
                 }

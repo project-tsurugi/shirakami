@@ -126,6 +126,30 @@ else ()
     add_definitions(-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=${PARAM_PWAL_LOG_GCOMMIT_THRESHOLD})
 endif ()
 
+# about diff set of cpr
+set(cpr_diff_set 0)
+if (CPR_DIFF_HOPSCOTCH)
+    set(cpr_diff_set 1)
+    add_definitions(-DCPR_DIFF_HOPSCOTCH)
+    message("It uses hopscotch hash for cpr's diff set.")
+endif()
+if (CPR_DIFF_UM)
+    if(cpr_diff_set)
+        message(FATAL_ERROR "You should select one method for cpr's diff set.")
+    endif()
+    set(cpr_diff_set 1)
+    add_definitions(-DCPR_DIFF_UM)
+    message("It uses std::unoredered_map for cpr's diff set.")
+endif()
+
+if (NOT DEFINED PARAM_CPR_DIFF_SET_RESERVE_NUM)
+# If you use for practicaly and seek high performance, set big number.
+# If you set big number and run ctest, it takes so much time, so default is 0.
+    add_definitions(-DPARAM_CPR_DIFF_SET_RESERVE_NUM=0)
+else()
+    add_definitions(-DPARAM_CPR_DIFF_SET_RESERVE_NUM=${PARAM_CPR_DIFF_SET_RESERVE_NUM})
+endif()
+
 # End : about logging
 
 # End : parameter settings
