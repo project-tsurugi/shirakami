@@ -332,13 +332,13 @@ public:
      * that switches the container that stores information from time to time. Do not call from CPR manager.
      * CPR managers have different criteria for choosing containers.
      */
-    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>>& get_diff_update_set() { return cpr_local_handle_.get_diff_update_set(); }
+    cpr_local_handler::diff_upd_set_type& get_diff_upd_set() { return cpr_local_handle_.get_diff_upd_set(); }
 
-    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set() { return cpr_local_handle_.get_diff_update_sequence_set(); }
+    cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set() { return cpr_local_handle_.get_diff_upd_seq_set(); }
 
-    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<cpr::register_count_type, Record*>>>& get_diff_update_set(std::size_t index) { return cpr_local_handle_.get_diff_update_set(index); }
+    cpr_local_handler::diff_upd_set_type& get_diff_upd_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_set(index); }
 
-    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) { return cpr_local_handle_.get_diff_update_sequence_set(index); }
+    cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_seq_set(index); }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 

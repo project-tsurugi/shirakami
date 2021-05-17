@@ -105,27 +105,26 @@ private:
  */
 class cpr_local_handler {
 public:
-    static void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& aggregate_buf);
-
-    static void aggregate_diff_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& aggregate_buf);
+    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>;
+    using diff_upd_seq_set_type = tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>;
 
     void clear_diff_set() {
-        diff_update_set.at(0).clear();
-        diff_update_set.at(1).clear();
-        diff_update_sequence_set.at(0).clear();
-        diff_update_sequence_set.at(1).clear();
+        diff_upd_set_ar.at(0).clear();
+        diff_upd_set_ar.at(1).clear();
+        diff_upd_seq_set_ar.at(0).clear();
+        diff_upd_seq_set_ar.at(1).clear();
     }
 
-    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set();
+    diff_upd_set_type& get_diff_upd_set();
 
-    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set();
+    diff_upd_seq_set_type& get_diff_upd_seq_set();
 
-    tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& get_diff_update_set(std::size_t index) {
-        return diff_update_set.at(index);
+    diff_upd_set_type& get_diff_upd_set(std::size_t index) {
+        return diff_upd_set_ar.at(index);
     }
 
-    tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& get_diff_update_sequence_set(std::size_t index) {
-        return diff_update_sequence_set.at(index);
+    diff_upd_seq_set_type& get_diff_upd_seq_set(std::size_t index) {
+        return diff_upd_seq_set_ar.at(index);
     }
 
     phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
@@ -165,9 +164,9 @@ private:
      * This can be resolved so that the physical memory reuse associated with the physical deletion of records crosses the boundaries of CPR. 
      *  Since it is highly optimized, it is future work.
      */
-    std::array<tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>, 2> diff_update_set; // NOLINT
+    std::array<diff_upd_set_type, 2> diff_upd_set_ar; // NOLINT
 
-    std::array<tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>, 2> diff_update_sequence_set; // NOLINT
+    std::array<diff_upd_seq_set_type, 2> diff_upd_seq_set_ar; // NOLINT
     std::atomic<phase_version> phase_version_{};
 };
 

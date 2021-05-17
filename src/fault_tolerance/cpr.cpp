@@ -16,11 +16,11 @@ using namespace shirakami::epoch;
 
 namespace shirakami::cpr {
 
-void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& aggregate_buf) {
+void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf) {
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
-        auto absorbed_set = table_elem.get_diff_update_set(index);
+        auto absorbed_set = table_elem.get_diff_upd_set(index);
         for (auto absorbed_storage = absorbed_set.begin(); absorbed_storage != absorbed_set.end(); ++absorbed_storage) {
             for (auto map_elem = absorbed_storage.value().begin(); map_elem != absorbed_storage.value().end(); ++map_elem) {
                 if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) ||                                                                                                              // not found storage in aggregate_buf
@@ -36,11 +36,11 @@ void aggregate_diff_update_set(tsl::hopscotch_map<std::string, tsl::hopscotch_ma
     clear_register_count(index);
 }
 
-void aggregate_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& aggregate_buf) {
+void aggregate_diff_upd_seq_set(cpr_local_handler::diff_upd_seq_set_type& aggregate_buf) {
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
-        auto absorbed_map = table_elem.get_diff_update_sequence_set(index);
+        auto absorbed_map = table_elem.get_diff_upd_seq_set(index);
         for (auto map_elem = absorbed_map.begin(); map_elem != absorbed_map.end(); ++map_elem) {
             if (aggregate_buf.find(map_elem.key()) == aggregate_buf.end() || std::get<0>(map_elem.value()) > std::get<0>(aggregate_buf[map_elem.key()])) {
                 aggregate_buf[map_elem.key()] = map_elem.value();
@@ -50,22 +50,22 @@ void aggregate_update_sequence_set(tsl::hopscotch_map<SequenceValue, std::tuple<
     }
 }
 
-tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>>& cpr_local_handler::get_diff_update_set() {
+cpr_local_handler::diff_upd_set_type& cpr_local_handler::get_diff_upd_set() {
     version_type cv{get_version()};
     if ((cv % 2 == 0 && get_phase() == phase::REST) ||
         (cv % 2 == 1 && get_phase() != phase::REST)) {
-        return diff_update_set.at(0);
+        return diff_upd_set_ar.at(0);
     }
-    return diff_update_set.at(1);
+    return diff_upd_set_ar.at(1);
 }
 
-tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>>& cpr_local_handler::get_diff_update_sequence_set() {
+cpr_local_handler::diff_upd_seq_set_type& cpr_local_handler::get_diff_upd_seq_set() {
     version_type cv{get_version()};
     if ((cv % 2 == 0 && get_phase() == phase::REST) ||
         (cv % 2 == 1 && get_phase() != phase::REST)) {
-        return diff_update_sequence_set.at(0);
+        return diff_upd_seq_set_ar.at(0);
     }
-    return diff_update_sequence_set.at(1);
+    return diff_upd_seq_set_ar.at(1);
 }
 
 void checkpoint_thread() {
@@ -106,10 +106,10 @@ void checkpoint_thread() {
 
 void checkpointing() {
     tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>> aggregate_buf;
-    aggregate_diff_update_set(aggregate_buf);
+    aggregate_diff_upd_set(aggregate_buf);
     if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
     tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>> aggregate_buf_seq;
-    aggregate_update_sequence_set(aggregate_buf_seq);
+    aggregate_diff_upd_seq_set(aggregate_buf_seq);
     if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
 
     std::ofstream logf;
