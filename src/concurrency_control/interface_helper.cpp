@@ -31,7 +31,11 @@ Status enter(Token& token) { // NOLINT
 }
 
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
-    // Send signal
+    /** It may seem like a meaningless order at first glance. Actually, 
+     * it is an order to make the end processing asynchronous as much as possible. 
+     * Send an end signal from a costly thread. Synchronize when needed.
+     * Delay synchronization as much as possible.
+     */
     snapshot_manager::set_snapshot_manager_thread_end(true);
 #ifdef CPR
     cpr::set_checkpoint_thread_end(true);
@@ -40,14 +44,16 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     epoch::set_epoch_thread_end(true);
 
     snapshot_manager::join_snapshot_manager_thread();
+#ifdef CPR
     cpr::join_checkpoint_thread();
+#endif
 
     delete_all_records();
     garbage_collection::release_all_heap_objects();
 
     epoch::join_epoch_thread();
 
-    // clean up 
+    // clean up
     session_info_table::fin_kThreadTable();
     yakushima::fin();
 } catch (std::exception& e) {
@@ -91,7 +97,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     boost::filesystem::create_directories(log_dir);
 
 #endif
-// end about logging
+    // end about logging
 
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
