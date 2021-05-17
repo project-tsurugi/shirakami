@@ -62,29 +62,35 @@ void session_info_table::init_kThreadTable() {
 }
 
 void session_info_table::fin_kThreadTable() {
+    std::vector<std::thread> th_vc;
+    th_vc.reserve(kThreadTable.size());
     for (auto&& itr : kThreadTable) {
-        /**
+        th_vc.emplace_back([&itr] {
+            /**
          * about holding operation info.
          */
-        itr.clean_up_ops_set();
+            itr.clean_up_ops_set();
 
-        /**
+            /**
          * about scan operation
          */
-        itr.clean_up_scan_caches();
+            itr.clean_up_scan_caches();
 
-        /**
+            /**
          * about logging
          */
 #ifdef PWAL
-        itr.get_log_set().clear();
-        itr.get_log_handler().get_log_file().close();
+            itr.get_log_set().clear();
+            itr.get_log_handler().get_log_file().close();
 #endif
 
 #ifdef CPR
-        itr.clear_diff_set();
+            itr.clear_diff_set();
 #endif
+        });
     }
+
+    for (auto&& th : th_vc) th.join();
 }
 
 } // namespace shirakami

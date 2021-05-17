@@ -31,23 +31,24 @@ Status enter(Token& token) { // NOLINT
 }
 
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
+    // Send signal
+    snapshot_manager::set_snapshot_manager_thread_end(true);
 #ifdef CPR
-    // Stop Checkpointing
     cpr::set_checkpoint_thread_end(true);
     cpr::set_checkpoint_thread_end_force(force_shut_down_cpr);
-    cpr::join_checkpoint_thread();
 #endif
+    epoch::set_epoch_thread_end(true);
+
+    snapshot_manager::join_snapshot_manager_thread();
+    cpr::join_checkpoint_thread();
 
     delete_all_records();
     garbage_collection::release_all_heap_objects();
 
-    // Stop DB operation.
-    epoch::set_epoch_thread_end(true);
     epoch::join_epoch_thread();
-    snapshot_manager::set_snapshot_manager_thread_end(true);
-    snapshot_manager::join_snapshot_manager_thread();
-    session_info_table::fin_kThreadTable();
 
+    // clean up 
+    session_info_table::fin_kThreadTable();
     yakushima::fin();
 } catch (std::exception& e) {
     std::cerr << "fin() : " << e.what() << std::endl;

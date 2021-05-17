@@ -13,6 +13,7 @@ namespace shirakami::garbage_collection {
 [[maybe_unused]] void release_all_heap_objects() {
     remove_all_leaf_from_mt_db_and_release();
     std::vector<std::thread> thv;
+    thv.reserve(session_info_table::get_thread_info_table().size());
     for (auto &&elem : session_info_table::get_thread_info_table()) {
         thv.emplace_back([&elem] {
             // delete all garbage records
