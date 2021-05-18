@@ -113,6 +113,26 @@ TEST_F(simple_search, search_upsert_search) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_search, multiple_storages) { // NOLINT
+    Storage storage0;
+    Storage storage1;
+    ASSERT_EQ(Status::OK, register_storage(storage0));
+    ASSERT_EQ(Status::OK, register_storage(storage1));
+    std::string k("k"); // NOLINT
+    std::string v0("v0"); // NOLINT
+    std::string v1("v1"); // NOLINT
+    Token token{};
+    ASSERT_EQ(Status::OK, enter(token));
+    ASSERT_EQ(Status::OK, upsert(token, storage0, k, v0));
+    EXPECT_EQ(Status::OK, upsert(token, storage1, k, v0));
+    ASSERT_EQ(Status::OK, commit(token)); // NOLINT
+    Tuple* tuple{};
+    ASSERT_EQ(Status::OK, upsert(token, storage0, k, v1));
+    EXPECT_EQ(Status::OK, search_key(token, storage1, k, &tuple));
+    EXPECT_EQ(memcmp(tuple->get_value().data(), v0.data(), v0.size()), 0);
+    ASSERT_EQ(Status::OK, commit(token)); // NOLINT
+}
+
 // Begin tests to do multiple transactions concurrently by one thread.
 
 TEST_F(simple_search, search_concurrent_insert) { // NOLINT
