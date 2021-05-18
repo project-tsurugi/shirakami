@@ -20,8 +20,10 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
         auto absorbed_set = table_elem.get_diff_upd_set(index);
         for (auto absorbed_storage = absorbed_set.begin(); absorbed_storage != absorbed_set.end(); ++absorbed_storage) {
+            if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
 #if defined(CPR_DIFF_HOPSCOTCH)
             for (auto map_elem = absorbed_storage.value().begin(); map_elem != absorbed_storage.value().end(); ++map_elem) {
                 if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) ||                                                                                                              // not found storage in aggregate_buf
@@ -52,8 +54,10 @@ void aggregate_diff_upd_seq_set(cpr_local_handler::diff_upd_seq_set_type& aggreg
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
     for (auto&& table_elem : session_info_table::get_thread_info_table()) {
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
         auto absorbed_map = table_elem.get_diff_upd_seq_set(index);
         for (auto map_elem = absorbed_map.begin(); map_elem != absorbed_map.end(); ++map_elem) {
+            if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
             if (aggregate_buf.find(map_elem.key()) == aggregate_buf.end() || std::get<0>(map_elem.value()) > std::get<0>(aggregate_buf[map_elem.key()])) {
                 aggregate_buf[map_elem.key()] = map_elem.value();
             }
@@ -99,6 +103,7 @@ void checkpoint_thread() {
 
     while (likely(!kCheckPointThreadEnd.load(std::memory_order_acquire))) {
         sleepMs(PARAM_CHECKPOINT_REST_EPOCH);
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
 
         /**
          * preparetoinprog() phase.
@@ -110,7 +115,9 @@ void checkpoint_thread() {
 
         // inprogtowaitflush() phase
         cpr::global_phase_version::set_gp(cpr::phase::WAIT_FLUSH);
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
         checkpointing();
+        if (kCheckPointThreadEnd.load(std::memory_order_acquire)) break;
 
         // atomically set global phase (rest) and increment version.
         cpr::global_phase_version::set_rest();

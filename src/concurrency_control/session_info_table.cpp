@@ -65,20 +65,20 @@ void session_info_table::fin_kThreadTable() {
     std::vector<std::thread> th_vc;
     th_vc.reserve(kThreadTable.size());
     for (auto&& itr : kThreadTable) {
-        th_vc.emplace_back([&itr] {
+        auto process = [&itr]() {
             /**
-         * about holding operation info.
-         */
+              * about holding operation info.
+              */
             itr.clean_up_ops_set();
 
             /**
-         * about scan operation
-         */
+              * about scan operation
+              */
             itr.clean_up_scan_caches();
 
             /**
-         * about logging
-         */
+              * about logging
+              */
 #ifdef PWAL
             itr.get_log_set().clear();
             itr.get_log_handler().get_log_file().close();
@@ -87,7 +87,17 @@ void session_info_table::fin_kThreadTable() {
 #ifdef CPR
             itr.clear_diff_set();
 #endif
-        });
+        };
+#ifdef CPR
+        if (itr.get_diff_upd_set(0).size() > 1000 || itr.get_diff_upd_set(1).size() > 1000) { // NOLINT
+            // Considering clean up time of test and benchmark.
+            th_vc.emplace_back(process);
+        } else {
+            process();
+        }
+#else
+        process();
+#endif
     }
 
     for (auto&& th : th_vc) th.join();
