@@ -76,10 +76,11 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
             ||
             check.get_absent() // check whether it was deleted.
             ||
-            (check.get_lock() && (ti->search_write_set(itr.get_rec_ptr()) == nullptr))
+            (check.get_lock() && (ti->search_write_set(itr.get_storage(), itr.get_rec_ptr()) == nullptr))
                 ) {
             ti->unlock_write_set();
             abort(token);
+
             return Status::ERR_VALIDATION;
         }
         max_rset = std::max(max_rset, check);

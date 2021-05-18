@@ -165,19 +165,22 @@ class read_set_obj { // NOLINT
 public:
     read_set_obj() { this->rec_ptr = nullptr; }
 
-    explicit read_set_obj(const Record* rec_ptr) {
+    explicit read_set_obj(Storage storage, const Record* rec_ptr) {
+        storage_ = {reinterpret_cast<char*>(&storage), sizeof(storage)}; // NOLINT
         this->rec_ptr = rec_ptr;
     }
 
     read_set_obj(const read_set_obj& right) = delete;
 
     read_set_obj(read_set_obj&& right) {
+        storage_ = std::move(right.storage_);
         rec_read = std::move(right.rec_read);
         rec_ptr = right.rec_ptr;
     }
 
     read_set_obj& operator=(const read_set_obj& right) = delete; // NOLINT
     read_set_obj& operator=(read_set_obj&& right) {              // NOLINT
+        storage_ = std::move(right.storage_);
         rec_read = std::move(right.rec_read);
         rec_ptr = right.rec_ptr;
 
@@ -196,7 +199,10 @@ public:
         return rec_ptr;
     }
 
+    [[nodiscard]] std::string_view get_storage() { return storage_; }
+
 private:
+    std::string storage_;
     Record rec_read{};
     const Record* rec_ptr{}; // ptr to database
 };

@@ -88,19 +88,22 @@ public:
 
     class scan_handler {
     public:
-        [[maybe_unused]] std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>&
-        get_scan_cache() { // NOLINT
+        using scan_cache_type = std::map<ScanHandle, std::tuple<Storage, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>>;
+        using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
+        static constexpr std::size_t scan_cache_storage_pos = 0;
+        static constexpr std::size_t scan_cache_vec_pos = 1;
+
+        [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
             return scan_cache_;
         }
 
-        [[maybe_unused]] std::map<ScanHandle, std::size_t>&
-        get_scan_cache_itr() { // NOLINT
+        [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
             return scan_cache_itr_;
         }
 
     private:
-        std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>> scan_cache_{};
-        std::map<ScanHandle, std::size_t> scan_cache_itr_{};
+        scan_cache_type scan_cache_{};
+        scan_cache_itr_type scan_cache_itr_{};
     };
 
     explicit session_info(Token token) {
@@ -216,17 +219,19 @@ public:
 
     /**
      * @brief check whether it already executed write operation.
-     * @param [in] key the key of record.
+     * @param[in] storage
+     * @param[in] key the key of record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search_write_set(std::string_view key); // NOLINT
+    write_set_obj* search_write_set(std::string_view storage, std::string_view key); // NOLINT
 
     /**
      * @brief check whether it already executed update/insert operation.
-     * @param [in] rec_ptr the pointer of record.
+     * @param[in] storage
+     * @param[in] rec_ptr the pointer of record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    const write_set_obj* search_write_set(const Record* rec_ptr); // NOLINT
+    const write_set_obj* search_write_set(std::string_view storage, const Record* rec_ptr); // NOLINT
 
     /**
      * @brief unlock records in write set.
@@ -301,8 +306,7 @@ public:
         return node_set;
     }
 
-    std::map<ScanHandle, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>&
-    get_scan_cache() { // NOLINT
+    scan_handler::scan_cache_type& get_scan_cache() { // NOLINT
         return scan_handle_.get_scan_cache();
     }
 

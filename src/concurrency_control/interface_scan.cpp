@@ -66,9 +66,11 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
         return Status::WARN_NOT_FOUND;
     }
 
-    ti->get_scan_cache()[handle].reserve(scan_res.size());
+    std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
+    auto& vec = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        ti->get_scan_cache()[handle].emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i)), std::get<index_nvec_ptr>(nvec.at(i)));
+        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i)), std::get<index_nvec_ptr>(nvec.at(i)));
     }
 
     return Status::OK;
@@ -88,7 +90,7 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_INVALID_HANDLE;
     }
 
-    std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>& scan_buf = ti->get_scan_cache()[handle];
+    auto& scan_buf = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     if (scan_buf.size() == scan_index) {
         return Status::WARN_SCAN_LIMIT;
@@ -96,10 +98,11 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
 
     auto itr = scan_buf.begin() + scan_index;
     std::string_view key_view = std::get<0>(*itr)->get_tuple().get_key();
+    Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->search_write_set(key_view);
+    const write_set_obj* inws = ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), key_view); // NOLINT
     if (inws != nullptr) {
         ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -114,7 +117,7 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    read_set_obj rsob(std::get<0>(*itr));
+    read_set_obj rsob(storage, std::get<0>(*itr));
     bool add_node_set{false};
     if (ti->get_node_set().empty() ||
         std::get<1>(ti->get_node_set().back()) != std::get<2>(*itr)) {
@@ -164,7 +167,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
     std::int64_t index_ctr{-1};
     for (auto&& elem : scan_buf) {
         ++index_ctr;
-        write_set_obj* inws = ti->search_write_set((*std::get<scan_buf_rec_ptr>(elem))->get_tuple().get_key());
+        write_set_obj* inws = ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), (*std::get<scan_buf_rec_ptr>(elem))->get_tuple().get_key()); // NOLINT
         if (inws != nullptr) {
             /**
              * If the record was already update/insert in the same transaction,
@@ -190,7 +193,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             continue;
         }
 
-        ti->get_read_set().emplace_back(const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
+        ti->get_read_set().emplace_back(storage, const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
         if (ti->get_node_set().empty() ||
             std::get<1>(ti->get_node_set().back()) != nvec.at(index_ctr).second) {
             ti->get_node_set().emplace_back(nvec.at(index_ctr).first,
@@ -240,7 +243,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = ti->get_scan_cache()[handle].size();
+    size = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]).size();
     return Status::OK;
 }
 

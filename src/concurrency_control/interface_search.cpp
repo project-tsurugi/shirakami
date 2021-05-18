@@ -9,7 +9,7 @@
 
 namespace shirakami {
 
-Status search_key(Token token, Storage storage, const std::string_view key,  // NOLINT
+Status search_key(Token token, Storage storage, const std::string_view key, // NOLINT
                   Tuple** const tuple) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) {
@@ -18,7 +18,7 @@ Status search_key(Token token, Storage storage, const std::string_view key,  // 
         return snapshot_interface::lookup_snapshot(ti, storage, key, tuple);
     }
 
-    write_set_obj* inws{ti->search_write_set(key)};
+    write_set_obj* inws{ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), key)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
@@ -34,7 +34,7 @@ Status search_key(Token token, Storage storage, const std::string_view key,  // 
     }
     Record* rec_ptr{*rec_double_ptr};
 
-    read_set_obj rs_ob(rec_ptr); // NOLINT
+    read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
         ti->get_read_set().emplace_back(std::move(rs_ob));
@@ -45,4 +45,4 @@ Status search_key(Token token, Storage storage, const std::string_view key,  // 
     return rr;
 }
 
-}  // namespace shirakami
+} // namespace shirakami
