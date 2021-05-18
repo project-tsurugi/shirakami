@@ -124,12 +124,33 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
 }
 
-Status session_info::check_delete_after_write(std::string_view key) { // NOLINT
+Status session_info::check_delete_after_write(Storage storage, std::string_view key) { // NOLINT
     for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
+        if (std::string_view{reinterpret_cast<char*>(&storage), sizeof(storage)} != itr->get_storage()) continue; // NOLINT
+
         // It can't use lange-based for because it use write_set.erase.
         std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
         if (key_view.size() == key.size() &&
             memcmp(key_view.data(), key.data(), key.size()) == 0) {
+            if (itr->get_op() == OP_TYPE::INSERT) {
+                Record* record = itr->get_rec_ptr();
+                std::string_view key_view = record->get_tuple().get_key();
+                yakushima::remove(get_yakushima_token(), itr->get_storage(), key_view);
+                this->gc_handle_.get_record_container().emplace_back(itr->get_rec_ptr());
+
+                /**
+                 * create information for garbage collection.
+                 */
+                tid_word deletetid;
+                deletetid.set_lock(false);
+                deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
+                deletetid.set_absent(false);
+                deletetid.set_epoch(this->get_epoch());
+                storeRelease(record->get_tidw().obj_, deletetid.obj_); // NOLINT
+
+                write_set.erase(itr);
+                return Status::WARN_CANCEL_PREVIOUS_INSERT;
+            }
             write_set.erase(itr);
             return Status::WARN_CANCEL_PREVIOUS_OPERATION;
         }

@@ -94,6 +94,7 @@ enum class Status : std::int32_t {
      * @a insert : The records whose key is the same as @a key exists in MTDB, so this function returned immediately. @n
      */
     WARN_ALREADY_EXISTS,
+    WARN_CANCEL_PREVIOUS_INSERT,
     /**
      * @brief warning.
      * @details
@@ -228,6 +229,8 @@ inline constexpr std::string_view to_string_view(  // NOLINT
             return "WARN_ALREADY_DELETE"sv;  // NOLINT
         case Status::WARN_ALREADY_EXISTS:
             return "WARN_ALREADY_EXISTS"sv;  // NOLINT
+        case Status::WARN_CANCEL_PREVIOUS_INSERT:
+            return "WARN_CANCEL_PREVIOUS_INSERT"sv;  // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_OPERATION:
             return "WARN_CANCEL_PREVIOUS_OPERATION"sv;  // NOLINT
         case Status::WARN_CONCURRENT_DELETE:

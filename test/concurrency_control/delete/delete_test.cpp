@@ -9,18 +9,18 @@ namespace shirakami::testing {
 using namespace shirakami;
 
 Storage storage;
-class simple_delete : public ::testing::Test { // NOLINT
+class delete_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/simple_delete_test_log");
+        log_dir.append("/build/delete_test_log");
         init(false, log_dir); // NOLINT
     }
 
     void TearDown() override { fin(); }
 };
 
-TEST_F(simple_delete, delete_) { // NOLINT
+TEST_F(delete_test, delete_) { // NOLINT
     register_storage(storage);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT
@@ -38,7 +38,7 @@ TEST_F(simple_delete, delete_) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(simple_delete, all_deletes) { // NOLINT
+TEST_F(delete_test, all_deletes) { // NOLINT
     register_storage(storage);
     std::string k("testing_a0123456"); // NOLINT
     std::string v("bbb");              // NOLINT

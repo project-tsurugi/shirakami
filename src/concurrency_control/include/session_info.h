@@ -146,13 +146,14 @@ public:
 
     /**
      * @brief check whether it already executed update or insert operation.
+     * @param[in] storage
      * @param[in] key the key of record.
      * @pre this function is only executed in delete_record operation.
      * @return Status::OK no update/insert before this delete_record operation.
      * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert
      * operation before this delete_record operation.
      */
-    Status check_delete_after_write(std::string_view key); // NOLINT
+    Status check_delete_after_write(Storage storage, std::string_view key); // NOLINT
 
     void gc();
 

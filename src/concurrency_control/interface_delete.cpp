@@ -33,7 +33,10 @@ Status delete_record(Token token, Storage storage, const std::string_view key) {
     auto* ti = static_cast<session_info*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
-    Status check = ti->check_delete_after_write(key);
+    Status check = ti->check_delete_after_write(storage, key);
+    if (check == Status::WARN_CANCEL_PREVIOUS_INSERT) {
+        return check;
+    }
 
     Record** rec_double_ptr{yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key).first}; // NOLINT
     if (rec_double_ptr == nullptr) {
