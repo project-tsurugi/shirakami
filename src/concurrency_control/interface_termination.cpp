@@ -35,7 +35,7 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
         if (itr->get_op() == OP_TYPE::INSERT) continue;
         // after this, update/delete
         itr->get_rec_ptr()->get_tidw().lock();
-        if (itr->get_op() == OP_TYPE::UPDATE &&  // NOLINT
+        if ((itr->get_op() == OP_TYPE::UPDATE || itr->get_op() == OP_TYPE::DELETE) &&  // NOLINT
             itr->get_rec_ptr()->get_tidw().get_absent()) {
             ti->unlock_write_set(ti->get_write_set().begin(), itr + 1);
             abort(token);

@@ -137,7 +137,6 @@ RETRY_FIND_RECORD:
         delete rec_ptr;         // NOLINT
         goto RETRY_FIND_RECORD; // NOLINT
     }
-    std::cout << "upsert update! : " << rec_ptr << std::endl;
     ti->get_write_set().emplace_back(storage, key, val, OP_TYPE::UPDATE, rec_ptr); // NOLINT
 
     return Status::OK;
