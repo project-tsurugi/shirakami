@@ -111,7 +111,7 @@ RETRY_FIND_RECORD:
     if (rec_double_ptr == nullptr) {
         rec_ptr = nullptr;
     } else {
-        rec_ptr = (*std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))); // NOLINT
+        rec_ptr = *rec_double_ptr;
     }
     if (rec_ptr == nullptr) {
         rec_ptr = new Record(key, val); // NOLINT
