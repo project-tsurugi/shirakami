@@ -259,7 +259,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
          ++iws) {
         Record* rec_ptr = iws->get_rec_ptr();
 #ifdef CPR
-        ti->regi_diff_upd_set(iws->get_storage(), rec_ptr, iws->get_op());
+        ti->regi_diff_upd_set(iws->get_storage(), max_tid, rec_ptr, iws->get_op());
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {

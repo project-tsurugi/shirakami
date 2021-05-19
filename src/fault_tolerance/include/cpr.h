@@ -37,9 +37,6 @@ inline std::thread kCheckPointThread;                      // NOLINT
 inline std::string kCheckpointPath;                        // NOLINT
 inline std::string kCheckpointingPath;                     // NOLINT
 
-inline std::array<std::atomic<register_count_type>, 2> kRegisterCount{}; // NOLINT
-
-
 // global variables setter / getter
 
 enum class phase : char {
@@ -106,9 +103,11 @@ private:
 class cpr_local_handler {
 public:
 #if defined(CPR_DIFF_HOPSCOTCH)
-    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<register_count_type, Record*>>, std::hash<std::string>>;
+    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<tid_word, Record*>>, std::hash<std::string>>;
 #elif defined(CPR_DIFF_UM)
     using diff_upd_set_type = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<register_count_type, Record*>>>;
+#elif defined(CPR_DIFF_VEC)
+    using diff_upd_set_type = std::vector<std::tuple<std::string, std::string, tid_word, Record*>>;
 #endif
     using diff_upd_seq_set_type = tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>, std::hash<SequenceValue>>;
     constexpr static std::size_t reserve_num = PARAM_CPR_DIFF_SET_RESERVE_NUM;
@@ -294,10 +293,6 @@ private:
 
 [[maybe_unused]] extern void wait_next_checkpoint();
 
-[[maybe_unused]] static void clear_register_count(std::size_t index) {
-    kRegisterCount.at(index).store(0, std::memory_order_release);
-}
-
 /**
  * @brief This is checkpoint thread and manager of cpr.
  */
@@ -312,19 +307,6 @@ extern void checkpointing();
     kCheckPointThreadEnd.store(false, std::memory_order_release);
     set_checkpoint_thread_end_force(true);
     kCheckPointThread = std::thread(checkpoint_thread);
-}
-
-[[maybe_unused]] static register_count_type fetch_add_register_count(std::size_t index) {
-    register_count_type ret = kRegisterCount.at(index).fetch_add(1);
-    if (ret == register_count_type_max) {
-        shirakami::logger::shirakami_logger->debug("wrap round error");
-        exit(1);
-        /**
-         * It is unlikely that there will be as many writes as the maximum number of data types at the checkpoint interval.
-         * If so, it is better to set the checkpoint interval shorter than it is now.
-         */
-    }
-    return ret;
 }
 
 } // namespace shirakami::cpr

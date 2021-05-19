@@ -47,7 +47,6 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
         absorbed_set.clear();                                 // clean up.
         absorbed_set.reserve(cpr_local_handler::reserve_num); // reserve for next
     }
-    clear_register_count(index);
 }
 
 void aggregate_diff_upd_seq_set(cpr_local_handler::diff_upd_seq_set_type& aggregate_buf) {
