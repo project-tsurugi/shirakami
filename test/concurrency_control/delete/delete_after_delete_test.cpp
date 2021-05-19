@@ -26,12 +26,18 @@ TEST_F(delete_after_delete, delete_after_delete) { // NOLINT
     std::string k1("k");  // NOLINT
     std::string v1("v1"); // NOLINT
     Token s{};
-    for (std::size_t i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < 100; ++i) { // NOLINT
         /**
          * Test the interaction between snapshot manager and cpr manager by inserting enter / leave frequently.
          */
         ASSERT_EQ(Status::OK, enter(s));
-        ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
+        while (Status::WARN_NOT_FOUND == upsert(s, storage, k1, v1)) {
+            ;
+            /**
+             * The last delete_record didn't unhook the record because of the snapshot manager or cpr manager, 
+             * so upsert is an update instruction because the record exists, and WARN_NOT_FOUND because it was a deleted record.
+             */
+        }
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(Status::OK, leave(s));
         ASSERT_EQ(Status::OK, enter(s));

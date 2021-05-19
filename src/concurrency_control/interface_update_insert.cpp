@@ -137,6 +137,13 @@ RETRY_FIND_RECORD:
         delete rec_ptr;         // NOLINT
         goto RETRY_FIND_RECORD; // NOLINT
     }
+    tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
+    if (check_tid.get_absent()) {
+        // The second condition checks
+        // whether the record you want to read should not be read by parallel
+        // insert / delete.
+        return Status::WARN_NOT_FOUND;
+    }
     ti->get_write_set().emplace_back(storage, key, val, OP_TYPE::UPDATE, rec_ptr); // NOLINT
 
     return Status::OK;
