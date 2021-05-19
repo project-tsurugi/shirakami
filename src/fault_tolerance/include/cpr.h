@@ -103,7 +103,7 @@ private:
 class cpr_local_handler {
 public:
 #if defined(CPR_DIFF_HOPSCOTCH)
-    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<tid_word, Record*>>, std::hash<std::string>>;
+    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<tid_word, Record*>>>;
 #elif defined(CPR_DIFF_UM)
     using diff_upd_set_type = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<register_count_type, Record*>>>;
 #elif defined(CPR_DIFF_VEC)
