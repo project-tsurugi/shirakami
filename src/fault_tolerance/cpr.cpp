@@ -171,27 +171,6 @@ void checkpointing() {
                 Record* rec = itr->second.second;
 #endif
 
-                auto for_deleted_record = [&ti, &rec, &itr_storage] {
-                    tid_word c_tid = rec->get_tidw();
-                    if (!c_tid.get_latest() && c_tid.get_absent()) {
-                        c_tid.set_epoch(ti->get_epoch());
-                        storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
-                        if (rec->get_snap_ptr() == nullptr) {
-#if defined(CPR_DIFF_HOPSCOTCH)
-                            yakushima::remove(ti->get_yakushima_token(), itr_storage.key(), rec->get_tuple().get_key());
-#elif defined(CPR_DIFF_UM)
-                            yakushima::remove(ti->get_yakushima_token(), itr_storage->first, rec->get_tuple().get_key());
-#endif
-                            ti->get_gc_record_container().emplace_back(rec);
-                        } else {
-#if defined(CPR_DIFF_HOPSCOTCH)
-                            snapshot_manager::remove_rec_cont.push({itr_storage.key(), rec});
-#elif defined(CPR_DIFF_UM)
-                            snapshot_manager::remove_rec_cont.push({itr_storage->first, rec});
-#endif
-                        }
-                    }
-                };
                 if (rec == nullptr) {
 #if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()));
@@ -214,7 +193,6 @@ void checkpointing() {
                      * redundant copies after releasing the lock.
                      */
                     rec->set_version(pv.get_version() + 1);
-                    for_deleted_record();
                 } else if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
 #if defined(CPR_DIFF_HOPSCOTCH)
@@ -222,7 +200,6 @@ void checkpointing() {
 #elif defined(CPR_DIFF_UM)
                     l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
 #endif
-                    for_deleted_record();
                 } else {
                     const Tuple& tup = rec->get_tuple();
 #if defined(CPR_DIFF_HOPSCOTCH)
@@ -231,7 +208,6 @@ void checkpointing() {
                     l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
 #endif
                     rec->set_version(ti->get_version() + 1);
-                    for_deleted_record();
                 }
                 // end : copy record
 

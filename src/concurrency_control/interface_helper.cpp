@@ -347,6 +347,11 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                         rec_ptr->get_stable() = rec_ptr->get_tuple();
                         rec_ptr->set_version(ti->get_version() + 1);
                     }
+                } else {
+                    /**
+                     * Used by the manager as information about when memory can be freed.
+                     */
+                    rec_ptr->set_version(ti->get_version());
                 }
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
