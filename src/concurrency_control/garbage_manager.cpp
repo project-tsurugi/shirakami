@@ -79,7 +79,7 @@ void gc_handler::gc_rec() {
                 break;
             }
 #endif
-            delete cache;
+            delete cache; // NOLINT
             cache = {};
         } else {
             break;
@@ -98,7 +98,7 @@ void gc_handler::gc_val() {
         // cache is not null
 
         if (cache.second < epoch::get_reclamation_epoch()) {
-            delete cache.first;
+            delete cache.first; // NOLINT
             cache = {};
         } else {
             break;
@@ -119,7 +119,7 @@ void gc_handler::gc_snap() {
         epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
         epoch::epoch_t maybe_smallest_e = ce - 1;
         if (snapshot_manager::get_snap_epoch(cache.first + snapshot_manager::snapshot_epoch_times) <= snapshot_manager::get_snap_epoch(maybe_smallest_e)) {
-            delete cache.second;
+            delete cache.second; // NOLINT
             cache = {};
         } else {
             break;
