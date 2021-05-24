@@ -41,7 +41,7 @@ class cleanup_handler {
 public:
     using value_type = std::pair<std::string, Record*>;
 
-    void cache(value_type val) {
+    void cache(const value_type& val) {
         cache_ = val;
     }
 
@@ -58,7 +58,7 @@ public:
         return cont_;
     }
 
-    void push(value_type val) {
+    void push(const value_type& val) {
         cont_.push(val);
     }
 
