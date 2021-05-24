@@ -27,19 +27,19 @@ namespace shirakami::epoch {
  */
 using epoch_t = std::int64_t;
 
-[[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0};  // NOLINT
+[[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0}; // NOLINT
 
 /**
  * @details Firstly, kGlobalEpoch is 0. After that, when kGlobalEpoch becomes 1, kReclamationEpoch is set to kGlobalEpoch - 2.
  * If this type is std::uint32_t, the value is UINT32_MAX - 1 because unsigned int doesn't have negative value.
  */
-inline std::atomic<epoch_t> kReclamationEpoch{-2};              // NOLINT
+inline std::atomic<epoch_t> kReclamationEpoch{-2}; // NOLINT
 
 // about epoch thread
-[[maybe_unused]] inline std::thread kEpochThread;  // NOLINT
-inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
+[[maybe_unused]] inline std::thread kEpochThread; // NOLINT
+inline std::atomic<bool> kEpochThreadEnd;         // NOLINT
 
-[[maybe_unused]] extern bool check_epoch_loaded();  // NOLINT
+[[maybe_unused]] extern bool check_epoch_loaded(); // NOLINT
 
 /**
  * @brief epoch thread
@@ -47,7 +47,7 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
  */
 [[maybe_unused]] extern void epocher();
 
-[[maybe_unused]] static epoch_t get_reclamation_epoch() {  // NOLINT
+[[maybe_unused]] static epoch_t get_reclamation_epoch() { // NOLINT
     return kReclamationEpoch.load(std::memory_order_acquire);
 }
 
@@ -69,4 +69,8 @@ inline std::atomic<bool> kEpochThreadEnd;          // NOLINT
 
 [[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
 
-}  // namespace shirakami::epoch
+[[maybe_unused]] static epoch_t get_global_epoch() {
+    return kGlobalEpoch.load(std::memory_order_acquire);
+}
+
+} // namespace shirakami::epoch

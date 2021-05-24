@@ -1,6 +1,6 @@
 /**
  * @file epoch.cpp
- * @brief implement about epoch
+ * @brief Implementation about epoch
  */
 
 #include "concurrency_control/include/epoch.h"
@@ -35,7 +35,6 @@ bool check_epoch_loaded() {  // NOLINT
 }
 
 void epocher() {
-    setup_spdlog();
     // initialization considering after fin()
     kGlobalEpoch.store(0, std::memory_order_release);
     while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
