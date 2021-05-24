@@ -16,6 +16,11 @@ void session_info::gc_handler::gc_records() {
     auto ers_end_itr = get_record_container().end();
     for (auto itr = ers_bgn_itr; itr != get_record_container().end(); ++itr) {
         if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
+#ifdef CPR
+            if ((*itr)->get_version() > cpr::global_phase_version::get_gpv().get_version()) {
+                break;
+            }
+#endif
             ers_end_itr = itr;
             delete *itr; // NOLINT
         } else {

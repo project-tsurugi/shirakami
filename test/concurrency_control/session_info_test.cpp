@@ -48,7 +48,9 @@ TEST_F(session_info_test, get_txbegan_) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_txbegan(), false);
     // test insert
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    while (Status::OK != insert(s, storage, k, v)) {
+        ;
+    }
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);

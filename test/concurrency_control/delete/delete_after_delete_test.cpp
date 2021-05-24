@@ -1,8 +1,3 @@
-#include <bitset>
-
-#include "tuple_local.h"
-#include "gtest/gtest.h"
-
 #include "shirakami/interface.h"
 
 namespace shirakami::testing {
@@ -36,6 +31,10 @@ TEST_F(delete_after_delete, delete_after_delete) { // NOLINT
             /**
              * The last delete_record didn't unhook the record because of the snapshot manager or cpr manager, 
              * so upsert is an update instruction because the record exists, and WARN_NOT_FOUND because it was a deleted record.
+             */
+            commit(s);
+            /**
+             * If you don't commit, the epoch and manager may not progress, so you may end up in an infinite loop here.
              */
         }
         ASSERT_EQ(Status::OK, commit(s));

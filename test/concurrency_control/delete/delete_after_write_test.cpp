@@ -62,7 +62,9 @@ TEST_F(delete_after_write, delete_after_update) { // NOLINT
         ;
     }
 #else
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k1, &tuple));
+    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, &tuple)) {
+        ;
+    }
 #endif
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));

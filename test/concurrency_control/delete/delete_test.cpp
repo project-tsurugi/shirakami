@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "shirakami/interface.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;

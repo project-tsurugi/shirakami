@@ -6,6 +6,7 @@
 
 #include "concurrency_control//include/interface_helper.h"
 
+#include "concurrency_control/include/cleanup_manager.h"
 #include "concurrency_control/include/garbage_collection.h"
 #include "concurrency_control/include/session_info_table.h"
 #include "concurrency_control/include/snapshot_manager.h"
@@ -36,6 +37,8 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
      * Send an end signal from a costly thread. Synchronize when needed.
      * Delay synchronization as much as possible.
      */
+
+    cleanup_manager::set_cleanup_manager_thread_end(true);
     snapshot_manager::set_snapshot_manager_thread_end(true);
 #ifdef CPR
     cpr::set_checkpoint_thread_end(true);
@@ -43,19 +46,20 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 #endif
     epoch::set_epoch_thread_end(true);
 
-    snapshot_manager::join_snapshot_manager_thread();
+    cleanup_manager::join_cleanup_manager_thread();   // Cond : before delete table because this access current records.
+    snapshot_manager::join_snapshot_manager_thread(); // Cond : before delete table because this access current records.
 #ifdef CPR
-    cpr::join_checkpoint_thread();
+    cpr::join_checkpoint_thread(); // Cond : before delete table because this access current records.
 #endif
 
     delete_all_records();
     garbage_collection::release_all_heap_objects();
 
-    epoch::join_epoch_thread();
 
-    // clean up
+    // Clean up
     session_info_table::fin_kThreadTable();
-    yakushima::fin();
+    yakushima::fin();           // Cond : after all removing (from index) ops.
+    epoch::join_epoch_thread(); // Note : this can be called at last.
 } catch (std::exception& e) {
     std::cerr << "fin() : " << e.what() << std::endl;
 }
@@ -102,6 +106,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     session_info_table::init_kThreadTable();
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
+    cleanup_manager::invoke_cleanup_manager();
 
     yakushima::init();
 
@@ -333,54 +338,19 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 delete_tid.set_latest(false);
                 delete_tid.set_absent(true);
 
-                std::string_view key_view = rec_ptr->get_tuple().get_key();
-
 #ifdef CPR
-                if (ti->get_phase() == cpr::phase::REST) {
-                    /**
-                     * This worker started in rest phase, meaning checkpoint thread does not scan yet.
-                     */
-                    if (rec_ptr->get_snap_ptr() == nullptr) {
-                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
-                        ti->get_gc_record_container().emplace_back(rec_ptr);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                    } else {
-                        rec_ptr->set_version(ti->get_version());
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                        snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
-                    }
-                } else {
+                if (ti->get_phase() != cpr::phase::REST) {
                     /**
                      * This is in checkpointing phase (in-progress or wait-flush), meaning checkpoint thread may be scanning.
                      */
-                    if (ti->get_version() + 1 == rec_ptr->get_version()) {
-                        /**
-                         * Checkpoint thread did process, so it can remove from index.
-                         */
-                        yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view); // NOLINT
-                        ti->get_gc_record_container().emplace_back(rec_ptr);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                    } else {
-                        /**
-                         * else : The check pointer is responsible for deleting from the index and registering garbage.
-                         */
+                    if (ti->get_version() + 1 != rec_ptr->get_version()) {
                         rec_ptr->get_stable() = rec_ptr->get_tuple();
                         rec_ptr->set_version(ti->get_version() + 1);
-                        storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
                     }
                 }
-
-#else
-                if (rec_ptr->get_snap_ptr() == nullptr) {
-                    // if no snapshot, it can immediately remove.
-                    yakushima::remove(ti->get_yakushima_token(), iws->get_storage(), key_view);
-                    ti->get_gc_record_container().emplace_back(rec_ptr);
-                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                } else {
-                    snapshot_manager::remove_rec_cont.push({std::string(iws->get_storage()), rec_ptr});
-                    storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                }
 #endif
+                storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
+                ti->get_cleanup_handle().push({std::string(iws->get_storage()), rec_ptr});
                 break;
             }
             default:

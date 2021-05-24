@@ -210,12 +210,12 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         if (rr != Status::OK) {
             // cancel this scan.
             if (read_set_init_size != ti->get_read_set().size()) {
-                ti->get_read_set().erase(ti->get_read_set().begin(),
-                                         ti->get_read_set().begin() + (read_set_init_size - ti->get_read_set().size()));
+                ti->get_read_set().erase(ti->get_read_set().begin() + read_set_init_size,
+                                         ti->get_read_set().begin() + (ti->get_read_set().size() - read_set_init_size));
             }
             if (node_set_init_size != ti->get_node_set().size()) {
-                ti->get_node_set().erase(ti->get_node_set().begin(),
-                                         ti->get_node_set().begin() + (node_set_init_size - ti->get_node_set().size()));
+                ti->get_node_set().erase(ti->get_node_set().begin() + node_set_init_size,
+                                         ti->get_node_set().begin() + (ti->get_node_set().size() - node_set_init_size));
             }
             return rr;
         }

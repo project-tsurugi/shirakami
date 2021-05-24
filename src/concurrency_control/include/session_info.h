@@ -28,6 +28,8 @@
 #include "scheme.h"
 #include "tid.h"
 
+#include "concurrency_control/include/cleanup_manager.h"
+
 // shirakami/include/
 #include "shirakami/scheme.h"
 
@@ -361,6 +363,11 @@ public:
 
 #endif
 
+    // about cleanup handle
+    cleanup_manager::cleanup_handler& get_cleanup_handle() {
+        return cleanup_handle_;
+    }
+
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
     tid_word mrc_tid_{}; // most recently chosen tid, for calculate new tids.
@@ -393,6 +400,11 @@ private:
      * about scan operation.
      */
     scan_handler scan_handle_;
+
+    /**
+     * about snapshot
+     */
+    cleanup_manager::cleanup_handler cleanup_handle_;
 
     /**
      * about indexing.

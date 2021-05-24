@@ -77,8 +77,13 @@ void session_info_table::fin_kThreadTable() {
             itr.clean_up_scan_caches();
 
             /**
-              * about logging
-              */
+             *  cleanup manager
+             */
+            itr.get_cleanup_handle().clear();
+
+            /**
+             * about logging
+             */
 #ifdef PWAL
             itr.get_log_set().clear();
             itr.get_log_handler().get_log_file().close();
@@ -89,7 +94,7 @@ void session_info_table::fin_kThreadTable() {
 #endif
         };
 #ifdef CPR
-        if (itr.get_diff_upd_set(0).size() > 1000 || itr.get_diff_upd_set(1).size() > 1000) { // NOLINT
+        if (itr.get_diff_upd_set(0).size() > 1000 || itr.get_diff_upd_set(1).size() > 1000 || itr.get_cleanup_handle().get_cont().size() > 1000) { // NOLINT
             // Considering clean up time of test and benchmark.
             th_vc.emplace_back(process);
         } else {

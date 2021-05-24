@@ -33,6 +33,7 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
                 }
             }
             absorbed_storage.value().clear();
+            absorbed_storage.value().reserve(cpr_local_handler::reserve_num); // reserve for next
 #elif defined(CPR_DIFF_UM)
             for (auto map_elem = absorbed_storage->second.begin(); map_elem != absorbed_storage->second.end(); ++map_elem) {
                 if ((aggregate_buf.find(absorbed_storage->first) == aggregate_buf.end()) ||                                                                                                                 // not found storage in aggregate_buf
@@ -42,6 +43,7 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
                 }
             }
             absorbed_storage->second.clear();
+            absorbed_storage->second.reserve(cpr_local_handler::reserve_num); // reserve for next
 #endif
         }
         absorbed_set.clear();                                 // clean up.
@@ -144,11 +146,9 @@ void checkpointing() {
 
     log_records l_recs{};
     if (aggregate_buf.size() > 0) {
-        yakushima::Token yaku_token{};
-        yakushima::enter(yaku_token);
         phase_version pv = global_phase_version::get_gpv();
-        Token shira_token{};
-        enter(shira_token);
+        Token token{};
+        enter(token);
         /**
      * the snapshot transaction manager aligns the work of removing snapshots from the index and freeing memory with
      * the progress of the epoch.
@@ -156,8 +156,8 @@ void checkpointing() {
      * therefore, by joining this thread to the session and starting a transaction in a pseudo manner, the view of
      * memory is protected.
      */
-        tx_begin(shira_token); // NOLINT
-        auto* ti = static_cast<session_info*>(shira_token);
+        tx_begin(token); // NOLINT
+        auto* ti = static_cast<session_info*>(token);
         for (auto itr_storage = aggregate_buf.begin(); itr_storage != aggregate_buf.end(); ++itr_storage) {
 #if defined(CPR_DIFF_HOPSCOTCH)
             for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
@@ -171,16 +171,16 @@ void checkpointing() {
                 Record* rec = itr->second.second;
 #endif
 
-                auto for_deleted_record = [&ti, &rec, &yaku_token, &itr_storage] {
+                auto for_deleted_record = [&ti, &rec, &itr_storage] {
                     tid_word c_tid = rec->get_tidw();
                     if (!c_tid.get_latest() && c_tid.get_absent()) {
                         c_tid.set_epoch(ti->get_epoch());
                         storeRelease(rec->get_tidw().get_obj(), c_tid.get_obj());
                         if (rec->get_snap_ptr() == nullptr) {
 #if defined(CPR_DIFF_HOPSCOTCH)
-                            yakushima::remove(yaku_token, itr_storage.key(), rec->get_tuple().get_key());
+                            yakushima::remove(ti->get_yakushima_token(), itr_storage.key(), rec->get_tuple().get_key());
 #elif defined(CPR_DIFF_UM)
-                            yakushima::remove(yaku_token, itr_storage->first, rec->get_tuple().get_key());
+                            yakushima::remove(ti->get_yakushima_token(), itr_storage->first, rec->get_tuple().get_key());
 #endif
                             ti->get_gc_record_container().emplace_back(rec);
                         } else {
@@ -214,6 +214,7 @@ void checkpointing() {
                      * redundant copies after releasing the lock.
                      */
                     rec->set_version(pv.get_version() + 1);
+                    for_deleted_record();
                 } else if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
 #if defined(CPR_DIFF_HOPSCOTCH)
@@ -234,14 +235,14 @@ void checkpointing() {
                 }
                 // end : copy record
 
+                rec->set_checkpointed_version(rec->get_version());
 
                 // unlock record
                 rec->get_tidw().unlock();
             }
         }
 
-        yakushima::leave(yaku_token);
-        leave(shira_token);
+        leave(token);
     }
 
     if (aggregate_buf_seq.size() > 0) {

@@ -80,13 +80,9 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
-#ifdef CPR
     while (Status::OK != search_key(s, storage, k2, &tuple)) {
         ;
     }
-#else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k2, &tuple));
-#endif
     EXPECT_NE(nullptr, tuple);
     delete_record(s, storage, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -96,13 +92,9 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
      */
     cpr::wait_next_checkpoint();
 #endif
-#if defined(CPR)
     while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
         ;
     }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
-#endif
     EXPECT_EQ(1, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
