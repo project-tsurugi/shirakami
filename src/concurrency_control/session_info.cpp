@@ -4,72 +4,12 @@
  */
 
 #include "concurrency_control/include/session_info.h"
-#include "concurrency_control/include/garbage_collection.h"
+#include "concurrency_control/include/garbage_manager.h"
 #include "concurrency_control/include/snapshot_manager.h"
 
 #include "tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami {
-
-void session_info::gc_handler::gc_records() {
-    auto ers_bgn_itr = get_record_container().begin();
-    auto ers_end_itr = get_record_container().end();
-    for (auto itr = ers_bgn_itr; itr != get_record_container().end(); ++itr) {
-        if ((*itr)->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
-#ifdef CPR
-            if ((*itr)->get_version() > cpr::global_phase_version::get_gpv().get_version()) {
-                break;
-            }
-#endif
-            ers_end_itr = itr;
-            delete *itr; // NOLINT
-        } else {
-            break;
-        }
-    }
-    if (ers_end_itr != get_record_container().end()) {
-        // vector erase func [begin, end)
-        get_record_container().erase(ers_bgn_itr, ers_end_itr + 1);
-    }
-}
-
-void session_info::gc_handler::gc_values() {
-    auto ers_bgn_itr = get_value_container().begin();
-    auto ers_end_itr = get_value_container().end();
-    for (auto itr = ers_bgn_itr; itr != get_value_container().end(); ++itr) {
-        if (itr->second < epoch::get_reclamation_epoch()) {
-            ers_end_itr = itr;
-            delete itr->first; // NOLINT
-        } else {
-            break;
-        }
-    }
-    if (ers_end_itr != get_value_container().end()) {
-        // vector erase func [begin, end)
-        get_value_container().erase(ers_bgn_itr, ers_end_itr + 1);
-    }
-}
-
-void session_info::gc_handler::gc_snap() {
-    auto ers_bgn_itr = get_snap_cont_().begin();
-    auto ers_end_itr = get_snap_cont_().end();
-
-    epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
-    epoch::epoch_t maybe_smallest_e = ce - 1;
-    for (auto itr = ers_bgn_itr; itr != get_snap_cont_().end(); ++itr) {
-        if (snapshot_manager::get_snap_epoch(itr->first + snapshot_manager::snapshot_epoch_times) <=
-            snapshot_manager::get_snap_epoch(maybe_smallest_e)) {
-            ers_end_itr = itr;
-            delete itr->second; // NOLINT
-        } else {
-            break;
-        }
-    }
-    if (ers_end_itr != get_snap_cont_().end()) {
-        // vector erase func [begin, end)
-        get_snap_cont_().erase(ers_bgn_itr, ers_end_itr + 1);
-    }
-}
 
 void session_info::clean_up_ops_set() {
     read_set.clear();
@@ -141,7 +81,7 @@ Status session_info::check_delete_after_write(Storage storage, std::string_view 
                 Record* record = itr->get_rec_ptr();
                 std::string_view key_view = record->get_tuple().get_key();
                 yakushima::remove(get_yakushima_token(), itr->get_storage(), key_view);
-                this->gc_handle_.get_record_container().emplace_back(itr->get_rec_ptr());
+                this->gc_handle_.get_rec_cont().push(itr->get_rec_ptr());
 
                 /**
                  * create information for garbage collection.
@@ -164,17 +104,13 @@ Status session_info::check_delete_after_write(Storage storage, std::string_view 
     return Status::OK;
 }
 
-void session_info::gc() {
-    this->gc_handle_.gc();
-}
-
 void session_info::remove_inserted_records_of_write_set_from_masstree() {
     for (auto&& itr : write_set) {
         if (itr.get_op() == OP_TYPE::INSERT) {
             Record* record = itr.get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
             yakushima::remove(get_yakushima_token(), itr.get_storage(), key_view);
-            this->gc_handle_.get_record_container().emplace_back(itr.get_rec_ptr());
+            this->gc_handle_.get_rec_cont().push(itr.get_rec_ptr());
 
             /**
              * create information for garbage collection.

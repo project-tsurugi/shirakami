@@ -55,7 +55,7 @@ void cleanup_manager_func() {
                         // if no snapshot, it can immediately remove.
                         auto* ti = static_cast<session_info*>(token);
                         yakushima::remove(ti->get_yakushima_token(), storage, key_view);
-                        ti->get_gc_record_container().emplace_back(rec_ptr);
+                        ti->get_gc_handle().get_rec_cont().push(rec_ptr);
                     } else {
                         snapshot_manager::remove_rec_cont.push({storage, rec_ptr});
                     }

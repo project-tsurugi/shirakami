@@ -8,7 +8,6 @@
 #include "atomic_wrapper.h"
 #include "storage.h"
 
-#include "concurrency_control/include/garbage_collection.h"
 #include "concurrency_control/include/interface_helper.h"
 
 #include "shirakami/interface.h"

@@ -29,6 +29,7 @@
 #include "tid.h"
 
 #include "concurrency_control/include/cleanup_manager.h"
+#include "concurrency_control/include/garbage_manager.h"
 
 // shirakami/include/
 #include "shirakami/scheme.h"
@@ -53,41 +54,6 @@ namespace shirakami {
 
 class session_info {
 public:
-    class gc_handler {
-    public:
-        void gc_records();
-
-        void gc_snap();
-
-        void gc_values();
-
-        void gc() {
-            gc_records();
-            gc_values();
-            gc_snap();
-        }
-
-        std::vector<Record*>& get_record_container() { // NOLINT
-            return record_container_;
-        }
-
-        std::vector<std::pair<std::string*, epoch::epoch_t>>& get_value_container() { // NOLINT
-            return value_container_;
-        }
-
-        std::vector<std::pair<epoch::epoch_t, Record*>>& get_snap_cont_() { // NOLINT
-            return snap_cont_;
-        }
-
-    private:
-        std::vector<Record*> record_container_{};
-        std::vector<std::pair<std::string*, epoch::epoch_t>> value_container_{};
-        /**
-         * @brief container for snapshot.
-         */
-        std::vector<std::pair<epoch::epoch_t, Record*>> snap_cont_{};
-    };
-
     class scan_handler {
     public:
         using scan_cache_type = std::map<ScanHandle, std::tuple<Storage, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>>;
@@ -157,22 +123,8 @@ public:
      */
     Status check_delete_after_write(Storage storage, std::string_view key); // NOLINT
 
-    void gc();
-
     [[nodiscard]] epoch::epoch_t get_epoch() const { // NOLINT
         return epoch_.load(std::memory_order_acquire);
-    }
-
-    std::vector<Record*>& get_gc_record_container() { // NOLINT
-        return gc_handle_.get_record_container();
-    }
-
-    std::vector<std::pair<std::string*, epoch::epoch_t>>& get_gc_value_container() { // NOLINT
-        return gc_handle_.get_value_container();
-    }
-
-    std::vector<std::pair<epoch::epoch_t, Record*>>& get_gc_snap_cont() { // NOLINT
-        return gc_handle_.get_snap_cont_();
     }
 
     tid_word& get_mrctid() { return mrc_tid_; } // NOLINT
@@ -368,6 +320,11 @@ public:
         return cleanup_handle_;
     }
 
+    // about gc handle
+    garbage_manager::gc_handler& get_gc_handle() {
+        return gc_handle_;
+    }
+
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
     tid_word mrc_tid_{}; // most recently chosen tid, for calculate new tids.
@@ -385,10 +342,6 @@ private:
      */
     bool read_only_{false};
     std::vector<Tuple> read_only_tuples_{};
-    /**
-     * about garbage collection
-     */
-    gc_handler gc_handle_;
 
     /**
      * about holding operation info.
@@ -405,6 +358,11 @@ private:
      * about snapshot
      */
     cleanup_manager::cleanup_handler cleanup_handle_;
+
+    /**
+     * about gc
+     */
+    garbage_manager::gc_handler gc_handle_;
 
     /**
      * about indexing.

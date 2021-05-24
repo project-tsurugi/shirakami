@@ -4,7 +4,6 @@
  */
 
 #include "concurrency_control/include/session_info_table.h"
-#include "concurrency_control/include/garbage_collection.h"
 
 #include "tuple_local.h" // sizeof(Tuple)
 

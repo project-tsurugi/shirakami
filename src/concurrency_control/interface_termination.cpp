@@ -3,7 +3,7 @@
 #include "atomic_wrapper.h"
 
 #include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/garbage_collection.h"
+#include "concurrency_control/include/garbage_manager.h"
 #include "concurrency_control/include/interface_helper.h"
 
 #include "include/tuple_local.h"  // sizeof(Tuple)
@@ -17,7 +17,6 @@ Status abort(Token token) {  // NOLINT
     ti->clean_up_ops_set();
     ti->clean_up_scan_caches();
     ti->set_tx_began(false);
-    ti->gc();
     return Status::OK;
 }
 
@@ -106,8 +105,6 @@ extern Status commit(Token token, commit_param* cp) {  // NOLINT
      * about scan operation.
      */
     ti->clean_up_scan_caches();
-
-    ti->gc();
 
 #if defined(PWAL)
     if (cp != nullptr) cp->set_ctid(ti->get_mrctid().get_obj());

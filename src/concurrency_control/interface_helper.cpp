@@ -7,7 +7,7 @@
 #include "concurrency_control//include/interface_helper.h"
 
 #include "concurrency_control/include/cleanup_manager.h"
-#include "concurrency_control/include/garbage_collection.h"
+#include "concurrency_control/include/garbage_manager.h"
 #include "concurrency_control/include/session_info_table.h"
 #include "concurrency_control/include/snapshot_manager.h"
 
@@ -40,20 +40,22 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
     cleanup_manager::set_cleanup_manager_thread_end(true);
     snapshot_manager::set_snapshot_manager_thread_end(true);
+    garbage_manager::set_garbage_manager_thread_end(true);
 #ifdef CPR
     cpr::set_checkpoint_thread_end(true);
     cpr::set_checkpoint_thread_end_force(force_shut_down_cpr);
 #endif
     epoch::set_epoch_thread_end(true);
 
-    cleanup_manager::join_cleanup_manager_thread();   // Cond : before delete table because this access current records.
+    cleanup_manager::join_cleanup_manager_thread();   // Cond : before delete table, before joining garbage_manager.
     snapshot_manager::join_snapshot_manager_thread(); // Cond : before delete table because this access current records.
 #ifdef CPR
     cpr::join_checkpoint_thread(); // Cond : before delete table because this access current records.
 #endif
 
     delete_all_records();
-    garbage_collection::release_all_heap_objects();
+    garbage_manager::join_garbage_manager_thread(); // Cond : before release_all_heap_objects func.
+    garbage_manager::release_all_heap_objects();
 
 
     // Clean up
@@ -107,6 +109,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
     cleanup_manager::invoke_cleanup_manager();
+    garbage_manager::invoke_garbage_manager();
 
     yakushima::init();
 
@@ -121,7 +124,6 @@ Status leave(Token const token) { // NOLINT
     for (auto&& itr : session_info_table::get_thread_info_table()) {
         if (&itr == static_cast<session_info*>(token)) {
             if (itr.get_visible()) {
-                itr.gc();
                 yakushima::leave(static_cast<session_info*>(token)->get_yakushima_token());
                 itr.set_tx_began(false);
                 itr.set_visible(false);
@@ -282,7 +284,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                     new_rec->set_snap_ptr(rec_ptr->get_snap_ptr());
                     rec_ptr->set_snap_ptr(new_rec);
                 }
-                ti->get_gc_snap_cont().emplace_back(std::make_pair(ti->get_epoch(), new_rec));
+                ti->get_gc_handle().get_snap_cont().push(std::make_pair(ti->get_epoch(), new_rec));
             }
         };
         switch (iws->get_op()) {
@@ -321,7 +323,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
                 if (old_value != nullptr) {
-                    ti->get_gc_value_container().emplace_back(std::make_pair(old_value, ti->get_epoch()));
+                    ti->get_gc_handle().get_val_cont().push(std::make_pair(old_value, ti->get_epoch()));
                 } else {
                     /**
                      *  null insert is not expected.

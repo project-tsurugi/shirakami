@@ -3,7 +3,6 @@
  * @brief about scheme
  */
 
-#include "concurrency_control/include/garbage_collection.h"
 #include "concurrency_control/include/session_info.h"
 #include "tuple_local.h"
 
