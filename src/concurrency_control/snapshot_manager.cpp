@@ -5,6 +5,12 @@
 
 #include "concurrency_control/include/snapshot_manager.h"
 
+#ifdef CPR
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
 #include "clock.h"
 #include "compiler.h"
 #include "logger.h"
@@ -49,9 +55,9 @@ void snapshot_manager_func() {
                 exit(1);
             }
             if (snapshot_manager::get_snap_epoch(
-                    elem.second->get_snap_ptr()->get_tidw().get_epoch()) !=
+                        elem.second->get_snap_ptr()->get_tidw().get_epoch()) !=
                 snapshot_manager::get_snap_epoch(
-                        maybe_smallest_ew)) {// todo : measures for
+                        maybe_smallest_ew)) { // todo : measures for
                 // round-trip of epoch.
                 if (!yaku_entered) {
                     yakushima::enter(yaku_token);
@@ -71,10 +77,15 @@ void snapshot_manager_func() {
 
         if (!release_rec_cont.empty()) {
             std::size_t erase_num{0};
-            for (auto &&elem : release_rec_cont) {
+            for (auto&& elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
+#ifdef CPR
+                    if (elem.second->get_version() + 1 >= cpr::global_phase_version::get_gpv().get_version()) {
+                        break;
+                    }
+#endif
                     ++erase_num;
-                    delete elem.second;// NOLINT
+                    delete elem.second; // NOLINT
                 } else {
                     break;
                 }
@@ -89,9 +100,9 @@ void snapshot_manager_func() {
     /**
      * Free memory before shutdown.
      */
-    for (auto &&elem : release_rec_cont) {
+    for (auto&& elem : release_rec_cont) {
         delete elem.second; // NOLINT
     }
 }
 
-}//  namespace shirakami::snapshot_manager
+} //  namespace shirakami::snapshot_manager

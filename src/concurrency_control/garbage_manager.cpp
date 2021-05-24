@@ -75,7 +75,7 @@ void gc_handler::gc_rec() {
 
         if (cache->get_tidw().get_epoch() <= epoch::get_reclamation_epoch()) {
 #ifdef CPR
-            if (cache->get_version() > cpr::global_phase_version::get_gpv().get_version()) {
+            if (cache->get_version() + 1 >= cpr::global_phase_version::get_gpv().get_version()) {
                 break;
             }
 #endif

@@ -181,19 +181,7 @@ void checkpointing() {
                 }
                 rec->get_tidw().lock();
                 // begin : copy record
-                if (rec->get_version() == pv.get_version()) {
-                    const Tuple& tup = rec->get_tuple();
-#if defined(CPR_DIFF_HOPSCOTCH)
-                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
-#elif defined(CPR_DIFF_UM)
-                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
-#endif
-                    /**
-                     * update only the version number to prevent other workers from making 
-                     * redundant copies after releasing the lock.
-                     */
-                    rec->set_version(pv.get_version() + 1);
-                } else if (rec->get_version() == pv.get_version() + 1) {
+                if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
 #if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
