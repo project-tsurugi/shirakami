@@ -24,6 +24,7 @@ add_executable(ycsb
 
 target_link_libraries(ycsb
         PRIVATE gflags::gflags
+        PRIVATE glog::glog
         PRIVATE shirakami
         PRIVATE shirakami-impl
         PRIVATE tsl::hopscotch_map
@@ -61,6 +62,7 @@ if (BUILD_ROCKSDB_BENCH)
             )
 
     target_link_libraries(rocksdb_bench
+            PRIVATE glog::glog
             PRIVATE gflags::gflags
             PRIVATE Threads::Threads
             PRIVATE librocksdb.so
@@ -88,6 +90,7 @@ target_include_directories(map
         )
 
 target_link_libraries(map
+        PRIVATE glog::glog
         PRIVATE gflags::gflags
         PRIVATE tsl::hopscotch_map
         PRIVATE Threads::Threads

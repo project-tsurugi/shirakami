@@ -5,6 +5,8 @@
 
 #include <map>
 
+#include <glog/logging.h>
+
 #include "concurrency_control/include/interface_helper.h"
 #include "concurrency_control/include/snapshot_interface.h"
 
@@ -12,10 +14,7 @@
 
 #include "shirakami/interface.h"
 
-#include "logger.h"
 #include "tuple_local.h" // sizeof(Tuple)
-
-using namespace shirakami::logger;
 
 namespace shirakami {
 
@@ -187,8 +186,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             } else if (inws->get_op() == OP_TYPE::INSERT) {
                 result.emplace_back(&inws->get_tuple_to_db());
             } else {
-                shirakami_logger->debug("It must not reach this points");
-                exit(1);
+                LOG(FATAL) << "It must not reach this points";
             }
             continue;
         }

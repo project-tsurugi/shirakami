@@ -2,6 +2,8 @@
 // Created by thawk on 2020/11/05.
 //
 
+#include <glog/logging.h>
+
 #include <boost/filesystem.hpp>
 
 #include "log.h"
@@ -24,10 +26,7 @@ using namespace shirakami::pwal;
 
 #endif
 
-#include "logger.h"
-
 using namespace shirakami;
-using namespace shirakami::logger;
 
 namespace shirakami {
 
@@ -145,11 +144,9 @@ namespace shirakami {
                 auto obj = oh.get();
                 obj.convert(restore);
             } catch (const std::bad_cast& e) {
-                shirakami_logger->debug("cast error.");
-                exit(1);
+                LOG(FATAL) << "cast error";
             } catch (...) {
-                shirakami_logger->debug("unknown error.");
-                exit(1);
+                LOG(FATAL) << "unknown error";
             }
 
             // recover from restore
@@ -199,9 +196,9 @@ namespace shirakami {
     boost::system::error_code ec;
     const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
-        shirakami_logger->debug("no checkpoint file to recover.");
+        LOG(INFO) << "no checkpoint file to recover.";
     }
-    shirakami_logger->debug("checkpoint file to recover exists.");
+    LOG(INFO) << "checkpoint file to recover exists.";
     process_from_file(cpr::get_checkpoint_path());
 
     // for sst files

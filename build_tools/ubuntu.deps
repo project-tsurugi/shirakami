@@ -5,8 +5,8 @@ doxygen
 gcovr
 git
 gnuplot
-libboost-filesystem-dev
 libboost-dev
+libboost-filesystem-dev
 libbz2-dev
 libgflags-dev
 libgoogle-glog-dev

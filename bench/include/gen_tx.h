@@ -5,11 +5,12 @@
 
 #pragma once
 
+#include <glog/logging.h>
+
 // shirakami/src/
 #include "concurrency_control/include/scheme.h"
 
 #include "gen_key.h"
-#include "logger.h"
 #include "random.h"
 #include "zipf.h"
 
@@ -97,8 +98,7 @@ gen_tx_scan(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std:
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
     uint64_t key_r_nm = key_l_nm + (scan_elem_n - 1);
     if (key_r_nm >= tpnm) {
-        shirakami::logger::shirakami_logger->debug("fatal error.");
-        exit(1);
+        LOG(FATAL) << "fatal error";
     }
     opr_set.emplace_back(OP_TYPE::SCAN, make_key(key_len, key_l_nm), make_key(key_len, key_r_nm));
 }

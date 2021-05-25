@@ -20,14 +20,10 @@
 
 // shirakami-impl interface library
 #include "clock.h"
-#include "logger.h"
 #include "random.h"
 #include "tuple_local.h"
 
 #include "shirakami/interface.h"
-
-using namespace spdlog;
-using namespace shirakami::logger;
 
 namespace shirakami {
 

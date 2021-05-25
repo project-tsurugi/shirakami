@@ -2,7 +2,7 @@
  * @file helper.cpp
  */
 
-#include "logger.h"
+#include <glog/logging.h>
 
 #include "concurrency_control//include/interface_helper.h"
 
@@ -18,8 +18,6 @@
 #endif
 
 #include "shirakami/interface.h"
-
-using namespace shirakami::logger;
 
 namespace shirakami {
 
@@ -328,8 +326,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                     /**
                      *  null insert is not expected.
                      */
-                    shirakami_logger->debug("fatal error.");
-                    exit(1);
+                    LOG(FATAL) << "Null insert is not expected.";
                 }
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
@@ -361,8 +358,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 break;
             }
             default:
-                shirakami_logger->debug("fatal error.");
-                std::abort();
+                LOG(FATAL) << "unknown operation type.";
         }
     }
 }

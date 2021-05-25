@@ -16,6 +16,8 @@
 
 #include <xmmintrin.h>
 
+#include <glog/logging.h>
+
 #include <cstring>
 
 // shirakami/test
@@ -33,7 +35,6 @@
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "logger.h"
 #include "tuple_local.h"
 
 #if defined(CPR)
@@ -46,9 +47,8 @@
 
 #include "boost/filesystem.hpp"
 
+
 using namespace shirakami;
-using namespace shirakami::logger;
-using namespace spdlog;
 
 /**
  * general option.
@@ -102,8 +102,7 @@ static void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        printf("sleep error.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "sleep error.";
     }
 #endif
     storeRelease(quit, true);
@@ -124,14 +123,12 @@ static void load_flags() {
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        printf("Number of threads must be larger than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Number of threads must be larger than 0.";
     }
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        printf("Number of database records(tuples) must be large than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Number of database records(tuples) must be large than 0.";
     }
     if (FLAGS_key_length > 0) {
         printf("FLAGS_key_length : %zu\n", FLAGS_key_length); // NOLINT
@@ -139,45 +136,39 @@ static void load_flags() {
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        printf("Length of val must be larger than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Length of val must be larger than 0.";
     }
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        printf("Number of operations in a transaction must be larger than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Number of operations in a transaction must be larger than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        printf("Rate of reads in a transaction must be in the range 0 to 100.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        printf("Access skew of transaction must be in the range 0 to 0.999... .\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
     }
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        printf("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        printf("Duration of benchmark in seconds must be larger than 0.\n"); // NOLINT
-        exit(1);
+        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
     }
     printf("Fin load_flags()\n"); // NOLINT
 }
 
 int main(int argc, char* argv[]) try { // NOLINT
-    shirakami::logger::setup_spdlog();
+    google::InitGoogleLogging("shirakami-bench-ycsb");
     gflags::SetUsageMessage(static_cast<const std::string&>(
             "YCSB benchmark for shirakami")); // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -199,7 +190,6 @@ int main(int argc, char* argv[]) try { // NOLINT
     invoke_leader();
     fin();
 
-    spdlog::drop_all();
     return 0;
 } catch (std::exception& e) {
     std::cerr << e.what() << std::endl;
@@ -252,8 +242,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
             } else {
-                printf("%s : fatal error.\n", __FILE__); // NOLINT
-                exit(1);
+                LOG(FATAL) << "fatal error";
             }
         } else {
             gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
@@ -288,8 +277,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 exit(1);
 #ifndef NDEBUG
                 if (scan_res.size() != FLAGS_scan_elem_num) {
-                    std::cerr << __FILE__ << " : " << __LINE__ << " : " << scan_res.size() << std::endl;
-                    exit(1);
+                    LOG(FATAL) << "scan fatal error " << scan_res.size();
                 } else {
                     std::cout << "ok" << std::endl;
                 }

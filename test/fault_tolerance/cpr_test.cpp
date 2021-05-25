@@ -6,14 +6,11 @@
 
 #include "fault_tolerance/include/log.h"
 
-#include "logger.h"
-
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
 
 using namespace shirakami;
-using namespace shirakami::logger;
 
 namespace shirakami::testing {
 
@@ -30,7 +27,6 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
     log_dir.append("/build/cpr_test_log");
     init(false, log_dir); // NOLINT
-    setup_spdlog();
     register_storage(storage);
     ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), false); // null db has no checkpoint.
     Token token{};

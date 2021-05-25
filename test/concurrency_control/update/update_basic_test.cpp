@@ -8,13 +8,10 @@
 #include "concurrency_control/include/snapshot_manager.h"
 
 #include "clock.h"
-#include "logger.h"
 
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
-
-using namespace shirakami::logger;
 
 namespace shirakami::testing {
 

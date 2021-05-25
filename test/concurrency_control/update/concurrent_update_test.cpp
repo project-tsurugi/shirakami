@@ -1,6 +1,8 @@
 #include <bitset>
 #include <future>
 
+#include <glog/logging.h>
+
 #include "gtest/gtest.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -8,13 +10,10 @@
 #include "concurrency_control/include/snapshot_manager.h"
 
 #include "clock.h"
-#include "logger.h"
 
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
-
-using namespace shirakami::logger;
 
 namespace shirakami::testing {
 
@@ -67,8 +66,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
                 res = search_key(s, storage, k, &t);
             }
             if (res != Status::OK) {
-                shirakami_logger->debug("fatal error");
-                exit(1);
+                LOG(FATAL) << "fatal error";
             }
             ASSERT_NE(nullptr, t);
             v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data())); // NOLINT

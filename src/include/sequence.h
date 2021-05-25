@@ -7,7 +7,7 @@
 #include <map>
 #include <mutex>
 
-#include "logger.h"
+#include <glog/logging.h>
 
 #include "shirakami/interface.h"
 
@@ -94,8 +94,7 @@ public:
     static SequenceId fetch_add_created_num() {
         SequenceId ret{created_num_.fetch_add(1)};
         if (ret == SIZE_MAX) {
-            shirakami::logger::shirakami_logger->debug("fatal error"); // todo round-trip
-            exit(1);
+            LOG(FATAL) << "fatal error"; // todo round-trip
         }
         return ret;
     }

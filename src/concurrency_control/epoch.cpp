@@ -3,13 +3,14 @@
  * @brief Implementation about epoch
  */
 
+#include <glog/logging.h>
+
 #include "concurrency_control/include/epoch.h"
 
 #include <xmmintrin.h>  // NOLINT
 
 #include "clock.h"
 #include "concurrency_control/include/session_info_table.h"
-#include "logger.h"
 #include "tuple_local.h"  // sizeof(Tuple)
 
 #if defined(CPR)
@@ -17,8 +18,6 @@
 #include "fault_tolerance/include/cpr.h"
 
 #endif
-
-using namespace shirakami::logger;
 
 namespace shirakami::epoch {
 

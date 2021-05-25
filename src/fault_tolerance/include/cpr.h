@@ -13,8 +13,6 @@
 #include <thread>
 #include <tuple>
 
-#include "logger.h"
-
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/record.h"
 

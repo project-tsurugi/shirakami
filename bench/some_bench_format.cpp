@@ -20,10 +20,10 @@
 #include "clock.h"
 #include "compiler.h"
 #include "cpu.h"
-#include "logger.h"
 #include "random.h"
 
 #include "gflags/gflags.h"
+
 #include "glog/logging.h"
 
 using namespace shirakami;
@@ -31,46 +31,46 @@ using namespace shirakami;
 /**
  * general option.
  */
-DEFINE_uint64(                                                        // NOLINT
-        cpumhz, 2000,                                                     // NOLINT
-        "# cpu MHz of execution environment. It is used measuring some "  // NOLINT
-        "time.");                                                         // NOLINT
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");      // NOLINT
-DEFINE_uint64(thread, 1, "# worker threads.");                        // NOLINT
+DEFINE_uint64(                                                           // NOLINT
+        cpumhz, 2000,                                                    // NOLINT
+        "# cpu MHz of execution environment. It is used measuring some " // NOLINT
+        "time.");                                                        // NOLINT
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
+DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
 
 /**
  * special option.
  */
 
-static bool isReady(const std::vector<char> &readys);  // NOLINT
-static void waitForReady(const std::vector<char> &readys);
+static bool isReady(const std::vector<char>& readys); // NOLINT
+static void waitForReady(const std::vector<char>& readys);
 
 static void invoke_leader();
 
-static void worker(size_t thid, char &ready, const bool &start, const bool &quit, std::uint64_t &res);
+static void worker(size_t thid, char& ready, const bool& start, const bool& quit, std::uint64_t& res);
 
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    alignas(CACHE_LINE_SIZE) std::vector<std::uint64_t> res(FLAGS_thread);  // NOLINT
+    alignas(CACHE_LINE_SIZE) std::vector<std::uint64_t> res(FLAGS_thread); // NOLINT
 
-    std::vector<char> readys(FLAGS_thread);  // NOLINT
+    std::vector<char> readys(FLAGS_thread); // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res.at(i)));
     }
     waitForReady(readys);
-    SPDLOG_DEBUG("start rocksdb exp.");
+    LOG(INFO) << "start rocksdb exp.";
     storeRelease(start, true);
     for (size_t i = 0; i < FLAGS_duration; ++i) {
-        sleepMs(1000);  // NOLINT
+        sleepMs(1000); // NOLINT
     }
     storeRelease(quit, true);
-    SPDLOG_DEBUG("stop rocksdb exp.");
-    for (auto &th : thv) th.join();
+    LOG(INFO) << "stop rocksdb exp.";
+    for (auto& th : thv) th.join();
 
     std::uint64_t sum{0};
-    for (auto &&elem : res) {
+    for (auto&& elem : res) {
         sum += elem;
     }
     SPDLOG_INFO("Throughput: {0} /s", sum / FLAGS_duration);
@@ -78,54 +78,53 @@ static void invoke_leader() {
 
 static void load_flags() {
     if (FLAGS_thread >= 1) {
-        SPDLOG_DEBUG("FLAGS_thread : {0}", FLAGS_thread);
+        LOG(INFO) << "FLAGS_thread : {0}", FLAGS_thread;
     } else {
-        SPDLOG_DEBUG("Number of threads must be larger than 0.");
+        LOG(FATAL) << "Number of threads must be larger than 0.";
         exit(1);
     }
     if (FLAGS_cpumhz > 1) {
-        SPDLOG_DEBUG("FLAGS_cpumhz : {0}", FLAGS_cpumhz);
+        LOG(INFO) << "FLAGS_cpumhz : {0}", FLAGS_cpumhz;
     } else {
-        SPDLOG_DEBUG("CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.");
+        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
         exit(1);
     }
     if (FLAGS_duration >= 1) {
-        SPDLOG_DEBUG("FLAGS_duration : {0}", FLAGS_duration);
+        LOG(INFO) << "FLAGS_duration : {0}", FLAGS_duration;
     } else {
-        SPDLOG_DEBUG("Duration of benchmark in seconds must be larger than 0.");
+        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
         exit(1);
     }
-    SPDLOG_DEBUG("Fin load_flags()");
+    LOG(INFO) << "Fin load_flags()";
 }
 
-int main(int argc, char* argv[]) {  // NOLINT
-    logger::setup_spdlog();
-    gflags::SetUsageMessage(static_cast<const std::string &>("RocksDB benchmark"));  // NOLINT
+int main(int argc, char* argv[]) { // NOLINT
+    google::InitGoogleLogging("shirakami-bench-some_bench_format");
+    gflags::SetUsageMessage(static_cast<const std::string&>("RocksDB benchmark")); // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
-    SPDLOG_DEBUG("hoge");
     invoke_leader();
-    SPDLOG_DEBUG("Fin invoke_leader");
+    LOG(INFO) << "Fin invoke_leader";
 
     return 0;
 }
 
-bool isReady(const std::vector<char> &readys) {  // NOLINT
-    for (const char &b : readys) {                 // NOLINT
+bool isReady(const std::vector<char>& readys) { // NOLINT
+    for (const char& b : readys) {              // NOLINT
         if (loadAcquire(b) == 0) return false;
     }
     return true;
 }
 
-void waitForReady(const std::vector<char> &readys) {
+void waitForReady(const std::vector<char>& readys) {
     while (!isReady(readys)) {
         _mm_pause();
     }
 }
 
-void worker(const std::size_t thid, char &ready, const bool &start,
-            const bool &quit, std::uint64_t &res) {
+void worker(const std::size_t thid, char& ready, const bool& start,
+            const bool& quit, std::uint64_t& res) {
     // init work
     Xoroshiro128Plus rnd;
     std::uint64_t sum{0};
