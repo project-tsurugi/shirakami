@@ -6,7 +6,7 @@ gcovr
 git
 gnuplot
 libboost-filesystem-dev
-libboost1.65-dev
+libboost-dev
 libbz2-dev
 libgflags-dev
 libgoogle-glog-dev
