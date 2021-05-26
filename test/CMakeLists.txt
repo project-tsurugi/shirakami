@@ -19,6 +19,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/storage/*.cpp"
         "concurrency_control/scan/*.cpp"
         "concurrency_control/update/*.cpp"
+        "concurrency_control/upsert/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
         )

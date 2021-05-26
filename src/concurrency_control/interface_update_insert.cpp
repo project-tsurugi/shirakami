@@ -65,6 +65,9 @@ Status update(Token token, Storage storage, const std::string_view key, // NOLIN
 
     write_set_obj* inws{ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), key)}; // NOLINT
     if (inws != nullptr) {
+        if (inws->get_op() == OP_TYPE::DELETE) {
+            return Status::WARN_ALREADY_DELETE;
+        }
         inws->reset_tuple_value(val);
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
