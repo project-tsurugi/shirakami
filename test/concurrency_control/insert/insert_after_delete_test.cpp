@@ -1,3 +1,6 @@
+
+#include <xmmintrin.h>
+
 #include <bitset>
 
 #include <glog/logging.h>
@@ -37,8 +40,15 @@ TEST_F(insert_after_delete, independent_tx) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     epoch::epoch_t before_insert{epoch::get_global_epoch()};
+    std::size_t ctr{0};
     while (Status::OK != insert(s, st, k, v)) {
-        LOG_EVERY_N(INFO, 20) << "fail insert";
+        //LOG_EVERY_N(INFO, 20) << "fail insert"; // NOLINT
+        // ^^ NOLINT does not work on Ubuntu18.04. It works in 20.04.
+        if (ctr % 30 == 0) { // NOLINT
+            LOG(INFO) << "fail insert";
+        }
+        ++ctr;
+        _mm_pause();
         ;
     }
     epoch::epoch_t after_insert{epoch::get_global_epoch()};
@@ -50,8 +60,8 @@ TEST_F(insert_after_delete, independent_tx) { // NOLINT
 
 TEST_F(insert_after_delete, same_tx) { // NOLINT
     register_storage(st);
-    std::string k("k"); // NOLINT
-    std::string v("v"); // NOLINT
+    std::string k("k");   // NOLINT
+    std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
