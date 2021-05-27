@@ -5,38 +5,12 @@
 
 #pragma once
 
-#include <pthread.h>
-#include <unistd.h>
-
-#include <algorithm>
-#include <atomic>
-#include <cassert>
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <ctime>
-#include <map>
-#include <tuple>
-#include <utility>
-#include <vector>
 
-#include "compiler.h"
-#include "cpu.h"
-#include "fileio.h"
 #include "record.h"
 #include "scheme.h"
-#include "tid.h"
 
 #include "shirakami/scheme.h"
-
-#include "yakushima/include/kvs.h"
-
-#ifdef PWAL
-
-#include "fault_tolerance/include/pwal.h"
-
-#endif
 
 namespace shirakami {
 

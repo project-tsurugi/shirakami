@@ -91,7 +91,7 @@ management.
       * Default: `ON`
     * `-DCPR_DIFF_UM=OFF`
       * Use std::unordered_map for cpr's differences sets.
-      * Note : This is maintained.
+      * Note : This maintenance has not kept up with the latest version.
       * Default: `OFF`
 
 * Benchmarking (project_root/bench)

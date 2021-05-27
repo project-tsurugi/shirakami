@@ -32,6 +32,7 @@
 #include "atomic_wrapper.h"
 
 #include "clock.h"
+#include "compiler.h"
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
