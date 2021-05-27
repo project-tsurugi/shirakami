@@ -174,11 +174,10 @@ public:
 
     /**
      * @brief check whether it already executed write operation.
-     * @param[in] storage
-     * @param[in] key the key of record.
+     * @param[in] rec_ptr the target record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search_write_set(std::string_view storage, std::string_view key); // NOLINT
+    write_set_obj* search_write_set(const Record* const rec_ptr); // NOLINT
 
     /**
      * @brief unlock records in write set.

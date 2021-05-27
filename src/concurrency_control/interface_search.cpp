@@ -18,7 +18,14 @@ Status search_key(Token token, Storage storage, const std::string_view key, // N
         return snapshot_interface::lookup_snapshot(ti, storage, key, tuple);
     }
 
-    write_set_obj* inws{ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), key)}; // NOLINT
+    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
+    if (rec_double_ptr == nullptr) {
+        *tuple = nullptr;
+        return Status::WARN_NOT_FOUND;
+    }
+    Record* rec_ptr{*rec_double_ptr};
+
+    write_set_obj* inws{ti->search_write_set(rec_ptr)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
@@ -26,13 +33,6 @@ Status search_key(Token token, Storage storage, const std::string_view key, // N
         *tuple = &inws->get_tuple(inws->get_op());
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
-
-    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
-    if (rec_double_ptr == nullptr) {
-        *tuple = nullptr;
-        return Status::WARN_NOT_FOUND;
-    }
-    Record* rec_ptr{*rec_double_ptr};
 
     read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);

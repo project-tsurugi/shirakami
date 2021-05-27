@@ -118,12 +118,10 @@ retry_by_continue:
     }
 
 
-    std::string_view key_view = std::get<0>(*itr)->get_tuple().get_key();
-    Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), key_view); // NOLINT
+    const write_set_obj* inws = ti->search_write_set(std::get<0>(*itr)); // NOLINT
     if (inws != nullptr) {
         ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -138,6 +136,7 @@ retry_by_continue:
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
+    Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
     bool add_node_set{false};
     if (ti->get_node_set().empty() ||
@@ -208,7 +207,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         }
 
         // Check local write set.
-        write_set_obj* inws = ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), (*std::get<scan_buf_rec_ptr>(elem))->get_tuple().get_key()); // NOLINT
+        write_set_obj* inws = ti->search_write_set(*std::get<scan_buf_rec_ptr>(elem)); // NOLINT
         if (inws != nullptr) {
             /**
              * If the record was already update/insert in the same transaction,
