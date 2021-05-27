@@ -7,9 +7,6 @@
 
 #include <glog/logging.h>
 
-// shirakami/src/
-#include "concurrency_control/include/scheme.h"
-
 #include "gen_key.h"
 #include "random.h"
 #include "zipf.h"

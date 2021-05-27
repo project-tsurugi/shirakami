@@ -1,13 +1,10 @@
 #include "shirakami/interface.h"
 
 #include <array>
-#include <bitset>
 
 #include "gtest/gtest.h"
 
-// shirakami-impl interface library
 #include "compiler.h"
-#include "concurrency_control/include/scheme.h"
 #include "tuple_local.h"
 
 namespace shirakami::testing {

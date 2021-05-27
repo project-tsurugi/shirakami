@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/include/scheme.h
+ * @file src/concurrency_control/include/local_set_scheme.h
  * @brief private scheme of transaction engine
  */
 
@@ -8,7 +8,6 @@
 #include <cstring>
 
 #include "record.h"
-#include "scheme.h"
 
 #include "shirakami/scheme.h"
 

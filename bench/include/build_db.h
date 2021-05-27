@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "concurrency_control/include/scheme.h"
-
 #include "shirakami/scheme.h"
 
 namespace shirakami {

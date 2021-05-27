@@ -25,7 +25,7 @@
 #include "cpu.h"
 #include "fileio.h"
 #include "record.h"
-#include "scheme.h"
+#include "local_set_scheme.h"
 #include "tid.h"
 
 #include "concurrency_control/include/cleanup_manager.h"
