@@ -91,11 +91,33 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
 
     auto& scan_buf = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+retry_by_continue:
     if (scan_buf.size() == scan_index) {
         return Status::WARN_SCAN_LIMIT;
     }
 
     auto itr = scan_buf.begin() + scan_index;
+
+    // check whether it is deleted
+    tid_word target_tid{loadAcquire(std::get<0>(*itr)->get_tidw().get_obj())};
+    if (!target_tid.get_latest() && target_tid.get_absent()) {
+        /**
+          * You can skip it with deleted record.
+          * The transactional scan logic is as follows.
+          * 1: Scan the index.
+          * 2: Transactional read the result of scanning the index.
+          * 3: Make sure that the transactional read has not been overwritten.
+          * 4: Check the node related to scanning for insertion / deletion to prevent phantom problem.
+          * If you observe the deleted record at point 2, you don't need to read it.
+          * As of 4, it should still be a deleted record.
+          * In other words, it suffices if there is no change in the node due to unhooking or the like.
+          * If delete interrupted between 1 and 2, 4 can detect it and abort.
+          */
+         ++scan_index;
+        goto retry_by_continue; // NOLINT
+    }
+
+
     std::string_view key_view = std::get<0>(*itr)->get_tuple().get_key();
     Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     /**
@@ -166,6 +188,26 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
     std::int64_t index_ctr{-1};
     for (auto&& elem : scan_buf) {
         ++index_ctr;
+
+        // check whether it is deleted
+        tid_word target_tid{loadAcquire((*std::get<scan_buf_rec_ptr>(elem))->get_tidw().get_obj())};
+        if (!target_tid.get_latest() && target_tid.get_absent()) {
+            /**
+             * You can skip it with deleted record.
+             * The transactional scan logic is as follows.
+             * 1: Scan the index.
+             * 2: Transactional read the result of scanning the index.
+             * 3: Make sure that the transactional read has not been overwritten.
+             * 4: Check the node related to scanning for insertion / deletion to prevent phantom problem.
+             * If you observe the deleted record at point 2, you don't need to read it.
+             * As of 4, it should still be a deleted record.
+             * In other words, it suffices if there is no change in the node due to unhooking or the like.
+             * If delete interrupted between 1 and 2, 4 can detect it and abort.
+             */
+            continue;
+        }
+
+        // Check local write set.
         write_set_obj* inws = ti->search_write_set(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage)), (*std::get<scan_buf_rec_ptr>(elem))->get_tuple().get_key()); // NOLINT
         if (inws != nullptr) {
             /**
@@ -191,7 +233,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             continue;
         }
 
-        ti->get_read_set().emplace_back(storage, const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
+        // Check for the need to add to node_set.
         if (ti->get_node_set().empty() ||
             std::get<1>(ti->get_node_set().back()) != nvec.at(index_ctr).second) {
             ti->get_node_set().emplace_back(nvec.at(index_ctr).first,
@@ -204,6 +246,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             return Status::ERR_PHANTOM;
         }
 
+        ti->get_read_set().emplace_back(storage, const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
         Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
         if (rr != Status::OK) {
             // cancel this scan.

@@ -117,15 +117,8 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, storage, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-#ifdef CPR
-    Status ret = read_from_scan(s, handle, &tuple);
-    while (ret == Status::WARN_CONCURRENT_UPDATE) {
-        ret = read_from_scan(s, handle, &tuple);
-    }
-#else
-    Status ret = read_from_scan(s, handle, &tuple);
-#endif
-    ASSERT_TRUE(ret == Status::ERR_PHANTOM || ret == Status::WARN_CONCURRENT_DELETE); // NOLINT
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));
 }
