@@ -41,7 +41,9 @@ public:
     // for std::sort
     write_set_obj& operator=(write_set_obj&& right) = default; // NOLINT
 
-    bool operator<(const write_set_obj& right) const; // NOLINT
+    bool operator<(const write_set_obj& right) const { // NOLINT
+        return this->get_rec_ptr() < right.get_rec_ptr();
+    }
 
     Record* get_rec_ptr() { return this->rec_ptr_; } // NOLINT
 
@@ -117,7 +119,12 @@ public:
 
     [[nodiscard]] const OP_TYPE& get_op() const { return op_; } // NOLINT
 
-    void reset_tuple_value(std::string_view val);
+    void reset_tuple_value(std::string_view val) {
+        (this->get_op() == OP_TYPE::UPDATE ? this->get_tuple_to_local()
+                                           : this->get_tuple_to_db())
+                .get_pimpl()
+                ->set_value(val.data(), val.size());
+    }
 
     void set_op(OP_TYPE new_op) {
         op_ = new_op;
