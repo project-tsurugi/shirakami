@@ -25,7 +25,7 @@
 #include "cpu.h"
 #include "fileio.h"
 #include "record.h"
-#include "local_set_scheme.h"
+#include "local_set.h"
 #include "tid.h"
 
 #include "concurrency_control/include/cleanup_manager.h"
@@ -179,14 +179,6 @@ public:
      * @return the pointer of element. If it is nullptr, it is not found.
      */
     write_set_obj* search_write_set(std::string_view storage, std::string_view key); // NOLINT
-
-    /**
-     * @brief check whether it already executed update/insert operation.
-     * @param[in] storage
-     * @param[in] rec_ptr the pointer of record.
-     * @return the pointer of element. If it is nullptr, it is not found.
-     */
-    const write_set_obj* search_write_set(std::string_view storage, const Record* rec_ptr); // NOLINT
 
     /**
      * @brief unlock records in write set.

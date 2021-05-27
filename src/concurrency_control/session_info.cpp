@@ -146,14 +146,6 @@ write_set_obj* session_info::search_write_set(std::string_view const storage, st
     return nullptr;
 }
 
-const write_set_obj* session_info::search_write_set(std::string_view const storage, const Record* const rec_ptr) {
-    for (auto& itr : write_set) {
-        if (itr.get_storage() == storage && itr.get_rec_ptr() == rec_ptr) return &itr;
-    }
-
-    return nullptr;
-}
-
 void session_info::unlock_write_set() {
     tid_word expected{};
     tid_word desired{};
