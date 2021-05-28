@@ -260,11 +260,10 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
     ti->pwal(max_tid.get_obj(), cp);
 #endif
 
-    for (auto iws = ti->get_write_set().begin(); iws != ti->get_write_set().end();
-         ++iws) {
-        Record* rec_ptr = iws->get_rec_ptr();
+    auto process = [ti, max_tid](write_set_obj* we_ptr) {
+        Record* rec_ptr = we_ptr->get_rec_ptr();
 #ifdef CPR
-        ti->regi_diff_upd_set(iws->get_storage(), max_tid, rec_ptr, iws->get_op());
+        ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, rec_ptr, we_ptr->get_op());
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
@@ -285,7 +284,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 ti->get_gc_handle().get_snap_cont().push(std::make_pair(ti->get_epoch(), new_rec));
             }
         };
-        switch (iws->get_op()) {
+        switch (we_ptr->get_op()) {
             case OP_TYPE::INSERT: {
 #ifdef CPR
                 /**
@@ -318,7 +317,7 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
 #endif
                 // update value
                 std::string* old_value{};
-                std::string_view new_value_view = iws->get_tuple(iws->get_op()).get_value();
+                std::string_view new_value_view = we_ptr->get_tuple(we_ptr->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
                 if (old_value != nullptr) {
                     ti->get_gc_handle().get_val_cont().push(std::make_pair(old_value, ti->get_epoch()));
@@ -354,11 +353,21 @@ void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_wo
                 }
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                ti->get_cleanup_handle().push({std::string(iws->get_storage()), rec_ptr});
+                ti->get_cleanup_handle().push({std::string(we_ptr->get_storage()), rec_ptr});
                 break;
             }
             default:
                 LOG(FATAL) << "unknown operation type.";
+        }
+    };
+
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& elem : ti->get_write_set().get_cont_for_bt()) {
+            process(&std::get<1>(elem));
+        }
+    } else {
+        for (auto&& elem : ti->get_write_set().get_cont_for_ol()) {
+            process(&elem);
         }
     }
 }

@@ -47,120 +47,47 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
 }
 
-[[maybe_unused]] void session_info::display_write_set() {
-    std::cout << "==========" << std::endl;
-    std::cout << "start : session_info::display_write_set()" << std::endl;
-    std::size_t ctr(1);
-    for (auto&& itr : write_set) {
-        std::cout << "Element #" << ctr << " of write set." << std::endl;
-        std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
-        std::cout << "op_ : " << itr.get_op() << std::endl;
-        std::string_view key_view;
-        std::string_view value_view;
-        key_view = itr.get_tuple().get_key();
-        value_view = itr.get_tuple().get_value();
-        std::cout << "key : " << key_view << std::endl;
-        std::cout << "key_size : " << key_view.size() << std::endl;
-        std::cout << "value : " << value_view << std::endl;
-        std::cout << "value_size : " << value_view.size() << std::endl;
-        std::cout << "----------" << std::endl;
-        ++ctr;
-    }
-    std::cout << "==========" << std::endl;
-}
-
-Status session_info::check_delete_after_write(Storage storage, std::string_view key) { // NOLINT
-    for (auto itr = write_set.begin(); itr != write_set.end(); ++itr) {
-        if (std::string_view{reinterpret_cast<char*>(&storage), sizeof(storage)} != itr->get_storage()) continue; // NOLINT
-
-        // It can't use lange-based for because it use write_set.erase.
-        std::string_view key_view = itr->get_rec_ptr()->get_tuple().get_key();
-        if (key_view.size() == key.size() &&
-            memcmp(key_view.data(), key.data(), key.size()) == 0) {
-            if (itr->get_op() == OP_TYPE::INSERT) {
-                Record* record = itr->get_rec_ptr();
-                std::string_view key_view = record->get_tuple().get_key();
-                yakushima::remove(get_yakushima_token(), itr->get_storage(), key_view);
-                this->gc_handle_.get_rec_cont().push(itr->get_rec_ptr());
-
-                /**
-                 * create information for garbage collection.
-                 */
-                tid_word deletetid;
-                deletetid.set_lock(false);
-                deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
-                deletetid.set_absent(false);
-                deletetid.set_epoch(this->get_epoch());
-                storeRelease(record->get_tidw().obj_, deletetid.obj_); // NOLINT
-
-                write_set.erase(itr);
-                return Status::WARN_CANCEL_PREVIOUS_INSERT;
-            }
-            write_set.erase(itr);
-            return Status::WARN_CANCEL_PREVIOUS_OPERATION;
-        }
-    }
-
-    return Status::OK;
-}
-
-void session_info::remove_inserted_records_of_write_set_from_masstree() {
-    for (auto&& itr : write_set) {
-        if (itr.get_op() == OP_TYPE::INSERT) {
-            Record* record = itr.get_rec_ptr();
+Status session_info::check_delete_after_write(Record* rec_ptr) {
+    auto process = [this](write_set_obj* we_ptr) {
+        if (we_ptr->get_op() == OP_TYPE::INSERT) {
+            Record* record = we_ptr->get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
-            yakushima::remove(get_yakushima_token(), itr.get_storage(), key_view);
-            this->gc_handle_.get_rec_cont().push(itr.get_rec_ptr());
+            yakushima::remove(get_yakushima_token(), we_ptr->get_storage(), key_view);
+            this->gc_handle_.get_rec_cont().push(we_ptr->get_rec_ptr());
 
             /**
-             * create information for garbage collection.
-             */
+                 * create information for garbage collection.
+                 */
             tid_word deletetid;
             deletetid.set_lock(false);
             deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
             deletetid.set_absent(false);
             deletetid.set_epoch(this->get_epoch());
             storeRelease(record->get_tidw().obj_, deletetid.obj_); // NOLINT
+
+            return Status::WARN_CANCEL_PREVIOUS_INSERT;
+        }
+        return Status::WARN_CANCEL_PREVIOUS_OPERATION;
+    };
+    if (get_write_set().get_for_batch()) {
+        auto&& cont = get_write_set().get_cont_for_bt();
+        for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
+            if (std::get<1>(*itr).get_rec_ptr() != rec_ptr) continue;
+            auto ret = process(&std::get<1>(*itr));
+            cont.erase(itr);
+            return ret;
+        }
+    } else {
+        auto&& cont = get_write_set().get_cont_for_ol();
+        for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
+            if (itr->get_rec_ptr() != rec_ptr) continue;
+            auto ret = process(&(*itr));
+            cont.erase(itr);
+            return ret;
         }
     }
-}
 
-write_set_obj* session_info::search_write_set(const Record* const rec_ptr) {
-    for (auto&& itr : write_set) {
-        if (itr.get_rec_ptr() == rec_ptr) return &itr;
-    }
-    return nullptr;
-}
-
-void session_info::unlock_write_set() {
-    tid_word expected{};
-    tid_word desired{};
-
-    for (auto& itr : write_set) {
-        if (itr.get_op() == OP_TYPE::INSERT) continue;
-        // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-        Record* recptr = itr.get_rec_ptr();
-        expected = loadAcquire(recptr->get_tidw().obj_); // NOLINT
-        desired = expected;
-        desired.set_lock(false);
-        storeRelease(recptr->get_tidw().obj_, desired.obj_); // NOLINT
-    }
-}
-
-void session_info::unlock_write_set( // NOLINT
-        std::vector<write_set_obj>::iterator begin,
-        std::vector<write_set_obj>::iterator end) {
-    tid_word expected;
-    tid_word desired;
-
-    for (auto itr = begin; itr != end; ++itr) {
-        if (itr->get_op() == OP_TYPE::INSERT) continue;
-        // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-        expected = loadAcquire(itr->get_rec_ptr()->get_tidw().obj_); // NOLINT
-        desired = expected;
-        desired.set_lock(false);
-        storeRelease(itr->get_rec_ptr()->get_tidw().obj_, desired.obj_); // NOLINT
-    }
+    return Status::OK;
 }
 
 Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT

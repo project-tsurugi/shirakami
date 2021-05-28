@@ -24,8 +24,8 @@
 #include "compiler.h"
 #include "cpu.h"
 #include "fileio.h"
-#include "record.h"
 #include "local_set.h"
+#include "record.h"
 #include "tid.h"
 
 #include "concurrency_control/include/cleanup_manager.h"
@@ -105,8 +105,6 @@ public:
      */
     [[maybe_unused]] void display_read_set();
 
-    [[maybe_unused]] void display_write_set();
-
     bool cas_visible(bool& expected, bool& desired) { // NOLINT
         return visible_.compare_exchange_strong(expected, desired,
                                                 std::memory_order_acq_rel);
@@ -114,14 +112,13 @@ public:
 
     /**
      * @brief check whether it already executed update or insert operation.
-     * @param[in] storage
-     * @param[in] key the key of record.
+     * @param[in] rec_ptr
      * @pre this function is only executed in delete_record operation.
      * @return Status::OK no update/insert before this delete_record operation.
      * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an update/insert
      * operation before this delete_record operation.
      */
-    Status check_delete_after_write(Storage storage, std::string_view key); // NOLINT
+    Status check_delete_after_write(Record* rec_ptr); // NOLINT
 
     [[nodiscard]] epoch::epoch_t get_epoch() const { // NOLINT
         return epoch_.load(std::memory_order_acquire);
@@ -131,6 +128,10 @@ public:
 
     std::vector<read_set_obj>& get_read_set() { // NOLINT
         return read_set;
+    }
+
+    local_write_set& get_write_set() {
+        return write_set;
     }
 
     bool get_read_only() const { // NOLINT
@@ -153,51 +154,9 @@ public:
         return visible_.load(std::memory_order_acquire);
     }
 
-    std::vector<write_set_obj>& get_write_set() { // NOLINT
-        return write_set;
-    }
-
     std::vector<Tuple>& get_read_only_tuples() { // NOLINT
         return read_only_tuples_;
     }
-
-    /**
-     * @brief Remove inserted records of write set from masstree.
-     *
-     * Insert operation inserts records to masstree in read phase.
-     * If the transaction is aborted, the records exists for ever with absent
-     * state. So it needs to remove the inserted records of write set from
-     * masstree at abort.
-     * @pre This function is called at abort.
-     */
-    void remove_inserted_records_of_write_set_from_masstree();
-
-    /**
-     * @brief check whether it already executed write operation.
-     * @param[in] rec_ptr the target record.
-     * @return the pointer of element. If it is nullptr, it is not found.
-     */
-    write_set_obj* search_write_set(const Record* const rec_ptr); // NOLINT
-
-    /**
-     * @brief unlock records in write set.
-     *
-     * This function unlocked all records in write set absolutely.
-     * So it has a pre-condition.
-     * @pre It has locked all records in write set.
-     * @return void
-     */
-    void unlock_write_set();
-
-    /**
-     * @brief unlock write set object between @a begin and @a end.
-     * @param [in] begin Starting points.
-     * @param [in] end Ending points.
-     * @pre It already locked write set between @a begin and @a end.
-     * @return void
-     */
-    void unlock_write_set(std::vector<write_set_obj>::iterator begin,
-                          std::vector<write_set_obj>::iterator end);
 
     /**
      * begin setter zone
@@ -338,7 +297,7 @@ private:
      * about holding operation info.
      */
     std::vector<read_set_obj> read_set{};
-    std::vector<write_set_obj> write_set{};
+    local_write_set write_set{};
 
     /**
      * about scan operation.

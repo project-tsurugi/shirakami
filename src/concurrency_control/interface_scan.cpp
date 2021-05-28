@@ -121,7 +121,7 @@ retry_by_continue:
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->search_write_set(std::get<0>(*itr)); // NOLINT
+    const write_set_obj* inws = ti->get_write_set().search(std::get<0>(*itr)); // NOLINT
     if (inws != nullptr) {
         ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -207,7 +207,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         }
 
         // Check local write set.
-        write_set_obj* inws = ti->search_write_set(*std::get<scan_buf_rec_ptr>(elem)); // NOLINT
+        write_set_obj* inws = ti->get_write_set().search(*std::get<scan_buf_rec_ptr>(elem)); // NOLINT
         if (inws != nullptr) {
             /**
              * If the record was already update/insert in the same transaction,

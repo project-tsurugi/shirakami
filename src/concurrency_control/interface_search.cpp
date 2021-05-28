@@ -25,7 +25,7 @@ Status search_key(Token token, Storage storage, const std::string_view key, // N
     }
     Record* rec_ptr{*rec_double_ptr};
 
-    write_set_obj* inws{ti->search_write_set(rec_ptr)}; // NOLINT
+    write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
