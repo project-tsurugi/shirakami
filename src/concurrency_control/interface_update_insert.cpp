@@ -68,15 +68,14 @@ Status update(Token token, Storage storage, const std::string_view key, // NOLIN
             std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     if (existing_rec_ptr == nullptr) {
         return Status::WARN_NOT_FOUND;
-    } else {
-        write_set_obj* inws{ti->search_write_set(*existing_rec_ptr)}; // NOLINT
-        if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::DELETE) {
-                return Status::WARN_ALREADY_DELETE;
-            }
-            inws->reset_tuple_value(val);
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
+    }
+    write_set_obj* inws{ti->search_write_set(*existing_rec_ptr)}; // NOLINT
+    if (inws != nullptr) {
+        if (inws->get_op() == OP_TYPE::DELETE) {
+            return Status::WARN_ALREADY_DELETE;
         }
+        inws->reset_tuple_value(val);
+        return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
     Record* rec_ptr{*existing_rec_ptr};
