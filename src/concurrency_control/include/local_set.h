@@ -62,7 +62,7 @@ public:
      * @param[in] rec_ptr the target record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search(const Record* const rec_ptr);
+    write_set_obj* search(const Record* rec_ptr);
 
     void set_for_batch(bool tf) { for_batch_ = tf; }
 

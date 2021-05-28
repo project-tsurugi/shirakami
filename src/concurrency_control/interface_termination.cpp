@@ -71,15 +71,13 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
     }
 
     // Serialization point
-    asm volatile("" ::
-                         : "memory"); // NOLINT
+    asm volatile("" ::: "memory"); // NOLINT
     /**
      * In x86/64, the write-read order between different addresses is not guaranteed.
      */
     std::atomic_thread_fence(std::memory_order_release);
     ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
-    asm volatile("" ::
-                         : "memory"); // NOLINT
+    asm volatile("" ::: "memory"); // NOLINT
     /**
      * In x86/64, the order between reads (epoch read and read verify) is guaranteed.
      */
