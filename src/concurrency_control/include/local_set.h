@@ -22,40 +22,18 @@ public:
      * @return some_ptr Found element.
      * @return nullptr Not found.
      */
-    write_set_obj* find(Record* rec_ptr) {
-        // for bt
-        if (for_batch_) {
-            auto ret{cont_for_bt_.find(rec_ptr)};
-            if (ret == cont_for_bt_.end()) {
-                return nullptr;
-            }
-                return &std::get<1>(*ret);
-        }
-        // for ol
-        for (auto&& elem : cont_for_ol_) {
-            if (elem.get_rec_ptr() == rec_ptr) {
-                return &elem;
-            }
-        }
-        return nullptr;
-    }
+    write_set_obj* find(Record* rec_ptr);
+
+    template<class T>
+    T&& get_cont();
 
     bool get_for_batch() { return for_batch_; }
 
-    void push(write_set_obj&& elem) {
-        if (for_batch_) {
-            cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
-        } else {
-            cont_for_ol_.emplace_back(std::move(elem));
-        }
-    }
+    void push(write_set_obj&& elem);
 
     void set_for_batch(bool tf) { for_batch_ = tf; }
 
-    void sort_if_ol() {
-        if (for_batch_) return;
-        std::sort(cont_for_ol_.begin(), cont_for_ol_.end());
-    }
+    void sort_if_ol();
 
 private:
     /**
