@@ -288,9 +288,11 @@ extern Status search_key(Token token, Storage storage, std::string_view key, Tup
  * read_only to execute a fast read only transaction that just reads snapshots.
  * @param[in] token
  * @param[in] read_only If this is true, it uses read only mode which transactional reads read stale snapshot.
+ * @param[in] for_batch If this is true, local write set is represented by std::map.
+ * If this is false, local write set is represented by std::vector.
  * @attention If you specify read_only is true, you can not execute transactional write operation in this transaction.
  */
-extern void tx_begin(Token token, bool read_only = false); // NOLINT
+extern void tx_begin(Token token, bool read_only = false, bool for_batch = false); // NOLINT
 
 /**
  * @brief It updates the record for the given key.
