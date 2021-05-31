@@ -143,13 +143,21 @@ RETRY_FIND_RECORD:
         delete rec_ptr;         // NOLINT
         goto RETRY_FIND_RECORD; // NOLINT
     }
+
     tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
-    if (check_tid.get_absent()) {
-        // The second condition checks
-        // whether the record you want to read should not be read by parallel
-        // insert / delete.
-        return Status::WARN_NOT_FOUND;
+    if (check_tid.get_latest() && check_tid.get_absent()) {
+        /**
+         * The record being inserted has been detected.
+         */
+        return Status::WARN_CONCURRENT_INSERT;
     }
+    if (!check_tid.get_latest() && check_tid.get_absent()) {
+        /**
+         * It was detected between the logical deletion operation and the physical deletion operation (unhook operation).
+         */
+        return Status::WARN_CONCURRENT_DELETE;
+    }
+
     ti->get_write_set().push({storage, key, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
 
     return Status::OK;

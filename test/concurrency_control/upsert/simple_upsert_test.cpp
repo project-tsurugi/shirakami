@@ -74,4 +74,15 @@ TEST_F(simple_upsert, double_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_upsert, upsert_after_insert) { // NOLINT
+    std::string k("K");
+    std::string v("v");
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
+    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
