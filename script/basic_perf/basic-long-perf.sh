@@ -1,7 +1,7 @@
 cpumhz=2100
 duration=10
-key_length=64
 record=1000000
+key_length=64
 rratioary=(99 80 50)
 skew=0
 thread=1
@@ -65,7 +65,7 @@ do
     for ((long_tx_ops=1; long_tx_ops<=10000; long_tx_ops*=10))
     do
       echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio"
-      echo "Ops $ops"
+      echo "Ops $long_tx_ops"
       
       sumTH=0
       sumAR=0
@@ -78,13 +78,11 @@ do
       minCA=0
       for ((i = 1; i <= epoch; ++i))
       do
-        if test $host = $dbs11 ; then
-          date
-          sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio > exp.txt
-        fi
+        date
+        sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio > exp.txt
       
-        tmpTH=`grep throughput ./exp.txt | awk '{print $2}'`
-        tmpAR=`grep abort_rate ./exp.txt | awk '{print $2}'`
+        tmpTH=`grep throughput ./exp.txt | grep -v long | awk '{print $2}'`
+        tmpAR=`grep abort_rate ./exp.txt | grep -v long | awk '{print $2}'`
         tmpCA=`grep cache-misses ./ana.txt | awk '{print $4}'`
         sumTH=`echo "$sumTH + $tmpTH" | bc`
         sumAR=`echo "scale=4; $sumAR + $tmpAR" | bc | xargs printf %.4f`
@@ -126,7 +124,7 @@ do
           minCA=$tmpCA
         fi
       done
-      avgTH=`echo "$sumTH / $epoch * $ops" | bc`
+      avgTH=`echo "$sumTH / $epoch * $long_tx_ops" | bc`
       avgAR=`echo "scale=4; $sumAR / $epoch" | bc | xargs printf %.4f`
       avgCA=`echo "$sumCA / $epoch" | bc`
       echo "sumTH: $sumTH, sumAR: $sumAR, sumCA: $sumCA"
@@ -134,7 +132,7 @@ do
       echo "maxTH: $maxTH, maxAR: $maxAR, maxCA: $maxCA"
       echo "minTH: $minTH, minAR: $minAR, minCA: $minCA"
       echo ""
-      echo "$ops $avgTH $minTH $maxTH $avgAR $minAR $maxAR $avgCA $minCA $maxCA" >> $result
+      echo "$long_tx_ops $avgTH $minTH $maxTH $avgAR $minAR $maxAR $avgCA $minCA $maxCA" >> $result
     done
   done
 done
