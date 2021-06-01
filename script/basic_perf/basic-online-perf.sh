@@ -8,7 +8,7 @@ rratioary=(99 80 50)
 skew=0
 thread=224
 #val_length_ary=(8)
-val_length_ary=(8 64 1024 16384)
+val_length_ary=(8 64 1024)
 epoch=5
 
 for val_length in "${val_length_ary[@]}"
