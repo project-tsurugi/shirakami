@@ -46,8 +46,6 @@
 
 #include <tsl/hopscotch_map.h>
 
-using namespace shirakami::cpr;
-
 #endif
 
 namespace shirakami {
@@ -241,19 +239,19 @@ public:
      * that switches the container that stores information from time to time. Do not call from CPR manager.
      * CPR managers have different criteria for choosing containers.
      */
-    cpr_local_handler::diff_upd_set_type& get_diff_upd_set() { return cpr_local_handle_.get_diff_upd_set(); }
+    cpr::cpr_local_handler::diff_upd_set_type& get_diff_upd_set() { return cpr_local_handle_.get_diff_upd_set(); }
 
-    cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set() { return cpr_local_handle_.get_diff_upd_seq_set(); }
+    cpr::cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set() { return cpr_local_handle_.get_diff_upd_seq_set(); }
 
-    cpr_local_handler::diff_upd_set_type& get_diff_upd_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_set(index); }
+    cpr::cpr_local_handler::diff_upd_set_type& get_diff_upd_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_set(index); }
 
-    cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_seq_set(index); }
+    cpr::cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_seq_set(index); }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
 
-    void regi_diff_upd_set(std::string_view storage, tid_word tid, Record* record, OP_TYPE op_type);
+    void regi_diff_upd_set(std::string_view storage, const tid_word& tid, Record* record, OP_TYPE op_type);
 
     void regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val);
 
@@ -326,7 +324,7 @@ private:
 #if defined(PWAL)
     pwal::pwal_handler log_handle_;
 #elif defined(CPR)
-    cpr_local_handler cpr_local_handle_;
+    cpr::cpr_local_handler cpr_local_handle_;
 #endif
 };
 

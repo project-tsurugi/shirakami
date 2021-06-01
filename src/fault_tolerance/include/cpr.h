@@ -200,7 +200,7 @@ public:
         delete_op_ = false;
     }
 
-    bool get_delete_op() const { return delete_op_; }
+    [[nodiscard]] bool get_delete_op() const { return delete_op_; }
 
     std::string_view get_key() const { return key_; } // NOLINT
 
@@ -216,9 +216,9 @@ private:
      * this log means update.
      */
     bool delete_op_{false};
-    std::string storage_;
-    std::string key_;
-    std::string val_;
+    std::string storage_{};
+    std::string key_{};
+    std::string val_{};
 };
 
 class log_record_of_seq {
@@ -230,15 +230,15 @@ public:
         val_ = val;
     }
 
-    SequenceValue get_id() { return key_; }
+    [[nodiscard]] SequenceValue get_id() const { return key_; }
 
-    std::tuple<SequenceVersion, SequenceValue> get_val() { return val_; }
+    [[nodiscard]] std::tuple<SequenceVersion, SequenceValue> get_val() const { return val_; }
 
     MSGPACK_DEFINE(key_, val_);
 
 private:
-    SequenceValue key_;
-    std::tuple<SequenceVersion, SequenceValue> val_;
+    SequenceValue key_{};
+    std::tuple<SequenceVersion, SequenceValue> val_{};
 };
 
 class log_records {

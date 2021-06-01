@@ -149,7 +149,7 @@ extern Status enter(Token& token); // NOLINT
  * Then, it delete the remaining garbage (heap) object by using private interface.
  * @return void
  */
-extern void fin(bool force_shut_down_cpr = true);
+extern void fin(bool force_shut_down_cpr = true); // NOLINT
 
 /**
  * @brief initialize shirakami environment

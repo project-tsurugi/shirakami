@@ -22,8 +22,8 @@ public:
 };
 
 TEST_F(storage, multiple_storages) { // NOLINT
-    Storage storage0;
-    Storage storage1;
+    Storage storage0{};
+    Storage storage1{};
     ASSERT_EQ(Status::OK, register_storage(storage0));
     ASSERT_EQ(Status::OK, register_storage(storage1));
     std::string k("k");   // NOLINT

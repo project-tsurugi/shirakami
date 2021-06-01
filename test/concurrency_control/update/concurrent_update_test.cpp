@@ -31,7 +31,7 @@ public:
 };
 
 TEST_F(simple_update, concurrent_updates) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     struct S {
         static void prepare(Storage storage) {

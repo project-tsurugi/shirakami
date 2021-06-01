@@ -69,7 +69,7 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
-    fin();
+    fin(); // NOLINT
 }
 
 } // namespace shirakami::testing

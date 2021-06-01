@@ -127,7 +127,7 @@ namespace shirakami {
     leave(s);
 
 #elif defined(CPR)
-    auto process_from_file = [](std::string fname) {
+    auto process_from_file = [](const std::string& fname) {
         std::ifstream logf;
         logf.open(fname, std::ios_base::in | std::ios_base::binary);
 
@@ -178,7 +178,7 @@ namespace shirakami {
             // recover from restore about sequence
             std::vector<cpr::log_record_of_seq>& logs_seq = restore.get_vec_seq();
             for (auto&& elem : logs_seq) {
-                std::unique_lock{sequence_map::get_sm_mtx()};
+                std::unique_lock lock{sequence_map::get_sm_mtx()};
                 /**
                  * Since the values ​​are aggregated for each generation, you can easily overwrite them.
                  */

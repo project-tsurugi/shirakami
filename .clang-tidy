@@ -8,6 +8,7 @@ cppcoreguidelines-*,\
 -cppcoreguidelines-pro-type-const-cast,\
 fuchsia-*,\
 -fuchsia-default-arguments,\
+-fuchsia-default-arguments-calls,\
 -fuchsia-overloaded-operator,\
 google-*,\
 -google-build-using-namespace,\
@@ -25,6 +26,7 @@ llvm-*,\
 misc-*,\
 -misc-unused-parameters,\
 modernize-*,\
+-modernize-use-trailing-return-type,\
 performance-*,\
 -performance-noexcept-move-constructor,\
 readability-*,\

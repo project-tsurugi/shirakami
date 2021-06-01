@@ -21,7 +21,7 @@ public:
 };
 
 TEST_F(session_info_test, get_txbegan_) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT

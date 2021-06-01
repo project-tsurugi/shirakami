@@ -27,7 +27,7 @@ public:
 };
 
 TEST_F(scan_insert_test, insert_record_after_select_doesnt_find) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k0("k0"); // NOLINT
     std::string k1("k1"); // NOLINT
@@ -39,7 +39,7 @@ TEST_F(scan_insert_test, insert_record_after_select_doesnt_find) { // NOLINT
     Token s1{};
     ASSERT_EQ(Status::OK, enter(s1));
     Tuple* t{};
-    ScanHandle handle;
+    ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s1, storage, k0, scan_endpoint::INCLUSIVE, k1, scan_endpoint::INCLUSIVE, handle));
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, read_from_scan(s1, handle, &t));
     ASSERT_FALSE(t); // NOLINT

@@ -148,7 +148,7 @@ extern bool check_commit(Token token, [[maybe_unused]] std::uint64_t commit_id) 
 #if defined(PWAL)
     return ti->get_flushed_ctid().get_obj() > commit_id;
 #elif defined(CPR)
-    return commit_id < global_phase_version::get_gpv().get_version();
+    return commit_id < cpr::global_phase_version::get_gpv().get_version();
 #else
     /**
      * No logging method means pre-commit is commit.

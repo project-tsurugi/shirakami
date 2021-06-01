@@ -145,7 +145,7 @@ void checkpointing() {
     }
 
     log_records l_recs{};
-    if (aggregate_buf.size() > 0) {
+    if (!aggregate_buf.empty()) {
         phase_version pv = global_phase_version::get_gpv();
         Token token{};
         enter(token);
@@ -209,7 +209,7 @@ void checkpointing() {
         leave(token);
     }
 
-    if (aggregate_buf_seq.size() > 0) {
+    if (!aggregate_buf_seq.empty()) {
         for (auto&& elem : aggregate_buf_seq) {
             if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
             l_recs.emplace_back_seq({std::get<0>(elem), std::get<1>(elem)});

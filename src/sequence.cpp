@@ -12,9 +12,10 @@ Status create_sequence(SequenceId* id) {
     sequence_map::create_initial_value(*id);
 
 #if defined(CPR)
-    Token token;
-    while (enter(token) != Status::OK)
+    Token token{};
+    while (enter(token) != Status::OK) {
         ;
+    }
     tx_begin(token);
     auto* ti = static_cast<session_info*>(token);
     ti->regi_diff_upd_seq_set(*id, sequence_map::initial_value);
@@ -101,9 +102,10 @@ Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* val
 
     // target.second is a durable one.
 #if defined(CPR)
-    Token token;
-    while (enter(token) != Status::OK)
+    Token token{};
+    while (enter(token) != Status::OK) {
         ;
+    }
     tx_begin(token);
     auto* ti = static_cast<session_info*>(token);
     // get reference
@@ -170,9 +172,10 @@ Status delete_sequence(SequenceId id) {
      * Unlike the transaction function, the sequence function returns deleted status even if the deletion process is not persisted, so there is no need to consider persistence.
      */
 #if defined(CPR)
-    Token token;
-    while (enter(token) != Status::OK)
+    Token token{};
+    while (enter(token) != Status::OK) {
         ;
+    }
     tx_begin(token); // for cordinate with cpr.
 
     target = sequence_map::value_type{sequence_map::non_exist_value, std::get<sequence_map::durable_pos>(target), std::get<sequence_map::cpr_version_pos>(target)};

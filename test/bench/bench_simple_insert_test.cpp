@@ -34,7 +34,7 @@ TEST_F(simple_insert, long_key_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, make_key(key_length, key_num), v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* tuple;
+    Tuple* tuple{};
 #ifdef CPR
     while (Status::OK != search_key(s, storage, make_key(key_length, key_num), &tuple)) {
         ;

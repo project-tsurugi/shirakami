@@ -29,7 +29,7 @@ public:
 };
 
 TEST_F(simple_update, update) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT

@@ -110,7 +110,7 @@ TEST_F(insert_delete, delete_insert_on_scan) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* t{};
-    ScanHandle handle;
+    ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, "", scan_endpoint::INF, handle));
 #if defined(CPR)
     while (Status::OK != read_from_scan(s, handle, &t)) {

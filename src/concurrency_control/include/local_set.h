@@ -33,7 +33,7 @@ public:
 
     cont_for_ol_type& get_cont_for_ol();
 
-    bool get_for_batch() { return for_batch_; }
+    [[nodiscard]] bool get_for_batch() const { return for_batch_; }
 
     void push(write_set_obj&& elem);
 

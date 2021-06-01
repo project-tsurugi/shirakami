@@ -46,7 +46,7 @@ public:
 
 
 TEST_F(scan_search, scan_key_search_key) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k("a");    // NOLINT
     std::string k2("aa");  // NOLINT
@@ -105,7 +105,7 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
 }
 
 TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k1("aaa"); // NOLINT
     std::string k2("aab"); // NOLINT

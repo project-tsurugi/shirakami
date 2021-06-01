@@ -22,7 +22,7 @@ public:
 };
 
 TEST_F(simple_scan, read_from_scan) { // NOLINT
-    Storage storage;
+    Storage storage{};
     register_storage(storage);
     std::string k("aaa");  // NOLINT
     std::string k2("aab"); // NOLINT
