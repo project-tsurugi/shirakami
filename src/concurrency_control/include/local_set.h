@@ -29,13 +29,6 @@ public:
 
     [[maybe_unused]] void display_write_set();
 
-    /**
-     * @param[in] rec_ptr The key to be found.
-     * @return some_ptr Found element.
-     * @return nullptr Not found.
-     */
-    write_set_obj* find(Record* rec_ptr);
-
     cont_for_bt_type& get_cont_for_bt();
 
     cont_for_ol_type& get_cont_for_ol();
@@ -62,7 +55,7 @@ public:
      * @param[in] rec_ptr the target record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search(const Record* rec_ptr);
+    write_set_obj* search(Record* rec_ptr);
 
     void set_for_batch(bool tf) { for_batch_ = tf; }
 

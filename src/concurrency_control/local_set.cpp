@@ -40,24 +40,6 @@ namespace shirakami {
     std::cout << "==========" << std::endl;
 }
 
-write_set_obj* local_write_set::find(Record* rec_ptr) {
-    // for bt
-    if (for_batch_) {
-        auto ret{cont_for_bt_.find(rec_ptr)};
-        if (ret == cont_for_bt_.end()) {
-            return nullptr;
-        }
-        return &std::get<1>(*ret);
-    }
-    // for ol
-    for (auto&& elem : cont_for_ol_) {
-        if (elem.get_rec_ptr() == rec_ptr) {
-            return &elem;
-        }
-    }
-    return nullptr;
-}
-
 local_write_set::cont_for_bt_type& local_write_set::get_cont_for_bt() {
     return cont_for_bt_;
 }
@@ -108,14 +90,13 @@ void local_write_set::remove_inserted_records_from_yakushima(shirakami::Token sh
     }
 }
 
-write_set_obj* local_write_set::search(const Record* const rec_ptr) {
-    if (get_for_batch()) {
-        for (auto&& elem : get_cont_for_bt()) {
-            write_set_obj* we_ptr = &std::get<1>(elem);
-            if (rec_ptr == we_ptr->get_rec_ptr()) {
-                return we_ptr;
-            }
+write_set_obj* local_write_set::search(Record* rec_ptr) {
+    if (for_batch_) {
+        auto ret{cont_for_bt_.find(rec_ptr)};
+        if (ret == cont_for_bt_.end()) {
+            return nullptr;
         }
+        return &std::get<1>(*ret);
     } else {
         for (auto&& elem : get_cont_for_ol()) {
             write_set_obj* we_ptr = &elem;

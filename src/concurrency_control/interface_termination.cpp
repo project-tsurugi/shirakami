@@ -91,7 +91,7 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
              itr.get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
             check.get_absent() // check whether it was deleted.
             ||
-            (check.get_lock() && (ti->get_write_set().search(rec_ptr) == nullptr))) {
+            (check.get_lock() && (ti->get_write_set().search(const_cast<Record*>(rec_ptr)) == nullptr))) {
             ti->get_write_set().unlock();
             abort(token);
 

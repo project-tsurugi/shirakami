@@ -121,7 +121,7 @@ retry_by_continue:
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->get_write_set().search(std::get<0>(*itr)); // NOLINT
+    const write_set_obj* inws = ti->get_write_set().search(const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (inws != nullptr) {
         ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
