@@ -59,21 +59,24 @@ DEFINE_uint64(                                                           // NOLI
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
         "time.");                                                        // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
+DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8.");   // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
 DEFINE_uint64(record, 10, "# database records(tuples).");                // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
-DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8.");   // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
 
 /**
- * special option.
+ * batch option.
  */
 DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
 DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");                                     // NOLINT
 DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions.");                       // NOLINT
 
+/**
+ * scan option.
+ */
 DEFINE_bool(include_scan_tx, false, "If it is true, one of # worker threads executese scan tx."); // NOLINT
 DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");                                   // NOLINT
 
@@ -121,28 +124,29 @@ static void invoke_leader() {
 }
 
 static void load_flags() {
-    if (FLAGS_thread >= 1) {
-        printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
+    std::cout << "general options" << std::endl;
+    if (FLAGS_cpumhz > 1) {
+        printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(FATAL) << "Number of threads must be larger than 0.";
+        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
     }
-    if (FLAGS_record > 1) {
-        printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
+    if (FLAGS_duration >= 1) {
+        printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        LOG(FATAL) << "Number of database records(tuples) must be large than 0.";
+        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (FLAGS_key_length > 0) {
         printf("FLAGS_key_length : %zu\n", FLAGS_key_length); // NOLINT
-    }
-    if (FLAGS_val_length > 1) {
-        printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
-    } else {
-        LOG(FATAL) << "Length of val must be larger than 0.";
     }
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
         LOG(FATAL) << "Number of operations in a transaction must be larger than 0.";
+    }
+    if (FLAGS_record > 1) {
+        printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
+    } else {
+        LOG(FATAL) << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
@@ -155,16 +159,26 @@ static void load_flags() {
     } else {
         LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
     }
-    if (FLAGS_cpumhz > 1) {
-        printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
+    if (FLAGS_thread >= 1) {
+        printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
+        LOG(FATAL) << "Number of threads must be larger than 0.";
     }
-    if (FLAGS_duration >= 1) {
-        printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
+    if (FLAGS_val_length > 1) {
+        printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
+        LOG(FATAL) << "Length of val must be larger than 0.";
     }
+
+    std::cout << "batch options" << std::endl;
+    std::cout << "FLAGS_include_long_tx: " << FLAGS_include_long_tx << std::endl;
+    std::cout << "FLAGS_long_tx_ops: " << FLAGS_long_tx_ops << std::endl;
+    std::cout << "FLAGS_long_tx_rratio: " << FLAGS_long_tx_rratio << std::endl;
+
+    std::cout << "scan options" << std::endl;
+    std::cout << "FLAGS_include_scan_tx: " << FLAGS_include_scan_tx << std::endl;
+    std::cout << "FLAGS_scan_elem_num: " << FLAGS_scan_elem_num << std::endl;
+
     printf("Fin load_flags()\n"); // NOLINT
 }
 
