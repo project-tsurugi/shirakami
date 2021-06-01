@@ -97,12 +97,11 @@ write_set_obj* local_write_set::search(Record* rec_ptr) {
             return nullptr;
         }
         return &std::get<1>(*ret);
-    } else {
-        for (auto&& elem : get_cont_for_ol()) {
-            write_set_obj* we_ptr = &elem;
-            if (rec_ptr == we_ptr->get_rec_ptr()) {
-                return we_ptr;
-            }
+    }
+    for (auto&& elem : get_cont_for_ol()) {
+        write_set_obj* we_ptr = &elem;
+        if (rec_ptr == we_ptr->get_rec_ptr()) {
+            return we_ptr;
         }
     }
     return nullptr;
