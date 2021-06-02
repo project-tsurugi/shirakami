@@ -32,7 +32,7 @@ void Result::displayTps(size_t extime) const {
     if (total_commit_counts_ == 0) {
         std::cout << "throughput[tps]:\t0" << std::endl;
     } else {
-        uint64_t result = total_commit_counts_ / extime;
+        long double result{static_cast<long double>(total_commit_counts_) / extime};
         constexpr std::uint64_t ns_sec = 1000000000;
         std::cout << "latency[ns]:\t" << ns_sec / result << std::endl;
         std::cout << "throughput[tps]:\t" << result << std::endl;

@@ -118,7 +118,7 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    printf("cpr global version :\t%zu\n", cpr::global_phase_version::get_gpv().get_version()); // NOLINT
+    printf("cpr_global_version:\t%zu\n", cpr::global_phase_version::get_gpv().get_version()); // NOLINT
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
