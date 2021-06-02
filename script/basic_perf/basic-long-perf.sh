@@ -1,6 +1,6 @@
 cpumhz=2100
-duration=10
-record=1000000
+duration=1
+record=100
 key_length=64
 rratioary=(99 80 50)
 skew=0
@@ -92,7 +92,7 @@ do
         tmpCA=`grep cache-misses ./ana.txt | awk '{print $4}'`
         tmpMAXRSS=`grep maxrss ./exp.txt | awk '{print $2}'`
         tmpCGV=`grep cpr_global_version ./exp.txt | awk '{print $2}'`
-        sumTH=`echo "$sumTH + $tmpTH" | bc`
+        sumTH=`echo "scale=4; $sumTH + $tmpTH" | bc | xargs printf %10.4f`
         sumAR=`echo "scale=4; $sumAR + $tmpAR" | bc | xargs printf %.4f`
         sumCA=`echo "$sumCA + $tmpCA" | bc`
         sumMAXRSS=`echo "$sumMAXRSS + $tmpMAXRSS" | bc`
@@ -155,7 +155,7 @@ do
           minCGV=$tmpCGV
         fi
       done
-      avgTH=`echo "$sumTH / $epoch" | bc`
+      avgTH=`echo "scale=4; $sumTH / $epoch" | bc | xargs printf %10.4f`
       avgAR=`echo "scale=4; $sumAR / $epoch" | bc | xargs printf %.4f`
       avgCA=`echo "$sumCA / $epoch" | bc`
       avgMAXRSS=`echo "$sumMAXRSS / $epoch" | bc`
