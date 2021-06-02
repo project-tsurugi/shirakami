@@ -76,11 +76,7 @@ public:
 
     [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
 
-    [[nodiscard]] std::uint64_t get_checkpointed_version() const { return checkpointed_version_; } // NOLINT
-
     void set_version(std::uint64_t new_v) { version_ = new_v; }
-
-    void set_checkpointed_version(std::uint64_t new_v) { checkpointed_version_ = new_v; }
 
 #endif
 
@@ -91,12 +87,7 @@ private:
      * @pre Only lock owner can read-write this filed.
      * @todo consider type of member and round-trip
      */
-    std::uint64_t version_{0};
-    /**
-     * @pre Only lock owner can read-write this filed.
-     * @todo consider type of member and round-trip
-     */
-    std::uint64_t checkpointed_version_{0};
+    std::atomic<std::uint64_t> version_{0};
     Tuple stable_;
 #endif
     Tuple tuple_;

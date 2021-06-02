@@ -165,44 +165,37 @@ void checkpointing() {
             for (auto itr = itr_storage->second.begin(); itr != itr_storage->second.end(); ++itr) {
 #endif
                 if (kCheckPointThreadEnd.load(std::memory_order_acquire) && kCheckPointThreadEndForce.load(std::memory_order_acquire)) return;
-#if defined(CPR_DIFF_HOPSCOTCH)
                 Record* rec = itr.value().second;
-#elif defined(CPR_DIFF_UM)
-                Record* rec = itr->second.second;
-#endif
 
                 if (rec == nullptr) {
-#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()));
-#elif defined(CPR_DIFF_UM)
-#endif
-                    l_recs.emplace_back(itr_storage->first, std::string_view(itr->first));
                     continue;
                 }
-                rec->get_tidw().lock();
+RETRY_COPY:
                 // begin : copy record
                 if (rec->get_version() == pv.get_version() + 1) {
                     const Tuple& tup = rec->get_stable();
-#if defined(CPR_DIFF_HOPSCOTCH)
                     l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
-#elif defined(CPR_DIFF_UM)
-                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
-#endif
                 } else {
+                    tid_word tid{rec->get_tidw()};
+                    while (tid.get_lock()) {
+                        _mm_pause();
+                        tid = rec->get_tidw();
+                    }
+                    if (rec->get_version() == pv.get_version() + 1) goto RETRY_COPY; // NOLINT
                     const Tuple& tup = rec->get_tuple();
-#if defined(CPR_DIFF_HOPSCOTCH)
-                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
-#elif defined(CPR_DIFF_UM)
-                    l_recs.emplace_back(itr_storage->first, tup.get_key(), tup.get_value());
-#endif
+                    std::string key{tup.get_key()};
+                    std::string value{tup.get_value()};
+                    tid_word tid_check{rec->get_tidw()};
+                    while (tid_check.get_lock()) {
+                        _mm_pause();
+                        tid_check = rec->get_tidw();
+                    }
+                    if (tid_check != tid) goto RETRY_COPY; // NOLINT
+                    l_recs.emplace_back(itr_storage.key(), key, value);
                     rec->set_version(ti->get_version() + 1);
                 }
                 // end : copy record
-
-                rec->set_checkpointed_version(rec->get_version());
-
-                // unlock record
-                rec->get_tidw().unlock();
             }
         }
 
