@@ -124,7 +124,7 @@ do
           minCA=$tmpCA
         fi
       done
-      avgTH=`echo "$sumTH / $epoch * $long_tx_ops" | bc`
+      avgTH=`echo "$sumTH / $epoch" | bc`
       avgAR=`echo "scale=4; $sumAR / $epoch" | bc | xargs printf %.4f`
       avgCA=`echo "$sumCA / $epoch" | bc`
       echo "sumTH: $sumTH, sumAR: $sumAR, sumCA: $sumCA"
@@ -132,6 +132,9 @@ do
       echo "maxTH: $maxTH, maxAR: $maxAR, maxCA: $maxCA"
       echo "minTH: $minTH, minAR: $minAR, minCA: $minCA"
       echo ""
+      avgTH=`echo "$avgTH * $long_tx_ops" | bc`
+      minTH=`echo "$minTH * $long_tx_ops" | bc`
+      maxTH=`echo "$maxTH * $long_tx_ops" | bc`
       echo "$long_tx_ops $avgTH $minTH $maxTH $avgAR $minAR $maxAR $avgCA $minCA $maxCA" >> $result
     done
   done
