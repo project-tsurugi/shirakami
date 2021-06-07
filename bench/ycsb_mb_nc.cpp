@@ -67,19 +67,6 @@ DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLI
 DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
 
-/**
- * batch option.
- */
-DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
-DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");                                     // NOLINT
-DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions.");                       // NOLINT
-
-/**
- * scan option.
- */
-DEFINE_bool(include_scan_tx, false, "If it is true, one of # worker threads executese scan tx."); // NOLINT
-DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");                                   // NOLINT
-
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
 
@@ -170,15 +157,6 @@ static void load_flags() {
         LOG(FATAL) << "Length of val must be larger than 0.";
     }
 
-    std::cout << "batch options" << std::endl;
-    std::cout << "FLAGS_include_long_tx: " << FLAGS_include_long_tx << std::endl;
-    std::cout << "FLAGS_long_tx_ops: " << FLAGS_long_tx_ops << std::endl;
-    std::cout << "FLAGS_long_tx_rratio: " << FLAGS_long_tx_rratio << std::endl;
-
-    std::cout << "scan options" << std::endl;
-    std::cout << "FLAGS_include_scan_tx: " << FLAGS_include_scan_tx << std::endl;
-    std::cout << "FLAGS_scan_elem_num: " << FLAGS_scan_elem_num << std::endl;
-
     printf("Fin load_flags()\n"); // NOLINT
 }
 
@@ -201,6 +179,12 @@ int main(int argc, char* argv[]) try { // NOLINT
     std::string log_dir = MAC2STR(PROJECT_ROOT);
     log_dir.append("/build/bench/ycsb_log");
     init(false, log_dir); // NOLINT
+
+    /**
+     * about separating
+     */
+    set_use_separate_storage(true);
+
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length, FLAGS_thread);
     invoke_leader();
     fin();
@@ -231,73 +215,31 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     std::reference_wrapper<Result> myres = std::ref(res[thid]);
 
     // this function can be used in Linux environment only.
-#ifdef SHIRAKAMI_LINUX
     setThreadAffinity(static_cast<const int>(thid));
-#endif
 
     Token token{};
     std::vector<shirakami::opr_obj> opr_set;
-    if (thid == 0 && FLAGS_include_long_tx) {
-        opr_set.reserve(FLAGS_long_tx_ops);
-    } else {
-        opr_set.reserve(FLAGS_ops);
-    }
     enter(token);
 
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
-            /**
-             * special workloads.
-             */
-            if (FLAGS_include_long_tx) {
-                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
-                tx_begin(token, false, true);
-            } else if (FLAGS_include_scan_tx) {
-                gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
-            } else {
-                LOG(FATAL) << "fatal error";
-            }
-        } else {
-            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
-        }
+        opr_set.reserve(FLAGS_ops);
+        gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
+        tx_begin(token, false, true);
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tuple{};
                 uint64_t ctr{0};
                 for (;;) {
-
-                    auto ret = search_key(token, storage, itr.get_key(), &tuple);
+                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), &tuple);
                     if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
-#ifndef NDEBUG
-                    assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
-#endif
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                auto ret = update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
-#ifndef NDEBUG
-                assert(ret == Status::OK || ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
-#endif
-            } else if (itr.get_type() == OP_TYPE::SCAN) {
-                tx_begin(token, true);
-                std::vector<const Tuple*> scan_res;
-                //                scan_key(token, storage, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),scan_endpoint::INCLUSIVE, scan_res);
-                scan_key(token, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, scan_res);
-                std::cout << "list" << std::endl;
-                for (auto&& it : scan_res) {
-                    std::cout << it->get_key() << std::endl;
-                    std::flush(std::cout);
-                }
-                exit(1);
-#ifndef NDEBUG
-                if (scan_res.size() != FLAGS_scan_elem_num) {
-                    LOG(FATAL) << "scan fatal error " << scan_res.size();
-                } else {
-                    std::cout << "ok" << std::endl;
-                }
-#endif
+                auto ret = update(token, get_separate_storage()[thid], itr.get_key(), std::string(FLAGS_val_length, '0'));
+            } else {
+                LOG(FATAL) << "error.";
             }
         }
         if (commit(token) == Status::OK) { // NOLINT
@@ -308,29 +250,4 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         }
     }
     leave(token);
-    if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
-        if (FLAGS_include_long_tx) {
-            printf("long_tx_commit_counts:\t%lu\n" // NOLINT
-                   "long_tx_abort_counts:\t%lu\n"
-                   "long_tx_throughput:\t%lu\n"
-                   "long_tx_abort_rate:\t%lf\n",
-                   myres.get().get_local_commit_counts(),
-                   myres.get().get_local_abort_counts(),
-                   myres.get().get_local_commit_counts() / FLAGS_duration,
-                   static_cast<double>(myres.get().get_local_abort_counts()) /
-                           static_cast<double>(myres.get().get_local_commit_counts() +
-                                               myres.get().get_local_abort_counts()));
-        } else if (FLAGS_include_scan_tx) {
-            printf("scan_tx_commit_counts:\t%lu\n" // NOLINT
-                   "scan_tx_abort_counts:\t%lu\n"
-                   "scan_tx_throughput:\t%lu\n"
-                   "scan_tx_abort_rate:\t%lf\n",
-                   myres.get().get_local_commit_counts(),
-                   myres.get().get_local_abort_counts(),
-                   myres.get().get_local_commit_counts() / FLAGS_duration,
-                   static_cast<double>(myres.get().get_local_abort_counts()) /
-                           static_cast<double>(myres.get().get_local_commit_counts() +
-                                               myres.get().get_local_abort_counts()));
-        }
-    }
 }

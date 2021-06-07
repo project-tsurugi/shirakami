@@ -1,28 +1,29 @@
 # shirakami benchmark
 Benchmarking of
 - YCSB of shirakami
-- third_party/masstree-beta
 
 ## Preparation
 Please do appropriate build (ex. release-build). If you do benchmarking with
  avoiding contentions against heap, you should use some high performance memory 
  allocator (ex. jemalloc).
  
-```
+```sh
 cd [/path/to/project_root]
 mkdir build-release
 cd build-release
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 ```
 
-## Running
-```
+## Running example
+```sh
 cd [/path/to/project_root]
-cd build-release/bench
-LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb
-LD_PRELOAD=[/path/to/some memory allocator library] ./masstree
+cd [/path/to/release_build]/bench
+./ycsb
+
 ```
-YCSB of shirakami : Available options for general workloads.
+
+## ycsb.cpp
+### YCSB of shirakami : Available options for general workloads.
 - `-cpumhz`
   - number of cpu MHz of execution environment. It is used measuring some time.
   - default : `2000`
@@ -58,34 +59,8 @@ for special workloads
 - `long_tx_ops`
   - number of operations per a long transactions.
   - default : `50`
-
-masstree : Available options
-- `-cpumhz`
-  - number of cpu MHz of execution environment. It is used measuring some time.
-  - default : `2000`
-- `-duration`
-  - duration of benchmark in seconds.
-  - default : `1`
-- `-instruction`
-  - insert or put or get.
-  - default : `insert`
-- `-key_length`
-  - byte size of key.
-  - default : `8`
-- `-record`
-  - number of database records.
-  - default : `100`
-- `-skew`
-  - access skew of transaction.
-  - default : `0.0`
-- `-thread`
-  - number of worker threads.
-  - default : `1`
-- `-val_length`
-  - byte size of val.
-  - default : `4`
  
-## YCSB Example
+### Example
 - YCSB-A
   - rratio : `50`
 ```
@@ -102,17 +77,9 @@ LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb -rratio 95
 LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb -rratio 100
 ```
 
-## masstree Example
-- insert benchmark
-  - note : default option of -instruction is `insert`
-```
-LD_PRELOAD=[/path/to/some memory allocator library] ./masstree
-```
-- put benchmark
-```
-LD_PRELOAD=[/path/to/some memory allocator library] ./masstree -instruction put
-```
-- get benchmark
-```
-LD_PRELOAD=[/path/to/some memory allocator library] ./masstree -instruction get
-```
+## ycsb_mb_nc.cpp
+This benchmark is intended to measure performance when multiple non-conflicting long transactions are being processed.
+
+### Available options
+
+### Example

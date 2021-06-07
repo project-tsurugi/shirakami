@@ -25,8 +25,8 @@ public:
     // for scan
     opr_obj(const OP_TYPE type, std::string_view str1, std::string_view str2)
         : type_(type) {
-            scan_l_key_ = str1;
-            scan_r_key_ = str2;
+        scan_l_key_ = str1;
+        scan_r_key_ = str2;
     }
 
     opr_obj(const opr_obj& right) = delete;
@@ -72,9 +72,18 @@ private:
 
 /**
  * @brief generate search/update operations.
+ * @param[in,out] opr_set
+ * @param[in] key_len
+ * @param[in] tpnm
+ * @param[in] opnm
+ * @param[in] rratio
+ * @param[in,out] rnd
+ * @param[in,out] zipf
  */
 static void
-gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm, const std::size_t opnm, const std::size_t rratio, Xoroshiro128Plus& rnd, FastZipf& zipf) {
+gen_tx_rw(
+        std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm,
+        const std::size_t opnm, const std::size_t rratio, Xoroshiro128Plus& rnd, FastZipf& zipf) {
     using namespace shirakami;
     opr_set.clear();
     for (std::size_t i = 0; i < opnm; ++i) {
@@ -88,8 +97,18 @@ gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::s
     }
 }
 
+/**
+ * @param[in,out] opr_set
+ * @param[in] key_len
+ * @param[in] tpnm
+ * @param[in] scan_elem_n
+ * @param[in,out] rnd
+ * @param[in,out] zipf
+ */
 static void
-gen_tx_scan(std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm, const std::size_t scan_elem_n, Xoroshiro128Plus& rnd, FastZipf& zipf) {
+gen_tx_scan(
+    std::vector<opr_obj>& opr_set, const std::size_t key_len, const std::size_t tpnm, 
+    const std::size_t scan_elem_n, Xoroshiro128Plus& rnd, FastZipf& zipf) {
     using namespace shirakami;
     opr_set.clear();
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);

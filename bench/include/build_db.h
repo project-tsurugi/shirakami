@@ -16,6 +16,10 @@
 
 #pragma once
 
+#include <utility>
+
+#include "cpu.h"
+
 #include "shirakami/scheme.h"
 
 namespace shirakami {
@@ -26,12 +30,41 @@ namespace shirakami {
 inline Storage storage;
 
 /**
+ * @brief For ycsb_mb_nc.cpp
+ * @details If this is true, All worker threads access separate storage. 
+ * Therefore, there is no conflict.
+ */
+inline bool use_separate_storage{false};
+
+/**
+ * @brief For ycsb_mb_nc.cpp
+ * @details If this is true, All worker threads access separate storage. 
+ * Therefore, there is no conflict.
+ */
+alignas(CACHE_LINE_SIZE) inline std::vector<Storage> separate_storage{};
+
+/**
+ * global variables getter / setter
+ */
+
+inline std::vector<Storage>& get_separate_storage() { return separate_storage; }
+
+inline bool get_use_separate_storage() { return use_separate_storage; }
+
+inline void set_use_separate_storage(bool tf) { use_separate_storage = tf; }
+
+/**
+ * Other functions.
+ */
+
+void build_db(std::size_t record, std::size_t key_length, std::size_t value_length, std::size_t threads);
+
+/**
  * @brief Determine the number of parallels to use for the build.
  */
 size_t decideParallelBuildNumber(std::size_t record); // NOLINT
 
-void parallel_build_db(std::size_t start, std::size_t end, std::size_t key_length, std::size_t value_length);
+void parallel_build_db(
+        std::size_t start, std::size_t end, std::size_t key_length, std::size_t value_length, std::size_t pbd_storage);
 
-void build_db(std::size_t record, std::size_t key_length, std::size_t value_length);
-
-}  // namespace shirakami
+} // namespace shirakami
