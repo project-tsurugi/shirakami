@@ -38,7 +38,7 @@ size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
 }
 
 void parallel_build_db(const std::size_t start, const std::size_t end, const std::size_t key_length,
-                       const std::size_t value_length, const Storage pbd_storage = 0) {
+                       const std::size_t value_length, const Storage pbd_storage = 0) { // NOLINT
     Xoroshiro128Plus rnd;
     Token token{};
     enter(token);
@@ -73,7 +73,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end, const std
 }
 
 void build_db(const std::size_t record, const std::size_t key_length, const std::size_t value_length,
-              const std::size_t threads = 0) {
+              const std::size_t threads = 0) { // NOLINT
     if (get_use_separate_storage()) {
         get_separate_storage().reserve(threads);
         for (std::size_t i = 0; i < threads; ++i) {

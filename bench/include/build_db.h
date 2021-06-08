@@ -41,7 +41,7 @@ inline bool use_separate_storage{false};
  * @details If this is true, All worker threads access separate storage. 
  * Therefore, there is no conflict.
  */
-alignas(CACHE_LINE_SIZE) inline std::vector<Storage> separate_storage{};
+alignas(CACHE_LINE_SIZE) inline std::vector<Storage> separate_storage{}; // NOLINT
 
 /**
  * global variables getter / setter
