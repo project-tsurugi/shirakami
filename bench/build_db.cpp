@@ -53,15 +53,22 @@ void parallel_build_db(const std::size_t start, const std::size_t end, const std
         } else {
             ret = insert(token, storage, make_key(key_length, i), std::string(value_length, '0'));
         }
-        assert(ret == Status::OK); // NOLINT
+        if (ret != Status::OK) {
+            LOG(FATAL);
+        }
         ++ctr;
         if (ctr > 10) { // NOLINT
-            commit(token);
+            ret = commit(token);
+            if (ret != Status::OK) {
+                LOG(FATAL);
+            }
             ctr = 0;
         }
     }
     auto ret = commit(token);
-    assert(ret == Status::OK); // NOLINT
+    if (ret != Status::OK) {
+        LOG(FATAL);
+    }
     leave(token);
 }
 
