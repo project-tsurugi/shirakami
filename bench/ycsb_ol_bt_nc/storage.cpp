@@ -89,7 +89,7 @@ void build_storage(Storage st, std::size_t rec) {
 
 void init_db_ol() {
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
-        Storage st;
+        Storage st{};
         auto ret{register_storage(st)};
         if (ret != Status::OK) {
             LOG(FATAL) << "fail register_storage.";
@@ -110,7 +110,7 @@ void init_db_ol() {
 
 void init_db_bt() {
     for (std::size_t i = 0; i < FLAGS_bt_thread; ++i) {
-        Storage st;
+        Storage st{};
         auto ret{register_storage(st)};
         if (ret != Status::OK) {
             LOG(FATAL) << "fail register_storage.";
