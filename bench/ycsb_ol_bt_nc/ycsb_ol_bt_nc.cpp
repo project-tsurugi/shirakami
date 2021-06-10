@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     check_flags();
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/build/bench/ycsb_log");
+    log_dir.append("/build/bench/ycsb_ol_bt_nc_log");
     init(false, log_dir); // NOLINT
     init_db();
     //invoke_leader();

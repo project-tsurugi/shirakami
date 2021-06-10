@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     }
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/build/bench/ycsb_log");
+    log_dir.append("/build/bench/ycsb_mb_nc_log");
     init(false, log_dir); // NOLINT
 
     /**
