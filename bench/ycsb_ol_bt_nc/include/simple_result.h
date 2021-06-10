@@ -11,17 +11,17 @@ namespace shirakami {
 class alignas(64) simple_result { // NOLINT
 public:
     // getter
-    double get_abort_rate() const { return abort_rate_; }
+    [[nodiscard]] double get_abort_rate() const { return abort_rate_; }
 
-    std::uint64_t get_ct_abort() const { return ct_abort_; }
+    [[nodiscard]] std::uint64_t get_ct_abort() const { return ct_abort_; }
 
-    std::uint64_t get_ct_commit() const { return ct_commit_; }
+    [[nodiscard]] std::uint64_t get_ct_commit() const { return ct_commit_; }
 
-    std::uint64_t get_ct_cpr() const { return ct_cpr_; }
+    [[nodiscard]] std::uint64_t get_ct_cpr() const { return ct_cpr_; }
 
-    std::uint64_t get_maxrss() const { return maxrss_; }
+    [[nodiscard]] std::uint64_t get_maxrss() const { return maxrss_; }
 
-    double get_throughput() const { return throughput_; }
+    [[nodiscard]] double get_throughput() const { return throughput_; }
 
     // setter
     void set_abort_rate(double rate) { abort_rate_ = rate; }
