@@ -79,7 +79,3 @@ LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb -rratio 100
 
 ## ycsb_mb_nc.cpp
 This benchmark is intended to measure performance when multiple non-conflicting long transactions are being processed.
-
-### Available options
-
-### Example

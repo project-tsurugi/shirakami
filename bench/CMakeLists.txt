@@ -135,3 +135,5 @@ target_link_libraries(map
         PRIVATE tsl::hopscotch_map
         PRIVATE Threads::Threads
         )
+
+add_subdirectory(ycsb_ol_bt_nc)
