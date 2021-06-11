@@ -47,6 +47,7 @@ void check_flags() {
     } else {
         LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
     }
+    std::cout << "FLAGS_ol_thread:\t" << FLAGS_ol_thread << std::endl;
 
     std::cout << "batch options" << std::endl;
     printf("FLAGS_bt_ops : %zu\n", FLAGS_bt_ops);           // NOLINT
@@ -61,6 +62,7 @@ void check_flags() {
     } else {
         LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
     }
+    std::cout << "FLAGS_bt_thread:\t" << FLAGS_bt_thread << std::endl;
 
     printf("Fin check_flags()\n"); // NOLINT
 }
