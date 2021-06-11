@@ -15,6 +15,7 @@ file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "concurrency_control/*.cpp"
         "concurrency_control/delete/*.cpp"
+        "concurrency_control/helper/*.cpp"
         "concurrency_control/insert/*.cpp"
         "concurrency_control/storage/*.cpp"
         "concurrency_control/scan/*.cpp"
