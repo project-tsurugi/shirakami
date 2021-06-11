@@ -23,8 +23,11 @@ namespace shirakami {
 
 Status enter(Token& token) { // NOLINT
     Status ret_status = session_info_table::decide_token(token);
+    if (ret_status != Status::OK) return ret_status;
     yakushima::Token kvs_token{};
-    yakushima::enter(kvs_token);
+    while (yakushima::enter(kvs_token) != yakushima::status::OK) {
+        _mm_pause();
+    }
     static_cast<session_info*>(token)->set_kvs_token(kvs_token);
     return ret_status;
 }
