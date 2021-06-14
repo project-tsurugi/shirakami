@@ -88,8 +88,8 @@ void build_storage(Storage st, std::size_t rec) {
 }
 
 void init_db_ol() {
-    std::vector<std::thread> ths;
-    ths.reserve(FLAGS_ol_thread);
+    //std::vector<std::thread> ths;
+    //ths.reserve(FLAGS_ol_thread);
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
         auto ret{register_storage(st)};
@@ -98,13 +98,16 @@ void init_db_ol() {
         }
         get_ol_storages().emplace_back(st);
 
-        ths.emplace_back(build_storage, st, FLAGS_ol_rec);
+        //ths.emplace_back(build_storage, st, FLAGS_ol_rec);
+        build_storage(st, FLAGS_ol_rec);
     }
 
-    for (auto&& th : ths) th.join();
+    //for (auto&& th : ths) th.join();
 }
 
 void init_db_bt() {
+    std::vector<std::thread> ths;
+    ths.reserve(FLAGS_bt_thread);
     for (std::size_t i = 0; i < FLAGS_bt_thread; ++i) {
         Storage st{};
         auto ret{register_storage(st)};
@@ -112,15 +115,12 @@ void init_db_bt() {
             LOG(FATAL) << "fail register_storage.";
         }
         get_bt_storages().emplace_back(st);
+
+        //ths.emplace_back(build_storage, st, FLAGS_bt_rec);
+        build_storage(st, FLAGS_bt_rec);
     }
 
-    std::vector<std::thread> ths;
-    ths.reserve(get_bt_storages().size());
-    for (auto&& st : get_bt_storages()) {
-        ths.emplace_back(build_storage, st, FLAGS_bt_rec);
-    }
-
-    for (auto&& th : ths) th.join();
+    //for (auto&& th : ths) th.join();
 }
 
 void init_db() {

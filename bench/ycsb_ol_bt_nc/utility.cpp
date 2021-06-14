@@ -5,6 +5,8 @@
 #include "declare_gflags.h"
 #include "simple_result.h"
 
+#include "memory.h"
+
 #if defined(CPR)
 
 #include "fault_tolerance/include/cpr.h"
@@ -82,6 +84,7 @@ void output_result(
     std::cout << "ol_abort_count:\t" << ol_ct_abort << std::endl;
     std::cout << "ol_throughput[tps]:\t" << ol_ct_commit / FLAGS_duration << std::endl;
     std::cout << "ol_throughput[ops/s]:\t" << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration << std::endl;
+    std::cout << "ol_throughput[ops/s/th]:\t" << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration / FLAGS_ol_thread << std::endl;
 
     std::uint64_t bt_ct_commit{0};
     std::uint64_t bt_ct_abort{0}; 
@@ -95,7 +98,9 @@ void output_result(
     std::cout << "bt_abort_count:\t" << bt_ct_abort << std::endl;
     std::cout << "bt_throughput[tps]:\t" << bt_ct_commit / FLAGS_duration << std::endl;
     std::cout << "bt_throughput[ops/s]:\t" << (bt_ct_commit * FLAGS_bt_ops) / FLAGS_duration << std::endl;
+    std::cout << "bt_throughput[ops/s/th]:\t" << (bt_ct_commit * FLAGS_bt_ops) / FLAGS_duration / FLAGS_bt_thread << std::endl;
 
+    shirakami::displayRusageRUMaxrss();
 #if defined(CPR)
     printf("cpr_global_version:\t%zu\n", shirakami::cpr::global_phase_version::get_gpv().get_version()); // NOLINT
 #endif

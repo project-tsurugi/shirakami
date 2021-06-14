@@ -100,7 +100,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready, const bool& s
     Xoroshiro128Plus rnd;
     FastZipf zipf(&rnd, is_ol ? FLAGS_ol_skew : FLAGS_bt_skew, is_ol ? FLAGS_ol_rec : FLAGS_bt_rec);
 
-    setThreadAffinity(static_cast<const int>(thid));
+    setThreadAffinity(static_cast<const int>(is_ol ? thid : thid + FLAGS_ol_thread));
 
     Token token{};
     Storage storage{is_ol ? get_ol_storages()[thid] : get_bt_storages()[thid]};
