@@ -57,7 +57,7 @@ void brock_insert(Storage st, size_t start, size_t end) {
         Status ret{};
         ret = insert(token, st, make_key(FLAGS_key_len, i), std::string(FLAGS_val_len, '0'));
         if (ret != Status::OK) {
-            LOG(FATAL);
+            LOG(FATAL) << "status is " << ret;
         }
         ++ctr;
         if (ctr > 10) { // NOLINT
@@ -88,6 +88,8 @@ void build_storage(Storage st, std::size_t rec) {
 }
 
 void init_db_ol() {
+    std::vector<std::thread> ths;
+    ths.reserve(FLAGS_ol_thread);
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
         auto ret{register_storage(st)};
@@ -95,13 +97,8 @@ void init_db_ol() {
             LOG(FATAL) << "fail register_storage.";
         }
         get_ol_storages().emplace_back(st);
-    }
 
-    std::vector<std::thread> ths;
-    ths.reserve(get_ol_storages().size());
-    for (auto&& st : get_ol_storages()) {
         ths.emplace_back(build_storage, st, FLAGS_ol_rec);
-        build_storage(st, FLAGS_ol_rec);
     }
 
     for (auto&& th : ths) th.join();
@@ -121,7 +118,6 @@ void init_db_bt() {
     ths.reserve(get_bt_storages().size());
     for (auto&& st : get_bt_storages()) {
         ths.emplace_back(build_storage, st, FLAGS_bt_rec);
-        build_storage(st, FLAGS_bt_rec);
     }
 
     for (auto&& th : ths) th.join();

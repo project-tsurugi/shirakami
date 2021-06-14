@@ -79,6 +79,7 @@ void output_result(
     std::cout << "ol_abort_rate:\t" 
     << static_cast<double>(ol_ct_abort) / static_cast<double>(ol_ct_commit + ol_ct_abort) 
     << std::endl;
+    std::cout << "ol_abort_count:\t" << ol_ct_abort << std::endl;
     std::cout << "ol_throughput[tps]:\t" << ol_ct_commit / FLAGS_duration << std::endl;
     std::cout << "ol_throughput[ops/s]:\t" << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration << std::endl;
 
@@ -91,6 +92,7 @@ void output_result(
     std::cout << "bt_abort_rate:\t" 
     << static_cast<double>(bt_ct_abort) / static_cast<double>(bt_ct_commit + bt_ct_abort) 
     << std::endl;
+    std::cout << "bt_abort_count:\t" << bt_ct_abort << std::endl;
     std::cout << "bt_throughput[tps]:\t" << bt_ct_commit / FLAGS_duration << std::endl;
     std::cout << "bt_throughput[ops/s]:\t" << (bt_ct_commit * FLAGS_bt_ops) / FLAGS_duration << std::endl;
 
