@@ -97,14 +97,14 @@ void init_db_ol() {
         get_ol_storages().emplace_back(st);
     }
 
-    //std::vector<std::thread> ths;
-    //ths.reserve(get_ol_storages().size());
+    std::vector<std::thread> ths;
+    ths.reserve(get_ol_storages().size());
     for (auto&& st : get_ol_storages()) {
-        //ths.emplace_back(build_storage, st, FLAGS_ol_rec);
+        ths.emplace_back(build_storage, st, FLAGS_ol_rec);
         build_storage(st, FLAGS_ol_rec);
     }
 
-    //for (auto&& th : ths) th.join();
+    for (auto&& th : ths) th.join();
 }
 
 void init_db_bt() {
@@ -117,14 +117,14 @@ void init_db_bt() {
         get_bt_storages().emplace_back(st);
     }
 
-    //std::vector<std::thread> ths;
-    //ths.reserve(get_bt_storages().size());
+    std::vector<std::thread> ths;
+    ths.reserve(get_bt_storages().size());
     for (auto&& st : get_bt_storages()) {
-        //ths.emplace_back(build_storage, st, FLAGS_bt_rec);
+        ths.emplace_back(build_storage, st, FLAGS_bt_rec);
         build_storage(st, FLAGS_bt_rec);
     }
 
-    //for (auto&& th : ths) th.join();
+    for (auto&& th : ths) th.join();
 }
 
 void init_db() {

@@ -25,7 +25,7 @@ public:
     void TearDown() override { fin(); }
 };
 
-TEST_F(helper_many_session, heavy_enter_leave) {
+TEST_F(helper_many_session, heavy_enter_leave) { // NOLINT
     auto repeat_enter_leave = []() {
         Token s{};
         constexpr std::size_t repeat_num{1000};
