@@ -13,12 +13,12 @@
 #include <thread>
 #include <tuple>
 
+#include <msgpack.hpp>
+
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/record.h"
 
 #include "shirakami/interface.h"
-
-#include "msgpack-c/include/msgpack.hpp"
 
 #include <tsl/hopscotch_map.h>
 

@@ -11,6 +11,7 @@ libbz2-dev
 libgflags-dev
 libgoogle-glog-dev
 liblz4-1
+libmsgpack-dev
 librocksdb-dev
 libsnappy1v5
 libspdlog-dev
