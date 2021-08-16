@@ -48,8 +48,10 @@ function(register_tests)
     foreach(src IN LISTS TESTS_SOURCES)
         get_filename_component(fname "${src}" NAME_WE)
         if(fname MATCHES "test$")
-            if (fname MATCHES "scan_perf_test$")
+            if ((fname MATCHES "scan_perf_test$") OR
+            (fname MATCHES "phantom_protection_test$"))
                 # scan_perf_test takes much time, so it doesn't register test list.
+                # phantom_protection_test is a test for cc only.
                 set(test_name "${TESTS_TARGET}-test_${fname}.exe")
             else()
                 set(test_name "${TESTS_TARGET}-test_${fname}")

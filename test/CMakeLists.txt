@@ -13,6 +13,7 @@
 # limitations under the License.
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
+        "complicated_test/phantom_protection_test.cpp"
         "concurrency_control/*.cpp"
         "concurrency_control/delete/*.cpp"
         "concurrency_control/helper/*.cpp"
