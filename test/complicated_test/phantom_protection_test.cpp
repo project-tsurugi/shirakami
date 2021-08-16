@@ -62,7 +62,7 @@ TEST_F(phantom_protection, phantom_basic) { // NOLINT
     ASSERT_EQ(leave(token.at(1)), Status::OK);
 }
 
-TEST_F(phantom_protection, phantom_no_elem_nodes) {
+TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     /**
      * conditions:
      * structure: tree which has some fanout.
@@ -80,7 +80,7 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) {
     Token token{};
     std::string v{"v"};
     ASSERT_EQ(enter(token), Status::OK);
-    for (char i = 0; i <= 25; ++i) {
+    for (char i = 0; i <= 25; ++i) { // NOLINT
         char c = i;
         ASSERT_EQ(insert(token, storage, std::string_view(&c, 1), v), Status::OK);
     }
@@ -101,9 +101,9 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) {
         }
         ASSERT_EQ(Status::OK, commit(token));
     };
-    delete_range(1, 8);
-    delete_range(18, 24);
-    delete_range(17, 17);
+    delete_range(1, 8); // NOLINT
+    delete_range(18, 24); // NOLINT
+    delete_range(17, 17); // NOLINT
     /**
      * now,
      * A:  0, 
@@ -116,8 +116,8 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) {
     Token enemy{};
     ASSERT_EQ(enter(enemy), Status::OK);
     // easy phantom
-    char begin{9};
-    char end{17};
+    char begin{9}; // NOLINT
+    char end{17}; // NOLINT
     std::vector<const Tuple*> res;
     /**
      * for unhook latency.
@@ -126,7 +126,7 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) {
     sleep(1);
     ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
     ASSERT_EQ(res.size(), 8);
-    char ekey{17};
+    char ekey{17}; // NOLINT
     ASSERT_EQ(insert(enemy, storage, std::string_view(&ekey, 1), v), Status::OK);
     ASSERT_EQ(commit(enemy), Status::OK);
     /**
@@ -139,19 +139,19 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) {
      */
     ASSERT_EQ(commit(token), Status::ERR_PHANTOM);
 
-    begin = 0;
-    end = 0;
+    begin = 0; // NOLINT
+    end = 0; // NOLINT
     ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
     auto* ti = static_cast<session_info*>(token);
     yakushima::node_version64* node_a{std::get<1>(ti->get_node_set().back())};
     ASSERT_EQ(commit(token), Status::OK);
-    begin = 9;
-    end = 9;
+    begin = 9; // NOLINT
+    end = 9; // NOLINT
     ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
     yakushima::node_version64* node_b{std::get<1>(ti->get_node_set().back())};
     ASSERT_EQ(commit(token), Status::OK);
-    begin = 25;
-    end = 25;
+    begin = 25; // NOLINT
+    end = 25; // NOLINT
     ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
     yakushima::node_version64* node_c{std::get<1>(ti->get_node_set().back())};
     ASSERT_EQ(commit(token), Status::OK);
