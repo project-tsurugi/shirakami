@@ -65,11 +65,28 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
         return Status::WARN_NOT_FOUND;
     }
 
+    std::size_t nvec_delta{0};
+    if (scan_res.size() < nvec.size()) {
+        auto add_ns = [&ti, &nvec](std::size_t n) {
+            for (std::size_t i = 0; i < n; ++i) {
+                ti->get_node_set().emplace_back(nvec.at(i));
+            }
+        };
+        if (scan_res.size() + 1 == nvec.size()) {
+            nvec_delta = 1;
+            add_ns(1);
+
+        } else if (scan_res.size() + 2 == nvec.size()) {
+            nvec_delta = 2;
+            add_ns(2);
+        }
+    }
+
     std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
     auto& vec = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i)), std::get<index_nvec_ptr>(nvec.at(i)));
+        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i + nvec_delta)), std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }
 
     return Status::OK;
@@ -113,7 +130,7 @@ retry_by_continue:
           * In other words, it suffices if there is no change in the node due to unhooking or the like.
           * If delete interrupted between 1 and 2, 4 can detect it and abort.
           */
-         ++scan_index;
+        ++scan_index;
         goto retry_by_continue; // NOLINT
     }
 
@@ -138,29 +155,21 @@ retry_by_continue:
 
     Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
-    bool add_node_set{false};
-    if (ti->get_node_set().empty() ||
-        std::get<1>(ti->get_node_set().back()) != std::get<2>(*itr)) {
-        ti->get_node_set().emplace_back(std::get<1>(*itr), std::get<2>(*itr));
-        add_node_set = true;
-    }
-
-    // pre-verify of phantom problem.
-    if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
-        abort(token);
-        return Status::ERR_PHANTOM;
-    }
 
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
     if (rr != Status::OK) {
-        if (add_node_set) {
-            ti->get_node_set().erase(ti->get_node_set().end() - 1);
-        }
         return rr;
     }
     ti->get_read_set().emplace_back(std::move(rsob));
     *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     ++scan_index;
+
+    // create node set info
+    auto& ns = ti->get_node_set();
+    if (ns.empty() ||
+        std::get<1>(ns.back()) != std::get<2>(*itr)) {
+        ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+    }
 
     return Status::OK;
 }
@@ -177,7 +186,6 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
     // as a precaution
     result.clear();
     auto read_set_init_size{ti->get_read_set().size()};
-    auto node_set_init_size{ti->get_node_set().size()};
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
     constexpr std::size_t scan_buf_rec_ptr{1};
@@ -232,19 +240,6 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             continue;
         }
 
-        // Check for the need to add to node_set.
-        if (ti->get_node_set().empty() ||
-            std::get<1>(ti->get_node_set().back()) != nvec.at(index_ctr).second) {
-            ti->get_node_set().emplace_back(nvec.at(index_ctr).first,
-                                            nvec.at(index_ctr).second);
-        }
-
-        // pre-verify of phantom problem.
-        if (std::get<0>(ti->get_node_set().back()) != std::get<1>(ti->get_node_set().back())->get_stable_version()) {
-            abort(token);
-            return Status::ERR_PHANTOM;
-        }
-
         ti->get_read_set().emplace_back(storage, const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
         Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
         if (rr != Status::OK) {
@@ -252,10 +247,6 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             if (read_set_init_size != ti->get_read_set().size()) {
                 ti->get_read_set().erase(ti->get_read_set().begin() + read_set_init_size,
                                          ti->get_read_set().begin() + (ti->get_read_set().size() - read_set_init_size));
-            }
-            if (node_set_init_size != ti->get_node_set().size()) {
-                ti->get_node_set().erase(ti->get_node_set().begin() + node_set_init_size,
-                                         ti->get_node_set().begin() + (ti->get_node_set().size() - node_set_init_size));
             }
             return rr;
         }
@@ -267,6 +258,13 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             result.emplace_back(&itr->get_rec_read().get_tuple());
         }
     }
+
+    // create node set info
+    auto itr_rs = std::unique(nvec.begin(), nvec.end());
+    nvec.erase(itr_rs, nvec.end());
+    auto& ns = ti->get_node_set();
+    ns.reserve(ns.size() + nvec.size());
+    ns.insert(ns.end(), nvec.begin(), nvec.end());
 
     return Status::OK;
 }
