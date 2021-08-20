@@ -106,10 +106,18 @@ endif ()
 
 if (NOT DEFINED PARAM_SNAPSHOT_EPOCH)
     add_definitions(-DPARAM_SNAPSHOT_EPOCH=25)
-    else ()
+else ()
     add_definitions(-DPARAM_SNAPSHOT_EPOCH=${PARAM_SNAPSHOT_EPOCH})
-    endif()
-    
+endif ()
+ 
+if (BUILD_WP)
+    if (NOT DEFINED WP_LEVEL)
+        add_definitions(-DWP_LEVEL=0)
+    else ()
+        add_definitions(-DWP_LEVEL=${WP_LEVEL})
+    endif ()
+endif ()
+
 # End : about cc
 
 # Begin : about logging
