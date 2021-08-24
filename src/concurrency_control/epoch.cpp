@@ -7,11 +7,17 @@
 
 #include "concurrency_control/include/epoch.h"
 
-#include <xmmintrin.h>  // NOLINT
+#include <xmmintrin.h> // NOLINT
 
 #include "clock.h"
 #include "concurrency_control/include/session_info_table.h"
-#include "tuple_local.h"  // sizeof(Tuple)
+#include "tuple_local.h" // sizeof(Tuple)
+
+#if WP_LEVEL == 0
+
+#include "concurrency_control/include/wp.h"
+
+#endif
 
 #if defined(CPR)
 
@@ -21,10 +27,10 @@
 
 namespace shirakami::epoch {
 
-bool check_epoch_loaded() {  // NOLINT
+bool check_epoch_loaded() { // NOLINT
     epoch_t curEpoch = kGlobalEpoch.load(std::memory_order_acquire);
 
-    for (auto &&itr : session_info_table::get_thread_info_table()) {  // NOLINT
+    for (auto&& itr : session_info_table::get_thread_info_table()) { // NOLINT
         if (itr.get_visible() && itr.get_txbegan() && itr.get_epoch() != curEpoch) {
             return false;
         }
@@ -51,10 +57,17 @@ void epocher() {
             _mm_pause();
         }
 
+#if WP_LEVEL == 0
+        // block batch
+        std::unique_lock<std::mutex> get_lock{get_wp_mutex()};
+#endif
+
         kGlobalEpoch++;
         kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
 
+        // unblock batch
+        // dtor get_lock
     }
 }
 
-}  // namespace shirakami::epoch
+} // namespace shirakami::epoch

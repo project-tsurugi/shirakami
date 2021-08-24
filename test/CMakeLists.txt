@@ -36,6 +36,11 @@ if (BUILD_CPR)
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 
+if (BUILD_WP)
+    file(GLOB WP_TESTS "concurrency_control/wp/*.cpp")
+    set(TEST_SOURCES ${TEST_SOURCES} ${WP_TESTS})
+endif ()
+
 register_tests(
         TARGET shirakami
         DEPENDS shirakami-impl
