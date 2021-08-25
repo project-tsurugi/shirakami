@@ -1,5 +1,5 @@
 /**
- * @file session_info_table.h
+ * @file concurrency_control/wp/include/session_info_table.h
  * @brief core work about shirakami.
  */
 

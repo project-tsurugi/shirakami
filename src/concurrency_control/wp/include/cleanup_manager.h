@@ -1,5 +1,5 @@
 /**
- * @file cleanup_manager.h
+ * @file concurrency_control/wp/include/cleanup_manager.h
  * @brief header about cleanup manager
  */
 

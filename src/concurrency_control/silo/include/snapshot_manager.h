@@ -1,5 +1,5 @@
 /**
- * @file snapshot_manager.h
+ * @file concurrency_control/silo/include/snapshot_manager.h
  * @brief header about snapshot manager
  */
 

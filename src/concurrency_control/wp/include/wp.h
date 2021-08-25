@@ -1,5 +1,5 @@
 /**
- * @file wp.h
+ * @file concurrency_control/wp/include/wp.h
  * @brief header about write preserve
  */
 

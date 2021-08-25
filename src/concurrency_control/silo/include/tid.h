@@ -1,5 +1,5 @@
 /**
- * @file tid.h
+ * @file concurrency_control/silo/include/tid.h
  * @brief utilities about transaction id
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file record.h
+ * @file concurrency_control/wp/include/record.h
  * @brief header about record
  */
 

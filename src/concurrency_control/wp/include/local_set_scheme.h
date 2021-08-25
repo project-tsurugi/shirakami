@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/include/local_set_scheme.h
+ * @file concurrency_control/wp/include/local_set_scheme.h
  * @brief private scheme of transaction engine
  */
 

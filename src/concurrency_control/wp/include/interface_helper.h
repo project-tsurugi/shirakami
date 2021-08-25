@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/include/interface_helper.h
+ * @file concurrency_control/wp/include/interface_helper.h
  */
 
 #pragma once

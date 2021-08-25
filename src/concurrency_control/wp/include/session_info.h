@@ -1,5 +1,5 @@
 /**
- * @file session_info.h
+ * @file concurrency_control/wp/include/session_info.h
  * @brief private scheme of transaction engine
  */
 

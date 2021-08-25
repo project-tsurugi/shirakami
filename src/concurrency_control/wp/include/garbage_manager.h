@@ -1,5 +1,5 @@
 /**
- * @file garbage_manager.h
+ * @file concurrency_control/wp/include/garbage_manager.h
  * @brief about garbage collection
  */
 

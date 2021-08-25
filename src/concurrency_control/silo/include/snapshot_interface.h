@@ -1,5 +1,5 @@
 /**
- * @file snapshot_interface.h
+ * @file concurrency_control/silo/include/snapshot_interface.h
  */
 
 #include "shirakami/scheme.h"

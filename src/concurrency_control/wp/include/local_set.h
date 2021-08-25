@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/include/local_set.h
+ * @file concurrency_control/wp/include/local_set.h
  */
 
 #pragma once

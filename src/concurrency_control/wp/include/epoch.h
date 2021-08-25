@@ -1,5 +1,5 @@
 /**
- * @file epoch.h
+ * @file concurrency_control/wp/include/epoch.h
  * @brief header about epoch
  */
 
