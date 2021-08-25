@@ -5,8 +5,8 @@
 #include "tuple_local.h"
 #include "gtest/gtest.h"
 
-#include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/wp.h"
+#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #if defined(RECOVERY)
 

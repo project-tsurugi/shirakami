@@ -4,8 +4,15 @@
 
 #include "storage.h"
 
-#include "concurrency_control/include/record.h"
+#ifdef WP
 
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
+#include "concurrency_control/silo/include/record.h"
+
+#endif
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"

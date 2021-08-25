@@ -28,8 +28,8 @@
 #include "record.h"
 #include "tid.h"
 
-#include "concurrency_control/include/cleanup_manager.h"
-#include "concurrency_control/include/garbage_manager.h"
+#include "cleanup_manager.h"
+#include "garbage_manager.h"
 
 // shirakami/include/
 #include "shirakami/scheme.h"

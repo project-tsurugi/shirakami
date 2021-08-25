@@ -5,9 +5,9 @@
 
 #include "clock.h"
 
-#include "concurrency_control/include/cleanup_manager.h"
-#include "concurrency_control/include/session_info_table.h"
-#include "concurrency_control/include/snapshot_manager.h"
+#include "include/cleanup_manager.h"
+#include "include/session_info_table.h"
+#include "include/snapshot_manager.h"
 
 #include "shirakami/interface.h"
 

@@ -2,8 +2,8 @@
  * @file local_set.cpp
  */
 
-#include "concurrency_control/include/local_set.h"
-#include "concurrency_control/include/session_info.h"
+#include "include/local_set.h"
+#include "include/session_info.h"
 
 namespace shirakami {
 

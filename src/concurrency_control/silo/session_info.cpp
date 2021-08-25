@@ -3,9 +3,9 @@
  * @brief about scheme
  */
 
-#include "concurrency_control/include/session_info.h"
-#include "concurrency_control/include/garbage_manager.h"
-#include "concurrency_control/include/snapshot_manager.h"
+#include "include/session_info.h"
+#include "include/garbage_manager.h"
+#include "include/snapshot_manager.h"
 
 #include "tuple_local.h" // sizeof(Tuple)
 

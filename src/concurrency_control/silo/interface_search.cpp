@@ -1,7 +1,7 @@
 
-#include "concurrency_control//include/interface_helper.h"
-#include "concurrency_control/include/session_info_table.h"
-#include "concurrency_control/include/snapshot_interface.h"
+#include "include/interface_helper.h"
+#include "include/session_info_table.h"
+#include "include/snapshot_interface.h"
 
 #include "tuple_local.h"
 

@@ -5,7 +5,7 @@
 
 #include <glog/logging.h>
 
-#include "concurrency_control/include/snapshot_manager.h"
+#include "include/snapshot_manager.h"
 
 #ifdef CPR
 

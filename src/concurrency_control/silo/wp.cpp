@@ -1,5 +1,5 @@
 
-#include "concurrency_control/include/wp.h"
+#include "include/wp.h"
 
 namespace shirakami {
 

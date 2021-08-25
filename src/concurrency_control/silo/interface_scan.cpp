@@ -7,8 +7,8 @@
 
 #include <glog/logging.h>
 
-#include "concurrency_control/include/interface_helper.h"
-#include "concurrency_control/include/snapshot_interface.h"
+#include "include/interface_helper.h"
+#include "include/snapshot_interface.h"
 
 #include "index/yakushima/include/scheme.h"
 

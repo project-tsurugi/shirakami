@@ -1,8 +1,15 @@
 
 #include "gtest/gtest.h"
 
-#include "concurrency_control/include/tid.h"
+#ifdef WP
 
+#include "concurrency_control/wp/include/tid.h"
+
+#else
+
+#include "concurrency_control/silo/include/tid.h"
+
+#endif
 namespace shirakami::testing {
 
 using namespace shirakami;

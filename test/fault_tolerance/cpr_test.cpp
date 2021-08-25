@@ -2,7 +2,15 @@
 #include <xmmintrin.h> // NOLINT
 // It is used, but clang-tidy warn.
 
-#include "concurrency_control/include/session_info.h"
+#ifdef WP
+
+#include "concurrency_control/wp/include/session_info.h"
+
+#else
+
+#include "concurrency_control/silo/include/session_info.h"
+
+#endif
 
 #include "fault_tolerance/include/log.h"
 

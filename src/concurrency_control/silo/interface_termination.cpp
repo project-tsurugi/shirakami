@@ -2,9 +2,9 @@
 
 #include "atomic_wrapper.h"
 
-#include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/garbage_manager.h"
-#include "concurrency_control/include/interface_helper.h"
+#include "include/epoch.h"
+#include "include/garbage_manager.h"
+#include "include/interface_helper.h"
 
 #include "include/tuple_local.h" // sizeof(Tuple)
 #include "shirakami/interface.h" // NOLINT

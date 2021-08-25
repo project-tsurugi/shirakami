@@ -5,8 +5,15 @@
 
 #include <glog/logging.h>
 
-#include "concurrency_control/include/epoch.h"
+#ifdef WP
 
+#include "concurrency_control/wp/include/epoch.h"
+
+#else
+
+#include "concurrency_control/silo/include/epoch.h"
+
+#endif
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"

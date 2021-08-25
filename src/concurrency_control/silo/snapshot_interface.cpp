@@ -2,8 +2,8 @@
 // Created by thawk on 2021/01/19.
 //
 
-#include "concurrency_control/include/snapshot_interface.h"
-#include "concurrency_control/include/snapshot_manager.h"
+#include "include/snapshot_interface.h"
+#include "include/snapshot_manager.h"
 
 #include "index/yakushima/include/scheme.h"
 

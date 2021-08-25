@@ -3,7 +3,7 @@
  * @brief about entire shirakami.
  */
 
-#include "concurrency_control/include/session_info_table.h"
+#include "include/session_info_table.h"
 
 #include "tuple_local.h" // sizeof(Tuple)
 

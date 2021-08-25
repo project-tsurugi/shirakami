@@ -111,6 +111,7 @@ else ()
 endif ()
  
 if (BUILD_WP)
+    add_definitions(-DWP)
     if (NOT DEFINED WP_LEVEL)
         add_definitions(-DWP_LEVEL=0)
     else ()

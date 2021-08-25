@@ -5,12 +5,18 @@
 
 #include <glog/logging.h>
 
-#include "concurrency_control/include/epoch.h"
+#include "include/epoch.h"
+
+#ifdef WP
+
+#include "concurrency_control/include/wp.h"
+
+#endif
 
 #include <xmmintrin.h> // NOLINT
 
 #include "clock.h"
-#include "concurrency_control/include/session_info_table.h"
+#include "include/session_info_table.h"
 #include "tuple_local.h" // sizeof(Tuple)
 
 #if defined(CPR)
@@ -51,8 +57,22 @@ void epocher() {
             _mm_pause();
         }
 
+#ifdef WP
+#if WP_LEVEL == 0
+        // block batch
+        std::unique_lock<std::mutex> get_lock{wp::get_wp_mutex()};
+#endif
+#endif
+
         kGlobalEpoch++;
+
+#ifdef WP
+#if WP_LEVEL == 0
         set_reclamation_epoch(get_global_epoch() - 2);
+#else
+        set_reclamation_epoch(get_global_epoch() - 2);
+#endif
+#endif
 
         // unblock batch
         // dtor get_lock

@@ -1,8 +1,17 @@
 
 #include <glog/logging.h>
 
-#include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/interface_helper.h"
+#ifdef WP
+
+#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/interface_helper.h"
+
+#else
+
+#include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/silo/include/interface_helper.h"
+
+#endif
 
 #include "clock.h"
 

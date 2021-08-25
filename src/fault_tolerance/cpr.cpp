@@ -2,9 +2,19 @@
 // created by thawk on 2020/10/30.
 //
 
-#include "concurrency_control/include/interface_helper.h"
-#include "concurrency_control/include/session_info_table.h"
-#include "concurrency_control/include/snapshot_manager.h"
+#ifdef WP
+
+#include "concurrency_control/wp/include/interface_helper.h"
+#include "concurrency_control/wp/include/session_info_table.h"
+#include "concurrency_control/wp/include/snapshot_manager.h"
+
+#else
+
+#include "concurrency_control/silo/include/interface_helper.h"
+#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/snapshot_manager.h"
+
+#endif
 
 #include "fault_tolerance/include/log.h"
 

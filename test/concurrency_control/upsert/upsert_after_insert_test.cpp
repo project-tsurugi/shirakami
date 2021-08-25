@@ -7,10 +7,20 @@
 #include <glog/logging.h>
 
 #include "compiler.h"
-#include "concurrency_control/include/epoch.h"
 #include "tuple_local.h"
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/epoch.h"
+
+#else
+
+#include "concurrency_control/silo/include/epoch.h"
+
+#endif
+
 #include "shirakami/interface.h"
+
 
 // third party
 #include "gtest/gtest.h"

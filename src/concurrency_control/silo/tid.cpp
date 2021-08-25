@@ -3,7 +3,7 @@
  * @details implement about tid.
  */
 
-#include "concurrency_control/include/tid.h"
+#include "include/tid.h"
 
 #include <bitset>
 #include <iostream>

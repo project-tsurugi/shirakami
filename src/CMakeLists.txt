@@ -4,8 +4,13 @@ file(GLOB SOURCES
         )
 
 # about cc
-file(GLOB CC_SOURCES "concurrency_control/*.cpp")
-set(SOURCES ${SOURCES} ${CC_SOURCES})
+if (BUILD_WP)
+    file(GLOB CC_SOURCES "concurrency_control/wp/*.cpp")
+    set(SOURCES ${SOURCES} ${CC_SOURCES})
+else ()
+    file(GLOB CC_SOURCES "concurrency_control/silo/*.cpp")
+    set(SOURCES ${SOURCES} ${CC_SOURCES})
+endif ()
 
 if (BUILD_PWAL)
     file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
