@@ -40,7 +40,7 @@ TEST_F(wp_test, basic) { // NOLINT
 }
 
 TEST_F(wp_test, wp_regi_remove) { // NOLINT
-    wp_meta wp_info;
+    wp::wp_meta wp_info;
     std::atomic<bool> ready_register{false};
     std::atomic<std::size_t> fin_register{0};
     std::atomic<bool> ready_remove{false};

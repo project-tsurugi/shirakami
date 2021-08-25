@@ -13,12 +13,6 @@
 #include "concurrency_control/include/session_info_table.h"
 #include "tuple_local.h" // sizeof(Tuple)
 
-#if WP_LEVEL == 0
-
-#include "concurrency_control/include/wp.h"
-
-#endif
-
 #if defined(CPR)
 
 #include "fault_tolerance/include/cpr.h"
@@ -28,7 +22,7 @@
 namespace shirakami::epoch {
 
 bool check_epoch_loaded() { // NOLINT
-    epoch_t curEpoch = kGlobalEpoch.load(std::memory_order_acquire);
+    epoch_t curEpoch = get_global_epoch(); 
 
     for (auto&& itr : session_info_table::get_thread_info_table()) { // NOLINT
         if (itr.get_visible() && itr.get_txbegan() && itr.get_epoch() != curEpoch) {
@@ -41,8 +35,8 @@ bool check_epoch_loaded() { // NOLINT
 
 void epocher() {
     // initialization considering after fin()
-    kGlobalEpoch.store(0, std::memory_order_release);
-    while (likely(!kEpochThreadEnd.load(std::memory_order_acquire))) {
+    set_global_epoch(0);
+    while (likely(!get_epoch_thread_end())) {
         /*
          * Increment global epoch in each PARAM_EPOCH_TIME [ms] (default: 40).
          */
@@ -53,21 +47,24 @@ void epocher() {
          * latest global epoch is read by all the threads
          */
         while (!check_epoch_loaded()) {
-            if (kEpochThreadEnd.load(std::memory_order_acquire)) return;
+            if (get_epoch_thread_end()) return;
             _mm_pause();
         }
 
-#if WP_LEVEL == 0
-        // block batch
-        std::unique_lock<std::mutex> get_lock{get_wp_mutex()};
-#endif
-
         kGlobalEpoch++;
-        kReclamationEpoch.store(kGlobalEpoch.load(std::memory_order_acquire) - 2, std::memory_order_release);
+        set_reclamation_epoch(get_global_epoch() - 2);
 
         // unblock batch
         // dtor get_lock
     }
+}
+
+void invoke_epocher() {
+    // It may be redundant, but needs to restore if this is called after fin in the same program.
+    set_epoch_thread_end(false);
+    set_reclamation_epoch(-2);
+
+    kEpochThread = std::thread(epocher);
 }
 
 } // namespace shirakami::epoch

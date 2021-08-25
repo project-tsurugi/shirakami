@@ -30,7 +30,8 @@ using epoch_t = std::int64_t;
 [[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0}; // NOLINT
 
 /**
- * @details Firstly, kGlobalEpoch is 0. After that, when kGlobalEpoch becomes 1, kReclamationEpoch is set to kGlobalEpoch - 2.
+ * @details Firstly, kGlobalEpoch is 0. 
+ * After that, when kGlobalEpoch becomes 1, kReclamationEpoch is set to kGlobalEpoch - 2.
  * If this type is std::uint32_t, the value is UINT32_MAX - 1 because unsigned int doesn't have negative value.
  */
 inline std::atomic<epoch_t> kReclamationEpoch{-2}; // NOLINT
@@ -47,30 +48,36 @@ inline std::atomic<bool> kEpochThreadEnd;         // NOLINT
  */
 [[maybe_unused]] extern void epocher();
 
-[[maybe_unused]] static epoch_t get_reclamation_epoch() { // NOLINT
-    return kReclamationEpoch.load(std::memory_order_acquire);
+[[maybe_unused]] static bool get_epoch_thread_end() { // NOLINT
+    return kEpochThreadEnd.load(std::memory_order_acquire);
 }
 
-[[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
-    kEpochThreadEnd.store(tf, std::memory_order_release);
+[[maybe_unused]] static epoch_t get_global_epoch() { // NOLINT
+    return kGlobalEpoch.load(std::memory_order_acquire);
+}
+
+[[maybe_unused]] static epoch_t get_reclamation_epoch() { // NOLINT
+    return kReclamationEpoch.load(std::memory_order_acquire);
 }
 
 /**
  * @brief invoke epocher thread.
  * @post invoke fin() to join this thread.
  */
-[[maybe_unused]] static void invoke_epocher() {
-    // It may be redundant, but needs to restore if this is called after fin in the same program.
-    set_epoch_thread_end(false);
-    kReclamationEpoch.store(-2, std::memory_order_release);
-
-    kEpochThread = std::thread(epocher);
-}
+[[maybe_unused]] extern void invoke_epocher();
 
 [[maybe_unused]] static void join_epoch_thread() { kEpochThread.join(); }
 
-[[maybe_unused]] static epoch_t get_global_epoch() {
-    return kGlobalEpoch.load(std::memory_order_acquire);
+[[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
+    kEpochThreadEnd.store(tf, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_global_epoch(const epoch_t epo) { // NOLINT
+    kGlobalEpoch.store(epo, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_reclamation_epoch(const epoch_t epo) { // NOLINT
+    kReclamationEpoch.store(epo, std::memory_order_release);
 }
 
 } // namespace shirakami::epoch

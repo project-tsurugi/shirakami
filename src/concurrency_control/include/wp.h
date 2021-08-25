@@ -13,8 +13,16 @@
 #include <shared_mutex>
 #include <vector>
 
-namespace shirakami {
+namespace shirakami::wp {
 
+/**
+ * @brief The counter serving batch id which show priority of batchs.
+ */
+inline std::size_t batch_counter{1};
+
+/**
+ * @brief The mutex excluding fetch_add  from batch_counter and executing wp.
+ */
 inline std::mutex wp_mutex;
 
 [[maybe_unused]] static std::unique_lock<std::mutex> get_wp_mutex() {
@@ -51,9 +59,8 @@ public:
             if ((*it).second == id) {
                 wped_.erase(it);
                 return Status::OK;
-            } else {
-                ++it;
             }
+            ++it;
         }
         return Status::WARN_NOT_FOUND;
     }
@@ -69,11 +76,11 @@ private:
      * @details first of each vector's element is epoch which is the valid point of wp.
      * second of those is the batch id. 
      */
-     wped_type wped_;
+    wped_type wped_;
     /**
      * @brief mutex for wped_
      */
     std::shared_mutex wped_mtx_;
 };
 
-} // namespace shirakami
+} // namespace shirakami::wp
