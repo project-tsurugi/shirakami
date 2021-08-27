@@ -1,11 +1,13 @@
 file(GLOB SOURCES
-        "*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/fault_tolerance/log.cpp"
         )
 
 # about cc
 if (BUILD_WP)
-    file(GLOB CC_SOURCES "concurrency_control/wp/*.cpp")
+    file(GLOB CC_SOURCES 
+    "concurrency_control/wp/*.cpp"
+    "concurrency_control/wp/interface/*.cpp"
+    )
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 else ()
     file(GLOB CC_SOURCES "concurrency_control/silo/*.cpp")

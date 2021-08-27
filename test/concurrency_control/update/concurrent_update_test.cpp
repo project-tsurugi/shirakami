@@ -5,19 +5,10 @@
 
 #include "gtest/gtest.h"
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/record.h"
-#include "concurrency_control/wp/include/snapshot_manager.h"
-
-#else
-
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/record.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 
-#endif
 #include "clock.h"
 
 #include "shirakami/interface.h"

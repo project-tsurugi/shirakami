@@ -6,15 +6,7 @@
 #include "clock.h"
 #include "tuple_local.h"
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/snapshot_manager.h"
-
-#else
-
 #include "concurrency_control/silo/include/snapshot_manager.h"
-
-#endif
 
 #ifdef CPR
 

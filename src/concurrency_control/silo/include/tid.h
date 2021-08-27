@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <xmmintrin.h>
 
+#include "atomic_wrapper.h"
 #include "epoch.h"
 
 namespace shirakami{

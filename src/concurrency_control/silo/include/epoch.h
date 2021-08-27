@@ -8,8 +8,6 @@
 #include <atomic>
 #include <thread>
 
-#include "atomic_wrapper.h"
-
 namespace shirakami::epoch {
 
 // todo resolve about round-trip problem for epoch.

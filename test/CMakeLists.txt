@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+if (NOT BUILD_WP)
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
@@ -25,6 +26,7 @@ file(GLOB TEST_SOURCES
         "sequence/*.cpp"
         "third_party/*.cpp"
         )
+endif()
 
 if (BUILD_PWAL)
     file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")

@@ -7,17 +7,8 @@
 #include <map>
 #include <utility>
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/local_set_scheme.h"
-#include "concurrency_control/wp/include/record.h"
-
-#else
-
 #include "concurrency_control/silo/include/local_set_scheme.h"
 #include "concurrency_control/silo/include/record.h"
-
-#endif
 
 #include "yakushima/include/kvs.h"
 

@@ -10,15 +10,8 @@
 
 #include "shirakami/interface.h"
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/session_info.h"
-
-#else
-
 #include "concurrency_control/silo/include/session_info.h"
 
-#endif
 namespace shirakami::testing {
 
 using namespace shirakami;
