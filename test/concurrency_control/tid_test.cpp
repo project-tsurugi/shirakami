@@ -98,4 +98,31 @@ TEST_F(tid_test, compare) { // NOLINT
     ASSERT_EQ(tid1 == tid2, true);
 }
 
+TEST_F(tid_test, multi_thread_lock) { // NOLINT
+    tid_word tid;
+    std::size_t counter{0};
+    std::atomic<bool> ready_register{false};
+    std::vector<std::thread> th_vc;
+    th_vc.reserve(std::thread::hardware_concurrency());
+
+    auto work = [&tid, &counter, &ready_register]() {
+        while (!ready_register.load(std::memory_order_acquire)) _mm_pause();
+        tid.lock();
+        ASSERT_EQ(true, tid.get_lock());
+        ++counter;
+        tid.unlock();
+    };
+
+    for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+        th_vc.emplace_back(work);
+    }
+    ready_register.store(true, std::memory_order_release);
+
+    for (auto&& elem : th_vc) {
+        elem.join();
+    }
+
+    ASSERT_EQ(counter, std::thread::hardware_concurrency());
+}
+
 } // namespace shirakami::testing
