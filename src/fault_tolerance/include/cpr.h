@@ -15,17 +15,8 @@
 
 #include <msgpack.hpp>
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/record.h"
-
-#else
-
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/record.h"
-
-#endif
 
 #include "shirakami/interface.h"
 

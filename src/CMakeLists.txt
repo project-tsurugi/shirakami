@@ -10,16 +10,16 @@ if (BUILD_WP)
 else ()
     file(GLOB CC_SOURCES "concurrency_control/silo/*.cpp")
     set(SOURCES ${SOURCES} ${CC_SOURCES})
-endif ()
 
-if (BUILD_PWAL)
-    file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
-    set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
-endif ()
-
-if (BUILD_CPR)
-    file(GLOB LOGGING_SOURCES "fault_tolerance/cpr.cpp")
-    set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
+    if (BUILD_PWAL)
+        file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
+        set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
+    endif ()
+    
+    if (BUILD_CPR)
+        file(GLOB LOGGING_SOURCES "fault_tolerance/cpr.cpp")
+        set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
+    endif ()
 endif ()
 
 add_library(shirakami

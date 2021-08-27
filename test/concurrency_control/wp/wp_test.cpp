@@ -5,7 +5,7 @@
 #include "tuple_local.h"
 #include "gtest/gtest.h"
 
-#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #if defined(RECOVERY)
@@ -32,8 +32,12 @@ public:
 };
 
 TEST_F(wp_test, basic) { // NOLINT
+#ifdef WP
 #if WP_LEVEL == 0
     ASSERT_EQ(WP_LEVEL, 0);
+#else
+    ASSERT_EQ(true, true);
+#endif
 #else
     ASSERT_EQ(true, true);
 #endif

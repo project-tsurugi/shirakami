@@ -6,11 +6,8 @@
 #pragma once
 
 #include "cpu.h"
-#include "tid.h"
-#include "tuple_local.h"
-
-#include "shirakami/scheme.h"
-#include "shirakami/tuple.h"
+#include "lock.h"
+#include "version.h"
 
 namespace shirakami {
 
@@ -81,20 +78,12 @@ public:
 #endif
 
 private:
-    tid_word tidw_;
-#if defined(CPR)
+    s_mutex mtx_;
     /**
-     * @pre Only lock owner can read-write this filed.
-     * @todo consider type of member and round-trip
+     * @brief Pointer to latest version
+     * @details The version infomation which it should have at each version.
      */
-    std::atomic<std::uint64_t> version_{0};
-    Tuple stable_;
-#endif
-    Tuple tuple_;
-    /**
-     * @details This is safely snapshot for read only transaction.
-     */
-    std::atomic<Record*> snap_ptr_{nullptr};
+    std::atomic<version*> latest_;
 };
 
 } // namespace shirakami
