@@ -36,7 +36,7 @@
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "tuple_local.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #if defined(CPR)
 

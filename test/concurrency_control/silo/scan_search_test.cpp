@@ -6,7 +6,7 @@
 
 #include "gtest/gtest.h"
 
-#include "tuple_local.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #if defined(CPR)
 

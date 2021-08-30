@@ -2,8 +2,7 @@
 #include "include/interface_helper.h"
 #include "include/session_info_table.h"
 #include "include/snapshot_interface.h"
-
-#include "tuple_local.h"
+#include "include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

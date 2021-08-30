@@ -2,7 +2,6 @@
 #include <xmmintrin.h>
 #include <thread>
 
-#include "tuple_local.h"
 #include "gtest/gtest.h"
 
 #include "concurrency_control/silo/include/epoch.h"

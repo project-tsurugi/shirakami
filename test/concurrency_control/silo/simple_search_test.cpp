@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 
 // shirakami-impl interface library
-#include "tuple_local.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 namespace shirakami::testing {

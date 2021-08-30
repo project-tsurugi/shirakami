@@ -9,12 +9,12 @@
 
 #include "include/interface_helper.h"
 #include "include/snapshot_interface.h"
+#include "include/tuple_local.h" // sizeof(Tuple)
 
 #include "index/yakushima/include/scheme.h"
 
 #include "shirakami/interface.h"
 
-#include "tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami {
 

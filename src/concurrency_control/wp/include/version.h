@@ -45,6 +45,10 @@ public:
         next_.store(next, std::memory_order_release);
     }
 
+    void set_tid(tid_word tid) {
+        tid_ = tid;
+    }
+
 private:
     tid_word tid_{};
 

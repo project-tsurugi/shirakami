@@ -52,6 +52,8 @@ namespace shirakami {
 
 class session_info {
 public:
+    using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
+                                                yakushima::node_version64*>>;
     class scan_handler {
     public:
         using scan_cache_type = std::map<ScanHandle, std::tuple<Storage, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>>;
@@ -205,7 +207,7 @@ public:
     }
 #endif
 
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>>& get_node_set() { // NOLINT
+    node_set_type& get_node_set() { // NOLINT
         return node_set;
     }
 
@@ -316,7 +318,7 @@ private:
      * about indexing.
      */
     yakushima::Token yakushima_token_{};
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> node_set{};
+    node_set_type node_set{};
 
     /**
      * about logging.

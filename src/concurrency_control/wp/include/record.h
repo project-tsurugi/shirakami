@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "concurrency_control/silo/include/tid.h"
 
 #include "cpu.h"
@@ -14,24 +16,31 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
-    Record(tid_word tid, std::string_view vinfo) : tid_(tid) {
+    Record() = default;
+
+    Record(tid_word tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release);
     }
 
+    tid_word& get_tidw_ref() { return tidw_; }
+
     void lock() {
-        tid_.lock();
+        tidw_.lock();
     }
 
     void set_tid(tid_word tid) {
-        tid_ = tid;
+        tidw_ = tid;
     }
 
     void unlock() {
-        tid_.unlock();
+        tidw_.unlock();
     }
 
 private:
-    tid_word tid_{};
+    /**
+     * @brief latest timestamp
+     */
+    tid_word tidw_{};
 
     /**
      * @brief Pointer to latest version

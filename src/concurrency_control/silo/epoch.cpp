@@ -17,7 +17,7 @@
 
 #include "clock.h"
 #include "include/session_info_table.h"
-#include "tuple_local.h" // sizeof(Tuple)
+#include "include/tuple_local.h" // sizeof(Tuple)
 
 #if defined(CPR)
 

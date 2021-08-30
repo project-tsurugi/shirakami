@@ -13,7 +13,7 @@
 
 #if defined(PWAL) || defined(CPR)
 
-#include "log.h"
+#include "fault_tolerance/include/log.h"
 
 #endif
 

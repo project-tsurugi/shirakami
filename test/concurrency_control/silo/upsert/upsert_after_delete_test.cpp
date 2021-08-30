@@ -7,7 +7,6 @@
 #include <glog/logging.h>
 
 #include "compiler.h"
-#include "tuple_local.h"
 
 #ifdef WP
 
@@ -16,6 +15,7 @@
 #else
 
 #include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #endif
 

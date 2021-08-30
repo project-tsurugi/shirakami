@@ -4,9 +4,9 @@
 #include "gtest/gtest.h"
 
 #include "clock.h"
-#include "tuple_local.h"
 
 #include "concurrency_control/silo/include/snapshot_manager.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #ifdef CPR
 

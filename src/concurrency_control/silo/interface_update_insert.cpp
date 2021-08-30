@@ -8,10 +8,10 @@
 #include "atomic_wrapper.h"
 
 #include "include/interface_helper.h"
+#include "include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 
-#include "tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami {
 

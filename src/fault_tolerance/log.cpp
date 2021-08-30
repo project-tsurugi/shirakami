@@ -6,7 +6,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "log.h"
+#include "include/log.h"
 #include "sequence.h"
 
 // about cc
@@ -25,7 +25,7 @@
 
 #if defined(CPR)
 
-#include "cpr.h"
+#include "fault_tolerance/include/cpr.h"
 
 #elif defined(PWAL)
 

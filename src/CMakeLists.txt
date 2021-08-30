@@ -31,9 +31,7 @@ add_library(shirakami
 target_include_directories(shirakami
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fault_tolerance/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
         )
 
 find_package(Threads REQUIRED)

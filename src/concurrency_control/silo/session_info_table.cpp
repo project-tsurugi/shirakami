@@ -4,8 +4,8 @@
  */
 
 #include "include/session_info_table.h"
+#include "include/tuple_local.h" // sizeof(Tuple)
 
-#include "tuple_local.h" // sizeof(Tuple)
 
 #if defined(PWAL)
 

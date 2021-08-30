@@ -21,7 +21,7 @@
 // shirakami-impl interface library
 #include "clock.h"
 #include "random.h"
-#include "tuple_local.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

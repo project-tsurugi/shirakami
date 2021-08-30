@@ -1,6 +1,6 @@
 #include <bitset>
 
-#include "tuple_local.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 #include "gtest/gtest.h"
 
 #if defined(RECOVERY)

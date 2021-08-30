@@ -1,8 +1,8 @@
 
-#include "tuple_local.h"
 #include "gtest/gtest.h"
 
 #include "concurrency_control/silo/include/session_info.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
