@@ -145,7 +145,7 @@ void tx_begin(Token const token, bool const read_only, bool const for_batch) { /
          * func is called once by each tx.
          */
         ti->set_tx_began(true);
-        ti->set_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire));
+        ti->set_epoch(epoch::get_global_epoch());
         ti->set_read_only(read_only);
         ti->get_write_set().set_for_batch(for_batch);
 #if defined(CPR)

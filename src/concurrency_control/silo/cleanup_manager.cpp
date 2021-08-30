@@ -46,7 +46,7 @@ void cleanup_manager_func() {
                 storage = cache.first;
                 rec_ptr = cache.second;
 
-                if (rec_ptr->get_tidw().get_epoch() < epoch::kGlobalEpoch.load(std::memory_order_acquire)) {
+                if (rec_ptr->get_tidw().get_epoch() < epoch::get_global_epoch()) {
                     // removing process
 
                     std::string_view key_view = rec_ptr->get_tuple().get_key();

@@ -116,7 +116,7 @@ void gc_handler::gc_snap() {
         }
         // cache is not null
 
-        epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
+        epoch::epoch_t ce = epoch::get_global_epoch();
         epoch::epoch_t maybe_smallest_e = ce - 1;
         if (snapshot_manager::get_snap_epoch(cache.first + snapshot_manager::snapshot_epoch_times) <= snapshot_manager::get_snap_epoch(maybe_smallest_e)) {
             delete cache.second; // NOLINT

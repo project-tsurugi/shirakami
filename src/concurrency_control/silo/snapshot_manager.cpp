@@ -32,7 +32,7 @@ void snapshot_manager_func() {
         // todo parametrize  for build options.
         sleepMs(1);
 
-        epoch::epoch_t maybe_smallest_ew = epoch::kGlobalEpoch.load(std::memory_order_acquire);
+        epoch::epoch_t maybe_smallest_ew = epoch::get_global_epoch();
         if (maybe_smallest_ew != 0) --maybe_smallest_ew;
 
         yakushima::Token yaku_token{};

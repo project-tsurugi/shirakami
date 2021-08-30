@@ -45,8 +45,8 @@ TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // trying to wait enough
-    epoch::epoch_t ce = epoch::kGlobalEpoch.load(std::memory_order_acquire);
-    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::kGlobalEpoch.load(std::memory_order_acquire))) {
+    epoch::epoch_t ce = epoch::get_global_epoch();
+    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::get_global_epoch())) {
         sleepMs(1);
     }
 
