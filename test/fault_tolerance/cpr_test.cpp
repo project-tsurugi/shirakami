@@ -78,8 +78,16 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         ASSERT_EQ(enter(token), Status::OK);
         std::string k("b"); // NOLINT
         ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        auto* ti = static_cast<session_info*>(token);
+        std::size_t sst_num{};
+        if (ti->get_phase() == cpr::phase::REST) {
+            sst_num = ti->get_version();
+        } else {
+            sst_num = ti->get_version() + 1;
+        }
         ASSERT_EQ(commit(token), Status::OK); // NOLINT
         cpr::wait_next_checkpoint();
+        EXPECT_EQ(boost::filesystem::exists(log_dir + "/sst" + std::to_string(sst_num)), true);
         ASSERT_EQ(leave(token), Status::OK);
     }
     fin(false);

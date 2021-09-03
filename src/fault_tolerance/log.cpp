@@ -210,19 +210,18 @@ namespace shirakami {
     process_from_file(cpr::get_checkpoint_path());
 
     // for sst files
-    cpr::version_type ver{0};
-    for (;;) {
-        std::string fname{Log::get_kLogDirectory() + "/sst" + std::to_string(ver)};
+    using namespace boost::filesystem;
+    path dir_path{Log::get_kLogDirectory()};
+    directory_iterator end_itr{};
+    std::vector<std::pair<cpr::version_type, std::string>> files;
+    for (directory_iterator itr(dir_path); itr != end_itr; ++itr) {
+        cpr::version_type vnum{stoull(std::string(itr->path().string()).erase(0, std::string(Log::get_kLogDirectory()).size() + 4))};
+        files.emplace_back(vnum, itr->path().string());
+    }
+    std::sort(files.begin(), files.end());
 
-        // check existing
-        boost::system::error_code ec;
-        const bool find_result = boost::filesystem::exists(fname, ec);
-        if (!find_result || ec) {
-            return;
-        }
-        process_from_file(fname);
-
-        ++ver;
+    for (auto&& elem : files) {
+        process_from_file(std::get<1>(elem));
     }
 
 #endif
