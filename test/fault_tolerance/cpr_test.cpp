@@ -95,7 +95,7 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     std::string k("a"); // NOLINT
     Tuple* tup{};
 #ifdef CPR
-    while (Status::OK != search_key(token, storage, "k", &tup)) {
+    while (Status::OK != search_key(token, storage, "a", &tup)) {
         ;
     }
 #else
