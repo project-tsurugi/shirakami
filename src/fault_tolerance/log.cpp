@@ -205,9 +205,9 @@ namespace shirakami {
     const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
         LOG(INFO) << "no checkpoint file to recover.";
+    } else {
+        LOG(INFO) << "checkpoint file to recover exists.";
     }
-    LOG(INFO) << "checkpoint file to recover exists.";
-    process_from_file(cpr::get_checkpoint_path());
 
     // for sst files
     using namespace boost::filesystem;

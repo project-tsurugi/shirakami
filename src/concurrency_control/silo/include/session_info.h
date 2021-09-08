@@ -120,6 +120,16 @@ public:
      */
     Status check_delete_after_write(Record* rec_ptr); // NOLINT
 
+#ifdef CPR
+    bool diff_upd_set_is_empty() {
+        return cpr_local_handle_.diff_upd_set_is_empty();
+    }
+
+    bool diff_upd_seq_set_is_empty() {
+        return cpr_local_handle_.diff_upd_seq_set_is_empty();
+    }
+#endif
+
     [[nodiscard]] epoch::epoch_t get_epoch() const { // NOLINT
         return epoch_.load(std::memory_order_acquire);
     }

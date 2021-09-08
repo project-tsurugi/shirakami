@@ -31,7 +31,9 @@ constexpr register_count_type register_count_type_max = UINT64_MAX;
 
 inline std::atomic<bool> kCheckPointThreadEnd{false};      // NOLINT
 inline std::atomic<bool> kCheckPointThreadEndForce{false}; // NOLINT
+
 inline std::thread kCheckPointThread;                      // NOLINT
+
 inline std::string kCheckpointPath;                        // NOLINT
 inline std::string kCheckpointingPath;                     // NOLINT
 
@@ -115,6 +117,21 @@ public:
         diff_upd_set_ar.at(1).clear();
         diff_upd_seq_set_ar.at(0).clear();
         diff_upd_seq_set_ar.at(1).clear();
+    }
+
+    bool diff_upd_set_is_empty() {
+        for (auto &&each_set : diff_upd_set_ar) {
+            for (auto &&elem : each_set) {
+                if (!std::get<1>(elem).empty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool diff_upd_seq_set_is_empty() {
+        return get_diff_upd_seq_set(0).empty() && get_diff_upd_seq_set(1).empty();
     }
 
     diff_upd_set_type& get_diff_upd_set();
@@ -270,6 +287,10 @@ private:
 [[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
 
 [[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
+
+[[maybe_unused]] static bool get_checkpoint_thread_end() { return kCheckPointThreadEnd.load(std::memory_order_acquire); }
+
+[[maybe_unused]] static bool get_checkpoint_thread_end_force() { return kCheckPointThreadEndForce.load(std::memory_order_acquire); }
 
 [[maybe_unused]] static void join_checkpoint_thread() try {
     kCheckPointThread.join();

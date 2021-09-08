@@ -44,9 +44,11 @@ void list_directory(std::string_view dir) {
         return;
     }
     std::sort(entries.begin(), entries.end());
-    for(auto&& e : entries) {
+    std::cout << "[list start]" << std::endl;
+    for (auto&& e : entries) {
         std::cerr << e << std::endl;
     }
+    std::cout << "[list end]" << std::endl;
 }
 
 TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
@@ -91,7 +93,6 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         ASSERT_EQ(leave(token), Status::OK);
     }
     fin(false);
-    list_directory(log_dir);
 }
 
 TEST_F(cpr_test, cpr_recovery) {                // NOLINT
@@ -109,14 +110,20 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
 #else
     ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
 #endif
-    ASSERT_EQ(std::string(tup->get_key()), "a"); // NOLINT
+    ASSERT_EQ(std::string(tup->get_key()), "a");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "a"); // NOLINT
     std::string tup_key{tup->get_key()};
     Tuple* tup2{};
-    ASSERT_EQ(search_key(token, storage, "b", &tup2), Status::OK);
-    ASSERT_EQ(std::string(tup2->get_key()), "b"); // NOLINT
+#ifdef CPR
+    while (Status::OK != search_key(token, storage, "b", &tup2)) {
+        _mm_pause();
+    }
+#else
+    ASSERT_EQ(search_key(token, storage, "b", &tup2));
+#endif
+    ASSERT_EQ(std::string(tup2->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup2->get_value()), "b"); // NOLINT
-    ASSERT_EQ(commit(token), Status::OK); // NOLINT
+    ASSERT_EQ(commit(token), Status::OK);           // NOLINT
     ASSERT_EQ(delete_record(token, storage, tup_key), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();

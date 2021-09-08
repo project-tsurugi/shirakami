@@ -43,8 +43,8 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     snapshot_manager::set_snapshot_manager_thread_end(true);
     garbage_manager::set_garbage_manager_thread_end(true);
 #ifdef CPR
-    cpr::set_checkpoint_thread_end(true);
     cpr::set_checkpoint_thread_end_force(force_shut_down_cpr);
+    cpr::set_checkpoint_thread_end(true);
 #endif
     epoch::set_epoch_thread_end(true);
 
