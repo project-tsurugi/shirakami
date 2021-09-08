@@ -43,6 +43,9 @@ Status delete_record(Token token, Storage storage, const std::string_view key) {
     if (check == Status::WARN_CANCEL_PREVIOUS_INSERT) {
         return check;
     }
+    if (check == Status::WARN_ALREADY_EXISTS) {
+        return Status::OK;
+    }
 
     tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
     if (check_tid.get_absent()) {

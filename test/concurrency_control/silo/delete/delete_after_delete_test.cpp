@@ -18,7 +18,7 @@ public:
     void TearDown() override { fin(); }
 };
 
-TEST_F(delete_after_delete, delete_after_delete) { // NOLINT
+TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
     register_storage(storage);
     std::string k1("k");  // NOLINT
     std::string v1("v1"); // NOLINT
@@ -44,8 +44,23 @@ TEST_F(delete_after_delete, delete_after_delete) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
+
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, storage, k1));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(delete_after_delete, delete_after_delete_in_tx) { // NOLINT
+    register_storage(storage);
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, delete_record(s, storage, k));
+    ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }

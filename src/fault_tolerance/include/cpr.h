@@ -323,7 +323,7 @@ extern void checkpoint_thread();
 extern void checkpointing();
 
 [[maybe_unused]] static void invoke_checkpoint_thread() {
-    kCheckPointThreadEnd.store(false, std::memory_order_release);
+    set_checkpoint_thread_end(false);
     set_checkpoint_thread_end_force(true);
     kCheckPointThread = std::thread(checkpoint_thread);
 }

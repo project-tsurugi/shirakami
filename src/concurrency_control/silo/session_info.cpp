@@ -66,6 +66,9 @@ Status session_info::check_delete_after_write(Record* rec_ptr) {
 
             return Status::WARN_CANCEL_PREVIOUS_INSERT;
         }
+        if (we_ptr->get_op() == OP_TYPE::DELETE) {
+            return Status::WARN_ALREADY_EXISTS;
+        }
         return Status::WARN_CANCEL_PREVIOUS_OPERATION;
     };
     if (get_write_set().get_for_batch()) {
@@ -73,7 +76,9 @@ Status session_info::check_delete_after_write(Record* rec_ptr) {
         for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
             if (std::get<1>(*itr).get_rec_ptr() != rec_ptr) continue;
             auto ret = process(&std::get<1>(*itr));
-            cont.erase(itr);
+            if (ret != Status::WARN_ALREADY_EXISTS) {
+                cont.erase(itr);
+            }
             return ret;
         }
     } else {
@@ -81,7 +86,9 @@ Status session_info::check_delete_after_write(Record* rec_ptr) {
         for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
             if (itr->get_rec_ptr() != rec_ptr) continue;
             auto ret = process(&(*itr));
-            cont.erase(itr);
+            if (ret != Status::WARN_ALREADY_EXISTS) {
+                cont.erase(itr);
+            }
             return ret;
         }
     }
