@@ -31,11 +31,11 @@ constexpr register_count_type register_count_type_max = UINT64_MAX;
 
 inline std::atomic<bool> kCheckPointThreadEnd{false};      // NOLINT
 inline std::atomic<bool> kCheckPointThreadEndForce{false}; // NOLINT
-
+inline std::atomic<bool> kCheckPointThreadJoined{false};   // NOLINT
 inline std::thread kCheckPointThread;                      // NOLINT
 
-inline std::string kCheckpointPath;                        // NOLINT
-inline std::string kCheckpointingPath;                     // NOLINT
+inline std::string kCheckpointPath;    // NOLINT
+inline std::string kCheckpointingPath; // NOLINT
 
 // global variables setter / getter
 
@@ -120,8 +120,8 @@ public:
     }
 
     bool diff_upd_set_is_empty() {
-        for (auto &&each_set : diff_upd_set_ar) {
-            for (auto &&elem : each_set) {
+        for (auto&& each_set : diff_upd_set_ar) {
+            for (auto&& elem : each_set) {
                 if (!std::get<1>(elem).empty()) {
                     return false;
                 }
@@ -292,6 +292,8 @@ private:
 
 [[maybe_unused]] static bool get_checkpoint_thread_end_force() { return kCheckPointThreadEndForce.load(std::memory_order_acquire); }
 
+[[maybe_unused]] static bool get_checkpoint_thread_joined() { return kCheckPointThreadJoined.load(std::memory_order_acquire); }
+
 [[maybe_unused]] static void join_checkpoint_thread() try {
     kCheckPointThread.join();
 } catch (std::exception& e) {
@@ -304,6 +306,10 @@ private:
 
 [[maybe_unused]] static void set_checkpoint_thread_end_force(const bool tf) {
     kCheckPointThreadEndForce.store(tf, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_checkpoint_thread_joined(const bool tf) {
+    kCheckPointThreadJoined.store(tf, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
@@ -325,6 +331,7 @@ extern void checkpointing();
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     set_checkpoint_thread_end(false);
     set_checkpoint_thread_end_force(true);
+    set_checkpoint_thread_joined(false);
     kCheckPointThread = std::thread(checkpoint_thread);
 }
 

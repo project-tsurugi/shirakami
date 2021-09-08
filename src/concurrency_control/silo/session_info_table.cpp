@@ -107,4 +107,18 @@ void session_info_table::fin_kThreadTable() {
     for (auto&& th : th_vc) th.join();
 }
 
+#ifdef CPR
+
+bool session_info_table::is_empty_logs() {
+    for (auto&& elem : session_info_table::get_thread_info_table()) {
+        if (!elem.diff_upd_set_is_empty() ||
+            !elem.diff_upd_seq_set_is_empty()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+#endif
+
 } // namespace shirakami

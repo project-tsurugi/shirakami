@@ -20,7 +20,15 @@ namespace shirakami {
     std::vector<Storage> storage_list;
     list_storage(storage_list);
     for (auto&& elem : storage_list) {
-        storage::delete_storage(elem);
+#ifdef CPR
+        if (cpr::get_checkpoint_thread_joined()) {
+            storage::delete_storage(elem, false);
+        } else {
+            storage::delete_storage(elem, true);
+        }
+#else
+        storage::delete_storage(elem, false);
+#endif
     }
 
     yakushima::destroy();

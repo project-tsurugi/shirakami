@@ -17,15 +17,15 @@ public:
      * @brief Check wheter the session is already started. This function is not
      * thread safe. But this function can be used only after taking mutex.
      */
-    static Status decide_token(Token &token);  // NOLINT
+    static Status decide_token(Token& token); // NOLINT
 
     /**
      * @brief fin work about kThreadTable
      */
     static void fin_kThreadTable();
 
-    static std::array<session_info, KVS_MAX_PARALLEL_THREADS> &
-    get_thread_info_table() {  // NOLINT
+    static std::array<session_info, KVS_MAX_PARALLEL_THREADS>&
+    get_thread_info_table() { // NOLINT
         return kThreadTable;
     }
 
@@ -33,6 +33,10 @@ public:
      * @brief init work about kThreadTable
      */
     static void init_kThreadTable();
+
+#ifdef CPR
+    static bool is_empty_logs();
+#endif
 
 private:
     /**
@@ -43,8 +47,8 @@ private:
      * @attention This element may be used by CPR checkpointer, so please set KVS_MAX_PARALLEL_THREADS larger than
      * actual number of sessions.
      */
-    static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS>  // NOLINT
-    kThreadTable;                                               // NOLINT
+    static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS> // NOLINT
+            kThreadTable;                                            // NOLINT
 };
 
-}  // namespace shirakami
+} // namespace shirakami

@@ -11,8 +11,16 @@
 #else
 
 #include "concurrency_control/silo/include/record.h"
+#include "concurrency_control/silo/include/session_info_table.h"
 
 #endif
+
+#ifdef CPR
+
+#include "fault_tolerance/include/cpr.h"
+
+#endif
+
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
@@ -28,7 +36,7 @@ Status exist_storage(Storage storage) {
 }
 
 Status delete_storage(Storage storage) {
-    return storage::delete_storage(storage);
+    return storage::delete_storage(storage, true);
 }
 
 Status list_storage(std::vector<Storage>& out) {
@@ -51,7 +59,15 @@ Status storage::exist_storage(Storage storage) {
     return Status::WARN_NOT_FOUND;
 }
 
-Status storage::delete_storage(Storage storage) {
+Status storage::delete_storage(Storage storage, [[maybe_unused]] bool const wait_dml = true) {
+    // wait for cpr taching table
+#ifdef CPR
+    if (wait_dml) {
+        cpr::wait_next_checkpoint();
+        cpr::wait_next_checkpoint();
+    }
+#endif
+
     auto ret = yakushima::find_storage({reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
     if (ret != yakushima::status::OK) return Status::WARN_INVALID_HANDLE;
     // exist storage

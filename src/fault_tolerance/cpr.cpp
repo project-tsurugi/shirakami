@@ -100,16 +100,6 @@ cpr_local_handler::diff_upd_seq_set_type& cpr_local_handler::get_diff_upd_seq_se
     return diff_upd_seq_set_ar.at(1);
 }
 
-bool is_empty_logs() {
-    for (auto&& elem : session_info_table::get_thread_info_table()) {
-        if (!elem.diff_upd_set_is_empty() ||
-            !elem.diff_upd_seq_set_is_empty()) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void checkpoint_thread() {
     auto wait_worker = [](phase new_phase) {
         bool continue_loop{}; // NOLINT
@@ -149,12 +139,14 @@ void checkpoint_thread() {
 
         // Termination process that is not forced termination.
         if (get_checkpoint_thread_end() && !get_checkpoint_thread_end_force()) {
-            if (is_empty_logs()) {
+            if (session_info_table::is_empty_logs()) {
                 break;
             }
             // else: continue to do logging all log records.
         }
     }
+
+    set_checkpoint_thread_joined(true);
 }
 
 void checkpointing() {
