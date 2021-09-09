@@ -59,7 +59,7 @@ Status storage::exist_storage(Storage storage) {
     return Status::WARN_NOT_FOUND;
 }
 
-Status storage::delete_storage(Storage storage, [[maybe_unused]] bool const wait_dml = true) {
+Status storage::delete_storage(Storage storage, [[maybe_unused]] bool const wait_dml = true) { // NOLINT
     // wait for cpr taching table
 #ifdef CPR
     if (wait_dml) {
