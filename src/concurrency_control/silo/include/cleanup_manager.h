@@ -24,6 +24,10 @@ inline std::atomic<bool> cleanup_manager_thread_end;        // NOLINT
  */
 [[maybe_unused]] extern void cleanup_manager_func();
 
+[[maybe_unused]] static bool get_cleanup_manager_thread_end() {
+    return cleanup_manager_thread_end.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static void set_cleanup_manager_thread_end(const bool tf) {
     cleanup_manager_thread_end.store(tf, std::memory_order_release);
 }

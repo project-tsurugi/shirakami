@@ -17,7 +17,7 @@ namespace shirakami::cleanup_manager {
 
 void cleanup_manager_func() {
 
-    while (!cleanup_manager_thread_end.load(std::memory_order_acquire)) {
+    while (!get_cleanup_manager_thread_end()) {
         /**
          * Dividing by 2 is a heuristic. However, if the timing is not right, 
          * the unhooked record will be delayed by about 2 epochs, so divide it by 2.
@@ -26,7 +26,7 @@ void cleanup_manager_func() {
 
         shirakami::Token token{};
         while (Status::OK != shirakami::enter(token)) {
-            ;
+            _mm_pause();
         }
 
         for (auto&& elem : session_info_table::get_thread_info_table()) {
