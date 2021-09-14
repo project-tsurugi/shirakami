@@ -213,9 +213,9 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #if defined(CPR)
 
-void session_info::regi_diff_upd_set(std::string_view const storage, const tid_word& tid, Record* const record, OP_TYPE const op_type) {
+void session_info::regi_diff_upd_set(std::string_view const storage, const tid_word& tid, OP_TYPE const op_type, Record* const record, std::string_view const value_view) {
     auto& map{get_diff_upd_set()};
-    map[std::string(storage)][std::string{record->get_tuple().get_key()}] = {tid, op_type != OP_TYPE::DELETE ? record : nullptr};
+    map[std::string(storage)][std::string{record->get_tuple().get_key()}] = std::make_tuple(tid, op_type == OP_TYPE::DELETE, value_view);
 }
 
 void session_info::regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val) {

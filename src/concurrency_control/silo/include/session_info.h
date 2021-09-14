@@ -263,7 +263,7 @@ public:
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
 
-    void regi_diff_upd_set(std::string_view storage, const tid_word& tid, Record* record, OP_TYPE op_type);
+    void regi_diff_upd_set(std::string_view storage, const tid_word& tid, OP_TYPE op_type, Record* record, std::string_view value_view);
 
     void regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val);
 

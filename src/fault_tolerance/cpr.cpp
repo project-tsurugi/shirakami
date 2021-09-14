@@ -38,7 +38,7 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
             for (auto map_elem = absorbed_storage.value().begin(); map_elem != absorbed_storage.value().end(); ++map_elem) {
                 if ((aggregate_buf.find(absorbed_storage.key()) == aggregate_buf.end()) ||                                                                                                              // not found storage in aggregate_buf
                     (aggregate_buf.find(absorbed_storage.key()) != aggregate_buf.end() && aggregate_buf[absorbed_storage.key()].find(map_elem.key()) != aggregate_buf[absorbed_storage.key()].end()) || // found storage but not found elem in aggregate_buf
-                    aggregate_buf[absorbed_storage.key()][map_elem.key()].first < map_elem.value().first) {
+                    std::get<cpr::cpr_local_handler::diff_timestamp_pos>(aggregate_buf[absorbed_storage.key()][map_elem.key()]) < std::get<cpr_local_handler::diff_timestamp_pos>(map_elem.value())) {
                     aggregate_buf[absorbed_storage.key()][map_elem.key()] = map_elem.value(); // merge
                 }
             }
@@ -145,8 +145,6 @@ void checkpoint_thread() {
             // else: continue to do logging all log records.
         }
     }
-
-    set_checkpoint_thread_joined(true);
 }
 
 void checkpointing() {
@@ -170,9 +168,6 @@ void checkpointing() {
 
     log_records l_recs{};
     if (!aggregate_buf.empty()) {
-        phase_version pv = global_phase_version::get_gpv();
-        Token token{};
-        enter(token);
         /**
      * the snapshot transaction manager aligns the work of removing snapshots from the index and freeing memory with
      * the progress of the epoch.
@@ -180,8 +175,6 @@ void checkpointing() {
      * therefore, by joining this thread to the session and starting a transaction in a pseudo manner, the view of
      * memory is protected.
      */
-        tx_begin(token); // NOLINT
-        auto* ti = static_cast<session_info*>(token);
         for (auto itr_storage = aggregate_buf.begin(); itr_storage != aggregate_buf.end(); ++itr_storage) {
 #if defined(CPR_DIFF_HOPSCOTCH)
             for (auto itr = itr_storage.value().begin(); itr != itr_storage.value().end(); ++itr) {
@@ -189,41 +182,15 @@ void checkpointing() {
             for (auto itr = itr_storage->second.begin(); itr != itr_storage->second.end(); ++itr) {
 #endif
                 if (get_checkpoint_thread_end() && get_checkpoint_thread_end_force()) return;
-                Record* rec = itr.value().second;
 
-                if (rec == nullptr) {
+                if (std::get<cpr_local_handler::diff_is_delete_pos>(itr.value())) {
                     l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()));
-                    continue;
-                }
-            RETRY_COPY:
-                // begin : copy record
-                if (rec->get_version() == pv.get_version() + 1) {
-                    const Tuple& tup = rec->get_stable();
-                    l_recs.emplace_back(itr_storage.key(), tup.get_key(), tup.get_value());
                 } else {
-                    tid_word tid{rec->get_tidw()};
-                    while (tid.get_lock()) {
-                        _mm_pause();
-                        tid = rec->get_tidw();
-                    }
-                    if (rec->get_version() == pv.get_version() + 1) goto RETRY_COPY; // NOLINT
-                    const Tuple& tup = rec->get_tuple();
-                    std::string key{tup.get_key()};
-                    std::string value{tup.get_value()};
-                    tid_word tid_check{rec->get_tidw()};
-                    while (tid_check.get_lock()) {
-                        _mm_pause();
-                        tid_check = rec->get_tidw();
-                    }
-                    if (tid_check != tid) goto RETRY_COPY; // NOLINT
-                    l_recs.emplace_back(itr_storage.key(), key, value);
-                    rec->set_version(ti->get_version() + 1);
+                    l_recs.emplace_back(itr_storage.key(), std::string_view(itr.key()),
+                                        std::get<cpr_local_handler::diff_value_pos>(itr.value()));
                 }
-                // end : copy record
             }
         }
-
-        leave(token);
     }
 
     if (!aggregate_buf_seq.empty()) {

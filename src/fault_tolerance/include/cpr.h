@@ -31,7 +31,6 @@ constexpr register_count_type register_count_type_max = UINT64_MAX;
 
 inline std::atomic<bool> kCheckPointThreadEnd{false};      // NOLINT
 inline std::atomic<bool> kCheckPointThreadEndForce{false}; // NOLINT
-inline std::atomic<bool> kCheckPointThreadJoined{false};   // NOLINT
 inline std::thread kCheckPointThread;                      // NOLINT
 
 inline std::string kCheckpointPath;    // NOLINT
@@ -103,7 +102,20 @@ private:
 class cpr_local_handler {
 public:
 #if defined(CPR_DIFF_HOPSCOTCH)
-    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::pair<tid_word, Record*>>>;
+    /**
+     * @brief Type of difference about updates.
+     * @details diff_upd_set_type.key is a storage.
+     * diff_upd_set_type.second is a log record corresponding to the storage.
+     * diff_upd_set_type.second.first is a primary key.
+     * diff_upd_set_type.second.second is log record corresponding to the primary key.
+     * diff_upd_set_type.second.second.first is a timestamp.
+     * diff_upd_set_type.second.second.second is whether it is a delete operation.
+     * diff_upd_set_type.second.second.second is a payload data.
+     */
+    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::tuple<tid_word, bool, std::string>>>;
+    constexpr static std::size_t diff_timestamp_pos = 0;
+    constexpr static std::size_t diff_is_delete_pos = 1;
+    constexpr static std::size_t diff_value_pos = 2;
 #elif defined(CPR_DIFF_UM)
     using diff_upd_set_type = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<register_count_type, Record*>>>;
 #elif defined(CPR_DIFF_VEC)
@@ -292,8 +304,6 @@ private:
 
 [[maybe_unused]] static bool get_checkpoint_thread_end_force() { return kCheckPointThreadEndForce.load(std::memory_order_acquire); }
 
-[[maybe_unused]] static bool get_checkpoint_thread_joined() { return kCheckPointThreadJoined.load(std::memory_order_acquire); }
-
 [[maybe_unused]] static void join_checkpoint_thread() try {
     kCheckPointThread.join();
 } catch (std::exception& e) {
@@ -306,10 +316,6 @@ private:
 
 [[maybe_unused]] static void set_checkpoint_thread_end_force(const bool tf) {
     kCheckPointThreadEndForce.store(tf, std::memory_order_release);
-}
-
-[[maybe_unused]] static void set_checkpoint_thread_joined(const bool tf) {
-    kCheckPointThreadJoined.store(tf, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
@@ -331,7 +337,6 @@ extern void checkpointing();
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     set_checkpoint_thread_end(false);
     set_checkpoint_thread_end_force(true);
-    set_checkpoint_thread_joined(false);
     kCheckPointThread = std::thread(checkpoint_thread);
 }
 

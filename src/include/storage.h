@@ -20,12 +20,8 @@ public:
     /**
      * @brief delete storage
      * @param[in] storage
-     * @param[in] wait_dml If this is true, wait for checkpointing processing.
-     * This is because the checkpointing process accesses the table, 
-     * so if the storage release process is performed without waiting for it, 
-     * "heap-use-after-free" by checkpointing thread will occur.
      */
-    static Status delete_storage(Storage storage, bool wait_dml);
+    static Status delete_storage(Storage storage);
 
     static Status list_storage(std::vector<Storage>& out);
 

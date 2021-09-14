@@ -36,7 +36,7 @@ Status exist_storage(Storage storage) {
 }
 
 Status delete_storage(Storage storage) {
-    return storage::delete_storage(storage, true);
+    return storage::delete_storage(storage);
 }
 
 Status list_storage(std::vector<Storage>& out) {
@@ -59,15 +59,7 @@ Status storage::exist_storage(Storage storage) {
     return Status::WARN_NOT_FOUND;
 }
 
-Status storage::delete_storage(Storage storage, [[maybe_unused]] bool const wait_dml = true) { // NOLINT
-    // wait for cpr taching table
-#ifdef CPR
-    if (wait_dml) {
-        cpr::wait_next_checkpoint();
-        cpr::wait_next_checkpoint();
-    }
-#endif
-
+Status storage::delete_storage(Storage storage) { // NOLINT
     auto ret = yakushima::find_storage({reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
     if (ret != yakushima::status::OK) return Status::WARN_INVALID_HANDLE;
     // exist storage
