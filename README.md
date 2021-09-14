@@ -116,6 +116,10 @@ Available options:
       * Use std::unordered_map for cpr's differences sets.
       * Note : This maintenance has not kept up with the latest version.
       * Default: `OFF`
+   - `-DCPR_DIFF_VEC=OFF`
+      * Use std::vector for cpr's differences sets.
+      * Note : This maintenance has not kept up with the latest version.
+      * Default: `OFF`
 
 * Benchmarking (project_root/bench)
   + RocksDB
