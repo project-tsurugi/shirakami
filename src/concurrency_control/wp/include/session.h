@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include <atomic>
 #include <array>
+#include <atomic>
 
 #include "cpu.h"
 #include "epoch.h"
 #include "local_set.h"
 
-#include "concurrency_control/silo/include/tid.h"
+#include "concurrency_control/wp/include/tid.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -22,10 +22,32 @@ public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
 
+    /**
+     * @brief compare and swap for visible_.
+     */
+    bool cas_visible(bool& expected, bool& desired) {
+        return visible_.compare_exchange_weak(expected, desired, std::memory_order_release,
+                                              std::memory_order_acquire);
+    }
+
+    /**
+     * @brief clean aup about local set.
+     */
+    void clean_up_local_set();
+
+    /**
+     * @brief get the value of mrc_tid_.
+     */
     tid_word get_mrc_tid() { return mrc_tid_; }
 
+    /**
+     * @brief get the value of tx_began_.
+     */
     bool get_tx_began() { return tx_began_.load(std::memory_order_acquire); }
 
+    /**
+     * @brief get the value of visible_.
+     */
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
     void push_to_read_set(read_set_obj&& elem) {
@@ -70,24 +92,40 @@ private:
     local_write_set write_set_{};
 
     /**
-     * about indexing
+     * @brief token about yakushima.
      */
     yakushima::Token yakushima_token_{};
-    node_set_type node_set{};
+
+    /**
+     * @brief local set for phantom avoidance.
+     */
+    node_set_type node_set_{};
 };
 
 class session_table {
 public:
-#if 0
+    /**
+     * @brief Acquire right of an one session.
+     */
     static Status decide_token(Token& token); // NOLINT
 
+    /**
+     * @brief End work about session_table.
+     */
     static void fin_session_table();
-#endif
 
+    /**
+     * @brief getter of session_table_
+     */
     static std::array<session, KVS_MAX_PARALLEL_THREADS>&
-    get_session_table() { 
+    get_session_table() {
         return session_table_;
     }
+
+    /**
+     * @brief Initialization about session_table_
+     */
+    static void init_session_table();
 
 private:
     /**

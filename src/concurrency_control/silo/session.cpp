@@ -1,7 +1,3 @@
-/**
- * @file thread_info.cpp
- * @brief about scheme
- */
 
 #include "include/session.h"
 #include "include/garbage_manager.h"
@@ -10,7 +6,7 @@
 
 namespace shirakami {
 
-void session::clean_up_ops_set() {
+void session::clean_up_local_set() {
     read_set.clear();
     read_only_tuples_.clear();
     write_set.clear();

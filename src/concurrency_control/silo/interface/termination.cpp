@@ -15,7 +15,7 @@ namespace shirakami {
 Status abort(Token token) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->get_write_set().remove_inserted_records_from_yakushima(token, ti->get_yakushima_token());
-    ti->clean_up_ops_set();
+    ti->clean_up_local_set();
     ti->clean_up_scan_caches();
     ti->set_tx_began(false);
     return Status::OK;
@@ -116,7 +116,7 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
     /**
      * about holding operation info.
      */
-    ti->clean_up_ops_set();
+    ti->clean_up_local_set();
     /**
      * about scan operation.
      */

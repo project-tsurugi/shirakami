@@ -68,7 +68,7 @@ void session_table::fin_session_table() {
             /**
               * about holding operation info.
               */
-            itr.clean_up_ops_set();
+            itr.clean_up_local_set();
 
             /**
               * about scan operation

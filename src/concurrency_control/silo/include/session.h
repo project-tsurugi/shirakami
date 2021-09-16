@@ -91,9 +91,9 @@ public:
     }
 
     /**
-     * @brief clean up about holding operation info.
+     * @brief clean up about local set.
      */
-    void clean_up_ops_set();
+    void clean_up_local_set();
 
     /**
      * @brief clean up about scan operation.
@@ -105,9 +105,12 @@ public:
      */
     [[maybe_unused]] void display_read_set();
 
+    /**
+     * @brief compare and swap for visible_.
+     */
     bool cas_visible(bool& expected, bool& desired) { // NOLINT
-        return visible_.compare_exchange_strong(expected, desired,
-                                                std::memory_order_acq_rel);
+        return visible_.compare_exchange_weak(expected, desired, std::memory_order_release,
+                                              std::memory_order_acquire);
     }
 
     /**

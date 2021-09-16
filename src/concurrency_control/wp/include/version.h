@@ -6,7 +6,7 @@
 
 #include "cpu.h"
 
-#include "concurrency_control/silo/include/tid.h"
+#include "concurrency_control/wp/include/tid.h"
 
 #include <atomic>
 

@@ -14,23 +14,25 @@ namespace shirakami {
 class session_table {
 public:
     /**
-     * @brief Check wheter the session is already started. This function is not
-     * thread safe. But this function can be used only after taking mutex.
+     * @brief Acquire right of an one session.
      */
     static Status decide_token(Token& token); // NOLINT
 
     /**
-     * @brief fin work about session_table_
+     * @brief End work about session_table.
      */
     static void fin_session_table();
 
+    /**
+     * @brief getter of session_table_
+     */
     static std::array<session, KVS_MAX_PARALLEL_THREADS>&
     get_session_table() { // NOLINT
         return session_table_;
     }
 
     /**
-     * @brief init work about session_table_
+     * @brief Initialization about session_table_
      */
     static void init_session_table();
 

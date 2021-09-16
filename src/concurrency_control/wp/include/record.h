@@ -7,7 +7,7 @@
 
 #include <string_view>
 
-#include "concurrency_control/silo/include/tid.h"
+#include "concurrency_control/wp/include/tid.h"
 
 #include "cpu.h"
 #include "version.h"
