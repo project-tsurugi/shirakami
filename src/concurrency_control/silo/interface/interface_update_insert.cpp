@@ -8,7 +8,8 @@
 #include "atomic_wrapper.h"
 
 #include "include/interface_helper.h"
-#include "include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 

@@ -2,11 +2,12 @@
 
 #include "atomic_wrapper.h"
 
-#include "include/epoch.h"
-#include "include/garbage_manager.h"
 #include "include/interface_helper.h"
 
-#include "include/tuple_local.h" // sizeof(Tuple)
+#include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/silo/include/garbage_manager.h"
+#include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
+
 #include "shirakami/interface.h" // NOLINT
 
 namespace shirakami {

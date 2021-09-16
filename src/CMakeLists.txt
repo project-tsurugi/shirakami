@@ -10,7 +10,10 @@ if (BUILD_WP)
     )
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 else ()
-    file(GLOB CC_SOURCES "concurrency_control/silo/*.cpp")
+    file(GLOB CC_SOURCES 
+    "concurrency_control/silo/*.cpp"
+    "concurrency_control/silo/interface/*.cpp"
+    )
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 
     if (BUILD_PWAL)

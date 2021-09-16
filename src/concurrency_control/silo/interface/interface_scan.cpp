@@ -8,8 +8,9 @@
 #include <glog/logging.h>
 
 #include "include/interface_helper.h"
-#include "include/snapshot_interface.h"
-#include "include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/silo/include/snapshot_interface.h"
+#include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
 
 #include "index/yakushima/include/scheme.h"
 

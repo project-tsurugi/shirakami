@@ -1,10 +1,10 @@
 /**
- * @file concurrency_control/silo/include/interface_helper.h
+ * @file concurrency_control/silo/interface/include/interface_helper.h
  */
 
 #pragma once
 
-#include "session_info.h"
+#include "concurrency_control/silo/include/session_info.h"
 
 namespace shirakami {
 

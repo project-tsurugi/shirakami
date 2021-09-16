@@ -6,10 +6,10 @@
 
 #include "include/interface_helper.h"
 
-#include "include/cleanup_manager.h"
-#include "include/garbage_manager.h"
-#include "include/session_info_table.h"
-#include "include/snapshot_manager.h"
+#include "concurrency_control/silo/include/cleanup_manager.h"
+#include "concurrency_control/silo/include/garbage_manager.h"
+#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/snapshot_manager.h"
 
 #if defined(PWAL) || defined(CPR)
 
