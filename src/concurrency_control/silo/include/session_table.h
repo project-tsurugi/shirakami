@@ -20,19 +20,19 @@ public:
     static Status decide_token(Token& token); // NOLINT
 
     /**
-     * @brief fin work about kThreadTable
+     * @brief fin work about session_table_
      */
-    static void fin_kThreadTable();
+    static void fin_session_table();
 
     static std::array<session, KVS_MAX_PARALLEL_THREADS>&
-    get_thread_info_table() { // NOLINT
-        return kThreadTable;
+    get_session_table() { // NOLINT
+        return session_table_;
     }
 
     /**
-     * @brief init work about kThreadTable
+     * @brief init work about session_table_
      */
-    static void init_kThreadTable();
+    static void init_session_table();
 
 #ifdef CPR
     static bool is_empty_logs();
@@ -48,7 +48,7 @@ private:
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
     static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
-            kThreadTable;                                            // NOLINT
+            session_table_;                                            // NOLINT
 };
 
 } // namespace shirakami

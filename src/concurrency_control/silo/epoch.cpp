@@ -30,7 +30,7 @@ namespace shirakami::epoch {
 bool check_epoch_loaded() { // NOLINT
     epoch_t curEpoch = get_global_epoch(); 
 
-    for (auto&& itr : session_table::get_thread_info_table()) { // NOLINT
+    for (auto&& itr : session_table::get_session_table()) { // NOLINT
         if (itr.get_visible() && itr.get_txbegan() && itr.get_epoch() != curEpoch) {
             return false;
         }

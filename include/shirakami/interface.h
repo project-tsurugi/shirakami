@@ -131,7 +131,7 @@ extern Status delete_record(Token token, Storage storage, std::string_view key);
 /**
  * @brief enter session
  * @param[out] token output parameter to return the token
- * @pre Maximum degree of parallelism of this function without leave is the size of kThreadTable, KVS_MAX_PARALLEL_THREADS.
+ * @pre Maximum degree of parallelism of this function without leave is the size of session_table_, KVS_MAX_PARALLEL_THREADS.
  * @post When it ends this session, do leave(Token token).
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
@@ -183,7 +183,7 @@ extern Status insert(Token token, Storage storage, std::string_view key, std::st
 /**
  * @brief leave session
  * @details It return the objects which was got at enter function to
- * kThreadTable.
+ * session_table_.
  * @param[in] token retrieved by enter()
  * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  * @return Status::OK success.

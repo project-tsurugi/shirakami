@@ -44,7 +44,7 @@ public:
 
 private:
     /**
-     * @brief most recently chosen tid for calculate new tid.
+     * @brief most recently chosen tid for calculate new tid of occ.
      */
     tid_word mrc_tid_{};
 
@@ -78,6 +78,16 @@ private:
 
 class session_table {
 public:
+#if 0
+    static Status decide_token(Token& token); // NOLINT
+
+    static void fin_session_table();
+#endif
+
+    static std::array<session, KVS_MAX_PARALLEL_THREADS>&
+    get_session_table() { 
+        return session_table_;
+    }
 
 private:
     /**

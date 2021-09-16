@@ -60,7 +60,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
 
     // Clean up
-    session_table::fin_kThreadTable();
+    session_table::fin_session_table();
     yakushima::fin();           // Cond : after all removing (from index) ops.
     epoch::join_epoch_thread(); // Note : this can be called at last.
 } catch (std::exception& e) {
@@ -106,7 +106,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
 #endif
     // end about logging
 
-    session_table::init_kThreadTable();
+    session_table::init_session_table();
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
     cleanup_manager::invoke_cleanup_manager();
@@ -122,7 +122,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
 }
 
 Status leave(Token const token) { // NOLINT
-    for (auto&& itr : session_table::get_thread_info_table()) {
+    for (auto&& itr : session_table::get_session_table()) {
         if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
                 yakushima::leave(static_cast<session*>(token)->get_yakushima_token());

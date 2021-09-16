@@ -16,7 +16,7 @@
 namespace shirakami {
 
 Status session_table::decide_token(Token& token) { // NOLINT
-    for (auto&& itr : kThreadTable) {
+    for (auto&& itr : get_session_table()) {
         if (!itr.get_visible()) {
             bool expected(false);
             bool desired(true);
@@ -25,17 +25,17 @@ Status session_table::decide_token(Token& token) { // NOLINT
                 break;
             }
         }
-        if (&itr == kThreadTable.end() - 1) return Status::ERR_SESSION_LIMIT;
+        if (&itr == get_session_table().end() - 1) return Status::ERR_SESSION_LIMIT;
     }
 
     return Status::OK;
 }
 
-void session_table::init_kThreadTable() {
+void session_table::init_session_table() {
 #if defined(PWAL)
     uint64_t ctr(0);
 #endif
-    for (auto&& itr : kThreadTable) {
+    for (auto&& itr : get_session_table()) {
         itr.set_visible(false);
         itr.set_tx_began(false);
 
@@ -60,10 +60,10 @@ void session_table::init_kThreadTable() {
     }
 }
 
-void session_table::fin_kThreadTable() {
+void session_table::fin_session_table() {
     std::vector<std::thread> th_vc;
-    th_vc.reserve(kThreadTable.size());
-    for (auto&& itr : kThreadTable) {
+    th_vc.reserve(get_session_table().size());
+    for (auto&& itr : get_session_table()) {
         auto process = [&itr]() {
             /**
               * about holding operation info.
@@ -110,7 +110,7 @@ void session_table::fin_kThreadTable() {
 #ifdef CPR
 
 bool session_table::is_empty_logs() {
-    for (auto&& elem : session_table::get_thread_info_table()) {
+    for (auto&& elem : session_table::get_session_table()) {
         if (!elem.diff_upd_set_is_empty() ||
             !elem.diff_upd_seq_set_is_empty()) {
             return false;

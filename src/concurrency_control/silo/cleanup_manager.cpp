@@ -29,7 +29,7 @@ void cleanup_manager_func() {
             _mm_pause();
         }
 
-        for (auto&& elem : session_table::get_thread_info_table()) {
+        for (auto&& elem : session_table::get_session_table()) {
             auto& handle = elem.get_cleanup_handle();
             auto& cont = handle.get_cont();
             auto& cache = handle.get_cache();
