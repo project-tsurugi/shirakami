@@ -3,7 +3,7 @@
 
 #include "concurrency_control/silo/include/epoch.h"
 
-#include "concurrency_control/silo/interface/include/interface_helper.h"
+#include "concurrency_control/silo/interface/include/helper.h"
 
 #include "clock.h"
 

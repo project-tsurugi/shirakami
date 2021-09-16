@@ -1,5 +1,5 @@
 
-#include "include/interface_helper.h"
+#include "include/helper.h"
 
 #include "concurrency_control/silo/include/session_info_table.h"
 #include "concurrency_control/silo/include/snapshot_interface.h"

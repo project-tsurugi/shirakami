@@ -10,7 +10,7 @@
 
 #else
 
-#include "concurrency_control/silo/interface/include/interface_helper.h"
+#include "concurrency_control/silo/interface/include/helper.h"
 #include "concurrency_control/silo/include/session_info_table.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 

@@ -7,7 +7,7 @@
 
 #include <glog/logging.h>
 
-#include "include/interface_helper.h"
+#include "include/helper.h"
 
 #include "concurrency_control/silo/include/snapshot_interface.h"
 #include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)

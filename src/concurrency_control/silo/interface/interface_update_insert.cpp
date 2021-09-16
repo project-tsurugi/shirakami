@@ -7,7 +7,7 @@
 
 #include "atomic_wrapper.h"
 
-#include "include/interface_helper.h"
+#include "include/helper.h"
 
 #include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
 

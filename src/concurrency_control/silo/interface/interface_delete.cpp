@@ -8,7 +8,7 @@
 #include "atomic_wrapper.h"
 #include "storage.h"
 
-#include "include/interface_helper.h"
+#include "include/helper.h"
 
 #include "shirakami/interface.h"
 

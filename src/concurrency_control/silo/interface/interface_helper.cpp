@@ -4,7 +4,7 @@
 
 #include <glog/logging.h>
 
-#include "include/interface_helper.h"
+#include "include/helper.h"
 
 #include "concurrency_control/silo/include/cleanup_manager.h"
 #include "concurrency_control/silo/include/garbage_manager.h"
