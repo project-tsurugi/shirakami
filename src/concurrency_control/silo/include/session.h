@@ -1,5 +1,5 @@
 /**
- * @file concurrency_control/silo/include/session_info.h
+ * @file concurrency_control/silo/include/session.h
  * @brief private scheme of transaction engine
  */
 
@@ -50,7 +50,7 @@
 
 namespace shirakami {
 
-class session_info {
+class session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
@@ -74,7 +74,7 @@ public:
         scan_cache_itr_type scan_cache_itr_{};
     };
 
-    explicit session_info(Token token) {
+    explicit session(Token token) {
         this->token_ = token;
         get_mrctid().reset();
 #if defined(PWAL)
@@ -82,7 +82,7 @@ public:
 #endif
     }
 
-    session_info() {
+    session() {
         this->visible_.store(false, std::memory_order_release);
         get_mrctid().reset();
 #if defined(PWAL)

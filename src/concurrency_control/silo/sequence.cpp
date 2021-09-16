@@ -6,11 +6,11 @@
 
 #ifdef WP
 
-#include "concurrency_control/wp/include/session_info.h"
+#include "concurrency_control/wp/include/session.h"
 
 #else
 
-#include "concurrency_control/silo/include/session_info.h"
+#include "concurrency_control/silo/include/session.h"
 
 #endif
 
@@ -26,7 +26,7 @@ Status create_sequence(SequenceId* id) {
         ;
     }
     tx_begin(token);
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     ti->regi_diff_upd_seq_set(*id, sequence_map::initial_value);
     commit(token);
     leave(token);
@@ -75,7 +75,7 @@ Status update_sequence([[maybe_unused]] Token token, SequenceId id, SequenceVers
 
 #if defined(CPR)
     // register diff hint
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     ti->regi_diff_upd_seq_set(id, std::make_pair(version, value));
     if (ti->get_phase() != cpr::phase::REST) {
         if (std::get<sequence_map::cpr_version_pos>(target) != ti->get_version() + 1) {
@@ -116,7 +116,7 @@ Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* val
         ;
     }
     tx_begin(token);
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     // get reference
     sequence_map::value_type& target_ref = sequence_map::get_value_ref(id);
     if (ti->get_phase() == cpr::phase::REST) {
@@ -188,7 +188,7 @@ Status delete_sequence(SequenceId id) {
     tx_begin(token); // for cordinate with cpr.
 
     target = sequence_map::value_type{sequence_map::non_exist_value, std::get<sequence_map::durable_pos>(target), std::get<sequence_map::cpr_version_pos>(target)};
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     ti->regi_diff_upd_seq_set(id, sequence_map::non_exist_value);
     commit(token);
     leave(token);

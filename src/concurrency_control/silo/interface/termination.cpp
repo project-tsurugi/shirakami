@@ -13,7 +13,7 @@
 namespace shirakami {
 
 Status abort(Token token) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     ti->get_write_set().remove_inserted_records_from_yakushima(token, ti->get_yakushima_token());
     ti->clean_up_ops_set();
     ti->clean_up_scan_caches();
@@ -23,7 +23,7 @@ Status abort(Token token) { // NOLINT
 
 extern Status commit(Token token, commit_param* cp) { // NOLINT
     // Phase 1: Sort lock list;
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     ti->get_write_set().sort_if_ol();
 
     // Phase 2: Lock write set;
@@ -145,7 +145,7 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
 }
 
 extern bool check_commit(Token token, [[maybe_unused]] std::uint64_t commit_id) { // NOLINT
-    [[maybe_unused]] auto* ti = static_cast<session_info*>(token);
+    [[maybe_unused]] auto* ti = static_cast<session*>(token);
 #if defined(PWAL)
     return ti->get_flushed_ctid().get_obj() > commit_id;
 #elif defined(CPR)

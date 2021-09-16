@@ -18,7 +18,7 @@ namespace shirakami {
 
 Status insert(Token token, Storage storage, const std::string_view key, // NOLINT
               const std::string_view val) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
@@ -61,7 +61,7 @@ Status insert(Token token, Storage storage, const std::string_view key, // NOLIN
 
 Status update(Token token, Storage storage, const std::string_view key, // NOLINT
               const std::string_view val) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
@@ -95,7 +95,7 @@ Status update(Token token, Storage storage, const std::string_view key, // NOLIN
 
 Status upsert(Token token, Storage storage, const std::string_view key, // NOLINT
               const std::string_view val) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 

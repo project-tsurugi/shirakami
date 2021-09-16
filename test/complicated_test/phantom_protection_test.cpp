@@ -10,7 +10,7 @@
 
 #include "shirakami/interface.h"
 
-#include "concurrency_control/silo/include/session_info.h"
+#include "concurrency_control/silo/include/session.h"
 
 namespace shirakami::testing {
 
@@ -141,7 +141,7 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     begin = 1; // NOLINT
     end = 24;  // NOLINT
     ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     auto& ns = ti->get_node_set();
     ASSERT_EQ(ns.size(), 3);
     ASSERT_NE(std::get<1>(ns.at(0)), std::get<1>(ns.at(1)));

@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
 
-#include "concurrency_control/silo/include/session_info.h"
+#include "concurrency_control/silo/include/session.h"
 #include "concurrency_control/silo/include/tuple_local.h"
 
 #include "shirakami/interface.h"
@@ -10,25 +10,25 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class session_info_test : public ::testing::Test {
+class session_test : public ::testing::Test {
 public:
     void SetUp() override {
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/session_info_test_log");
+        log_dir.append("/build/session_test_log");
         init(false, log_dir); // NOLINT
     }
 
     void TearDown() override { fin(); }
 };
 
-TEST_F(session_info_test, get_txbegan_) { // NOLINT
+TEST_F(session_test, get_txbegan_) { // NOLINT
     Storage storage{};
     register_storage(storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    auto* ti = static_cast<session_info*>(s);
+    auto* ti = static_cast<session*>(s);
     ASSERT_EQ(ti->get_txbegan(), false);
     // test upsert
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));

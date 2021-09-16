@@ -29,7 +29,7 @@ namespace shirakami {
 }
 
 Status delete_record(Token token, Storage storage, const std::string_view key) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 

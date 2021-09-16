@@ -1,9 +1,9 @@
 /**
- * @file session_info_table.cpp
+ * @file session_table.cpp
  * @brief about entire shirakami.
  */
 
-#include "include/session_info_table.h"
+#include "include/session_table.h"
 #include "include/tuple_local.h" // sizeof(Tuple)
 
 
@@ -15,7 +15,7 @@
 
 namespace shirakami {
 
-Status session_info_table::decide_token(Token& token) { // NOLINT
+Status session_table::decide_token(Token& token) { // NOLINT
     for (auto&& itr : kThreadTable) {
         if (!itr.get_visible()) {
             bool expected(false);
@@ -31,7 +31,7 @@ Status session_info_table::decide_token(Token& token) { // NOLINT
     return Status::OK;
 }
 
-void session_info_table::init_kThreadTable() {
+void session_table::init_kThreadTable() {
 #if defined(PWAL)
     uint64_t ctr(0);
 #endif
@@ -60,7 +60,7 @@ void session_info_table::init_kThreadTable() {
     }
 }
 
-void session_info_table::fin_kThreadTable() {
+void session_table::fin_kThreadTable() {
     std::vector<std::thread> th_vc;
     th_vc.reserve(kThreadTable.size());
     for (auto&& itr : kThreadTable) {
@@ -109,8 +109,8 @@ void session_info_table::fin_kThreadTable() {
 
 #ifdef CPR
 
-bool session_info_table::is_empty_logs() {
-    for (auto&& elem : session_info_table::get_thread_info_table()) {
+bool session_table::is_empty_logs() {
+    for (auto&& elem : session_table::get_thread_info_table()) {
         if (!elem.diff_upd_set_is_empty() ||
             !elem.diff_upd_seq_set_is_empty()) {
             return false;

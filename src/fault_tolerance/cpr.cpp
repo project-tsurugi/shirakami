@@ -5,13 +5,13 @@
 #ifdef WP
 
 #include "concurrency_control/wp/include/interface_helper.h"
-#include "concurrency_control/wp/include/session_info_table.h"
+#include "concurrency_control/wp/include/session_table.h"
 #include "concurrency_control/wp/include/snapshot_manager.h"
 
 #else
 
 #include "concurrency_control/silo/interface/include/helper.h"
-#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/session_table.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 
 #endif
@@ -27,7 +27,7 @@ using namespace shirakami::epoch;
 namespace shirakami::cpr {
 
 void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf) {
-    for (auto&& table_elem : session_info_table::get_thread_info_table()) {
+    for (auto&& table_elem : session_table::get_thread_info_table()) {
         if (get_checkpoint_thread_end() && get_checkpoint_thread_end_force()) return;
         phase_version pv = global_phase_version::get_gpv();
         auto index{pv.get_version() % 2 == 0 ? 0 : 1};
@@ -68,7 +68,7 @@ void aggregate_diff_upd_set(cpr_local_handler::diff_upd_set_type& aggregate_buf)
 void aggregate_diff_upd_seq_set(cpr_local_handler::diff_upd_seq_set_type& aggregate_buf) {
     phase_version pv = global_phase_version::get_gpv();
     auto index{pv.get_version() % 2 == 0 ? 0 : 1};
-    for (auto&& table_elem : session_info_table::get_thread_info_table()) {
+    for (auto&& table_elem : session_table::get_thread_info_table()) {
         if (get_checkpoint_thread_end() && get_checkpoint_thread_end_force()) return;
         auto& absorbed_map = table_elem.get_diff_upd_seq_set(index);
         for (auto map_elem = absorbed_map.begin(); map_elem != absorbed_map.end(); ++map_elem) {
@@ -105,7 +105,7 @@ void checkpoint_thread() {
         bool continue_loop{}; // NOLINT
         do {
             continue_loop = false;
-            for (auto&& elem : session_info_table::get_thread_info_table()) {
+            for (auto&& elem : session_table::get_thread_info_table()) {
                 if (elem.get_visible() && elem.get_txbegan() && elem.get_phase() != new_phase) {
                     continue_loop = true;
                     _mm_pause();
@@ -139,7 +139,7 @@ void checkpoint_thread() {
 
         // Termination process that is not forced termination.
         if (get_checkpoint_thread_end() && !get_checkpoint_thread_end_force()) {
-            if (session_info_table::is_empty_logs()) {
+            if (session_table::is_empty_logs()) {
                 break;
             }
             // else: continue to do logging all log records.

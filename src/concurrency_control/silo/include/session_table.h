@@ -1,5 +1,5 @@
 /**
- * @file concurrency_control/silo/include/session_info_table.h
+ * @file concurrency_control/silo/include/session_table.h
  * @brief core work about shirakami.
  */
 
@@ -7,11 +7,11 @@
 
 #include <array>
 
-#include "session_info.h"
+#include "session.h"
 
 namespace shirakami {
 
-class session_info_table {
+class session_table {
 public:
     /**
      * @brief Check wheter the session is already started. This function is not
@@ -24,7 +24,7 @@ public:
      */
     static void fin_kThreadTable();
 
-    static std::array<session_info, KVS_MAX_PARALLEL_THREADS>&
+    static std::array<session, KVS_MAX_PARALLEL_THREADS>&
     get_thread_info_table() { // NOLINT
         return kThreadTable;
     }
@@ -47,7 +47,7 @@ private:
      * exclusive arbitration is performed for fixed-length tables.
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
-    static inline std::array<session_info, KVS_MAX_PARALLEL_THREADS> // NOLINT
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
             kThreadTable;                                            // NOLINT
 };
 

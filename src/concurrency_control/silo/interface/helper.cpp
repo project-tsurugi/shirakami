@@ -8,7 +8,7 @@
 
 #include "concurrency_control/silo/include/cleanup_manager.h"
 #include "concurrency_control/silo/include/garbage_manager.h"
-#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/session_table.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 
 #if defined(PWAL) || defined(CPR)
@@ -22,13 +22,13 @@
 namespace shirakami {
 
 Status enter(Token& token) { // NOLINT
-    Status ret_status = session_info_table::decide_token(token);
+    Status ret_status = session_table::decide_token(token);
     if (ret_status != Status::OK) return ret_status;
     yakushima::Token kvs_token{};
     while (yakushima::enter(kvs_token) != yakushima::status::OK) {
         _mm_pause();
     }
-    static_cast<session_info*>(token)->set_kvs_token(kvs_token);
+    static_cast<session*>(token)->set_kvs_token(kvs_token);
     return ret_status;
 }
 
@@ -60,7 +60,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
 
     // Clean up
-    session_info_table::fin_kThreadTable();
+    session_table::fin_kThreadTable();
     yakushima::fin();           // Cond : after all removing (from index) ops.
     epoch::join_epoch_thread(); // Note : this can be called at last.
 } catch (std::exception& e) {
@@ -106,7 +106,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
 #endif
     // end about logging
 
-    session_info_table::init_kThreadTable();
+    session_table::init_kThreadTable();
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
     cleanup_manager::invoke_cleanup_manager();
@@ -122,10 +122,10 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
 }
 
 Status leave(Token const token) { // NOLINT
-    for (auto&& itr : session_info_table::get_thread_info_table()) {
-        if (&itr == static_cast<session_info*>(token)) {
+    for (auto&& itr : session_table::get_thread_info_table()) {
+        if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
-                yakushima::leave(static_cast<session_info*>(token)->get_yakushima_token());
+                yakushima::leave(static_cast<session*>(token)->get_yakushima_token());
                 itr.set_tx_began(false);
                 itr.set_visible(false);
                 return Status::OK;
@@ -137,7 +137,7 @@ Status leave(Token const token) { // NOLINT
 }
 
 void tx_begin(Token const token, bool const read_only, bool const for_batch) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         /**
          * This func includes loading latest global epoch used for epoch-base resource management. This means that this
@@ -223,7 +223,7 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
     return Status::OK;
 }
 
-void write_phase(session_info* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
+void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
                  [[maybe_unused]] commit_property cp) {
     /*
      * It calculates the smallest number that is

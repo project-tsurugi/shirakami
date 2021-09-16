@@ -6,7 +6,7 @@
 #include "clock.h"
 
 #include "include/garbage_manager.h"
-#include "include/session_info_table.h"
+#include "include/session_table.h"
 #include "include/snapshot_manager.h"
 #include "include/tuple_local.h" // sizeof(Tuple)
 
@@ -129,8 +129,8 @@ void gc_handler::gc_snap() {
 [[maybe_unused]] void release_all_heap_objects() {
     remove_all_leaf_from_mt_db_and_release();
     std::vector<std::thread> thv;
-    thv.reserve(session_info_table::get_thread_info_table().size());
-    for (auto&& elem : session_info_table::get_thread_info_table()) {
+    thv.reserve(session_table::get_thread_info_table().size());
+    for (auto&& elem : session_table::get_thread_info_table()) {
         auto& gc_handle = elem.get_gc_handle();
         auto process = [&gc_handle]() {
             gc_handle.clear();
@@ -153,7 +153,7 @@ void garbage_manager_func() {
     while (!garbage_manager_thread_end.load(std::memory_order_acquire)) {
         sleepMs(PARAM_EPOCH_TIME);
 
-        for (auto&& elem : session_info_table::get_thread_info_table()) {
+        for (auto&& elem : session_table::get_thread_info_table()) {
             auto& handle = elem.get_gc_handle();
             handle.gc();
             if (garbage_manager_thread_end.load(std::memory_order_acquire)) break;

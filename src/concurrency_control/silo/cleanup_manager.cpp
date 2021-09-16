@@ -6,7 +6,7 @@
 #include "clock.h"
 
 #include "include/cleanup_manager.h"
-#include "include/session_info_table.h"
+#include "include/session_table.h"
 #include "include/snapshot_manager.h"
 
 #include "shirakami/interface.h"
@@ -29,7 +29,7 @@ void cleanup_manager_func() {
             _mm_pause();
         }
 
-        for (auto&& elem : session_info_table::get_thread_info_table()) {
+        for (auto&& elem : session_table::get_thread_info_table()) {
             auto& handle = elem.get_cleanup_handle();
             auto& cont = handle.get_cont();
             auto& cache = handle.get_cache();
@@ -53,7 +53,7 @@ void cleanup_manager_func() {
 
                     if (rec_ptr->get_snap_ptr() == nullptr) {
                         // if no snapshot, it can immediately remove.
-                        auto* ti = static_cast<session_info*>(token);
+                        auto* ti = static_cast<session*>(token);
                         yakushima::remove(ti->get_yakushima_token(), storage, key_view);
                         ti->get_gc_handle().get_rec_cont().push(rec_ptr);
                     } else {

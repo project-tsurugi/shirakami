@@ -3,13 +3,13 @@
  */
 
 #include "include/local_set.h"
-#include "include/session_info.h"
+#include "include/session.h"
 
 namespace shirakami {
 
 [[maybe_unused]] void local_write_set::display_write_set() {
     std::cout << "==========" << std::endl;
-    std::cout << "start : session_info::display_write_set()" << std::endl;
+    std::cout << "start : session::display_write_set()" << std::endl;
     std::size_t ctr(1);
     auto display_we = [&ctr](write_set_obj* we_ptr) {
         std::cout << "Element #" << ctr << " of write set." << std::endl;
@@ -62,7 +62,7 @@ void local_write_set::remove_inserted_records_from_yakushima(shirakami::Token sh
             Record* record = we_ptr->get_rec_ptr();
             std::string_view key_view = record->get_tuple().get_key();
             yakushima::remove(yakushima_token, we_ptr->get_storage(), key_view);
-            auto* ti = static_cast<session_info*>(shirakami_token);
+            auto* ti = static_cast<session*>(shirakami_token);
             ti->get_gc_handle().get_rec_cont().push(we_ptr->get_rec_ptr());
 
             /**

@@ -1,7 +1,7 @@
 
 #include "include/helper.h"
 
-#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/session_table.h"
 #include "concurrency_control/silo/include/snapshot_interface.h"
 #include "concurrency_control/silo/include/tuple_local.h"
 
@@ -11,7 +11,7 @@ namespace shirakami {
 
 Status search_key(Token token, Storage storage, const std::string_view key, // NOLINT
                   Tuple** const tuple) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {

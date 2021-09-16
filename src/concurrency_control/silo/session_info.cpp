@@ -3,28 +3,28 @@
  * @brief about scheme
  */
 
-#include "include/session_info.h"
+#include "include/session.h"
 #include "include/garbage_manager.h"
 #include "include/snapshot_manager.h"
 #include "include/tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami {
 
-void session_info::clean_up_ops_set() {
+void session::clean_up_ops_set() {
     read_set.clear();
     read_only_tuples_.clear();
     write_set.clear();
     node_set.clear();
 }
 
-void session_info::clean_up_scan_caches() {
+void session::clean_up_scan_caches() {
     scan_handle_.get_scan_cache().clear();
     scan_handle_.get_scan_cache_itr().clear();
 }
 
-[[maybe_unused]] void session_info::display_read_set() {
+[[maybe_unused]] void session::display_read_set() {
     std::cout << "==========" << std::endl;
-    std::cout << "start : session_info::display_read_set()" << std::endl;
+    std::cout << "start : session::display_read_set()" << std::endl;
     std::size_t ctr(1);
     for (auto&& itr : read_set) {
         std::cout << "Element #" << ctr << " of read set." << std::endl;
@@ -46,7 +46,7 @@ void session_info::clean_up_scan_caches() {
     std::cout << "==========" << std::endl;
 }
 
-Status session_info::check_delete_after_write(Record* rec_ptr) {
+Status session::check_delete_after_write(Record* rec_ptr) {
     auto process = [this](write_set_obj* we_ptr) {
         if (we_ptr->get_op() == OP_TYPE::INSERT) {
             Record* record = we_ptr->get_rec_ptr();
@@ -96,7 +96,7 @@ Status session_info::check_delete_after_write(Record* rec_ptr) {
     return Status::OK;
 }
 
-Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
+Status session::update_node_set(yakushima::node_version64* nvp) { // NOLINT
     for (auto&& elem : node_set) {
         if (std::get<1>(elem) == nvp) {
             yakushima::node_version64_body nvb = nvp->get_stable_version();
@@ -119,7 +119,7 @@ Status session_info::update_node_set(yakushima::node_version64* nvp) { // NOLINT
 
 #ifdef PWAL
 
-void session_info::pwal(uint64_t commit_id, commit_property cp) {
+void session::pwal(uint64_t commit_id, commit_property cp) {
     for (auto&& itr : write_set) {
         if (itr.get_op() == OP_TYPE::UPDATE) {
             log_handle_.get_log_set().emplace_back(commit_id, itr.get_op(), &itr.get_tuple_to_local());
@@ -213,12 +213,12 @@ void session_info::pwal(uint64_t commit_id, commit_property cp) {
 
 #if defined(CPR)
 
-void session_info::regi_diff_upd_set(std::string_view const storage, const tid_word& tid, OP_TYPE const op_type, Record* const record, std::string_view const value_view) {
+void session::regi_diff_upd_set(std::string_view const storage, const tid_word& tid, OP_TYPE const op_type, Record* const record, std::string_view const value_view) {
     auto& map{get_diff_upd_set()};
     map[std::string(storage)][std::string{record->get_tuple().get_key()}] = std::make_tuple(tid, op_type == OP_TYPE::DELETE, value_view);
 }
 
-void session_info::regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val) {
+void session::regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val) {
     auto& map{get_diff_upd_seq_set()};
     map[id] = ver_val;
 }

@@ -4,11 +4,11 @@
 
 #ifdef WP
 
-#include "concurrency_control/wp/include/session_info.h"
+#include "concurrency_control/wp/include/session.h"
 
 #else
 
-#include "concurrency_control/silo/include/session_info.h"
+#include "concurrency_control/silo/include/session.h"
 
 #endif
 
@@ -62,7 +62,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         ASSERT_EQ(enter(token), Status::OK);
         std::string k("a"); // NOLINT
         ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
-        auto* ti = static_cast<session_info*>(token);
+        auto* ti = static_cast<session*>(token);
         std::size_t sst_num{};
         if (ti->get_phase() == cpr::phase::REST) {
             sst_num = ti->get_version();
@@ -80,7 +80,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         ASSERT_EQ(enter(token), Status::OK);
         std::string k("b"); // NOLINT
         ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
-        auto* ti = static_cast<session_info*>(token);
+        auto* ti = static_cast<session*>(token);
         std::size_t sst_num{};
         if (ti->get_phase() == cpr::phase::REST) {
             sst_num = ti->get_version();

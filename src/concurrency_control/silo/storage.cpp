@@ -11,7 +11,7 @@
 #else
 
 #include "concurrency_control/silo/include/record.h"
-#include "concurrency_control/silo/include/session_info_table.h"
+#include "concurrency_control/silo/include/session_table.h"
 
 #endif
 

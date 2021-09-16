@@ -14,7 +14,7 @@ using namespace shirakami;
 namespace shirakami::snapshot_interface {
 
 extern Status
-open_scan(session_info* ti, Storage storage, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
+open_scan(session* ti, Storage storage, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, // NOLINT
           scan_endpoint r_end, ScanHandle& handle) {
 
     for (ScanHandle i = 0;; ++i) {
@@ -39,8 +39,8 @@ open_scan(session_info* ti, Storage storage, std::string_view l_key, scan_endpoi
     /**
      * scan could find any records.
      */
-    auto& vec = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
-    std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
+    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    std::get<session::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
     for (auto& elem : scan_res) {
         vec.emplace_back(*std::get<scan_res_rec_ptr>(elem), yakushima::node_version64_body{}, nullptr);
     }
@@ -48,7 +48,7 @@ open_scan(session_info* ti, Storage storage, std::string_view l_key, scan_endpoi
     return Status::OK;
 }
 
-Status lookup_snapshot(session_info* ti, Storage storage, std::string_view key, Tuple** const ret_tuple) {               // NOLINT
+Status lookup_snapshot(session* ti, Storage storage, std::string_view key, Tuple** const ret_tuple) {               // NOLINT
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     if (rec_d_ptr == nullptr) {
         // There is no record which has the key.
@@ -59,7 +59,7 @@ Status lookup_snapshot(session_info* ti, Storage storage, std::string_view key, 
     return read_record(ti, *rec_d_ptr, ret_tuple);
 }
 
-extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** const tuple) { // NOLINT
+extern Status read_from_scan(session* ti, const ScanHandle handle, Tuple** const tuple) { // NOLINT
     /**
      * Check whether the handle is valid.
      */
@@ -67,7 +67,7 @@ extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** 
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     if (scan_buf.size() == scan_index) {
         return Status::WARN_SCAN_LIMIT;
@@ -78,7 +78,7 @@ extern Status read_from_scan(session_info* ti, const ScanHandle handle, Tuple** 
     return read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple);
 }
 
-extern Status read_record(session_info* const ti, Record* const rec_ptr, Tuple** const tuple) { // NOLINT
+extern Status read_record(session* const ti, Record* const rec_ptr, Tuple** const tuple) { // NOLINT
     tid_word tid{};
 
     // phase 1 : decide to see main record or snapshot.
@@ -125,7 +125,7 @@ extern Status read_record(session_info* const ti, Record* const rec_ptr, Tuple**
 }
 
 Status
-scan_key(session_info* ti, Storage storage, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
+scan_key(session* ti, Storage storage, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
          const std::string_view r_key,
          const scan_endpoint r_end, std::vector<const Tuple*>& result) {
     // as a precaution

@@ -20,7 +20,7 @@
 namespace shirakami {
 
 Status close_scan(Token token, ScanHandle handle) { // NOLINT
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
 
     auto itr = ti->get_scan_cache().find(handle);
     if (itr == ti->get_scan_cache().end()) {
@@ -36,7 +36,7 @@ Status close_scan(Token token, ScanHandle handle) { // NOLINT
 Status open_scan(Token token, Storage storage, const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
                  const scan_endpoint r_end, ScanHandle& handle) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
@@ -83,8 +83,8 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
         }
     }
 
-    std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
-    auto& vec = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    std::get<session::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
+    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
         vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i + nvec_delta)), std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
@@ -95,7 +95,7 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
 
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple** const tuple) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (ti->get_read_only()) {
         return snapshot_interface::read_from_scan(ti, handle, tuple);
     }
@@ -107,7 +107,7 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 retry_by_continue:
     if (scan_buf.size() == scan_index) {
@@ -154,7 +154,7 @@ retry_by_continue:
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    Storage storage{std::get<session_info::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
+    Storage storage{std::get<session::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
 
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
@@ -177,7 +177,7 @@ retry_by_continue:
 
 Status scan_key(Token token, Storage storage, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
                 const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*>& result) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
@@ -273,7 +273,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
 [[maybe_unused]] Status scannable_total_index_size(Token token, // NOLINT
                                                    ScanHandle handle,
                                                    std::size_t& size) {
-    auto* ti = static_cast<session_info*>(token);
+    auto* ti = static_cast<session*>(token);
 
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
         /**
@@ -282,7 +282,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = std::get<session_info::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]).size();
+    size = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]).size();
     return Status::OK;
 }
 
