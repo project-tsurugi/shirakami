@@ -25,8 +25,9 @@ Status session_table::decide_token(Token& token) { // NOLINT
                 break;
             }
         }
-        if (&itr == get_session_table().end() - 1)
+        if (&itr == get_session_table().end() - 1) {
             return Status::ERR_SESSION_LIMIT;
+        }
     }
 
     return Status::OK;
@@ -70,12 +71,14 @@ void session_table::init_session_table(bool enable_recovery) {
         for (auto&& storage : storage_list) {
             std::vector<std::tuple<std::string, Record**, std::size_t>>
                     scan_buf;
-            std::string_view storage_view = {reinterpret_cast<char*>(&storage),
-                                             sizeof(storage)}; // NOLINT
+            std::string_view storage_view = {
+                    reinterpret_cast<char*>(&storage), // NOLINT
+                    sizeof(storage)};
             yakushima::scan(storage_view, "", yakushima::scan_endpoint::INF, "",
                             yakushima::scan_endpoint::INF, scan_buf);
             for (auto&& elem : scan_buf) {
-                auto& map = get_session_table().at(0).get_diff_upd_set(); // NOLINT
+                auto& map =
+                        get_session_table().at(0).get_diff_upd_set(); // NOLINT
                 auto* record = *std::get<1>(elem);
                 map[std::string(storage_view)]
                    [std::string(record->get_tuple().get_key())] =
@@ -120,8 +123,8 @@ void session_table::fin_session_table() {
 #endif
         };
 #ifdef CPR
-        if (itr.get_diff_upd_set(0).size() > 1000 ||
-            itr.get_diff_upd_set(1).size() > 1000 ||
+        if (itr.get_diff_upd_set(0).size() > 1000 ||             // NOLINT
+            itr.get_diff_upd_set(1).size() > 1000 ||             // NOLINT
             itr.get_cleanup_handle().get_cont().size() > 1000) { // NOLINT
             // Considering clean up time of test and benchmark.
             th_vc.emplace_back(process);

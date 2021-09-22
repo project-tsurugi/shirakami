@@ -178,13 +178,13 @@ namespace shirakami {
                 }
                 if (!elem.get_delete_op()) {
                     if (existing_record != nullptr) {
-                        delete existing_record->get_tuple()
+                        delete existing_record->get_tuple() // NOLINT
                                 .get_pimpl()
                                 ->get_val_ptr();
-                        delete existing_record;
+                        delete existing_record; // NOLINT
                     }
-                    Record* rec_ptr = new Record(elem.get_key(),
-                                                 elem.get_val()); // NOLINT
+                    Record* rec_ptr = new Record(elem.get_key(),  // NOLINT
+                                                 elem.get_val());
                     rec_ptr->get_tidw() = 0;
                     put<Record*>(token, elem.get_storage(), elem.get_key(),
                                  &rec_ptr);

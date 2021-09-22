@@ -76,7 +76,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         EXPECT_EQ(boost::filesystem::exists(log_dir + "/sst" + std::to_string(sst_num)), true);
         ASSERT_EQ(leave(token), Status::OK);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds{230});
+    std::this_thread::sleep_for(std::chrono::milliseconds{230}); // NOLINT
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
