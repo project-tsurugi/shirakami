@@ -25,7 +25,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
 Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
     // about cc
-    session_table::init_session_table();
+    session_table::init_session_table(enable_recovery);
     //epoch::invoke_epoch_thread();
 
     // about index
