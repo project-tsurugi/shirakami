@@ -40,7 +40,7 @@ Status insert(Token token, Storage storage, const std::string_view key, // NOLIN
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{
-            yakushima::put<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+            yakushima::put<Record*>(ti->get_yakushima_token(), {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
                                     static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)};                             // NOLINT
     if (insert_result == yakushima::status::OK) {
         ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
@@ -124,7 +124,7 @@ RETRY_FIND_RECORD:
         rec_ptr = new Record(key, val); // NOLINT
         yakushima::node_version64* nvp{};
         yakushima::status insert_result{
-                yakushima::put<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
+                yakushima::put<Record*>(ti->get_yakushima_token(), {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
                                         static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)};                             // NOLINT
         if (insert_result == yakushima::status::OK) {
             Status check_node_set_res{ti->update_node_set(nvp)};

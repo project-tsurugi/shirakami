@@ -168,21 +168,18 @@ namespace shirakami {
                     if (elem.get_delete_op()) {
                         yakushima::remove(token, elem.get_storage(), elem.get_key());
                     } else {
-                        yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
+                        yakushima::put<Record*>(token, elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
                     }
                 } else {
                     // exist record
                     if (elem.get_delete_op()) {
                         yakushima::remove(token, elem.get_storage(), elem.get_key());
                     } else {
-                        // todo. we impl yakushima's update func. but now, the func is not impled. so remove and put.
-                        yakushima::remove(token, elem.get_storage(), elem.get_key());
-                        yakushima::put<Record*>(elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
+                        yakushima::put<Record*>(token, elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
                     }
                 }
             }
 
-#if defined(CPR)
             // recover from restore about sequence
             std::vector<cpr::log_record_of_seq>& logs_seq = restore.get_vec_seq();
             for (auto&& elem : logs_seq) {
@@ -192,7 +189,7 @@ namespace shirakami {
                  */
                 sequence_map::get_sm()[elem.get_id()] = sequence_map::value_type{elem.get_val(), elem.get_val(), 0};
             }
-#endif
+
             /**
               * else. In no logging mode, durable value is nothing.
               */

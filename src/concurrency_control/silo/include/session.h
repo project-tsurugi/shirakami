@@ -232,8 +232,8 @@ public:
         return yakushima_token_;
     }
 
-    void set_kvs_token(yakushima::Token new_token) {
-        yakushima_token_ = new_token;
+    void set_yakushima_token(yakushima::Token token) {
+        yakushima_token_ = token;
     }
 
     /**

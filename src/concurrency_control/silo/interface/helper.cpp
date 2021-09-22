@@ -28,7 +28,7 @@ Status enter(Token& token) { // NOLINT
     while (yakushima::enter(kvs_token) != yakushima::status::OK) {
         _mm_pause();
     }
-    static_cast<session*>(token)->set_kvs_token(kvs_token);
+    static_cast<session*>(token)->set_yakushima_token(kvs_token);
     return ret_status;
 }
 

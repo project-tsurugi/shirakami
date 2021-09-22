@@ -64,6 +64,8 @@ public:
 
     void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
 
+    void set_yakushima_token(yakushima::Token token) { yakushima_token_ = token; }
+
 private:
     /**
      * @brief most recently chosen tid for calculate new tid of occ.
