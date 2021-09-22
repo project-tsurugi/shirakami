@@ -33,7 +33,7 @@ Status session_table::decide_token(Token& token) { // NOLINT
     return Status::OK;
 }
 
-void session_table::init_session_table(bool enable_recovery) {
+void session_table::init_session_table([[maybe_unused]] bool enable_recovery) {
 #if defined(PWAL)
     uint64_t ctr(0);
 #endif
