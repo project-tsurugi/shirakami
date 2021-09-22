@@ -106,7 +106,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
 #endif
     // end about logging
 
-    session_table::init_session_table();
+    session_table::init_session_table(enable_recovery);
     epoch::invoke_epocher();
     snapshot_manager::invoke_snapshot_manager();
     cleanup_manager::invoke_cleanup_manager();

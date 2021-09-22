@@ -16,6 +16,7 @@
 
 #include "shirakami/interface.h"
 
+#include "glog/logging.h"
 #include "gtest/gtest.h"
 
 using namespace shirakami;
@@ -52,6 +53,7 @@ void list_directory(std::string_view dir) {
 }
 
 TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
+    google::InitGoogleLogging("shirakami-cpr_test");
     std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
     log_dir.append("/build/cpr_test_log");
     init(false, log_dir); // NOLINT
@@ -103,24 +105,12 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     Tuple* tup{};
-#ifdef CPR
-    while (Status::OK != search_key(token, storage, "a", &tup)) {
-        ;
-    }
-#else
     ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
-#endif
     ASSERT_EQ(std::string(tup->get_key()), "a");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "a"); // NOLINT
     std::string tup_key{tup->get_key()};
     Tuple* tup2{};
-#ifdef CPR
-    while (Status::OK != search_key(token, storage, "b", &tup2)) {
-        _mm_pause();
-    }
-#else
-    ASSERT_EQ(search_key(token, storage, "b", &tup2));
-#endif
+    ASSERT_EQ(search_key(token, storage, "b", &tup2), Status::OK);
     ASSERT_EQ(std::string(tup2->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup2->get_value()), "b"); // NOLINT
     ASSERT_EQ(commit(token), Status::OK);           // NOLINT

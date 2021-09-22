@@ -33,8 +33,10 @@ public:
 
     /**
      * @brief Initialization about session_table_
+     * @pre If it was a recovery boot, this function can be called after the recovery is complete.
+     * @param[in] enable_recovery When this variable is true, all recovered records are logged as log records.
      */
-    static void init_session_table();
+    static void init_session_table(bool enable_recovery);
 
 #ifdef CPR
     static bool is_empty_logs();
@@ -50,7 +52,7 @@ private:
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
     static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
-            session_table_;                                            // NOLINT
+            session_table_;                                     // NOLINT
 };
 
 } // namespace shirakami

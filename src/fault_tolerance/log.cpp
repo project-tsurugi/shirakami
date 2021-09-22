@@ -63,21 +63,25 @@ namespace shirakami {
                             sizeof(LogHeader))) {
             std::vector<LogRecord> log_tmp_buf;
             for (unsigned int j = 0; j < log_header.get_log_rec_num(); ++j) {
-                if (fix_size != logfile.read(static_cast<void*>(&log), fix_size)) break;
+                if (fix_size !=
+                    logfile.read(static_cast<void*>(&log), fix_size))
+                    break;
                 std::unique_ptr<char[]> key_ptr;   // NOLINT
                 std::unique_ptr<char[]> value_ptr; // NOLINT
                 std::size_t key_length{};
                 std::size_t value_length{};
                 // read key_length
-                if (sizeof(std::size_t) != logfile.read(static_cast<void*>(&key_length),
-                                                        sizeof(std::size_t))) {
+                if (sizeof(std::size_t) !=
+                    logfile.read(static_cast<void*>(&key_length),
+                                 sizeof(std::size_t))) {
                     break;
                 }
                 // read key_body
                 if (key_length > 0) {
                     key_ptr = std::make_unique<char[]>(key_length); // NOLINT
                     if (key_length !=
-                        logfile.read(static_cast<void*>(key_ptr.get()), key_length)) {
+                        logfile.read(static_cast<void*>(key_ptr.get()),
+                                     key_length)) {
                         break;
                     }
                 }
@@ -89,9 +93,11 @@ namespace shirakami {
                 }
                 // read value_body
                 if (value_length > 0) {
-                    value_ptr = std::make_unique<char[]>(value_length); // NOLINT
+                    value_ptr =
+                            std::make_unique<char[]>(value_length); // NOLINT
                     if (value_length !=
-                        logfile.read(static_cast<void*>(value_ptr.get()), value_length)) {
+                        logfile.read(static_cast<void*>(value_ptr.get()),
+                                     value_length)) {
                         break;
                     }
                 }
@@ -125,7 +131,8 @@ namespace shirakami {
     enter(s);
     for (auto&& itr : log_set) {
         if (itr.get_tid().get_epoch() > recovery_epoch) break;
-        if (itr.get_op() == OP_TYPE::UPDATE || itr.get_op() == OP_TYPE::INSERT) {
+        if (itr.get_op() == OP_TYPE::UPDATE ||
+            itr.get_op() == OP_TYPE::INSERT) {
             upsert(s, itr.get_tuple()->get_key(), itr.get_tuple()->get_value());
         } else if (itr.get_op() == OP_TYPE::DELETE) {
             delete_record(s, itr.get_tuple()->get_key());
@@ -139,7 +146,8 @@ namespace shirakami {
         std::ifstream logf;
         logf.open(fname, std::ios_base::in | std::ios_base::binary);
 
-        std::string buffer{std::istreambuf_iterator<char>(logf), std::istreambuf_iterator<char>()}; // NOLINT
+        std::string buffer{std::istreambuf_iterator<char>(logf),
+                           std::istreambuf_iterator<char>()}; // NOLINT
         size_t offset{0};
         cpr::log_records restore;
 
@@ -148,46 +156,54 @@ namespace shirakami {
         for (;;) {
             if (offset == buffer.size()) break;
             try {
-                auto oh = msgpack::unpack(buffer.data(), buffer.size(), offset); // NOLINT
+                auto oh = msgpack::unpack(buffer.data(), buffer.size(),
+                                          offset); // NOLINT
                 auto obj = oh.get();
                 obj.convert(restore);
             } catch (const std::bad_cast& e) {
                 LOG(FATAL) << "cast error";
-            } catch (...) {
-                LOG(FATAL) << "unknown error";
-            }
+            } catch (...) { LOG(FATAL) << "unknown error"; }
 
             // recover from restore
+            // note : attention please when impl multi thread
             std::vector<cpr::log_record>& logs = restore.get_vec();
             for (auto&& elem : logs) {
-                Record* rec_ptr = new Record(elem.get_key(), elem.get_val()); // NOLINT
-                rec_ptr->get_tidw() = 0;
-                yakushima::create_storage(elem.get_storage()); // it may already exist.
-                if (std::get<0>(yakushima::get<Record*>(elem.get_storage(), elem.get_key())) == nullptr) {
-                    // no record, so simply do
-                    if (elem.get_delete_op()) {
-                        yakushima::remove(token, elem.get_storage(), elem.get_key());
-                    } else {
-                        yakushima::put<Record*>(token, elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
+                using namespace yakushima;
+                create_storage(elem.get_storage()); // it may already exist.
+                Record** result_search = std::get<0>(
+                        get<Record*>(elem.get_storage(), elem.get_key()));
+                Record* existing_record{nullptr};
+                if (result_search != nullptr) {
+                    existing_record = *result_search;
+                }
+                if (!elem.get_delete_op()) {
+                    if (existing_record != nullptr) {
+                        delete existing_record->get_tuple()
+                                .get_pimpl()
+                                ->get_val_ptr();
+                        delete existing_record;
                     }
-                } else {
-                    // exist record
-                    if (elem.get_delete_op()) {
-                        yakushima::remove(token, elem.get_storage(), elem.get_key());
-                    } else {
-                        yakushima::put<Record*>(token, elem.get_storage(), elem.get_key(), &rec_ptr); // NOLINT
-                    }
+                    Record* rec_ptr = new Record(elem.get_key(),
+                                                 elem.get_val()); // NOLINT
+                    rec_ptr->get_tidw() = 0;
+                    put<Record*>(token, elem.get_storage(), elem.get_key(),
+                                 &rec_ptr);
+                } else if (existing_record != nullptr) {
+                    remove(token, elem.get_storage(), elem.get_key());
                 }
             }
 
             // recover from restore about sequence
-            std::vector<cpr::log_record_of_seq>& logs_seq = restore.get_vec_seq();
+            std::vector<cpr::log_record_of_seq>& logs_seq =
+                    restore.get_vec_seq();
             for (auto&& elem : logs_seq) {
                 std::unique_lock lock{sequence_map::get_sm_mtx()};
                 /**
                  * Since the values ​​are aggregated for each generation, you can easily overwrite them.
                  */
-                sequence_map::get_sm()[elem.get_id()] = sequence_map::value_type{elem.get_val(), elem.get_val(), 0};
+                sequence_map::get_sm()[elem.get_id()] =
+                        sequence_map::value_type{elem.get_val(), elem.get_val(),
+                                                 0};
             }
 
             /**
@@ -199,7 +215,8 @@ namespace shirakami {
 
     // check whether checkpoint file exists.
     boost::system::error_code ec;
-    const bool find_result = boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
+    const bool find_result =
+            boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
         LOG(INFO) << "no checkpoint file to recover.";
     } else {
@@ -212,15 +229,15 @@ namespace shirakami {
     directory_iterator end_itr{};
     std::vector<std::pair<cpr::version_type, std::string>> files;
     for (directory_iterator itr(dir_path); itr != end_itr; ++itr) {
-        cpr::version_type vnum{stoull(std::string(itr->path().string()).erase(0, std::string(Log::get_kLogDirectory()).size() + 4))};
+        cpr::version_type vnum{stoull(
+                std::string(itr->path().string())
+                        .erase(0, std::string(Log::get_kLogDirectory()).size() +
+                                          4))};
         files.emplace_back(vnum, itr->path().string());
     }
     std::sort(files.begin(), files.end());
 
-    for (auto&& elem : files) {
-        process_from_file(std::get<1>(elem));
-    }
-
+    for (auto&& elem : files) { process_from_file(std::get<1>(elem)); }
 #endif
 }
 

@@ -4,8 +4,8 @@
  */
 
 #include "include/session_table.h"
+#include "include/storage.h"
 #include "include/tuple_local.h" // sizeof(Tuple)
-
 
 #if defined(PWAL)
 
@@ -25,13 +25,14 @@ Status session_table::decide_token(Token& token) { // NOLINT
                 break;
             }
         }
-        if (&itr == get_session_table().end() - 1) return Status::ERR_SESSION_LIMIT;
+        if (&itr == get_session_table().end() - 1)
+            return Status::ERR_SESSION_LIMIT;
     }
 
     return Status::OK;
 }
 
-void session_table::init_session_table() {
+void session_table::init_session_table(bool enable_recovery) {
 #if defined(PWAL)
     uint64_t ctr(0);
 #endif
@@ -46,8 +47,10 @@ void session_table::init_session_table() {
         std::string log_dir = Log::get_kLogDirectory();
         log_dir += "/log";
         log_dir.append(std::to_string(ctr));
-        if (!itr.get_log_handler().get_log_file().open(log_dir, O_CREAT | O_TRUNC | O_WRONLY, 0644)) { // NOLINT
-            std::cerr << __FILE__ << " : " << __LINE__ << " : error." << std::endl;
+        if (!itr.get_log_handler().get_log_file().open(
+                    log_dir, O_CREAT | O_TRUNC | O_WRONLY, 0644)) { // NOLINT
+            std::cerr << __FILE__ << " : " << __LINE__ << " : error."
+                      << std::endl;
             exit(1);
         }
         // itr->log_file_.ftruncate(10^9); // if it want to be high performance in
@@ -58,6 +61,30 @@ void session_table::init_session_table() {
         itr.reserve_diff_set(); // NOLINT
 #endif
     }
+
+#if defined(CPR)
+    if (enable_recovery) {
+        // log recovered records.
+        std::vector<Storage> storage_list;
+        storage::list_storage(storage_list); // NOLINT
+        for (auto&& storage : storage_list) {
+            std::vector<std::tuple<std::string, Record**, std::size_t>>
+                    scan_buf;
+            std::string_view storage_view = {reinterpret_cast<char*>(&storage),
+                                             sizeof(storage)}; // NOLINT
+            yakushima::scan(storage_view, "", yakushima::scan_endpoint::INF, "",
+                            yakushima::scan_endpoint::INF, scan_buf);
+            for (auto&& elem : scan_buf) {
+                auto& map = get_session_table().at(0).get_diff_upd_set(); // NOLINT
+                auto* record = *std::get<1>(elem);
+                map[std::string(storage_view)]
+                   [std::string(record->get_tuple().get_key())] =
+                           std::make_tuple(0, false,
+                                           record->get_tuple().get_value());
+            }
+        }
+    }
+#endif
 }
 
 void session_table::fin_session_table() {
@@ -93,7 +120,9 @@ void session_table::fin_session_table() {
 #endif
         };
 #ifdef CPR
-        if (itr.get_diff_upd_set(0).size() > 1000 || itr.get_diff_upd_set(1).size() > 1000 || itr.get_cleanup_handle().get_cont().size() > 1000) { // NOLINT
+        if (itr.get_diff_upd_set(0).size() > 1000 ||
+            itr.get_diff_upd_set(1).size() > 1000 ||
+            itr.get_cleanup_handle().get_cont().size() > 1000) { // NOLINT
             // Considering clean up time of test and benchmark.
             th_vc.emplace_back(process);
         } else {
