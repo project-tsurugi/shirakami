@@ -28,6 +28,12 @@ TEST_F(helper, init) { // NOLINT
     ASSERT_EQ(init(), Status::OK);
 }
 
+TEST_F(helper, fin) { // NOLINT
+    // meaningless fin
+    fin();
+    fin();
+}
+
 TEST_F(helper, enter) { // NOLINT
     std::array<Token, 2> s{nullptr, nullptr};
     ASSERT_EQ(s.at(0), s.at(1));

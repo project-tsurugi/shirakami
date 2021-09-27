@@ -1,5 +1,7 @@
 
 
+#include <string_view>
+
 #include "include/helper.h"
 
 #include "concurrency_control/wp/include/session.h"
@@ -22,6 +24,8 @@ Status enter(Token& token) { // NOLINT
 }
 
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
+    if (!get_initialized()) { return; }
+
     yakushima::fin();
     set_initialized(false);
 } catch (std::exception& e) {

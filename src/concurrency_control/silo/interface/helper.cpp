@@ -33,6 +33,8 @@ Status enter(Token& token) { // NOLINT
 }
 
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
+    if (!get_initialized()) { return; }
+
     /** It may seem like a meaningless order at first glance. Actually, 
      * it is an order to make the end processing asynchronous as much as possible. 
      * Send an end signal from a costly thread. Synchronize when needed.
