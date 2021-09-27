@@ -19,6 +19,9 @@ Status enter(Token& token) { // NOLINT
 }
 
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
+
+    yakushima::fin();
+
 } catch (std::exception& e) {
     std::cerr << "fin() : " << e.what() << std::endl;
 }
@@ -34,8 +37,19 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     return Status::OK;
 }
 
-Status leave([[maybe_unused]] Token const token) { // NOLINT
-    return Status::OK;
+Status leave(Token const token) { // NOLINT
+    for (auto&& itr : session_table::get_session_table()) {
+        if (&itr == static_cast<session*>(token)) {
+            if (itr.get_visible()) {
+                yakushima::leave(static_cast<session*>(token)->get_yakushima_token());
+                itr.set_tx_began(false);
+                itr.set_visible(false);
+                return Status::OK;
+            }
+            return Status::WARN_NOT_IN_A_SESSION;
+        }
+    }
+    return Status::WARN_INVALID_ARGS;
 }
 
 void tx_begin([[maybe_unused]] Token const token, [[maybe_unused]] bool const read_only, [[maybe_unused]] bool const for_batch) { // NOLINT

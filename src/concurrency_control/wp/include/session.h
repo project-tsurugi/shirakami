@@ -50,6 +50,11 @@ public:
      */
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
+    /**
+     * @brief get the yakushima token used by this session.
+     */
+    yakushima::Token get_yakushima_token() { return yakushima_token_; }
+
     void push_to_read_set(read_set_obj&& elem) {
         read_set_.emplace_back(std::move(elem));
     }

@@ -22,20 +22,22 @@ public:
     void TearDown() override { fin(); }
 };
 
-TEST_F(helper, project_root) { // NOLINT
-    /**
-     * MAC2STR macro is used at init function.
-     */
-    std::cout << MAC2STR(PROJECT_ROOT) << std::endl;
-    std::string str(MAC2STR(PROJECT_ROOT)); // NOLINT
-    str.append("/log/");
-    std::cout << str << std::endl;
+TEST_F(helper, init) { // NOLINT
+    ASSERT_EQ(init(), Status::WARN_ALREADY_INIT);
+    fin();
+    ASSERT_EQ(init(), Status::OK);
 }
 
 TEST_F(helper, enter) { // NOLINT
     std::array<Token, 2> s{nullptr, nullptr};
+    ASSERT_EQ(s.at(0), s.at(1));
+    ASSERT_EQ(s.at(0), nullptr);
     ASSERT_EQ(Status::OK, enter(s[0]));
+    ASSERT_NE(s.at(0), nullptr);
+    ASSERT_EQ(s.at(1), nullptr);
     ASSERT_EQ(Status::OK, enter(s[1]));
+    ASSERT_NE(s.at(1), nullptr);
+    ASSERT_NE(s.at(0), s.at(1));
     ASSERT_EQ(Status::OK, leave(s[0]));
     ASSERT_EQ(Status::OK, leave(s[1]));
 }

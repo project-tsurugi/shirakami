@@ -26,6 +26,12 @@ file(GLOB TEST_SOURCES
         "sequence/*.cpp"
         "third_party/*.cpp"
         )
+else ()
+file(GLOB TEST_SOURCES
+        "concurrency_control/wp/interface/helper/*.cpp"
+        "concurrency_control/wp/wp_test.cpp"
+        )
+
 endif()
 
 if (BUILD_PWAL)
@@ -37,12 +43,6 @@ if (BUILD_CPR)
     file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr_test.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
-
-#if (BUILD_WP)
-# first, it enables for developer tests.
-    file(GLOB WP_TESTS "concurrency_control/wp/*.cpp")
-    set(TEST_SOURCES ${TEST_SOURCES} ${WP_TESTS})
-#endif ()
 
 register_tests(
         TARGET shirakami

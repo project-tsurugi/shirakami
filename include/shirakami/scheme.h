@@ -40,7 +40,9 @@ class commit_param {
 public:
     commit_property get_cp() { return cp_; } // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] std::uint64_t get_ctid() const { return ctid_; } // NOLINT
+    [[maybe_unused]] [[nodiscard]] std::uint64_t get_ctid() const {
+        return ctid_;
+    } // NOLINT
 
     void set_cp(commit_property cp) { cp_ = cp; }
 
@@ -94,6 +96,12 @@ enum class Status : std::int32_t {
      * @a insert : The records whose key is the same as @a key exists in MTDB, so this function returned immediately. @n
      */
     WARN_ALREADY_EXISTS,
+    /**
+     * @brief warning.
+     * @details When init function is called twice without fin, this status code is returned.
+     * This is for blocking invalid multiple initialization.
+     */
+    WARN_ALREADY_INIT,
     WARN_CANCEL_PREVIOUS_INSERT,
     /**
      * @brief warning.
@@ -221,59 +229,62 @@ enum class Status : std::int32_t {
     ERR_WRITE_TO_DELETED_RECORD,
 };
 
-inline constexpr std::string_view to_string_view(  // NOLINT
+inline constexpr std::string_view to_string_view( // NOLINT
         const Status value) noexcept {
     using namespace std::string_view_literals;
     switch (value) {
         case Status::WARN_ALREADY_DELETE:
-            return "WARN_ALREADY_DELETE"sv;  // NOLINT
+            return "WARN_ALREADY_DELETE"sv; // NOLINT
         case Status::WARN_ALREADY_EXISTS:
-            return "WARN_ALREADY_EXISTS"sv;  // NOLINT
+            return "WARN_ALREADY_EXISTS"sv; // NOLINT
+        case Status::WARN_ALREADY_INIT:
+            return "WARN_ALREADY_INIT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_INSERT:
-            return "WARN_CANCEL_PREVIOUS_INSERT"sv;  // NOLINT
+            return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_OPERATION:
-            return "WARN_CANCEL_PREVIOUS_OPERATION"sv;  // NOLINT
+            return "WARN_CANCEL_PREVIOUS_OPERATION"sv; // NOLINT
         case Status::WARN_CONCURRENT_DELETE:
-            return "WARN_CONCURRENT_DELETE"sv;  // NOLINT
+            return "WARN_CONCURRENT_DELETE"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:
-            return "WARN_CONCURRENT_INSERT"sv;  // NOLINT
+            return "WARN_CONCURRENT_INSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_UPDATE:
-            return "WARN_CONCURRENT_UPDATE"sv;  // NOLINT
+            return "WARN_CONCURRENT_UPDATE"sv; // NOLINT
         case Status::WARN_INVARIANT:
-            return "WARN_INVARIANT"sv;  // NOLINT
+            return "WARN_INVARIANT"sv; // NOLINT
         case Status::WARN_INVALID_ARGS:
-            return "WARN_INVALID_ARGS"sv;  // NOLINT
+            return "WARN_INVALID_ARGS"sv; // NOLINT
         case Status::WARN_INVALID_HANDLE:
-            return "WARN_INVALID_HANDLE"sv;  // NOLINT
+            return "WARN_INVALID_HANDLE"sv; // NOLINT
         case Status::WARN_NOT_FOUND:
-            return "WARN_NOT_FOUND"sv;  // NOLINT
+            return "WARN_NOT_FOUND"sv; // NOLINT
         case Status::WARN_NOT_IN_A_SESSION:
-            return "WARN_NOT_IN_A_SESSION"sv;  // NOLINT
+            return "WARN_NOT_IN_A_SESSION"sv; // NOLINT
         case Status::WARN_READ_FROM_OWN_OPERATION:
-            return "WARN_READ_FROM_OWN_OPERATION"sv;  // NOLINT
+            return "WARN_READ_FROM_OWN_OPERATION"sv; // NOLINT
         case Status::WARN_SCAN_LIMIT:
-            return "WARN_SCAN_LIMIT"sv;  // NOLINT
+            return "WARN_SCAN_LIMIT"sv; // NOLINT
         case Status::WARN_WRITE_TO_LOCAL_WRITE:
-            return "WARN_WRITE_TO_LOCAL_WRITE"sv;  // NOLINT
+            return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
         case Status::OK:
-            return "OK"sv;  // NOLINT
+            return "OK"sv; // NOLINT
         case Status::ERR_CPR_ORDER_VIOLATION:
             return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
         case Status::ERR_NOT_FOUND:
-            return "ERR_NOT_FOUND"sv;  // NOLINT
+            return "ERR_NOT_FOUND"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
-            return "ERR_SESSION_LIMIT"sv;  // NOLINT
+            return "ERR_SESSION_LIMIT"sv; // NOLINT
         case Status::ERR_PHANTOM:
             return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_VALIDATION:
-            return "ERR_VALIDATION"sv;  // NOLINT
+            return "ERR_VALIDATION"sv; // NOLINT
         case Status::ERR_WRITE_TO_DELETED_RECORD:
-            return "ERR_WRITE_TO_DELETED_RECORD"sv;  // NOLINT
+            return "ERR_WRITE_TO_DELETED_RECORD"sv; // NOLINT
     }
     std::abort();
 }
 
-inline std::ostream &operator<<(std::ostream &out, const Status value) {  // NOLINT
+inline std::ostream& operator<<(std::ostream& out,
+                                const Status value) { // NOLINT
     return out << to_string_view(value);
 }
 
@@ -289,34 +300,34 @@ enum class OP_TYPE : std::int32_t {
     UPDATE,
 };
 
-inline constexpr std::string_view to_string_view(  // NOLINT
+inline constexpr std::string_view to_string_view( // NOLINT
         const OP_TYPE op) noexcept {
     using namespace std::string_view_literals;
     switch (op) {
         case OP_TYPE::ABORT:
-            return "ABORT"sv;  // NOLINT
+            return "ABORT"sv; // NOLINT
         case OP_TYPE::BEGIN:
-            return "BEGIN"sv;  // NOLINT
+            return "BEGIN"sv; // NOLINT
         case OP_TYPE::COMMIT:
-            return "COMMIT"sv;  // NOLINT
+            return "COMMIT"sv; // NOLINT
         case OP_TYPE::DELETE:
-            return "DELETE"sv;  // NOLINT
+            return "DELETE"sv; // NOLINT
         case OP_TYPE::INSERT:
-            return "INSERT"sv;  // NOLINT
+            return "INSERT"sv; // NOLINT
         case OP_TYPE::NONE:
-            return "NONE"sv;  // NOLINT
+            return "NONE"sv; // NOLINT
         case OP_TYPE::SCAN:
-            return "SCAN"sv;  // NOLINT
+            return "SCAN"sv; // NOLINT
         case OP_TYPE::SEARCH:
-            return "SEARCH"sv;  // NOLINT
+            return "SEARCH"sv; // NOLINT
         case OP_TYPE::UPDATE:
-            return "UPDATE"sv;  // NOLINT
+            return "UPDATE"sv; // NOLINT
     }
     std::abort();
 }
 
-inline std::ostream &operator<<(std::ostream &out, const OP_TYPE op) {  // NOLINT
+inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
     return out << to_string_view(op);
 }
 
-}  // namespace shirakami
+} // namespace shirakami

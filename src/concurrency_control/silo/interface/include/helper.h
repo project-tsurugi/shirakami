@@ -4,9 +4,21 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "concurrency_control/silo/include/session.h"
 
 namespace shirakami {
+
+/**
+ * @brief Whether init function was called in this system.
+ */
+inline std::atomic<bool> initialized_{false};
+
+/**
+ * @brief getter of @a intialized_.
+ */
+[[maybe_unused]] static bool get_initialized() { return initialized_.load(std::memory_order_acquire); }
 
 /**
  * @brief read record by using dest given by caller and store read info to res
@@ -20,6 +32,11 @@ namespace shirakami {
  * but it isn't committed yet.
  */
 Status read_record(Record &res, const Record* dest);  // NOLINT
+
+/**
+ * @brief setter of @a intialized_.
+ */
+[[maybe_unused]] static void set_initialized(bool tf) { initialized_.store(tf, std::memory_order_release); }
 
 void write_phase(session* ti, const tid_word &max_r_set, const tid_word &max_w_set, commit_property cp);
 

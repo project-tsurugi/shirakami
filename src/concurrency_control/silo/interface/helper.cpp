@@ -48,14 +48,18 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 #endif
     epoch::set_epoch_thread_end(true);
 
-    cleanup_manager::join_cleanup_manager_thread();   // Cond : before delete table, before joining garbage_manager.
-    snapshot_manager::join_snapshot_manager_thread(); // Cond : before delete table because this access current records.
+    cleanup_manager::
+            join_cleanup_manager_thread(); // Cond : before delete table, before joining garbage_manager.
+    snapshot_manager::
+            join_snapshot_manager_thread(); // Cond : before delete table because this access current records.
 #ifdef CPR
-    cpr::join_checkpoint_thread(); // Cond : before delete table because this access current records.
+    cpr::join_checkpoint_thread();
+    // Cond : before delete table because this access current records.
 #endif
 
     delete_all_records();
-    garbage_manager::join_garbage_manager_thread(); // Cond : before release_all_heap_objects func.
+    garbage_manager::
+            join_garbage_manager_thread(); // Cond : before release_all_heap_objects func.
     garbage_manager::release_all_heap_objects();
 
 
@@ -63,11 +67,16 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     session_table::fin_session_table();
     yakushima::fin();           // Cond : after all removing (from index) ops.
     epoch::join_epoch_thread(); // Note : this can be called at last.
+    set_initialized(false);
 } catch (std::exception& e) {
     std::cerr << "fin() : " << e.what() << std::endl;
 }
 
-Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
+Status
+init([[maybe_unused]] bool enable_recovery,
+     [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
+
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 // start about logging
 #if defined(PWAL) || defined(CPR)
     /**
@@ -118,6 +127,7 @@ Status init([[maybe_unused]] bool enable_recovery, [[maybe_unused]] const std::s
     cpr::invoke_checkpoint_thread();
 #endif
 
+    set_initialized(true);
     return Status::OK;
 }
 
@@ -125,7 +135,8 @@ Status leave(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
         if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
-                yakushima::leave(static_cast<session*>(token)->get_yakushima_token());
+                yakushima::leave(
+                        static_cast<session*>(token)->get_yakushima_token());
                 itr.set_tx_began(false);
                 itr.set_visible(false);
                 return Status::OK;
@@ -136,7 +147,8 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-void tx_begin(Token const token, bool const read_only, bool const for_batch) { // NOLINT
+void tx_begin(Token const token, bool const read_only,
+              bool const for_batch) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         /**
@@ -209,13 +221,13 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
             return Status::WARN_CONCURRENT_DELETE;
         }
 
-        res.get_tuple().get_pimpl()->set(dest->get_tuple().get_key(), dest->get_tuple().get_pimpl_cst()->get_val_ptr());
+        res.get_tuple().get_pimpl()->set(
+                dest->get_tuple().get_key(),
+                dest->get_tuple().get_pimpl_cst()->get_val_ptr());
         // todo optimization by shallow copy about key (Now, key is deep copy, value is shallow copy).
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-        if (f_check == s_check) {
-            break;
-        }
+        if (f_check == s_check) { break; }
         f_check = s_check;
     }
 
@@ -223,7 +235,8 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
     return Status::OK;
 }
 
-void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& max_w_set,
+void write_phase(session* const ti, const tid_word& max_r_set,
+                 const tid_word& max_w_set,
                  [[maybe_unused]] commit_property cp) {
     /*
      * It calculates the smallest number that is
@@ -273,12 +286,17 @@ void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& m
         } else if (we_ptr->get_op() == OP_TYPE::UPDATE) {
             value_view = we_ptr->get_tuple().get_value();
         }
-        ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, we_ptr->get_op(), rec_ptr, value_view);
+        ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, we_ptr->get_op(),
+                              rec_ptr, value_view);
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
-            if (snapshot_manager::get_snap_epoch(ti->get_epoch()) != snapshot_manager::get_snap_epoch(rec_ptr->get_tidw().get_epoch())) {
+            if (snapshot_manager::get_snap_epoch(ti->get_epoch()) !=
+                snapshot_manager::get_snap_epoch(
+                        rec_ptr->get_tidw().get_epoch())) {
                 // update safely snap
-                Record* new_rec = new Record(rec_ptr->get_tuple().get_key(), rec_ptr->get_tuple().get_value()); // NOLINT
+                auto* new_rec = // NOLINT
+                        new Record(rec_ptr->get_tuple().get_key(),
+                                   rec_ptr->get_tuple().get_value());
                 new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
                 new_rec->get_tidw().set_latest(true);
                 new_rec->get_tidw().set_lock(false);
@@ -291,7 +309,8 @@ void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& m
                     new_rec->set_snap_ptr(rec_ptr->get_snap_ptr());
                     rec_ptr->set_snap_ptr(new_rec);
                 }
-                ti->get_gc_handle().get_snap_cont().push(std::make_pair(ti->get_epoch(), new_rec));
+                ti->get_gc_handle().get_snap_cont().push(
+                        std::make_pair(ti->get_epoch(), new_rec));
             }
         };
         switch (we_ptr->get_op()) {
@@ -320,17 +339,22 @@ void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& m
                 safely_snap_work();
 #ifdef CPR
                 // update about cpr
-                if (ti->get_phase() != cpr::phase::REST && rec_ptr->get_version() != (ti->get_version() + 1)) {
+                if (ti->get_phase() != cpr::phase::REST &&
+                    rec_ptr->get_version() != (ti->get_version() + 1)) {
                     rec_ptr->get_stable() = rec_ptr->get_tuple();
                     rec_ptr->set_version(ti->get_version() + 1);
                 }
 #endif
                 // update value
                 std::string* old_value{};
-                std::string_view new_value_view = we_ptr->get_tuple(we_ptr->get_op()).get_value();
-                rec_ptr->get_tuple().get_pimpl()->set_value(new_value_view.data(), new_value_view.size(), &old_value);
+                std::string_view new_value_view =
+                        we_ptr->get_tuple(we_ptr->get_op()).get_value();
+                rec_ptr->get_tuple().get_pimpl()->set_value(
+                        new_value_view.data(), new_value_view.size(),
+                        &old_value);
                 if (old_value != nullptr) {
-                    ti->get_gc_handle().get_val_cont().push(std::make_pair(old_value, ti->get_epoch()));
+                    ti->get_gc_handle().get_val_cont().push(
+                            std::make_pair(old_value, ti->get_epoch()));
                 } else {
                     /**
                      *  null insert is not expected.
@@ -362,8 +386,10 @@ void write_phase(session* const ti, const tid_word& max_r_set, const tid_word& m
                     rec_ptr->set_version(ti->get_version());
                 }
 #endif
-                storeRelease(rec_ptr->get_tidw().get_obj(), delete_tid.get_obj());
-                ti->get_cleanup_handle().push({std::string(we_ptr->get_storage()), rec_ptr});
+                storeRelease(rec_ptr->get_tidw().get_obj(),
+                             delete_tid.get_obj());
+                ti->get_cleanup_handle().push(
+                        {std::string(we_ptr->get_storage()), rec_ptr});
                 break;
             }
             default:
