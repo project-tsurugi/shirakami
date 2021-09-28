@@ -26,7 +26,8 @@ public:
      * @brief compare and swap for visible_.
      */
     bool cas_visible(bool& expected, bool& desired) {
-        return visible_.compare_exchange_weak(expected, desired, std::memory_order_release,
+        return visible_.compare_exchange_weak(expected, desired,
+                                              std::memory_order_release,
                                               std::memory_order_acquire);
     }
 
@@ -39,6 +40,8 @@ public:
      * @brief get the value of mrc_tid_.
      */
     tid_word get_mrc_tid() { return mrc_tid_; }
+
+    bool get_read_only() { return read_only_; }
 
     /**
      * @brief get the value of tx_began_.
@@ -65,13 +68,24 @@ public:
 
     void set_mrc_tid(tid_word tidw) { mrc_tid_ = tidw; }
 
+    void set_read_only(bool tf) { read_only_ = tf; }
+
+    void set_tx_began(bool tf) {
+        tx_began_.store(tf, std::memory_order_release);
+    }
+
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
-    void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
-
-    void set_yakushima_token(yakushima::Token token) { yakushima_token_ = token; }
+    void set_yakushima_token(yakushima::Token token) {
+        yakushima_token_ = token;
+    }
 
 private:
+    /**
+     * @brief If this is true, begun transaction by this session can only do (transaction read operations).
+     */
+    bool read_only_{false};
+
     /**
      * @brief most recently chosen tid for calculate new tid of occ.
      */
@@ -124,8 +138,7 @@ public:
     /**
      * @brief getter of session_table_
      */
-    static std::array<session, KVS_MAX_PARALLEL_THREADS>&
-    get_session_table() {
+    static std::array<session, KVS_MAX_PARALLEL_THREADS>& get_session_table() {
         return session_table_;
     }
 

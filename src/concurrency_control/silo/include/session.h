@@ -290,20 +290,26 @@ public:
 
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
+
     tid_word mrc_tid_{}; // most recently chosen tid, for calculate new tids.
+
     std::atomic<epoch::epoch_t> epoch_{0};
+
     /**
      * @brief If this is true, this session is live, otherwise, not live.
      */
     std::atomic<bool> visible_{false};
+
     /**
      * @brief If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
+
     /**
      * @brief If this is true, begun transaction by this session can only do (transaction read operations).
      */
     bool read_only_{false};
+
     std::vector<Tuple> read_only_tuples_{};
 
     /**

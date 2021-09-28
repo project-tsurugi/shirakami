@@ -14,10 +14,16 @@ namespace shirakami {
 
 Status abort(Token token) { // NOLINT
     auto* ti = static_cast<session*>(token);
-    ti->get_write_set().remove_inserted_records_from_yakushima(token, ti->get_yakushima_token());
+
+    ti->get_write_set().remove_inserted_records_from_yakushima(
+            token, ti->get_yakushima_token());
     ti->clean_up_local_set();
     ti->clean_up_scan_caches();
+
+    // about member
+    ti->set_read_only(false);
     ti->set_tx_began(false);
+
     return Status::OK;
 }
 
@@ -29,10 +35,12 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
     // Phase 2: Lock write set;
     tid_word max_rset;
     tid_word max_wset;
-    auto process = [token, ti, &max_wset](write_set_obj* we_ptr, std::size_t ctr) {
+    auto process = [token, ti, &max_wset](write_set_obj* we_ptr,
+                                          std::size_t ctr) {
         // update/delete
         we_ptr->get_rec_ptr()->get_tidw().lock();
-        if ((we_ptr->get_op() == OP_TYPE::UPDATE || we_ptr->get_op() == OP_TYPE::DELETE) && // NOLINT
+        if ((we_ptr->get_op() == OP_TYPE::UPDATE ||
+             we_ptr->get_op() == OP_TYPE::DELETE) && // NOLINT
             we_ptr->get_rec_ptr()->get_tidw().get_absent()) {
             ti->get_write_set().unlock(ctr);
             abort(token);
@@ -41,7 +49,8 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
 
 #if defined(CPR)
         // cpr verify
-        if (ti->get_phase() == cpr::phase::REST && we_ptr->get_rec_ptr()->get_version() > ti->get_version()) {
+        if (ti->get_phase() == cpr::phase::REST &&
+            we_ptr->get_rec_ptr()->get_version() > ti->get_version()) {
             ti->get_write_set().unlock(ctr);
             abort(token);
             return Status::ERR_CPR_ORDER_VIOLATION;
@@ -56,17 +65,13 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
     if (ti->get_write_set().get_for_batch()) {
         for (auto&& elem : ti->get_write_set().get_cont_for_bt()) {
             write_set_obj* we_ptr = &std::get<1>(elem);
-            if (we_ptr->get_op() != OP_TYPE::INSERT) {
-                process(we_ptr, ctr);
-            }
+            if (we_ptr->get_op() != OP_TYPE::INSERT) { process(we_ptr, ctr); }
             ++ctr;
         }
     } else {
         for (auto&& elem : ti->get_write_set().get_cont_for_ol()) {
             write_set_obj* we_ptr = &(elem);
-            if (we_ptr->get_op() != OP_TYPE::INSERT) {
-                process(we_ptr, ctr);
-            }
+            if (we_ptr->get_op() != OP_TYPE::INSERT) { process(we_ptr, ctr); }
             ++ctr;
         }
     }
@@ -91,8 +96,9 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
         if ((itr.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
              itr.get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
             check.get_absent() // check whether it was deleted.
-            ||
-            (check.get_lock() && (ti->get_write_set().search(const_cast<Record*>(rec_ptr)) == nullptr))) {
+            || (check.get_lock() &&
+                (ti->get_write_set().search(const_cast<Record*>(rec_ptr)) ==
+                 nullptr))) {
             ti->get_write_set().unlock();
             abort(token);
 
@@ -112,7 +118,8 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
 
     // Phase 4: Write & Unlock
     write_phase(ti, max_rset, max_wset,
-                cp != nullptr ? cp->get_cp() : commit_property::NOWAIT_FOR_COMMIT);
+                cp != nullptr ? cp->get_cp()
+                              : commit_property::NOWAIT_FOR_COMMIT);
     /**
      * about holding operation info.
      */
@@ -127,7 +134,8 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
 #elif defined(CPR)
     if (cp != nullptr) {
         cpr::phase_version current_gpv = cpr::global_phase_version::get_gpv();
-        if (ti->get_phase() == current_gpv.get_phase() && current_gpv.get_phase() == cpr::phase::REST) {
+        if (ti->get_phase() == current_gpv.get_phase() &&
+            current_gpv.get_phase() == cpr::phase::REST) {
             cp->set_ctid(ti->get_version());
         } else {
             /**
@@ -140,11 +148,13 @@ extern Status commit(Token token, commit_param* cp) { // NOLINT
     }
 #endif
 
+    ti->set_read_only(false);
     ti->set_tx_began(false);
     return Status::OK;
 }
 
-extern bool check_commit(Token token, [[maybe_unused]] std::uint64_t commit_id) { // NOLINT
+extern bool check_commit(Token token,
+                         [[maybe_unused]] std::uint64_t commit_id) { // NOLINT
     [[maybe_unused]] auto* ti = static_cast<session*>(token);
 #if defined(PWAL)
     return ti->get_flushed_ctid().get_obj() > commit_id;

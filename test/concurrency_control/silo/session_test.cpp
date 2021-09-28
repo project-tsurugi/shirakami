@@ -21,6 +21,19 @@ public:
     void TearDown() override { fin(); }
 };
 
+TEST_F(session_test, read_only) { // NOLINT
+    Storage storage{};
+    register_storage(storage);
+    std::string k("aaa"); // NOLINT
+    std::string v("bbb"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    auto* ti = static_cast<session*>(s);
+    tx_begin(s, true);
+    ASSERT_EQ(ti->get_read_only(), true);
+    ASSERT_EQ(leave(s), Status::OK);
+}
+
 TEST_F(session_test, get_txbegan_) { // NOLINT
     Storage storage{};
     register_storage(storage);
