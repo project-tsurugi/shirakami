@@ -178,16 +178,15 @@ namespace shirakami {
                 }
                 if (!elem.get_delete_op()) {
                     if (existing_record != nullptr) {
-                        delete existing_record->get_tuple() // NOLINT
-                                .get_pimpl()
-                                ->get_val_ptr();
-                        delete existing_record; // NOLINT
+                        existing_record->get_tuple().get_pimpl()->set_value(
+                                elem.get_val().data(), elem.get_val().size());
+                    } else {
+                        Record* rec_ptr = new Record(elem.get_key(), // NOLINT
+                                                     elem.get_val());
+                        rec_ptr->get_tidw() = 0;
+                        put<Record*>(token, elem.get_storage(), elem.get_key(),
+                                     &rec_ptr);
                     }
-                    Record* rec_ptr = new Record(elem.get_key(),  // NOLINT
-                                                 elem.get_val());
-                    rec_ptr->get_tidw() = 0;
-                    put<Record*>(token, elem.get_storage(), elem.get_key(),
-                                 &rec_ptr);
                 } else if (existing_record != nullptr) {
                     remove(token, elem.get_storage(), elem.get_key());
                 }
