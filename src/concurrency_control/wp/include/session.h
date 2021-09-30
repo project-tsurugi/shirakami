@@ -41,7 +41,10 @@ public:
      */
     tid_word get_mrc_tid() { return mrc_tid_; }
 
-    bool get_read_only() { return read_only_; }
+    /**
+     * @brief getter of @a read_only_
+     */
+    [[nodiscard]] bool get_read_only() const { return read_only_; }
 
     /**
      * @brief get the value of tx_began_.
@@ -52,6 +55,11 @@ public:
      * @brief get the value of visible_.
      */
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
+
+    /**
+     * @brief get the local write set.
+     */
+    local_write_set& get_write_set() { return write_set_; }
 
     /**
      * @brief get the yakushima token used by this session.
@@ -66,7 +74,7 @@ public:
         write_set_.push(std::move(elem));
     }
 
-    void set_mrc_tid(tid_word tidw) { mrc_tid_ = tidw; }
+    void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
     void set_read_only(bool tf) { read_only_ = tf; }
 
@@ -157,6 +165,6 @@ private:
      * arbitration is performed for fixed-length tables.
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> session_table_;
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> session_table_; // NOLINT
 };
 } // namespace shirakami

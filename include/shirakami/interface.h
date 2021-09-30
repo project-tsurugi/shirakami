@@ -181,7 +181,7 @@ extern void fin(bool force_shut_down_cpr = true); // NOLINT
  * @return Status::OK
  */
 extern Status
-init(bool enable_recovery = false, // NOLINT
+init(bool enable_recovery = false,                                 // NOLINT
      std::string_view log_directory_path = MAC2STR(PROJECT_ROOT)); // NOLINT
 
 /**
@@ -201,7 +201,8 @@ init(bool enable_recovery = false, // NOLINT
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, 
  * so it update the local write set object.
  */
-extern Status insert(Token token, Storage storage, std::string_view key, // NOLINT
+extern Status insert(Token token, Storage storage,
+                     std::string_view key, // NOLINT
                      std::string_view val);
 
 /**
@@ -284,7 +285,8 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other 
  * updater, and it could not complete search.
  */
-extern Status scan_key(Token token, Storage storage, std::string_view l_key, // NOLINT
+extern Status scan_key(Token token, Storage storage,
+                       std::string_view l_key, // NOLINT
                        scan_endpoint l_end, std::string_view r_key,
                        scan_endpoint r_end, std::vector<const Tuple*>& result);
 
@@ -338,13 +340,14 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * reads read stale snapshot.
  * @param[in] for_batch If this is true, local write set is represented by std::map.
  * If this is false, local write set is represented by std::vector.
- * todo at param[in] write_preserve Notice of writing required for special protocols for long 
+ * @param[in] write_preserve Notice of writing required for special protocols for long 
  * transactions. A write that does not give this notice cannot be executed.
  * @attention If you specify read_only is true, you can not execute transactional 
  * write operation in this transaction.
  */
-extern void tx_begin(Token token, bool read_only = false, // NOLINT
-                     bool for_batch = false); // NOLINT
+extern void tx_begin(Token token, bool read_only = false,       // NOLINT
+                     bool for_batch = false,                    // NOLINT
+                     std::vector<Storage> write_preserve = {}); // NOLINT
 
 /**
  * @brief It updates the record for the given key.

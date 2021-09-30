@@ -166,6 +166,11 @@ enum class Status : std::int32_t {
      */
     WARN_NOT_IN_A_SESSION,
     /**
+     * @brief warning
+     * @details If it calls fin function without init, this status is returned.
+     */
+    WARN_NOT_INIT,
+    /**
      * @brief waring
      * @details
      * @a read_from_scan : It read the records from own preceding write. @n
@@ -215,6 +220,11 @@ enum class Status : std::int32_t {
     ERR_SESSION_LIMIT,
     /**
      * @brief error
+     * @details Error about storage.
+     */
+    ERR_STORAGE,
+    /**
+     * @brief error
      * @details
      * @a commit : This means read validation failure and it already executed abort(). After this, do tx_begin to start
      * next transaction or leave to leave the session. @n
@@ -259,6 +269,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_NOT_FOUND"sv; // NOLINT
         case Status::WARN_NOT_IN_A_SESSION:
             return "WARN_NOT_IN_A_SESSION"sv; // NOLINT
+        case Status::WARN_NOT_INIT:
+            return "WARN_NOT_INIT"sv; // NOLINT
         case Status::WARN_READ_FROM_OWN_OPERATION:
             return "WARN_READ_FROM_OWN_OPERATION"sv; // NOLINT
         case Status::WARN_SCAN_LIMIT:
@@ -273,6 +285,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_NOT_FOUND"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
+        case Status::ERR_STORAGE:
+            return "ERR_STORAGE"sv; // NOLINT
         case Status::ERR_PHANTOM:
             return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_VALIDATION:

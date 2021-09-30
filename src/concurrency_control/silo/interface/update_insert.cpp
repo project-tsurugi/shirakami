@@ -16,20 +16,26 @@
 
 namespace shirakami {
 
-Status insert(Token token, Storage storage, const std::string_view key, // NOLINT
+Status insert(Token token, Storage storage,
+              const std::string_view key, // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
-    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
+    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};
     if (existing_rec_ptr != nullptr) {
-        write_set_obj* inws{ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
+        write_set_obj* inws{
+                ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
         if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::INSERT || inws->get_op() == OP_TYPE::UPDATE) {
+            if (inws->get_op() == OP_TYPE::INSERT ||
+                inws->get_op() == OP_TYPE::UPDATE) {
                 inws->reset_tuple_value(val);
             } else if (inws->get_op() == OP_TYPE::DELETE) {
-                *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE, inws->get_rec_ptr()};
+                *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
+                                      inws->get_rec_ptr()};
             }
             return Status::WARN_WRITE_TO_LOCAL_WRITE;
         }
@@ -39,16 +45,19 @@ Status insert(Token token, Storage storage, const std::string_view key, // NOLIN
 
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
-    yakushima::status insert_result{
-            yakushima::put<Record*>(ti->get_yakushima_token(), {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
-                                    static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)};                             // NOLINT
+    yakushima::status insert_result{yakushima::put<Record*>(
+            ti->get_yakushima_token(),
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, // NOLINT
+            &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
+            static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
+            &nvp)};
     if (insert_result == yakushima::status::OK) {
         ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_PHANTOM) {
             /**
-             * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
-             * by another transaction.
+             * This This transaction is confirmed to be aborted because the previous 
+             * scan was destroyed by an insert by another transaction.
              */
             abort(token);
             return Status::ERR_PHANTOM;
@@ -59,18 +68,18 @@ Status insert(Token token, Storage storage, const std::string_view key, // NOLIN
     return Status::WARN_ALREADY_EXISTS;
 }
 
-Status update(Token token, Storage storage, const std::string_view key, // NOLINT
-              const std::string_view val) {
+Status update(Token token, Storage storage, // NOLINT
+              const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
-    Record** existing_rec_ptr{
-            std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
-    if (existing_rec_ptr == nullptr) {
-        return Status::WARN_NOT_FOUND;
-    }
-    write_set_obj* inws{ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
+    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};
+    if (existing_rec_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
+    write_set_obj* inws{
+            ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
@@ -93,24 +102,27 @@ Status update(Token token, Storage storage, const std::string_view key, // NOLIN
     return Status::OK;
 }
 
-Status upsert(Token token, Storage storage, const std::string_view key, // NOLINT
-              const std::string_view val) {
+Status upsert(Token token, Storage storage, // NOLINT
+              const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
 RETRY_FIND_RECORD:
-    Record** existing_rec_ptr{
-            std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
+    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};
     Record* rec_ptr{};
     if (existing_rec_ptr != nullptr) {
         rec_ptr = *existing_rec_ptr;
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
-            if (in_ws->get_op() == OP_TYPE::INSERT || in_ws->get_op() == OP_TYPE::UPDATE) {
+            if (in_ws->get_op() == OP_TYPE::INSERT ||
+                in_ws->get_op() == OP_TYPE::UPDATE) {
                 in_ws->reset_tuple_value(val);
             } else if (in_ws->get_op() == OP_TYPE::DELETE) {
-                *in_ws = write_set_obj{storage, key, val, OP_TYPE::UPDATE, in_ws->get_rec_ptr()};
+                *in_ws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
+                                       in_ws->get_rec_ptr()};
             }
             return Status::WARN_WRITE_TO_LOCAL_WRITE;
         }
@@ -123,9 +135,13 @@ RETRY_FIND_RECORD:
     if (rec_ptr == nullptr) {
         rec_ptr = new Record(key, val); // NOLINT
         yakushima::node_version64* nvp{};
-        yakushima::status insert_result{
-                yakushima::put<Record*>(ti->get_yakushima_token(), {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, &rec_ptr, sizeof(Record*), nullptr, // NOLINT
-                                        static_cast<yakushima::value_align_type>(sizeof(Record*)), &nvp)};                             // NOLINT
+        yakushima::status insert_result{yakushima::put<Record*>(
+                ti->get_yakushima_token(),
+                {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+                key, &rec_ptr, sizeof(Record*), nullptr,              // NOLINT
+                static_cast<yakushima::value_align_type>(
+                        sizeof(Record*)), // NOLINT
+                &nvp)};
         if (insert_result == yakushima::status::OK) {
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_PHANTOM) {
@@ -159,7 +175,8 @@ RETRY_FIND_RECORD:
         return Status::WARN_CONCURRENT_DELETE;
     }
 
-    ti->get_write_set().push({storage, key, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
+    ti->get_write_set().push(
+            {storage, key, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
 
     return Status::OK;
 } // namespace shirakami

@@ -2,8 +2,6 @@
 #include <xmmintrin.h>
 #include <thread>
 
-#include "gtest/gtest.h"
-
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/wp/include/wp.h"
 
@@ -14,6 +12,8 @@
 #endif
 
 #include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
 
 using namespace shirakami;
 
@@ -71,6 +71,14 @@ TEST_F(wp_test, wp_regi_remove) { // NOLINT
     for (auto&& elem : th_vc) {
         elem.join();
     }
+}
+
+TEST_F(wp_test, init_fin) { // NOLINT
+    ASSERT_EQ(Status::OK, wp::fin());
+    ASSERT_EQ(Status::WARN_NOT_INIT, wp::fin());
+    ASSERT_EQ(Status::OK, wp::init());
+    ASSERT_EQ(Status::WARN_ALREADY_INIT, wp::init());
+    ASSERT_EQ(Status::OK, wp::fin());
 }
 
 } // namespace shirakami::testing

@@ -15,18 +15,66 @@
 
 namespace shirakami::wp {
 
+constexpr Storage initial_page_set_meta_storage{};
+
 /**
  * @brief The counter serving batch id which show priority of batchs.
  */
 inline std::size_t batch_counter{1};
 
 /**
+ * @brief whether it was initialized about wp.
+ */
+inline bool initialized{false};
+
+/**
  * @brief The mutex excluding fetch_add  from batch_counter and executing wp.
  */
 inline std::mutex wp_mutex;
 
+inline Storage page_set_meta_storage{initial_page_set_meta_storage};
+
+/**
+ * @brief termination process about wp.
+ */
+[[maybe_unused]] extern Status fin();
+
+/**
+ * @brief getter
+ */
+[[maybe_unused]] static bool get_initialized() { return initialized; }
+
+/**
+ * @brief getter
+ */
+[[maybe_unused]] static Storage get_page_set_meta_storage() {
+    return page_set_meta_storage;
+}
+
+/**
+ * @brief getter.
+ */
 [[maybe_unused]] static std::unique_lock<std::mutex> get_wp_mutex() {
     return std::unique_lock<std::mutex>{wp_mutex};
+}
+
+/**
+ * @brief initialization about wp.
+ * @return Status::OK success.
+ * @return Status::ERR_STORAGE error about storage.
+ */
+[[maybe_unused]] extern Status init();
+
+/**
+ * @brief setter.
+ */
+[[maybe_unused]] static void set_initialized(bool tf) { initialized = tf; }
+
+/**
+ * @brief setter.
+ */
+[[maybe_unused]] static void set_page_set_meta_storage(Storage storage) {
+    page_set_meta_storage = storage;
 }
 
 /**

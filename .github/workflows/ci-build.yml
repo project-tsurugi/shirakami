@@ -69,6 +69,18 @@ jobs:
           python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build/clang-tidy.log
         if: matrix.container-tag != 'ubuntu-18.04'
 
+      - id: Clang-Tidy_cpr
+        name: Clang-Tidy_cpr
+        run: |
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build_cpr/clang-tidy-fix.yaml -p build_cpr -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build_cpr/clang-tidy.log
+        if: matrix.container-tag != 'ubuntu-18.04'
+
+      - id: Clang-Tidy_wp
+        name: Clang-Tidy_wp
+        run: |
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build_wp/clang-tidy-fix.yaml -p build_wp -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build_wp/clang-tidy.log
+        if: matrix.container-tag != 'ubuntu-18.04'
+
       - id: Doxygen
         name: Doxygen
         run: |

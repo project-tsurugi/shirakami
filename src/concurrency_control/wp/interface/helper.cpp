@@ -5,6 +5,7 @@
 #include "include/helper.h"
 
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/interface.h"
 
@@ -26,6 +27,7 @@ Status enter(Token& token) { // NOLINT
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
+    wp::fin(); // note: this use yakushima.
     yakushima::fin();
     set_initialized(false);
 } catch (std::exception& e) {
@@ -43,6 +45,10 @@ init([[maybe_unused]] bool enable_recovery,
 
     // about index
     yakushima::init();
+
+    // about wp
+    auto ret = wp::init();
+    if (ret != Status::OK) { return ret; }
 
     set_initialized(true);
     return Status::OK;
@@ -64,9 +70,18 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-void tx_begin([[maybe_unused]] Token const token,
-              [[maybe_unused]] bool const read_only,
-              [[maybe_unused]] bool const for_batch) { // NOLINT
+void tx_begin(Token const token, bool const read_only, bool const for_batch,
+              [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        ti->set_tx_began(true);
+        ti->set_read_only(read_only);
+        ti->get_write_set().set_for_batch(for_batch);
+
+        if (for_batch) {
+            // do write preserve
+        }
+    }
 }
 
 } // namespace shirakami

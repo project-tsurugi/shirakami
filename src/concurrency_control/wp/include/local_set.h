@@ -19,8 +19,10 @@ namespace shirakami {
 class read_set_obj { // NOLINT
 public:
     read_set_obj(std::string_view const storage, std::string_view const key,
-                 std::string_view const val, const Record* const rec_ptr, tid_word const tid)
-        : storage_(storage), key_(key), val_(val), rec_ptr_(rec_ptr), tid_(tid) {}
+                 std::string_view const val, const Record* const rec_ptr,
+                 tid_word const& tid)
+        : storage_(storage), key_(key), val_(val), rec_ptr_(rec_ptr),
+          tid_(tid) {}
 
     read_set_obj(const read_set_obj& right) = delete;
     read_set_obj(read_set_obj&& right) = default;
@@ -63,9 +65,10 @@ private:
 
 class write_set_obj { // NOLINT
 public:
-    write_set_obj(std::string_view const storage, OP_TYPE const op, Record* const rec_ptr,
-                  std::string_view const key, std::string_view const val) : storage_(storage), op_(op),
-                                                                            rec_ptr_(rec_ptr), key_(key), val_(val) {}
+    write_set_obj(std::string_view const storage, OP_TYPE const op,
+                  Record* const rec_ptr, std::string_view const key,
+                  std::string_view const val)
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr), key_(key), val_(val) {}
 
     write_set_obj(const write_set_obj& right) = delete;
     write_set_obj(write_set_obj&& right) = default;
@@ -73,23 +76,19 @@ public:
     write_set_obj& operator=(const write_set_obj& right) = delete;
     write_set_obj& operator=(write_set_obj&& right) = default;
 
-    auto get_rec_ptr() const {
-        return rec_ptr_;
-    }
-
     bool operator<(const write_set_obj& right) const {
-        return this->get_rec_ptr() < right.get_rec_ptr();
+        return get_rec_ptr() < right.get_rec_ptr();
     }
 
-    OP_TYPE get_op() const { return op_; }
+    [[nodiscard]] OP_TYPE get_op() const { return op_; }
+
+    [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
 
     /**
      * @brief set value
      * @details It is for twice update in the same transaction.
      */
-    void set_val(std::string_view const val) {
-        val_ = val;
-    }
+    void set_val(std::string_view const val) { val_ = val; }
 
 private:
     /**
@@ -135,7 +134,7 @@ public:
         cont_for_bt_.clear();
     }
 
-    bool get_for_batch() const { return for_batch_; }
+    [[nodiscard]] bool get_for_batch() const { return for_batch_; }
 
     cont_for_bt_type& get_ref_cont_for_bt() { return cont_for_bt_; }
 

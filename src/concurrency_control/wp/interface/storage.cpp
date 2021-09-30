@@ -5,6 +5,7 @@
 #include "storage.h"
 
 #include "concurrency_control/wp/include/record.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/interface.h"
 
@@ -31,36 +32,59 @@ Status list_storage(std::vector<Storage>& out) {
 Status storage::register_storage(Storage& storage) {
     get_new_storage_num(storage);
 
-    if (yakushima::create_storage(std::string_view(reinterpret_cast<char*>(&storage), sizeof(storage))) != yakushima::status::OK) { // NOLINT
+    std::string_view storage_view = {
+            reinterpret_cast<char*>(&storage), // NOLINT
+            sizeof(storage)};
+    if (yakushima::create_storage(std::string_view(storage_view)) !=
+        yakushima::status::OK) { // NOLINT
         return Status::WARN_INVARIANT;
     }
 
+    yakushima::Token ytoken{};
+    while (yakushima::enter(ytoken) != yakushima::status::OK) { _mm_pause(); }
+    Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+    wp::wp_meta new_wp_meta{};
+    if (yakushima::status::OK !=
+        yakushima::put<wp::wp_meta>(
+                ytoken,
+                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                 sizeof(page_set_meta_storage)},
+                storage_view, &new_wp_meta, sizeof(new_wp_meta))) {
+        return Status::WARN_INVARIANT;
+    }
+    yakushima::leave(ytoken);
     return Status::OK;
 }
 
 Status storage::exist_storage(Storage storage) {
-    auto ret = yakushima::find_storage({reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
+    auto ret = yakushima::find_storage(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
     if (ret == yakushima::status::OK) return Status::OK;
     return Status::WARN_NOT_FOUND;
 }
 
 Status storage::delete_storage(Storage storage) { // NOLINT
-    auto ret = yakushima::find_storage({reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
+    std::string_view storage_view = {
+            reinterpret_cast<char*>(&storage), // NOLINT
+            sizeof(storage)};
+    auto ret = yakushima::find_storage(storage_view);
     if (ret != yakushima::status::OK) return Status::WARN_INVALID_HANDLE;
     // exist storage
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t v_index{1};
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, "", yakushima::scan_endpoint::INF, "", yakushima::scan_endpoint::INF, scan_res); // NOLINT
+    yakushima::scan(storage_view, "", yakushima::scan_endpoint::INF, "",
+                    yakushima::scan_endpoint::INF, scan_res);
 
     if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
-                                                                      // single thread clean up
+        // single thread clean up
         for (auto&& itr : scan_res) {
             delete *std::get<v_index>(itr); // NOLINT
         }
     } else {
         // multi threads clean up
-        auto process = [&scan_res]([[maybe_unused]] std::size_t const begin, [[maybe_unused]] std::size_t const end) {
+        auto process = [&scan_res](std::size_t const begin,
+                                   std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
                 delete *std::get<v_index>(scan_res[i]); // NOLINT
             }
@@ -69,12 +93,28 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         std::vector<std::thread> th_vc;
         th_vc.reserve(th_size);
         for (std::size_t i = 0; i < th_size; ++i) {
-            th_vc.emplace_back(process, i * (scan_res.size() / th_size), i != th_size - 1 ? (i + 1) * (scan_res.size() / th_size) : scan_res.size());
+            th_vc.emplace_back(process, i * (scan_res.size() / th_size),
+                               i != th_size - 1
+                                       ? (i + 1) * (scan_res.size() / th_size)
+                                       : scan_res.size());
         }
         for (auto&& th : th_vc) th.join();
     }
 
-    yakushima::delete_storage({reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
+    yakushima::delete_storage(storage_view); // NOLINT
+
+    Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+    yakushima::Token ytoken{};
+    while (yakushima::enter(ytoken) != yakushima::status::OK) { _mm_pause(); }
+    if (yakushima::status::OK !=
+        yakushima::remove(ytoken,
+                          {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                           sizeof(page_set_meta_storage)},
+                          storage_view)) {
+        return Status::WARN_INVARIANT;
+    }
+    yakushima::leave(ytoken);
+
     return Status::OK;
 }
 

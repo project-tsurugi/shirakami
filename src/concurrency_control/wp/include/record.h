@@ -18,23 +18,17 @@ class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
     Record() = default;
 
-    Record(tid_word tidw, std::string_view vinfo) : tidw_(tidw) {
-        latest_.store(new version(vinfo), std::memory_order_release);
+    Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
+        latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
     }
 
     tid_word& get_tidw_ref() { return tidw_; }
 
-    void lock() {
-        tidw_.lock();
-    }
+    void lock() { tidw_.lock(); }
 
-    void set_tid(tid_word tid) {
-        tidw_ = tid;
-    }
+    void set_tid(tid_word const& tid) { tidw_ = tid; }
 
-    void unlock() {
-        tidw_.unlock();
-    }
+    void unlock() { tidw_.unlock(); }
 
 private:
     /**

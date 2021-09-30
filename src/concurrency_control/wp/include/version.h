@@ -14,20 +14,14 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) version {
 public:
-    version(std::string_view vinfo) {
-        set_pv(vinfo);
-    }
+    explicit version(std::string_view vinfo) { set_pv(vinfo); }
 
-    version* get_next() {
-        return next_.load(std::memory_order_acquire);
-    }
+    version* get_next() { return next_.load(std::memory_order_acquire); }
 
-    std::string* get_pv() {
-        return pv_.load(std::memory_order_acquire);
-    }
+    std::string* get_pv() { return pv_.load(std::memory_order_acquire); }
 
     void set_pv(std::string_view vinfo) {
-        pv_.store(new std::string(vinfo), std::memory_order_release);
+        pv_.store(new std::string(vinfo), std::memory_order_release); // NOLINT
     }
 
     /**
@@ -45,9 +39,7 @@ public:
         next_.store(next, std::memory_order_release);
     }
 
-    void set_tid(tid_word tid) {
-        tid_ = tid;
-    }
+    void set_tid(tid_word const& tid) { tid_ = tid; }
 
 private:
     tid_word tid_{};
