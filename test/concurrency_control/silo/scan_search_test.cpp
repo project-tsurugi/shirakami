@@ -2,6 +2,8 @@
  * @file scan_search_test.cpp
  */
 
+#include <xmmintrin.h>
+
 #include <bitset>
 
 #include "gtest/gtest.h"
@@ -56,13 +58,8 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<const Tuple*> records{};
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
-#endif
+    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                                   scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(0, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
@@ -70,33 +67,28 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k3, v));
     ASSERT_EQ(Status::OK, upsert(s, storage, k4, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records));
-#endif
+    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                                   scan_endpoint::EXCLUSIVE, records));
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
-    while (Status::OK != search_key(s, storage, k2, &tuple)) {
-        ;
-    }
+    ASSERT_EQ(Status::OK, search_key(s, storage, k2, &tuple));
     EXPECT_NE(nullptr, tuple);
     delete_record(s, storage, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-#if defined(CPR)
-    /**
-     * cpr checkpoint thread may delete concurrently by upper 2 line's delete_record function.
-     */
-    cpr::wait_next_checkpoint();
-#endif
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4, scan_endpoint::EXCLUSIVE, records)) {
-        ;
+    for (;;) {
+        if (Status::OK == scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                                   scan_endpoint::EXCLUSIVE, records) &&
+            Status::OK == commit(s)) {
+            /**
+             * Delayed unhooking can result in false positive aborts.
+             * However, it will surely succeed.
+             */
+            ASSERT_EQ(1, records.size());
+            break;
+        }
+        _mm_pause();
     }
-    EXPECT_EQ(1, records.size());
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k3));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k4));
@@ -121,11 +113,10 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ScanHandle handle{};
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, open_scan(s, storage, k1, scan_endpoint::INCLUSIVE, k2, scan_endpoint::INCLUSIVE, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, storage, k1, scan_endpoint::INCLUSIVE,
+                                    k2, scan_endpoint::INCLUSIVE, handle));
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
-        ;
-    }
+    while (Status::OK != read_from_scan(s, handle, &tuple)) { ; }
 #else
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
 #endif
@@ -134,9 +125,7 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
 
 // record exists
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, k4, &tuple)) {
-        ;
-    }
+    while (Status::OK != search_key(s, storage, k4, &tuple)) { ; }
 #else
     ASSERT_EQ(Status::OK, search_key(s, storage, k4, &tuple));
 #endif
@@ -146,9 +135,7 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k3, &tuple));
 
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
-        ;
-    }
+    while (Status::OK != read_from_scan(s, handle, &tuple)) { ; }
 #else
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
 #endif
