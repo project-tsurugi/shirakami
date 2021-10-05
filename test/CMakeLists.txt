@@ -28,8 +28,8 @@ file(GLOB TEST_SOURCES
         )
 else ()
 file(GLOB TEST_SOURCES
+        "concurrency_control/wp/*.cpp"
         "concurrency_control/wp/interface/helper/*.cpp"
-        "concurrency_control/wp/wp_test.cpp"
         )
 
 endif()

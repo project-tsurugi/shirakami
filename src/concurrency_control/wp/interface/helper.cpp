@@ -4,6 +4,7 @@
 
 #include "include/helper.h"
 
+#include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
 
@@ -27,6 +28,7 @@ Status enter(Token& token) { // NOLINT
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
+    epoch::fin();
     wp::fin(); // note: this use yakushima.
     yakushima::fin();
     set_initialized(false);
@@ -44,11 +46,15 @@ init([[maybe_unused]] bool enable_recovery,
     //epoch::invoke_epoch_thread();
 
     // about index
+    // pre condition : before wp::init() because wp::init() use yakushima function.
     yakushima::init();
 
     // about wp
     auto ret = wp::init();
     if (ret != Status::OK) { return ret; }
+
+    // about epoch
+    epoch::init();
 
     set_initialized(true);
     return Status::OK;

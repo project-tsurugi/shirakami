@@ -60,6 +60,23 @@ TEST_F(wp_test, init_fin) { // NOLINT
     ASSERT_EQ(Status::OK, wp::fin());
 }
 
+TEST_F(wp_test, wp_meta_register) { // NOLINT
+    wp::wp_meta meta{};
+    meta.register_wp(1, 1);
+    ASSERT_EQ(meta.get_wped().size(), 1);
+    auto rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 1);
+    ASSERT_EQ(rv.at(0).second, 1);
+    std::vector<std::pair<std::size_t, std::size_t>> batch_wps{{2, 2}, {3, 3}};
+    meta.register_wp(batch_wps);
+    ASSERT_EQ(meta.get_wped().size(), 3);
+    rv = meta.get_wped();
+    ASSERT_EQ(rv.at(1).first, 2);
+    ASSERT_EQ(rv.at(1).second, 2);
+    ASSERT_EQ(rv.at(2).first, 3);
+    ASSERT_EQ(rv.at(2).second, 3);
+}
+
 TEST_F(wp_test, wp_regi_remove) { // NOLINT
     wp::wp_meta wp_info;
     std::atomic<bool> ready_register{false};

@@ -104,10 +104,6 @@ class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
     using wped_type = std::vector<std::pair<std::size_t, std::size_t>>;
 
-#if 0
-    ~wp_meta() { clear_wped(); }
-#endif
-
     void clear_wped() { wped_.clear(); }
 
     wped_type get_wped() {
@@ -115,9 +111,21 @@ public:
         return wped_;
     }
 
+    /**
+     * @brief single register.
+     */
     void register_wp(std::size_t epoc, std::size_t id) {
         std::unique_lock u_lock{wped_mtx_};
         wped_.emplace_back(epoc, id);
+    }
+
+    /**
+     * @brief batch register.
+     */
+    void
+    register_wp(std::vector<std::pair<std::size_t, std::size_t>> const& wps) {
+        std::unique_lock u_lock{wped_mtx_};
+        for (auto&& elem : wps) { wped_.emplace_back(elem.first, elem.second); }
     }
 
     /**
