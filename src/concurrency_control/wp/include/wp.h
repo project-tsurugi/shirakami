@@ -23,6 +23,11 @@ constexpr Storage initial_page_set_meta_storage{};
 inline std::size_t batch_counter{1};
 
 /**
+ * @brief whether it is finalizing about wp.
+ */
+inline std::atomic<bool> finalizing{false};
+
+/**
  * @brief whether it was initialized about wp.
  */
 inline bool initialized{false};
@@ -38,6 +43,13 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  * @brief termination process about wp.
  */
 [[maybe_unused]] extern Status fin();
+
+/**
+ * @brief getter
+ */
+[[maybe_unused]] static bool get_finalizing() {
+    return finalizing.load(std::memory_order_acquire);
+}
 
 /**
  * @brief getter
@@ -68,6 +80,13 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 /**
  * @brief setter.
  */
+[[maybe_unused]] static void set_finalizing(bool tf) {
+    finalizing.store(tf, std::memory_order_release);
+}
+
+/**
+ * @brief setter.
+ */
 [[maybe_unused]] static void set_initialized(bool tf) { initialized = tf; }
 
 /**
@@ -84,6 +103,12 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
     using wped_type = std::vector<std::pair<std::size_t, std::size_t>>;
+
+#if 0
+    ~wp_meta() { clear_wped(); }
+#endif
+
+    void clear_wped() { wped_.clear(); }
 
     wped_type get_wped() {
         std::shared_lock sh_lock{wped_mtx_};

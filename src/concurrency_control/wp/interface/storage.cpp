@@ -11,6 +11,8 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 Status register_storage(Storage& storage) {
@@ -40,19 +42,25 @@ Status storage::register_storage(Storage& storage) {
         return Status::WARN_INVARIANT;
     }
 
-    yakushima::Token ytoken{};
-    while (yakushima::enter(ytoken) != yakushima::status::OK) { _mm_pause(); }
-    Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-    wp::wp_meta new_wp_meta{};
-    if (yakushima::status::OK !=
-        yakushima::put<wp::wp_meta>(
+    if (wp::get_initialized()) {
+        yakushima::Token ytoken{};
+        while (yakushima::enter(ytoken) != yakushima::status::OK) {
+            _mm_pause();
+        }
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        wp::wp_meta* wp_meta_ptr{new wp::wp_meta()};
+        auto rc = yakushima::put<wp::wp_meta*>(
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
-                storage_view, &new_wp_meta, sizeof(new_wp_meta))) {
-        return Status::WARN_INVARIANT;
+                storage_view, &wp_meta_ptr, sizeof(wp_meta_ptr)); // NOLINT
+        if (yakushima::status::OK != rc) {
+            LOG(FATAL) << rc;
+            std::abort();
+        }
+        yakushima::leave(ytoken);
     }
-    yakushima::leave(ytoken);
+
     return Status::OK;
 }
 
@@ -79,7 +87,12 @@ Status storage::delete_storage(Storage storage) { // NOLINT
     if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
         // single thread clean up
         for (auto&& itr : scan_res) {
-            delete *std::get<v_index>(itr); // NOLINT
+            if (wp::get_finalizing()) {
+                delete *reinterpret_cast<wp::wp_meta**>( // NOLINT
+                        std::get<v_index>(itr));
+            } else {
+                delete *std::get<v_index>(itr); // NOLINT
+            }
         }
     } else {
         // multi threads clean up
@@ -101,19 +114,41 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         for (auto&& th : th_vc) th.join();
     }
 
-    yakushima::delete_storage(storage_view); // NOLINT
+    if (!wp::get_finalizing()) {
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        yakushima::Token ytoken{};
+        while (yakushima::enter(ytoken) != yakushima::status::OK) {
+            _mm_pause();
+        }
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta**>(
+                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                 sizeof(page_set_meta_storage)},
+                storage_view));
+        if (elem_ptr == nullptr) {
+            LOG(FATAL) << "missing error";
+            std::abort();
+        }
+        delete *elem_ptr; // NOLINT
+        if (yakushima::status::OK !=
+            yakushima::remove(
+                    ytoken,
+                    {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                     sizeof(page_set_meta_storage)},
+                    storage_view)) {
+            LOG(FATAL) << "missing error";
+            std::abort();
+        }
+        if (yakushima::status::OK != yakushima::leave(ytoken)) {
+            LOG(FATAL) << "missing error";
+            std::abort();
+        }
 
-    Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-    yakushima::Token ytoken{};
-    while (yakushima::enter(ytoken) != yakushima::status::OK) { _mm_pause(); }
-    if (yakushima::status::OK !=
-        yakushima::remove(ytoken,
-                          {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
-                           sizeof(page_set_meta_storage)},
-                          storage_view)) {
-        return Status::WARN_INVARIANT;
+        if (yakushima::status::OK !=
+            yakushima::delete_storage(storage_view)) { // NOLINT
+            LOG(FATAL) << "missing error";
+            std::abort();
+        }
     }
-    yakushima::leave(ytoken);
 
     return Status::OK;
 }
