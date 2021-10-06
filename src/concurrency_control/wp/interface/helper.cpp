@@ -10,6 +10,8 @@
 
 #include "shirakami/interface.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 Status enter(Token& token) { // NOLINT
@@ -29,6 +31,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
     epoch::fin();
+    delete_all_records();
     wp::fin(); // note: this use yakushima.
     yakushima::fin();
     set_initialized(false);
@@ -77,7 +80,7 @@ Status leave(Token const token) { // NOLINT
 }
 
 void tx_begin(Token const token, bool const read_only, bool const for_batch,
-              [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
+              std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         ti->set_tx_began(true);
@@ -86,6 +89,23 @@ void tx_begin(Token const token, bool const read_only, bool const for_batch,
 
         if (for_batch) {
             // do write preserve
+            for (auto&& wp_target : write_preserve) {
+                Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+                std::string_view page_set_meta_storage_view = {
+                        reinterpret_cast<char*>( // NOLINT
+                                &page_set_meta_storage),
+                        sizeof(page_set_meta_storage)};
+                std::string_view storage_view = {
+                        reinterpret_cast<char*>(&wp_target), // NOLINT
+                        sizeof(wp_target)};
+                auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
+                        page_set_meta_storage_view, storage_view));
+                if (elem_ptr == nullptr) {
+                    LOG(FATAL);
+                    std::abort();
+                }
+                // wp::wp_meta* target_wp_meta = *elem_ptr;
+            }
         }
     }
 }

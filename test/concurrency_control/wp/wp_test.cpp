@@ -25,10 +25,14 @@ namespace shirakami::testing {
 
 class wp_test : public ::testing::Test { // NOLINT
 public:
-    void SetUp() override {
-        std::call_once(init_google, google::InitGoogleLogging,
-                       "shirakami-test-concurrency_control-wp-wp_test");
+    static void call_once_f() {
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-wp-wp_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
+    }
 
+    void SetUp() override {
+        std::call_once(init_google, call_once_f);
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
         log_dir.append("/build/wp_test_log");
         init(false, log_dir); // NOLINT
@@ -87,11 +91,11 @@ TEST_F(wp_test, wp_regi_remove) { // NOLINT
 
     auto work = [&wp_info, &ready_register, &fin_register,
                  &ready_remove](std::size_t id) {
-        while (!ready_register.load(std::memory_order_acquire)) _mm_pause();
+        while (!ready_register.load(std::memory_order_acquire)) { _mm_pause(); }
         epoch::epoch_t ce{epoch::get_global_epoch()};
         wp_info.register_wp(ce, id);
         ++fin_register;
-        while (!ready_remove.load(std::memory_order_acquire)) _mm_pause();
+        while (!ready_remove.load(std::memory_order_acquire)) { _mm_pause(); }
         ASSERT_EQ(wp_info.remove_wp(id), Status::OK);
     };
 
@@ -101,8 +105,9 @@ TEST_F(wp_test, wp_regi_remove) { // NOLINT
     ready_register.store(true, std::memory_order_release);
 
     while (fin_register.load(std::memory_order_acquire) !=
-           std::thread::hardware_concurrency())
+           std::thread::hardware_concurrency()) {
         _mm_pause();
+    }
     ASSERT_EQ(wp_info.size_wp(), std::thread::hardware_concurrency());
     ready_remove.store(true, std::memory_order_acquire);
 

@@ -56,6 +56,8 @@ public:
      */
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
+    std::vector<Storage>& get_wp_set() { return wp_set_; }
+
     /**
      * @brief get the local write set.
      */
@@ -114,6 +116,14 @@ private:
      * @brief local read set.
      */
     std::vector<read_set_obj> read_set_{};
+
+    /**
+     * @brief local wp set.
+     * @details If this session processes long transaction in a batch mode and 
+     * executes transactional write operations, it is for cheking whether the target 
+     * of the operation was write preserved properly by use this infomation.
+     */
+    std::vector<Storage> wp_set_{};
 
     /**
      * @brief local write set.

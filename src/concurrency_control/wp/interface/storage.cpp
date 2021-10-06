@@ -120,7 +120,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
             _mm_pause();
         }
-        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta**>(
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
                 storage_view));

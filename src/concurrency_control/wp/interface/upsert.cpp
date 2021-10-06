@@ -3,8 +3,13 @@
 
 namespace shirakami {
 
-Status upsert([[maybe_unused]] Token token, [[maybe_unused]] Storage storage, [[maybe_unused]] const std::string_view key, // NOLINT
+Status upsert([[maybe_unused]] Token token, [[maybe_unused]] Storage storage,
+              [[maybe_unused]] const std::string_view key, // NOLINT
               [[maybe_unused]] const std::string_view val) {
+    // occ
+
+    // batch
+
     return Status::OK;
 }
 
