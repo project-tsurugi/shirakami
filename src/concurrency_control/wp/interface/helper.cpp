@@ -79,7 +79,7 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-void tx_begin(Token const token, bool const read_only, bool const for_batch,
+Status tx_begin(Token const token, bool const read_only, bool const for_batch,
               std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
@@ -89,6 +89,9 @@ void tx_begin(Token const token, bool const read_only, bool const for_batch,
 
         if (for_batch) {
             // do write preserve
+            // preserve wp set
+            ti->get_wp_set().reserve(write_preserve.size());
+
             for (auto&& wp_target : write_preserve) {
                 Storage page_set_meta_storage = wp::get_page_set_meta_storage();
                 std::string_view page_set_meta_storage_view = {
@@ -104,10 +107,13 @@ void tx_begin(Token const token, bool const read_only, bool const for_batch,
                     LOG(FATAL);
                     std::abort();
                 }
-                // wp::wp_meta* target_wp_meta = *elem_ptr;
+                //wp::wp_meta* target_wp_meta = *elem_ptr;
+                //target_wp_meta->register_wp()
             }
         }
     }
+
+    return Status::OK;
 }
 
 } // namespace shirakami

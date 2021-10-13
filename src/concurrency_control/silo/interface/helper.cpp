@@ -149,7 +149,7 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-void tx_begin(Token const token, bool const read_only, bool const for_batch,
+Status tx_begin(Token const token, bool const read_only, bool const for_batch,
               [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
@@ -166,6 +166,8 @@ void tx_begin(Token const token, bool const read_only, bool const for_batch,
         ti->update_pv();
 #endif
     }
+
+    return Status::OK;
 }
 
 Status read_record(Record& res, const Record* const dest) { // NOLINT

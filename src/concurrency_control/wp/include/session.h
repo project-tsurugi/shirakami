@@ -86,6 +86,8 @@ public:
 
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
+    void set_wp_set(std::vector<Storage> const& wps) { wp_set_ = wps; }
+
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
     }
@@ -175,6 +177,7 @@ private:
      * arbitration is performed for fixed-length tables.
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> session_table_; // NOLINT
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS>
+            session_table_; // NOLINT
 };
 } // namespace shirakami

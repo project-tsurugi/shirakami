@@ -200,6 +200,11 @@ enum class Status : std::int32_t {
     ERR_CPR_ORDER_VIOLATION,
     /**
      * @brief error
+     * @details This means that wp failed.
+     */
+    ERR_FAIL_WP,
+    /**
+     * @brief error
      * @details
      * @a delete_storage : If the storage is not registered with the given name. @n
      * @a get_storage : If the storage is not registered with the given name. @n
@@ -281,6 +286,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "OK"sv; // NOLINT
         case Status::ERR_CPR_ORDER_VIOLATION:
             return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
+        case Status::ERR_FAIL_WP:
+            return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_NOT_FOUND:
             return "ERR_NOT_FOUND"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:

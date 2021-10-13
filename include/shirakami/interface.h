@@ -344,8 +344,10 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * transactions. A write that does not give this notice cannot be executed.
  * @attention If you specify read_only is true, you can not execute transactional 
  * write operation in this transaction.
+ * @return Status::OK success.
+ * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
  */
-extern void tx_begin(Token token, bool read_only = false,       // NOLINT
+extern Status tx_begin(Token token, bool read_only = false,       // NOLINT
                      bool for_batch = false,                    // NOLINT
                      std::vector<Storage> write_preserve = {}); // NOLINT
 
