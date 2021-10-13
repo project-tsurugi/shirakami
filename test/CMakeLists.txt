@@ -19,6 +19,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/silo/delete/*.cpp"
         "concurrency_control/silo/helper/*.cpp"
         "concurrency_control/silo/insert/*.cpp"
+        "concurrency_control/silo/read_write/*.cpp"
         "concurrency_control/silo/storage/*.cpp"
         "concurrency_control/silo/scan/*.cpp"
         "concurrency_control/silo/update/*.cpp"

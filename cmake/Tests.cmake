@@ -86,7 +86,7 @@ function(register_tests)
                 (fname MATCHES "memory_test") OR
                 (fname MATCHES "scheme_test") OR
                 (fname MATCHES "string_view_test"))
-                # nothing to link
+                # nothing to link for fast compile
                 else()
                     target_link_libraries(${test_name}
                             PRIVATE ${TESTS_TARGET}
