@@ -56,4 +56,14 @@ TEST_F(helper, leave) { // NOLINT
     ASSERT_EQ(Status::WARN_INVALID_ARGS, leave(nullptr));
 }
 
+TEST_F(helper, tx_begin) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
 } // namespace shirakami::testing

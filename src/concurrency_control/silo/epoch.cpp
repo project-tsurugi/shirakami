@@ -57,25 +57,7 @@ void epocher() {
             _mm_pause();
         }
 
-#ifdef WP
-#if WP_LEVEL == 0
-        // block batch
-        std::unique_lock<std::mutex> get_lock{wp::get_wp_mutex()};
-#endif
-#endif
-
         kGlobalEpoch++;
-
-#ifdef WP
-#if WP_LEVEL == 0
-        set_reclamation_epoch(get_global_epoch() - 2);
-#else
-        set_reclamation_epoch(get_global_epoch() - 2);
-#endif
-#endif
-
-        // unblock batch
-        // dtor get_lock
     }
 }
 

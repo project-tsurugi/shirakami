@@ -61,9 +61,7 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 /**
  * @brief getter.
  */
-[[maybe_unused]] static std::unique_lock<std::mutex> get_wp_mutex() {
-    return std::unique_lock<std::mutex>{wp_mutex};
-}
+[[maybe_unused]] static std::mutex& get_wp_mutex() { return wp_mutex; }
 
 /**
  * @brief initialization about wp.

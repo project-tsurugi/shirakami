@@ -10,7 +10,7 @@ namespace shirakami::epoch {
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
         sleepMs(PARAM_EPOCH_TIME);
-        auto wp_mutex = std::move(wp::get_wp_mutex());
+        auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
         set_global_epoch(get_global_epoch() + 1);
         // dtor : release wp_mutex
     }

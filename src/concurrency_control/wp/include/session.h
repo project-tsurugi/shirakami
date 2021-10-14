@@ -182,7 +182,7 @@ private:
      * arbitration is performed for fixed-length tables.
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS>
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
             session_table_; // NOLINT
 };
 } // namespace shirakami

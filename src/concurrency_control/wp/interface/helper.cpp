@@ -95,7 +95,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
             wped.reserve(write_preserve.size());
 
             // get wp mutex
-            auto wp_mutex = std::move(wp::get_wp_mutex());
+            auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
 
             // get batch id
             auto batch_id = wp::batch::get_counter();
@@ -122,6 +122,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                             std::abort();
                         }
                     }
+                    ti->get_wp_set().clear();
                     // dtor : release wp_mutex
                     return Status::ERR_FAIL_WP;
                 }
@@ -129,6 +130,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                 target_wp_meta->register_wp(valid_epoch, batch_id);
                 wped.emplace_back(
                         target_wp_meta); // for fast cleanup at failure
+                ti->get_wp_set().emplace_back(wp_target);
             }
 
             // inc batch counter
