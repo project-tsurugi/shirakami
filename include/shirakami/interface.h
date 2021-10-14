@@ -344,6 +344,8 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * transactions. A write that does not give this notice cannot be executed.
  * @attention If you specify read_only is true, you can not execute transactional 
  * write operation in this transaction.
+ * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without termination 
+ * command, this is returned.
  * @return Status::OK success.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
  */

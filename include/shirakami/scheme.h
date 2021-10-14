@@ -83,6 +83,11 @@ enum class scan_endpoint : char {
 enum class Status : std::int32_t {
     /**
      * @brief warning.
+     * @details When it uses multiple tx_begin without termination command, this is returned.
+     */
+    WARN_ALREADY_BEGIN,
+    /**
+     * @brief warning.
      * @details
      * @a delete_all_records : There are no records. @n
      * @a read_from_scan : The read targets was deleted by delete operation of own transaction. @n
@@ -248,6 +253,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
         const Status value) noexcept {
     using namespace std::string_view_literals;
     switch (value) {
+        case Status::WARN_ALREADY_BEGIN:
+            return "WARN_ALREADY_BEGIN"sv; // NOLINT
         case Status::WARN_ALREADY_DELETE:
             return "WARN_ALREADY_DELETE"sv; // NOLINT
         case Status::WARN_ALREADY_EXISTS:

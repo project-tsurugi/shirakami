@@ -32,9 +32,14 @@ public:
     }
 
     /**
-     * @brief clean aup about local set.
+     * @brief clean up about local set.
      */
     void clean_up_local_set();
+
+    /**
+     * @brief clean up tx_began.
+     */
+    void clean_up_tx_property();
 
     /**
      * @brief get the value of mrc_tid_.

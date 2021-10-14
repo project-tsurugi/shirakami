@@ -9,6 +9,7 @@ Status abort([[maybe_unused]] Token token) { // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
     ti->clean_up_local_set();
+    ti->clean_up_tx_property();
     return Status::OK;
 }
 
@@ -27,6 +28,7 @@ extern Status commit([[maybe_unused]] Token token, // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
     ti->clean_up_local_set();
+    ti->clean_up_tx_property();
     return Status::OK;
 }
 

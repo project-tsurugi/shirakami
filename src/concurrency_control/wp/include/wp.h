@@ -18,11 +18,6 @@ namespace shirakami::wp {
 constexpr Storage initial_page_set_meta_storage{};
 
 /**
- * @brief The counter serving batch id which show priority of batchs.
- */
-inline std::size_t batch_counter{1};
-
-/**
  * @brief whether it is finalizing about wp.
  */
 inline std::atomic<bool> finalizing{false};

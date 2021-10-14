@@ -10,4 +10,8 @@ void session::clean_up_local_set() {
     write_set_.clear();
 }
 
+void session::clean_up_tx_property() {
+    set_tx_began(false);
+}
+
 } // namespace shirakami

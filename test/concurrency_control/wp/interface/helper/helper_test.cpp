@@ -34,13 +34,9 @@ private:
 };
 
 TEST_F(helper, init) { // NOLINT
-    LOG(INFO);
     ASSERT_EQ(init(), Status::WARN_ALREADY_INIT);
-    LOG(INFO);
     fin();
-    LOG(INFO);
     ASSERT_EQ(init(), Status::OK);
-    LOG(INFO);
 }
 
 TEST_F(helper, fin) { // NOLINT
@@ -69,6 +65,23 @@ TEST_F(helper, leave) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::WARN_NOT_IN_A_SESSION, leave(s));
     ASSERT_EQ(Status::WARN_INVALID_ARGS, leave(nullptr));
+}
+
+TEST_F(helper, tx_begin) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    std::vector<Storage> wp{1, 2, 3};
+    // wp for non-existing storage
+    ASSERT_EQ(Status::ERR_FAIL_WP, tx_begin(s, false, true, wp));
+    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 } // namespace shirakami::testing

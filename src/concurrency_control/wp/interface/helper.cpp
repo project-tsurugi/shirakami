@@ -4,6 +4,7 @@
 
 #include "include/helper.h"
 
+#include "concurrency_control/wp/include/batch.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
@@ -80,18 +81,29 @@ Status leave(Token const token) { // NOLINT
 }
 
 Status tx_begin(Token const token, bool const read_only, bool const for_batch,
-              std::vector<Storage> write_preserve) { // NOLINT
+                std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
-        ti->set_tx_began(true);
-        ti->set_read_only(read_only);
-        ti->get_write_set().set_for_batch(for_batch);
-
         if (for_batch) {
-            // do write preserve
-            // preserve wp set
+            /**
+             * preserve wp set.
+             * This is preparing for the calculation before the 
+             * critical section for speedup.
+             */
             ti->get_wp_set().reserve(write_preserve.size());
+            std::vector<wp::wp_meta*> wped{};
+            wped.reserve(write_preserve.size());
 
+            // get wp mutex
+            auto wp_mutex = std::move(wp::get_wp_mutex());
+
+            // get batch id
+            auto batch_id = wp::batch::get_counter();
+
+            // compute future epoch
+            auto valid_epoch = epoch::get_global_epoch() + 1;
+
+            // do write preserve
             for (auto&& wp_target : write_preserve) {
                 Storage page_set_meta_storage = wp::get_page_set_meta_storage();
                 std::string_view page_set_meta_storage_view = {
@@ -104,13 +116,31 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                 auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
                         page_set_meta_storage_view, storage_view));
                 if (elem_ptr == nullptr) {
-                    LOG(FATAL);
-                    std::abort();
+                    for (auto&& elem : wped) {
+                        if (Status::OK != elem->remove_wp(batch_id)) {
+                            LOG(FATAL) << "vanish registered wp.";
+                            std::abort();
+                        }
+                    }
+                    // dtor : release wp_mutex
+                    return Status::ERR_FAIL_WP;
                 }
-                //wp::wp_meta* target_wp_meta = *elem_ptr;
-                //target_wp_meta->register_wp()
+                wp::wp_meta* target_wp_meta = *elem_ptr;
+                target_wp_meta->register_wp(valid_epoch, batch_id);
+                wped.emplace_back(
+                        target_wp_meta); // for fast cleanup at failure
             }
+
+            // inc batch counter
+            wp::batch::set_counter(batch_id + 1);
+
+            // dtor : release wp_mutex
         }
+        ti->set_tx_began(true);
+        ti->set_read_only(read_only);
+        ti->get_write_set().set_for_batch(for_batch);
+    } else {
+        return Status::WARN_ALREADY_BEGIN;
     }
 
     return Status::OK;

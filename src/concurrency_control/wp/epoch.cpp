@@ -3,13 +3,16 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
+#include "concurrency_control/wp/include/wp.h"
 
 namespace shirakami::epoch {
 
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
         sleepMs(PARAM_EPOCH_TIME);
+        auto wp_mutex = std::move(wp::get_wp_mutex());
         set_global_epoch(get_global_epoch() + 1);
+        // dtor : release wp_mutex
     }
 }
 
