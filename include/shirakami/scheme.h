@@ -40,7 +40,8 @@ class commit_param {
 public:
     commit_property get_cp() { return cp_; } // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] std::uint64_t get_ctid() const {
+    [[maybe_unused]] [[nodiscard]] std::uint64_t
+    get_ctid() const {
         return ctid_;
     } // NOLINT
 
@@ -172,13 +173,22 @@ enum class Status : std::int32_t {
     WARN_NOT_IN_A_SESSION,
     /**
      * @brief warning
-     * @details If it calls fin function without init, this status is returned.
+     * @details If it calls fin function without init, 
+     * this status is returned.
      */
     WARN_NOT_INIT,
     /**
+     * @brief warning
+     * @details When a batch mode transaction tries to start 
+     * an operation, the status is returned if it is not yet 
+     * time to start.
+     */
+    WARN_PREMATURE,
+    /**
      * @brief waring
      * @details
-     * @a read_from_scan : It read the records from own preceding write. @n
+     * @a read_from_scan : It read the records from own 
+     * preceding write. @n
      * @a insert : operation in the same tx. @n
      * @a update : operation in the same tx. @n
      * @a upsert : operation in the same tx. @n
@@ -283,6 +293,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_NOT_IN_A_SESSION"sv; // NOLINT
         case Status::WARN_NOT_INIT:
             return "WARN_NOT_INIT"sv; // NOLINT
+        case Status::WARN_PREMATURE:
+            return "WARN_PREMATURE"sv; // NOLINT
         case Status::WARN_READ_FROM_OWN_OPERATION:
             return "WARN_READ_FROM_OWN_OPERATION"sv; // NOLINT
         case Status::WARN_SCAN_LIMIT:
@@ -311,8 +323,9 @@ inline constexpr std::string_view to_string_view( // NOLINT
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out,
-                                const Status value) { // NOLINT
+inline std::ostream&
+operator<<(std::ostream& out,
+           const Status value) { // NOLINT
     return out << to_string_view(value);
 }
 
@@ -354,7 +367,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
+inline std::ostream&
+operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
     return out << to_string_view(op);
 }
 

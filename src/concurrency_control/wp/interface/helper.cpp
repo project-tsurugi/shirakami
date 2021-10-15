@@ -136,7 +136,11 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
             // inc batch counter
             wp::batch::set_counter(batch_id + 1);
 
+            ti->set_mode(tx_mode::BATCH);
+            ti->set_valid_epoch(valid_epoch);
             // dtor : release wp_mutex
+        } else {
+            ti->set_mode(tx_mode::OCC);
         }
         ti->set_tx_began(true);
         ti->set_read_only(read_only);

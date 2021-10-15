@@ -383,6 +383,8 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @return Status::OK success
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation 
  * in read only mode.
+ * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
+ * wp in batch mode.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, 
  * so it overwrite its local write set.
  */

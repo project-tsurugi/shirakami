@@ -17,19 +17,33 @@
 
 namespace shirakami {
 
+enum class tx_mode : char {
+    BATCH,
+    OCC,
+};
+
 class alignas(CACHE_LINE_SIZE) session {
 public:
-    using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
-                                                yakushima::node_version64*>>;
+    using node_set_type = std::vector<
+            std::pair<yakushima::node_version64_body,
+                      yakushima::node_version64*>>;
 
     /**
      * @brief compare and swap for visible_.
      */
     bool cas_visible(bool& expected, bool& desired) {
-        return visible_.compare_exchange_weak(expected, desired,
-                                              std::memory_order_release,
-                                              std::memory_order_acquire);
+        return visible_.compare_exchange_weak(
+                expected, desired,
+                std::memory_order_release,
+                std::memory_order_acquire);
     }
+
+    /**
+     * @brief check the existance of @a storage in wp_set_.
+     * @return true exist.
+     * @return false not exist.
+     */
+    bool check_exist_wp_set(Storage storage);
 
     /**
      * @brief clean up about local set.
@@ -49,17 +63,35 @@ public:
     /**
      * @brief getter of @a read_only_
      */
-    [[nodiscard]] bool get_read_only() const { return read_only_; }
+    [[nodiscard]] bool get_read_only() const {
+        return read_only_;
+    }
 
     /**
      * @brief get the value of tx_began_.
      */
-    bool get_tx_began() { return tx_began_.load(std::memory_order_acquire); }
+    bool get_tx_began() {
+        return tx_began_.load(std::memory_order_acquire);
+    }
+
+    /**
+     * @brief getter of @a mode_.
+     */
+    tx_mode get_mode() { return mode_; }
+
+    /**
+     * @brief getter of @a valid_epoch_
+     */
+    epoch::epoch_t get_valid_epoch() {
+        return valid_epoch_;
+    }
 
     /**
      * @brief get the value of visible_.
      */
-    bool get_visible() { return visible_.load(std::memory_order_acquire); }
+    bool get_visible() {
+        return visible_.load(std::memory_order_acquire);
+    }
 
     std::vector<Storage>& get_wp_set() { return wp_set_; }
 
@@ -71,7 +103,9 @@ public:
     /**
      * @brief get the yakushima token used by this session.
      */
-    yakushima::Token get_yakushima_token() { return yakushima_token_; }
+    yakushima::Token get_yakushima_token() {
+        return yakushima_token_;
+    }
 
     void push_to_read_set(read_set_obj&& elem) {
         read_set_.emplace_back(std::move(elem));
@@ -81,7 +115,9 @@ public:
         write_set_.push(std::move(elem));
     }
 
-    void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
+    void set_mrc_tid(tid_word const& tidw) {
+        mrc_tid_ = tidw;
+    }
 
     void set_read_only(bool tf) { read_only_ = tf; }
 
@@ -89,15 +125,27 @@ public:
         tx_began_.store(tf, std::memory_order_release);
     }
 
-    void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
+    void set_mode(tx_mode mode) { mode_ = mode; }
 
-    void set_wp_set(std::vector<Storage> const& wps) { wp_set_ = wps; }
+    void set_valid_epoch(epoch::epoch_t ep) {
+        valid_epoch_ = ep;
+    }
+
+    void set_visible(bool tf) {
+        visible_.store(tf, std::memory_order_release);
+    }
+
+    void set_wp_set(std::vector<Storage> const& wps) {
+        wp_set_ = wps;
+    }
 
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
     }
 
 private:
+    tx_mode mode_{tx_mode::OCC};
+
     /**
      * @brief If this is true, begun transaction by this session can only do (transaction read operations).
      */
@@ -146,6 +194,12 @@ private:
      * @brief local set for phantom avoidance.
      */
     node_set_type node_set_{};
+
+    // for batch field
+    /**
+     * @brief read write batch executes write preserve preserve.
+     */
+    epoch::epoch_t valid_epoch_{};
 };
 
 class session_table {
@@ -163,7 +217,8 @@ public:
     /**
      * @brief getter of session_table_
      */
-    static std::array<session, KVS_MAX_PARALLEL_THREADS>& get_session_table() {
+    static std::array<session, KVS_MAX_PARALLEL_THREADS>&
+    get_session_table() {
         return session_table_;
     }
 
@@ -182,7 +237,8 @@ private:
      * arbitration is performed for fixed-length tables.
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
-            session_table_; // NOLINT
+    static inline std::array<
+            session, KVS_MAX_PARALLEL_THREADS> // NOLINT
+            session_table_;                    // NOLINT
 };
 } // namespace shirakami

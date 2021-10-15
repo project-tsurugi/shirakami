@@ -1,4 +1,6 @@
 
+#include "concurrency_control/wp/include/session.h"
+
 #include "shirakami/interface.h"
 
 namespace shirakami {
@@ -6,9 +8,19 @@ namespace shirakami {
 Status upsert([[maybe_unused]] Token token, [[maybe_unused]] Storage storage,
               [[maybe_unused]] const std::string_view key, // NOLINT
               [[maybe_unused]] const std::string_view val) {
-    // occ
-
-    // batch
+    auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        tx_begin(token); // NOLINT
+    }
+    if (ti->get_mode() == tx_mode::BATCH) {
+        
+    }
+    if (ti->get_read_only()) { return Status::WARN_INVALID_HANDLE; }
+    if (ti->get_mode() == tx_mode::BATCH) {
+        if (!ti->check_exist_wp_set(storage)) {
+            return Status::WARN_INVALID_ARGS;
+        }
+    }
 
     return Status::OK;
 }
