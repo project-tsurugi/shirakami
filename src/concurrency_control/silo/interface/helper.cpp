@@ -149,10 +149,13 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-Status tx_begin(Token const token, bool const read_only, bool const for_batch,
-              [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
+Status
+tx_begin(Token const token, bool const read_only, bool const for_batch,
+         [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_txbegan()) {
+    if (ti->get_txbegan()) {
+        return Status::WARN_ALREADY_BEGIN;
+    } else {
         /**
          * This func includes loading latest global epoch used for epoch-base resource management. This means that this
          * func is also bound of epoch-base resource management such as view management for gc to prevent segv. So this
