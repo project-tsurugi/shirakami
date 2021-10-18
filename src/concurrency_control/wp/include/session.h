@@ -71,7 +71,7 @@ public:
     /**
      * @brief getter of @a mode_.
      */
-    [[nodsicard]] tx_mode get_mode() const { return mode_; }
+    [[nodiscard]] tx_mode get_mode() const { return mode_; }
 
     /**
      * @brief getter of @a valid_epoch_
@@ -81,7 +81,7 @@ public:
     /**
      * @brief get the value of visible_.
      */
-    [[nodsicard]] bool get_visible() { return visible_.load(std::memory_order_acquire); }
+    bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
     std::vector<Storage>& get_wp_set() { return wp_set_; }
 
