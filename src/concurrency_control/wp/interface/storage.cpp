@@ -2,6 +2,8 @@
  * @file wp/storage.cpp
  */
 
+#include <cstdlib>
+
 #include "storage.h"
 
 #include "concurrency_control/wp/include/record.h"
@@ -53,7 +55,8 @@ Status storage::register_storage(Storage& storage) {
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
-                storage_view, &wp_meta_ptr, sizeof(wp_meta_ptr)); // NOLINT
+                storage_view, &wp_meta_ptr,
+                sizeof(wp_meta_ptr)); // NOLINT
         if (yakushima::status::OK != rc) {
             LOG(FATAL) << rc;
             std::abort();
@@ -67,7 +70,7 @@ Status storage::register_storage(Storage& storage) {
 Status storage::exist_storage(Storage storage) {
     auto ret = yakushima::find_storage(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
-    if (ret == yakushima::status::OK) return Status::OK;
+    if (ret == yakushima::status::OK) { return Status::OK; }
     return Status::WARN_NOT_FOUND;
 }
 
@@ -76,7 +79,10 @@ Status storage::delete_storage(Storage storage) { // NOLINT
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
     auto ret = yakushima::find_storage(storage_view);
-    if (ret != yakushima::status::OK) return Status::WARN_INVALID_HANDLE;
+    if ((ret != yakushima::status::OK) ||
+        (!wp::get_finalizing() && storage == wp::get_page_set_meta_storage())) {
+        return Status::WARN_INVALID_HANDLE;
+    }
     // exist storage
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
@@ -111,7 +117,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                                        ? (i + 1) * (scan_res.size() / th_size)
                                        : scan_res.size());
         }
-        for (auto&& th : th_vc) th.join();
+        for (auto&& th : th_vc) { th.join(); }
     }
 
     if (!wp::get_finalizing()) {
@@ -125,7 +131,9 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                  sizeof(page_set_meta_storage)},
                 storage_view));
         if (elem_ptr == nullptr) {
-            LOG(FATAL) << "missing error";
+            LOG(FATAL) << "missing error" << std::endl
+                       << " " << page_set_meta_storage << " " << storage
+                       << std::endl;
             std::abort();
         }
         delete *elem_ptr; // NOLINT
@@ -142,12 +150,11 @@ Status storage::delete_storage(Storage storage) { // NOLINT
             LOG(FATAL) << "missing error";
             std::abort();
         }
-
-        if (yakushima::status::OK !=
-            yakushima::delete_storage(storage_view)) { // NOLINT
-            LOG(FATAL) << "missing error";
-            std::abort();
-        }
+    }
+    if (yakushima::status::OK !=
+        yakushima::delete_storage(storage_view)) { // NOLINT
+        LOG(FATAL) << "missing error";
+        std::abort();
     }
 
     return Status::OK;

@@ -62,6 +62,7 @@ TEST_F(wp_test, init_fin) { // NOLINT
     ASSERT_EQ(Status::OK, wp::init());
     ASSERT_EQ(Status::WARN_ALREADY_INIT, wp::init());
     ASSERT_EQ(Status::OK, wp::fin());
+    ASSERT_EQ(Status::OK, wp::init());
 }
 
 TEST_F(wp_test, wp_meta_register) { // NOLINT

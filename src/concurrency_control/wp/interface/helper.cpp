@@ -31,13 +31,19 @@ Status enter(Token& token) { // NOLINT
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
+    // about engine
     epoch::fin();
-    delete_all_records();
+    delete_all_records(); // This should be before wp::fin();
     wp::fin(); // note: this use yakushima.
+
+    // about index
     yakushima::fin();
+
+    // clear flag
     set_initialized(false);
 } catch (std::exception& e) {
-    std::cerr << "fin() : " << e.what() << std::endl;
+    LOG(FATAL);
+    std::abort();
 }
 
 Status
