@@ -18,9 +18,16 @@ class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
     Record() = default;
 
+    Record(std::string_view const key, std::string_view const val) : key_(key) {
+        latest_.store(new version(val), std::memory_order_release);
+        tidw_.set_lock(true);
+    }
+
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
     }
+
+    std::string_view get_key() { return key_; }
 
     tid_word& get_tidw_ref() { return tidw_; }
 
@@ -41,6 +48,8 @@ private:
      * @details The version infomation which it should have at each version.
      */
     std::atomic<version*> latest_{nullptr};
+
+    std::string key_{};
 };
 
 } // namespace shirakami

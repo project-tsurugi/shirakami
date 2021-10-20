@@ -7,6 +7,7 @@
 #include "concurrency_control/wp/include/batch.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/interface.h"
@@ -34,7 +35,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     // about engine
     epoch::fin();
     delete_all_records(); // This should be before wp::fin();
-    wp::fin(); // note: this use yakushima.
+    wp::fin();            // note: this use yakushima.
 
     // about index
     yakushima::fin();
@@ -121,7 +122,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                         sizeof(wp_target)};
                 auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
                         page_set_meta_storage_view, storage_view));
-                if (elem_ptr == nullptr) {
+                auto cleanup_process = [ti, &wped, batch_id]() {
                     for (auto&& elem : wped) {
                         if (Status::OK != elem->remove_wp(batch_id)) {
                             LOG(FATAL) << "vanish registered wp.";
@@ -129,11 +130,18 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                         }
                     }
                     ti->get_wp_set().clear();
+                };
+                if (elem_ptr == nullptr) {
+                    cleanup_process();
                     // dtor : release wp_mutex
                     return Status::ERR_FAIL_WP;
                 }
                 wp::wp_meta* target_wp_meta = *elem_ptr;
-                target_wp_meta->register_wp(valid_epoch, batch_id);
+                if (Status::OK !=
+                    target_wp_meta->register_wp(valid_epoch, batch_id)) {
+                    cleanup_process();
+                    return Status::ERR_FAIL_WP;
+                }
                 wped.emplace_back(
                         target_wp_meta); // for fast cleanup at failure
                 ti->get_wp_set().emplace_back(wp_target);

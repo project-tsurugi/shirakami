@@ -13,6 +13,8 @@
 
 #include "concurrency_control/wp/include/tid.h"
 
+#include "shirakami/tuple.h"
+
 #include "yakushima/include/kvs.h"
 
 namespace shirakami {
@@ -53,6 +55,8 @@ public:
      */
     void clean_up_tx_property();
 
+    Tuple* get_cache_for_search_ptr() { return &cache_for_search_; }
+
     /**
      * @brief get the value of mrc_tid_.
      */
@@ -66,7 +70,9 @@ public:
     /**
      * @brief get the value of tx_began_.
      */
-    [[nodiscard]] bool get_tx_began() { return tx_began_.load(std::memory_order_acquire); }
+    [[nodiscard]] bool get_tx_began() {
+        return tx_began_.load(std::memory_order_acquire);
+    }
 
     /**
      * @brief getter of @a mode_.
@@ -76,7 +82,9 @@ public:
     /**
      * @brief getter of @a valid_epoch_
      */
-    [[nodiscard]] epoch::epoch_t get_valid_epoch() const { return valid_epoch_; }
+    [[nodiscard]] epoch::epoch_t get_valid_epoch() const {
+        return valid_epoch_;
+    }
 
     /**
      * @brief get the value of visible_.
@@ -103,6 +111,8 @@ public:
         write_set_.push(std::move(elem));
     }
 
+    void set_cache_for_search(Tuple tuple) { cache_for_search_ = tuple; }
+
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
     void set_read_only(bool tf) { read_only_ = tf; }
@@ -121,6 +131,27 @@ public:
 
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
+    }
+
+    Status update_node_set(yakushima::node_version64* nvp) { // NOLINT
+        for (auto&& elem : node_set_) {
+            if (std::get<1>(elem) == nvp) {
+                yakushima::node_version64_body nvb = nvp->get_stable_version();
+                if (std::get<0>(elem).get_vinsert_delete() + 1 !=
+                    nvb.get_vinsert_delete()) {
+                    return Status::ERR_PHANTOM;
+                }
+                std::get<0>(elem) = nvb; // update
+                /**
+                  * note : discussion.
+                  * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
+                  * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
+                  * Even if you find a match, you have to search for everything because there may be other matches.
+                  * If you do not allow duplication, the situation is the opposite.
+                  */
+            }
+        }
+        return Status::OK;
     }
 
 private:
@@ -153,10 +184,17 @@ private:
     std::vector<read_set_obj> read_set_{};
 
     /**
+     * @brief cache for search api.
+     * @details The search function returns Tuple *. For speeding up, the 
+     * entity does not currently exist on the table, so we have it here.
+     */
+    Tuple cache_for_search_;
+
+    /**
      * @brief local wp set.
      * @details If this session processes long transaction in a batch mode and 
-     * executes transactional write operations, it is for cheking whether the target 
-     * of the operation was write preserved properly by use this infomation.
+     * executes transactional write operations, it is for cheking whether the 
+     * target of the operation was write preserved properly by use this infomation.
      */
     std::vector<Storage> wp_set_{};
 

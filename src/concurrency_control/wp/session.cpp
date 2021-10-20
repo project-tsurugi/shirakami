@@ -1,5 +1,6 @@
 
 #include "include/session.h"
+#include "include/tuple_local.h"
 
 namespace shirakami {
 

@@ -107,9 +107,17 @@ public:
     /**
      * @brief single register.
      */
-    void register_wp(std::size_t epoc, std::size_t id) {
+    Status register_wp(std::size_t epoc, std::size_t id) {
         std::unique_lock u_lock{wped_mtx_};
-        wped_.emplace_back(epoc, id);
+        if (wped_.empty()) {
+            wped_.emplace_back(epoc, id);
+            return Status::OK;
+        }
+        /**
+         * Since the overlapping of wp is complicated, it is optimized or used 
+         * as wp-k.
+         */
+        return Status::ERR_FAIL_WP;
     }
 
     /**

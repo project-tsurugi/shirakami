@@ -9,7 +9,8 @@
 
 namespace shirakami {
 
-Status search_key(Token token, Storage storage, const std::string_view key, // NOLINT
+Status search_key(Token token, Storage storage,
+                  const std::string_view key, // NOLINT
                   Tuple** const tuple) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
@@ -18,7 +19,9 @@ Status search_key(Token token, Storage storage, const std::string_view key, // N
         return snapshot_interface::lookup_snapshot(ti, storage, key, tuple);
     }
 
-    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
+    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},
+            key))}; // NOLINT
     if (rec_double_ptr == nullptr) {
         *tuple = nullptr;
         return Status::WARN_NOT_FOUND;

@@ -65,10 +65,13 @@ private:
 
 class write_set_obj { // NOLINT
 public:
-    write_set_obj(std::string_view const storage, OP_TYPE const op,
-                  Record* const rec_ptr, std::string_view const key,
-                  std::string_view const val)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr), key_(key), val_(val) {}
+    write_set_obj(Storage const storage, OP_TYPE const op,
+                  Record* const rec_ptr, std::string_view const val)
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {}
+
+    write_set_obj(Storage const storage, OP_TYPE const op,
+                  Record* const rec_ptr)
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr) {}
 
     write_set_obj(const write_set_obj& right) = delete;
     write_set_obj(write_set_obj&& right) = default;
@@ -84,6 +87,10 @@ public:
 
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
 
+    [[nodiscard]] std::string_view get_val() const { return val_; }
+
+    void set_op(OP_TYPE op) { op_ = op; }
+
     /**
      * @brief set value
      * @details It is for twice update in the same transaction.
@@ -94,7 +101,7 @@ private:
     /**
      * @brief The target storage of this write.
      */
-    std::string storage_{};
+    Storage storage_{};
     /**
      * @brief The operation type of this write.
      */
@@ -105,10 +112,6 @@ private:
      * For insert, this is a pointer to new existing record.
      */
     Record* rec_ptr_{};
-    /**
-     * @brief key of targets.
-     */
-    std::string key_{};
     /**
      * @brief Update cache for update.
      */
@@ -144,6 +147,13 @@ public:
      * @brief push an element to local write set.
      */
     void push(write_set_obj&& elem);
+
+    /**
+     * @brief check whether it already executed write operation.
+     * @param[in] rec_ptr the target record.
+     * @return the pointer of element. If it is nullptr, it is not found.
+     */
+    write_set_obj* search(Record* const rec_ptr);
 
     void set_for_batch(bool const tf) { for_batch_ = tf; }
 

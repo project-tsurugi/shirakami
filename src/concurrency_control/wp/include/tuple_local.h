@@ -16,7 +16,9 @@ namespace shirakami {
  */
 class Tuple::Impl {
 public:
-    Impl() {} // NOLINT
+    Impl() = default;
+    
+    Impl(std::string_view key, std::string_view val) : key_(key), val_(val) {}
 
     [[nodiscard]] std::string_view get_key() const { return key_; }
 

@@ -342,6 +342,8 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * If this is false, local write set is represented by std::vector.
  * @param[in] write_preserve Notice of writing required for special protocols for long 
  * transactions. A write that does not give this notice cannot be executed.
+ * If the user mistakenly sets a duplicate element in write_preserve, it will be 
+ * treated as unique internally.
  * @attention If you specify read_only is true, you can not execute transactional 
  * write operation in this transaction.
  * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without termination 

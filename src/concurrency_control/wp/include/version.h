@@ -4,35 +4,39 @@
 
 #pragma once
 
+#include <atomic>
+#include <string_view>
+
 #include "cpu.h"
 
 #include "concurrency_control/wp/include/tid.h"
 
-#include <atomic>
+#include "glog/logging.h"
 
 namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) version {
 public:
-    explicit version(std::string_view vinfo) { set_pv(vinfo); }
+    explicit version(std::string_view value) { set_value(value); }
 
     version* get_next() { return next_.load(std::memory_order_acquire); }
 
-    std::string* get_pv() { return pv_.load(std::memory_order_acquire); }
-
-    void set_pv(std::string_view vinfo) {
-        pv_.store(new std::string(vinfo), std::memory_order_release); // NOLINT
+    std::string_view get_value() {
+        std::string* str_ptr{value_.load(std::memory_order_acquire)};
+        return *str_ptr;
     }
 
     /**
-     * @brief set pointer to value
-     * @details allocate new heap memory for new value, set pointer to the value, and return old value by @a old_v.
-     * @param[in] vinfo
-     * @param[out] old_v pointer to old value.
+     * @brief set value
+     * @pre This is for initialization of version.
+     * If you use in other case, it may occurs std::abort.
      */
-    void set_pv(std::string_view vinfo, std::string** old_v) {
-        *old_v = get_pv();
-        set_pv(vinfo);
+    void set_value(std::string_view value) {
+        if (value_.load(std::memory_order_acquire) != nullptr) {
+            LOG(FATAL) << "usage";
+            std::abort();
+        }
+        value_.store(new std::string(value), std::memory_order_release);
     }
 
     void set_next(version* next) {
@@ -45,9 +49,9 @@ private:
     tid_word tid_{};
 
     /**
-     * @brief pointer to value.
+     * @brief value.
      */
-    std::atomic<std::string*> pv_{nullptr};
+    std::atomic<std::string*> value_{nullptr};
     /**
      * @brief pointer to next version.
      */

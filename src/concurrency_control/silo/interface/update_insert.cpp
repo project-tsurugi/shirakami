@@ -146,7 +146,8 @@ RETRY_FIND_RECORD:
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_PHANTOM) {
                 /**
-                 * This This transaction is confirmed to be aborted because the previous scan was destroyed by an insert
+                 * This This transaction is confirmed to be aborted 
+                 * because the previous scan was destroyed by an insert
                  * by another transaction.
                  */
                 abort(token);
