@@ -18,11 +18,9 @@ namespace shirakami {
 
 class read_set_obj { // NOLINT
 public:
-    read_set_obj(std::string_view const storage, std::string_view const key,
-                 std::string_view const val, const Record* const rec_ptr,
-                 tid_word const& tid)
-        : storage_(storage), key_(key), val_(val), rec_ptr_(rec_ptr),
-          tid_(tid) {}
+    read_set_obj(Storage const storage, const Record* const rec_ptr,
+                 tid_word const tid, std::string* const val)
+        : storage_(storage), rec_ptr_(rec_ptr), tid_(tid), val_(val) {}
 
     read_set_obj(const read_set_obj& right) = delete;
     read_set_obj(read_set_obj&& right) = default;
@@ -30,11 +28,7 @@ public:
     read_set_obj& operator=(const read_set_obj& right) = delete; // NOLINT
     read_set_obj& operator=(read_set_obj&& right) = default;
 
-    [[nodiscard]] std::string_view get_storage() const { return storage_; }
-
-    [[nodiscard]] std::string_view get_key() const { return key_; }
-
-    [[nodiscard]] std::string_view get_val() const { return val_; }
+    [[nodiscard]] Storage get_storage() const { return storage_; }
 
     [[nodiscard]] const Record* get_rec_ptr() const { return rec_ptr_; }
 
@@ -44,23 +38,22 @@ private:
     /**
      * @brief The target storage of this write.
      */
-    std::string storage_{};
-    /**
-     * @brief Key of targets.
-     */
-    std::string key_{};
-    /**
-     * @brief Value of targets.
-     */
-    std::string val_{};
+    Storage storage_{};
+
     /**
      * @brief Pointer to the read record in database.
      */
     const Record* rec_ptr_{nullptr};
+
     /**
      * @brief Timestamp for optimistic read.
      */
     tid_word tid_{};
+
+    /**
+     * @brief Value of targets.
+     */
+    std::string* val_{};
 };
 
 class write_set_obj { // NOLINT

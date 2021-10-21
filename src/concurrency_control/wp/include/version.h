@@ -19,12 +19,9 @@ class alignas(CACHE_LINE_SIZE) version {
 public:
     explicit version(std::string_view value) { set_value(value); }
 
-    version* get_next() { return next_.load(std::memory_order_acquire); }
+    [[nodiscard]] version* get_next() const { return next_.load(std::memory_order_acquire); }
 
-    std::string_view get_value() {
-        std::string* str_ptr{value_.load(std::memory_order_acquire)};
-        return *str_ptr;
-    }
+    [[nodiscard]] std::string* get_value() const { return value_.load(std::memory_order_acquire); }
 
     /**
      * @brief set value

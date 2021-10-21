@@ -31,61 +31,66 @@ Status upsert(Token token, Storage storage, const std::string_view key,
         return Status::WARN_INVALID_ARGS;
     }
 
-    for (;;) {
+RETRY_INDEX_ACCESS:
 
-        // index access
-        Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-                {reinterpret_cast<char*>(&storage), sizeof(storage)},
-                key))}; // NOLINT
-        Record* rec_ptr{};
-        if (rec_d_ptr != nullptr) {
-            rec_ptr = *rec_d_ptr;
-            write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-            if (in_ws != nullptr) {
-                if (in_ws->get_op() == OP_TYPE::DELETE) {
-                    in_ws->set_op(OP_TYPE::UPDATE);
-                }
-                in_ws->set_val(val);
-                return Status::WARN_WRITE_TO_LOCAL_WRITE;
+    // index access
+    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},
+            key))}; // NOLINT
+    Record* rec_ptr{};
+    if (rec_d_ptr != nullptr) {
+        // do update
+        // check local write
+        rec_ptr = *rec_d_ptr;
+        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+        if (in_ws != nullptr) {
+            if (in_ws->get_op() == OP_TYPE::DELETE) {
+                in_ws->set_op(OP_TYPE::UPDATE);
             }
-            // do update
-        } else {
-            rec_ptr = nullptr;
-            // try insert
+            in_ws->set_val(val);
+            return Status::WARN_WRITE_TO_LOCAL_WRITE;
         }
 
-        if (rec_ptr == nullptr) {
-            // try insert
-            rec_ptr = new Record(key, val); // NOLINT
-            yakushima::node_version64* nvp{};
-            yakushima::status insert_result{yakushima::put<Record*>(
-                    ti->get_yakushima_token(),
-                    {reinterpret_cast<char*>(&storage), sizeof(storage)}, key,
-                    &rec_ptr, sizeof(Record*), nullptr,
-                    static_cast<yakushima::value_align_type>(sizeof(Record*)),
-                    &nvp)};
-            if (insert_result == yakushima::status::OK) {
-                Status check_node_set_res{ti->update_node_set(nvp)};
-                if (check_node_set_res == Status::ERR_PHANTOM) {
-                    /**
+        // prepare write
+        tid_word check_tid(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+        if (check_tid.get_latest() && check_tid.get_absent()) {
+            /**
+             * The record being inserted has been detected.
+             */
+            return Status::WARN_CONCURRENT_INSERT;
+        }
+
+        ti->get_write_set().push({storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
+
+        return Status::OK;
+    } else {
+        // try insert
+        rec_ptr = new Record(key, val); // NOLINT
+        yakushima::node_version64* nvp{};
+        yakushima::status insert_result{yakushima::put<Record*>(
+                ti->get_yakushima_token(),
+                {reinterpret_cast<char*>(&storage), sizeof(storage)}, key,
+                &rec_ptr, sizeof(Record*), nullptr,
+                static_cast<yakushima::value_align_type>(sizeof(Record*)),
+                &nvp)};
+        if (insert_result == yakushima::status::OK) {
+            Status check_node_set_res{ti->update_node_set(nvp)};
+            if (check_node_set_res == Status::ERR_PHANTOM) {
+                /**
                          * This This transaction is confirmed to be aborted 
                          * because the previous scan was destroyed by an insert
                          * by another transaction.
                          */
-                    abort(token);
-                    return Status::ERR_PHANTOM;
-                }
-                ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
-                return Status::OK;
+                abort(token);
+                return Status::ERR_PHANTOM;
             }
-            // else insert_result == Status::WARN_ALREADY_EXISTS
-            // so retry from index access
-            delete rec_ptr;
-            continue;
+            ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+            return Status::OK;
         }
-        // try update
-        tid_word check_tid(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
-        return Status::OK;
+        // else insert_result == Status::WARN_ALREADY_EXISTS
+        // so retry from index access
+        delete rec_ptr;          // NOLINT
+        goto RETRY_INDEX_ACCESS; // NOLINT
     }
 }
 

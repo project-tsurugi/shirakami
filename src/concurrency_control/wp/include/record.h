@@ -18,9 +18,15 @@ class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
     Record() = default;
 
+    /**
+     * @brief ctor.
+     * @details This is used for insert logic.
+     */
     Record(std::string_view const key, std::string_view const val) : key_(key) {
         latest_.store(new version(val), std::memory_order_release);
         tidw_.set_lock(true);
+        tidw_.set_latest(true);
+        tidw_.set_absent(true);
     }
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
@@ -28,6 +34,8 @@ public:
     }
 
     std::string_view get_key() { return key_; }
+
+    [[nodiscard]] version* get_latest() const { return latest_.load(std::memory_order_acquire); }
 
     tid_word& get_tidw_ref() { return tidw_; }
 

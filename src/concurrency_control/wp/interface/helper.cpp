@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "atomic_wrapper.h"
+
 #include "include/helper.h"
 
 #include "concurrency_control/wp/include/batch.h"
@@ -163,6 +165,64 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
         return Status::WARN_ALREADY_BEGIN;
     }
 
+    return Status::OK;
+}
+
+Status read_record(Record* const rec_ptr, tid_word& tid, std::string*& val) {
+    tid_word f_check;
+    tid_word s_check;
+
+    f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+
+    for (;;) {
+        auto return_some_others_write_status = [&f_check] {
+            if (f_check.get_absent() && f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_INSERT;
+            }
+            if (f_check.get_absent() && !f_check.get_latest()) {
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+            return Status::WARN_CONCURRENT_UPDATE;
+        };
+
+#if PARAM_RETRY_READ > 0
+        auto check_concurrent_others_write = [&f_check] {
+            if (f_check.get_absent()) {
+                if (f_check.get_latest()) {
+                    return Status::WARN_CONCURRENT_INSERT;
+                }
+                return Status::WARN_CONCURRENT_DELETE;
+            }
+            return Status::OK;
+        };
+
+        std::size_t repeat_num{0};
+#endif
+
+        while (f_check.get_lock()) {
+#if PARAM_RETRY_READ == 0
+            return return_some_others_write_status();
+#else
+            if (repeat_num >= PARAM_RETRY_READ) {
+                return return_some_others_write_status();
+            }
+            _mm_pause();
+            f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+            Status s{check_concurrent_others_write()};
+            if (s != Status::OK) return s;
+            ++repeat_num;
+#endif
+        }
+
+        if (f_check.get_absent()) { return Status::WARN_CONCURRENT_DELETE; }
+
+        val = rec_ptr->get_latest()->get_value();
+        s_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+        if (f_check == s_check) { break; }
+        f_check = s_check;
+    }
+
+    tid = f_check;
     return Status::OK;
 }
 

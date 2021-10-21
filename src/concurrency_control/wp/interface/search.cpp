@@ -33,9 +33,10 @@ Status search_key(Token const token, Storage const storage, std::string_view con
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        *ti->get_cache_for_search_ptr() = Tuple(in_ws->get_rec_ptr()->get_key(),in_ws->get_val());
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(in_ws->get_rec_ptr()->get_key());
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(in_ws->get_val());
         *tuple = ti->get_cache_for_search_ptr();
-
+        return Status::WARN_READ_FROM_OWN_OPERATION;
     }
     // version selection
 
