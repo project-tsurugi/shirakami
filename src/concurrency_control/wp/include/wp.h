@@ -135,7 +135,7 @@ public:
      * @return Status::OK success.
      * @return Status::WARN_NOT_FOUND fail.
      */
-    Status remove_wp(std::size_t id) {
+    [[nodiscard]] Status remove_wp(std::size_t const id) {
         std::unique_lock u_lock{wped_mtx_};
         for (auto it = wped_.begin(); it != wped_.end();) {
             if ((*it).second == id) {
@@ -147,7 +147,7 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
-    std::size_t size_wp() {
+    [[nodiscard]] std::size_t size_wp() {
         std::shared_lock sh_lock{wped_mtx_};
         return wped_.size();
     }

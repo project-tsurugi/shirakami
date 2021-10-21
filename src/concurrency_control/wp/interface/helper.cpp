@@ -49,6 +49,25 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     std::abort();
 }
 
+[[maybe_unused]] wp::wp_meta::wped_type find_wp(Storage const storage) {
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        std::string_view page_set_meta_storage_view = {
+                reinterpret_cast<char*>(&page_set_meta_storage),
+                sizeof(page_set_meta_storage)};
+        std::string_view storage_view = {
+                reinterpret_cast<const char*>(&storage), sizeof(storage)};
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
+                page_set_meta_storage_view, storage_view));
+
+        if (elem_ptr == nullptr) {
+            LOG(FATAL) << "There is no metadata that should be there.";
+            std::abort();
+        }
+        wp::wp_meta* target_wp_meta = *elem_ptr;
+
+        return target_wp_meta->get_wped();      
+}
+
 Status
 init([[maybe_unused]] bool enable_recovery,
      [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT

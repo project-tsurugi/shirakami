@@ -13,12 +13,15 @@ Status search_key(Token token, Storage storage,
                   const std::string_view key, // NOLINT
                   Tuple** const tuple) {
     auto* ti = static_cast<session*>(token);
+
+    // check flags
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::lookup_snapshot(ti, storage, key, tuple);
     }
 
+    // index access
     Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<char*>(&storage), sizeof(storage)},
             key))}; // NOLINT
@@ -28,6 +31,7 @@ Status search_key(Token token, Storage storage,
     }
     Record* rec_ptr{*rec_double_ptr};
 
+    // check read own write
     write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -37,6 +41,7 @@ Status search_key(Token token, Storage storage,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
+    // data access
     read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
