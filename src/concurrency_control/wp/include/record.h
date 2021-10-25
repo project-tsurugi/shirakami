@@ -24,7 +24,7 @@ public:
      * @details This is used for insert logic.
      */
     Record(std::string_view const key, std::string_view const val) : key_(key) {
-        latest_.store(new version(val), std::memory_order_release);
+        latest_.store(new version(val), std::memory_order_release); // NOLINT
         tidw_.set_lock(true);
         tidw_.set_latest(true);
         tidw_.set_absent(true);

@@ -21,20 +21,25 @@ extern Status commit([[maybe_unused]] Token token, // NOLINT
     auto* ti = static_cast<session*>(token);
 
     auto process = [](write_set_obj* wso_ptr) {
-        tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
-        update_tid.set_lock(false);
-        update_tid.set_absent(false);
         switch (wso_ptr->get_op()) {
             case OP_TYPE::INSERT: {
+                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
+                update_tid.set_lock(false);
+                update_tid.set_absent(false);
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;
             }
             case OP_TYPE::UPDATE: {
+                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
+                update_tid.set_lock(false);
+                update_tid.set_absent(false);
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;
             }
-            default:
+            default: {
                 LOG(FATAL) << "unknown operation type.";
+                break;
+            }
         }
     };
 

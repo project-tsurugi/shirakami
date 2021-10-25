@@ -23,8 +23,8 @@ Status search_key(Token token, Storage storage,
 
     // index access
     Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},
-            key))}; // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};                                               // NOLINT
     if (rec_double_ptr == nullptr) {
         tuple = nullptr;
         return Status::WARN_NOT_FOUND;

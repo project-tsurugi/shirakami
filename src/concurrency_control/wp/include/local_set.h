@@ -19,8 +19,8 @@ namespace shirakami {
 class read_set_obj { // NOLINT
 public:
     read_set_obj(Storage const storage, const Record* const rec_ptr,
-                 tid_word const tid, std::string* const val)
-        : storage_(storage), rec_ptr_(rec_ptr), tid_(tid), val_(val) {}
+                 tid_word const tid) // NOLINT
+        : storage_(storage), rec_ptr_(rec_ptr), tid_(tid) {}
 
     read_set_obj(const read_set_obj& right) = delete;
     read_set_obj(read_set_obj&& right) = default;
@@ -49,11 +49,6 @@ private:
      * @brief Timestamp for optimistic read.
      */
     tid_word tid_{};
-
-    /**
-     * @brief Value of targets.
-     */
-    std::string* val_{};
 };
 
 class write_set_obj { // NOLINT
@@ -80,6 +75,8 @@ public:
 
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
 
+    [[nodiscard]] Storage get_storage() const { return storage_; }
+    
     [[nodiscard]] std::string_view get_val() const { return val_; }
 
     void set_op(OP_TYPE op) { op_ = op; }
@@ -146,7 +143,7 @@ public:
      * @param[in] rec_ptr the target record.
      * @return the pointer of element. If it is nullptr, it is not found.
      */
-    write_set_obj* search(Record* const rec_ptr);
+    write_set_obj* search(Record* rec_ptr);
 
     void set_for_batch(bool const tf) { for_batch_ = tf; }
 

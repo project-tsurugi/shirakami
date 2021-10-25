@@ -35,8 +35,8 @@ RETRY_INDEX_ACCESS:
 
     // index access
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},
-            key))}; // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};                                               // NOLINT
     Record* rec_ptr{};
     if (rec_d_ptr != nullptr) {
         // do update
@@ -60,38 +60,38 @@ RETRY_INDEX_ACCESS:
             return Status::WARN_CONCURRENT_INSERT;
         }
 
-        ti->get_write_set().push({storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
+        ti->get_write_set().push(
+                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
 
         return Status::OK;
-    } else {
-        // try insert
-        rec_ptr = new Record(key, val); // NOLINT
-        yakushima::node_version64* nvp{};
-        yakushima::status insert_result{yakushima::put<Record*>(
-                ti->get_yakushima_token(),
-                {reinterpret_cast<char*>(&storage), sizeof(storage)}, key,
-                &rec_ptr, sizeof(Record*), nullptr,
-                static_cast<yakushima::value_align_type>(sizeof(Record*)),
-                &nvp)};
-        if (insert_result == yakushima::status::OK) {
-            Status check_node_set_res{ti->update_node_set(nvp)};
-            if (check_node_set_res == Status::ERR_PHANTOM) {
-                /**
+    }
+    // try insert
+    rec_ptr = new Record(key, val); // NOLINT
+    yakushima::node_version64* nvp{};
+    yakushima::status insert_result{yakushima::put<Record*>(
+            ti->get_yakushima_token(),
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},      // NOLINT
+            key, &rec_ptr, sizeof(Record*), nullptr,                   // NOLINT
+            static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
+            &nvp)};
+    if (insert_result == yakushima::status::OK) {
+        Status check_node_set_res{ti->update_node_set(nvp)};
+        if (check_node_set_res == Status::ERR_PHANTOM) {
+            /**
                          * This This transaction is confirmed to be aborted 
                          * because the previous scan was destroyed by an insert
                          * by another transaction.
                          */
-                abort(token);
-                return Status::ERR_PHANTOM;
-            }
-            ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
-            return Status::OK;
+            abort(token);
+            return Status::ERR_PHANTOM;
         }
-        // else insert_result == Status::WARN_ALREADY_EXISTS
-        // so retry from index access
-        delete rec_ptr;          // NOLINT
-        goto RETRY_INDEX_ACCESS; // NOLINT
+        ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+        return Status::OK;
     }
+    // else insert_result == Status::WARN_ALREADY_EXISTS
+    // so retry from index access
+    delete rec_ptr;          // NOLINT
+    goto RETRY_INDEX_ACCESS; // NOLINT
 }
 
 } // namespace shirakami

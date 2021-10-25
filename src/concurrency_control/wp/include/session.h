@@ -114,7 +114,8 @@ public:
         write_set_.push(std::move(elem));
     }
 
-    void set_cache_for_search(Tuple tuple) { cache_for_search_ = tuple; }
+    void set_cache_for_search(Tuple tuple) { cache_for_search_ = tuple; } // NOLINT
+    // because Tuple is small size data.
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 

@@ -18,7 +18,7 @@ Tuple::Tuple(const Tuple& right) {
 
 Tuple::Tuple(Tuple&& right) { pimpl_ = std::move(right.pimpl_); }
 
-Tuple& Tuple::operator=(const Tuple& right) {
+Tuple& Tuple::operator=(const Tuple& right) { // NOLINT
     this->pimpl_ = std::make_unique<Impl>(*right.pimpl_);
 
     return *this;

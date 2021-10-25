@@ -64,11 +64,11 @@ void local_write_set::unlock(std::size_t num) {
         tid_word expected{};
         tid_word desired{};
         expected = loadAcquire(
-                we_ptr->get_rec_ptr()->get_tidw_ref().obj_); // NOLINT
+                we_ptr->get_rec_ptr()->get_tidw_ref().get_obj()); // NOLINT
         desired = expected;
         desired.set_lock(false);
-        storeRelease(we_ptr->get_rec_ptr()->get_tidw_ref().obj_,
-                     desired.obj_); // NOLINT
+        storeRelease(we_ptr->get_rec_ptr()->get_tidw_ref().get_obj(),
+                     desired.get_obj()); // NOLINT
     };
     std::size_t ctr{0};
     if (get_for_batch()) {
