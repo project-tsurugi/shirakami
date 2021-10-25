@@ -79,7 +79,7 @@ TEST_F(insert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tup{};
-    ASSERT_EQ(Status::OK, search_key(s, st, k, &tup));
+    ASSERT_EQ(Status::OK, search_key(s, st, k, tup));
     ASSERT_EQ(memcmp(tup->get_value().data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

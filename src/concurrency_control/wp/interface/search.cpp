@@ -14,7 +14,7 @@
 namespace shirakami {
 
 Status search_key(Token const token, Storage const storage,
-                  std::string_view const key, Tuple** const tuple) {
+                  std::string_view const key, Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
@@ -30,7 +30,7 @@ Status search_key(Token const token, Storage const storage,
                                      sizeof(storage)}, // NOLINT
                                     key))};
     if (rec_d_ptr == nullptr) {
-        *tuple = nullptr;
+        tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_d_ptr};
@@ -44,7 +44,7 @@ Status search_key(Token const token, Storage const storage,
         ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
                 in_ws->get_rec_ptr()->get_key());
         ti->get_cache_for_search_ptr()->get_pimpl()->set_val(in_ws->get_val());
-        *tuple = ti->get_cache_for_search_ptr();
+        tuple = ti->get_cache_for_search_ptr();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -65,9 +65,9 @@ Status search_key(Token const token, Storage const storage,
                                             read_val);
             ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
             ti->get_cache_for_search_ptr()->get_pimpl()->set_val(*read_val);
-            *tuple = ti->get_cache_for_search_ptr();
+            tuple = ti->get_cache_for_search_ptr();
         } else {
-            *tuple = nullptr;
+            tuple = nullptr;
         }
         return rs;
     } else {
@@ -91,7 +91,7 @@ Status search_key(Token const token, Storage const storage,
                     rec_ptr->get_key());
             ti->get_cache_for_search_ptr()->get_pimpl()->set_val(
                     *ver->get_value());
-            *tuple = ti->get_cache_for_search_ptr();
+            tuple = ti->get_cache_for_search_ptr();
         };
         for (;;) {
             if (ver == nullptr) {

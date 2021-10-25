@@ -45,11 +45,11 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             Tuple* t{};
 #ifdef CPR
-            while (Status::OK != search_key(s, storage, k, &t)) {
+            while (Status::OK != search_key(s, storage, k, t)) {
                 ;
             }
 #else
-            ASSERT_EQ(Status::OK, search_key(s, storage, k, &t));
+            ASSERT_EQ(Status::OK, search_key(s, storage, k, t));
 #endif
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
@@ -61,9 +61,9 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
             Tuple* t{};
-            Status res{search_key(s, storage, k, &t)};
+            Status res{search_key(s, storage, k, t)};
             while (res == Status::WARN_CONCURRENT_UPDATE) {
-                res = search_key(s, storage, k, &t);
+                res = search_key(s, storage, k, t);
             }
             if (res != Status::OK) {
                 LOG(FATAL) << "fatal error";
@@ -85,11 +85,11 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             ASSERT_EQ(Status::OK, enter(s));
             Tuple* tuple{};
 #ifdef CPR
-            while (Status::OK != search_key(s, storage, k, &tuple)) {
+            while (Status::OK != search_key(s, storage, k, tuple)) {
                 ;
             }
 #else
-            ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+            ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
 #endif
             ASSERT_NE(nullptr, tuple);
             std::int64_t v{*reinterpret_cast<std::int64_t*>( // NOLINT

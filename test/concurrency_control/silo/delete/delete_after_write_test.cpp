@@ -58,11 +58,11 @@ TEST_F(delete_after_write, delete_after_update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     Tuple* tuple{};
 #ifdef CPR
-    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, &tuple)) {
+    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) {
         ;
     }
 #else
-    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, &tuple)) {
+    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) {
         ;
     }
 #endif

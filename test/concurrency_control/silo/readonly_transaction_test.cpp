@@ -54,19 +54,19 @@ TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
     Tuple* tuple{};
 #ifdef CPR
-    auto ret = read_from_scan(s, handle, &tuple);
+    auto ret = read_from_scan(s, handle, tuple);
     while (ret == Status::WARN_CONCURRENT_UPDATE) {
-        ret = read_from_scan(s, handle, &tuple);
+        ret = read_from_scan(s, handle, tuple);
     }
     ASSERT_EQ(Status::OK, ret);
-    ret = read_from_scan(s, handle, &tuple);
+    ret = read_from_scan(s, handle, tuple);
     while (ret == Status::WARN_CONCURRENT_UPDATE) {
-        ret = read_from_scan(s, handle, &tuple);
+        ret = read_from_scan(s, handle, tuple);
     }
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, ret);
 #else
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
 #endif
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(leave(s), Status::OK);

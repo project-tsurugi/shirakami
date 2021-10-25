@@ -72,7 +72,7 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     EXPECT_EQ(2, records.size());
 
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k2, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k2, tuple));
     EXPECT_NE(nullptr, tuple);
     delete_record(s, storage, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -116,32 +116,32 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k1, scan_endpoint::INCLUSIVE,
                                     k2, scan_endpoint::INCLUSIVE, handle));
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) { ; }
+    while (Status::OK != read_from_scan(s, handle, tuple)) { ; }
 #else
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
     ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
 
 // record exists
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, k4, &tuple)) { ; }
+    while (Status::OK != search_key(s, storage, k4, tuple)) { ; }
 #else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k4, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k4, tuple));
 #endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
 
     // record not exist
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k3, &tuple));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k3, tuple));
 
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) { ; }
+    while (Status::OK != read_from_scan(s, handle, tuple)) { ; }
 #else
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
     ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k2));

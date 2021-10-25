@@ -49,7 +49,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
      * if read_from_scan detects self write(update, insert), it read from owns.
      */
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-              read_from_scan(s, handle, &tuple));
+              read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, close_scan(s, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -61,37 +61,37 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
      */
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
     // range : k, k2, k3
-    ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, 3, &tuple));
+    ASSERT_EQ(Status::WARN_INVALID_HANDLE, read_from_scan(s, 3, tuple));
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
 // range : k, k2, k3
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+    while (Status::OK != read_from_scan(s, handle, tuple)) {
         ;
     }
 #else
-    EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    EXPECT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+    while (Status::OK != read_from_scan(s, handle, tuple)) {
         ;
     }
 #else
-    EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    EXPECT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v2.data(), v2.size()), 0);
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+    while (Status::OK != read_from_scan(s, handle, tuple)) {
         ;
     }
 #else
-    EXPECT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    EXPECT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
     EXPECT_EQ(memcmp(tuple->get_key().data(), k3.data(), k3.size()), 0);
     EXPECT_EQ(memcmp(tuple->get_value().data(), v1.data(), v1.size()), 0);
-    EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+    EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     /**
@@ -102,7 +102,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k4, scan_endpoint::INCLUSIVE, handle));
     // range : k, k2, k3
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
-    EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, handle, &tuple));
+    EXPECT_EQ(Status::WARN_ALREADY_DELETE, read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, abort(s));
 
     /**
@@ -117,7 +117,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, storage, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
     ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));

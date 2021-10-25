@@ -44,7 +44,7 @@ TEST_F(read_write, point_read_update) { // NOLINT
     ASSERT_EQ(upsert(s, storage, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
@@ -59,7 +59,7 @@ TEST_F(read_write, point_read_delete) { // NOLINT
     ASSERT_EQ(upsert(s, storage, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

@@ -133,7 +133,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready, const bool& s
                 uint64_t ctr{0};
                 for (;;) {
 
-                    auto ret = search_key(token, storage, itr.get_key(), &tuple);
+                    auto ret = search_key(token, storage, itr.get_key(), tuple);
                     if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
 #ifndef NDEBUG
                     assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT

@@ -233,7 +233,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 Tuple* tuple{};
                 uint64_t ctr{0};
                 for (;;) {
-                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), &tuple);
+                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), tuple);
                     if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {

@@ -105,12 +105,12 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
     Tuple* tup{};
-    ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
+    ASSERT_EQ(search_key(token, storage, k, tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), "a");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "a"); // NOLINT
     std::string tup_key{tup->get_key()};
     Tuple* tup2{};
-    ASSERT_EQ(search_key(token, storage, "b", &tup2), Status::OK);
+    ASSERT_EQ(search_key(token, storage, "b", tup2), Status::OK);
     ASSERT_EQ(std::string(tup2->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup2->get_value()), "b"); // NOLINT
     ASSERT_EQ(commit(token), Status::OK);           // NOLINT
@@ -130,7 +130,7 @@ TEST_F(cpr_test, cpr_recovery_again) {                // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("b"); // NOLINT
     Tuple* tup{};
-    ASSERT_EQ(search_key(token, storage, k, &tup), Status::OK);
+    ASSERT_EQ(search_key(token, storage, k, tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "b"); // NOLINT
     ASSERT_EQ(commit(token), Status::OK);           // NOLINT

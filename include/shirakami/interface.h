@@ -260,7 +260,7 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
  */
 extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
-                             Tuple** result);
+                             Tuple*& result);
 
 /**
  * @brief search with the given key range and return the found tuples
@@ -326,7 +326,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * write (insert/update/upsert) operation in the same tx.
  */
 extern Status search_key(Token token, Storage storage, std::string_view key,
-                         Tuple** tuple); // NOLINT
+                         Tuple*& tuple); // NOLINT
 
 /**
  * @brief Transaction begins.

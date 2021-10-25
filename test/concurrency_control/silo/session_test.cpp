@@ -84,21 +84,21 @@ TEST_F(session_test, get_txbegan_) { // NOLINT
     // test search
     Tuple* tuple = {};
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, k, &tuple)) {
+    while (Status::OK != search_key(s, storage, k, tuple)) {
         ;
     }
 #else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
 #endif
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, k, &tuple)) {
+    while (Status::OK != search_key(s, storage, k, tuple)) {
         ;
     }
 #else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
 #endif
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, commit(s));

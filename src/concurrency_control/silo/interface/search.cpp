@@ -11,7 +11,7 @@ namespace shirakami {
 
 Status search_key(Token token, Storage storage,
                   const std::string_view key, // NOLINT
-                  Tuple** const tuple) {
+                  Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
 
     // check flags
@@ -26,7 +26,7 @@ Status search_key(Token token, Storage storage,
             {reinterpret_cast<char*>(&storage), sizeof(storage)},
             key))}; // NOLINT
     if (rec_double_ptr == nullptr) {
-        *tuple = nullptr;
+        tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_double_ptr};
@@ -37,7 +37,7 @@ Status search_key(Token token, Storage storage,
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        *tuple = &inws->get_tuple(inws->get_op());
+        tuple = &inws->get_tuple(inws->get_op());
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -46,9 +46,9 @@ Status search_key(Token token, Storage storage,
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
         ti->get_read_set().emplace_back(std::move(rs_ob));
-        *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
+        tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     } else {
-        *tuple = nullptr;
+        tuple = nullptr;
     }
     return rr;
 }

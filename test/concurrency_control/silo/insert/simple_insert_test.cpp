@@ -39,11 +39,11 @@ TEST_F(simple_insert, insert) { // NOLINT
         ASSERT_EQ(Status::OK, insert(s, storage, {&k2, 1}, v));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 #ifdef CPR
-        while (Status::OK != search_key(s, storage, {&k2, 1}, &tuple)) {
+        while (Status::OK != search_key(s, storage, {&k2, 1}, tuple)) {
             ;
         }
 #else
-        ASSERT_EQ(Status::OK, search_key(s, storage, {&k2, 1}, &tuple));
+        ASSERT_EQ(Status::OK, search_key(s, storage, {&k2, 1}, tuple));
 #endif
         ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
         ASSERT_EQ(Status::OK, commit(s));
@@ -52,11 +52,11 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, "", v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, "", &tuple)) {
+    while (Status::OK != search_key(s, storage, "", tuple)) {
         ;
     }
 #else
-    ASSERT_EQ(Status::OK, search_key(s, storage, "", &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, "", tuple));
 #endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -110,11 +110,11 @@ TEST_F(simple_insert, long_key_insert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
 #ifdef CPR
-    while (Status::OK != search_key(s, storage, k, &tuple)) {
+    while (Status::OK != search_key(s, storage, k, tuple)) {
         ;
     }
 #else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
 #endif
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

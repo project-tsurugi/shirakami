@@ -57,7 +57,7 @@ TEST_F(upsert_after_delete, txs) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     Tuple *tuple{};
-    ASSERT_EQ(Status::OK, search_key(s1, st, k, &tuple));
+    ASSERT_EQ(Status::OK, search_key(s1, st, k, tuple));
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));

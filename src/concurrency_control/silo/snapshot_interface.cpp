@@ -48,18 +48,18 @@ open_scan(session* ti, Storage storage, std::string_view l_key, scan_endpoint l_
     return Status::OK;
 }
 
-Status lookup_snapshot(session* ti, Storage storage, std::string_view key, Tuple** const ret_tuple) {               // NOLINT
+Status lookup_snapshot(session* ti, Storage storage, std::string_view key, Tuple*& ret_tuple) {               // NOLINT
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, key))}; // NOLINT
     if (rec_d_ptr == nullptr) {
         // There is no record which has the key.
-        *ret_tuple = nullptr;
+        ret_tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
 
     return read_record(ti, *rec_d_ptr, ret_tuple);
 }
 
-extern Status read_from_scan(session* ti, const ScanHandle handle, Tuple** const tuple) { // NOLINT
+extern Status read_from_scan(session* ti, const ScanHandle handle, Tuple*& tuple) { // NOLINT
     /**
      * Check whether the handle is valid.
      */
@@ -78,7 +78,7 @@ extern Status read_from_scan(session* ti, const ScanHandle handle, Tuple** const
     return read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple);
 }
 
-extern Status read_record(session* const ti, Record* const rec_ptr, Tuple** const tuple) { // NOLINT
+extern Status read_record(session* const ti, Record* const rec_ptr, Tuple*& tuple) { // NOLINT
     tid_word tid{};
 
     // phase 1 : decide to see main record or snapshot.
@@ -99,7 +99,7 @@ extern Status read_record(session* const ti, Record* const rec_ptr, Tuple** cons
             if (tid == loadAcquire(rec_ptr->get_tidw().get_obj())) {
                 // success atomic read
                 ti->get_read_only_tuples().emplace_back(std::move(escape_tuple));
-                *tuple = &ti->get_read_only_tuples().back();
+                tuple = &ti->get_read_only_tuples().back();
                 return Status::OK;
             }
             // fail atomic read
@@ -117,7 +117,7 @@ extern Status read_record(session* const ti, Record* const rec_ptr, Tuple** cons
      */
     for (Record* snap_ptr = rec_ptr->get_snap_ptr(); snap_ptr != nullptr; snap_ptr = snap_ptr->get_snap_ptr()) {
         if (snapshot_manager::get_snap_epoch(ti->get_epoch()) > snapshot_manager::get_snap_epoch(snap_ptr->get_tidw().get_epoch())) {
-            *tuple = &snap_ptr->get_tuple();
+            tuple = &snap_ptr->get_tuple();
             return Status::OK;
         }
     }

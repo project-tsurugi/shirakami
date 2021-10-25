@@ -94,7 +94,7 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
 }
 
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
-                      Tuple** const tuple) {
+                      Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
     if (ti->get_read_only()) {
         return snapshot_interface::read_from_scan(ti, handle, tuple);
@@ -146,10 +146,10 @@ retry_by_continue:
             return Status::WARN_ALREADY_DELETE;
         }
         if (inws->get_op() == OP_TYPE::UPDATE) {
-            *tuple = const_cast<Tuple*>(&inws->get_tuple_to_local());
+            tuple = const_cast<Tuple*>(&inws->get_tuple_to_local());
         } else {
             // insert/delete
-            *tuple = const_cast<Tuple*>(&inws->get_tuple_to_db());
+            tuple = const_cast<Tuple*>(&inws->get_tuple_to_db());
         }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
@@ -162,7 +162,7 @@ retry_by_continue:
         return rr;
     }
     ti->get_read_set().emplace_back(std::move(rsob));
-    *tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
+    tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     ++scan_index;
 
     // create node set info

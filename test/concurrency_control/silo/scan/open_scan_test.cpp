@@ -61,17 +61,17 @@ TEST_F(simple_scan, open_scan_test2) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k2, scan_endpoint::INCLUSIVE, "sa0", scan_endpoint::EXCLUSIVE, handle));
     Tuple* tuple{};
 #ifdef CPR
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+    while (Status::OK != read_from_scan(s, handle, tuple)) {
         ;
     }
-    while (Status::OK != read_from_scan(s, handle, &tuple)) {
+    while (Status::OK != read_from_scan(s, handle, tuple)) {
         ;
     }
 #else
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
 #endif
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, &tuple));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }

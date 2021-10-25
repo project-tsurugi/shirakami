@@ -38,24 +38,30 @@ public:
 
     [[nodiscard]] std::string* get_key_ptr() { return &key_; }
 
-    [[nodiscard]] version* get_latest() const { return latest_.load(std::memory_order_acquire); }
+    [[nodiscard]] version* get_latest() const {
+        return latest_.load(std::memory_order_acquire);
+    }
 
     [[nodiscard]] tid_word get_stable_tidw() {
         for (;;) {
-            tid_word check{loadAcquire(tidw_.get_obj())}; 
+            tid_word check{loadAcquire(tidw_.get_obj())};
             if (check.get_lock()) {
                 _mm_pause();
             } else {
                 return check;
-            }          
+            }
         }
     }
+
+    [[nodiscard]] tid_word get_tidw() const { return tidw_; }
 
     tid_word& get_tidw_ref() { return tidw_; }
 
     void lock() { tidw_.lock(); }
 
-    void set_tid(tid_word const& tid) { tidw_ = tid; }
+    void set_tid(tid_word const& tid) {
+        storeRelease(tidw_.get_obj(), tid.get_obj());
+    }
 
     void unlock() { tidw_.unlock(); }
 
