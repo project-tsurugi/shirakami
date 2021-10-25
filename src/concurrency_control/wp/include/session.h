@@ -28,6 +28,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
+    using read_set_type = std::vector<read_set_obj>;
 
     /**
      * @brief compare and swap for visible_.
@@ -66,6 +67,8 @@ public:
      * @brief getter of @a read_only_
      */
     [[nodiscard]] bool get_read_only() const { return read_only_; }
+
+    read_set_type& get_read_set() { return read_set_; }
 
     /**
      * @brief get the value of tx_began_.
@@ -181,7 +184,7 @@ private:
     /**
      * @brief local read set.
      */
-    std::vector<read_set_obj> read_set_{};
+    read_set_type read_set_{};
 
     /**
      * @brief cache for search api.

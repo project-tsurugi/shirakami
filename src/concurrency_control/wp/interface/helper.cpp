@@ -49,7 +49,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     std::abort();
 }
 
-[[maybe_unused]] wp::wp_meta::wped_type find_wp(Storage const storage) {
+wp::wp_meta::wped_type find_wp(Storage const storage) {
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         std::string_view page_set_meta_storage_view = {
                 reinterpret_cast<char*>(&page_set_meta_storage),

@@ -29,8 +29,8 @@ public:
     void set_val(std::string_view val) { val_ = val; }
 
 private:
-    std::string key_{};
-    std::string val_{};
+    std::string_view key_{};
+    std::string_view val_{};
 };
 
 } // namespace shirakami

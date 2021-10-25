@@ -97,7 +97,9 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                 delete *reinterpret_cast<wp::wp_meta**>( // NOLINT
                         std::get<v_index>(itr));
             } else {
-                delete *std::get<v_index>(itr); // NOLINT
+                Record* target_rec{*std::get<v_index>(itr)};
+                delete target_rec->get_latest(); // NOLINT
+                delete target_rec;               // NOLINT
             }
         }
     } else {
@@ -105,7 +107,13 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         auto process = [&scan_res](std::size_t const begin,
                                    std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
-                delete *std::get<v_index>(scan_res[i]); // NOLINT
+                if (wp::get_finalizing()) {
+                    delete *reinterpret_cast<wp::wp_meta**>(std::get<v_index>(scan_res[i])); // NOLINT
+                } else {
+                    Record* target_rec{*std::get<v_index>(scan_res[i])};
+                    delete target_rec->get_latest(); // NOLINT
+                    delete target_rec;               // NOLINT
+                }
             }
         };
         std::size_t th_size = std::thread::hardware_concurrency();

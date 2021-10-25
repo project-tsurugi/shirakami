@@ -29,6 +29,7 @@ file(GLOB TEST_SOURCES
         )
 else ()
 file(GLOB TEST_SOURCES
+        "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/wp/*.cpp"
         "concurrency_control/wp/interface/helper/*.cpp"
         )

@@ -84,35 +84,26 @@ TEST_F(wp_test, wp_meta_register) { // NOLINT
 
 TEST_F(wp_test, wp_regi_remove) { // NOLINT
     wp::wp_meta wp_info;
-    std::atomic<bool> ready_register{false};
     std::atomic<std::size_t> fin_register{0};
-    std::atomic<bool> ready_remove{false};
     std::vector<std::thread> th_vc;
     th_vc.reserve(std::thread::hardware_concurrency());
 
-    auto work = [&wp_info, &ready_register, &fin_register,
-                 &ready_remove](std::size_t id) {
-        while (!ready_register.load(std::memory_order_acquire)) { _mm_pause(); }
+    auto work = [&wp_info, &fin_register](std::size_t const id) {
         epoch::epoch_t ce{epoch::get_global_epoch()};
-        wp_info.register_wp(ce, id);
-        ++fin_register;
-        while (!ready_remove.load(std::memory_order_acquire)) { _mm_pause(); }
-        ASSERT_EQ(wp_info.remove_wp(id), Status::OK);
+        Status rc{wp_info.register_wp(ce, id)};
+        if (rc == Status::OK) {
+            ++fin_register;
+            ASSERT_EQ(wp_info.remove_wp(id), Status::OK);
+        }
     };
 
     for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
         th_vc.emplace_back(work, i);
     }
-    ready_register.store(true, std::memory_order_release);
-
-    while (fin_register.load(std::memory_order_acquire) !=
-           std::thread::hardware_concurrency()) {
-        _mm_pause();
-    }
-    ASSERT_EQ(wp_info.size_wp(), std::thread::hardware_concurrency());
-    ready_remove.store(true, std::memory_order_acquire);
 
     for (auto&& elem : th_vc) { elem.join(); }
+
+    ASSERT_EQ(fin_register > 0, true);
 }
 
 TEST_F(wp_test, wp_meta_basic) { // NOLINT
