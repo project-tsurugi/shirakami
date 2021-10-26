@@ -14,6 +14,8 @@
 
 #include "shirakami/scheme.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 class read_set_obj { // NOLINT
@@ -76,8 +78,15 @@ public:
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
 
     [[nodiscard]] Storage get_storage() const { return storage_; }
-    
-    [[nodiscard]] std::string_view get_val() const { return val_; }
+
+    [[nodiscard]] std::string_view get_val() const {
+        if (get_op() == OP_TYPE::INSERT) {
+            return *get_rec_ptr()->get_latest()->get_value();
+        }
+        if (get_op() == OP_TYPE::UPDATE) { return val_; }
+        LOG(FATAL) << "unreachable";
+        std::abort();
+    }
 
     void set_op(OP_TYPE op) { op_ = op; }
 

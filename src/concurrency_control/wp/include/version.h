@@ -15,7 +15,7 @@
 
 namespace shirakami {
 
-class alignas(CACHE_LINE_SIZE) version {
+class alignas(CACHE_LINE_SIZE) version { // NOLINT
 public:
     explicit version(std::string_view value) { set_value(value); }
 
