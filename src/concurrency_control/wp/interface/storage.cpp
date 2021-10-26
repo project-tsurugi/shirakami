@@ -98,7 +98,6 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                         std::get<v_index>(itr));
             } else {
                 Record* target_rec{*std::get<v_index>(itr)};
-                delete target_rec->get_latest(); // NOLINT
                 delete target_rec;               // NOLINT
             }
         }
@@ -111,7 +110,6 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                     delete *reinterpret_cast<wp::wp_meta**>(std::get<v_index>(scan_res[i])); // NOLINT
                 } else {
                     Record* target_rec{*std::get<v_index>(scan_res[i])};
-                    delete target_rec->get_latest(); // NOLINT
                     delete target_rec;               // NOLINT
                 }
             }

@@ -19,6 +19,15 @@ class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
     Record() = default;
 
+    ~Record() {
+        auto* ver = get_latest();
+        while (ver != nullptr) {
+            auto* ver_tmp = get_latest()->get_next();
+            delete ver; // NOLINT
+            ver = ver_tmp;
+        }
+    }
+
     /**
      * @brief ctor.
      * @details This is used for insert logic.
