@@ -5,14 +5,14 @@
 
 namespace shirakami::batch {
 
-extern Status abort(Token token);
+extern Status abort(session* ti);
 
-extern Status commit(Token token, commit_param* cp);
+extern Status commit(session* ti, commit_param* cp);
 
-extern Status search_key(Token token, Storage storage, std::string_view key,
+extern Status search_key(session* ti, Storage storage, std::string_view key,
                          Tuple*& tuple);
 
-extern Status upsert(Token token, Storage storage, std::string_view key,
+extern Status upsert(session* ti, Storage storage, std::string_view key,
                      std::string_view val);
 
 } // namespace shirakami::batch

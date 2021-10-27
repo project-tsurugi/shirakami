@@ -15,9 +15,9 @@ void local_write_set::push(write_set_obj&& elem) {
     }
 }
 
-write_set_obj* local_write_set::search(Record* const rec_ptr) {
+write_set_obj* local_write_set::search(Record const* const rec_ptr) {
     if (for_batch_) {
-        auto ret{cont_for_bt_.find(rec_ptr)};
+        auto ret{cont_for_bt_.find(const_cast<Record*>(rec_ptr))};
         if (ret == cont_for_bt_.end()) { return nullptr; }
         return &std::get<1>(*ret);
     }

@@ -15,10 +15,8 @@
 
 namespace shirakami::batch {
 
-Status search_key(Token const token, Storage const storage,
+Status search_key(session* ti, Storage const storage,
                   std::string_view const key, Tuple*& tuple) {
-    auto* ti = static_cast<session*>(token);
-
     if (ti->get_mode() == tx_mode::BATCH &&
         epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;

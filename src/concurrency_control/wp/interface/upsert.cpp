@@ -22,9 +22,9 @@ Status upsert(Token token, Storage storage, const std::string_view key,
     }
 
     if (ti->get_mode() == tx_mode::BATCH) {
-        return batch::upsert(token, storage, key, val);
+        return batch::upsert(ti, storage, key, val);
     } else if (ti->get_mode() == tx_mode::OCC) {
-        return occ::upsert(token, storage, key, val);
+        return occ::upsert(ti, storage, key, val);
     } else {
         LOG(FATAL) << "unreachable";
         std::abort();

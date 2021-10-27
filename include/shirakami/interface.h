@@ -92,6 +92,7 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @pre executed enter (-> tx_begin -> transaction operation).
  * @post execute leave to leave the session or transactional operations (ex. tx_begin, 
  * search, update, ...etc)  to start next transaction.
+ * @return Status::ERR_FAIL_WP This means validation failure by others write preserve.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
  * so it called abort().
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 

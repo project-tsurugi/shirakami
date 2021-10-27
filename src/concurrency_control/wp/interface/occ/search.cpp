@@ -16,10 +16,8 @@
 
 namespace shirakami::occ {
 
-Status search_key(Token const token, Storage const storage,
+Status search_key(session* ti, Storage const storage,
                   std::string_view const key, Tuple*& tuple) {
-    auto* ti = static_cast<session*>(token);
-
     // index access
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<const char*>(&storage), // NOLINT
@@ -47,7 +45,7 @@ Status search_key(Token const token, Storage const storage,
     // wp check
     wp::wp_meta::wped_type wps{find_wp(storage)};
     if (!wps.empty()) {
-        abort(token);
+        abort(ti);
         return Status::ERR_VALIDATION;
     }
     tid_word read_tid;

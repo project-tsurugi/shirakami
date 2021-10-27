@@ -15,16 +15,16 @@ Status abort(Token token) { // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
 
-    if (ti->get_mode() == tx_mode::BATCH) { return batch::abort(token); }
-    return occ::abort(token);
+    if (ti->get_mode() == tx_mode::BATCH) { return batch::abort(ti); }
+    return occ::abort(ti);
 }
 
 Status commit([[maybe_unused]] Token token, // NOLINT
               [[maybe_unused]] commit_param* cp) {
     auto* ti = static_cast<session*>(token);
 
-    if (ti->get_mode() == tx_mode::BATCH) { return batch::commit(token, cp); }
-    return occ::commit(token, cp);
+    if (ti->get_mode() == tx_mode::BATCH) { return batch::commit(ti, cp); }
+    return occ::commit(ti, cp);
 }
 
 bool check_commit([[maybe_unused]] Token token, // NOLINT

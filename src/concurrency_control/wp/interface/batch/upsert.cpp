@@ -10,10 +10,8 @@
 
 namespace shirakami::batch {
 
-Status upsert(Token token, Storage storage, const std::string_view key,
+Status upsert(session* ti, Storage storage, const std::string_view key,
               const std::string_view val) {
-    auto* ti = static_cast<session*>(token);
-
     // checks
     if (ti->get_mode() == tx_mode::BATCH &&
         epoch::get_global_epoch() < ti->get_valid_epoch()) {
@@ -80,7 +78,7 @@ RETRY_INDEX_ACCESS:
                          * because the previous scan was destroyed by an insert
                          * by another transaction.
                          */
-            abort(token);
+            batch::abort(ti);
             return Status::ERR_PHANTOM;
         }
         ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});

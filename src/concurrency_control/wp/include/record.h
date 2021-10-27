@@ -66,6 +66,8 @@ public:
 
     tid_word& get_tidw_ref() { return tidw_; }
 
+    tid_word const& get_tidw_ref() const { return tidw_; }
+
     void lock() { tidw_.lock(); }
 
     void set_tid(tid_word const& tid) {
