@@ -2,6 +2,9 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 
+#include "concurrency_control/wp/interface/batch/include/batch.h"
+#include "concurrency_control/wp/interface/occ/include/occ.h"
+
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -20,54 +23,8 @@ extern Status commit([[maybe_unused]] Token token, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
     auto* ti = static_cast<session*>(token);
 
-    auto process = [](write_set_obj* wso_ptr) {
-        switch (wso_ptr->get_op()) {
-            case OP_TYPE::INSERT: {
-                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
-                update_tid.set_lock(false);
-                update_tid.set_absent(false);
-                wso_ptr->get_rec_ptr()->set_tid(update_tid);
-                break;
-            }
-            case OP_TYPE::UPDATE: {
-                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
-                update_tid.set_lock(false);
-                update_tid.set_absent(false);
-                wso_ptr->get_rec_ptr()->set_tid(update_tid);
-                break;
-            }
-            default: {
-                LOG(FATAL) << "unknown operation type.";
-                break;
-            }
-        }
-    };
-
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& elem : ti->get_write_set().get_ref_cont_for_bt()) {
-            process(&std::get<1>(elem));
-        }
-    } else {
-        for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-            process(&elem);
-        }
-    }
-
-
-    // occ
-    // write lock
-    // epoch load
-    // serialization point
-    // wp verify
-    // read verify
-    // node verify
-
-    // batch
-
-    // clean up local set
-    ti->clean_up_local_set();
-    ti->clean_up_tx_property();
-    return Status::OK;
+    if (ti->get_mode() == tx_mode::BATCH) { return batch::commit(token, cp); }
+    return occ::commit(token, cp);
 }
 
 extern bool check_commit([[maybe_unused]] Token token, // NOLINT

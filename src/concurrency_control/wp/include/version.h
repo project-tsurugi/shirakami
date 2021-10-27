@@ -37,12 +37,17 @@ public:
      * If you use in other case, it may occurs std::abort.
      */
     void set_value(std::string_view value) {
-        if (value_.load(std::memory_order_acquire) != nullptr) {
+        if (get_value() != nullptr) {
             LOG(FATAL) << "usage";
             std::abort();
         }
         value_.store(new std::string(value), // NOLINT
                      std::memory_order_release);
+    }
+
+    void set_value(std::string_view new_v, std::string*& old_v) {
+        old_v = get_value();
+        value_.store(new std::string(new_v), std::memory_order_release);
     }
 
     void set_next(version* next) {

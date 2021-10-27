@@ -9,6 +9,7 @@
 
 #include "cpu.h"
 #include "epoch.h"
+#include "garbage.h"
 #include "local_set.h"
 
 #include "concurrency_control/wp/include/tid.h"
