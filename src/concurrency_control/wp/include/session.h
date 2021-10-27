@@ -47,6 +47,11 @@ public:
      */
     bool check_exist_wp_set(Storage storage);
 
+    void clean_up() {
+        clean_up_local_set();
+        clean_up_tx_property();
+    }
+
     /**
      * @brief clean up about local set.
      */
@@ -58,6 +63,8 @@ public:
     void clean_up_tx_property();
 
     Tuple* get_cache_for_search_ptr() { return &cache_for_search_; }
+
+    garbage::gc_handle& get_gc_handle() { return gc_handle_; }
 
     /**
      * @brief get the value of mrc_tid_.
@@ -115,7 +122,9 @@ public:
         write_set_.push(std::move(elem));
     }
 
-    void set_cache_for_search(Tuple tuple) { cache_for_search_ = tuple; } // NOLINT
+    void set_cache_for_search(Tuple tuple) {
+        cache_for_search_ = tuple;
+    } // NOLINT
     // because Tuple is small size data.
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
@@ -223,6 +232,8 @@ private:
      * @brief read write batch executes write preserve preserve.
      */
     epoch::epoch_t valid_epoch_{};
+
+    garbage::gc_handle gc_handle_{};
 };
 
 class session_table {

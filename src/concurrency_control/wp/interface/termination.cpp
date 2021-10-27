@@ -11,24 +11,24 @@
 
 namespace shirakami {
 
-Status abort([[maybe_unused]] Token token) { // NOLINT
+Status abort(Token token) { // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
-    ti->clean_up_local_set();
-    ti->clean_up_tx_property();
-    return Status::OK;
+
+    if (ti->get_mode() == tx_mode::BATCH) { return batch::abort(token); }
+    return occ::abort(token);
 }
 
-extern Status commit([[maybe_unused]] Token token, // NOLINT
-                     [[maybe_unused]] commit_param* cp) {
+Status commit([[maybe_unused]] Token token, // NOLINT
+              [[maybe_unused]] commit_param* cp) {
     auto* ti = static_cast<session*>(token);
 
     if (ti->get_mode() == tx_mode::BATCH) { return batch::commit(token, cp); }
     return occ::commit(token, cp);
 }
 
-extern bool check_commit([[maybe_unused]] Token token, // NOLINT
-                         [[maybe_unused]] std::uint64_t commit_id) {
+bool check_commit([[maybe_unused]] Token token, // NOLINT
+                  [[maybe_unused]] std::uint64_t commit_id) {
     // todo
     return true;
 }
