@@ -15,6 +15,42 @@ Status abort(Token token) { // NOLINT
     return Status::OK;
 }
 
+void unlock_not_insert_records(Token token, std::size_t not_insert_locked_num) {
+    auto* ti = static_cast<session*>(token);
+    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+        if (not_insert_locked_num == 0) { break; }
+        auto* wso_ptr = &(elem);
+        if (wso_ptr->get_op() == OP_TYPE::INSERT) { continue; }
+        wso_ptr->get_rec_ptr()->get_tidw_ref().unlock();
+        --not_insert_locked_num;
+    }
+}
+
+Status write_lock(Token token) {
+    auto* ti = static_cast<session*>(token);
+
+    std::size_t not_insert_locked_num{0};
+    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+        auto* wso_ptr = &(elem);
+        if (wso_ptr->get_op() != OP_TYPE::INSERT) {
+            auto* rec_ptr{wso_ptr->get_rec_ptr()};
+            rec_ptr->get_tidw_ref().lock();
+            ++not_insert_locked_num;
+            if ((wso_ptr->get_op() == OP_TYPE::UPDATE ||
+                 wso_ptr->get_op() == OP_TYPE::DELETE) &&
+                rec_ptr->get_tidw_ref().get_absent()) {
+                if (not_insert_locked_num > 0) {
+                    unlock_not_insert_records(token, not_insert_locked_num);
+                }
+                occ::abort(token);
+                return Status::ERR_WRITE_TO_DELETED_RECORD;
+            }
+        }
+    }
+
+    return Status::OK;
+}
+
 void write_phase(Token token) {
     auto* ti = static_cast<session*>(token);
 
@@ -54,8 +90,6 @@ void write_phase(Token token) {
             process(&elem);
         }
     }
-
-
 }
 
 extern Status commit(Token token, // NOLINT
@@ -63,6 +97,8 @@ extern Status commit(Token token, // NOLINT
     auto* ti = static_cast<session*>(token);
 
     // write lock phase
+    auto rc{write_lock(token)};
+    if (rc != Status::OK) { return rc; }
 
     // wp verify
 
