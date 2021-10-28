@@ -121,6 +121,17 @@ void write_phase(session* ti) {
     }
 }
 
+Status node_verify(session* ti) {
+    for (auto&& itr : ti->get_node_set()) {
+        if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
+            unlock_write_set(ti);
+            occ::abort(ti);
+            return Status::ERR_PHANTOM;
+        }
+    }
+    return Status::OK;
+}
+
 extern Status commit(session* ti, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
     // write lock phase
@@ -136,6 +147,8 @@ extern Status commit(session* ti, // NOLINT
     if (rc != Status::OK) { return rc; }
 
     // node verify
+    rc = node_verify(ti);
+    if (rc != Status::OK) { return rc; }
 
     // write phase
     write_phase(ti);
