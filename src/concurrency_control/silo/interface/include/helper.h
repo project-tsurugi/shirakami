@@ -38,6 +38,4 @@ Status read_record(Record &res, const Record* dest);  // NOLINT
  */
 [[maybe_unused]] static void set_initialized(bool tf) { initialized_.store(tf, std::memory_order_release); }
 
-void write_phase(session* ti, const tid_word &max_r_set, const tid_word &max_w_set, commit_property cp);
-
 }  // namespace shirakami
