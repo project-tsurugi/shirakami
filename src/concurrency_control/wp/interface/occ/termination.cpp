@@ -29,9 +29,9 @@ Status read_verify(session* ti) {
     for (auto&& itr : ti->get_read_set()) {
         auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-        if (itr.get_tid().get_tid() != check.get_tid() ||
-        check.get_absent() ||
-        (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
+        if (itr.get_tid().get_tid() != check.get_tid() || check.get_absent() ||
+            (check.get_lock() &&
+             ti->get_write_set().search(rec_ptr) == nullptr)) {
             unlock_write_set(ti);
             occ::abort(ti);
             return Status::ERR_VALIDATION;
@@ -52,10 +52,18 @@ void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num) {
 }
 
 Status wp_verify(session* ti) {
+    // for write set
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto wps = find_wp(elem.get_storage());
         if (!wps.empty()) { return Status::ERR_FAIL_WP; }
     }
+
+    // for read set
+    for (auto&& elem : ti->get_read_set()) {
+        auto wps = find_wp(elem.get_storage());
+        if (!wps.empty()) { return Status::ERR_FAIL_WP; }
+    }
+
     return Status::OK;
 }
 
