@@ -7,6 +7,8 @@
 namespace shirakami::batch {
 
 Status abort(session* ti) { // NOLINT
+    // clean up wp
+
     // clean up local set
     ti->clean_up();
     return Status::OK;
