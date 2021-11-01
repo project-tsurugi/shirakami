@@ -15,6 +15,7 @@ if (NOT BUILD_WP)
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
+        "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/silo/*.cpp"
         "concurrency_control/silo/delete/*.cpp"
         "concurrency_control/silo/helper/*.cpp"
