@@ -117,6 +117,7 @@ Available options:
       * Note : This maintenance has not kept up with the latest version.
       * Default: `OFF`
    - `-DCPR_DIFF_VEC=OFF`
+
       * Use std::vector for cpr's differences sets.
       * Note : This maintenance has not kept up with the latest version.
       * Default: `OFF`
@@ -128,19 +129,46 @@ Available options:
       * Default: `OFF`
         
 
-### Install 
+## Recommendation
+
+### Setting options
+* For high throughput
+  + Common workloads
+    - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent transaction thread size>`
+      - The value of this option is the maximum number of parallel sessions. If it is unnecessarily large, the management cost will increase and the efficiency will decrease.
+    - `-DBUILD_PWAL=OFF -DBUILD_CPR=ON`
+      - PWAL generates a log record for each transaction.
+      In comparison, CPR, a checkpointing technology, has almost no work until the timing of logging comes.
+    - `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
+      - Checkpointing logging has little work until it's time to log.
+    - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=<large num, ex. 10000>`
+      - Performance is good when a large number is reserved so that area rearrangement does not occur.
+  + For high contention workloads
+    - `-DPARAM_EPOCH_TIME=<small num, ex. 10>`
+      - For workloads that repeatedly insert and delete the same primary key, new inserts will be rejected until physical unhooking occurs in garbage collection, so set a small value here to execute frequently.
+    - `-DPARAM_RETRY_READ=<small num, ex. 0>`
+      - When reading fails in the read phase, it is better to return the failure without retrying in an environment with high contention.
+      This is because in an environment with high contention, the abort rate is high, so retries are likely to be wasted work.
+  + For low contention workloads
+    - `-DPARAM_EPOCH_TIME=<large num, ex. 10>`
+      - In the single version concurrency control mode, garbage collection basically causes performance degradation, so set a large value here and execute it infrequently.
+    - `-DPARAM_RETRY_READ=<medium num, ex. 20>`
+      - When reading fails in the read phase, you may try until the reading succeeds in an environment with low contention.
+      Because, as a result, the probability of aborting is small.
+
+## Install 
 
 ```sh
 ninja install
 ```
 
-### Run tests
+## Run tests
 
 ```sh
 ctest -V
 ```
 
-### Generate documents
+## Generate documents
 
 ```sh
 ninja doxygen
