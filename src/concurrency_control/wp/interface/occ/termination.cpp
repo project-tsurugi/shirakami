@@ -27,7 +27,7 @@ Status abort(session* ti) { // NOLINT
 Status read_verify(session* ti, tid_word& commit_tid) {
     tid_word check{};
     for (auto&& itr : ti->get_read_set()) {
-        auto* rec_ptr = itr.get_rec_ptr();
+        const auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
         if (itr.get_tid().get_tid() != check.get_tid() || check.get_absent() ||
             (check.get_lock() &&
@@ -119,14 +119,8 @@ void write_phase(session* ti, epoch::epoch_t ce) {
         }
     };
 
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& elem : ti->get_write_set().get_ref_cont_for_bt()) {
-            process(&std::get<1>(elem));
-        }
-    } else {
-        for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-            process(&elem);
-        }
+    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+        process(&elem);
     }
 }
 

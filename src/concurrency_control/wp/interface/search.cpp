@@ -24,12 +24,12 @@ Status search_key(Token const token, Storage const storage,
 
     if (ti->get_mode() == tx_mode::BATCH) {
         return batch::search_key(ti, storage, key, tuple);
-    } else if (ti->get_mode() == tx_mode::OCC) {
-        return occ::search_key(ti, storage, key, tuple);
-    } else {
-        LOG(FATAL) << "unreachable";
-        std::abort();
     }
+    if (ti->get_mode() == tx_mode::OCC) {
+        return occ::search_key(ti, storage, key, tuple);
+    }
+    LOG(FATAL) << "unreachable";
+    std::abort();
 }
 
 } // namespace shirakami

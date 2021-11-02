@@ -65,6 +65,7 @@ Status tx_begin(session* const ti,
     // inc batch counter
     wp::batch::set_counter(batch_id + 1);
 
+    ti->set_batch_id(batch_id);
     ti->set_mode(tx_mode::BATCH);
     ti->set_valid_epoch(valid_epoch);
 

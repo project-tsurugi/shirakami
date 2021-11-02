@@ -119,7 +119,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
         ti->get_write_set().set_for_batch(for_batch);
         if (for_batch) {
             ti->set_mode(tx_mode::BATCH);
-            return batch::tx_begin(ti, write_preserve);
+            return batch::tx_begin(ti, std::move(write_preserve));
         }
         ti->set_mode(tx_mode::OCC);
     } else {

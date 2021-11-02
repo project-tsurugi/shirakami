@@ -18,8 +18,9 @@ Status session_table::decide_token(Token& token) { // NOLINT
                 break;
             }
         }
-        if (&itr == get_session_table().end() - 1)
+        if (&itr == get_session_table().end() - 1) {
             return Status::ERR_SESSION_LIMIT;
+        }
     }
 
     return Status::OK;
