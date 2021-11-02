@@ -144,8 +144,9 @@ Available options:
     - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=<large num, ex. 10000>`
       - Performance is good when a large number is reserved so that area rearrangement does not occur.
   + For high contention workloads
-    - `-DPARAM_EPOCH_TIME=<small num, ex. 10>`
+    - `-DPARAM_EPOCH_TIME=<medium num, ex. 10>`
       - For workloads that repeatedly insert and delete the same primary key, new inserts will be rejected until physical unhooking occurs in garbage collection, so set a small value here to execute frequently.
+      If this value is too small, the cache will be polluted frequently, so make sure it is not too small.
     - `-DPARAM_RETRY_READ=<small num, ex. 0>`
       - When reading fails in the read phase, it is better to return the failure without retrying in an environment with high contention.
       This is because in an environment with high contention, the abort rate is high, so retries are likely to be wasted work.
@@ -155,7 +156,15 @@ Available options:
     - `-DPARAM_RETRY_READ=<medium num, ex. 20>`
       - When reading fails in the read phase, you may try until the reading succeeds in an environment with low contention.
       Because, as a result, the probability of aborting is small.
-
+- For low latency
+  - `-DPARAM_EPOCH_TIME=<small time, ex. 10> -DPARAM_CHECKPOINT_REST_EPOCH=<small time, ex. 10>`
+    - Frequent logging improves latency but worsens throughput.
+- For fast testing
+  - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=0`
+    - It is faster not to allocate unnecessary memory.
+  - `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
+    - If you do not enable the option of the fin function that waits for logging IO to finish, it is faster to finish the test before logging IO occurs.
+    
 ## Install 
 
 ```sh
