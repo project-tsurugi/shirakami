@@ -150,7 +150,7 @@ Available options:
       - When reading fails in the read phase, it is better to return the failure without retrying in an environment with high contention.
       This is because in an environment with high contention, the abort rate is high, so retries are likely to be wasted work.
   + For low contention workloads
-    - `-DPARAM_EPOCH_TIME=<large num, ex. 10>`
+    - `-DPARAM_EPOCH_TIME=<large num, ex. 1000>`
       - In the single version concurrency control mode, garbage collection basically causes performance degradation, so set a large value here and execute it infrequently.
     - `-DPARAM_RETRY_READ=<medium num, ex. 20>`
       - When reading fails in the read phase, you may try until the reading succeeds in an environment with low contention.
