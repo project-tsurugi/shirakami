@@ -4,6 +4,10 @@
 
 namespace shirakami {
 
+void session_table::clean_up() {
+    for (auto&& se : get_session_table()) { se.get_gc_handle().destroy(); }
+}
+
 Status session_table::decide_token(Token& token) { // NOLINT
     for (auto&& itr : get_session_table()) {
         if (!itr.get_visible()) {
@@ -14,7 +18,8 @@ Status session_table::decide_token(Token& token) { // NOLINT
                 break;
             }
         }
-        if (&itr == get_session_table().end() - 1) return Status::ERR_SESSION_LIMIT;
+        if (&itr == get_session_table().end() - 1)
+            return Status::ERR_SESSION_LIMIT;
     }
 
     return Status::OK;
@@ -31,9 +36,7 @@ void session_table::fin_session_table() {
     std::vector<std::thread> th_vc;
     th_vc.reserve(get_session_table().size());
     for (auto&& itr : get_session_table()) {
-        auto process = [&itr]() {
-            itr.clean_up_local_set();
-        };
+        auto process = [&itr]() { itr.clean_up_local_set(); };
         th_vc.emplace_back(process);
     }
 

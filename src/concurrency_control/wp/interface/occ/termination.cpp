@@ -24,7 +24,7 @@ Status abort(session* ti) { // NOLINT
     return Status::OK;
 }
 
-Status read_verify(session* ti) {
+Status read_verify(session* ti, tid_word& commit_tid) {
     tid_word check{};
     for (auto&& itr : ti->get_read_set()) {
         auto* rec_ptr = itr.get_rec_ptr();
@@ -36,6 +36,7 @@ Status read_verify(session* ti) {
             occ::abort(ti);
             return Status::ERR_VALIDATION;
         }
+        commit_tid = std::max(check, commit_tid);
     }
 
     return Status::OK;
@@ -67,13 +68,14 @@ Status wp_verify(session* ti) {
     return Status::OK;
 }
 
-Status write_lock(session* ti) {
+Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t not_insert_locked_num{0};
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto* wso_ptr = &(elem);
         if (wso_ptr->get_op() != OP_TYPE::INSERT) {
             auto* rec_ptr{wso_ptr->get_rec_ptr()};
             rec_ptr->get_tidw_ref().lock();
+            commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++not_insert_locked_num;
             if ((wso_ptr->get_op() == OP_TYPE::UPDATE ||
                  wso_ptr->get_op() == OP_TYPE::DELETE) &&
@@ -90,25 +92,24 @@ Status write_lock(session* ti) {
     return Status::OK;
 }
 
-void write_phase(session* ti) {
-    auto process = [](write_set_obj* wso_ptr) {
+void write_phase(session* ti, epoch::epoch_t ce) {
+    auto process = [ti, ce](write_set_obj* wso_ptr) {
         switch (wso_ptr->get_op()) {
             case OP_TYPE::INSERT: {
-                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
-                update_tid.set_lock(false);
-                update_tid.set_absent(false);
-                wso_ptr->get_rec_ptr()->set_tid(update_tid);
+                wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
             }
             case OP_TYPE::UPDATE: {
                 std::string* old_v{};
                 wso_ptr->get_rec_ptr()->get_latest()->set_value(
                         wso_ptr->get_val(), old_v);
-
-                tid_word update_tid{wso_ptr->get_rec_ptr()->get_tidw()};
-                update_tid.set_lock(false);
-                update_tid.set_absent(false);
-                wso_ptr->get_rec_ptr()->set_tid(update_tid);
+                LOG(INFO) << "before : " << static_cast<int>(*old_v->data())
+                          << ", after : "
+                          << static_cast<int>(*wso_ptr->get_val().data());
+                if (old_v != nullptr) {
+                    ti->get_gc_handle().push_value({old_v, ce});
+                }
+                wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
             }
             default: {
@@ -140,26 +141,48 @@ Status node_verify(session* ti) {
     return Status::OK;
 }
 
+void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
+    tid_word tid_a{commit_tid};
+    tid_a.inc_tid();
+
+    tid_word tid_b{ti->get_mrc_tid()};
+    tid_b.inc_tid();
+
+    tid_word tid_c{};
+    tid_c.set_epoch(ce);
+
+    commit_tid = std::max({tid_a, tid_b, tid_c});
+    commit_tid.set_lock(false);
+    commit_tid.set_absent(false);
+    commit_tid.set_latest(true);
+    ti->set_mrc_tid(commit_tid);
+}
+
 extern Status commit(session* ti, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
     // write lock phase
-    auto rc{write_lock(ti)};
+    tid_word commit_tid{};
+    auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) { return rc; }
+
+    epoch::epoch_t ce{epoch::get_global_epoch()};
 
     // wp verify
     rc = wp_verify(ti);
     if (rc != Status::OK) { return rc; }
 
     // read verify
-    rc = read_verify(ti);
+    rc = read_verify(ti, commit_tid);
     if (rc != Status::OK) { return rc; }
 
     // node verify
     rc = node_verify(ti);
     if (rc != Status::OK) { return rc; }
 
+    compute_commit_tid(ti, ce, commit_tid);
+
     // write phase
-    write_phase(ti);
+    write_phase(ti, ce);
 
     // clean up local set
     ti->clean_up();

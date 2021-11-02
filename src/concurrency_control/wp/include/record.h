@@ -13,6 +13,8 @@
 #include "cpu.h"
 #include "version.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) Record { // NOLINT

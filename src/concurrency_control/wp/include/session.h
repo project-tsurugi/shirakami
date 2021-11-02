@@ -241,6 +241,12 @@ private:
 class session_table {
 public:
     /**
+     * @brief about gc
+     * @details Clean up the garbage that each session has.
+     */
+    static void clean_up();
+
+    /**
      * @brief Acquire right of an one session.
      */
     static Status decide_token(Token& token); // NOLINT

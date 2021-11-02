@@ -20,7 +20,10 @@ public:
     explicit version(std::string_view value) { set_value(value); }
 
     ~version() {
-        delete get_value(); // NOLINT
+        auto* val{get_value()};
+        if (val != nullptr) {
+            delete val; // NOLINT
+        }
     }
 
     [[nodiscard]] version* get_next() const {
