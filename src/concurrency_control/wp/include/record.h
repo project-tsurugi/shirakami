@@ -24,7 +24,7 @@ public:
     ~Record() {
         auto* ver = get_latest();
         while (ver != nullptr) {
-            auto* ver_tmp = get_latest()->get_next();
+            auto* ver_tmp = ver->get_next();
             delete ver; // NOLINT
             ver = ver_tmp;
         }
