@@ -11,8 +11,32 @@
 
 namespace shirakami::batch {
 
+void remove_wps(session* ti) {
+    for (auto&& storage : ti->get_wp_set()) {
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        std::string_view page_set_meta_storage_view = {
+                reinterpret_cast<char*>( // NOLINT
+                        &page_set_meta_storage),
+                sizeof(page_set_meta_storage)};
+        std::string_view storage_view = {
+                reinterpret_cast<char*>(&storage), // NOLINT
+                sizeof(storage)};
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
+                page_set_meta_storage_view, storage_view));
+        if (elem_ptr == nullptr) {
+            LOG(FATAL);
+            std::abort();
+        }
+        if (Status::OK != (*elem_ptr)->remove_wp(ti->get_batch_id())) {
+            LOG(FATAL);
+            std::abort();
+        }
+    }
+}
+
 Status abort(session* ti) { // NOLINT
     // clean up
+    remove_wps(ti);
     ti->clean_up();
     return Status::OK;
 }
@@ -51,29 +75,6 @@ void expose_local_write(session* ti) {
 
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         process(wso);
-    }
-}
-
-void remove_wps(session* ti) {
-    for (auto&& storage : ti->get_wp_set()) {
-        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        std::string_view page_set_meta_storage_view = {
-                reinterpret_cast<char*>( // NOLINT
-                        &page_set_meta_storage),
-                sizeof(page_set_meta_storage)};
-        std::string_view storage_view = {
-                reinterpret_cast<char*>(&storage), // NOLINT
-                sizeof(storage)};
-        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
-                page_set_meta_storage_view, storage_view));
-        if (elem_ptr == nullptr) {
-            LOG(FATAL);
-            std::abort();
-        }
-        if (Status::OK != (*elem_ptr)->remove_wp(ti->get_batch_id())) {
-            LOG(FATAL);
-            std::abort();
-        }
     }
 }
 

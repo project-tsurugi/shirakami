@@ -101,11 +101,17 @@ void write_phase(session* ti, epoch::epoch_t ce) {
             }
             case OP_TYPE::UPDATE: {
                 std::string* old_v{};
-                wso_ptr->get_rec_ptr()->get_latest()->set_value(
-                        wso_ptr->get_val(), old_v);
-                LOG(INFO) << "before : " << static_cast<int>(*old_v->data())
-                          << ", after : "
-                          << static_cast<int>(*wso_ptr->get_val().data());
+                tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
+                if (ce != old_tid.get_epoch()) {
+                    // append new version
+                    Record* rec_ptr{wso_ptr->get_rec_ptr()};
+                    version* new_v{new version(ti->get_mrc_tid(), wso_ptr->get_val(), rec_ptr->get_latest())};
+                    rec_ptr->set_latest(new_v);
+                } else {
+                    // update existing version
+                    wso_ptr->get_rec_ptr()->get_latest()->set_value(
+                            wso_ptr->get_val(), old_v);
+                }
                 if (old_v != nullptr) {
                     ti->get_gc_handle().push_value({old_v, ce});
                 }

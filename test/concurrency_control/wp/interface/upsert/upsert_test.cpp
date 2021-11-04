@@ -12,7 +12,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class helper : public ::testing::Test { // NOLINT
+class upsert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
@@ -23,7 +23,7 @@ public:
     void SetUp() override {
         std::call_once(init_google, call_once_f);
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/helper_test_log");
+        log_dir.append("/build/upsert_test_log");
         init(false, log_dir); // NOLINT
     }
 
@@ -33,15 +33,9 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(helper, tx_begin_wp) { // NOLINT
+TEST_F(upsert, tx_begin) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    std::vector<Storage> wp{1, 2, 3};
-    // wp for non-existing storage
-    ASSERT_EQ(Status::ERR_FAIL_WP, tx_begin(s, false, true, wp));
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 

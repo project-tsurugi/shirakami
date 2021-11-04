@@ -15,10 +15,10 @@ if (NOT BUILD_WP)
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
+        "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/silo/*.cpp"
         "concurrency_control/silo/delete/*.cpp"
-        "concurrency_control/silo/helper/*.cpp"
         "concurrency_control/silo/insert/*.cpp"
         "concurrency_control/silo/read_write/*.cpp"
         "concurrency_control/silo/storage/*.cpp"
@@ -30,9 +30,11 @@ file(GLOB TEST_SOURCES
         )
 else ()
 file(GLOB TEST_SOURCES
+        "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/wp/*.cpp"
         "concurrency_control/wp/interface/helper/*.cpp"
+        "concurrency_control/wp/interface/upsert/*.cpp"
         )
 
 endif()
