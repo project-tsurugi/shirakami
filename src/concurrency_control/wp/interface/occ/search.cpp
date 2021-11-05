@@ -48,7 +48,8 @@ Status search_key(session* ti, Storage const storage,
         abort(ti);
         return Status::ERR_VALIDATION;
     }
-    tid_word read_tid;
+
+    tid_word read_tid{};
     std::string* read_val{};
     // read version
     Status rs{read_record(rec_ptr, read_tid, read_val)};

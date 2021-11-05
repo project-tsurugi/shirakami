@@ -17,7 +17,16 @@ void unlock_write_set(session* ti) {
     }
 }
 
-void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num);
+
+void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num) {
+    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+        if (not_insert_locked_num == 0) { break; }
+        auto* wso_ptr = &(elem);
+        if (wso_ptr->get_op() == OP_TYPE::INSERT) { continue; }
+        wso_ptr->get_rec_ptr()->get_tidw_ref().unlock();
+        --not_insert_locked_num;
+    }
+}
 
 Status abort(session* ti) { // NOLINT
     ti->clean_up();
@@ -29,7 +38,9 @@ Status read_verify(session* ti, tid_word& commit_tid) {
     for (auto&& itr : ti->get_read_set()) {
         const auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-        if (itr.get_tid().get_tid() != check.get_tid() || check.get_absent() ||
+        if (itr.get_tid().get_tid() != check.get_tid() ||
+            itr.get_tid().get_epoch() != check.get_epoch() ||
+            check.get_absent() ||
             (check.get_lock() &&
              ti->get_write_set().search(rec_ptr) == nullptr)) {
             unlock_write_set(ti);
@@ -40,16 +51,6 @@ Status read_verify(session* ti, tid_word& commit_tid) {
     }
 
     return Status::OK;
-}
-
-void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num) {
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        if (not_insert_locked_num == 0) { break; }
-        auto* wso_ptr = &(elem);
-        if (wso_ptr->get_op() == OP_TYPE::INSERT) { continue; }
-        wso_ptr->get_rec_ptr()->get_tidw_ref().unlock();
-        --not_insert_locked_num;
-    }
 }
 
 Status wp_verify(session* ti) {
@@ -105,7 +106,9 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                 if (ce != old_tid.get_epoch()) {
                     // append new version
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
-                    version* new_v{new version(ti->get_mrc_tid(), wso_ptr->get_val(), rec_ptr->get_latest())};
+                    version* new_v{new version(ti->get_mrc_tid(),
+                                               wso_ptr->get_val(),
+                                               rec_ptr->get_latest())};
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version

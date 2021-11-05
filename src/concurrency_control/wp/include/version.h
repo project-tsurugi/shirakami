@@ -44,7 +44,7 @@ public:
      * @pre This is for initialization of version.
      * If you use in other case, it may occurs std::abort.
      */
-    void set_value(std::string_view value) {
+    void set_value(std::string_view const value) {
         if (get_value() != nullptr) {
             LOG(FATAL) << "usage";
             std::abort();
@@ -58,7 +58,7 @@ public:
         value_.store(new std::string(new_v), std::memory_order_release); // NOLINT
     }
 
-    void set_next(version* next) {
+    void set_next(version* const next) {
         next_.store(next, std::memory_order_release);
     }
 

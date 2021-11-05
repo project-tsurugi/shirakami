@@ -74,7 +74,6 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
         std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                 sizeof(v)};
         ASSERT_EQ(upsert(s, storage, elem, v_view), Status::OK);
-        LOG(INFO) << "c is " << static_cast<int>(c);
         ASSERT_EQ(Status::OK, commit(s));
     }
     ASSERT_EQ(leave(s), Status::OK);
