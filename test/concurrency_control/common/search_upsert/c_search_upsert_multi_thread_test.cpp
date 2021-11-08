@@ -6,6 +6,7 @@
 #include <atomic>
 #include <climits>
 #include <mutex>
+#include <random>
 #include <thread>
 #include <vector>
 
@@ -82,8 +83,10 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
     for (auto&& elem : readys) { elem = 0; }
     std::atomic<bool> go{false};
 
-    auto process = [storage, &go, &readys,
-                    &keys](std::size_t th_num) {
+    auto process = [storage, &go, &readys, keys](std::size_t th_num) {
+        //std::random_device rd;
+        //std::mt19937_64 engine(rd());
+        //std::shuffle(keys.begin(), keys.end(), engine);
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
         storeRelease(readys.at(th_num), 1);

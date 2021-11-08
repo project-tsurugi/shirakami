@@ -166,21 +166,36 @@ extern Status commit(session* ti, // NOLINT
     // write lock phase
     tid_word commit_tid{};
     auto rc{write_lock(ti, commit_tid)};
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        occ::abort(ti);
+        return rc;
+    }
 
     epoch::epoch_t ce{epoch::get_global_epoch()};
 
     // wp verify
     rc = wp_verify(ti);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        unlock_write_set(ti);
+        occ::abort(ti);
+        return rc;
+    }
 
     // read verify
     rc = read_verify(ti, commit_tid);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        unlock_write_set(ti);
+        occ::abort(ti);
+        return rc;
+    }
 
     // node verify
     rc = node_verify(ti);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        unlock_write_set(ti);
+        occ::abort(ti);
+        return rc;
+    }
 
     compute_commit_tid(ti, ce, commit_tid);
 

@@ -120,7 +120,7 @@ TEST_F(upsert_test, batch_rmw) { // NOLINT
     ASSERT_EQ(register_storage(st), Status::OK);
 
     // begin: initialize table
-    std::size_t th_num{5};
+    std::size_t th_num{5}; // NOLINT
     //if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
     std::vector<std::string> keys(th_num);
     Token s{};
