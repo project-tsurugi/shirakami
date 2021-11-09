@@ -140,4 +140,5 @@ target_link_libraries(map
         PRIVATE Threads::Threads
         )
 
+add_subdirectory(bcc_2b)
 add_subdirectory(ycsb_ol_bt_nc)
