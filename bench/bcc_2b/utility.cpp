@@ -36,6 +36,7 @@ void check_flags() {
     } else {
         LOG(FATAL) << "Length of val must be larger than 0.";
     }
+    std::cout << "FLAGS_rec : " << FLAGS_rec << std::endl;
 
     std::cout << "online options" << std::endl;
     printf("FLAGS_ol_ops : %zu\n", FLAGS_ol_ops);           // NOLINT
@@ -84,19 +85,27 @@ void output_result(std::vector<simple_result> const& res_ol,
         ol_ct_abort += elem.get_ct_abort();
         ol_ct_commit += elem.get_ct_commit();
     }
-    std::cout << "ol_abort_rate:\t"
-              << static_cast<double>(ol_ct_abort) /
-                         static_cast<double>(ol_ct_commit + ol_ct_abort)
-              << std::endl;
+    if (ol_ct_abort == 0) {
+        std::cout << "ol_abort_rate:\t0" << std::endl;
+    } else if (ol_ct_commit == 0) {
+        std::cout << "ol_abort_rate:\t100" << std::endl;
+    } else {
+        std::cout << "ol_abort_rate:\t"
+                  << static_cast<double>(ol_ct_abort) /
+                             static_cast<double>(ol_ct_commit + ol_ct_abort)
+                  << std::endl;
+    }
     std::cout << "ol_abort_count:\t" << ol_ct_abort << std::endl;
     std::cout << "ol_throughput[tps]:\t" << ol_ct_commit / FLAGS_duration
               << std::endl;
     std::cout << "ol_throughput[ops/s]:\t"
               << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration << std::endl;
-    std::cout << "ol_throughput[ops/s/th]:\t"
-              << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration /
-                         FLAGS_ol_thread
-              << std::endl;
+    if (FLAGS_ol_thread != 0) {
+        std::cout << "ol_throughput[ops/s/th]:\t"
+                  << (ol_ct_commit * FLAGS_ol_ops) / FLAGS_duration /
+                             FLAGS_ol_thread
+                  << std::endl;
+    }
 
     std::uint64_t bt_ct_commit{0};
     std::uint64_t bt_ct_abort{0};

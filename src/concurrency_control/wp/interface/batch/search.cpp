@@ -12,7 +12,6 @@
 
 #include "glog/logging.h"
 
-
 namespace shirakami::batch {
 
 Status search_key(session* ti, Storage const storage,
@@ -70,7 +69,6 @@ Status search_key(session* ti, Storage const storage,
     for (;;) {
         if (ver == nullptr) {
             LOG(FATAL) << "unreachable";
-            std::abort();
         }
         if (ti->get_valid_epoch() > f_check.get_epoch()) {
             valid_version_tuple_register();

@@ -25,11 +25,9 @@ void remove_wps(session* ti) {
                 page_set_meta_storage_view, storage_view));
         if (elem_ptr == nullptr) {
             LOG(FATAL);
-            std::abort();
         }
         if (Status::OK != (*elem_ptr)->remove_wp(ti->get_batch_id())) {
             LOG(FATAL);
-            std::abort();
         }
     }
 }

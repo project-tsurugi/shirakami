@@ -55,7 +55,7 @@ void brock_insert(Storage st, size_t start, size_t end) {
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
-        rc = insert(token, st, make_key(FLAGS_key_len, i),
+        rc = upsert(token, st, make_key(FLAGS_key_len, i),
                      std::string(FLAGS_val_len, '0'));
         if (rc != Status::OK) { LOG(FATAL) << rc; }
         ++ctr;
@@ -108,6 +108,7 @@ void init_db_bt() {
         if (ret != Status::OK) { LOG(FATAL) << "fail register_storage."; }
         get_bt_storages().emplace_back(st);
 
+        LOG(INFO) << st;
         //ths.emplace_back(build_storage, st, FLAGS_bt_rec);
         build_storage(st, FLAGS_rec);
     }
