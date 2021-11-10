@@ -143,9 +143,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }
-                    if (rc == Status::WARN_NOT_FOUND) {
-                        LOG(FATAL);
-                    }
+                    if (rc == Status::WARN_NOT_FOUND) { LOG(FATAL); }
                     if (rc == Status::OK ||
                         rc == Status::WARN_READ_FROM_OWN_OPERATION ||
                         rc == Status::ERR_VALIDATION) {
@@ -166,7 +164,10 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 ++ct_abort;
                 abort(token);
                 need_verify = false;
-                break;
+                goto RETRY; // NOLINT
+                // for occ
+                // Without it, OCC can commit well.
+                // Because if the transaction changes the access destination, the collision with the batch may be avoided.
             }
         }
 

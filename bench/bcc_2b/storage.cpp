@@ -108,7 +108,6 @@ void init_db_bt() {
         if (ret != Status::OK) { LOG(FATAL) << "fail register_storage."; }
         get_bt_storages().emplace_back(st);
 
-        LOG(INFO) << st;
         //ths.emplace_back(build_storage, st, FLAGS_bt_rec);
         build_storage(st, FLAGS_rec);
     }

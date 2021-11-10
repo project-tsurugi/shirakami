@@ -15,8 +15,8 @@
  */
 
 // shirakami/bench
-#include "./include/build_db.h"
-#include "./include/gen_key.h"
+#include "build_db.h"
+#include "gen_key.h"
 
 // shirakami-impl interface library
 #include "clock.h"

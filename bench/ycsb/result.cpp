@@ -3,7 +3,7 @@
 #include <iostream>
 
 // shirakami-impl interface library
-#include "./include/result.h"
+#include "result.h"
 #include "memory.h"
 
 namespace shirakami {
