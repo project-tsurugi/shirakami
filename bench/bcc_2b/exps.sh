@@ -1,340 +1,232 @@
+set -e
+
+# Run this script from the project source directory (shirakami).
+
 cpumhz=2100
-duration=100
+#duration=100
+duration=5
 key_len=64
 #val_len_ary=(8)
-val_len_ary=(8 64 1024)
+val_len_ary=(8 64)
+rec=10000
+#rec=10
 
-rec_ary=(30000 60000 100000)
-ol_ops=10
+rratio_ary=(99 80 50)
 skew=0
 
-rratioary=(99 80 50)
+ol_ops=10
+ol_wp_rratio_ary=(0 10 50)
+
+# Reinitialize later.
+ol_thread=1
+
+bt_ops=1000
 
 epoch=5
 
-for rec in "${rec_ary[@]}"; do
-  bt_ops=$rec
-	for val_len in "${val_len_ary[@]}"; do
-		for rratio in "${rratioary[@]}"; do
-			if test $rratio = 99; then
-				if test $val_len = 64; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r99_k64_v64_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r99_k64_v64_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r99_k64_v64_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 8; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r99_k64_v8_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r99_k64_v8_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r99_k64_v8_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 1024; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r99_k64_v1024_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r99_k64_v1024_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r99_k64_v1024_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				else
-					echo "BUG"
-					exit 1
-				fi
-			elif test $rratio = 80; then
-				if test $val_len = 64; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r80_k64_v64_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r80_k64_v64_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r80_k64_v64_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 8; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r80_k64_v8_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r80_k64_v8_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r80_k64_v8_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 1024; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r80_k64_v1024_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r80_k64_v1024_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r80_k64_v1024_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				else
-					echo "BUG"
-					exit 1
-				fi
-			elif test $rratio = 50; then
-				if test $val_len = 64; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r50_k64_v64_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r50_k64_v64_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r50_k64_v64_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 8; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r50_k64_v8_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r50_k64_v8_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r50_k64_v8_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				elif test $val_len = 1024; then
-					if test $rec = 30000; then
-						result=result_ycsb_mb_nc_r50_k64_v1024_rec30k.dat
-					elif test $rec = 60000; then
-						result=result_ycsb_mb_nc_r50_k64_v1024_rec60k.dat
-					elif test $rec = 100000; then
-						result=result_ycsb_mb_nc_r50_k64_v1024_rec100k.dat
-					else
-						echo "BUG"
-						exit 1
-					fi
-				else
-					echo "BUG"
-					exit 1
-				fi
-			else
-				echo "BUG"
-				exit 1
-			fi
-			rm $result
+# Reinitialize later.
+result=hoge.dat
 
-			echo "#ol-thread, avg-tps, min-tps, max-tps, avg-ops, min-ops, max-ops, avg-opsth, min-opsth, max-opsth, avg-ar, min-ar, max-ar, bt-thread, avg-tps, min-tps, max-tps, avg-ops, min-ops, max-ops, avg-opsth, min-opsth, max-opsth, avg-ar, min-ar, max-ar, avg-camiss, min-camiss, max-camiss, avg-maxrss, min-maxrss, max-maxrss, avg-cgv, min-cgv, max-cgv" >>$result
-			echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb_ol_bt_nc/ycsb_ol_bt_nc -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -ol_ops $ol_ops -ol_rratio $rratio -ol_rec $rec -ol_skew $skew -ol_thread x -bt_ops $bt_ops -bt_rratio $rratio -bt_rec $rec -bt_skew $skew -bt_thread 1" >>$result
+gen_graph_cc() {
+	echo "start gen_graph_cc"
+	gnuplot -e 'tname="cc only"' ./../../../bench/bcc_2b/graph.plt
+}
 
-			for ((thread = 28; thread <= 84; thread += 28)); do
-				ol_thread=$(echo "$thread - 1" | bc)
-				#        bt_thread=`echo "112 - $thread" | bc`
-				bt_thread=1
-				echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb_ol_bt_nc/ycsb_ol_bt_nc -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -ol_ops $ol_ops -ol_rratio $rratio -ol_rec $rec -ol_skew $skew -ol_thread $ol_thread -bt_ops $bt_ops -bt_rratio $rratio -bt_rec $rec -bt_skew $skew -bt_thread $bt_thread"
-				echo "online thread number $thread"
+gen_graph_wp() {
+	echo "start gen_graph_wp"
+	gnuplot -e 'tname="wp"' ./../../../bench/bcc_2b/graph.plt
+}
 
-				sumOLTH=0
-				sumOLOPS=0
-				sumOLOPSTH=0
-				sumOLAR=0
-				sumBTTH=0
-				sumBTOPS=0
-				sumBTOPSTH=0
-				sumBTAR=0
-				sumCA=0
-				sumMAXRSS=0
-				sumCGV=0
-				maxOLTH=0
-				maxOLOPS=0
-				maxOLOPSTH=0
-				maxOLAR=0
-				maxBTTH=0
-				maxBTOPS=0
-				maxBTOPSTH=0
-				maxBTAR=0
-				maxCA=0
-				maxMAXRSS=0
-				maxCGV=0
-				minOLTH=0
-				minOLOPS=0
-				minOLOPSTH=0
-				minOLAR=0
-				minBTTH=0
-				minBTOPS=0
-				minBTOPSTH=0
-				minBTAR=0
-				minCA=0
-				minMAXRSS=0
-				minCGV=0
-				for ((i = 1; i <= epoch; ++i)); do
-					date
-					sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb_ol_bt_nc/ycsb_ol_bt_nc -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -ol_ops $ol_ops -ol_rratio $rratio -ol_rec $rec -ol_skew $skew -ol_thread $ol_thread -bt_ops $bt_ops -bt_rratio $rratio -bt_rec $rec -bt_skew $skew -bt_thread $bt_thread >exp.txt
-					tmpOLTH=$(grep ol_throughput ./exp.txt | grep tps | awk '{print $2}')
-					tmpOLOPS=$(grep ol_throughput ./exp.txt | grep ops/s | grep -v ops/s/th | awk '{print $2}')
-					tmpOLOPSTH=$(grep ol_throughput ./exp.txt | grep ops/s/th | awk '{print $2}')
-					tmpBTTH=$(grep bt_throughput ./exp.txt | grep tps | awk '{print $2}')
-					tmpBTOPS=$(grep bt_throughput ./exp.txt | grep ops/s | grep -v ops/s/th | awk '{print $2}')
-					tmpBTOPSTH=$(grep bt_throughput ./exp.txt | grep ops/s/th | awk '{print $2}')
-					tmpOLAR=$(grep ol_abort_rate ./exp.txt | awk '{print $2}')
-					tmpBTAR=$(grep bt_abort_rate ./exp.txt | awk '{print $2}')
-					tmpCA=$(grep cache-misses ./ana.txt | awk '{print $4}')
-					tmpMAXRSS=$(grep maxrss ./exp.txt | awk '{print $2}')
-					tmpCGV=$(grep cpr_global_version ./exp.txt | awk '{print $2}')
-					sumOLTH=$(echo "scale=4; $sumOLTH + $tmpOLTH" | bc | xargs printf %10.4f)
-					sumOLOPS=$(echo "scale=4; $sumOLOPS + $tmpOLOPS" | bc | xargs printf %10.4f)
-					sumOLOPSTH=$(echo "scale=4; $sumOLOPSTH + $tmpOLOPSTH" | bc | xargs printf %10.4f)
-					sumBTTH=$(echo "scale=4; $sumBTTH + $tmpBTTH" | bc | xargs printf %10.4f)
-					sumBTOPS=$(echo "scale=4; $sumBTOPS + $tmpBTOPS" | bc | xargs printf %10.4f)
-					sumBTOPSTH=$(echo "scale=4; $sumBTOPSTH + $tmpBTOPSTH" | bc | xargs printf %10.4f)
-					sumOLAR=$(echo "scale=4; $sumOLAR + $tmpOLAR" | bc | xargs printf %.4f)
-					sumBTAR=$(echo "scale=4; $sumBTAR + $tmpBTAR" | bc | xargs printf %.4f)
-					sumCA=$(echo "$sumCA + $tmpCA" | bc)
-					sumMAXRSS=$(echo "$sumMAXRSS + $tmpMAXRSS" | bc)
-					sumCGV=$(echo "$sumCGV + $tmpCGV" | bc)
-					echo "tmpOLTH: $tmpOLTH, tmpOLAR: $tmpOLAR, tmpBTTH: $tmpBTTH, tmpBTAR: $tmpBTAR, tmpCA: $tmpCA"
+decide_result_name() {
+	# $1 rratio, $2 val, $3 wp_rratio
+	local one="_r$1"
+	local two="_v$2"
+	local three="_wpr$3"
+	result="data$one$two$three.dat"
+}
 
-					if test $i -eq 1; then
-						maxOLTH=$tmpOLTH
-						maxOLOPS=$tmpOLOPS
-						maxOLOPSTH=$tmpOLOPSTH
-						maxBTTH=$tmpBTTH
-						maxBTOPS=$tmpBTOPS
-						maxBTOPSTH=$tmpBTOPSTH
-						maxOLAR=$tmpOLAR
-						maxBTAR=$tmpBTAR
-						maxCA=$tmpCA
-						maxMAXRSS=$tmpMAXRSS
-						maxCGV=$tmpCGV
-						minOLTH=$tmpOLTH
-						minOLOPS=$tmpOLOPS
-						minOLOPSTH=$tmpOLOPSTH
-						minBTTH=$tmpBTTH
-						minBTOPS=$tmpBTOPS
-						minBTOPSTH=$tmpBTOPSTH
-						minOLAR=$tmpOLAR
-						minBTAR=$tmpBTAR
-						minCA=$tmpCA
-						minMAXRSS=$tmpMAXRSS
-						minCGV=$tmpCGV
-					fi
+build_cc() {
+	echo "start build_cc"
+	rm -rf build_cc_release
+	mkdir build_cc_release
+	cd build_cc_release
+	cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF ..
+	cmake --build . --target all -- -j
+	cd ../
+}
 
-					flag=$(echo "$tmpOLTH > $maxOLTH" | bc)
-					if test $flag -eq 1; then
-						maxOLTH=$tmpOLTH
-					fi
-					flag=$(echo "$tmpOLOPS > $maxOLOPS" | bc)
-					if test $flag -eq 1; then
-						maxOLOPS=$tmpOLOPS
-					fi
-					flag=$(echo "$tmpOLOPSTH > $maxOLOPSTH" | bc)
-					if test $flag -eq 1; then
-						maxOLOPSTH=$tmpOLOPSTH
-					fi
-					flag=$(echo "$tmpBTTH > $maxBTTH" | bc)
-					if test $flag -eq 1; then
-						maxBTTH=$tmpBTTH
-					fi
-					flag=$(echo "$tmpBTOPS > $maxBTOPS" | bc)
-					if test $flag -eq 1; then
-						maxBTOPS=$tmpBTOPS
-					fi
-					flag=$(echo "$tmpBTOPSTH > $maxBTOPSTH" | bc)
-					if test $flag -eq 1; then
-						maxBTOPSTH=$tmpBTOPSTH
-					fi
-					flag=$(echo "$tmpOLAR > $maxOLAR" | bc)
-					if test $flag -eq 1; then
-						maxOLAR=$tmpOLAR
-					fi
-					flag=$(echo "$tmpBTAR > $maxBTAR" | bc)
-					if test $flag -eq 1; then
-						maxBTAR=$tmpBTAR
-					fi
-					flag=$(echo "$tmpCA > $maxCA" | bc)
-					if test $flag -eq 1; then
-						maxCA=$tmpCA
-					fi
-					flag=$(echo "$tmpMAXRSS > $maxMAXRSS" | bc)
-					if test $flag -eq 1; then
-						maxMAXRSS=$tmpMAXRSS
-					fi
-					flag=$(echo "$tmpCGV > $maxCGV" | bc)
-					if test $flag -eq 1; then
-						maxCGV=$tmpCGV
-					fi
+build_wp() {
+	echo "start build_wp"
+	rm -rf build_wp_release
+	mkdir build_wp_release
+	cd build_wp_release
+	cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBUILD_WP=ON ..
+	cmake --build . --target all -- -j
+	cd ../
+}
 
-					flag=$(echo "$tmpOLTH < $minOLTH" | bc)
-					if test $flag -eq 1; then
-						minOLTH=$tmpOLTH
-					fi
-					flag=$(echo "$tmpOLOPS < $minOLOPS" | bc)
-					if test $flag -eq 1; then
-						minOLOPS=$tmpOLOPS
-					fi
-					flag=$(echo "$tmpOLOPSTH < $minOLOPSTH" | bc)
-					if test $flag -eq 1; then
-						minOLOPSTH=$tmpOLOPSTH
-					fi
-					flag=$(echo "$tmpBTTH < $minBTTH" | bc)
-					if test $flag -eq 1; then
-						minBTTH=$tmpBTTH
-					fi
-					flag=$(echo "$tmpBTOPS < $minBTOPS" | bc)
-					if test $flag -eq 1; then
-						minBTOPS=$tmpBTOPS
-					fi
-					flag=$(echo "$tmpBTOPSTH < $minBTOPSTH" | bc)
-					if test $flag -eq 1; then
-						minBTOPSTH=$tmpBTOPSTH
-					fi
-					flag=$(echo "$tmpOLAR < $minOLAR" | bc)
-					if test $flag -eq 1; then
-						minOLAR=$tmpOLAR
-					fi
-					flag=$(echo "$tmpBTAR < $minBTAR" | bc)
-					if test $flag -eq 1; then
-						minBTAR=$tmpBTAR
-					fi
-					flag=$(echo "$tmpCA < $minCA" | bc)
-					if test $flag -eq 1; then
-						minCA=$tmpCA
-					fi
-					flag=$(echo "$tmpMAXRSS < $minMAXRSS" | bc)
-					if test $flag -eq 1; then
-						minMAXRSS=$tmpMAXRSS
-					fi
-					flag=$(echo "$tmpCGV < $minCGV" | bc)
-					if test $flag -eq 1; then
-						minCGV=$tmpCGV
-					fi
+output_data_comment() {
+	echo "start output_data_comment"
+	# $1 rratio, $2 val, $3 wp_rratio
+	echo "#ol-thread, avg-tps, min-tps, max-tps, avg-ops, avg-ar, min-ar, max-ar, batch avg-tps, min-tps, max-tps, avg-ar, min-ar, max-ar, avg-camiss, min-camiss, max-camiss, avg-maxrss, min-maxrss, max-maxrss" >>$result
+	echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l bcc_2b -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -rec $rec -ol_ops $ol_ops -ol_rratio $rratio -ol_wp_rratio $ol_wp_rratio -ol_skew $skew -ol_thread sweep -bt_ops $rec -bt_rratio $rratio -bt_skew $skew" >>$result
 
+}
+
+exp() {
+	echo "start exp"
+	for ol_wp_rratio in "${ol_wp_rratio_ary[@]}"; do
+		echo "start loop ol_wp_rratio"
+		for val_len in "${val_len_ary[@]}"; do
+			echo "start loop val_len"
+			for rratio in "${rratio_ary[@]}"; do
+				echo "start loop rratio"
+				decide_result_name $rratio $val_len $ol_wp_rratio
+				rm -f $result
+
+				output_data_comment $rratio $val_len $ol_wp_rratio
+				for ((thread = 28; thread <= 112; thread += 28)); do
+					ol_thread=$(echo "$thread - 1" | bc)
+					echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_2b -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -rec $rec -ol_ops $ol_ops -ol_rratio $rratio -ol_wp_rratio $ol_wp_rratio -ol_skew $skew -ol_thread $ol_thread -bt_ops $rec -bt_rratio $rratio -bt_skew $skew"
+					echo "online thread $ol_thread, batch thread 1"
+
+					sumOLTH=0
+					sumOLAR=0
+					sumBTTH=0
+					sumBTAR=0
+					sumCA=0
+					sumMAXRSS=0
+					maxOLTH=0
+					maxOLAR=0
+					maxBTTH=0
+					maxBTAR=0
+					maxCA=0
+					maxMAXRSS=0
+					minOLTH=0
+					minOLAR=0
+					minBTTH=0
+					minBTAR=0
+					minCA=0
+					minMAXRSS=0
+
+					for ((i = 1; i <= epoch; ++i)); do
+						date
+						sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_2b -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -rec $rec -ol_ops $ol_ops -ol_rratio $rratio -ol_wp_rratio $ol_wp_rratio -ol_skew $skew -ol_thread $ol_thread -bt_ops $rec -bt_rratio $rratio -bt_skew $skew >exp.txt
+						tmpOLTH=$(grep "ol_throughput\[tps" ./exp.txt | grep tps | awk '{print $2}')
+						tmpBTTH=$(grep bt_throughput ./exp.txt | grep tps | awk '{print $2}')
+						tmpOLAR=$(grep ol_abort_rate ./exp.txt | awk '{print $2}')
+						tmpBTAR=$(grep bt_abort_rate ./exp.txt | awk '{print $2}')
+						tmpCA=$(grep cache-misses ./ana.txt | awk '{print $4}')
+						tmpMAXRSS=$(grep maxrss ./exp.txt | awk '{print $2}')
+						sumOLTH=$(echo "scale=4; $sumOLTH + $tmpOLTH" | bc | xargs printf %10.4f)
+						sumBTTH=$(echo "scale=4; $sumBTTH + $tmpBTTH" | bc | xargs printf %10.4f)
+						sumOLAR=$(echo "scale=4; $sumOLAR + $tmpOLAR" | bc | xargs printf %.4f)
+						sumBTAR=$(echo "scale=4; $sumBTAR + $tmpBTAR" | bc | xargs printf %.4f)
+						sumCA=$(echo "$sumCA + $tmpCA" | bc)
+						sumMAXRSS=$(echo "$sumMAXRSS + $tmpMAXRSS" | bc)
+						echo "tmpOLTH: $tmpOLTH, tmpOLAR: $tmpOLAR, tmpBTTH: $tmpBTTH, tmpBTAR: $tmpBTAR, tmpCA: $tmpCA"
+
+						if test $i -eq 1; then
+							maxOLTH=$tmpOLTH
+							maxBTTH=$tmpBTTH
+							maxOLAR=$tmpOLAR
+							maxBTAR=$tmpBTAR
+							maxCA=$tmpCA
+							maxMAXRSS=$tmpMAXRSS
+							minOLTH=$tmpOLTH
+							minBTTH=$tmpBTTH
+							minOLAR=$tmpOLAR
+							minBTAR=$tmpBTAR
+							minCA=$tmpCA
+							minMAXRSS=$tmpMAXRSS
+						fi
+
+						flag=$(echo "$tmpOLTH > $maxOLTH" | bc)
+						if test $flag -eq 1; then
+							maxOLTH=$tmpOLTH
+						fi
+						flag=$(echo "$tmpBTTH > $maxBTTH" | bc)
+						if test $flag -eq 1; then
+							maxBTTH=$tmpBTTH
+						fi
+						flag=$(echo "$tmpOLAR > $maxOLAR" | bc)
+						if test $flag -eq 1; then
+							maxOLAR=$tmpOLAR
+						fi
+						flag=$(echo "$tmpBTAR > $maxBTAR" | bc)
+						if test $flag -eq 1; then
+							maxBTAR=$tmpBTAR
+						fi
+						flag=$(echo "$tmpCA > $maxCA" | bc)
+						if test $flag -eq 1; then
+							maxCA=$tmpCA
+						fi
+						flag=$(echo "$tmpMAXRSS > $maxMAXRSS" | bc)
+						if test $flag -eq 1; then
+							maxMAXRSS=$tmpMAXRSS
+						fi
+
+						flag=$(echo "$tmpOLTH < $minOLTH" | bc)
+						if test $flag -eq 1; then
+							minOLTH=$tmpOLTH
+						fi
+						flag=$(echo "$tmpBTTH < $minBTTH" | bc)
+						if test $flag -eq 1; then
+							minBTTH=$tmpBTTH
+						fi
+						flag=$(echo "$tmpOLAR < $minOLAR" | bc)
+						if test $flag -eq 1; then
+							minOLAR=$tmpOLAR
+						fi
+						flag=$(echo "$tmpBTAR < $minBTAR" | bc)
+						if test $flag -eq 1; then
+							minBTAR=$tmpBTAR
+						fi
+						flag=$(echo "$tmpCA < $minCA" | bc)
+						if test $flag -eq 1; then
+							minCA=$tmpCA
+						fi
+						flag=$(echo "$tmpMAXRSS < $minMAXRSS" | bc)
+						if test $flag -eq 1; then
+							minMAXRSS=$tmpMAXRSS
+						fi
+
+					done
+					avgOLTH=$(echo "scale=4; $sumOLTH / $epoch" | bc | xargs printf %10.4f)
+					avgBTTH=$(echo "scale=4; $sumBTTH / $epoch" | bc | xargs printf %10.4f)
+					avgOLAR=$(echo "scale=4; $sumOLAR / $epoch" | bc | xargs printf %.4f)
+					avgBTAR=$(echo "scale=4; $sumBTAR / $epoch" | bc | xargs printf %.4f)
+					avgCA=$(echo "$sumCA / $epoch" | bc)
+					avgMAXRSS=$(echo "$sumMAXRSS / $epoch" | bc)
+					echo "$thread $avgOLTH $minOLTH $maxOLTH $avgOLAR $minOLAR $maxOLAR $bt_thread $avgBTTH $minBTTH $maxBTTH $avgBTAR $minBTAR $maxBTAR $avgCA $minCA $maxCA $avgMAXRSS $minMAXRSS $maxMAXRSS" >>$result
 				done
-				avgOLTH=$(echo "scale=4; $sumOLTH / $epoch" | bc | xargs printf %10.4f)
-				avgOLOPS=$(echo "scale=4; $sumOLOPS / $epoch" | bc | xargs printf %10.4f)
-				avgOLOPSTH=$(echo "scale=4; $sumOLOPSTH / $epoch" | bc | xargs printf %10.4f)
-				avgBTTH=$(echo "scale=4; $sumBTTH / $epoch" | bc | xargs printf %10.4f)
-				avgBTOPS=$(echo "scale=4; $sumBTOPS / $epoch" | bc | xargs printf %10.4f)
-				avgBTOPSTH=$(echo "scale=4; $sumBTOPSTH / $epoch" | bc | xargs printf %10.4f)
-				avgOLAR=$(echo "scale=4; $sumOLAR / $epoch" | bc | xargs printf %.4f)
-				avgBTAR=$(echo "scale=4; $sumBTAR / $epoch" | bc | xargs printf %.4f)
-				avgCA=$(echo "$sumCA / $epoch" | bc)
-				avgMAXRSS=$(echo "$sumMAXRSS / $epoch" | bc)
-				avgCGV=$(echo "$sumCGV / $epoch" | bc)
-				echo "$ol_thread $avgOLTH $minOLTH $maxOLTH $avgOLOPS $minOLOPS $maxOLOPS $avgOLOPSTH $minOLOPSTH $maxOLOPSTH $avgOLAR $minOLAR $maxOLAR $bt_thread $avgBTTH $minBTTH $maxBTTH $avgBTOPS $minBTOPS $maxBTOPS $avgBTOPSTH $minBTOPSTH $maxBTOPSTH $avgBTAR $minBTAR $maxBTAR $avgCA $minCA $maxCA $avgMAXRSS $minMAXRSS $maxMAXRSS $avgCGV $minCGV $maxCGV" >>$result
 			done
 		done
 	done
-done
+}
+
+cc_exp() {
+	echo "start cc_exp"
+	cd build_cc_release/bench/bcc_2b
+	exp
+	gen_graph_cc
+	cd ../../../
+}
+
+wp_exp() {
+	echo "start wp_exp"
+	cd build_wp_release/bench/bcc_2b
+	exp
+	gen_graph_wp
+	cd ../../../
+}
+
+main() {
+	echo "start main"
+	build_cc
+	cc_exp
+	build_wp
+	wp_exp
+}
+
+main
