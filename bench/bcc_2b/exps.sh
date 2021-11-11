@@ -69,7 +69,7 @@ output_data_comment() {
 	echo "start output_data_comment"
 	# $1 rratio, $2 val, $3 wp_rratio
 	echo "#ol-thread, avg-tps, min-tps, max-tps, avg-ops, avg-ar, min-ar, max-ar, batch avg-tps, min-tps, max-tps, avg-ar, min-ar, max-ar, avg-camiss, min-camiss, max-camiss, avg-maxrss, min-maxrss, max-maxrss" >>$result
-	echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l bcc_2b -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -rec $rec -ol_ops $ol_ops -ol_rratio $rratio -ol_wp_rratio $ol_wp_rratio -ol_skew $skew -ol_thread sweep -bt_ops $rec -bt_rratio $rratio -bt_skew $skew" >>$result
+	echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_2b -cpumhz $cpumhz -duration $duration -key_len $key_len -val_len $val_len -rec $rec -ol_ops $ol_ops -ol_rratio $rratio -ol_wp_rratio $ol_wp_rratio -ol_skew $skew -ol_thread sweep -bt_ops $rec -bt_rratio $rratio -bt_skew $skew" >>$result
 
 }
 
