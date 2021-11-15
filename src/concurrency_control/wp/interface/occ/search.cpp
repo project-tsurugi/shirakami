@@ -42,13 +42,6 @@ Status search_key(session* ti, Storage const storage,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    // wp check
-    wp::wp_meta::wped_type wps{find_wp(storage)};
-    if (!wps.empty()) {
-        abort(ti);
-        return Status::ERR_VALIDATION;
-    }
-
     tid_word read_tid{};
     std::string* read_val{};
     // read version
@@ -58,6 +51,7 @@ Status search_key(session* ti, Storage const storage,
         ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
         ti->get_cache_for_search_ptr()->get_pimpl()->set_val(*read_val);
         tuple = ti->get_cache_for_search_ptr();
+        ti->get_storage_set().emplace_back(storage);
     } else {
         tuple = nullptr;
     }

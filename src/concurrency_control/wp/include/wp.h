@@ -7,6 +7,8 @@
 
 #include "cpu.h"
 
+#include "concurrency_control/wp/include/session.h"
+
 #include "shirakami/scheme.h"
 
 #include <mutex>
@@ -88,6 +90,11 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 [[maybe_unused]] static void set_page_set_meta_storage(Storage storage) {
     page_set_meta_storage = storage;
 }
+
+[[maybe_unused]] extern Status write_preserve(session* ti,
+                                              std::vector<Storage> storage,
+                                              std::size_t batch_id,
+                                              epoch::epoch_t valid_epoch);
 
 /**
  * @brief metadata about wp attached to each table (page sets).

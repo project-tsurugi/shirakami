@@ -1,4 +1,7 @@
 
+#include <string_view>
+
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "include/wp.h"
 
@@ -37,6 +40,49 @@ Status wp::init() {
     }
     set_page_set_meta_storage(ret_storage);
     set_initialized(true);
+    return Status::OK;
+}
+
+Status wp::write_preserve(session* const ti, std::vector<Storage> storage,
+                          std::size_t batch_id, epoch::epoch_t valid_epoch) {
+    ti->get_wp_set().reserve(storage.size());
+    std::vector<wp::wp_meta*> wped{};
+    wped.reserve(storage.size());
+
+    for (auto&& wp_target : storage) {
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        std::string_view page_set_meta_storage_view = {
+                reinterpret_cast<char*>( // NOLINT
+                        &page_set_meta_storage),
+                sizeof(page_set_meta_storage)};
+        std::string_view storage_view = {
+                reinterpret_cast<char*>(&wp_target), // NOLINT
+                sizeof(wp_target)};
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
+                page_set_meta_storage_view, storage_view));
+        auto cleanup_process = [ti, &wped, batch_id]() {
+            for (auto&& elem : wped) {
+                if (Status::OK != elem->remove_wp(batch_id)) {
+                    LOG(FATAL) << "vanish registered wp.";
+                    std::abort();
+                }
+            }
+            ti->clean_up();
+        };
+        if (elem_ptr == nullptr) {
+            cleanup_process();
+            // dtor : release wp_mutex
+            return Status::ERR_FAIL_WP;
+        }
+        wp::wp_meta* target_wp_meta = *elem_ptr;
+        if (Status::OK != target_wp_meta->register_wp(valid_epoch, batch_id)) {
+            cleanup_process();
+            return Status::ERR_FAIL_WP;
+        }
+        wped.emplace_back(target_wp_meta); // for fast cleanup at failure
+        ti->get_wp_set().emplace_back(wp_target);
+    }
+
     return Status::OK;
 }
 

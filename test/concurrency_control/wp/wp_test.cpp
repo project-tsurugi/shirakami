@@ -2,7 +2,7 @@
 #include <thread>
 #include <xmmintrin.h>
 
-#include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #if defined(RECOVERY)

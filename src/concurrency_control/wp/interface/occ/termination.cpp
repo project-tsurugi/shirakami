@@ -54,15 +54,13 @@ Status read_verify(session* ti, tid_word& commit_tid) {
 }
 
 Status wp_verify(session* ti) {
-    // for write set
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        auto wps = find_wp(elem.get_storage());
-        if (!wps.empty()) { return Status::ERR_FAIL_WP; }
-    }
+    // sort and unique
+    auto& st = ti->get_storage_set();
+    std::sort(st.begin(), st.end());
+    st.erase(std::unique(st.begin(), st.end()), st.end());
 
-    // for read set
-    for (auto&& elem : ti->get_read_set()) {
-        auto wps = find_wp(elem.get_storage());
+    for (auto&& elem : st) {
+        auto wps = find_wp(elem);
         if (!wps.empty()) { return Status::ERR_FAIL_WP; }
     }
 

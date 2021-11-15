@@ -3,6 +3,7 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
 namespace shirakami::epoch {

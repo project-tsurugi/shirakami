@@ -49,7 +49,7 @@ RETRY_INDEX_ACCESS:
 
         ti->get_write_set().push(
                 {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
-
+        ti->get_storage_set().emplace_back(storage);
         return Status::OK;
     }
     // try insert
@@ -73,6 +73,7 @@ RETRY_INDEX_ACCESS:
             return Status::ERR_PHANTOM;
         }
         ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+        ti->get_storage_set().emplace_back(storage);
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS

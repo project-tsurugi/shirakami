@@ -36,9 +36,9 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
     // about engine
     epoch::fin();
-    delete_all_records(); // This should be before wp::fin();
+    delete_all_records();      // This should be before wp::fin();
     session_table::clean_up(); // about gc
-    wp::fin();            // note: this use yakushima.
+    wp::fin();                 // note: this use yakushima.
 
     // about index
     yakushima::fin();
@@ -62,7 +62,7 @@ wp::wp_meta::wped_type find_wp(Storage const storage) {
             page_set_meta_storage_view, storage_view));
 
     if (elem_ptr == nullptr) {
-        LOG(FATAL) << "There is no metadata that should be there.";
+        LOG(FATAL) << "There is no metadata that should be there.: " << storage;
         std::abort();
     }
     wp::wp_meta* target_wp_meta = *elem_ptr;
@@ -114,14 +114,16 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                 std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
+        if (for_batch) {
+            ti->set_mode(tx_mode::BATCH);
+            auto rc{batch::tx_begin(ti, std::move(write_preserve))};
+            if (rc != Status::OK) { return rc; }
+        } else {
+            ti->set_mode(tx_mode::OCC);
+        }
         ti->set_tx_began(true);
         ti->set_read_only(read_only);
         ti->get_write_set().set_for_batch(for_batch);
-        if (for_batch) {
-            ti->set_mode(tx_mode::BATCH);
-            return batch::tx_begin(ti, std::move(write_preserve));
-        }
-        ti->set_mode(tx_mode::OCC);
     } else {
         return Status::WARN_ALREADY_BEGIN;
     }
