@@ -61,7 +61,7 @@ Status wp_verify(session* ti) {
 
     for (auto&& elem : st) {
         auto wps = find_wp(elem);
-        if (!wps.empty()) { return Status::ERR_FAIL_WP; }
+        if (!wp::wp_meta::empty(wps)) { return Status::ERR_FAIL_WP; }
     }
 
     return Status::OK;

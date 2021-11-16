@@ -5,15 +5,18 @@
 
 #pragma once
 
+#include <xmmintrin.h>
+
+#include <atomic>
+#include <mutex>
+#include <shared_mutex>
+#include <vector>
+
 #include "cpu.h"
 
 #include "concurrency_control/wp/include/session.h"
 
 #include "shirakami/scheme.h"
-
-#include <mutex>
-#include <shared_mutex>
-#include <vector>
 
 namespace shirakami::wp {
 
@@ -96,44 +99,104 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
                                               std::size_t batch_id,
                                               epoch::epoch_t valid_epoch);
 
+class wp_lock {
+public:
+    static bool is_locked(std::uint64_t obj) { return obj & 1; }
+
+    std::uint64_t load_obj() { return obj.load(std::memory_order_acquire); }
+
+    void lock() {
+        std::uint64_t expected{obj.load(std::memory_order_acquire)};
+        for (;;) {
+            if (is_locked(expected)) {
+                // locked by others
+                _mm_pause();
+                expected = obj.load(std::memory_order_acquire);
+                continue;
+            }
+            std::uint64_t desired{expected | 1};
+            if (obj.compare_exchange_weak(expected, desired,
+                                          std::memory_order_acq_rel,
+                                          std::memory_order_acquire)) {
+                break;
+            }
+        }
+    }
+
+    void unlock() {
+        std::uint64_t desired{obj.load(std::memory_order_acquire)};
+        std::uint64_t locked_num{desired >> 1};
+        ++locked_num;
+        desired = locked_num << 1;
+        obj.store(desired, std::memory_order_release);
+    }
+
+private:
+    /**
+     * @brief lock object
+     * @details One bit indicates the presence or absence of a lock. 
+     * The rest represents the number of past locks.
+     * The target object loaded while loading the unlocked object twice can be regarded as atomically loaded.
+     */
+    std::atomic<std::uint64_t> obj{0};
+};
+
 /**
  * @brief metadata about wp attached to each table (page sets).
  * @details
  */
 class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
-    using wped_type = std::vector<std::pair<std::size_t, std::size_t>>;
+    using wped_type =
+            std::array<std::pair<std::size_t, std::size_t>, WP_MAX_OVERLAP>;
 
-    void clear_wped() { wped_.clear(); }
+    static bool empty(const wped_type& wped) {
+        for (auto&& elem : wped) {
+            if (elem != std::make_pair<std::size_t, std::size_t>(0, 0)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void clear_wped() {
+        for (auto&& elem : wped_) { elem = {0, 0}; }
+    }
 
     wped_type get_wped() {
-        std::shared_lock sh_lock{wped_mtx_};
-        return wped_;
+        wped_type r_obj{};
+        for (;;) {
+            auto ts_f{wp_lock_.load_obj()};
+            if (wp_lock::is_locked(ts_f)) {
+                _mm_pause();
+                continue;
+            }
+            r_obj = wped_;
+            auto ts_s{wp_lock_.load_obj()};
+            if (wp_lock::is_locked(ts_s) || ts_f != ts_s) { continue; }
+            break;
+        }
+        return r_obj;
     }
 
     /**
      * @brief single register.
      */
     Status register_wp(std::size_t epoc, std::size_t id) {
-        std::unique_lock u_lock{wped_mtx_};
-        if (wped_.empty()) {
-            wped_.emplace_back(epoc, id);
-            return Status::OK;
+        wp_lock_.lock();
+        for (auto&& elem : wped_) {
+            if (elem != std::make_pair<std::size_t, std::size_t>(0, 0)) {
+                /**
+                 * Since the overlapping of wp is complicated, it is optimized or used 
+                 * as wp-k.
+                 */
+                wp_lock_.unlock();
+                return Status::ERR_FAIL_WP;
+            }
         }
-        /**
-         * Since the overlapping of wp is complicated, it is optimized or used 
-         * as wp-k.
-         */
-        return Status::ERR_FAIL_WP;
-    }
-
-    /**
-     * @brief batch register.
-     */
-    void
-    register_wp(std::vector<std::pair<std::size_t, std::size_t>> const& wps) {
-        std::unique_lock u_lock{wped_mtx_};
-        for (auto&& elem : wps) { wped_.emplace_back(elem.first, elem.second); }
+        wped_.at(0) = {epoc, id};
+        wp_lock_.unlock();
+        return Status::OK;
     }
 
     /**
@@ -143,20 +206,16 @@ public:
      * @return Status::WARN_NOT_FOUND fail.
      */
     [[nodiscard]] Status remove_wp(std::size_t const id) {
-        std::unique_lock u_lock{wped_mtx_};
-        for (auto it = wped_.begin(); it != wped_.end();) {
-            if ((*it).second == id) {
-                wped_.erase(it);
+        wp_lock_.lock();
+        for (auto&& elem : wped_) {
+            if (elem.second == id) {
+                elem = {0, 0};
+                wp_lock_.unlock();
                 return Status::OK;
             }
-            ++it;
         }
+        wp_lock_.unlock();
         return Status::WARN_NOT_FOUND;
-    }
-
-    [[nodiscard]] std::size_t size_wp() {
-        std::shared_lock sh_lock{wped_mtx_};
-        return wped_.size();
     }
 
 private:
@@ -166,10 +225,11 @@ private:
      * second of those is the batch id. 
      */
     wped_type wped_;
+
     /**
      * @brief mutex for wped_
      */
-    std::shared_mutex wped_mtx_;
+    wp_lock wp_lock_;
 };
 
 } // namespace shirakami::wp

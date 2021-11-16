@@ -72,14 +72,6 @@ TEST_F(wp_test, wp_meta_register) { // NOLINT
     auto rv = meta.get_wped();
     ASSERT_EQ(rv.at(0).first, 1);
     ASSERT_EQ(rv.at(0).second, 1);
-    std::vector<std::pair<std::size_t, std::size_t>> batch_wps{{2, 2}, {3, 3}};
-    meta.register_wp(batch_wps);
-    ASSERT_EQ(meta.get_wped().size(), 3);
-    rv = meta.get_wped();
-    ASSERT_EQ(rv.at(1).first, 2);
-    ASSERT_EQ(rv.at(1).second, 2);
-    ASSERT_EQ(rv.at(2).first, 3);
-    ASSERT_EQ(rv.at(2).second, 3);
 }
 
 TEST_F(wp_test, wp_regi_remove) { // NOLINT
@@ -122,11 +114,17 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
     ASSERT_NE(wp_info.first, nullptr);
     wp::wp_meta* wp_ptr = *wp_info.first;
     ASSERT_NE(wp_ptr, nullptr);
-    ASSERT_EQ(wp_ptr->get_wped().size(), 0);
+    ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), true);
     wp_ptr->register_wp(1, 1);
-    ASSERT_EQ(wp_ptr->get_wped().size(), 1);
+    ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), false);
+    auto wps{wp_ptr->get_wped()};
+    ASSERT_EQ(wps.at(0).first, 1);
+    ASSERT_EQ(wps.at(0).second, 1);
     ASSERT_EQ(Status::OK, wp_ptr->remove_wp(1));
-    ASSERT_EQ(wp_ptr->get_wped().size(), 0);
+    ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), true);
+    wps = wp_ptr->get_wped();
+    ASSERT_EQ(wps.at(0).first, 0);
+    ASSERT_EQ(wps.at(0).second, 0);
     wp_ptr->clear_wped();
 }
 

@@ -117,6 +117,12 @@ if (BUILD_WP)
     else ()
         add_definitions(-DWP_LEVEL=${WP_LEVEL})
     endif ()
+
+    if (NOT DEFINED WP_MAX_OVERLAP)
+        add_definitions(-DWP_MAX_OVERLAP=1)
+    else ()
+        add_definitions(-DWP_MAX_OVERLAP=${WP_MAX_OVERLAP})
+    endif ()
 endif ()
 
 # End : about cc

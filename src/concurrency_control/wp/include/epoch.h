@@ -11,7 +11,11 @@ namespace shirakami::epoch {
 
 using epoch_t = std::int64_t;
 
-[[maybe_unused]] inline std::atomic<epoch_t> global_epoch{0}; // NOLINT
+/**
+ * @brief global epoch
+ * @pre We start with 1 because we give 0 the meaning of uninitialized.
+ */
+[[maybe_unused]] inline std::atomic<epoch_t> global_epoch{1}; // NOLINT
 
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
 
