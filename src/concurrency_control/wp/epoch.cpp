@@ -23,7 +23,6 @@ void fin() {
 }
 
 void init() {
-    set_epoch_thread_end(false);
     invoke_epoch_thread();
 }
 

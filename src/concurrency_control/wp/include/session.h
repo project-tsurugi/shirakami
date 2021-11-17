@@ -96,11 +96,15 @@ public:
      */
     [[nodiscard]] tx_mode get_mode() const { return mode_; }
 
+    [[nodiscard]] epoch::epoch_t get_step_epoch() const {
+        return step_epoch_.load(std::memory_order_release);
+    }
+
     /**
      * @brief getter of @a valid_epoch_
      */
     [[nodiscard]] epoch::epoch_t get_valid_epoch() const {
-        return valid_epoch_;
+        return valid_epoch_.load(std::memory_order_acquire);
     }
 
     /**
@@ -145,7 +149,13 @@ public:
 
     void set_mode(tx_mode mode) { mode_ = mode; }
 
-    void set_valid_epoch(epoch::epoch_t ep) { valid_epoch_ = ep; }
+    void set_step_epoch(epoch::epoch_t e) {
+        step_epoch_.store(e, std::memory_order_release);
+    }
+
+    void set_valid_epoch(epoch::epoch_t ep) {
+        valid_epoch_.store(ep, std::memory_order_release);
+    }
 
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
@@ -234,6 +244,14 @@ private:
     std::vector<Storage> storage_set_{};
 
     /**
+     * @brief epoch at latest transactional step.
+     * @details Memorize the epoch in which the latest transitional step was
+     * performed. Examining this information for all workers determines some 
+     * free memory space.
+     */
+    std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
+
+    /**
      * @brief token about yakushima.
      */
     yakushima::Token yakushima_token_{};
@@ -249,7 +267,7 @@ private:
     /**
      * @brief read write batch executes write preserve preserve.
      */
-    epoch::epoch_t valid_epoch_{};
+    std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
 
     std::size_t batch_id_{};
 };

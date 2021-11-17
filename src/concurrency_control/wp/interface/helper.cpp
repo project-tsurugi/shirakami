@@ -35,6 +35,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
     // about engine
+    garbage::fin();
     epoch::fin();
     delete_all_records();      // This should be before wp::fin();
     session_table::clean_up(); // about gc
@@ -89,6 +90,7 @@ init([[maybe_unused]] bool enable_recovery,
 
     // about epoch
     epoch::init();
+    garbage::init();
 
     set_initialized(true);
     return Status::OK;
