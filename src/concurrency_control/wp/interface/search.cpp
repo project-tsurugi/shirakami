@@ -22,6 +22,9 @@ Status search_key(Token const token, Storage const storage,
         tx_begin(token); // NOLINT
     }
 
+    // update metadata
+    ti->set_step_epoch(epoch::get_global_epoch());
+
     if (ti->get_mode() == tx_mode::BATCH) {
         return batch::search_key(ti, storage, key, tuple);
     }

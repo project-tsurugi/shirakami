@@ -1,4 +1,6 @@
 
+#include <xmmintrin.h>
+
 #include <string_view>
 
 #include "concurrency_control/wp/include/helper.h"
@@ -49,8 +51,18 @@ Status search_key(session* ti, Storage const storage,
     version* ver{};
     tid_word f_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
     for (;;) {
+        if (f_check.get_lock()) {
+            _mm_pause();
+            f_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
+            continue;
+        }
         ver = rec_ptr->get_latest();
         tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
+        if (s_check.get_lock()) {
+            _mm_pause();
+            f_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
+            continue;
+        }
         if (f_check == s_check) {
             // Whatever value tid is, ver is the latest version.
             break;
@@ -66,17 +78,20 @@ Status search_key(session* ti, Storage const storage,
         tuple = ti->get_cache_for_search_ptr();
     };
 
+    if (ti->get_valid_epoch() > f_check.get_epoch()) {
+        valid_version_tuple_register();
+        return Status::OK;
+    }
+
     for (;;) {
-        if (ver == nullptr) {
-            LOG(FATAL) << "unreachable";
-        }
-        if (ti->get_valid_epoch() > f_check.get_epoch()) {
+        ver = ver->get_next();
+        if (ver == nullptr) { LOG(FATAL) << "unreachable"; }
+
+        if (ti->get_valid_epoch() > ver->get_tid().get_epoch()) {
             valid_version_tuple_register();
             return Status::OK;
         }
-        ver = ver->get_next();
     }
-
 }
 
 } // namespace shirakami::batch

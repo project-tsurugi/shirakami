@@ -23,9 +23,7 @@ void remove_wps(session* ti) {
                 sizeof(storage)};
         auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
                 page_set_meta_storage_view, storage_view));
-        if (elem_ptr == nullptr) {
-            LOG(FATAL);
-        }
+        if (elem_ptr == nullptr) { LOG(FATAL); }
         if (Status::OK != (*elem_ptr)->remove_wp(ti->get_batch_id())) {
             LOG(FATAL);
         }
@@ -58,8 +56,13 @@ void expose_local_write(session* ti) {
                 break;
             }
             case OP_TYPE::UPDATE: {
-                version* new_v{new version(rec_ptr->get_tidw(), wso.get_val(), // NOLINT
+                version* new_v{new version(rec_ptr->get_tidw(), // NOLINT
+                                           wso.get_val(),
                                            rec_ptr->get_latest())};
+                tid_word old_tid{rec_ptr->get_tidw_ref().get_obj()};
+                old_tid.set_latest(false);
+                old_tid.set_lock(false);
+                rec_ptr->get_latest()->set_tid(old_tid);
                 rec_ptr->set_latest(new_v);
                 break;
             }

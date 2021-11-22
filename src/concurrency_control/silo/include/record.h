@@ -56,7 +56,11 @@ public:
         return *this;
     }
 
-    [[nodiscard]] Record* get_snap_ptr() const { return snap_ptr_.load(std::memory_order_acquire); } // NOLINT
+    std::string_view get_key() { return tuple_.get_key(); }
+
+    [[nodiscard]] Record* get_snap_ptr() const {
+        return snap_ptr_.load(std::memory_order_acquire);
+    } // NOLINT
 
     tid_word& get_tidw() { return tidw_; } // NOLINT
 
@@ -68,13 +72,17 @@ public:
 
     void set_tidw(tid_word tidw) & { tidw_.set_obj(tidw.get_obj()); }
 
-    void set_snap_ptr(Record* ptr) { snap_ptr_.store(ptr, std::memory_order_release); }
+    void set_snap_ptr(Record* ptr) {
+        snap_ptr_.store(ptr, std::memory_order_release);
+    }
 
 #if defined(CPR)
 
     Tuple& get_stable() { return stable_; } // NOLINT
 
-    [[nodiscard]] std::uint64_t get_version() const { return version_; } // NOLINT
+    [[nodiscard]] std::uint64_t get_version() const {
+        return version_;
+    } // NOLINT
 
     void set_version(std::uint64_t new_v) { version_ = new_v; }
 

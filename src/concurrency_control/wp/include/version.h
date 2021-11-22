@@ -39,6 +39,8 @@ public:
         return value_.load(std::memory_order_acquire);
     }
 
+    [[nodiscard]] tid_word get_tid() const { return tid_; }
+
     /**
      * @brief set value
      * @pre This is for initialization of version.
@@ -55,7 +57,8 @@ public:
 
     void set_value(std::string_view new_v, std::string*& old_v) {
         old_v = get_value();
-        value_.store(new std::string(new_v), std::memory_order_release); // NOLINT
+        value_.store(new std::string(new_v),
+                     std::memory_order_release); // NOLINT
     }
 
     void set_next(version* const next) {

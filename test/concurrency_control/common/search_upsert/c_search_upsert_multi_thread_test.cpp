@@ -63,7 +63,7 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
     ASSERT_EQ(register_storage(storage), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    std::size_t thread_num{std::thread::hardware_concurrency()};
+    std::size_t thread_num{10}; // NOLINT
     if (CHAR_MAX < thread_num) { thread_num = CHAR_MAX; }
     LOG(INFO) << "thread num : " << thread_num;
     std::vector<std::string> keys(thread_num);
