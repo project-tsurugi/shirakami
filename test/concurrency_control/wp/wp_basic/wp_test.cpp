@@ -56,48 +56,6 @@ TEST_F(wp_test, basic) { // NOLINT
 #endif
 }
 
-TEST_F(wp_test, init_fin) { // NOLINT
-    ASSERT_EQ(Status::OK, wp::fin());
-    ASSERT_EQ(Status::WARN_NOT_INIT, wp::fin());
-    ASSERT_EQ(Status::OK, wp::init());
-    ASSERT_EQ(Status::WARN_ALREADY_INIT, wp::init());
-    ASSERT_EQ(Status::OK, wp::fin());
-    ASSERT_EQ(Status::OK, wp::init());
-}
-
-TEST_F(wp_test, wp_meta_register) { // NOLINT
-    wp::wp_meta meta{};
-    meta.register_wp(1, 1);
-    ASSERT_EQ(meta.get_wped().size(), 1);
-    auto rv = meta.get_wped();
-    ASSERT_EQ(rv.at(0).first, 1);
-    ASSERT_EQ(rv.at(0).second, 1);
-}
-
-TEST_F(wp_test, wp_regi_remove) { // NOLINT
-    wp::wp_meta wp_info;
-    std::atomic<std::size_t> fin_register{0};
-    std::vector<std::thread> th_vc;
-    th_vc.reserve(std::thread::hardware_concurrency());
-
-    auto work = [&wp_info, &fin_register](std::size_t const id) {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        Status rc{wp_info.register_wp(ce, id)};
-        if (rc == Status::OK) {
-            ++fin_register;
-            ASSERT_EQ(wp_info.remove_wp(id), Status::OK);
-        }
-    };
-
-    for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-        th_vc.emplace_back(work, i);
-    }
-
-    for (auto&& elem : th_vc) { elem.join(); }
-
-    ASSERT_EQ(fin_register > 0, true);
-}
-
 TEST_F(wp_test, wp_meta_basic) { // NOLINT
     Storage storage{};
     ASSERT_EQ(Status::OK, register_storage(storage));

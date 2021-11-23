@@ -39,14 +39,14 @@ private:
 TEST_F(c_helper_many_session, heavy_enter_leave) { // NOLINT
     auto repeat_enter_leave = []() {
         Token s{};
-        constexpr std::size_t repeat_num{1000};
+        constexpr std::size_t repeat_num{100};
         for (std::size_t i = 0; i < repeat_num; ++i) {
             while (Status::OK != enter(s)) { _mm_pause(); }
             ASSERT_EQ(Status::OK, leave(s));
         }
     };
 
-    constexpr std::size_t th_num{1000}; // NOLINT
+    constexpr std::size_t th_num{100}; // NOLINT
     std::vector<std::thread> ths;
     ths.reserve(th_num);
     for (std::size_t i = 0; i < th_num; ++i) {

@@ -38,6 +38,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/wp/interface/helper/*.cpp"
         "concurrency_control/wp/interface/search_upsert/*.cpp"
         "concurrency_control/wp/interface/upsert/*.cpp"
+        "concurrency_control/wp/wp_basic/*.cpp"
         )
 
 endif()

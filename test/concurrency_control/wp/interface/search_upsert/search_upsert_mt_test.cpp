@@ -61,7 +61,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
     ASSERT_EQ(register_storage(storage), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    std::size_t thread_num{40}; // NOLINT
+    std::size_t thread_num{3}; // NOLINT
     //if (CHAR_MAX < thread_num) { thread_num = CHAR_MAX; }
     std::vector<std::string> keys(thread_num);
     for (auto&& elem : keys) {
@@ -77,7 +77,6 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 
     std::vector<char> readys(thread_num);
-    for (auto&& elem : readys) { elem = 0; }
     std::atomic<bool> go{false};
     std::atomic<std::size_t> batch_loop{0};
     std::atomic<std::size_t> occ_loop{0};

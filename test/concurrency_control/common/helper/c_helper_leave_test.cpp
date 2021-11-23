@@ -33,16 +33,12 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(c_helper, init) { // NOLINT
-    ASSERT_EQ(init(), Status::WARN_ALREADY_INIT);
-    fin();
-    ASSERT_EQ(init(), Status::OK);
-}
-
-TEST_F(c_helper, fin) { // NOLINT
-    // meaningless fin
-    fin();
-    fin();
+TEST_F(c_helper, leave) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::WARN_NOT_IN_A_SESSION, leave(s));
+    ASSERT_EQ(Status::WARN_INVALID_ARGS, leave(nullptr));
 }
 
 } // namespace shirakami::testing
