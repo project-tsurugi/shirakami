@@ -23,28 +23,6 @@ public:
     void TearDown() override { fin(); }
 };
 
-TEST_F(simple_search, search) { // NOLINT
-    register_storage(storage);
-    std::string k("aaa"); // NOLINT
-    std::string v("bbb"); // NOLINT
-    Token s{};
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k, tuple));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 TEST_F(simple_search, search_search) { // NOLINT
     register_storage(storage);
     std::string k("aaa"); // NOLINT
@@ -54,21 +32,9 @@ TEST_F(simple_search, search_search) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -98,13 +64,7 @@ TEST_F(simple_search, search_upsert_search) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
     ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v2));
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, storage, k, tuple));
