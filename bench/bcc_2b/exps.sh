@@ -220,7 +220,7 @@ exp() {
           avgBTAR=$(echo "scale=4; $sumBTAR / $epoch" | bc | xargs printf %.4f)
           avgCA=$(echo "$sumCA / $epoch" | bc)
           avgMAXRSS=$(echo "$sumMAXRSS / $epoch" | bc)
-          echo "$thread $avgOLTH $minOLTH $maxOLTH $avgOLAR $minOLAR $maxOLAR $bt_thread $avgBTTH $minBTTH $maxBTTH $avgBTAR $minBTAR $maxBTAR $avgCA $minCA $maxCA $avgMAXRSS $minMAXRSS $maxMAXRSS" >>$result
+          echo "$thread $avgOLTH $minOLTH $maxOLTH $avgOLAR $minOLAR $maxOLAR $avgBTTH $minBTTH $maxBTTH $avgBTAR $minBTAR $maxBTAR $avgCA $minCA $maxCA $avgMAXRSS $minMAXRSS $maxMAXRSS" >>$result
         done
       done
     done
