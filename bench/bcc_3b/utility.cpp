@@ -90,7 +90,7 @@ void output_result(std::vector<simple_result> const& res_ol,
     } else if (ol_ct_commit == 0) {
         std::cout << "ol_abort_rate:\t100" << std::endl;
     } else {
-        std::cout << "ol_abort_rate:\t"
+        std::cout << "ol_abort_rate:\t" << std::fixed
                   << static_cast<double>(ol_ct_abort) /
                              static_cast<double>(ol_ct_commit + ol_ct_abort)
                   << std::endl;

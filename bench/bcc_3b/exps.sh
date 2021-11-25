@@ -3,30 +3,42 @@ set -e
 # Run this script from the project source directory (shirakami).
 
 cpumhz=2100
-#duration=100
-duration=5
-key_len=64
-#val_len_ary=(8)
-val_len_ary=(8 64)
-rec=10000
-#rec=10
 
-rratio_ary=(99 80 50)
-skew=0
-
-ol_ops=10
 ol_wp_rratio_ary=(0 10 50)
+#rratio_ary=(99 80 50)
+rratio_ary=(50)
+skew=0
+val_len_ary=(8 64)
 
 # Reinitialize later.
 ol_thread=1
 bt_thread=1
 
-bt_ops=1000
-
-epoch=5
-
 # Reinitialize later.
 result=hoge.dat
+
+# for fast test param
+#=========================
+
+#duration=1
+#epoch=1
+#key_len=8
+#rec=1
+#ol_ops=1
+#bt_ops=1
+
+# real param
+#=========================
+
+duration=5
+key_len=64
+rec=10000
+epoch=5
+
+ol_ops=1
+bt_ops=1000
+
+#=========================
 
 gen_graph_cc() {
   echo "start gen_graph_cc"
@@ -79,7 +91,7 @@ exp() {
   echo "start exp"
 
   total_trial_num=0
-  for ((bt_thread = 1; bt_thread <= 5; bt_thread += 1)); do
+  for ((bt_thread = 1; bt_thread <= 16; bt_thread *= 2)); do
     for ol_wp_rratio in "${ol_wp_rratio_ary[@]}"; do
       for val_len in "${val_len_ary[@]}"; do
         for rratio in "${rratio_ary[@]}"; do
@@ -95,7 +107,7 @@ exp() {
   echo "total_trial_num is $total_trial_num"
 
   trial_num=0
-  for ((bt_thread = 1; bt_thread <= 5; bt_thread += 1)); do
+  for ((bt_thread = 1; bt_thread <= 16; bt_thread *= 2)); do
     echo "start loop bt_thread"
     for ol_wp_rratio in "${ol_wp_rratio_ary[@]}"; do
       echo "start loop ol_wp_rratio"

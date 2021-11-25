@@ -79,8 +79,8 @@ DEFINE_uint64(ol_thread, 1, "# online worker threads.");  // NOLINT
  * about batch tx
  */
 DEFINE_uint64(bt_ops, 1, "# operations per a batch tx."); // NOLINT
-DEFINE_uint64(
-        bt_others_wp_rratio, 0, // NOLINT
+DEFINE_uint64(                                            // NOLINT
+        bt_others_wp_rratio, 0,
         "Probability that batch processing goes to read the others WP target "
         "area.");
 DEFINE_uint64(bt_rratio, 100, "rate of reads in a batch tx."); // NOLINT
@@ -124,16 +124,13 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_ops : FLAGS_bt_ops,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
-        if (!is_ol) { tx_begin(token, false, true, {get_bt_storages()[0]}); }
+        if (!is_ol) { tx_begin(token, false, true, {get_bt_storages()[thid]}); }
 
     RETRY: // for wp premature // NOLINT
         bool need_verify = true;
         for (auto&& itr : opr_set) {
             Status rc{};
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                Tuple* tuple{};
-                uint64_t ctr{0};
-
                 // whether read from batch table
                 bool ol_read_bt{};
                 bool bt_read_others_wp{};
@@ -143,15 +140,20 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     ol_read_bt =
                             FLAGS_ol_wp_rratio > (rnd.next() % 100); // NOLINT
                     if (ol_read_bt) {
-                        ol_read_bt_st = rnd.next() % FLAGS_bt_thread;
+                        ol_read_bt_st = get_bt_storages().at(rnd.next() %
+                                                             FLAGS_bt_thread);
                     }
                 } else {
                     bt_read_others_wp = FLAGS_bt_others_wp_rratio >
                                         (rnd.next() % 100); // NOLINT
                     if (bt_read_others_wp) {
                         for (;;) {
-                            bt_read_others_wp_st = rnd.next() % FLAGS_bt_thread;
-                            if (bt_read_others_wp_st != thid) { break; }
+                            bt_read_others_wp_st = get_bt_storages().at(
+                                    rnd.next() % FLAGS_bt_thread);
+                            if (bt_read_others_wp_st != storage ||
+                                FLAGS_bt_thread == 1) {
+                                break;
+                            }
                             _mm_pause();
                         }
                     }
@@ -173,6 +175,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                             target_st = storage;
                         }
                     }
+                    Tuple* tuple{};
                     rc = search_key(token, target_st, itr.get_key(), tuple);
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
