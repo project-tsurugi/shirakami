@@ -4,8 +4,8 @@
 
 namespace shirakami {
 
-bool session::check_exist_wp_set(Storage storage) {
-    for (auto elem : get_wp_set()) {
+bool session::check_exist_wp_set(Storage storage) const {
+    for (auto&& elem : get_wp_set()) {
         if (elem == storage) { return true; }
     }
     return false;
@@ -20,5 +20,12 @@ void session::clean_up_local_set() {
 }
 
 void session::clean_up_tx_property() { set_tx_began(false); }
+
+Status session::find_wp(Storage st) const {
+    for (auto&& elem : get_wp_set()) {
+        if (elem == st) { return Status::OK; }
+    }
+    return Status::WARN_NOT_FOUND;
+}
 
 } // namespace shirakami

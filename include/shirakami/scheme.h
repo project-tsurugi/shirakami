@@ -40,8 +40,7 @@ class commit_param {
 public:
     commit_property get_cp() { return cp_; } // NOLINT
 
-    [[maybe_unused]] [[nodiscard]] std::uint64_t
-    get_ctid() const {
+    [[maybe_unused]] [[nodiscard]] std::uint64_t get_ctid() const {
         return ctid_;
     } // NOLINT
 
@@ -218,6 +217,7 @@ enum class Status : std::int32_t {
      * @details This means that wp failed.
      */
     ERR_FAIL_WP,
+    ERR_FATAL,
     /**
      * @brief error
      * @details
@@ -307,6 +307,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
         case Status::ERR_FAIL_WP:
             return "ERR_FAIL_WP"sv; // NOLINT
+        case Status::ERR_FATAL:
+            return "ERR_FATAL"sv; // NOLINT
         case Status::ERR_NOT_FOUND:
             return "ERR_NOT_FOUND"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
@@ -323,9 +325,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
     std::abort();
 }
 
-inline std::ostream&
-operator<<(std::ostream& out,
-           const Status value) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out,
+                                const Status value) { // NOLINT
     return out << to_string_view(value);
 }
 
@@ -367,8 +368,7 @@ inline constexpr std::string_view to_string_view( // NOLINT
     std::abort();
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
     return out << to_string_view(op);
 }
 

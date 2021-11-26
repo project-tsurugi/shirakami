@@ -32,6 +32,7 @@ Status search_key(Token const token, Storage const storage,
         return occ::search_key(ti, storage, key, tuple);
     }
     LOG(FATAL) << "unreachable";
+    return Status::ERR_FATAL;
 }
 
 } // namespace shirakami

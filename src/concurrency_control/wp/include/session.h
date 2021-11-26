@@ -45,7 +45,7 @@ public:
      * @return true exist.
      * @return false not exist.
      */
-    bool check_exist_wp_set(Storage storage);
+    bool check_exist_wp_set(Storage storage) const;
 
     void clean_up() {
         clean_up_local_set();
@@ -61,6 +61,14 @@ public:
      * @brief clean up tx_began.
      */
     void clean_up_tx_property();
+
+    /**
+     * @brief Find wp about @a st from wp set.
+     * @param st target storage.
+     * @return Status::OK success.
+     * @return Status::WARN_NOT_FOUND fail.
+     */
+    [[nodiscard]] Status find_wp(Storage st) const;
 
     [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
 
@@ -113,6 +121,8 @@ public:
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
     std::vector<Storage>& get_wp_set() { return wp_set_; }
+
+    const std::vector<Storage>& get_wp_set() const { return wp_set_; }
 
     /**
      * @brief get the local write set.
