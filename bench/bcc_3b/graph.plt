@@ -29,13 +29,21 @@ plot \
        "data_r50_v8_wpr50_bt16.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr50", \
        "data_r50_v64_wpr50_bt16.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr50", \
 
-set output "ycsb_batch.pdf"
+set output "ycsb_batch_wpr0.pdf"
 plot \
        "data_r50_v8_wpr0_bt1.dat"    using 1:9:10:11 w    errorlines title   "bt1", \
        "data_r50_v8_wpr0_bt2.dat"    using 1:9:10:11 w    errorlines title   "bt2", \
        "data_r50_v8_wpr0_bt4.dat"    using 1:9:10:11 w    errorlines title   "bt4", \
        "data_r50_v8_wpr0_bt8.dat"    using 1:9:10:11 w    errorlines title   "bt8", \
        "data_r50_v8_wpr0_bt16.dat"   using 1:9:10:11 w    errorlines title   "bt16", \
+
+set output "ycsb_batch_wpr50.pdf"
+plot \
+       "data_r50_v8_wpr50_bt1.dat"    using 1:9:10:11 w    errorlines title   "bt1", \
+       "data_r50_v8_wpr50_bt2.dat"    using 1:9:10:11 w    errorlines title   "bt2", \
+       "data_r50_v8_wpr50_bt4.dat"    using 1:9:10:11 w    errorlines title   "bt4", \
+       "data_r50_v8_wpr50_bt8.dat"    using 1:9:10:11 w    errorlines title   "bt8", \
+       "data_r50_v8_wpr50_bt16.dat"   using 1:9:10:11 w    errorlines title   "bt16", \
 
 ##################################
 #abort rate
