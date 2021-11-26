@@ -194,6 +194,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 if (!is_ol && rc == Status::WARN_PREMATURE) {
                     goto RETRY; // NOLINT
                 }
+                if (rc == Status::WARN_INVALID_ARGS) { LOG(FATAL); }
             } else {
                 LOG(FATAL) << "unkown operation";
             }
