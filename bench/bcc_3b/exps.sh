@@ -91,7 +91,7 @@ exp() {
   echo "start exp"
 
   total_trial_num=0
-  for ((bt_thread = 1; bt_thread <= 81; bt_thread *= 3)); do
+  for ((bt_thread = 1; bt_thread <= 27; bt_thread *= 3)); do
     for ol_wp_rratio in "${ol_wp_rratio_ary[@]}"; do
       for val_len in "${val_len_ary[@]}"; do
         for rratio in "${rratio_ary[@]}"; do
@@ -107,7 +107,7 @@ exp() {
   echo "total_trial_num is $total_trial_num"
 
   trial_num=0
-  for ((bt_thread = 1; bt_thread <= 81; bt_thread *= 3)); do
+  for ((bt_thread = 1; bt_thread <= 27; bt_thread *= 3)); do
     echo "start loop bt_thread"
     for ol_wp_rratio in "${ol_wp_rratio_ary[@]}"; do
       echo "start loop ol_wp_rratio"
