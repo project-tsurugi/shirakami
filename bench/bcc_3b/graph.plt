@@ -20,14 +20,14 @@ plot \
        "data_r50_v8_wpr50_bt1.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr50", \
        "data_r50_v64_wpr50_bt1.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr50", \
 
-set output "ycsb_r50_occ_bt81.pdf"
+set output "ycsb_r50_occ_bt27.pdf"
 plot \
-       "data_r50_v8_wpr0_bt81.dat"    using 1:2:3:4 w    errorlines title   "OCC-v8-wpr0", \
-       "data_r50_v64_wpr0_bt81.dat"   using 1:2:3:4 w    errorlines title   "OCC-v64-wpr0", \
-       "data_r50_v8_wpr10_bt81.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr10", \
-       "data_r50_v64_wpr10_bt81.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr10", \
-       "data_r50_v8_wpr50_bt81.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr50", \
-       "data_r50_v64_wpr50_bt81.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr50", \
+       "data_r50_v8_wpr0_bt27.dat"    using 1:2:3:4 w    errorlines title   "OCC-v8-wpr0", \
+       "data_r50_v64_wpr0_bt27.dat"   using 1:2:3:4 w    errorlines title   "OCC-v64-wpr0", \
+       "data_r50_v8_wpr10_bt27.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr10", \
+       "data_r50_v64_wpr10_bt27.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr10", \
+       "data_r50_v8_wpr50_bt27.dat"   using 1:2:3:4 w    errorlines title   "OCC-v8-wpr50", \
+       "data_r50_v64_wpr50_bt27.dat"  using 1:2:3:4 w    errorlines title   "OCC-v64-wpr50", \
 
 set output "ycsb_batch_wpr0.pdf"
 plot \
@@ -35,7 +35,6 @@ plot \
        "data_r50_v8_wpr0_bt3.dat"    using 1:9:10:11 w    errorlines title   "bt3", \
        "data_r50_v8_wpr0_bt9.dat"    using 1:9:10:11 w    errorlines title   "bt9", \
        "data_r50_v8_wpr0_bt27.dat"   using 1:9:10:11 w    errorlines title   "bt27", \
-       "data_r50_v8_wpr0_bt81.dat"   using 1:9:10:11 w    errorlines title   "bt81", \
 
 set output "ycsb_batch_wpr50.pdf"
 plot \
@@ -43,7 +42,6 @@ plot \
        "data_r50_v8_wpr50_bt3.dat"    using 1:9:10:11 w    errorlines title   "bt3", \
        "data_r50_v8_wpr50_bt9.dat"    using 1:9:10:11 w    errorlines title   "bt9", \
        "data_r50_v8_wpr50_bt27.dat"   using 1:9:10:11 w    errorlines title   "bt27", \
-       "data_r50_v8_wpr50_bt81.dat"   using 1:9:10:11 w    errorlines title   "bt81", \
 
 ##################################
 #abort rate
