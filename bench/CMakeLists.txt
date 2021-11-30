@@ -14,6 +14,7 @@
 
 add_subdirectory(bcc_2b)
 add_subdirectory(bcc_3b)
+add_subdirectory(bcc_3b_st)
 add_subdirectory(map)
 add_subdirectory(rocksdb)
 add_subdirectory(ycsb)
