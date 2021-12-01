@@ -125,8 +125,7 @@ void output_result(std::vector<simple_result> const& res_ol,
 
     shirakami::displayRusageRUMaxrss();
 #if defined(CPR)
-    printf("cpr_global_version:\t%zu\n",
-           shirakami::cpr::global_phase_version::get_gpv()
-                   .get_version()); // NOLINT
+    printf("cpr_global_version:\t%zu\n", // NOLINT
+           shirakami::cpr::global_phase_version::get_gpv().get_version());
 #endif
 }

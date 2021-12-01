@@ -6,8 +6,12 @@
 
 #include <boost/filesystem.hpp>
 
+#include <algorithm>
+#include <vector>
+
 #include "include/log.h"
 #include "sequence.h"
+#include "storage.h"
 
 // about cc
 #ifdef WP
@@ -37,6 +41,29 @@ using namespace shirakami::pwal;
 using namespace shirakami;
 
 namespace shirakami {
+
+/**
+ * @brief todo
+ * @pre @a used_storage is not empty.
+ * @param [in] used_storage 
+ */
+void storage_ctr_adjust(std::vector<Storage>& used_storage) {
+    // remove duplicates
+    std::sort(used_storage.begin(), used_storage.end());
+    used_storage.erase(std::unique(used_storage.begin(), used_storage.end()),
+                       used_storage.end());
+
+    storage::set_strg_ctr(used_storage.back() + 1);
+
+    std::size_t st_ct{1};
+    for (auto&& elem : used_storage) {
+        for (;;) {
+            if (elem == st_ct) { break; }
+            storage::get_reuse_num().emplace_back(st_ct);
+            ++st_ct;
+        }
+    }
+}
 
 [[maybe_unused]] void Log::recovery_from_log() {
 #if defined(PWAL)
@@ -142,7 +169,8 @@ namespace shirakami {
     leave(s);
 
 #elif defined(CPR)
-    auto process_from_file = [](const std::string& fname) {
+    std::vector<Storage> used_storage;
+    auto process_from_file = [&used_storage](const std::string& fname) {
         std::ifstream logf;
         logf.open(fname, std::ios_base::in | std::ios_base::binary);
 
@@ -170,6 +198,9 @@ namespace shirakami {
             for (auto&& elem : logs) {
                 using namespace yakushima;
                 create_storage(elem.get_storage()); // it may already exist.
+                Storage st{};
+                memcpy(&st, elem.get_storage().data(), sizeof(st));
+                used_storage.emplace_back(st);
                 Record** result_search = std::get<0>(
                         get<Record*>(elem.get_storage(), elem.get_key()));
                 Record* existing_record{nullptr};
@@ -237,6 +268,11 @@ namespace shirakami {
     std::sort(files.begin(), files.end());
 
     for (auto&& elem : files) { process_from_file(std::get<1>(elem)); }
+
+    if (!used_storage.empty()) {
+        // update storage::strg_ctr_, reuse_num_
+        storage_ctr_adjust(used_storage);
+    }
 #endif
 }
 

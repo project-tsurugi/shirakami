@@ -144,7 +144,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 Storage target_st{storage};
 
                 // whether ol write from batch table
-                if (is_ol && FLAGS_ol_wp_wratio > (rnd.next() % 100)) {
+                if (is_ol &&
+                    FLAGS_ol_wp_wratio > (rnd.next() % 100)) { // NOLINT
                     target_st =
                             get_bt_storages().at(rnd.next() % FLAGS_bt_thread);
                 }

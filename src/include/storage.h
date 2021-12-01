@@ -23,15 +23,18 @@ public:
      */
     static Status delete_storage(Storage storage);
 
+    static std::vector<Storage>& get_reuse_num() { return reuse_num_; }
+
     static Status list_storage(std::vector<Storage>& out);
 
-private:
+    static void set_strg_ctr(Storage st) {
+        strg_ctr_.store(st, std::memory_order_release);
+    }
 
+private:
     static void get_new_storage_num(Storage& storage);
 
     static std::mutex& get_mt_reuse_num() { return mt_reuse_num_; }
-
-    static std::vector<Storage>& get_reuse_num() { return reuse_num_; }
 
     /**
      * @attention The number of storages above UINT64_MAX is undefined behavior.
