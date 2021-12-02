@@ -56,7 +56,7 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
     storage::set_strg_ctr(used_storage.back() + 1);
 
     std::size_t st_ct{storage::initial_strg_ctr};
-    std::unique_lock{storage::get_mt_reuse_num()};
+    std::unique_lock{storage::get_mt_reuse_num()}; // NOLINT
     for (auto&& elem : used_storage) {
         for (;;) {
             if (elem == st_ct) {

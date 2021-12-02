@@ -82,7 +82,7 @@ void clean_value(gc_handle& gh) {
         auto vc{gh.get_val_cache()};
         if (vc.second < min_se) {
             // it can delete
-            delete vc.first;
+            delete vc.first; // NOLINT
             gh.set_val_cache(gc_handle::initial_value);
             ++gc_handle::get_gc_ct_val();
         } else {
@@ -133,7 +133,7 @@ version* find_latest_invisible_version_from_batch(Record* rec_ptr,
 void delete_version_list(version* ver) {
     while (ver != nullptr) {
         version* v_next = ver->get_next();
-        delete ver;
+        delete ver; // NOLINT
         ++gc_handle::get_gc_ct_ver();
         ver = v_next;
     }

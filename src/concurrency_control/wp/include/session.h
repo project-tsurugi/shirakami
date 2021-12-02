@@ -45,7 +45,7 @@ public:
      * @return true exist.
      * @return false not exist.
      */
-    bool check_exist_wp_set(Storage storage) const;
+    [[nodiscard]] bool check_exist_wp_set(Storage storage) const;
 
     void clean_up() {
         clean_up_local_set();
@@ -122,7 +122,9 @@ public:
 
     std::vector<Storage>& get_wp_set() { return wp_set_; }
 
-    const std::vector<Storage>& get_wp_set() const { return wp_set_; }
+    [[nodiscard]] const std::vector<Storage>& get_wp_set() const {
+        return wp_set_;
+    }
 
     /**
      * @brief get the local write set.

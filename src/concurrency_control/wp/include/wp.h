@@ -101,7 +101,7 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 
 class wp_lock {
 public:
-    static bool is_locked(std::uint64_t obj) { return obj & 1; }
+    static bool is_locked(std::uint64_t obj) { return obj & 1; } // NOLINT
 
     std::uint64_t load_obj() { return obj.load(std::memory_order_acquire); }
 
@@ -114,7 +114,7 @@ public:
                 expected = obj.load(std::memory_order_acquire);
                 continue;
             }
-            std::uint64_t desired{expected | 1};
+            std::uint64_t desired{expected | 1}; // NOLINT
             if (obj.compare_exchange_weak(expected, desired,
                                           std::memory_order_acq_rel,
                                           std::memory_order_acquire)) {
@@ -125,9 +125,9 @@ public:
 
     void unlock() {
         std::uint64_t desired{obj.load(std::memory_order_acquire)};
-        std::uint64_t locked_num{desired >> 1};
+        std::uint64_t locked_num{desired >> 1}; // NOLINT
         ++locked_num;
-        desired = locked_num << 1;
+        desired = locked_num << 1; // NOLINT
         obj.store(desired, std::memory_order_release);
     }
 
@@ -152,7 +152,7 @@ public:
 
     static bool empty(const wped_type& wped) {
         for (auto&& elem : wped) {
-            if (elem != std::make_pair<std::size_t, std::size_t>(0, 0)) {
+            if (elem != std::pair<std::size_t, std::size_t>(0, 0)) {
                 return false;
             }
         }
@@ -185,7 +185,7 @@ public:
     Status register_wp(std::size_t epoc, std::size_t id) {
         wp_lock_.lock();
         for (auto&& elem : wped_) {
-            if (elem != std::make_pair<std::size_t, std::size_t>(0, 0)) {
+            if (elem != std::pair<std::size_t, std::size_t>(0, 0)) {
                 /**
                  * Since the overlapping of wp is complicated, it is optimized or used 
                  * as wp-k.

@@ -35,19 +35,19 @@ public:
     void TearDown() override {}
 
     // getter
-    std::string& get_log_dir() { return log_dir_; }
+    static std::string& get_log_dir() { return log_dir_; }
 
-    std::vector<Storage>& get_registered_storage() {
+    static std::vector<Storage>& get_registered_storage() {
         return registered_storage_;
     }
 
-    std::vector<Storage>& get_removed_storage() { return removed_storage_; }
+    static std::vector<Storage>& get_removed_storage() { return removed_storage_; }
 
 private:
-    static inline std::once_flag init_google_;
-    static inline std::string log_dir_{};
-    static inline std::vector<Storage> registered_storage_;
-    static inline std::vector<Storage> removed_storage_;
+    static inline std::once_flag init_google_;              // NOLINT
+    static inline std::string log_dir_{};                   // NOLINT
+    static inline std::vector<Storage> registered_storage_; // NOLINT
+    static inline std::vector<Storage> removed_storage_;    // NOLINT
 };
 
 TEST_F(cpr_storage_test, cpr_action_against_null_db) { // NOLINT
@@ -57,7 +57,9 @@ TEST_F(cpr_storage_test, cpr_action_against_null_db) { // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
-    Storage storage, storage_2, storage_3;
+    Storage storage{};
+    Storage storage_2{};
+    Storage storage_3{};
     ASSERT_EQ(Status::OK, register_storage(storage));
     ASSERT_EQ(Status::OK, register_storage(storage_2));
     ASSERT_EQ(Status::OK, register_storage(storage_3));

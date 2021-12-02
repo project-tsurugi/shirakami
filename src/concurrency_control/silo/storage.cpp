@@ -46,9 +46,9 @@ Status list_storage(std::vector<Storage>& out) {
 Status storage::register_storage(Storage& storage) {
     get_new_storage_num(storage);
 
-    if (yakushima::create_storage(std::string_view(
-                reinterpret_cast<char*>(&storage), sizeof(storage))) !=
-        yakushima::status::OK) { // NOLINT
+    if (yakushima::create_storage(
+                std::string_view(reinterpret_cast<char*>(&storage), // NOLINT
+                                 sizeof(storage))) != yakushima::status::OK) {
         return Status::WARN_INVARIANT;
     }
 
@@ -70,9 +70,10 @@ Status storage::delete_storage(Storage storage) { // NOLINT
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t v_index{1};
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, "",
-                    yakushima::scan_endpoint::INF, "",
-                    yakushima::scan_endpoint::INF, scan_res); // NOLINT
+    yakushima::scan(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            "", yakushima::scan_endpoint::INF, "",
+            yakushima::scan_endpoint::INF, scan_res);
 
     if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
         // single thread clean up

@@ -57,8 +57,8 @@ public:
 
     void set_value(std::string_view new_v, std::string*& old_v) {
         old_v = get_value();
-        value_.store(new std::string(new_v),
-                     std::memory_order_release); // NOLINT
+        value_.store(new std::string(new_v), // NOLINT
+                     std::memory_order_release);
     }
 
     void set_next(version* const next) {

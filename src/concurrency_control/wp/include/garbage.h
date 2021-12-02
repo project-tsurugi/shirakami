@@ -156,7 +156,7 @@ public:
 
     bool val_cache_is_empty() {
         return val_cache_ ==
-               std::make_pair<std::string*, epoch::epoch_t>(nullptr, 0);
+               std::pair<std::string*, epoch::epoch_t>(nullptr, 0);
     }
 
 private:

@@ -19,7 +19,7 @@ Status tx_begin(session* const ti,
     auto valid_epoch = epoch::get_global_epoch() + 1;
 
     // do write preserve
-    auto rc{wp::write_preserve(ti, write_preserve, batch_id, valid_epoch)};
+    auto rc{wp::write_preserve(ti, std::move(write_preserve), batch_id, valid_epoch)};
     if (rc != Status::OK) { return rc; }
 
     // inc batch counter
