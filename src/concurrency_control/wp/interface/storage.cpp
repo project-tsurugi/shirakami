@@ -193,4 +193,9 @@ void storage::get_new_storage_num(Storage& storage) {
     }
 }
 
+void storage::init() {
+    storage::get_reuse_num() = {};
+    storage::set_strg_ctr(storage::initial_strg_ctr);
+}
+
 } // namespace shirakami

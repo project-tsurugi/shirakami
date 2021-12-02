@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "atomic_wrapper.h"
+#include "storage.h"
 
 #include "include/helper.h"
 
@@ -75,6 +76,9 @@ Status
 init([[maybe_unused]] bool enable_recovery,
      [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    // about storage
+    storage::init();
 
     // about cc
     session_table::init_session_table(enable_recovery);

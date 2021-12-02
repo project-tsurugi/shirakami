@@ -15,6 +15,12 @@ class storage {
 public:
     static constexpr Storage initial_strg_ctr{0};
 
+    /**
+     * @brief initialization.
+     * @pre This should be called before recovery.
+     */
+    static void init();
+
     static Status register_storage(Storage& storage);
 
     static Status exist_storage(Storage storage);
@@ -29,6 +35,8 @@ public:
         return strg_ctr_.load(std::memory_order_acquire);
     }
 
+    static std::mutex& get_mt_reuse_num() { return mt_reuse_num_; }
+
     static std::vector<Storage>& get_reuse_num() { return reuse_num_; }
 
     static Status list_storage(std::vector<Storage>& out);
@@ -39,8 +47,6 @@ public:
 
 private:
     static void get_new_storage_num(Storage& storage);
-
-    static std::mutex& get_mt_reuse_num() { return mt_reuse_num_; }
 
     /**
      * @attention The number of storages above UINT64_MAX is undefined behavior.
