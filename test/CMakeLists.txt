@@ -56,7 +56,7 @@ if (BUILD_PWAL)
 endif ()
 
 if (BUILD_CPR)
-    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr_test.cpp")
+    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr/*.cpp")
     set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
 endif ()
 

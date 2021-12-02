@@ -55,10 +55,13 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
 
     storage::set_strg_ctr(used_storage.back() + 1);
 
-    std::size_t st_ct{1};
+    std::size_t st_ct{storage::initial_strg_ctr};
     for (auto&& elem : used_storage) {
         for (;;) {
-            if (elem == st_ct) { break; }
+            if (elem == st_ct) {
+                ++st_ct;
+                break;
+            }
             storage::get_reuse_num().emplace_back(st_ct);
             ++st_ct;
         }

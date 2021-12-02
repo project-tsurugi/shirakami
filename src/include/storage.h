@@ -13,6 +13,8 @@ namespace shirakami {
 
 class storage {
 public:
+    static constexpr Storage initial_strg_ctr{0};
+
     static Status register_storage(Storage& storage);
 
     static Status exist_storage(Storage storage);
@@ -22,6 +24,10 @@ public:
      * @param[in] storage
      */
     static Status delete_storage(Storage storage);
+
+    static Storage get_strg_ctr() {
+        return strg_ctr_.load(std::memory_order_acquire);
+    }
 
     static std::vector<Storage>& get_reuse_num() { return reuse_num_; }
 
@@ -39,7 +45,7 @@ private:
     /**
      * @attention The number of storages above UINT64_MAX is undefined behavior.
      */
-    static inline std::atomic<Storage> strg_ctr_{1};
+    static inline std::atomic<Storage> strg_ctr_{initial_strg_ctr};
 
     static inline std::vector<Storage> reuse_num_; // NOLINT
 
