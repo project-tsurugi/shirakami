@@ -2,6 +2,8 @@
 #include <xmmintrin.h> // NOLINT
 // It is used, but clang-tidy warn.
 
+#include <mutex>
+
 #ifdef WP
 
 #include "concurrency_control/wp/include/session.h"
@@ -17,6 +19,7 @@
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
+
 #include "gtest/gtest.h"
 
 using namespace shirakami;
@@ -27,38 +30,29 @@ Storage storage;
 
 class cpr_test : public ::testing::Test {
 public:
-    void SetUp() override {}
+    static void call_once_f() {
+        google::InitGoogleLogging(
+                "shirakami-test-fault_tolerance-cpr-cpr_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
+        log_dir_ = "/tmp/shirakami-test-fault_tolerance-cpr-cpr_test";
+    }
+
+    void SetUp() override { std::call_once(init_google_, call_once_f); }
 
     void TearDown() override {}
+
+    static std::string get_log_dir() { return log_dir_; }
+
+private:
+    static inline std::once_flag init_google_;
+    static inline std::string log_dir_;
 };
 
-void list_directory(std::string_view dir) {
-    using namespace boost::filesystem;
-    path dir_path{std::string(dir)};
-    directory_iterator end_itr{};
-    std::vector<std::string> entries{};
-    for (boost::filesystem::directory_iterator itr(dir_path); itr != end_itr; ++itr) {
-        entries.emplace_back(itr->path().string());
-    }
-    if (entries.empty()) {
-        std::cerr << "no file entries." << std::endl;
-        return;
-    }
-    std::sort(entries.begin(), entries.end());
-    std::cout << "[list start]" << std::endl;
-    for (auto&& e : entries) {
-        std::cerr << e << std::endl;
-    }
-    std::cout << "[list end]" << std::endl;
-}
-
-TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
-    google::InitGoogleLogging("shirakami-cpr_test");
-    std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/build/cpr_test_log");
-    init(false, log_dir); // NOLINT
+TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
+    init(false, get_log_dir());                // NOLINT
     register_storage(storage);
-    ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()), false); // null db has no checkpoint.
+    ASSERT_EQ(boost::filesystem::exists(cpr::get_checkpoint_path()),
+              false); // null db has no checkpoint.
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
@@ -73,7 +67,9 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         }
         ASSERT_EQ(commit(token), Status::OK); // NOLINT
         cpr::wait_next_checkpoint();
-        EXPECT_EQ(boost::filesystem::exists(log_dir + "/sst" + std::to_string(sst_num)), true);
+        EXPECT_EQ(boost::filesystem::exists(get_log_dir() + "/sst" + // NOLINT
+                                            std::to_string(sst_num)),
+                  true);
         ASSERT_EQ(leave(token), Status::OK);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds{230}); // NOLINT
@@ -91,16 +87,16 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
         }
         ASSERT_EQ(commit(token), Status::OK); // NOLINT
         cpr::wait_next_checkpoint();
-        EXPECT_EQ(boost::filesystem::exists(log_dir + "/sst" + std::to_string(sst_num)), true);
+        EXPECT_EQ(boost::filesystem::exists(get_log_dir() + "/sst" + // NOLINT
+                                            std::to_string(sst_num)),
+                  true);
         ASSERT_EQ(leave(token), Status::OK);
     }
     fin(false);
 }
 
-TEST_F(cpr_test, cpr_recovery) {                // NOLINT
-    std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/build/cpr_test_log");
-    init(true, log_dir); // NOLINT
+TEST_F(cpr_test, cpr_recovery) { // NOLINT
+    init(true, get_log_dir());   // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT
@@ -121,11 +117,9 @@ TEST_F(cpr_test, cpr_recovery) {                // NOLINT
     fin(false); // NOLINT
 }
 
-TEST_F(cpr_test, cpr_recovery_again) {                // NOLINT
+TEST_F(cpr_test, cpr_recovery_again) { // NOLINT
     // this testcase assumes to be run continuously after ones above
-    std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    log_dir.append("/build/cpr_test_log");
-    init(true, log_dir); // NOLINT
+    init(true, get_log_dir()); // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("b"); // NOLINT
@@ -133,7 +127,7 @@ TEST_F(cpr_test, cpr_recovery_again) {                // NOLINT
     ASSERT_EQ(search_key(token, storage, k, tup), Status::OK);
     ASSERT_EQ(std::string(tup->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "b"); // NOLINT
-    ASSERT_EQ(commit(token), Status::OK);           // NOLINT
+    ASSERT_EQ(commit(token), Status::OK);          // NOLINT
     cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
     fin(false); // NOLINT

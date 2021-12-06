@@ -247,15 +247,17 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
         yakushima::leave(token);
     };
 
+#if 0
     // check whether checkpoint file exists.
     boost::system::error_code ec;
     const bool find_result =
             boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
-        LOG(INFO) << "no tx log files to recover.";
+        LOG(INFO) << "no checkpoint log files to recover.";
     } else {
-        LOG(INFO) << "tx log files to recover exist.";
+        LOG(INFO) << "tx checkpoint log files to recover exist.";
     }
+#endif
 
     // for sst files
     using namespace boost::filesystem;
@@ -269,6 +271,8 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
                                           4))};
         files.emplace_back(vnum, itr->path().string());
     }
+    if (!files.empty()) { LOG(INFO) << "tx diff log files to recover exist."; }
+
     std::sort(files.begin(), files.end());
 
     for (auto&& elem : files) { process_from_file(std::get<1>(elem)); }
