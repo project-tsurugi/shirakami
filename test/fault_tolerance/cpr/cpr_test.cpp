@@ -62,8 +62,14 @@ TEST_F(cpr_test, cpr_action_against_null_db) {  // NOLINT
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
-        std::string k("a"); // NOLINT
-        ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        {
+            std::string k("a"); // NOLINT
+            ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        }
+        {
+            std::string k("Z"); // NOLINT
+            ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        }
         auto* ti = static_cast<session*>(token);
         std::size_t sst_num{};
         if (ti->get_phase() == cpr::phase::REST) {
