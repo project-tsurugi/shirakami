@@ -252,9 +252,9 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
     const bool find_result =
             boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
     if (!find_result || ec) {
-        LOG(INFO) << "no checkpoint file to recover.";
+        LOG(INFO) << "no tx log files to recover.";
     } else {
-        LOG(INFO) << "checkpoint file to recover exists.";
+        LOG(INFO) << "tx log files to recover exist.";
     }
 
     // for sst files
@@ -275,6 +275,7 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
 
     if (!used_storage.empty()) {
         // update storage::strg_ctr_, reuse_num_
+        LOG(INFO) << "some records was recovered by recovery process.";
         storage_ctr_adjust(used_storage);
     }
 #endif

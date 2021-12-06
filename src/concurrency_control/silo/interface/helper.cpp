@@ -21,6 +21,8 @@
 
 #include "shirakami/interface.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 Status enter(Token& token) { // NOLINT
@@ -81,6 +83,10 @@ init([[maybe_unused]] bool enable_recovery,
      [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
 
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    LOG(INFO) << "shirakami: initialize shirakami, recovery mode: "
+              << enable_recovery
+              << ", tx log directory path: " << log_directory_path;
 
     // about storage
     storage::init();
