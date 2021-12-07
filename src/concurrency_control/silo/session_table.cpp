@@ -13,6 +13,8 @@
 
 #endif
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 Status session_table::decide_token(Token& token) { // NOLINT
@@ -32,6 +34,13 @@ Status session_table::decide_token(Token& token) { // NOLINT
 
     return Status::OK;
 }
+
+#ifdef CPR
+void session_table::display_diff_set() {
+    LOG(INFO) << "session_table::display_diff_set";
+    for (auto&& elem : get_session_table()) { elem.display_diff_set(); }
+}
+#endif
 
 void session_table::init_session_table([[maybe_unused]] bool enable_recovery) {
 #if defined(PWAL)
@@ -59,35 +68,10 @@ void session_table::init_session_table([[maybe_unused]] bool enable_recovery) {
         ++ctr;
 #endif
 #if defined(CPR)
-        itr.reserve_diff_set(); // NOLINT
+        itr.clear_diff_set();
+        //itr.reserve_diff_set(); // NOLINT
 #endif
     }
-
-#if defined(CPR)
-    if (enable_recovery) {
-        // log recovered records.
-        std::vector<Storage> storage_list;
-        storage::list_storage(storage_list); // NOLINT
-        for (auto&& storage : storage_list) {
-            std::vector<std::tuple<std::string, Record**, std::size_t>>
-                    scan_buf;
-            std::string_view storage_view = {
-                    reinterpret_cast<char*>(&storage), // NOLINT
-                    sizeof(storage)};
-            yakushima::scan(storage_view, "", yakushima::scan_endpoint::INF, "",
-                            yakushima::scan_endpoint::INF, scan_buf);
-            for (auto&& elem : scan_buf) {
-                auto& map =
-                        get_session_table().at(0).get_diff_upd_set(); // NOLINT
-                auto* record = *std::get<1>(elem);
-                map[std::string(storage_view)]
-                   [std::string(record->get_tuple().get_key())] =
-                           std::make_tuple(0, false,
-                                           record->get_tuple().get_value());
-            }
-        }
-    }
-#endif
 }
 
 void session_table::fin_session_table() {

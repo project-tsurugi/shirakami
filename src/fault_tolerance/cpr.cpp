@@ -2,6 +2,8 @@
 // created by thawk on 2020/10/30.
 //
 
+#include "storage.h"
+
 #ifdef WP
 
 #include "concurrency_control/wp/include/interface_helper.h"
@@ -21,6 +23,8 @@
 #include "clock.h"
 
 #include "shirakami/interface.h"
+
+#include "glog/logging.h"
 
 using namespace shirakami::epoch;
 
@@ -142,6 +146,22 @@ cpr_local_handler::get_diff_upd_seq_set() {
         return diff_upd_seq_set_ar.at(0);
     }
     return diff_upd_seq_set_ar.at(1);
+}
+
+void cpr_local_handler::display_diff_set() {
+    for (auto&& set_elem : diff_upd_set_ar) {
+        for (auto storage = set_elem.begin(); storage != set_elem.end();
+             ++storage) {
+            LOG(INFO) << "storage:\t" << storage.key();
+            for (auto map_elem = storage.value().begin();
+                 map_elem != storage.value().end(); ++map_elem) {
+                LOG(INFO) << "key:\t" << map_elem.key() << ", tid:\t"
+                          << std::get<0>(map_elem.value()) << ", is_delete:\t"
+                          << std::get<1>(map_elem.value()) << ", val:\t"
+                          << std::get<2>(map_elem.value());
+            }
+        }
+    }
 }
 
 void checkpoint_thread() {
@@ -301,6 +321,53 @@ void checkpointing() {
         std::cerr << "unknown error" << std::endl;
         exit(1);
     }
+}
+
+void create_checkpoint() {
+    std::vector<Storage> st_list;
+    if (storage::list_storage(st_list) == Status::WARN_NOT_FOUND) { return; }
+    std::vector<log_records> l_recs_vc(st_list.size());
+    std::vector<std::thread> th_vc;
+    th_vc.reserve(st_list.size());
+
+    auto process = [&l_recs_vc](std::size_t th_ct, Storage st) {
+        auto& l_recs = const_cast<log_records&>(l_recs_vc.at(th_ct));
+        std::string_view st_view{reinterpret_cast<char*>(&st), // NOLINT
+                                 sizeof(st)};
+        std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+        yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
+                        yakushima::scan_endpoint::INF, scan_res);
+        if (scan_res.empty()) { return; }
+        for (auto&& elem : scan_res) {
+            Tuple& tuple{(*std::get<1>(elem))->get_tuple()};
+            l_recs.emplace_back(st_view, tuple.get_value(), tuple.get_value());
+        }
+    };
+
+    std::size_t th_ct{0};
+    for (auto&& st : st_list) {
+        th_vc.emplace_back(process, th_ct, st);
+        ++th_ct;
+    }
+
+    for (auto&& th : th_vc) { th.join(); }
+
+    // concat
+    for (std::size_t i = 1; i < st_list.size(); ++i) {
+        l_recs_vc.at(0).get_vec().insert(l_recs_vc.at(0).get_vec().end(),
+                                         l_recs_vc.at(i).get_vec().begin(),
+                                         l_recs_vc.at(i).get_vec().end());
+    }
+
+    std::ofstream cpf;
+    cpf.open(cpr::get_checkpoint_path(),
+             std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+    if (!cpf.is_open()) { LOG(FATAL) << "it can't open checkpoint file."; }
+
+    msgpack::pack(cpf, l_recs_vc.at(0));
+    cpf.flush();
+    cpf.close();
+    if (cpf.is_open()) { LOG(FATAL) << "it can't close checkpoint file."; }
 }
 
 void wait_next_checkpoint() {

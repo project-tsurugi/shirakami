@@ -4,15 +4,8 @@
 
 #include <mutex>
 
-#ifdef WP
-
-#include "concurrency_control/wp/include/session.h"
-
-#else
-
 #include "concurrency_control/silo/include/session.h"
-
-#endif
+#include "concurrency_control/silo/include/session_table.h"
 
 #include "fault_tolerance/include/log.h"
 
@@ -44,8 +37,8 @@ public:
     static std::string get_log_dir() { return log_dir_; }
 
 private:
-    static inline std::once_flag init_google_;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_; // NOLINT
 };
 
 TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
@@ -56,8 +49,14 @@ TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
-        std::string k("a"); // NOLINT
-        ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        {
+            std::string k("a"); // NOLINT
+            ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        }
+        {
+            std::string k("Z"); // NOLINT
+            ASSERT_EQ(upsert(token, storage, k, k), Status::OK);
+        }
         auto* ti = static_cast<session*>(token);
         std::size_t sst_num{};
         if (ti->get_phase() == cpr::phase::REST) {
@@ -96,7 +95,7 @@ TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
 }
 
 TEST_F(cpr_test, cpr_recovery) { // NOLINT
-    init(true, get_log_dir());   // NOLINT
+    init(true, get_log_dir()); // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     std::string k("a"); // NOLINT

@@ -103,6 +103,13 @@ init([[maybe_unused]] bool enable_recovery,
         Log::set_kLogDirectory(log_dir);
     }
 
+    // set checkpoint path
+    {
+        std::string log_dir = Log::get_kLogDirectory();
+        log_dir.append("/checkpoint");
+        cpr::set_checkpoint_path(log_dir);
+    }
+
     /**
      * check whether log_directory_path is filesystem objects.
      */
@@ -125,6 +132,7 @@ init([[maybe_unused]] bool enable_recovery,
         boost::filesystem::remove_all(log_dir);
     }
     boost::filesystem::create_directories(log_dir);
+    if (enable_recovery) { cpr::create_checkpoint(); }
 
 #endif
     // end about logging

@@ -22,6 +22,8 @@
 
 #include <tsl/hopscotch_map.h>
 
+#include "glog/logging.h"
+
 namespace shirakami::cpr {
 
 using version_type = std::uint64_t;
@@ -48,7 +50,9 @@ class phase_version {
 public:
     phase get_phase() { return phase_; } // NOLINT
 
-    [[nodiscard]] version_type get_version() const { return version_; } // NOLINT
+    [[nodiscard]] version_type get_version() const {
+        return version_;
+    } // NOLINT
 
     void inc_version() { version_ += 1; }
 
@@ -67,7 +71,9 @@ private:
  */
 class global_phase_version {
 public:
-    static phase_version get_gpv() { return body.load(std::memory_order_acquire); } // NOLINT
+    static phase_version get_gpv() {
+        return body.load(std::memory_order_acquire);
+    } // NOLINT
 
     static void inc_version() {
         phase_version new_body = body.load(std::memory_order_acquire);
@@ -112,39 +118,53 @@ public:
      * diff_upd_set_type.second.second.second is whether it is a delete operation.
      * diff_upd_set_type.second.second.second is a payload data.
      */
-    using diff_upd_set_type = tsl::hopscotch_map<std::string, tsl::hopscotch_map<std::string, std::tuple<tid_word, bool, std::string>>>;
+    using diff_upd_set_type = tsl::hopscotch_map<
+            std::string,
+            tsl::hopscotch_map<std::string,
+                               std::tuple<tid_word, bool, std::string>>>;
     constexpr static std::size_t diff_timestamp_pos = 0;
     constexpr static std::size_t diff_is_delete_pos = 1;
     constexpr static std::size_t diff_value_pos = 2;
 #elif defined(CPR_DIFF_UM)
-    using diff_upd_set_type = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<register_count_type, Record*>>>;
+    using diff_upd_set_type = std::unordered_map<
+            std::string,
+            std::unordered_map<std::string,
+                               std::pair<register_count_type, Record*>>>;
 #elif defined(CPR_DIFF_VEC)
-    using diff_upd_set_type = std::vector<std::tuple<std::string, std::string, tid_word, Record*>>;
+    using diff_upd_set_type = std::vector<
+            std::tuple<std::string, std::string, tid_word, Record*>>;
 #endif
-    using diff_upd_seq_set_type = tsl::hopscotch_map<SequenceValue, std::tuple<SequenceVersion, SequenceValue>, std::hash<SequenceValue>>;
+    using diff_upd_seq_set_type =
+            tsl::hopscotch_map<SequenceValue,
+                               std::tuple<SequenceVersion, SequenceValue>,
+                               std::hash<SequenceValue>>;
     constexpr static std::size_t reserve_num = PARAM_CPR_DIFF_SET_RESERVE_NUM;
 
     void clear_diff_set() {
-        diff_upd_set_ar.at(0).clear();
-        diff_upd_set_ar.at(1).clear();
-        diff_upd_seq_set_ar.at(0).clear();
-        diff_upd_seq_set_ar.at(1).clear();
+        for (auto&& diff_set : diff_upd_set_ar) {
+            for (auto storage = diff_set.begin(); storage != diff_set.end();
+                 ++storage) {
+                storage.value().clear();
+            }
+            diff_set.clear();
+        }
     }
 
     bool diff_upd_set_is_empty() {
         for (auto&& each_set : diff_upd_set_ar) {
             for (auto&& elem : each_set) {
-                if (!std::get<1>(elem).empty()) {
-                    return false;
-                }
+                if (!std::get<1>(elem).empty()) { return false; }
             }
         }
         return true;
     }
 
     bool diff_upd_seq_set_is_empty() {
-        return get_diff_upd_seq_set(0).empty() && get_diff_upd_seq_set(1).empty();
+        return get_diff_upd_seq_set(0).empty() &&
+               get_diff_upd_seq_set(1).empty();
     }
+
+    void display_diff_set();
 
     diff_upd_set_type& get_diff_upd_set();
 
@@ -158,9 +178,13 @@ public:
         return diff_upd_seq_set_ar.at(index);
     }
 
-    phase get_phase() { return phase_version_.load(std::memory_order_acquire).get_phase(); } // NOLINT
+    phase get_phase() {
+        return phase_version_.load(std::memory_order_acquire).get_phase();
+    } // NOLINT
 
-    version_type get_version() { return phase_version_.load(std::memory_order_acquire).get_version(); } // NOLINT
+    version_type get_version() {
+        return phase_version_.load(std::memory_order_acquire).get_version();
+    } // NOLINT
 
     void reserve_diff_set() {
         diff_upd_set_ar.at(0).reserve(reserve_num);
@@ -222,7 +246,8 @@ public:
         delete_op_ = true;
     }
 
-    log_record(std::string_view const storage, std::string_view const key, std::string_view const val) {
+    log_record(std::string_view const storage, std::string_view const key,
+               std::string_view const val) {
         storage_ = storage;
         key_ = key;
         val_ = val;
@@ -254,14 +279,17 @@ class log_record_of_seq {
 public:
     log_record_of_seq() = default;
 
-    log_record_of_seq(SequenceValue key, std::tuple<SequenceVersion, SequenceValue> val) {
+    log_record_of_seq(SequenceValue key,
+                      std::tuple<SequenceVersion, SequenceValue> val) {
         key_ = key;
         val_ = val;
     }
 
     [[nodiscard]] SequenceValue get_id() const { return key_; }
 
-    [[nodiscard]] std::tuple<SequenceVersion, SequenceValue> get_val() const { return val_; }
+    [[nodiscard]] std::tuple<SequenceVersion, SequenceValue> get_val() const {
+        return val_;
+    }
 
     MSGPACK_DEFINE(key_, val_);
 
@@ -272,11 +300,13 @@ private:
 
 class log_records {
 public:
-    void emplace_back(std::string_view const storage, std::string_view const key, std::string_view const val) {
+    void emplace_back(std::string_view const storage,
+                      std::string_view const key, std::string_view const val) {
         vec_.emplace_back(storage, key, val);
     }
 
-    void emplace_back(std::string_view const storage, std::string_view const key) {
+    void emplace_back(std::string_view const storage,
+                      std::string_view const key) {
         vec_.emplace_back(storage, key);
     }
 
@@ -286,7 +316,9 @@ public:
 
     std::vector<log_record>& get_vec() { return vec_; } // NOLINT
 
-    std::vector<log_record_of_seq>& get_vec_seq() { return vec_of_seq_; } // NOLINT
+    std::vector<log_record_of_seq>& get_vec_seq() {
+        return vec_of_seq_;
+    } // NOLINT
 
     MSGPACK_DEFINE(vec_, vec_of_seq_);
 
@@ -296,19 +328,25 @@ private:
 };
 
 // about global variables.
-[[maybe_unused]] static std::string& get_checkpoint_path() { return kCheckpointPath; } // NOLINT
+[[maybe_unused]] static std::string& get_checkpoint_path() {
+    return kCheckpointPath;
+} // NOLINT
 
-[[maybe_unused]] static std::string& get_checkpointing_path() { return kCheckpointingPath; } // NOLINT
+[[maybe_unused]] static std::string& get_checkpointing_path() {
+    return kCheckpointingPath;
+} // NOLINT
 
-[[maybe_unused]] static bool get_checkpoint_thread_end() { return kCheckPointThreadEnd.load(std::memory_order_acquire); }
+[[maybe_unused]] static bool get_checkpoint_thread_end() {
+    return kCheckPointThreadEnd.load(std::memory_order_acquire);
+}
 
-[[maybe_unused]] static bool get_checkpoint_thread_end_force() { return kCheckPointThreadEndForce.load(std::memory_order_acquire); }
+[[maybe_unused]] static bool get_checkpoint_thread_end_force() {
+    return kCheckPointThreadEndForce.load(std::memory_order_acquire);
+}
 
 [[maybe_unused]] static void join_checkpoint_thread() try {
     kCheckPointThread.join();
-} catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-}
+} catch (std::exception& e) { std::cerr << e.what() << std::endl; }
 
 [[maybe_unused]] static void set_checkpoint_thread_end(const bool tf) {
     kCheckPointThreadEnd.store(tf, std::memory_order_release);
@@ -318,9 +356,13 @@ private:
     kCheckPointThreadEndForce.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_checkpoint_path(std::string_view str) { kCheckpointPath.assign(str); }
+[[maybe_unused]] static void set_checkpoint_path(std::string_view str) {
+    kCheckpointPath.assign(str);
+}
 
-[[maybe_unused]] static void set_checkpointing_path(std::string_view str) { kCheckpointingPath.assign(str); }
+[[maybe_unused]] static void set_checkpointing_path(std::string_view str) {
+    kCheckpointingPath.assign(str);
+}
 
 [[maybe_unused]] extern void wait_next_checkpoint();
 
@@ -333,6 +375,12 @@ extern void checkpoint_thread();
  * @brief Checkpointing for entire database.
  */
 extern void checkpointing();
+
+/**
+ * @brief Create a checkpoint object
+ * @pre kCheckpointPath was already named.
+ */
+extern void create_checkpoint();
 
 [[maybe_unused]] static void invoke_checkpoint_thread() {
     set_checkpoint_thread_end(false);

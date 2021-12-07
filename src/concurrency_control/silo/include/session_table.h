@@ -39,7 +39,10 @@ public:
     static void init_session_table(bool enable_recovery);
 
 #ifdef CPR
+    static void display_diff_set();
+
     static bool is_empty_logs();
+
 #endif
 
 private:

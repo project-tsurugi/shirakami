@@ -38,7 +38,7 @@ using namespace shirakami::pwal;
 
 #endif
 
-using namespace shirakami;
+#include "glog/logging.h"
 
 namespace shirakami {
 
@@ -219,11 +219,18 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
                         Record* rec_ptr = new Record(elem.get_key(), // NOLINT
                                                      elem.get_val());
                         rec_ptr->get_tidw() = 0;
-                        put<Record*>(token, elem.get_storage(), elem.get_key(),
-                                     &rec_ptr);
+                        if (yakushima::status::OK !=
+                            put<Record*>(token, elem.get_storage(),
+                                         elem.get_key(), &rec_ptr)) {
+                            LOG(FATAL);
+                        }
                     }
                 } else if (existing_record != nullptr) {
-                    remove(token, elem.get_storage(), elem.get_key());
+                    delete existing_record; // NOLINT
+                    if (yakushima::status::OK !=
+                        remove(token, elem.get_storage(), elem.get_key())) {
+                        LOG(FATAL);
+                    }
                 }
             }
 
@@ -247,17 +254,19 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
         yakushima::leave(token);
     };
 
-#if 0
     // check whether checkpoint file exists.
     boost::system::error_code ec;
     const bool find_result =
             boost::filesystem::exists(cpr::get_checkpoint_path(), ec);
+    LOG(INFO) << "find checkpoint, " << cpr::get_checkpoint_path();
+
     if (!find_result || ec) {
         LOG(INFO) << "no checkpoint log files to recover.";
     } else {
         LOG(INFO) << "tx checkpoint log files to recover exist.";
+        process_from_file(cpr::get_checkpoint_path());
+        boost::filesystem::remove(cpr::get_checkpoint_path());
     }
-#endif
 
     // for sst files
     using namespace boost::filesystem;

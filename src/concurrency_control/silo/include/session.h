@@ -56,7 +56,12 @@ public:
                                                 yakushima::node_version64*>>;
     class scan_handler {
     public:
-        using scan_cache_type = std::map<ScanHandle, std::tuple<Storage, std::vector<std::tuple<const Record*, yakushima::node_version64_body, yakushima::node_version64*>>>>;
+        using scan_cache_type = std::map<
+                ScanHandle,
+                std::tuple<Storage, std::vector<std::tuple<
+                                            const Record*,
+                                            yakushima::node_version64_body,
+                                            yakushima::node_version64*>>>>;
         using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
         static constexpr std::size_t scan_cache_storage_pos = 0;
         static constexpr std::size_t scan_cache_vec_pos = 1;
@@ -109,7 +114,8 @@ public:
      * @brief compare and swap for visible_.
      */
     bool cas_visible(bool& expected, bool& desired) { // NOLINT
-        return visible_.compare_exchange_weak(expected, desired, std::memory_order_release,
+        return visible_.compare_exchange_weak(expected, desired,
+                                              std::memory_order_release,
                                               std::memory_order_acquire);
     }
 
@@ -143,9 +149,7 @@ public:
         return read_set;
     }
 
-    local_write_set& get_write_set() {
-        return write_set;
-    }
+    local_write_set& get_write_set() { return write_set; }
 
     bool get_read_only() const { // NOLINT
         return read_only_;
@@ -161,7 +165,9 @@ public:
         return token_;
     }
 
-    bool get_txbegan() const { return tx_began_.load(std::memory_order_acquire); } // NOLINT
+    [[nodiscard]] bool get_txbegan() const {
+        return tx_began_.load(std::memory_order_acquire);
+    } // NOLINT
 
     [[nodiscard]] bool get_visible() const { // NOLINT
         return visible_.load(std::memory_order_acquire);
@@ -187,7 +193,9 @@ public:
 
     [[maybe_unused]] void set_token(Token token) { token_ = token; }
 
-    void set_tx_began(bool tf) { tx_began_.store(tf, std::memory_order_release); }
+    void set_tx_began(bool tf) {
+        tx_began_.store(tf, std::memory_order_release);
+    }
 
     void set_visible(bool visible) {
         visible_.store(visible, std::memory_order_release);
@@ -206,7 +214,9 @@ public:
         return log_handle_.get_log_set();
     }
 
-    tid_word& get_flushed_ctid() { return log_handle_.get_flushed_ctid(); } // NOLINT
+    tid_word& get_flushed_ctid() {
+        return log_handle_.get_flushed_ctid();
+    } // NOLINT
 
     /**
      * @brief write-ahead logging
@@ -249,31 +259,48 @@ public:
 
     void clear_diff_set() { return cpr_local_handle_.clear_diff_set(); }
 
+    void display_diff_set() { return cpr_local_handle_.display_diff_set(); }
+
     /**
      * @pre In this function, the worker thread selects the appropriate container from the mechanism 
      * that switches the container that stores information from time to time. Do not call from CPR manager.
      * CPR managers have different criteria for choosing containers.
      */
-    cpr::cpr_local_handler::diff_upd_set_type& get_diff_upd_set() { return cpr_local_handle_.get_diff_upd_set(); }
+    cpr::cpr_local_handler::diff_upd_set_type& get_diff_upd_set() {
+        return cpr_local_handle_.get_diff_upd_set();
+    }
 
-    cpr::cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set() { return cpr_local_handle_.get_diff_upd_seq_set(); }
+    cpr::cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set() {
+        return cpr_local_handle_.get_diff_upd_seq_set();
+    }
 
-    cpr::cpr_local_handler::diff_upd_set_type& get_diff_upd_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_set(index); }
+    cpr::cpr_local_handler::diff_upd_set_type&
+    get_diff_upd_set(std::size_t index) {
+        return cpr_local_handle_.get_diff_upd_set(index);
+    }
 
-    cpr::cpr_local_handler::diff_upd_seq_set_type& get_diff_upd_seq_set(std::size_t index) { return cpr_local_handle_.get_diff_upd_seq_set(index); }
+    cpr::cpr_local_handler::diff_upd_seq_set_type&
+    get_diff_upd_seq_set(std::size_t index) {
+        return cpr_local_handle_.get_diff_upd_seq_set(index);
+    }
 
     cpr::phase get_phase() { return cpr_local_handle_.get_phase(); }
 
     std::uint64_t get_version() { return cpr_local_handle_.get_version(); }
 
-    void regi_diff_upd_set(std::string_view storage, const tid_word& tid, OP_TYPE op_type, Record* record, std::string_view value_view);
+    void regi_diff_upd_set(std::string_view storage, const tid_word& tid,
+                           OP_TYPE op_type, Record* record,
+                           std::string_view value_view);
 
-    void regi_diff_upd_seq_set(SequenceValue id, std::tuple<SequenceVersion, SequenceValue> ver_val);
+    void
+    regi_diff_upd_seq_set(SequenceValue id,
+                          std::tuple<SequenceVersion, SequenceValue> ver_val);
 
     void reserve_diff_set() { return cpr_local_handle_.reserve_diff_set(); }
 
     void update_pv() {
-        cpr_local_handle_.set_phase_version(cpr::global_phase_version::get_gpv());
+        cpr_local_handle_.set_phase_version(
+                cpr::global_phase_version::get_gpv());
     }
 
 #endif
@@ -284,9 +311,7 @@ public:
     }
 
     // about gc handle
-    garbage_manager::gc_handler& get_gc_handle() {
-        return gc_handle_;
-    }
+    garbage_manager::gc_handler& get_gc_handle() { return gc_handle_; }
 
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
