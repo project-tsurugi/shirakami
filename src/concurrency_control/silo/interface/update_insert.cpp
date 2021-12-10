@@ -32,12 +32,14 @@ Status insert(Token token, Storage storage,
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::INSERT ||
                 inws->get_op() == OP_TYPE::UPDATE) {
-                inws->reset_tuple_value(val);
-            } else if (inws->get_op() == OP_TYPE::DELETE) {
+                abort(token);
+                return Status::ERR_UNIQUE_CONSTRAINT;
+            }
+            if (inws->get_op() == OP_TYPE::DELETE) {
                 *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
                                       inws->get_rec_ptr()};
+                return Status::WARN_WRITE_TO_LOCAL_WRITE;
             }
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
         }
 
         return Status::WARN_ALREADY_EXISTS;
@@ -47,7 +49,8 @@ Status insert(Token token, Storage storage,
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{yakushima::put<Record*>(
             ti->get_yakushima_token(),
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, key, // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},
+            key,                                                       // NOLINT
             &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
             &nvp)};

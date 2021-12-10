@@ -26,6 +26,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/silo/delete_search/*.cpp"
         "concurrency_control/silo/delete_upsert/*.cpp"
         "concurrency_control/silo/insert/*.cpp"
+        "concurrency_control/silo/insert_update/*.cpp"
         "concurrency_control/silo/scan/*.cpp"
         "concurrency_control/silo/scan_upsert/*.cpp"
         "concurrency_control/silo/search/*.cpp"

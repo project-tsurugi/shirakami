@@ -32,6 +32,8 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::ERR_UNIQUE_CONSTRAINT, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     {
         Tuple* tuple{};
