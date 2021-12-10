@@ -49,9 +49,8 @@ Status insert(Token token, Storage storage,
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{yakushima::put<Record*>(
             ti->get_yakushima_token(),
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},
-            key,                                                       // NOLINT
-            &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},      // NOLINT
+            key, &rec_ptr, sizeof(Record*), nullptr,                   // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
             &nvp)};
     if (insert_result == yakushima::status::OK) {
