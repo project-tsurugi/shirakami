@@ -1,11 +1,20 @@
-#include <bitset>
 
-#include "gtest/gtest.h"
+#include <bitset>
+#include <mutex>
+#include <thread>
+
+#include "concurrency_control/silo/include/record.h"
 
 // shirakami-impl interface library
 #include "concurrency_control/silo/include/tuple_local.h"
 
 #include "shirakami/interface.h"
+
+#include "yakushima/include/kvs.h"
+
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
 
 namespace shirakami::testing {
 
@@ -14,13 +23,23 @@ using namespace shirakami;
 Storage storage;
 class simple_insert : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
+                                  "insert-simple_insert_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
+        log_dir_ = MAC2STR(PROJECT_ROOT);
+        log_dir_.append("/tmp/simple_insert_test_log");
+    }
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/simple_insert_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(simple_insert, insert) { // NOLINT
@@ -32,24 +51,45 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::ERR_UNIQUE_CONSTRAINT, insert(s, storage, k, v));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::WARN_UNIQUE_CONSTRAINT, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    {
-        Tuple* tuple{};
-        char k2 = 0;
-        ASSERT_EQ(Status::OK, insert(s, storage, {&k2, 1}, v));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ASSERT_EQ(Status::OK, search_key(s, storage, {&k2, 1}, tuple));
-        ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
-        ASSERT_EQ(Status::OK, commit(s));
-    }
-    Tuple* tuple{};
+
+    std::string_view st_view{reinterpret_cast<char*>(&storage), // NOLINT
+                             sizeof(storage)};
+    auto check_records = [st_view](std::string_view key_view,
+                                   std::string_view value_view) {
+        Record** rec_d_ptr{
+                std::get<0>(yakushima::get<Record*>(st_view, key_view))};
+        ASSERT_NE(rec_d_ptr, nullptr);
+        Record* rec_ptr{*rec_d_ptr};
+        ASSERT_NE(rec_ptr, nullptr);
+        {
+            Tuple& tuple_ref{rec_ptr->get_tuple()};
+            ASSERT_EQ(memcmp(tuple_ref.get_key().data(), key_view.data(),
+                             key_view.size()),
+                      0);
+            ASSERT_EQ(memcmp(tuple_ref.get_value().data(), value_view.data(),
+                             value_view.size()),
+                      0);
+        }
+    };
+
+    check_records(k, v);
+
+    // insert one char (0) records.
+    char k2 = 0;
+    std::string_view key_view{&k2, sizeof(k2)};
+    ASSERT_EQ(Status::OK, insert(s, storage, key_view, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    check_records(key_view, v);
+
+    // insert null key records.
     ASSERT_EQ(Status::OK, insert(s, storage, "", v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, search_key(s, storage, "", tuple));
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), 3), 0);
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    check_records("", v);
+
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -57,29 +97,41 @@ TEST_F(simple_insert, long_value_insert) { // NOLINT
     register_storage(storage);
     std::string k("CUSTOMER"); // NOLINT
     std::string v(             // NOLINT
-            "b234567890123456789012345678901234567890123456789012345678901234567890"
+            "b23456789012345678901234567890123456789012345678901234567890123456"
+            "7890"
             "12"
-            "3456789012345678901234567890123456789012345678901234567890123456789012"
+            "345678901234567890123456789012345678901234567890123456789012345678"
+            "9012"
             "34"
-            "5678901234567890123456789012345678901234567890123456789012345678901234"
+            "567890123456789012345678901234567890123456789012345678901234567890"
+            "1234"
             "56"
-            "7890123456789012345678901234567890123456789012345678901234567890123456"
+            "789012345678901234567890123456789012345678901234567890123456789012"
+            "3456"
             "78"
-            "9012345678901234567890123456789012345678901234567890123456789012345678"
+            "901234567890123456789012345678901234567890123456789012345678901234"
+            "5678"
             "90"
-            "1234567890123456789012345678901234567890123456789012345678901234567890"
+            "123456789012345678901234567890123456789012345678901234567890123456"
+            "7890"
             "12"
-            "3456789012345678901234567890123456789012345678901234567890123456789012"
+            "345678901234567890123456789012345678901234567890123456789012345678"
+            "9012"
             "34"
-            "5678901234567890123456789012345678901234567890123456789012345678901234"
+            "567890123456789012345678901234567890123456789012345678901234567890"
+            "1234"
             "56"
-            "7890123456789012345678901234567890123456789012345678901234567890123456"
+            "789012345678901234567890123456789012345678901234567890123456789012"
+            "3456"
             "78"
-            "9012345678901234567890123456789012345678901234567890123456789012345678"
+            "901234567890123456789012345678901234567890123456789012345678901234"
+            "5678"
             "90"
-            "1234567890123456789012345678901234567890123456789012345678901234567890"
+            "123456789012345678901234567890123456789012345678901234567890123456"
+            "7890"
             "12"
-            "3456789012345678901234567890123456789012345678901234567890123456789012"
+            "345678901234567890123456789012345678901234567890123456789012345678"
+            "9012"
             "34"
             "5678901234567890123456789012345678901234567890");
     Token s{};

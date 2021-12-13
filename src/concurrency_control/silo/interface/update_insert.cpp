@@ -32,8 +32,7 @@ Status insert(Token token, Storage storage,
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::INSERT ||
                 inws->get_op() == OP_TYPE::UPDATE) {
-                abort(token);
-                return Status::ERR_UNIQUE_CONSTRAINT;
+                return Status::WARN_UNIQUE_CONSTRAINT;
             }
             if (inws->get_op() == OP_TYPE::DELETE) {
                 *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
@@ -42,7 +41,7 @@ Status insert(Token token, Storage storage,
             }
         }
 
-        return Status::WARN_ALREADY_EXISTS;
+        return Status::WARN_UNIQUE_CONSTRAINT;
     }
 
     Record* rec_ptr = new Record(key, val); // NOLINT
@@ -67,7 +66,7 @@ Status insert(Token token, Storage storage,
         return Status::OK;
     }
     delete rec_ptr; // NOLINT
-    return Status::WARN_ALREADY_EXISTS;
+    return Status::WARN_UNIQUE_CONSTRAINT;
 }
 
 Status update(Token token, Storage storage, // NOLINT
