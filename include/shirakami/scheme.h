@@ -221,13 +221,6 @@ enum class Status : std::int32_t {
     /**
      * @brief error
      * @details
-     * @a delete_storage : If the storage is not registered with the given name. @n
-     * @a get_storage : If the storage is not registered with the given name. @n
-     */
-    ERR_NOT_FOUND,
-    /**
-     * @brief error
-     * @details
      * @a read_from_scan : It is the error due to phantom problems. @n
      * @a scan_key : It is the error due to phantom problems. @n
      */
@@ -238,11 +231,6 @@ enum class Status : std::int32_t {
      * @a enter : There are no capacity of session. @n
      */
     ERR_SESSION_LIMIT,
-    /**
-     * @brief error
-     * @details Error about storage.
-     */
-    ERR_STORAGE,
     /**
      * @brief error
      * @details
@@ -309,12 +297,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_FATAL:
             return "ERR_FATAL"sv; // NOLINT
-        case Status::ERR_NOT_FOUND:
-            return "ERR_NOT_FOUND"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
-        case Status::ERR_STORAGE:
-            return "ERR_STORAGE"sv; // NOLINT
         case Status::ERR_PHANTOM:
             return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_VALIDATION:

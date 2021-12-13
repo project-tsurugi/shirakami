@@ -38,8 +38,6 @@ TEST_F(scheme, to_string_view_Status) {  // NOLINT
     ASSERT_EQ("WARN_WRITE_TO_LOCAL_WRITE"sv, to_string_view(status));
     status = Status::OK;
     ASSERT_EQ("OK"sv, to_string_view(status));
-    status = Status::ERR_NOT_FOUND;
-    ASSERT_EQ("ERR_NOT_FOUND"sv, to_string_view(status));
     status = Status::ERR_SESSION_LIMIT;
     ASSERT_EQ("ERR_SESSION_LIMIT"sv, to_string_view(status));
     status = Status::ERR_VALIDATION;

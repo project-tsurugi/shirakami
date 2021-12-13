@@ -71,7 +71,6 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 /**
  * @brief initialization about wp.
  * @return Status::OK success.
- * @return Status::ERR_STORAGE error about storage.
  */
 [[maybe_unused]] extern Status init();
 
