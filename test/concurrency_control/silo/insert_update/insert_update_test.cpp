@@ -47,7 +47,7 @@ TEST_F(insert_update_test, insert_update) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, update(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_UNIQUE_CONSTRAINT, insert(s, storage, k, v));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

@@ -54,7 +54,7 @@ TEST_F(simple_upsert, upsert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::WARN_UNIQUE_CONSTRAINT, insert(s, st, k, v));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s));

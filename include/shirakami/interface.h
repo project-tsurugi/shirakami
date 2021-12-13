@@ -63,12 +63,10 @@ extern Status list_storage(std::vector<Storage>& out);
 
 /**
  * @brief transactional termination command about abort.
- * @details It aborts, does cleaning for local set/cache, and try gc.
+ * @details It is user abort, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
  * @pre it did enter -> ... -> (tx_begin ->) some transactional operations (update / insert / 
  * search / delete) or no operation.
- * @post execute leave to leave the session or transactional operations (delete_record, 
- * insert, open_scan, ...etc) to start next transaction.
  * @return Status::OK success.
  */
 extern Status abort(Token token); // NOLINT
@@ -90,8 +88,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @param[in,out] cp commit parameter to notify commit timestamp and wait obeyed to 
  * commit_param.commit_property.
  * @pre executed enter (-> tx_begin -> transaction operation).
- * @post execute leave to leave the session or transactional operations (ex. tx_begin, 
- * search, update, ...etc)  to start next transaction.
  * @return Status::ERR_FAIL_WP This means validation failure by others write preserve.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
  * so it called abort().
@@ -111,8 +107,8 @@ extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
  * @param[in] token This should be the token which was used for commit function.
  * @param[in] commit_id This should be the commit_id which was received at commit 
  * function with @b token.
- * @return  true This transaction was committed (durable).
- * @return  false This transaction was not committed (durable).
+ * @return  true This transaction was committed from the point of view of recovery.
+ * @return  false This transaction was not committed from the point of view of recovery.
  */
 extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
@@ -120,9 +116,9 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @brief Delete the all records in all tables.
  * @pre This function is called by a single thread and doesn't allow moving of 
  * other threads. 
- * This is not transactional operation.
- * @details  It doesn't need to call tx_begin(Token token). Also it doesn't need 
- * to call enter/leave around calling this function.
+ * This is not DML operations but DDL operations.
+ * @details  It must not call tx_begin(Token token) before this calling. And 
+ * it doesn't need to call enter/leave around calling this function.
  * @return Status::OK success
  */
 [[maybe_unused]] extern Status delete_all_records(); // NOLINT
@@ -134,8 +130,8 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @param[in] key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::WARN_CANCEL_PREVIOUS_OPERATION it canceled an previous update / 
- * insert / upsert operation before this function and did delete operation.
+ * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely canceled an previous 
+ * insert.
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
  * read only mode.
  * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem 
@@ -177,9 +173,11 @@ extern void fin(bool force_shut_down_cpr = true); // NOLINT
  * build database, it must be executed first.
  * @param[in] enable_recovery whether it is enable recovery from existing log.
  * @param[in] log_directory_path of WAL directory.
+ * @return Status::OK
+ * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
+ * not done anything in this call.
  * @return Status::ERR_INVALID_ARGS The args as a log directory path is invalid.
  * Some files which has the same path exist.
- * @return Status::OK
  */
 extern Status
 init(bool enable_recovery = false,                                 // NOLINT
@@ -191,16 +189,16 @@ init(bool enable_recovery = false,                                 // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
- * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which 
- * was inserted by this function was also read by previous scan operations, and it 
- * detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
  * exists in db, so this function returned immediately.
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
  * read only mode.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed update/insert/upsert, 
- * so it update the local write set object.
+ * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed delete.
+ * So it translated delete - insert into update.
+ * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which 
+ * was inserted by this function was also read by previous scan operations, and it 
+ * detects phantom problem by other transaction's write. It did abort().
  */
 extern Status insert(Token token, Storage storage,
                      std::string_view key, // NOLINT
@@ -211,9 +209,9 @@ extern Status insert(Token token, Storage storage,
  * @details It return the objects which was got at enter function to
  * session_table_.
  * @param[in] token retrieved by enter()
- * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  * @return Status::OK success.
  * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
+ * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  */
 extern Status leave(Token token); // NOLINT
 
@@ -245,8 +243,6 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * @param[in] token the token retrieved by enter()
  * @param[in] handle input parameters to identify the specific scan_cache.
  * @param[out] result output parameter to pass the read record.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
- * so it called abort().
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by previous delete 
  * operation of this transaction.
@@ -259,6 +255,8 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding 
  * write (insert / update / upsert) operation in the same tx.
  * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
+ * so it called abort().
  */
 extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                              Tuple*& result);
@@ -276,8 +274,6 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @param[out] result output parameter to pass the found Tuple pointers.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid until commit/abort.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
- * so it called abort().
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation 
  * of this transaction.
@@ -285,6 +281,8 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other 
  * updater, and it could not complete search.
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
+ * so it called abort().
  */
 extern Status scan_key(Token token, Storage storage,
                        std::string_view l_key, // NOLINT

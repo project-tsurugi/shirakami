@@ -202,12 +202,6 @@ enum class Status : std::int32_t {
     WARN_SCAN_LIMIT,
     /**
      * @brief warning
-     * @details warning about trying to insert a page and there already is a page 
-     * which has same primary key.
-     */
-    WARN_UNIQUE_CONSTRAINT,
-    /**
-     * @brief warning
      * @details
      * @a update : It already executed update/insert, so it up date the value which is going to be updated. @n
      * @a upsert : It already did insert/update/upsert, so it overwrite its local write set. @n
@@ -305,8 +299,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_READ_FROM_OWN_OPERATION"sv; // NOLINT
         case Status::WARN_SCAN_LIMIT:
             return "WARN_SCAN_LIMIT"sv; // NOLINT
-        case Status::WARN_UNIQUE_CONSTRAINT:
-            return "WARN_UNIQUE_CONSTRAINT"sv; // NOLINT
         case Status::WARN_WRITE_TO_LOCAL_WRITE:
             return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
         case Status::OK:
