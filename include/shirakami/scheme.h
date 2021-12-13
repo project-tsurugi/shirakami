@@ -251,12 +251,6 @@ enum class Status : std::int32_t {
     ERR_STORAGE,
     /**
      * @brief error
-     * @details Error about trying to insert a page and there already is a page 
-     * which has same primary key.
-     */
-    ERR_UNIQUE_CONSTRAINT,
-    /**
-     * @brief error
      * @details
      * @a commit : This means read validation failure and it already executed abort(). After this, do tx_begin to start
      * next transaction or leave to leave the session. @n
@@ -329,8 +323,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_SESSION_LIMIT"sv; // NOLINT
         case Status::ERR_STORAGE:
             return "ERR_STORAGE"sv; // NOLINT
-        case Status::ERR_UNIQUE_CONSTRAINT:
-            return "ERR_UNIQUE_CONSTRAINT"sv; // NOLINT
         case Status::ERR_PHANTOM:
             return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_VALIDATION:
