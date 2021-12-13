@@ -148,6 +148,10 @@ public:
             }
             diff_set.clear();
         }
+
+        for (auto&& diff_set : diff_upd_seq_set_ar) {
+            diff_set.clear();
+        }
     }
 
     bool diff_upd_set_is_empty() {
