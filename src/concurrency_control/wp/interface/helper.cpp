@@ -104,6 +104,9 @@ Status leave(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
         if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
+                // there may be halfway txs.
+                abort(token);
+                
                 yakushima::leave(
                         static_cast<session*>(token)->get_yakushima_token());
                 itr.set_tx_began(false);
