@@ -129,7 +129,6 @@ TEST_F(cpr_test, cpr_recovery_again) { // NOLINT
     ASSERT_EQ(std::string(tup->get_key()), "b");   // NOLINT
     ASSERT_EQ(std::string(tup->get_value()), "B"); // NOLINT
     ASSERT_EQ(commit(token), Status::OK);          // NOLINT
-    cpr::wait_next_checkpoint();
     ASSERT_EQ(leave(token), Status::OK);
     fin(false); // NOLINT
 }

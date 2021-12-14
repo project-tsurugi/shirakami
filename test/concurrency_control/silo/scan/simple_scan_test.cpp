@@ -32,13 +32,7 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> records{};
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, "", scan_endpoint::INF, end, scan_endpoint::EXCLUSIVE, records)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, end, scan_endpoint::EXCLUSIVE, records));
-#endif
     EXPECT_EQ(1, records.size());
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
