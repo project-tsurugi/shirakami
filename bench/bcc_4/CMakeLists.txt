@@ -1,14 +1,14 @@
-file(GLOB BCC_3B_ST_SOURCES
+file(GLOB BCC_4_SOURCES
         "storage.cpp"
         "utility.cpp"
-        "bcc_3b_st.cpp"
+        "bcc_4.cpp"
         )
 
-add_executable(bcc_3b_st
-        ${BCC_3B_ST_SOURCES}
+add_executable(bcc_4
+        ${BCC_4_SOURCES}
         )
 
-target_link_libraries(bcc_3b_st
+target_link_libraries(bcc_4
         PRIVATE gflags::gflags
         PRIVATE glog::glog
         PRIVATE shirakami
@@ -21,7 +21,7 @@ target_link_libraries(bcc_3b_st
         PRIVATE Threads::Threads
         )
 
-target_include_directories(bcc_3b_st
+target_include_directories(bcc_4
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/include
         PRIVATE ${PROJECT_SOURCE_DIR}/include
@@ -33,8 +33,6 @@ target_include_directories(bcc_3b_st
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
-if (NOT BUILD_WP)
-add_test(
-        NAME    bcc_3b_st
-        COMMAND bcc_3b_st)
-endif()
+#add_test(
+#        NAME    bcc_4
+#        COMMAND bcc_4)

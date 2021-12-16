@@ -20,3 +20,8 @@ add_subdirectory(rocksdb)
 add_subdirectory(ycsb)
 add_subdirectory(ycsb_mb_nc)
 add_subdirectory(ycsb_ol_bt_nc)
+
+if (BUILD_WP)
+# for wp bench.
+    add_subdirectory(bcc_4)
+endif ()
