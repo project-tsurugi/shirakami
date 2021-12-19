@@ -33,6 +33,8 @@ target_include_directories(bcc_4
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
+# Debug builds take a long time and cannot be automated. Release builds finish 
+# in a realistic amount of time.
 #add_test(
 #        NAME    bcc_4
 #        COMMAND bcc_4)
