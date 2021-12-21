@@ -9,16 +9,16 @@ build() {
     cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBUILD_WP=ON ..
     cmake --build . --target all -- -j
     #return original position.
-    cd ../bench/bcc_4
+    cd ../bench/bcc_5
 }
 
 exp() {
     echo "start exp"
-    cd ../../build_wp_release/bench/bcc_4/
+    cd ../../build_wp_release/bench/bcc_5/
 
     duration=5
     epoch=5
-    result="bcc_4.dat"
+    result="bcc_5.dat"
     rm -f $result
 
     total_trial_num=0
@@ -31,7 +31,7 @@ exp() {
 
     trial_num=0
     for ((cr = 0; cr <= 100; cr += 25)); do
-        echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_4 -cr $cr -d $duration "
+        echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_5 -cr $cr -d $duration "
 
         sumTH=0
         maxTH=0
@@ -45,8 +45,8 @@ exp() {
             echo "perc_rate_to_all is $perc_rate_to_all"
 
             date
-            sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_4 -cr $cr -d $duration >exp.txt
-            tmpTH=$(grep "bt_throughput\[tps" ./exp.txt | awk '{print $2}')
+            sudo perf stat -e cache-misses,cache-references -o ana.txt numactl -l ./bcc_5 -cr $cr -d $duration >exp.txt
+            tmpTH=$(grep "ol_throughput\[tps" ./exp.txt | awk '{print $2}')
             sumTH=$(echo "scale=4; $sumTH + $tmpTH" | bc | xargs printf %10.4f)
             echo "tmpTH: $tmpTH"
 
@@ -67,15 +67,15 @@ exp() {
         echo "$cr $avgTH $minTH $maxTH" >>$result
     done
     #return original pos
-    cd ../../../bench/bcc_4
+    cd ../../../bench/bcc_5
 }
 
 gen_graph() {
     echo "start gen_graph"
-    cd ../../build_wp_release/bench/bcc_4
-    gnuplot ./../../../bench/bcc_4/script/graph.plt
+    cd ../../build_wp_release/bench/bcc_5
+    gnuplot ./../../../bench/bcc_5/script/graph.plt
     #return original pos
-    cd ../../../bench/bcc_4
+    cd ../../../bench/bcc_5
 }
 
 main() {

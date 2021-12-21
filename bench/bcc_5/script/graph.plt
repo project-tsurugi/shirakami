@@ -5,8 +5,8 @@ set format y "%1.1t{/Symbol \264}10^{%T}"
 set grid
 
 set terminal pdfcairo enhanced color
-set ylabel "Throughput [tps]"
-set title "bcc4"
-set output "bcc_4.pdf"
+set ylabel "OL Throughput [tps]"
+set title "bcc5"
+set output "bcc_5.pdf"
 plot \
-       "bcc_4.dat"   using 1:2:3:4 w errorlines notitle, \
+       "bcc_5.dat"   using 1:2:3:4 w errorlines notitle, \
