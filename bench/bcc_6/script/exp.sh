@@ -16,7 +16,7 @@ exp() {
     echo "start exp"
     cd ../../build_wp_release/bench/bcc_6/
 
-    duration=1
+    duration=5
     epoch=5
     result="bcc_6.dat"
     rm -f $result
