@@ -22,6 +22,7 @@
 
 // shirakami/bench/bcc_6/include
 #include "param.h"
+#include "simple_result.h"
 #include "storage.h"
 #include "utility.h"
 
@@ -63,7 +64,7 @@ void waitForReady(const std::vector<char>& readys) {
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
-            const bool& quit) {
+            const bool& quit, simple_result& res) {
     // init work
     Xoroshiro128Plus rnd;
     FastZipf zipf(&rnd, 0, rec_num);
@@ -75,6 +76,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     std::vector<opr_obj> opr_set;
     opr_set.reserve(tx_size);
     while (Status::OK != enter(token)) { _mm_pause(); }
+
+    std::size_t ct_commit{0};
 
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
@@ -98,20 +101,23 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
         auto rc{commit(token)}; // NOLINT
         if (rc != Status::OK) { LOG(FATAL) << "unreachable path."; }
+        ++ct_commit;
     }
 
     leave(token);
+    res.set_ct_commit(ct_commit);
 }
 
 void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
+    alignas(CACHE_LINE_SIZE) std::vector<simple_result> res(FLAGS_th);
 
     std::vector<char> readys(FLAGS_th); // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_th; ++i) {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
-                         std::ref(quit));
+                         std::ref(quit), std::ref(res.at(i)));
     }
 
     waitForReady(readys);
@@ -124,7 +130,7 @@ void invoke_leader() {
     LOG(INFO) << "stop exp.";
     for (auto& th : thv) th.join();
 
-    output_result();
+    output_result(res);
     LOG(INFO) << "end exp, start cleanup.";
 }
 

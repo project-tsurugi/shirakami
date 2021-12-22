@@ -17,4 +17,10 @@ set output "bcc_6_val.pdf"
 plot \
        "bcc_6.dat"   using 1:5:6:7 w errorlines notitle, \
 
+set ylabel "throughput[tps]"
+set title "bcc-6-throughput"
+set output "bcc_6_th.pdf"
+plot \
+       "bcc_6.dat"   using 1:8:9:10 w errorlines notitle, \
+
 

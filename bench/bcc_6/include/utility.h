@@ -8,4 +8,4 @@
 
 extern void check_flags();
 
-extern void output_result();
+extern void output_result(std::vector<simple_result> const& res);
