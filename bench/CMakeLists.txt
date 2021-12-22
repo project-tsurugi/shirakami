@@ -25,4 +25,5 @@ if (BUILD_WP)
 # for wp bench.
     add_subdirectory(bcc_4)
     add_subdirectory(bcc_5)
+    add_subdirectory(bcc_6)
 endif ()

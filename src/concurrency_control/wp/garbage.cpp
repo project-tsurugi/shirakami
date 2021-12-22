@@ -91,6 +91,7 @@ void clean_value(gc_handle& gh) {
     }
     auto& val_cont = gh.get_val_cont();
     while (!val_cont.empty()) {
+        if (get_flag_value_cleaner_end()) { break; }
         gc_handle::value_type val{};
         if (val_cont.try_pop(val)) {
             if (val.first != nullptr) {
@@ -110,6 +111,7 @@ void work_value_cleaner() {
     while (!get_flag_value_cleaner_end()) {
         for (auto&& se : session_table::get_session_table()) {
             clean_value(se.get_gc_handle());
+            if (get_flag_value_cleaner_end()) { break; }
         }
         sleepMs(PARAM_EPOCH_TIME);
     }
@@ -164,7 +166,10 @@ void clean_st_version(Storage st) {
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
-    for (auto&& sr : scan_res) { clean_rec_version(*std::get<1>(sr)); }
+    for (auto&& sr : scan_res) {
+        clean_rec_version(*std::get<1>(sr));
+        if (get_flag_version_cleaner_end()) { break; }
+    }
 }
 
 void clean_all_version() {
@@ -172,6 +177,7 @@ void clean_all_version() {
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
         if (wp::get_page_set_meta_storage() != st) { clean_st_version(st); }
+        if (get_flag_version_cleaner_end()) { break; }
     }
 }
 
