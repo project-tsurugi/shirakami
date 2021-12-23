@@ -13,7 +13,7 @@ namespace shirakami {
  * @param[out] tid The result timestamp of read. It will be used for validation.
  * @param[out] val The result value of read.
  */
-Status read_record(Record* rec_ptr, tid_word& tid, std::string*& val);
+Status read_record(Record* rec_ptr, tid_word& tid, std::string& val);
 
 /**
  * @brief There is no metadata that should be there.

@@ -74,7 +74,7 @@ Status search_key(session* ti, Storage const storage,
     auto valid_version_tuple_register = [&ti, &rec_ptr, &ver, &tuple]() {
         ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
                 rec_ptr->get_key());
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(*ver->get_value());
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(ver->get_val());
         tuple = ti->get_cache_for_search_ptr();
     };
 

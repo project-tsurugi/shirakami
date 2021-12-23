@@ -81,7 +81,7 @@ public:
 
     [[nodiscard]] std::string_view get_val() const {
         if (get_op() == OP_TYPE::INSERT) {
-            return *get_rec_ptr()->get_latest()->get_value();
+            return get_rec_ptr()->get_latest()->get_val();
         }
         if (get_op() == OP_TYPE::UPDATE) { return val_; }
         LOG(FATAL) << "unreachable";

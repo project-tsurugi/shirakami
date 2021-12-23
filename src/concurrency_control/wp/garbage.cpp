@@ -122,7 +122,8 @@ void work_value_cleaner_each_thd(std::size_t const thid) {
 
     while (!get_flag_value_cleaner_end()) {
         for (std::size_t i = start; i < end; ++i) {
-            clean_value(session_table::get_session_table().at(i).get_gc_handle());
+            clean_value(
+                    session_table::get_session_table().at(i).get_gc_handle());
             if (get_flag_value_cleaner_end()) { break; }
         }
         sleepMs(PARAM_EPOCH_TIME);
@@ -130,6 +131,7 @@ void work_value_cleaner_each_thd(std::size_t const thid) {
 }
 
 void work_value_cleaner() {
+#if 0
     std::vector<std::thread> ths;
     ths.reserve(get_val_cleaner_thd_size());
 
@@ -138,6 +140,7 @@ void work_value_cleaner() {
     }
 
     for (auto&& th : ths) { th.join(); }
+#endif
 }
 
 version* find_latest_invisible_version_from_batch(Record* rec_ptr,

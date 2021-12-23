@@ -43,13 +43,13 @@ Status search_key(session* ti, Storage const storage,
     }
 
     tid_word read_tid{};
-    std::string* read_val{};
+    std::string read_val{};
     // read version
     Status rs{read_record(rec_ptr, read_tid, read_val)};
     if (rs == Status::OK) {
         ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
         ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(*read_val);
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(read_val);
         tuple = ti->get_cache_for_search_ptr();
         ti->get_storage_set().emplace_back(storage);
     } else {

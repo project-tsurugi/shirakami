@@ -90,10 +90,10 @@ TEST_F(upsert_test, new_epoch_new_version) { // NOLINT
         ASSERT_NE(rec_ptr, nullptr);
         version* ver{rec_ptr->get_latest()};
         ASSERT_NE(ver, nullptr);
-        ASSERT_EQ(*ver->get_value(), second_v);
+        ASSERT_EQ(ver->get_val(), second_v);
         ver = ver->get_next();
         ASSERT_NE(ver, nullptr);
-        ASSERT_EQ(*ver->get_value(), first_v);
+        ASSERT_EQ(ver->get_val(), first_v);
     };
     // for occ
     process(st, false);

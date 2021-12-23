@@ -140,7 +140,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
     return Status::OK;
 }
 
-Status read_record(Record* const rec_ptr, tid_word& tid, std::string*& val) {
+Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val) {
     tid_word f_check{};
     tid_word s_check{};
 
@@ -188,7 +188,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string*& val) {
 
         if (f_check.get_absent()) { return Status::WARN_CONCURRENT_DELETE; }
 
-        val = rec_ptr->get_latest()->get_value();
+        val = rec_ptr->get_latest()->get_val();
         s_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
         if (f_check == s_check) { break; }
         f_check = s_check;

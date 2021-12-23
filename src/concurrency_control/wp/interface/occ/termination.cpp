@@ -114,10 +114,10 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    std::string* old_v{nullptr};
+                    //std::string* old_v{nullptr};
                     wso_ptr->get_rec_ptr()->get_latest()->set_value(
-                            wso_ptr->get_val(), old_v);
-                    if (old_v != nullptr) { old_vs.emplace_back(old_v); }
+                            wso_ptr->get_val());
+                    //if (old_v != nullptr) { old_vs.emplace_back(old_v); }
                 }
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;

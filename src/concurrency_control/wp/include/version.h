@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <shared_mutex>
 #include <string_view>
 
 #include "cpu.h"
@@ -26,17 +27,19 @@ public:
         set_next(next);
     }
 
-    ~version() {
-        auto* val{get_value()};
-        delete val; // NOLINT
-    }
-
     [[nodiscard]] version* get_next() const {
         return next_.load(std::memory_order_acquire);
     }
 
+#if 0
     [[nodiscard]] std::string* get_value() const {
         return value_.load(std::memory_order_acquire);
+    }
+#endif
+
+    [[nodiscard]] std::string get_val() {
+        std::shared_lock<std::shared_mutex> lock{val_mtx_};
+        return value_;
     }
 
     [[nodiscard]] tid_word get_tid() const { return tid_; }
@@ -47,19 +50,25 @@ public:
      * If you use in other case, it may occurs std::abort.
      */
     void set_value(std::string_view const value) {
+#if 0
         if (get_value() != nullptr) {
             LOG(FATAL) << "usage";
             std::abort();
         }
         value_.store(new std::string(value), // NOLINT
                      std::memory_order_release);
+#endif
+        std::lock_guard<std::shared_mutex> lock{val_mtx_};
+        value_ = value;
     }
 
+#if 0
     void set_value(std::string_view new_v, std::string*& old_v) {
         old_v = get_value();
         value_.store(new std::string(new_v), // NOLINT
                      std::memory_order_release);
     }
+#endif
 
     void set_next(version* const next) {
         next_.store(next, std::memory_order_release);
@@ -73,7 +82,10 @@ private:
     /**
      * @brief value.
      */
-    std::atomic<std::string*> value_{nullptr};
+    std::string value_;
+
+    std::shared_mutex val_mtx_;
+
     /**
      * @brief pointer to next version.
      */
