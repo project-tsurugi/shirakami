@@ -39,7 +39,6 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     garbage::fin();
     epoch::fin();
     delete_all_records();      // This should be before wp::fin();
-    session_table::clean_up(); // about gc
     wp::fin();                 // note: this use yakushima.
 
     // about index

@@ -14,12 +14,6 @@ namespace shirakami::garbage {
 // background thread
 //================================================================================
 /**
- * @brief executor of garbage collection for values.
- * @details Perform a GC based on the time stamp determined by the manager.
- */
-[[maybe_unused]] inline std::thread value_cleaner; // NOLINT
-
-/**
  * @brief executor of garbage collection for versions.
  * @details Perform a GC based on the time stamp determined by the manager.
  */
@@ -34,34 +28,29 @@ namespace shirakami::garbage {
 // function for background thread
 [[maybe_unused]] void work_manager();
 
-[[maybe_unused]] void work_value_cleaner();
-
 [[maybe_unused]] void work_version_cleaner();
 
 // invoker for bg threads
 [[maybe_unused]] static void invoke_bg_threads() {
     manager = std::thread(work_manager);
-    value_cleaner = std::thread(work_value_cleaner);
     version_cleaner = std::thread(work_version_cleaner);
 }
 
 // flags for background thread
-[[maybe_unused]] inline std::atomic<bool> flag_value_cleaner_end{false};
-
 [[maybe_unused]] inline std::atomic<bool> flag_version_cleaner_end{false};
 
 [[maybe_unused]] inline std::atomic<bool> flag_manager_end{false};
 
 // parameters for background thread
-[[maybe_unused]] inline std::size_t val_cleaner_thd_size{0};
-
 [[maybe_unused]] inline std::size_t ver_cleaner_thd_size{0};
 
-// setter
-[[maybe_unused]] static void set_flag_value_cleaner_end(bool const tf) {
-    flag_value_cleaner_end.store(tf, std::memory_order_release);
-}
+// statistical data
+/**
+  * @brief Record the number of gc versions.
+  */
+inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
+// setter
 [[maybe_unused]] static void set_flag_version_cleaner_end(bool const tf) {
     flag_version_cleaner_end.store(tf, std::memory_order_release);
 }
@@ -70,19 +59,11 @@ namespace shirakami::garbage {
     flag_manager_end.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_val_cleaner_thd_size(std::size_t const n) {
-    val_cleaner_thd_size = n;
-}
-
 [[maybe_unused]] static void set_ver_cleaner_thd_size(std::size_t const n) {
     ver_cleaner_thd_size = n;
 }
 
 // getter
-[[maybe_unused]] static bool get_flag_value_cleaner_end() {
-    return flag_value_cleaner_end.load(std::memory_order_acquire);
-}
-
 [[maybe_unused]] static bool get_flag_version_cleaner_end() {
     return flag_version_cleaner_end.load(std::memory_order_acquire);
 }
@@ -91,18 +72,15 @@ namespace shirakami::garbage {
     return flag_manager_end.load(std::memory_order_acquire);
 }
 
-[[maybe_unused]] static std::size_t get_val_cleaner_thd_size() {
-    return val_cleaner_thd_size;
-}
-
 [[maybe_unused]] static std::size_t get_ver_cleaner_thd_size() {
     return ver_cleaner_thd_size;
 }
 
+[[maybe_unused]] static std::atomic<std::uint64_t>& get_gc_ct_ver() { return gc_ct_ver_; }
+
 // join about bg threads
 [[maybe_unused]] static void join_bg_threads() {
     manager.join();
-    value_cleaner.join();
     version_cleaner.join();
 }
 
@@ -148,56 +126,5 @@ inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
 
 [[maybe_unused]] extern void fin();
 //================================================================================
-
-class gc_handle {
-public:
-    /**
-     * @brief value_type
-     * @details The first element is the payload. The second element represents 
-     * the epoch when the payload changes from global to invisible.
-     */
-    using value_type = std::pair<std::string*, epoch::epoch_t>;
-    static constexpr value_type initial_value{nullptr, 0};
-
-    void destroy();
-
-    static std::atomic<std::uint64_t>& get_gc_ct_val() { return gc_ct_val_; }
-
-    static std::atomic<std::uint64_t>& get_gc_ct_ver() { return gc_ct_ver_; }
-
-    value_type get_val_cache() { return val_cache_; }
-
-    shirakami::concurrent_queue<value_type>& get_val_cont() {
-        return val_cont_;
-    }
-
-    void push_value(value_type const g_val) { val_cont_.push(g_val); }
-
-    void set_val_cache(value_type const v) { val_cache_ = v; }
-
-    bool val_cache_is_empty() {
-        return val_cache_ ==
-               std::pair<std::string*, epoch::epoch_t>(nullptr, 0);
-    }
-
-private:
-    value_type val_cache_{initial_value};
-
-    shirakami::concurrent_queue<value_type> val_cont_;
-
-    // for measurement
-    //==============================
-    /**
-     * @brief Record the number of gc vals.
-     */
-    static inline std::atomic<std::uint64_t> gc_ct_val_{0};
-
-    /**
-     * @brief Record the number of gc versions.
-     */
-    static inline std::atomic<std::uint64_t> gc_ct_ver_{0};
-
-    //==============================
-};
 
 } // namespace shirakami::garbage

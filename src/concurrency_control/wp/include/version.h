@@ -31,12 +31,6 @@ public:
         return next_.load(std::memory_order_acquire);
     }
 
-#if 0
-    [[nodiscard]] std::string* get_value() const {
-        return value_.load(std::memory_order_acquire);
-    }
-#endif
-
     [[nodiscard]] std::string get_val() {
         std::shared_lock<std::shared_mutex> lock{val_mtx_};
         return value_;
@@ -46,29 +40,12 @@ public:
 
     /**
      * @brief set value
-     * @pre This is for initialization of version.
-     * If you use in other case, it may occurs std::abort.
+     * @pre This is also for initialization of version.
      */
     void set_value(std::string_view const value) {
-#if 0
-        if (get_value() != nullptr) {
-            LOG(FATAL) << "usage";
-            std::abort();
-        }
-        value_.store(new std::string(value), // NOLINT
-                     std::memory_order_release);
-#endif
         std::lock_guard<std::shared_mutex> lock{val_mtx_};
         value_ = value;
     }
-
-#if 0
-    void set_value(std::string_view new_v, std::string*& old_v) {
-        old_v = get_value();
-        value_.store(new std::string(new_v), // NOLINT
-                     std::memory_order_release);
-    }
-#endif
 
     void set_next(version* const next) {
         next_.store(next, std::memory_order_release);

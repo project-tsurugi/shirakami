@@ -32,13 +32,8 @@ void output_result(std::vector<simple_result> const& res) {
     std::size_t ct_commit{0};
     for (auto const& elem : res) { ct_commit += elem.get_ct_commit(); }
     std::cout << "throughput[tps]:\t" << ct_commit / FLAGS_d << std::endl;
-    std::cout << "gc_val[/s]:\t"
-              << shirakami::garbage::gc_handle::get_gc_ct_val().load(
-                         std::memory_order_acquire) /
-                         FLAGS_d
-              << std::endl;
     std::cout << "gc_ver[/s]:\t"
-              << shirakami::garbage::gc_handle::get_gc_ct_ver().load(
+              << shirakami::garbage::get_gc_ct_ver().load(
                          std::memory_order_acquire) /
                          FLAGS_d
               << std::endl;

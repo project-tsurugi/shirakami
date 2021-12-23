@@ -74,8 +74,6 @@ public:
 
     Tuple* get_cache_for_search_ptr() { return &cache_for_search_; }
 
-    garbage::gc_handle& get_gc_handle() { return gc_handle_; }
-
     node_set_type& get_node_set() { return node_set_; }
 
     /**
@@ -272,8 +270,6 @@ private:
      * @brief local set for phantom avoidance.
      */
     node_set_type node_set_{};
-
-    garbage::gc_handle gc_handle_{};
 
     // for batch field
     /**

@@ -92,8 +92,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 }
 
 void write_phase(session* ti, epoch::epoch_t ce) {
-    std::vector<std::string*> old_vs;
-    auto process = [ti, ce, &old_vs](write_set_obj* wso_ptr) {
+    auto process = [ti, ce](write_set_obj* wso_ptr) {
         switch (wso_ptr->get_op()) {
             case OP_TYPE::INSERT: {
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
@@ -114,10 +113,8 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    //std::string* old_v{nullptr};
                     wso_ptr->get_rec_ptr()->get_latest()->set_value(
                             wso_ptr->get_val());
-                    //if (old_v != nullptr) { old_vs.emplace_back(old_v); }
                 }
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
@@ -131,15 +128,6 @@ void write_phase(session* ti, epoch::epoch_t ce) {
 
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         process(&elem);
-    }
-
-    // register garbage
-    if (!old_vs.empty()) {
-        // Get the epoch when it is completely invisible from the global.
-        epoch::epoch_t ce_v{epoch::get_global_epoch()};
-        for (auto&& elem : old_vs) {
-            ti->get_gc_handle().push_value({elem, ce_v});
-        }
     }
 }
 

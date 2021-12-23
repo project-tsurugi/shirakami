@@ -4,10 +4,6 @@
 
 namespace shirakami {
 
-void session_table::clean_up() {
-    for (auto&& se : get_session_table()) { se.get_gc_handle().destroy(); }
-}
-
 Status session_table::decide_token(Token& token) { // NOLINT
     for (auto&& itr : get_session_table()) {
         if (!itr.get_visible()) {

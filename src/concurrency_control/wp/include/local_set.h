@@ -79,7 +79,7 @@ public:
 
     [[nodiscard]] Storage get_storage() const { return storage_; }
 
-    [[nodiscard]] std::string_view get_val() const {
+    [[nodiscard]] std::string get_val() const {
         if (get_op() == OP_TYPE::INSERT) {
             return get_rec_ptr()->get_latest()->get_val();
         }

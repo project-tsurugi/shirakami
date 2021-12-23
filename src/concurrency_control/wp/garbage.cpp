@@ -13,31 +13,13 @@
 
 namespace shirakami::garbage {
 
-void gc_handle::destroy() {
-    while (!val_cont_.empty()) {
-        value_type val{};
-        val_cont_.try_pop(val);
-        if (val.first != nullptr) {
-            delete val.first; // NOLINT
-            val = {};
-        }
-    }
-    val_cont_.clear();
-}
-
 void init() {
     // clear global flags
     set_flag_manager_end(false);
-    set_flag_value_cleaner_end(false);
     set_flag_version_cleaner_end(false);
 
     // clear global statistical data
-    gc_handle::get_gc_ct_val().store(0, std::memory_order_release);
-    gc_handle::get_gc_ct_ver().store(0, std::memory_order_release);
-
-    // set global param
-    set_val_cleaner_thd_size(KVS_MAX_PARALLEL_THREADS / 56); // NOLINT
-    set_ver_cleaner_thd_size(KVS_MAX_PARALLEL_THREADS / 56); // NOLINT
+    get_gc_ct_ver().store(0, std::memory_order_release);
 
     invoke_bg_threads();
 }
@@ -45,7 +27,6 @@ void init() {
 void fin() {
     // set flags
     set_flag_manager_end(true);
-    set_flag_value_cleaner_end(true);
     set_flag_version_cleaner_end(true);
 
     join_bg_threads();
@@ -80,69 +61,6 @@ void work_manager() {
     }
 }
 
-void clean_value(gc_handle& gh) {
-    auto min_se{get_min_step_epoch()};
-    if (!gh.val_cache_is_empty()) {
-        auto vc{gh.get_val_cache()};
-        if (vc.second < min_se) {
-            // it can delete
-            delete vc.first; // NOLINT
-            gh.set_val_cache(gc_handle::initial_value);
-            ++gc_handle::get_gc_ct_val();
-        } else {
-            return;
-        }
-    }
-    auto& val_cont = gh.get_val_cont();
-    while (!val_cont.empty()) {
-        if (get_flag_value_cleaner_end()) { break; }
-        gc_handle::value_type val{};
-        if (val_cont.try_pop(val)) {
-            if (val.first != nullptr) {
-                if (val.second < min_se) {
-                    delete val.first; // NOLINT
-                    ++gc_handle::get_gc_ct_val();
-                } else {
-                    gh.set_val_cache(val);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-void work_value_cleaner_each_thd(std::size_t const thid) {
-    std::size_t start =
-            (KVS_MAX_PARALLEL_THREADS / get_val_cleaner_thd_size()) * thid;
-    std::size_t end =
-            thid != get_val_cleaner_thd_size() - 1
-                    ? (KVS_MAX_PARALLEL_THREADS / get_val_cleaner_thd_size()) *
-                              (thid + 1)
-                    : KVS_MAX_PARALLEL_THREADS;
-
-    while (!get_flag_value_cleaner_end()) {
-        for (std::size_t i = start; i < end; ++i) {
-            clean_value(
-                    session_table::get_session_table().at(i).get_gc_handle());
-            if (get_flag_value_cleaner_end()) { break; }
-        }
-        sleepMs(PARAM_EPOCH_TIME);
-    }
-}
-
-void work_value_cleaner() {
-#if 0
-    std::vector<std::thread> ths;
-    ths.reserve(get_val_cleaner_thd_size());
-
-    for (std::size_t i = 0; i < get_val_cleaner_thd_size(); ++i) {
-        ths.emplace_back(work_value_cleaner_each_thd, i);
-    }
-
-    for (auto&& th : ths) { th.join(); }
-#endif
-}
-
 version* find_latest_invisible_version_from_batch(Record* rec_ptr,
                                                   version*& pre_ver) {
     version* ver{rec_ptr->get_latest()};
@@ -162,7 +80,7 @@ void delete_version_list(version* ver) {
     while (ver != nullptr) {
         version* v_next = ver->get_next();
         delete ver; // NOLINT
-        ++gc_handle::get_gc_ct_ver();
+        ++get_gc_ct_ver();
         ver = v_next;
     }
 }
