@@ -12,7 +12,7 @@
 
 void check_flags() {
     std::cout << "general options" << std::endl;
-    if (FLAGS_cr >= 0 && FLAGS_cr <= 100) {
+    if (FLAGS_cr >= 0 && FLAGS_cr <= 100) { // NOLINT
         std::cout << "FLAGS_cr:\t" << FLAGS_cr << std::endl;
     } else {
         LOG(FATAL) << "error about setting FLAGS_cr.";

@@ -52,17 +52,30 @@ namespace shirakami::garbage {
 
 [[maybe_unused]] inline std::atomic<bool> flag_manager_end{false};
 
+// parameters for background thread
+[[maybe_unused]] inline std::size_t val_cleaner_thd_size{0};
+
+[[maybe_unused]] inline std::size_t ver_cleaner_thd_size{0};
+
 // setter
-[[maybe_unused]] static void set_flag_value_cleaner_end(bool tf) {
+[[maybe_unused]] static void set_flag_value_cleaner_end(bool const tf) {
     flag_value_cleaner_end.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_flag_version_cleaner_end(bool tf) {
+[[maybe_unused]] static void set_flag_version_cleaner_end(bool const tf) {
     flag_version_cleaner_end.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_flag_manager_end(bool tf) {
+[[maybe_unused]] static void set_flag_manager_end(bool const tf) {
     flag_manager_end.store(tf, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_val_cleaner_thd_size(std::size_t const n) {
+    val_cleaner_thd_size = n;
+}
+
+[[maybe_unused]] static void set_ver_cleaner_thd_size(std::size_t const n) {
+    ver_cleaner_thd_size = n;
 }
 
 // getter
@@ -76,6 +89,14 @@ namespace shirakami::garbage {
 
 [[maybe_unused]] static bool get_flag_manager_end() {
     return flag_manager_end.load(std::memory_order_acquire);
+}
+
+[[maybe_unused]] static std::size_t get_val_cleaner_thd_size() {
+    return val_cleaner_thd_size;
+}
+
+[[maybe_unused]] static std::size_t get_ver_cleaner_thd_size() {
+    return ver_cleaner_thd_size;
 }
 
 // join about bg threads

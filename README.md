@@ -71,7 +71,7 @@ Available options:
   + Concurrency Control
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>`
        * It is a max size of concurrent opening session (by enter command).
-       * Default: `500`
+       * Default: `112`
 
     - `-DPARAM_EPOCH_TIME=<epoch time (ms)>`
        * Epoch time related with latency of commit (durable) and span of resource management.

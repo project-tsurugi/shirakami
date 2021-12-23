@@ -74,7 +74,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
 
     Token token{};
     std::vector<opr_obj> opr_set;
-    std::size_t tx_size{is_ol == true ? ol_tx_size : bt_tx_size};
+    std::size_t tx_size{is_ol ? ol_tx_size : bt_tx_size};
     opr_set.reserve(tx_size);
     while (Status::OK != enter(token)) { _mm_pause(); }
 
@@ -98,7 +98,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
             Status rc{};
             if (itr.get_type() == OP_TYPE::UPDATE) {
                 // update function is not implemented yet.
-                Storage st;
+                Storage st{};
                 if (is_ol) {
                     if (FLAGS_cr > (rnd.next() % 100)) { // NOLINT
                         st = get_bt_storages().at(0);

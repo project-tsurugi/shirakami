@@ -8,7 +8,7 @@ static constexpr std::size_t key_len{8};
 
 static constexpr std::size_t rec_num{1000};
 
-inline std::size_t ol_th_size{111};
+inline std::size_t ol_th_size{111}; // NOLINT
 
 static constexpr std::size_t ol_tx_size{1};
 

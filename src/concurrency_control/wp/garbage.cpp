@@ -35,6 +35,10 @@ void init() {
     gc_handle::get_gc_ct_val().store(0, std::memory_order_release);
     gc_handle::get_gc_ct_ver().store(0, std::memory_order_release);
 
+    // set global param
+    set_val_cleaner_thd_size(KVS_MAX_PARALLEL_THREADS / 56); // NOLINT
+    set_ver_cleaner_thd_size(KVS_MAX_PARALLEL_THREADS / 56); // NOLINT
+
     invoke_bg_threads();
 }
 
@@ -107,14 +111,33 @@ void clean_value(gc_handle& gh) {
     }
 }
 
-void work_value_cleaner() {
+void work_value_cleaner_each_thd(std::size_t const thid) {
+    std::size_t start =
+            (KVS_MAX_PARALLEL_THREADS / get_val_cleaner_thd_size()) * thid;
+    std::size_t end =
+            thid != get_val_cleaner_thd_size() - 1
+                    ? (KVS_MAX_PARALLEL_THREADS / get_val_cleaner_thd_size()) *
+                              (thid + 1)
+                    : KVS_MAX_PARALLEL_THREADS;
+
     while (!get_flag_value_cleaner_end()) {
-        for (auto&& se : session_table::get_session_table()) {
-            clean_value(se.get_gc_handle());
+        for (std::size_t i = start; i < end; ++i) {
+            clean_value(session_table::get_session_table().at(i).get_gc_handle());
             if (get_flag_value_cleaner_end()) { break; }
         }
         sleepMs(PARAM_EPOCH_TIME);
     }
+}
+
+void work_value_cleaner() {
+    std::vector<std::thread> ths;
+    ths.reserve(get_val_cleaner_thd_size());
+
+    for (std::size_t i = 0; i < get_val_cleaner_thd_size(); ++i) {
+        ths.emplace_back(work_value_cleaner_each_thd, i);
+    }
+
+    for (auto&& th : ths) { th.join(); }
 }
 
 version* find_latest_invisible_version_from_batch(Record* rec_ptr,
