@@ -149,6 +149,8 @@ public:
     using wped_type =
             std::array<std::pair<std::size_t, std::size_t>, WP_MAX_OVERLAP>;
 
+    wp_meta() { init(); }
+
     static bool empty(const wped_type& wped) {
         for (auto&& elem : wped) {
             if (elem != std::pair<std::size_t, std::size_t>(0, 0)) {
@@ -160,6 +162,11 @@ public:
 
     void clear_wped() {
         for (auto&& elem : wped_) { elem = {0, 0}; }
+    }
+
+    void init() {
+        wped_ = {};
+        wped_used_.reset();
     }
 
     wped_type get_wped() {
@@ -179,21 +186,30 @@ public:
     }
 
     /**
+     * @brief check the space of write preserve.
+     * @param[out] at If this function returns Status::OK, the value of @a at 
+     * shows empty slot.
+     * @return Status::OK success.
+     * @return Status::WARN_NOT_FOUND fail.
+     */
+    Status find_slot(std::size_t& at) {
+        for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+            if (!wped_used_.test(i)) {
+                at = i;
+                return Status::OK;
+            }
+        }
+        return Status::WARN_NOT_FOUND;
+    }
+
+    /**
      * @brief single register.
      */
     Status register_wp(std::size_t epoc, std::size_t id) {
         wp_lock_.lock();
-        for (auto&& elem : wped_) {
-            if (elem != std::pair<std::size_t, std::size_t>(0, 0)) {
-                /**
-                 * Since the overlapping of wp is complicated, it is optimized or used 
-                 * as wp-k.
-                 */
-                wp_lock_.unlock();
-                return Status::ERR_FAIL_WP;
-            }
-        }
-        wped_.at(0) = {epoc, id};
+        std::size_t ret{};
+        if (Status::OK != find_slot(ret)) { return Status::ERR_FAIL_WP; }
+        wped_.at(ret) = {epoc, id};
         wp_lock_.unlock();
         return Status::OK;
     }
@@ -206,24 +222,29 @@ public:
      */
     [[nodiscard]] Status remove_wp(std::size_t const id) {
         wp_lock_.lock();
-        for (auto&& elem : wped_) {
-            if (elem.second == id) {
-                elem = {0, 0};
+        for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+            if (wped_.at(i).second == id) {
+                wped_.at(i) = {0, 0};
+                wped_used_.reset(i);
                 wp_lock_.unlock();
                 return Status::OK;
             }
         }
-        wp_lock_.unlock();
         return Status::WARN_NOT_FOUND;
     }
 
 private:
     /**
      * @brief write preserve infomation.
-     * @details first of each vector's element is epoch which is the valid point of wp.
-     * second of those is the batch id. 
+     * @details first of each vector's element is epoch which is the valid 
+     * point of wp. second of those is the batch id. 
      */
     wped_type wped_;
+
+    /**
+     * @brief Represents a used slot in wped_.
+     */
+    std::bitset<WP_MAX_OVERLAP> wped_used_;
 
     /**
      * @brief mutex for wped_

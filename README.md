@@ -88,11 +88,6 @@ Available options:
        </font>
        * Default: `OFF`
 
-    - `WP_LEVEL`
-       * The level of write preserve.
-       The higher level wp is set, the more write preserve logic tracks many infomation.
-       * Default: `0`
-
   + PWAL
     - `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>`
        * This is one of trigger of group commit.

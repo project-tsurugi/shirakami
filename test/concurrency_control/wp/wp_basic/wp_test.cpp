@@ -44,18 +44,6 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(wp_test, basic) { // NOLINT
-#ifdef WP
-#if WP_LEVEL == 0
-    ASSERT_EQ(WP_LEVEL, 0);
-#else
-    ASSERT_EQ(true, true);
-#endif
-#else
-    ASSERT_EQ(true, true);
-#endif
-}
-
 TEST_F(wp_test, wp_meta_basic) { // NOLINT
     Storage storage{};
     ASSERT_EQ(Status::OK, register_storage(storage));
