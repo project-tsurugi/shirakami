@@ -26,15 +26,15 @@ namespace shirakami::testing {
 class wp_remove_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-wp_basic-wp_remove_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-wp_"
+                                  "basic-wp_remove_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/wp_remove_test_log");
+        log_dir.append("/tmp/wp_remove_test_log");
         init(false, log_dir); // NOLINT
     }
 
@@ -44,28 +44,67 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(wp_remove_test, wp_regi_remove) { // NOLINT
-    wp::wp_meta wp_info;
-    std::atomic<std::size_t> fin_register{0};
-    std::vector<std::thread> th_vc;
-    th_vc.reserve(std::thread::hardware_concurrency());
+TEST_F(wp_remove_test, single_remove) { // NOLINT
+    wp::wp_meta meta{};
+    meta.set_wped(0, {1, 1});
+    meta.set_wped_used(0, true);
+    auto rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 1);
+    ASSERT_EQ(rv.at(0).second, 1);
+    auto& wu{meta.get_wped_used()};
+    ASSERT_EQ(wu.test(0), true);
+    ASSERT_EQ(wu.count(), 1);
+    ASSERT_EQ(Status::OK, meta.remove_wp(1));
+    rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 0);
+    ASSERT_EQ(rv.at(0).second, 0);
+    ASSERT_EQ(wu.test(0), false);
+    ASSERT_EQ(wu.count(), 0);
+}
 
-    auto work = [&wp_info, &fin_register](std::size_t const id) {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        Status rc{wp_info.register_wp(ce, id)};
-        if (rc == Status::OK) {
-            ++fin_register;
-            ASSERT_EQ(wp_info.remove_wp(id), Status::OK);
-        }
-    };
+TEST_F(wp_remove_test, multi_remove) { // NOLINT
+    wp::wp_meta meta{};
+    // register 1, 2 by dev func
+    meta.set_wped(0, {1, 1});
+    meta.set_wped(1, {2, 2});
+    meta.set_wped_used(0, true);
+    meta.set_wped_used(1, true);
 
-    for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-        th_vc.emplace_back(work, i);
-    }
+    // check prepare
+    auto rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 1);
+    ASSERT_EQ(rv.at(0).second, 1);
+    ASSERT_EQ(rv.at(1).first, 2);
+    ASSERT_EQ(rv.at(1).second, 2);
+    auto& wu{meta.get_wped_used()};
+    ASSERT_EQ(wu.test(0), true);
+    ASSERT_EQ(wu.test(1), true);
+    ASSERT_EQ(wu.test(2), false);
+    ASSERT_EQ(wu.count(), 2);
 
-    for (auto&& elem : th_vc) { elem.join(); }
+    // try remove 2
+    ASSERT_EQ(Status::OK, meta.remove_wp(2));
 
-    ASSERT_EQ(fin_register > 0, true);
+    // check result
+    rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 1);
+    ASSERT_EQ(rv.at(0).second, 1);
+    ASSERT_EQ(rv.at(2).first, 0);
+    ASSERT_EQ(rv.at(2).second, 0);
+    ASSERT_EQ(wu.test(0), true);
+    ASSERT_EQ(wu.test(1), false);
+    ASSERT_EQ(wu.test(2), false);
+    ASSERT_EQ(wu.count(), 1);
+
+    // try remove 1
+    ASSERT_EQ(Status::OK, meta.remove_wp(1));
+
+    // check result
+    rv = meta.get_wped();
+    ASSERT_EQ(rv.at(0).first, 0);
+    ASSERT_EQ(rv.at(0).second, 0);
+    ASSERT_EQ(wu.test(0), false);
+    ASSERT_EQ(wu.count(), 0);
 }
 
 } // namespace shirakami::testing

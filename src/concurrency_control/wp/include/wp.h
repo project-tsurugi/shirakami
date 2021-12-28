@@ -186,6 +186,12 @@ public:
     }
 
     /**
+     * @brief Get the wped_used_ object
+     * @return std::bitset<WP_MAX_OVERLAP>& 
+     */
+    std::bitset<WP_MAX_OVERLAP>& get_wped_used() { return wped_used_; }
+
+    /**
      * @brief check the space of write preserve.
      * @param[out] at If this function returns Status::OK, the value of @a at 
      * shows empty slot.
@@ -209,7 +215,8 @@ public:
         wp_lock_.lock();
         std::size_t ret{};
         if (Status::OK != find_slot(ret)) { return Status::ERR_FAIL_WP; }
-        wped_.at(ret) = {epoc, id};
+        wped_used_.set(ret);
+        set_wped(ret, {epoc, id});
         wp_lock_.unlock();
         return Status::OK;
     }
@@ -224,13 +231,22 @@ public:
         wp_lock_.lock();
         for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
             if (wped_.at(i).second == id) {
-                wped_.at(i) = {0, 0};
+                set_wped(i, {0, 0});
                 wped_used_.reset(i);
                 wp_lock_.unlock();
                 return Status::OK;
             }
         }
         return Status::WARN_NOT_FOUND;
+    }
+
+    void set_wped(std::size_t const pos,
+                  std::pair<std::size_t, std::size_t> const val) {
+        wped_.at(pos) = val;
+    }
+
+    void set_wped_used(std::size_t pos, bool val = true) {
+        wped_used_.set(pos, val);
     }
 
 private:
