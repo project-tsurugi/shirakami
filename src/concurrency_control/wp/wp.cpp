@@ -1,5 +1,7 @@
 
+#include <algorithm>
 #include <string_view>
+#include <vector>
 
 #include "concurrency_control/wp/include/tuple_local.h"
 
@@ -45,6 +47,10 @@ Status wp::init() {
 
 Status wp::write_preserve(session* const ti, std::vector<Storage> storage,
                           std::size_t batch_id, epoch::epoch_t valid_epoch) {
+    // decide storage form
+    std::sort(storage.begin(), storage.end());
+    storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
+
     ti->get_wp_set().reserve(storage.size());
     std::vector<wp::wp_meta*> wped{};
     wped.reserve(storage.size());
