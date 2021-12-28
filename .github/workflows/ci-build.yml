@@ -62,6 +62,8 @@ jobs:
           ctest --verbose --timeout 20 -j 100
           cd ../build_cpr
           ctest --verbose --timeout 20 -j 100
+          cd ../build_wp
+          ctest --verbose --timeout 20 -j 100
 
       - id: Clang-Tidy
         name: Clang-Tidy
