@@ -13,9 +13,9 @@
 
 #include "glog/logging.h"
 
-namespace shirakami {
+namespace shirakami::wp {
 
-Status wp::fin() {
+Status fin() {
     if (!get_initialized()) { return Status::WARN_NOT_INIT; }
 
     set_finalizing(true);
@@ -31,7 +31,27 @@ Status wp::fin() {
     return Status::OK;
 }
 
-Status wp::init() {
+wp_meta::wped_type find_wp(Storage const storage) {
+    Storage page_set_meta_storage = get_page_set_meta_storage();
+    std::string_view page_set_meta_storage_view = {
+            reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+            sizeof(page_set_meta_storage)};
+    std::string_view storage_view = {
+            reinterpret_cast<const char*>(&storage), // NOLINT
+            sizeof(storage)};
+    auto* elem_ptr = std::get<0>(yakushima::get<wp_meta*>(
+            page_set_meta_storage_view, storage_view));
+
+    if (elem_ptr == nullptr) {
+        LOG(FATAL) << "There is no metadata that should be there.: " << storage;
+        std::abort();
+    }
+    wp_meta* target_wp_meta = *elem_ptr;
+
+    return target_wp_meta->get_wped();
+}
+
+Status init() {
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
     Storage ret_storage{};
@@ -45,18 +65,18 @@ Status wp::init() {
     return Status::OK;
 }
 
-Status wp::write_preserve(session* const ti, std::vector<Storage> storage,
+Status write_preserve(session* const ti, std::vector<Storage> storage,
                           std::size_t batch_id, epoch::epoch_t valid_epoch) {
     // decide storage form
     std::sort(storage.begin(), storage.end());
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
 
     ti->get_wp_set().reserve(storage.size());
-    std::vector<wp::wp_meta*> wped{};
+    std::vector<wp_meta*> wped{};
     wped.reserve(storage.size());
 
     for (auto&& wp_target : storage) {
-        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        Storage page_set_meta_storage = get_page_set_meta_storage();
         std::string_view page_set_meta_storage_view = {
                 reinterpret_cast<char*>( // NOLINT
                         &page_set_meta_storage),
@@ -64,7 +84,7 @@ Status wp::write_preserve(session* const ti, std::vector<Storage> storage,
         std::string_view storage_view = {
                 reinterpret_cast<char*>(&wp_target), // NOLINT
                 sizeof(wp_target)};
-        auto* elem_ptr = std::get<0>(yakushima::get<wp::wp_meta*>(
+        auto* elem_ptr = std::get<0>(yakushima::get<wp_meta*>(
                 page_set_meta_storage_view, storage_view));
         auto cleanup_process = [ti, &wped, batch_id]() {
             for (auto&& elem : wped) {
@@ -80,7 +100,7 @@ Status wp::write_preserve(session* const ti, std::vector<Storage> storage,
             // dtor : release wp_mutex
             return Status::ERR_FAIL_WP;
         }
-        wp::wp_meta* target_wp_meta = *elem_ptr;
+        wp_meta* target_wp_meta = *elem_ptr;
         if (Status::OK != target_wp_meta->register_wp(valid_epoch, batch_id)) {
             cleanup_process();
             return Status::ERR_FAIL_WP;

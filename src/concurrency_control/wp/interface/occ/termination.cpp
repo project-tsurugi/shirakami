@@ -6,6 +6,7 @@
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "glog/logging.h"
 
@@ -60,7 +61,7 @@ Status wp_verify(session* ti) {
     st.erase(std::unique(st.begin(), st.end()), st.end());
 
     for (auto&& elem : st) {
-        auto wps = find_wp(elem);
+        auto wps = wp::find_wp(elem);
         if (!wp::wp_meta::empty(wps)) { return Status::ERR_FAIL_WP; }
     }
 

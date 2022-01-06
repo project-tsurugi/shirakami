@@ -15,9 +15,4 @@ namespace shirakami {
  */
 Status read_record(Record* rec_ptr, tid_word& tid, std::string& val);
 
-/**
- * @brief There is no metadata that should be there.
- */
-[[maybe_unused]] extern wp::wp_meta::wped_type find_wp(Storage storage);
-
 } // namespace shirakami

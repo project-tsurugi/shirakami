@@ -47,6 +47,13 @@ Status search_key(session* ti, Storage const storage,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
+    // wp verify
+    auto wps = wp::find_wp(storage);
+    if (!wp::wp_meta::empty(wps)) {
+        abort(ti);
+        return Status::ERR_FAIL_WP;
+    }
+
     // version selection
     version* ver{};
     tid_word f_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};

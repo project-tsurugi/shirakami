@@ -18,8 +18,16 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) version { // NOLINT
 public:
+    // for newly insert
     explicit version(std::string_view value) { set_value(value); }
 
+    // for insert version to version list at latest
+    explicit version(std::string_view const value, version* const next) {
+        set_value(value);
+        set_next(next);
+    }
+
+    // for insert version to version list at middle
     explicit version(tid_word const& tid, std::string_view const value,
                      version* const next)
         : tid_(tid) {
