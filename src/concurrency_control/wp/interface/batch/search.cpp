@@ -49,7 +49,8 @@ Status search_key(session* ti, Storage const storage,
 
     // wp verify
     auto wps = wp::find_wp(storage);
-    if (!wp::wp_meta::empty(wps)) {
+    if (!wp::wp_meta::empty(wps) &&
+        wp::wp_meta::find_min_id(wps) != ti->get_batch_id()) {
         abort(ti);
         return Status::ERR_FAIL_WP;
     }

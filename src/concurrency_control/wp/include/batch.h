@@ -6,8 +6,9 @@ namespace shirakami::wp::batch {
 
 /**
  * @brief The counter serving batch id which show priority of batchs.
+ * @pre @a counter > 0
  */
-inline std::size_t counter{0};
+inline std::size_t counter{1};
 
 [[maybe_unused]] static std::size_t get_counter() { return counter; }
 

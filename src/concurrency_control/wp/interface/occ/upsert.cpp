@@ -1,6 +1,6 @@
 
-#include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/local_set.h"
+#include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 
@@ -10,54 +10,13 @@
 
 namespace shirakami::occ {
 
-Status upsert(session* ti, Storage storage, const std::string_view key,
-              const std::string_view val) {
-    // checks
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
-
-RETRY_INDEX_ACCESS:
-
-    // index access
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};                                               // NOLINT
-    Record* rec_ptr{};
-    if (rec_d_ptr != nullptr) {
-        // do update
-        // check local write
-        rec_ptr = *rec_d_ptr;
-        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) {
-            if (in_ws->get_op() == OP_TYPE::DELETE) {
-                in_ws->set_op(OP_TYPE::UPDATE);
-            }
-            in_ws->set_val(val);
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
-        }
-
-        // prepare write
-        tid_word check_tid(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
-        if (check_tid.get_latest() && check_tid.get_absent()) {
-            /**
-             * The record being inserted has been detected.
-             */
-            return Status::WARN_CONCURRENT_INSERT;
-        }
-
-        ti->get_write_set().push(
-                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
-        ti->get_storage_set().emplace_back(storage);
-        return Status::OK;
-    }
-    // try insert
-    rec_ptr = new Record(key, val); // NOLINT
+Status insert_process(session* const ti, Storage st, const std::string_view key,
+                      const std::string_view val) {
+    Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
     yakushima::status insert_result{yakushima::put<Record*>(
             ti->get_yakushima_token(),
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},      // NOLINT
+            {reinterpret_cast<char*>(&st), sizeof(st)},                // NOLINT
             key, &rec_ptr, sizeof(Record*), nullptr,                   // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
             &nvp)};
@@ -72,14 +31,60 @@ RETRY_INDEX_ACCESS:
             abort(ti);
             return Status::ERR_PHANTOM;
         }
-        ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
-        ti->get_storage_set().emplace_back(storage);
+        ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr});
+        ti->get_storage_set().emplace_back(st);
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so retry from index access
-    delete rec_ptr;          // NOLINT
-    goto RETRY_INDEX_ACCESS; // NOLINT
+    delete rec_ptr; // NOLINT
+    return Status::WARN_CONCURRENT_INSERT;
+}
+
+Status upsert(session* ti, Storage storage, const std::string_view key,
+              const std::string_view val) {
+    // checks
+    if (ti->get_read_only()) {
+        // can't write in read only mode.
+        return Status::WARN_INVALID_HANDLE;
+    }
+
+RETRY_INDEX_ACCESS:
+
+    // index access to check local write set
+    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};                                               // NOLINT
+    Record* rec_ptr{};
+    if (rec_d_ptr != nullptr) {
+        rec_ptr = *rec_d_ptr;
+
+        // check local write
+        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+        if (in_ws != nullptr) {
+            if (in_ws->get_op() == OP_TYPE::INSERT) {
+                in_ws->get_rec_ptr()->get_latest()->set_value(val);
+            } else {
+                in_ws->set_op(OP_TYPE::UPSERT);
+                in_ws->set_val(val);
+            }
+            return Status::WARN_WRITE_TO_LOCAL_WRITE;
+        }
+
+        // prepare write
+        ti->get_write_set().push(
+                {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+        ti->get_storage_set().emplace_back(storage);
+        return Status::OK;
+    }
+
+    auto rc{insert_process(ti, storage, key, val)};
+    if (rc == Status::WARN_CONCURRENT_INSERT) {
+        goto RETRY_INDEX_ACCESS; // NOLINT
+
+    } else {
+        return rc;
+    }
 }
 
 } // namespace shirakami::occ

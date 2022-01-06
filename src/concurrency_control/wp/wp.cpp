@@ -31,22 +31,30 @@ Status fin() {
     return Status::OK;
 }
 
-wp_meta::wped_type find_wp(Storage const storage) {
+Status find_wp_meta(Storage st, wp_meta*& ret) {
     Storage page_set_meta_storage = get_page_set_meta_storage();
     std::string_view page_set_meta_storage_view = {
             reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
             sizeof(page_set_meta_storage)};
     std::string_view storage_view = {
-            reinterpret_cast<const char*>(&storage), // NOLINT
-            sizeof(storage)};
-    auto* elem_ptr = std::get<0>(yakushima::get<wp_meta*>(
-            page_set_meta_storage_view, storage_view));
+            reinterpret_cast<const char*>(&st), // NOLINT
+            sizeof(st)};
+    auto* elem_ptr = std::get<0>(
+            yakushima::get<wp_meta*>(page_set_meta_storage_view, storage_view));
 
     if (elem_ptr == nullptr) {
-        LOG(FATAL) << "There is no metadata that should be there.: " << storage;
-        std::abort();
+        ret = nullptr;
+        return Status::WARN_NOT_FOUND;
     }
-    wp_meta* target_wp_meta = *elem_ptr;
+    ret = *elem_ptr;
+    return Status::OK;
+}
+
+wp_meta::wped_type find_wp(Storage const storage) {
+    wp_meta* target_wp_meta{};
+    if (find_wp_meta(storage, target_wp_meta) != Status::OK) {
+        LOG(FATAL) << "There is no metadata that should be there.: " << storage;
+    }
 
     return target_wp_meta->get_wped();
 }
@@ -66,7 +74,7 @@ Status init() {
 }
 
 Status write_preserve(session* const ti, std::vector<Storage> storage,
-                          std::size_t batch_id, epoch::epoch_t valid_epoch) {
+                      std::size_t batch_id, epoch::epoch_t valid_epoch) {
     // decide storage form
     std::sort(storage.begin(), storage.end());
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
@@ -112,4 +120,4 @@ Status write_preserve(session* const ti, std::vector<Storage> storage,
     return Status::OK;
 }
 
-} // namespace shirakami
+} // namespace shirakami::wp

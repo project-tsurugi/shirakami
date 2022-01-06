@@ -36,7 +36,7 @@ void cleanup_process(session* const ti) {
 }
 
 void cancel_flag_inserted_records(session* const ti) {
-    auto process = [ti](std::pair<Record* const, write_set_obj>& wse) {
+    auto process = [](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT) {
             auto* rec_ptr = std::get<0>(wse);

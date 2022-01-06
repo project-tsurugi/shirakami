@@ -71,6 +71,7 @@ class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
     using wped_type =
             std::array<std::pair<std::size_t, std::size_t>, WP_MAX_OVERLAP>;
+    using wped_used_type = std::bitset<WP_MAX_OVERLAP>;
 
     wp_meta() { init(); }
 
@@ -85,6 +86,15 @@ public:
 
     void clear_wped() {
         for (auto&& elem : wped_) { elem = {0, 0}; }
+    }
+
+    void display() {
+        for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+            if (get_wped_used().test(i)) {
+                LOG(INFO) << "epoch:\t" << get_wped().at(i).first << ", id:\t"
+                          << get_wped().at(i).second;
+            }
+        }
     }
 
     void init() {
@@ -108,11 +118,17 @@ public:
         return r_obj;
     }
 
+    [[nodiscard]] const wped_type& get_wped() const { return wped_; }
+
     /**
      * @brief Get the wped_used_ object
      * @return std::bitset<WP_MAX_OVERLAP>& 
      */
-    std::bitset<WP_MAX_OVERLAP>& get_wped_used() { return wped_used_; }
+    wped_used_type& get_wped_used() { return wped_used_; }
+
+    [[nodiscard]] const wped_used_type& get_wped_used() const {
+        return wped_used_;
+    }
 
     /**
      * @brief check the space of write preserve.
@@ -131,15 +147,32 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
+    static std::size_t find_min_id(const wped_type& wped) {
+        bool first{true};
+        std::size_t min_id{};
+        for (auto&& elem : wped) {
+            if (elem.first != 0) {
+                // used slot
+                if (first) {
+                    first = false;
+                    min_id = elem.second;
+                } else if (min_id > elem.second) {
+                    min_id = elem.second;
+                }
+            }
+        }
+        return min_id;
+    }
+
     /**
      * @brief single register.
      */
     Status register_wp(std::size_t epoc, std::size_t id) {
         wp_lock_.lock();
-        std::size_t ret{};
-        if (Status::OK != find_slot(ret)) { return Status::ERR_FAIL_WP; }
-        wped_used_.set(ret);
-        set_wped(ret, {epoc, id});
+        std::size_t slot{};
+        if (Status::OK != find_slot(slot)) { return Status::ERR_FAIL_WP; }
+        wped_used_.set(slot);
+        set_wped(slot, {epoc, id});
         wp_lock_.unlock();
         return Status::OK;
     }
@@ -168,7 +201,7 @@ public:
         wped_.at(pos) = val;
     }
 
-    void set_wped_used(std::size_t pos, bool val = true) {
+    void set_wped_used(std::size_t pos, bool val = true) { // NOLINT
         wped_used_.set(pos, val);
     }
 
@@ -183,7 +216,7 @@ private:
     /**
      * @brief Represents a used slot in wped_.
      */
-    std::bitset<WP_MAX_OVERLAP> wped_used_;
+    wped_used_type wped_used_;
 
     /**
      * @brief mutex for wped_
@@ -219,6 +252,8 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  * @brief There is no metadata that should be there.
  */
 [[maybe_unused]] extern wp_meta::wped_type find_wp(Storage storage);
+
+[[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 
 /**
  * @brief getter

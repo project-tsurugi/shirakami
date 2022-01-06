@@ -99,7 +99,8 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
             }
-            case OP_TYPE::UPDATE: {
+            case OP_TYPE::UPDATE:
+            case OP_TYPE::UPSERT: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (ce != old_tid.get_epoch()) {
                     // append new version

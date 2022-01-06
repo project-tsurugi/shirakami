@@ -60,7 +60,7 @@ Status upsert(session* ti, Storage storage, const std::string_view key,
 
 RETRY_INDEX_ACCESS:
 
-    // index access
+    // index access to check local write set
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             key))};                                               // NOLINT

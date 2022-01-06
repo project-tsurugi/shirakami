@@ -12,7 +12,10 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/interface.h"
 
@@ -65,6 +68,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
     ASSERT_EQ(register_storage(st), Status::OK);
 
     // begin: initialize table
+    // ==============================
     std::size_t th_num{3}; // NOLINT
     //if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
     std::vector<std::string> keys(th_num);
@@ -80,7 +84,10 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
         ASSERT_EQ(Status::OK, commit(s));
     }
+    // ==============================
     // end: initialize table
+    LOG(INFO) << "end initialize table";
+
     ASSERT_EQ(leave(s), Status::OK);
 
     std::vector<char> readys(th_num);
@@ -93,14 +100,26 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         storeRelease(readys.at(th_num), 1);
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
+        TX_BEGIN:
             while (tx_begin(s, false, true, {st}) != Status::OK) {
                 _mm_pause();
             }
+
             for (auto&& elem : keys) {
                 Tuple* tuple{};
-                while (search_key(s, st, elem, tuple) != Status::OK) {
-                    _mm_pause();
+                for (;;) {
+                    auto rc{search_key(s, st, elem, tuple)};
+                    if (rc == Status::OK) { break; }
+                    if (rc == Status::ERR_FAIL_WP) {
+                        goto TX_BEGIN; // NOLINT
+                    }
+                    if (rc == Status::WARN_PREMATURE) {
+                        _mm_pause();
+                    } else {
+                        LOG(FATAL);
+                    }
                 }
+
                 std::size_t v{};
                 memcpy(&v, tuple->get_value().data(), sizeof(v));
                 ++v;
