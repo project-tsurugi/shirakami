@@ -47,7 +47,7 @@
 /**
  * general option.
  */
-DEFINE_uint64(cr, 0, "conflict rate. [0:100] %.");                          // NOLINT
+DEFINE_uint64(cr, 0, "conflict rate. [0:100] %.");        // NOLINT
 DEFINE_uint64(d, 1, "Duration of benchmark in seconds."); // NOLINT
 
 using namespace shirakami;
@@ -101,7 +101,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
     std::size_t ct_commit{0};
 
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) { _mm_pause(); }
 
     while (likely(!loadAcquire(quit))) {
         gen_tx_rw(opr_set, key_len, rec_num, tx_size, 0, rnd, zipf);
@@ -134,7 +134,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 } else {
                     ++st_ct;
                 }
-                if (rc != Status::OK && rc != Status::WARN_WRITE_TO_LOCAL_WRITE) {
+                if (rc != Status::OK &&
+                    rc != Status::WARN_WRITE_TO_LOCAL_WRITE) {
                     LOG(FATAL) << "ec: " << rc << std::endl;
                 }
             } else {
@@ -153,9 +154,10 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
 }
 
 void invoke_leader() {
+    LOG(INFO) << "start invoke leader.";
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    std::size_t bt_th{std::thread::hardware_concurrency()};
+    std::size_t bt_th{112};
     alignas(CACHE_LINE_SIZE) std::vector<simple_result> res_bt(bt_th); // NOLINT
 
     std::vector<char> readys(bt_th); // NOLINT
@@ -165,6 +167,7 @@ void invoke_leader() {
                          std::ref(quit), std::ref(res_bt[i]));
     }
 
+    LOG(INFO) << "wait leader for preparing workers.";
     waitForReady(readys);
     LOG(INFO) << "start exp.";
     storeRelease(start, true);
