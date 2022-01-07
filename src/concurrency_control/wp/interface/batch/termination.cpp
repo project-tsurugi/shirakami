@@ -110,11 +110,10 @@ void expose_local_write(session* ti) {
                         if (tid.get_epoch() == ti->get_valid_epoch()) {
                             // para (partial order) write, invisible write
                             break;
-                        } else {
-                            pre_ver = ver;
-                            ver = ver->get_next();
-                            tid = ver->get_tid();
                         }
+                        pre_ver = ver;
+                        ver = ver->get_next();
+                        tid = ver->get_tid();
                     }
                     rec_ptr->get_tidw_ref().unlock();
                 }

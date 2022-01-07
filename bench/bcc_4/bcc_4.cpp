@@ -157,7 +157,7 @@ void invoke_leader() {
     LOG(INFO) << "start invoke leader.";
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    std::size_t bt_th{112};
+    std::size_t bt_th{112}; // NOLINT
     alignas(CACHE_LINE_SIZE) std::vector<simple_result> res_bt(bt_th); // NOLINT
 
     std::vector<char> readys(bt_th); // NOLINT

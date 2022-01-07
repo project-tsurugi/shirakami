@@ -17,7 +17,7 @@ void check_flags() {
     } else {
         LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
     }
-    if (0 <= FLAGS_cr && FLAGS_cr <= 100) {
+    if (0 <= FLAGS_cr && FLAGS_cr <= 100) { // NOLINT
         std::cout << "FLAGS_cr:\t" << FLAGS_cr << std::endl;
     } else {
         LOG(FATAL);
