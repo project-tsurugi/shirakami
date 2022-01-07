@@ -13,11 +13,15 @@
 void check_flags() {
     std::cout << "general options" << std::endl;
     if (FLAGS_d >= 1) {
-        printf("FLAGS_d : %zu\n", FLAGS_d); // NOLINT
+        printf("FLAGS_d:\t%zu\n", FLAGS_d); // NOLINT
     } else {
         LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
     }
-
+    if (0 <= FLAGS_cr && FLAGS_cr <= 100) {
+        std::cout << "FLAGS_cr:\t" << FLAGS_cr << std::endl;
+    } else {
+        LOG(FATAL);
+    }
     printf("Fin check_flags()\n"); // NOLINT
 }
 

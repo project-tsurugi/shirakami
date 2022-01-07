@@ -35,6 +35,9 @@
 #include "compiler.h"
 #include "cpu.h"
 
+// shirakami/src/
+#include "concurrency_control/wp/include/epoch.h"
+
 #include "shirakami/interface.h"
 
 #include "boost/filesystem.hpp"
@@ -114,11 +117,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 st_list_unique.end());
 
         // wp
-        for (;;) {
-            if (tx_begin(token, false, true, st_list_unique) == Status::OK) {
-                break;
-            }
-            _mm_pause();
+        if (tx_begin(token, false, true, st_list_unique) != Status::OK) {
+            LOG(FATAL);
         }
 
     RETRY: // NOLINT

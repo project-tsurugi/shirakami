@@ -102,9 +102,12 @@ void expose_local_write(session* ti) {
                     tid_word tid{ver->get_tid()};
                     for (;;) {
                         if (tid.get_epoch() < ti->get_valid_epoch()) {
-                            version* new_v{new version(ctid, wso.get_val(), ver)};
+                            version* new_v{
+                                    new version(ctid, wso.get_val(), ver)};
                             pre_ver->set_next(new_v);
-                        } else if (tid.get_epoch() == ti->get_valid_epoch()) {
+                            break;
+                        }
+                        if (tid.get_epoch() == ti->get_valid_epoch()) {
                             // para (partial order) write, invisible write
                             break;
                         } else {
