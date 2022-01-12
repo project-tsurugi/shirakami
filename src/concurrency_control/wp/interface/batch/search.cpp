@@ -51,7 +51,12 @@ Status search_key(session* ti, Storage const storage,
     auto wps = wp::find_wp(storage);
     if (!wp::wp_meta::empty(wps) &&
         wp::wp_meta::find_min_id(wps) != ti->get_batch_id()) {
-        abort(ti);
+        abort(ti); // or wait
+        /**
+         * because: You have to wait for the end of the transaction to read 
+         * the prefixed batch write.
+         * 
+         */
         return Status::ERR_FAIL_WP;
     }
 
