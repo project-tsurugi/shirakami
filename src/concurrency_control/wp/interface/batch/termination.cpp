@@ -95,6 +95,9 @@ void expose_local_write(session* ti) {
                     rec_ptr->set_latest(new_v);
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);
+                } else if (ti->get_valid_epoch() == pre_tid.get_epoch()) {
+                    // invisible for the first of list
+                    rec_ptr->get_tidw_ref().unlock();
                 } else {
                     // case: middle of list
                     version* pre_ver{rec_ptr->get_latest()};

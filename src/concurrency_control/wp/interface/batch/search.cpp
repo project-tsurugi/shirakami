@@ -55,6 +55,7 @@ Status search_key(session* ti, Storage const storage,
         return Status::ERR_FAIL_WP;
     }
 
+VER_SELEC:
     // version selection
     version* ver{};
     tid_word f_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
@@ -88,9 +89,17 @@ Status search_key(session* ti, Storage const storage,
 
     if (ti->get_valid_epoch() > f_check.get_epoch()) {
         valid_version_tuple_register();
+        if (ver == rec_ptr->get_latest() &&
+            loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) !=
+                    f_check.get_obj()) {
+            // read latest version and fail optimistic read.
+            goto VER_SELEC; // NOLINT
+        }
+        // read latest version
         return Status::OK;
     }
 
+    // read non latest version
     for (;;) {
         ver = ver->get_next();
         if (ver == nullptr) { LOG(FATAL) << "unreachable"; }

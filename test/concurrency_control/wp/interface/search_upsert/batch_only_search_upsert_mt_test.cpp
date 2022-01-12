@@ -63,7 +63,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
-    const int trial_n{3};
+    const int trial_n{6};
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
 
@@ -101,9 +101,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
         TX_BEGIN:
-            while (tx_begin(s, false, true, {st}) != Status::OK) {
-                _mm_pause();
-            }
+            ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
 
             for (auto&& elem : keys) {
                 Tuple* tuple{};
@@ -147,9 +145,12 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         ASSERT_EQ(search_key(s, st, elem, tuple), Status::OK);
         std::size_t v{};
         memcpy(&v, tuple->get_value().data(), sizeof(v));
-        ASSERT_EQ(v, th_num * trial_n);
+        EXPECT_EQ(v, th_num * trial_n);
+        // reason of EXPECT_EQ
+        /**
+         * The current state is inconsistent and I have to add a spec to track read-anti-dependency.
+         */
     }
-    ASSERT_EQ(commit(s), Status::OK);
     ASSERT_EQ(leave(s), Status::OK);
 }
 
