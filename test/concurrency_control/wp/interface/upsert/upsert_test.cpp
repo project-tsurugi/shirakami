@@ -11,7 +11,10 @@
 #include "atomic_wrapper.h"
 
 #include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/record.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
 
 #include "shirakami/interface.h"
@@ -76,6 +79,7 @@ TEST_F(upsert_test, bt_simple) { // NOLINT
     std::string k{"k"};
     std::string v{"v"};
     ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+
     auto wait_epoch_update = []() {
         epoch::epoch_t ce{epoch::get_global_epoch()};
         for (;;) {

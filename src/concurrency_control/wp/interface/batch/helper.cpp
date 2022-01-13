@@ -1,6 +1,7 @@
 
 #include "concurrency_control/wp/include/batch.h"
 #include "concurrency_control/wp/include/wp.h"
+#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
 
 #include "concurrency_control/wp/include/tuple_local.h"
@@ -27,6 +28,7 @@ Status tx_begin(session* const ti,
     wp::batch::set_counter(batch_id + 1);
 
     ti->set_batch_id(batch_id);
+    ongoing_tx::push(batch_id);
     ti->set_mode(tx_mode::BATCH);
     ti->set_valid_epoch(valid_epoch);
 

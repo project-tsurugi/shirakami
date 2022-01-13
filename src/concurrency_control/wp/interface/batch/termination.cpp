@@ -2,6 +2,7 @@
 #include <string_view>
 
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/page_set_meta.h"
 #include "concurrency_control/wp/include/wp.h"
@@ -32,8 +33,19 @@ void remove_wps(session* ti) {
 }
 
 void cleanup_process(session* const ti) {
+    // global effect
     remove_wps(ti);
+    ongoing_tx::remove(ti->get_batch_id());
+
+    // local effect
     ti->clean_up();
+    /**
+     * When you execute leave (session), perform self-abort processing for 
+     * cleanup. In OCC mode, the effect is idempotent. If it is in BATCH 
+     * mode, it is not idempotent, so a bug will occur.
+     * 
+     */
+    ti->set_mode(tx_mode::OCC);
 }
 
 void cancel_flag_inserted_records(session* const ti) {
@@ -135,8 +147,16 @@ void expose_local_write(session* ti) {
     }
 }
 
+void wait_for_preceding_bt(session* ti) {
+    while (ongoing_tx::exist_preceding(ti->get_batch_id())) {
+        _mm_pause();
+    }
+}
+
 extern Status commit(session* ti, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
+    wait_for_preceding_bt(ti);
+
     expose_local_write(ti);
 
     // todo enhancement
