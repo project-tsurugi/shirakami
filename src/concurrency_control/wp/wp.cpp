@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/wp/include/page_set_meta.h"
 
 #include "include/wp.h"
 
@@ -40,13 +41,13 @@ Status find_wp_meta(Storage st, wp_meta*& ret) {
             reinterpret_cast<const char*>(&st), // NOLINT
             sizeof(st)};
     auto* elem_ptr = std::get<0>(
-            yakushima::get<wp_meta*>(page_set_meta_storage_view, storage_view));
+            yakushima::get<page_set_meta*>(page_set_meta_storage_view, storage_view));
 
     if (elem_ptr == nullptr) {
         ret = nullptr;
         return Status::WARN_NOT_FOUND;
     }
-    ret = *elem_ptr;
+    ret = (*elem_ptr)->get_wp_meta_ptr();
     return Status::OK;
 }
 
@@ -92,7 +93,7 @@ Status write_preserve(session* const ti, std::vector<Storage> storage,
         std::string_view storage_view = {
                 reinterpret_cast<char*>(&wp_target), // NOLINT
                 sizeof(wp_target)};
-        auto* elem_ptr = std::get<0>(yakushima::get<wp_meta*>(
+        auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
                 page_set_meta_storage_view, storage_view));
         auto cleanup_process = [ti, &wped, batch_id]() {
             for (auto&& elem : wped) {
@@ -108,7 +109,7 @@ Status write_preserve(session* const ti, std::vector<Storage> storage,
             // dtor : release wp_mutex
             return Status::ERR_FAIL_WP;
         }
-        wp_meta* target_wp_meta = *elem_ptr;
+        wp_meta* target_wp_meta = (*elem_ptr)->get_wp_meta_ptr();
         if (Status::OK != target_wp_meta->register_wp(valid_epoch, batch_id)) {
             cleanup_process();
             return Status::ERR_FAIL_WP;

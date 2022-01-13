@@ -46,8 +46,8 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google_;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 void generate_test_case(

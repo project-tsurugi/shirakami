@@ -64,6 +64,8 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
     std::size_t thread_num{3}; // NOLINT
     //if (CHAR_MAX < thread_num) { thread_num = CHAR_MAX; }
     std::vector<std::string> keys(thread_num);
+
+    // prepare data
     for (auto&& elem : keys) {
         static char c{0};
         elem = std::string(1, c);
@@ -98,7 +100,12 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                     for (;;) {
                         auto rc{search_key(s, storage, elem, tuple)};
                         if (rc == Status::OK) { break; }
-                        _mm_pause();
+                        if (rc == Status::WARN_PREMATURE ||
+                            rc == Status::WARN_CONCURRENT_UPDATE) {
+                            _mm_pause();
+                        } else {
+                            LOG(FATAL) << rc << " " << bt;
+                        }
                     }
                     std::size_t v{};
                     memcpy(&v, tuple->get_value().data(), sizeof(v));
