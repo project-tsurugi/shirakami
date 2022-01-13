@@ -86,7 +86,7 @@ function(register_tests)
                 (fname MATCHES "memory_test") OR
                 (fname MATCHES "scheme_test") OR
                 (fname MATCHES "string_view_test"))
-                # nothing to link for fast compile
+                # nothing to link
                 else()
                     target_link_libraries(${test_name}
                             PRIVATE ${TESTS_TARGET}
@@ -96,9 +96,7 @@ function(register_tests)
                 endif()
             endif()
             foreach(dep IN LISTS TESTS_DEPENDS)
-                target_link_libraries(${test_name}
-                        PRIVATE ${dep}
-                        )
+                target_link_libraries(${test_name} PRIVATE ${dep})
             endforeach()
 
             # link "gtest" instead of "gtest_main" only if main.cpp or *_main.cpp exists
@@ -107,13 +105,7 @@ function(register_tests)
             else()
                 target_link_libraries(${test_name} PRIVATE gtest_main)
             endif()
-            target_link_libraries(${test_name} 
-                PRIVATE glog::glog
-                PRIVATE Threads::Threads
-                PRIVATE tbb
-                PRIVATE tbbmalloc
-                PRIVATE tbbmalloc_proxy
-            )
+            target_link_libraries(${test_name} PRIVATE Threads::Threads)
 
             set_compile_options(${test_name})
 

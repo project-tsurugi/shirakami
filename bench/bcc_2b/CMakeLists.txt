@@ -14,9 +14,9 @@ target_link_libraries(bcc_2b
         PRIVATE shirakami
         PRIVATE shirakami-impl
         PRIVATE tsl::hopscotch_map
-        PRIVATE tbb
-        PRIVATE tbbmalloc
-        PRIVATE tbbmalloc_proxy
+        PRIVATE ${tbb_prefix}tbb
+        PRIVATE ${tbb_prefix}tbbmalloc
+        PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
         )

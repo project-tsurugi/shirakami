@@ -64,6 +64,11 @@ endif ()
 
 register_tests(
         TARGET shirakami
-        DEPENDS shirakami-impl
+        DEPENDS
+          shirakami-impl
+          PRIVATE glog::glog
+          PRIVATE ${tbb_prefix}tbb
+          PRIVATE ${tbb_prefix}tbbmalloc
+          PRIVATE ${tbb_prefix}tbbmalloc_proxy
         SOURCES ${TEST_SOURCES}
 )

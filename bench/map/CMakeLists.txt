@@ -1,4 +1,4 @@
-file(GLOB MAP_SOURCES
+   file(GLOB MAP_SOURCES
         "map.cpp"
         )
 

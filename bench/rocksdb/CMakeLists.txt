@@ -1,4 +1,4 @@
-file(GLOB ROCKSDB_SOURCES
+   file(GLOB ROCKSDB_SOURCES
         "rocksdb_bench.cpp"
         )
 

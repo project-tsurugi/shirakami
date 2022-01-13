@@ -47,7 +47,16 @@ option(FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD "If the command clang-fo
 find_package(Boost
         COMPONENTS filesystem)
 find_package(Doxygen)
-find_package(TBB REQUIRED)
+find_package(TBB
+  COMPONENTS tbb tbbmalloc tbbmalloc_proxy
+  CONFIG QUIET
+)
+if (DEFINED TBB_CONFIG)
+  set(tbb_prefix "TBB::")
+else()
+  find_package(TBB REQUIRED)
+  set(tbb_prefix "")
+endif()
 find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
