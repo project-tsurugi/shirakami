@@ -4,7 +4,6 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/tuple_local.h"
-#include "concurrency_control/wp/include/page_set_meta.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/wp/interface/batch/include/batch.h"
@@ -23,7 +22,7 @@ void remove_wps(session* ti) {
         std::string_view storage_view = {
                 reinterpret_cast<char*>(&storage), // NOLINT
                 sizeof(storage)};
-        auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::page_set_meta*>(
                 page_set_meta_storage_view, storage_view));
         if (elem_ptr == nullptr) { LOG(FATAL); }
         if (Status::OK != (*elem_ptr)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {

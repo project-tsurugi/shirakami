@@ -13,6 +13,7 @@
 #include "local_set.h"
 
 #include "concurrency_control/wp/include/tid.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/tuple.h"
 
@@ -219,6 +220,8 @@ private:
      * @details If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
+
+    std::vector<wp::read_by*> read_by_set_{};
 
     /**
      * @brief local read set.

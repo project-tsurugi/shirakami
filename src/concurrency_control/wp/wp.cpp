@@ -3,8 +3,8 @@
 #include <string_view>
 #include <vector>
 
+#include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
-#include "concurrency_control/wp/include/page_set_meta.h"
 
 #include "include/wp.h"
 
@@ -32,7 +32,7 @@ Status fin() {
     return Status::OK;
 }
 
-Status find_wp_meta(Storage st, wp_meta*& ret) {
+Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     Storage page_set_meta_storage = get_page_set_meta_storage();
     std::string_view page_set_meta_storage_view = {
             reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
@@ -47,7 +47,15 @@ Status find_wp_meta(Storage st, wp_meta*& ret) {
         ret = nullptr;
         return Status::WARN_NOT_FOUND;
     }
-    ret = (*elem_ptr)->get_wp_meta_ptr();
+    ret = *elem_ptr;
+    return Status::OK;
+}
+
+Status find_wp_meta(Storage st, wp_meta*& ret) {
+    page_set_meta* psm;
+    auto rc{find_page_set_meta(st, psm)};
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+    ret = psm->get_wp_meta_ptr();
     return Status::OK;
 }
 
@@ -74,9 +82,10 @@ Status init() {
     return Status::OK;
 }
 
-Status write_preserve(session* const ti, std::vector<Storage> storage,
+Status write_preserve(Token token, std::vector<Storage> storage,
                       std::size_t batch_id, epoch::epoch_t valid_epoch) {
     // decide storage form
+    auto *ti = static_cast<session*>(token);
     std::sort(storage.begin(), storage.end());
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
 

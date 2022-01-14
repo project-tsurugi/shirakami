@@ -8,18 +8,64 @@
 #include <xmmintrin.h>
 
 #include <atomic>
+#include <bitset>
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
 
 #include "cpu.h"
 
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/wp.h"
+#include "concurrency_control/wp/include/epoch.h"
 
 #include "shirakami/scheme.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::wp {
+
+class read_by {
+public:
+    using body_elem_type = std::pair<std::size_t, std::size_t>;
+
+    /**
+     * @brief Get the partial elements and gc stale elements
+     * @param epoch 
+     * @param threshold In the process of searching, remove the element with 
+     * epoch smaller than threshold.
+     * @return std::vector<body_elem_type> 
+     */
+    std::vector<body_elem_type> get_and_gc(std::size_t epoch,
+                                           std::size_t threshold) {
+        std::unique_lock<std::mutex> lk(mtx_);
+        std::vector<body_elem_type> ret;
+        for (auto itr = body_.begin(); itr != body_.end();) {
+            // check for return
+            if ((*itr).first == epoch) { ret.emplace_back(*itr); }
+
+            if ((*itr).first < threshold) {
+                itr = body_.erase(itr);
+            } else {
+                ++itr;
+            }
+        }
+
+        return ret;
+    }
+
+    void push(body_elem_type elem) {
+        std::unique_lock<std::mutex> lk(mtx_);
+        body_.emplace_back(elem);
+    }
+
+private:
+    std::mutex mtx_;
+
+    /**
+     * @brief body
+     * @details std::pair.first is epoch. the second is batch_id.
+     */
+    std::vector<body_elem_type> body_;
+};
 
 class wp_lock {
 public:
@@ -224,6 +270,17 @@ private:
     wp_lock wp_lock_;
 };
 
+class page_set_meta {
+public:
+    read_by* get_read_by_ptr() { return &read_by_; }
+
+    wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
+
+private:
+    read_by read_by_;
+    wp_meta wp_meta_;
+};
+
 constexpr Storage initial_page_set_meta_storage{};
 
 /**
@@ -235,6 +292,7 @@ inline std::atomic<bool> finalizing{false};
  * @brief whether it was initialized about wp.
  */
 inline bool initialized{false};
+
 
 /**
  * @brief The mutex excluding fetch_add  from batch_counter and executing wp.
@@ -252,6 +310,8 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  * @brief There is no metadata that should be there.
  */
 [[maybe_unused]] extern wp_meta::wped_type find_wp(Storage storage);
+
+[[maybe_unused]] extern Status find_page_set_meta(Storage st, page_set_meta*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 
@@ -304,7 +364,7 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
     page_set_meta_storage = storage;
 }
 
-[[maybe_unused]] extern Status write_preserve(session* ti,
+[[maybe_unused]] extern Status write_preserve(Token token,
                                               std::vector<Storage> storage,
                                               std::size_t batch_id,
                                               epoch::epoch_t valid_epoch);

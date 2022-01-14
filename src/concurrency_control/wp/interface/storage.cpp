@@ -7,7 +7,6 @@
 #include "storage.h"
 
 #include "concurrency_control/wp/include/tuple_local.h"
-#include "concurrency_control/wp/include/page_set_meta.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/wp.h"
 
@@ -52,8 +51,8 @@ Status storage::register_storage(Storage& storage) {
             _mm_pause();
         }
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        page_set_meta* page_set_meta_ptr{new page_set_meta()};
-        auto rc = yakushima::put<page_set_meta*>(
+        wp::page_set_meta* page_set_meta_ptr{new wp::page_set_meta()};
+        auto rc = yakushima::put<wp::page_set_meta*>(
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
@@ -96,7 +95,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         // single thread clean up
         for (auto&& itr : scan_res) {
             if (wp::get_finalizing()) {
-                delete *reinterpret_cast<page_set_meta**>( // NOLINT
+                delete *reinterpret_cast<wp::page_set_meta**>( // NOLINT
                         std::get<v_index>(itr));
             } else {
                 Record* target_rec{*std::get<v_index>(itr)};
@@ -109,7 +108,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                                    std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
                 if (wp::get_finalizing()) {
-                    delete *reinterpret_cast<page_set_meta**>(std::get<v_index>(scan_res[i])); // NOLINT
+                    delete *reinterpret_cast<wp::page_set_meta**>(std::get<v_index>(scan_res[i])); // NOLINT
                 } else {
                     Record* target_rec{*std::get<v_index>(scan_res[i])};
                     delete target_rec;               // NOLINT
@@ -134,7 +133,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
             _mm_pause();
         }
-        auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
+        auto* elem_ptr = std::get<0>(yakushima::get<wp::page_set_meta*>(
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
                 storage_view));
