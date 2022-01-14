@@ -40,8 +40,8 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     std::string_view storage_view = {
             reinterpret_cast<const char*>(&st), // NOLINT
             sizeof(st)};
-    auto* elem_ptr = std::get<0>(
-            yakushima::get<page_set_meta*>(page_set_meta_storage_view, storage_view));
+    auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
+            page_set_meta_storage_view, storage_view));
 
     if (elem_ptr == nullptr) {
         ret = nullptr;
@@ -51,8 +51,16 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     return Status::OK;
 }
 
+Status find_read_by(Storage const st, read_by*& ret) {
+    page_set_meta* psm{};
+    auto rc{find_page_set_meta(st, psm)};
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+    ret = psm->get_read_by_ptr();
+    return Status::OK;
+}
+
 Status find_wp_meta(Storage st, wp_meta*& ret) {
-    page_set_meta* psm;
+    page_set_meta* psm{};
     auto rc{find_page_set_meta(st, psm)};
     if (rc == Status::WARN_NOT_FOUND) { return rc; }
     ret = psm->get_wp_meta_ptr();
@@ -85,7 +93,7 @@ Status init() {
 Status write_preserve(Token token, std::vector<Storage> storage,
                       std::size_t batch_id, epoch::epoch_t valid_epoch) {
     // decide storage form
-    auto *ti = static_cast<session*>(token);
+    auto* ti = static_cast<session*>(token);
     std::sort(storage.begin(), storage.end());
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
 

@@ -30,6 +30,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
+    using read_by_set_type = std::vector<wp::read_by*>;
     using read_set_type = std::vector<read_set_obj>;
 
     /**
@@ -86,6 +87,8 @@ public:
      * @brief getter of @a read_only_
      */
     [[nodiscard]] bool get_read_only() const { return read_only_; }
+
+    read_by_set_type& get_read_by_set() { return read_by_set_; }
 
     read_set_type& get_read_set() { return read_set_; }
 
@@ -221,7 +224,7 @@ private:
      */
     std::atomic<bool> tx_began_{false};
 
-    std::vector<wp::read_by*> read_by_set_{};
+    read_by_set_type read_by_set_{};
 
     /**
      * @brief local read set.

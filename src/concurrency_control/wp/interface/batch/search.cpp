@@ -60,6 +60,15 @@ Status search_key(session* ti, Storage const storage,
         return Status::ERR_FAIL_WP;
     }
 
+    // register read_by_set
+    wp::read_by* rbp{};
+    auto rc = wp::find_read_by(storage, rbp);
+    if (rc == Status::OK) {
+        ti->get_read_by_set().emplace_back(rbp);
+    } else {
+        return Status::WARN_NOT_FOUND;
+    }
+
 VER_SELEC:
     // version selection
     version* ver{};

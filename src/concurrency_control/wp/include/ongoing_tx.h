@@ -7,78 +7,85 @@
 #include <atomic>
 #include <mutex>
 
+#include "concurrency_control/wp/include/epoch.h"
+
 #include "glog/logging.h"
 
 namespace shirakami {
 
 class ongoing_tx {
 public:
-    using ids_type = std::vector<std::size_t>;
+    /**
+      * @brief tx_info_elem_type. first is epoch, second is batch id.
+      * 
+      */
+    using tx_info_elem_type = std::pair<epoch::epoch_t, std::size_t>;
+    using tx_info_type = std::vector<tx_info_elem_type>;
 
-    static bool exist(std::size_t id) {
+    static bool exist_id(std::size_t id) {
         std::unique_lock<std::mutex> lk{mtx_};
-        for (auto&& elem : ids_) {
-            if (elem == id) { return true; }
+        for (auto&& elem : tx_info_) {
+            if (elem.second == id) { return true; }
         }
         return false;
     }
 
-    static bool exist_preceding(std::size_t id) {
+    static bool exist_preceding_id(std::size_t id) {
         std::unique_lock<std::mutex> lk{mtx_};
-        for (auto&& elem : ids_) {
-            if (elem < id) { return true; }
+        for (auto&& elem : tx_info_) {
+            if (elem.second < id) { return true; }
         }
         return false;
     }
 
     /**
-     * @brief Get the lowest id object
+     * @brief Get the lowest epoch
      * 
-     * @return std::size_t if ret equals to 0, ids_ is empty. Otherwise, ret is lowest id.
+     * @return std::size_t if ret equals to 0, tx_info_ is empty. Otherwise, ret is lowest epoch.
      */
-    static std::size_t get_lowest_id() {
-        return lowest_id_.load(std::memory_order_acquire);
+    static epoch::epoch_t get_lowest_epoch() {
+        return lowest_epoch_.load(std::memory_order_acquire);
     }
 
-    static void push(std::size_t id) {
+    static void push(tx_info_elem_type ti) {
         std::unique_lock<std::mutex> lk{mtx_};
-        if (ids_.empty()) { set_lowest_id(id); }
-        ids_.emplace_back(id);
+        if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
+        tx_info_.emplace_back(ti);
     }
 
-    static void remove(std::size_t id) {
+    static void remove_id(std::size_t id) {
         std::unique_lock<std::mutex> lk{mtx_};
-        std::size_t lowest_id{0};
+        epoch::epoch_t lep{0};
         bool first{true};
         bool erased{false};
-        for (auto it = ids_.begin(); it != ids_.end();) {
-            // update lowest id 
+        for (auto it = tx_info_.begin(); it != tx_info_.end();) {
+            // update lowest epoch
             if (first) {
-                lowest_id = *it;
+                lep = (*it).first;
                 first = false;
             } else {
-                if (*it < lowest_id) { lowest_id = *it; }
+                if ((*it).first < lep) { lep = (*it).first; }
             }
 
-            if (*it == id) {
-                ids_.erase(it);
+            if (!erased && (*it).second == id) {
+                tx_info_.erase(it);
                 erased = true;
             } else {
                 ++it;
             }
         }
-        set_lowest_id(lowest_id);
+        set_lowest_epoch(lep);
         if (!erased) { LOG(FATAL); }
     }
 
-    static void set_lowest_id(std::size_t id) {
-        lowest_id_.store(id, std::memory_order_release);
+    static void set_lowest_epoch(epoch::epoch_t ep) {
+        lowest_epoch_.store(ep, std::memory_order_release);
     }
 
 private:
     static inline std::mutex mtx_;                        // NOLINT
-    static inline ids_type ids_;                          // NOLINT
-    static inline std::atomic<std::size_t> lowest_id_{0}; // NOLINT
+    static inline tx_info_type tx_info_;                          // NOLINT
+    static inline std::atomic<epoch::epoch_t> lowest_epoch_{0}; // NOLINT
 };
 
 } // namespace shirakami

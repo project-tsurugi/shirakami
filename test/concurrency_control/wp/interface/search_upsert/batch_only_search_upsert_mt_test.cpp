@@ -125,7 +125,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                                         sizeof(v)};
                 ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
             }
-            ASSERT_EQ(commit(s), Status::OK);
+            if (commit(s) != Status::OK) {
+                goto TX_BEGIN; // NOLINT
+            }
         }
     };
 
@@ -145,11 +147,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         ASSERT_EQ(search_key(s, st, elem, tuple), Status::OK);
         std::size_t v{};
         memcpy(&v, tuple->get_value().data(), sizeof(v));
-        //ASSERT_EQ(v, th_num * trial_n); // todo un comment out.
-        // reason of EXPECT_EQ
-        /**
-         * The current state is inconsistent and I have to add a spec to track read-anti-dependency.
-         */
+        ASSERT_EQ(v, th_num * trial_n);
     }
     ASSERT_EQ(leave(s), Status::OK);
 }

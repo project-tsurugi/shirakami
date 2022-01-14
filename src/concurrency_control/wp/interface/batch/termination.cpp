@@ -1,8 +1,10 @@
 
+#include <algorithm>
 #include <string_view>
+#include <vector>
 
-#include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
@@ -25,7 +27,8 @@ void remove_wps(session* ti) {
         auto* elem_ptr = std::get<0>(yakushima::get<wp::page_set_meta*>(
                 page_set_meta_storage_view, storage_view));
         if (elem_ptr == nullptr) { LOG(FATAL); }
-        if (Status::OK != (*elem_ptr)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {
+        if (Status::OK !=
+            (*elem_ptr)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {
             LOG(FATAL);
         }
     }
@@ -34,7 +37,7 @@ void remove_wps(session* ti) {
 void cleanup_process(session* const ti) {
     // global effect
     remove_wps(ti);
-    ongoing_tx::remove(ti->get_batch_id());
+    ongoing_tx::remove_id(ti->get_batch_id());
 
     // local effect
     ti->clean_up();
@@ -146,15 +149,58 @@ void expose_local_write(session* ti) {
     }
 }
 
-void wait_for_preceding_bt(session* ti) {
-    while (ongoing_tx::exist_preceding(ti->get_batch_id())) {
-        _mm_pause();
+void wait_for_preceding_bt(session* const ti) {
+    while (ongoing_tx::exist_preceding_id(ti->get_batch_id())) { _mm_pause(); }
+}
+
+void register_read_by(session* const ti) {
+    auto& rbset = ti->get_read_by_set();
+    for (auto&& elem : rbset) {
+        elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
     }
 }
 
-extern Status commit(session* ti, // NOLINT
-                     [[maybe_unused]] commit_param* cp) {
+void prepare_commit(session* const ti) {
+    // optimizations
+    // shrink read_by_set
+    auto& rbset = ti->get_read_by_set();
+    std::sort(rbset.begin(), rbset.end());
+    rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
+
+    register_read_by(ti);
+}
+
+Status verify_read_by(session* const ti) {
+    epoch::epoch_t lep{ongoing_tx::get_lowest_epoch()};
+    for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+        wp::read_by* rbp{};
+        auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
+        if (rc == Status::OK) {
+            wp::read_by::body_type rbs{
+                    rbp->get_and_gc(ti->get_valid_epoch(), lep)};
+            for (auto&& rb : rbs) {
+                if (rb.second < ti->get_batch_id()) {
+                    return Status::ERR_VALIDATION;
+                }
+            }
+        } else {
+            LOG(FATAL);
+        }
+    }
+    return Status::OK;
+}
+
+extern Status commit(session* const ti, // NOLINT
+                     [[maybe_unused]] commit_param* const cp) {
+    prepare_commit(ti);
     wait_for_preceding_bt(ti);
+
+    // verify read by
+    auto rc{verify_read_by(ti)};
+    if (rc == Status::ERR_VALIDATION) {
+        abort(ti);
+        return Status::ERR_VALIDATION;
+    }
 
     expose_local_write(ti);
 

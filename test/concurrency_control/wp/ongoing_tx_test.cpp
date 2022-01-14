@@ -19,10 +19,10 @@ public:
 };
 
 TEST_F(ongoing_tx_test, simple) { // NOLINT
-    ongoing_tx::push(1);
-    ASSERT_EQ(ongoing_tx::exist_preceding(2), true);
-    ongoing_tx::remove(1);
-    ASSERT_EQ(ongoing_tx::exist_preceding(2), false);
+    ongoing_tx::push({1, 1});
+    ASSERT_EQ(ongoing_tx::exist_preceding_id(2), true);
+    ongoing_tx::remove_id(1);
+    ASSERT_EQ(ongoing_tx::exist_preceding_id(2), false);
 }
 
 } // namespace shirakami::testing

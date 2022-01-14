@@ -25,7 +25,8 @@ namespace shirakami::wp {
 
 class read_by {
 public:
-    using body_elem_type = std::pair<std::size_t, std::size_t>;
+    using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
+    using body_type = std::vector<body_elem_type>;
 
     /**
      * @brief Get the partial elements and gc stale elements
@@ -34,8 +35,7 @@ public:
      * epoch smaller than threshold.
      * @return std::vector<body_elem_type> 
      */
-    std::vector<body_elem_type> get_and_gc(std::size_t epoch,
-                                           std::size_t threshold) {
+    body_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold) {
         std::unique_lock<std::mutex> lk(mtx_);
         std::vector<body_elem_type> ret;
         for (auto itr = body_.begin(); itr != body_.end();) {
@@ -64,7 +64,7 @@ private:
      * @brief body
      * @details std::pair.first is epoch. the second is batch_id.
      */
-    std::vector<body_elem_type> body_;
+    body_type body_;
 };
 
 class wp_lock {
@@ -311,7 +311,10 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  */
 [[maybe_unused]] extern wp_meta::wped_type find_wp(Storage storage);
 
-[[maybe_unused]] extern Status find_page_set_meta(Storage st, page_set_meta*& ret);
+[[maybe_unused]] extern Status find_page_set_meta(Storage st,
+                                                  page_set_meta*& ret);
+
+[[maybe_unused]] extern Status find_read_by(Storage st, read_by*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 
