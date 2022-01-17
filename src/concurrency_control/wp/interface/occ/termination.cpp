@@ -102,16 +102,21 @@ void write_phase(session* ti, epoch::epoch_t ce) {
             case OP_TYPE::UPDATE:
             case OP_TYPE::UPSERT: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
-                if (ce != old_tid.get_epoch()) {
-                    // append new version
+                if (ce > old_tid.get_epoch()) {
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
+                    // append new version
+                    // gen new version
                     version* new_v{new version(ti->get_mrc_tid(),
                                                wso_ptr->get_val(),
                                                rec_ptr->get_latest())};
+
+                    // update old version tid
                     tid_word old_version_tid{old_tid};
                     old_version_tid.set_latest(false);
                     old_version_tid.set_lock(false);
                     rec_ptr->get_latest()->set_tid(old_version_tid);
+
+                    // set version to latest
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version

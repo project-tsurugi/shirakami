@@ -74,7 +74,6 @@ RETRY_INDEX_ACCESS:
         // prepare write
         ti->get_write_set().push(
                 {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
-        ti->get_storage_set().emplace_back(storage);
         return Status::OK;
     }
 
