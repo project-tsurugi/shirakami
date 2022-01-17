@@ -32,7 +32,6 @@ Status insert_process(session* const ti, Storage st, const std::string_view key,
             return Status::ERR_PHANTOM;
         }
         ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr});
-        ti->get_storage_set().emplace_back(st);
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS

@@ -92,8 +92,6 @@ public:
 
     read_set_type& get_read_set() { return read_set_; }
 
-    std::vector<Storage>& get_storage_set() { return storage_set_; }
-
     /**
      * @brief get the value of tx_began_.
      */
@@ -250,14 +248,6 @@ private:
      * @brief local write set.
      */
     local_write_set write_set_{};
-
-    /**
-     * @brief storage set
-     * @details This is for wp verify in occ mode. 
-     * Record the storage that has been read / write accessed. 
-     * Verification using this information is performed at the validation phase.
-     */
-    std::vector<Storage> storage_set_{};
 
     /**
      * @brief epoch at latest transactional step.

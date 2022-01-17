@@ -17,7 +17,6 @@ void session::clean_up_local_set() {
     read_set_.clear();
     wp_set_.clear();
     write_set_.clear();
-    storage_set_.clear();
 }
 
 void session::clean_up_tx_property() { set_tx_began(false); }

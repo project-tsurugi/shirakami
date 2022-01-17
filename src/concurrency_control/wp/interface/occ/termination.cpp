@@ -55,8 +55,13 @@ Status read_verify(session* ti, tid_word& commit_tid) {
 }
 
 Status wp_verify(session* ti) {
+    std::vector<Storage> st;
+
+    for (auto&& itr : ti->get_read_set()) {
+        st.emplace_back(itr.get_storage());
+    }
+
     // sort and unique
-    auto& st = ti->get_storage_set();
     std::sort(st.begin(), st.end());
     st.erase(std::unique(st.begin(), st.end()), st.end());
 

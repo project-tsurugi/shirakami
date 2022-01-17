@@ -51,7 +51,6 @@ Status search_key(session* ti, Storage const storage,
         ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
         ti->get_cache_for_search_ptr()->get_pimpl()->set_val(read_val);
         tuple = ti->get_cache_for_search_ptr();
-        ti->get_storage_set().emplace_back(storage);
     } else {
         tuple = nullptr;
     }
