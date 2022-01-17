@@ -20,7 +20,7 @@ namespace shirakami {
 
 class read_set_obj { // NOLINT
 public:
-    read_set_obj(Storage const storage, const Record* const rec_ptr,
+    read_set_obj(Storage const storage, Record* const rec_ptr,
                  tid_word const tid) // NOLINT
         : storage_(storage), rec_ptr_(rec_ptr), tid_(tid) {}
 
@@ -31,6 +31,8 @@ public:
     read_set_obj& operator=(read_set_obj&& right) = default;
 
     [[nodiscard]] Storage get_storage() const { return storage_; }
+
+    [[nodiscard]] Record* get_rec_ptr() { return rec_ptr_; }
 
     [[nodiscard]] const Record* get_rec_ptr() const { return rec_ptr_; }
 
@@ -45,7 +47,7 @@ private:
     /**
      * @brief Pointer to the read record in database.
      */
-    const Record* rec_ptr_{nullptr};
+    Record* rec_ptr_{nullptr};
 
     /**
      * @brief Timestamp for optimistic read.

@@ -115,15 +115,15 @@ private:
  */
 class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
-    using wped_type =
-            std::array<std::pair<std::size_t, std::size_t>, WP_MAX_OVERLAP>;
+    using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
+    using wped_type = std::array<wped_elem_type, WP_MAX_OVERLAP>;
     using wped_used_type = std::bitset<WP_MAX_OVERLAP>;
 
     wp_meta() { init(); }
 
     static bool empty(const wped_type& wped) {
         for (auto&& elem : wped) {
-            if (elem != std::pair<std::size_t, std::size_t>(0, 0)) {
+            if (elem != std::pair<epoch::epoch_t, std::size_t>(0, 0)) {
                 return false;
             }
         }
@@ -213,12 +213,12 @@ public:
     /**
      * @brief single register.
      */
-    Status register_wp(std::size_t epoc, std::size_t id) {
+    Status register_wp(epoch::epoch_t ep, std::size_t id) {
         wp_lock_.lock();
         std::size_t slot{};
         if (Status::OK != find_slot(slot)) { return Status::ERR_FAIL_WP; }
         wped_used_.set(slot);
-        set_wped(slot, {epoc, id});
+        set_wped(slot, {ep, id});
         wp_lock_.unlock();
         return Status::OK;
     }
@@ -243,7 +243,7 @@ public:
     }
 
     void set_wped(std::size_t const pos,
-                  std::pair<std::size_t, std::size_t> const val) {
+                  wped_elem_type const val) {
         wped_.at(pos) = val;
     }
 
