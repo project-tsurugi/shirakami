@@ -26,12 +26,13 @@ inline std::atomic<bool> initialized_{false};
  * @pre the dest wasn't already read by itself.
  * @param [out] res it is stored read info.
  * @param [in] dest read record pointed by this dest.
+ * @param [in] read_value whether read the value of record.
  * @return WARN_CONCURRENT_DELETE No corresponding record in masstree. If you
  * have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-Status read_record(Record &res, const Record* dest);  // NOLINT
+Status read_record(Record &res, const Record* dest, bool read_value = true);  // NOLINT
 
 /**
  * @brief setter of @a intialized_.

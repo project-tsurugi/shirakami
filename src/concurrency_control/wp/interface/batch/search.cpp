@@ -17,7 +17,8 @@
 namespace shirakami::batch {
 
 Status search_key(session* ti, Storage const storage,
-                  std::string_view const key, Tuple*& tuple) {
+                  std::string_view const key, Tuple*& tuple,
+                  bool const read_value) {
     if (ti->get_mode() == tx_mode::BATCH &&
         epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
@@ -29,7 +30,7 @@ Status search_key(session* ti, Storage const storage,
              sizeof(storage)},                        // NOLINT
             key))};
     if (rec_d_ptr == nullptr) {
-        tuple = nullptr;
+        if (read_value) { tuple = nullptr; }
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_d_ptr};
@@ -40,10 +41,13 @@ Status search_key(session* ti, Storage const storage,
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
-                in_ws->get_rec_ptr()->get_key());
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(in_ws->get_val());
-        tuple = ti->get_cache_for_search_ptr();
+        if (read_value) {
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
+                    in_ws->get_rec_ptr()->get_key());
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_val(
+                    in_ws->get_val());
+            tuple = ti->get_cache_for_search_ptr();
+        }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -102,7 +106,7 @@ VER_SELEC:
     };
 
     if (ti->get_valid_epoch() > f_check.get_epoch()) {
-        valid_version_tuple_register();
+        if (read_value) { valid_version_tuple_register(); }
         if (ver == rec_ptr->get_latest() &&
             loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) !=
                     f_check.get_obj()) {
@@ -119,7 +123,7 @@ VER_SELEC:
         if (ver == nullptr) { LOG(FATAL) << "unreachable"; }
 
         if (ti->get_valid_epoch() > ver->get_tid().get_epoch()) {
-            valid_version_tuple_register();
+            if (read_value) { valid_version_tuple_register(); }
             return Status::OK;
         }
     }

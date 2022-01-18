@@ -194,7 +194,8 @@ tx_begin(Token const token, bool const read_only, bool const for_batch,
     return Status::OK;
 }
 
-Status read_record(Record& res, const Record* const dest) { // NOLINT
+Status read_record(Record& res, const Record* const dest,
+                   bool read_value) { // NOLINT
     tid_word f_check;
     tid_word s_check; // first_check, second_check for occ
 
@@ -249,9 +250,11 @@ Status read_record(Record& res, const Record* const dest) { // NOLINT
             return Status::WARN_CONCURRENT_DELETE;
         }
 
-        res.get_tuple().get_pimpl()->set(
-                dest->get_tuple().get_key(),
-                dest->get_tuple().get_pimpl_cst()->get_val_ptr());
+        if (read_value) {
+            res.get_tuple().get_pimpl()->set(
+                    dest->get_tuple().get_key(),
+                    dest->get_tuple().get_pimpl_cst()->get_val_ptr());
+        }
         // todo optimization by shallow copy about key (Now, key is deep copy, value is shallow copy).
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));

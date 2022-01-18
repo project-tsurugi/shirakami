@@ -17,14 +17,15 @@
 namespace shirakami::occ {
 
 Status search_key(session* ti, Storage const storage,
-                  std::string_view const key, Tuple*& tuple) {
+                  std::string_view const key, Tuple*& tuple,
+                  bool const read_value) {
     // index access
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<const char*>(&storage), // NOLINT
              sizeof(storage)},                        // NOLINT
             key))};
     if (rec_d_ptr == nullptr) {
-        tuple = nullptr;
+        if (read_value) { tuple = nullptr; }
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_d_ptr};
@@ -35,24 +36,29 @@ Status search_key(session* ti, Storage const storage,
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
-                in_ws->get_rec_ptr()->get_key());
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(in_ws->get_val());
-        tuple = ti->get_cache_for_search_ptr();
+        if (read_value) {
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
+                    in_ws->get_rec_ptr()->get_key());
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_val(
+                    in_ws->get_val());
+            tuple = ti->get_cache_for_search_ptr();
+        }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
     tid_word read_tid{};
-    std::string read_val{};
+    std::string read_res{};
     // read version
-    Status rs{read_record(rec_ptr, read_tid, read_val)};
+    Status rs{read_record(rec_ptr, read_tid, read_res, read_value)};
     if (rs == Status::OK) {
-        ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(read_val);
-        tuple = ti->get_cache_for_search_ptr();
+        if (read_value) {
+            ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_val(read_res);
+            tuple = ti->get_cache_for_search_ptr();
+        }
     } else {
-        tuple = nullptr;
+        if (read_value) { tuple = nullptr; }
     }
     return rs;
 }

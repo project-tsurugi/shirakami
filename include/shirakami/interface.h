@@ -154,12 +154,13 @@ extern Status enter(Token& token); // NOLINT
 
 /**
  * @brief Confirm existence of the key in the @a storage.
+ * @param[in] token the token retrieved by enter()
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
  * @return Status::OK if existence.
  * @return Status::WARN_NOT_FOUND if not existence.
  */
-extern Status exist_key(Storage storage, std::string_view key);
+extern Status exist_key(Token token, Storage storage, std::string_view key);
 
 /**
  * @brief do delete operations for all records, join core threads and delete the

@@ -9,13 +9,41 @@
 
 namespace shirakami {
 
-Status exist_key(Storage storage, std::string_view const key) {
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
+Status exist_key(Token token, Storage storage, std::string_view const key) {
+    auto* ti = static_cast<session*>(token);
+
+    // check flags
+    if (!ti->get_txbegan()) {
+        tx_begin(token); // NOLINT
+    } else if (ti->get_read_only()) {
+        return snapshot_interface::lookup_snapshot(ti, storage, key);
+    }
+
+    // index access
+    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             key))};                                               // NOLINT
-    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
+    if (rec_double_ptr == nullptr) {
+        return Status::WARN_NOT_FOUND;
+    }
+    Record* rec_ptr{*rec_double_ptr};
 
-    return Status::OK;
+    // check read own write
+    write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+    if (inws != nullptr) {
+        if (inws->get_op() == OP_TYPE::DELETE) {
+            return Status::WARN_ALREADY_DELETE;
+        }
+        return Status::OK;
+    }
+
+    // data access
+    read_set_obj rs_ob(storage, rec_ptr); // NOLINT
+    Status rr = read_record(rs_ob.get_rec_read(), rec_ptr, false);
+    if (rr == Status::OK) {
+        ti->get_read_set().emplace_back(std::move(rs_ob));
+    }
+    return rr;
 }
 
 Status search_key(Token token, Storage storage,

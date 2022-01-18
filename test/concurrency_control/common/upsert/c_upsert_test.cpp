@@ -55,7 +55,6 @@ TEST_F(upsert_test, simple) { // NOLINT
     std::string v{"v"};
     std::string v2{"v2"};
     ASSERT_EQ(upsert(s, storage, k, v), Status::OK);
-    ASSERT_EQ(Status::OK, exist_key(storage, k));
     ASSERT_EQ(commit(s), Status::OK);
     std::string_view st_view{reinterpret_cast<char*>(&storage), // NOLINT
                              sizeof(storage)};

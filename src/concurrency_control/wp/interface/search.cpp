@@ -15,13 +15,24 @@
 
 namespace shirakami {
 
-Status exist_key(Storage storage, std::string_view const key) {
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};                                               // NOLINT
-    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
+Status exist_key(Token const token, Storage const storage, std::string_view const key) {
+    auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        tx_begin(token); // NOLINT
+    }
 
-    return Status::OK;
+    // update metadata
+    ti->set_step_epoch(epoch::get_global_epoch());
+
+    Tuple* dummy{};
+    if (ti->get_mode() == tx_mode::BATCH) {
+        return batch::search_key(ti, storage, key, dummy, false);
+    }
+    if (ti->get_mode() == tx_mode::OCC) {
+        return occ::search_key(ti, storage, key, dummy, false);
+    }
+    LOG(FATAL) << "unreachable";
+    return Status::ERR_FATAL;
 }
 
 Status search_key(Token const token, Storage const storage,
