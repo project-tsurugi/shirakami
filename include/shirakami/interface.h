@@ -153,6 +153,15 @@ extern Status delete_record(Token token, Storage storage, // NOLINT
 extern Status enter(Token& token); // NOLINT
 
 /**
+ * @brief Confirm existence of the key in the @a storage.
+ * @param[in] storage input parameter about the storage.
+ * @param[in] key input parameter about the key.
+ * @return Status::OK if existence.
+ * @return Status::WARN_NOT_FOUND if not existence.
+ */
+extern Status exist_key(Storage storage, std::string_view key);
+
+/**
  * @brief do delete operations for all records, join core threads and delete the
  * remaining garbage (heap) objects.
  * @pre It already did init() and invoked core threads.

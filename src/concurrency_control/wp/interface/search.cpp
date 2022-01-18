@@ -15,6 +15,15 @@
 
 namespace shirakami {
 
+Status exist_key(Storage storage, std::string_view const key) {
+    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            key))};                                               // NOLINT
+    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
+
+    return Status::OK;
+}
+
 Status search_key(Token const token, Storage const storage,
                   std::string_view const key, Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
