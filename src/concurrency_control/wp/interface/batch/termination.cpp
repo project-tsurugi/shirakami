@@ -166,8 +166,6 @@ void prepare_commit(session* const ti) {
     auto& rbset = ti->get_read_by_set();
     std::sort(rbset.begin(), rbset.end());
     rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
-
-    register_read_by(ti);
 }
 
 Status verify_read_by(session* const ti) {
@@ -202,6 +200,7 @@ extern Status commit(session* const ti, // NOLINT
         return Status::ERR_VALIDATION;
     }
 
+    register_read_by(ti);
     expose_local_write(ti);
 
     // todo enhancement
