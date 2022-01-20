@@ -30,7 +30,7 @@ public:
      * epoch smaller than threshold.
      * @return std::vector<body_elem_type> 
      */
-    body_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
+    body_elem_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
 
     void push(body_elem_type elem);
 

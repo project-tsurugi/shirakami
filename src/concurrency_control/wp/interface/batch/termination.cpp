@@ -174,12 +174,11 @@ Status verify_read_by(session* const ti) {
         read_by* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
-            read_by::body_type rbs{
-                    rbp->get_and_gc(ti->get_valid_epoch(), lep)};
-            for (auto&& rb : rbs) {
-                if (rb.second < ti->get_batch_id()) {
-                    return Status::ERR_VALIDATION;
-                }
+            auto rb{rbp->get_and_gc(ti->get_valid_epoch(), lep)};
+
+            if (rb != read_by::body_elem_type(0, 0) &&
+                rb.second < ti->get_batch_id()) {
+                return Status::ERR_VALIDATION;
             }
         } else {
             LOG(FATAL);
