@@ -229,12 +229,12 @@ private:
 
 class page_set_meta {
 public:
-    read_by* get_read_by_ptr() { return &read_by_; }
+    read_by_bt* get_read_by_ptr() { return &read_by_; }
 
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
 private:
-    read_by read_by_;
+    read_by_bt read_by_;
     wp_meta wp_meta_;
 };
 
@@ -271,7 +271,7 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
 
-[[maybe_unused]] extern Status find_read_by(Storage st, read_by*& ret);
+[[maybe_unused]] extern Status find_read_by(Storage st, read_by_bt*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 

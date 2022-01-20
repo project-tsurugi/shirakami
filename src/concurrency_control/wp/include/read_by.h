@@ -18,7 +18,7 @@
 
 namespace shirakami {
 
-class read_by {
+class read_by_bt {
 public:
     using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using body_type = std::vector<body_elem_type>;

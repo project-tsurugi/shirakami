@@ -30,7 +30,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-    using read_by_set_type = std::vector<read_by*>;
+    using read_by_set_type = std::vector<read_by_bt*>;
     using read_set_type = std::vector<read_set_obj>;
 
     /**
