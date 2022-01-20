@@ -67,8 +67,8 @@ TEST_F(write_skew, simple) { // NOLINT
     epoch::get_ep_mtx().lock();
     ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
-    epoch::get_ep_mtx().unlock(); 
-    
+    epoch::get_ep_mtx().unlock();
+
     // wait change epoch
     sleepMs(PARAM_EPOCH_TIME * 2);
 
@@ -83,7 +83,7 @@ TEST_F(write_skew, simple) { // NOLINT
     ++v1;
     //1memcpy(&v2, tuple2->get_value().data(), sizeof(v2));
     //1++v2;
-    std::string v1_view{reinterpret_cast<char*>(&v1), sizeof(v1)};
+    std::string v1_view{reinterpret_cast<char*>(&v1), sizeof(v1)}; // NOLINT
     //std::string v2_view{reinterpret_cast<char*>(&v2), sizeof(v2)};
     ASSERT_EQ(upsert(s1, st, y, v1_view), Status::OK);
     //ASSERT_EQ(upsert(s2, st, x, v2_view), Status::OK);

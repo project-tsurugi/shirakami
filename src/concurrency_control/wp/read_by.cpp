@@ -23,15 +23,13 @@ void read_by_bt::push(body_elem_type const elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     body_.emplace_back(elem);
     for (auto itr = body_.begin(); itr != body_.end(); ++itr) {
-        if ((*itr).first < elem.first) {
-            continue;
-        } else if ((*itr).first == elem.first) {
+        if ((*itr).first < elem.first) { continue; }
+        if ((*itr).first == elem.first) {
             if ((*itr).second > elem.second) { (*itr).second = elem.second; }
             return;
-        } else {
-            body_.insert(itr, elem);
-            return;
         }
+        body_.insert(itr, elem);
+        return;
     }
 }
 
@@ -56,14 +54,10 @@ void read_by_occ::push(body_elem_type const elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     body_.emplace_back(elem);
     for (auto itr = body_.begin(); itr != body_.end(); ++itr) {
-        if ((*itr) < elem) {
-            continue;
-        } else if ((*itr) == elem) {
-            return;
-        } else {
-            body_.insert(itr, elem);
-            return;
-        }
+        if ((*itr) < elem) { continue; }
+        if ((*itr) == elem) { return; }
+        body_.insert(itr, elem);
+        return;
     }
 }
 

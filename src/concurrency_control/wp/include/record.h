@@ -28,7 +28,7 @@ public:
      * @brief ctor.
      * @details This is used for insert logic.
      */
-    Record(std::string_view const key, std::string_view const val);
+    Record(std::string_view key, std::string_view val);
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT

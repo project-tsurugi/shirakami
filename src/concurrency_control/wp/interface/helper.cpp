@@ -120,7 +120,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
 }
 
 Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
-                   bool const read_value = true) {
+                   bool const read_value = true) { // NOLINT
     tid_word f_check{};
     tid_word s_check{};
 
