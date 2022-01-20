@@ -16,56 +16,13 @@
 #include "cpu.h"
 
 #include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/read_by.h"
 
 #include "shirakami/scheme.h"
 
 #include "glog/logging.h"
 
 namespace shirakami::wp {
-
-class read_by {
-public:
-    using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
-    using body_type = std::vector<body_elem_type>;
-
-    /**
-     * @brief Get the partial elements and gc stale elements
-     * @param epoch 
-     * @param threshold In the process of searching, remove the element with 
-     * epoch smaller than threshold.
-     * @return std::vector<body_elem_type> 
-     */
-    body_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold) {
-        std::unique_lock<std::mutex> lk(mtx_);
-        std::vector<body_elem_type> ret;
-        for (auto itr = body_.begin(); itr != body_.end();) {
-            // check for return
-            if ((*itr).first == epoch) { ret.emplace_back(*itr); }
-
-            if ((*itr).first < threshold) {
-                itr = body_.erase(itr);
-            } else {
-                ++itr;
-            }
-        }
-
-        return ret;
-    }
-
-    void push(body_elem_type elem) {
-        std::unique_lock<std::mutex> lk(mtx_);
-        body_.emplace_back(elem);
-    }
-
-private:
-    std::mutex mtx_;
-
-    /**
-     * @brief body
-     * @details std::pair.first is epoch. the second is batch_id.
-     */
-    body_type body_;
-};
 
 class wp_lock {
 public:

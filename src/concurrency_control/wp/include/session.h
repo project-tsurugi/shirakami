@@ -13,7 +13,7 @@
 #include "local_set.h"
 
 #include "concurrency_control/wp/include/tid.h"
-#include "concurrency_control/wp/include/wp.h"
+#include "concurrency_control/wp/include/read_by.h"
 
 #include "shirakami/tuple.h"
 
@@ -30,7 +30,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-    using read_by_set_type = std::vector<wp::read_by*>;
+    using read_by_set_type = std::vector<read_by*>;
     using read_set_type = std::vector<read_set_obj>;
 
     /**

@@ -65,7 +65,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // register read_by_set
-    wp::read_by* rbp{};
+    read_by* rbp{};
     auto rc = wp::find_read_by(storage, rbp);
     if (rc == Status::OK) {
         ti->get_read_by_set().emplace_back(rbp);

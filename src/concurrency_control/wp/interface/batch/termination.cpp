@@ -171,10 +171,10 @@ void prepare_commit(session* const ti) {
 Status verify_read_by(session* const ti) {
     epoch::epoch_t lep{ongoing_tx::get_lowest_epoch()};
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-        wp::read_by* rbp{};
+        read_by* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
-            wp::read_by::body_type rbs{
+            read_by::body_type rbs{
                     rbp->get_and_gc(ti->get_valid_epoch(), lep)};
             for (auto&& rb : rbs) {
                 if (rb.second < ti->get_batch_id()) {
