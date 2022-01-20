@@ -154,7 +154,7 @@ void wait_for_preceding_bt(session* const ti) {
 }
 
 void register_read_by(session* const ti) {
-    auto& rbset = ti->get_read_by_set();
+    auto& rbset = ti->get_read_by_bt_set();
     for (auto&& elem : rbset) {
         elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
     }
@@ -163,7 +163,7 @@ void register_read_by(session* const ti) {
 void prepare_commit(session* const ti) {
     // optimizations
     // shrink read_by_set
-    auto& rbset = ti->get_read_by_set();
+    auto& rbset = ti->get_read_by_bt_set();
     std::sort(rbset.begin(), rbset.end());
     rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
 }

@@ -7,6 +7,7 @@
 
 #include <string_view>
 
+#include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"
 
 #include "atomic_wrapper.h"
@@ -95,6 +96,8 @@ private:
     std::atomic<version*> latest_{nullptr};
 
     std::string key_{};
+
+    read_by_occ read_by_{};
 };
 
 } // namespace shirakami

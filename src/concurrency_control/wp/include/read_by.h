@@ -44,4 +44,30 @@ private:
     body_type body_;
 };
 
+class read_by_occ {
+public:
+    using body_elem_type = epoch::epoch_t;
+    using body_type = std::vector<body_elem_type>;
+
+    /**
+     * @brief Get the partial elements and gc stale elements
+     * @param epoch 
+     * @param threshold In the process of searching, remove the element with 
+     * epoch smaller than threshold.
+     * @return std::vector<body_elem_type> 
+     */
+    body_elem_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
+
+    void push(body_elem_type elem);
+
+private:
+    std::mutex mtx_;
+
+    /**
+     * @brief body
+     * @details std::pair.first is epoch. the second is batch_id.
+     */
+    body_type body_;
+};
+
 } // namespace shirakami
