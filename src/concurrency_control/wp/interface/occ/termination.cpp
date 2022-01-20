@@ -34,7 +34,8 @@ Status abort(session* ti) { // NOLINT
     return Status::OK;
 }
 
-Status read_verify(session* ti, tid_word read_tid, tid_word check, Record* const rec_ptr) {
+Status read_verify(session* ti, tid_word read_tid, tid_word check,
+                   Record* const rec_ptr) {
     if (read_tid.get_tid() != check.get_tid() ||
         read_tid.get_epoch() != check.get_epoch() || check.get_absent() ||
         (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
@@ -78,7 +79,8 @@ Status read_wp_verify(session* const ti, tid_word& commit_tid) {
         // verify
         // ==============================
         if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK ||
-            wp_verify(itr.get_storage(), itr.get_tid().get_epoch()) != Status::OK) {
+            wp_verify(itr.get_storage(), itr.get_tid().get_epoch()) !=
+                    Status::OK) {
             unlock_write_set(ti);
             occ::abort(ti);
             return Status::ERR_VALIDATION;
@@ -192,10 +194,10 @@ Status node_verify(session* ti) {
 }
 
 void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
-    tid_word tid_a{commit_tid};
+    auto tid_a{commit_tid};
     tid_a.inc_tid();
 
-    tid_word tid_b{ti->get_mrc_tid()};
+    auto tid_b{ti->get_mrc_tid()};
     tid_b.inc_tid();
 
     tid_word tid_c{};
@@ -206,6 +208,26 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     commit_tid.set_absent(false);
     commit_tid.set_latest(true);
     ti->set_mrc_tid(commit_tid);
+}
+
+void register_read_by_occ(session* const ti) {
+    auto ce{ti->get_mrc_tid().get_epoch()};
+
+    std::vector<Record*> recs{};
+    for (auto&& itr : ti->get_read_set()) {
+        recs.emplace_back(itr.get_rec_ptr());
+    }
+
+    /**
+     * Since the registration of read_by involves an exclusive lock, the 
+     * redundancy is deleted. 
+     */
+    std::sort(recs.begin(), recs.end());
+    recs.erase(std::unique(recs.begin(), recs.end()), recs.end());
+    for (auto&& itr : recs) {
+        auto& ro{itr->get_read_by()};
+        ro.push(ce);
+    }
 }
 
 extern Status commit(session* ti, // NOLINT
@@ -240,6 +262,9 @@ extern Status commit(session* ti, // NOLINT
 
     // write phase
     write_phase(ti, ce);
+
+    // This calculation can be done outside the critical section.
+    register_read_by_occ(ti);
 
     // clean up local set
     ti->clean_up();

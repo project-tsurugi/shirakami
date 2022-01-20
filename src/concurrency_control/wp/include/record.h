@@ -22,25 +22,13 @@ class alignas(CACHE_LINE_SIZE) Record { // NOLINT
 public:
     Record() = default;
 
-    ~Record() {
-        auto* ver = get_latest();
-        while (ver != nullptr) {
-            auto* ver_tmp = ver->get_next();
-            delete ver; // NOLINT
-            ver = ver_tmp;
-        }
-    }
+    ~Record();
 
     /**
      * @brief ctor.
      * @details This is used for insert logic.
      */
-    Record(std::string_view const key, std::string_view const val) : key_(key) {
-        latest_.store(new version(val), std::memory_order_release); // NOLINT
-        tidw_.set_lock(true);
-        tidw_.set_latest(true);
-        tidw_.set_absent(true);
-    }
+    Record(std::string_view const key, std::string_view const val);
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
@@ -54,16 +42,9 @@ public:
         return latest_.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] tid_word get_stable_tidw() {
-        for (;;) {
-            tid_word check{loadAcquire(tidw_.get_obj())};
-            if (check.get_lock()) {
-                _mm_pause();
-            } else {
-                return check;
-            }
-        }
-    }
+    read_by_occ& get_read_by() { return read_by_; }
+
+    [[nodiscard]] tid_word get_stable_tidw();
 
     [[nodiscard]] tid_word get_tidw() const { return tidw_; }
 
