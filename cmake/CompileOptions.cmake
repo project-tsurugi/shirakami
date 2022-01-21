@@ -160,6 +160,11 @@ else()
     add_definitions(-DPARAM_CPR_DIFF_SET_RESERVE_NUM=${PARAM_CPR_DIFF_SET_RESERVE_NUM})
 endif()
 
+# for test bench, todo remove
+if (BCC_7)
+        add_definitions(-DBCC_7)
+endif ()
+
 # End : about logging
 
 # End : parameter settings

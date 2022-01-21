@@ -264,7 +264,9 @@ extern Status commit(session* ti, // NOLINT
     write_phase(ti, ce);
 
     // This calculation can be done outside the critical section.
+    #ifdef BCC_7
     register_read_by_occ(ti);
+    #endif
 
     // clean up local set
     ti->clean_up();
