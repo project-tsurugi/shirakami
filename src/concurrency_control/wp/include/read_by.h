@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <mutex>
 #include <vector>
 
@@ -58,9 +59,19 @@ public:
      */
     body_elem_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
 
+    epoch::epoch_t get_max_epoch() {
+        return max_epoch_.load(std::memory_order_acquire);
+    }
+
     void push(body_elem_type elem);
 
+    void set_max_epoch(epoch::epoch_t const ep) {
+        max_epoch_.store(ep, std::memory_order_release);
+    }
+
 private:
+    std::atomic<std::uint64_t> max_epoch_{0};
+
     std::mutex mtx_;
 
     /**

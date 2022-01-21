@@ -21,7 +21,6 @@ read_by_bt::get_and_gc(epoch::epoch_t const epoch,
 
 void read_by_bt::push(body_elem_type const elem) {
     std::unique_lock<std::mutex> lk(mtx_);
-    body_.emplace_back(elem);
     for (auto itr = body_.begin(); itr != body_.end(); ++itr) {
         if ((*itr).first < elem.first) { continue; }
         if ((*itr).first == elem.first) {
@@ -51,14 +50,29 @@ read_by_occ::get_and_gc(epoch::epoch_t const epoch,
 }
 
 void read_by_occ::push(body_elem_type const elem) {
+    // optimization
+    if (get_max_epoch() == elem) { return; }
+
     std::unique_lock<std::mutex> lk(mtx_);
-    body_.emplace_back(elem);
-    for (auto itr = body_.begin(); itr != body_.end(); ++itr) {
-        if ((*itr) < elem) { continue; }
-        if ((*itr) == elem) { return; }
-        body_.insert(itr, elem);
+
+    // if empty
+    if (body_.empty()) {
+        // push back
+        body_.emplace_back(elem);
+        set_max_epoch(elem);
         return;
     }
+
+    for (auto ritr = body_.rbegin(); ritr != body_.rend(); ++ritr) {
+        if ((*ritr) < elem) {
+            if (ritr == body_.rbegin()) { set_max_epoch(elem); }
+            body_.insert(ritr.base(), elem);
+            return;
+        }
+    }
+
+    body_.insert(body_.begin(), elem);
+    return;
 }
 
 } // namespace shirakami
