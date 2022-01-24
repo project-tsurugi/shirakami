@@ -25,13 +25,18 @@ public:
     using body_type = std::vector<body_elem_type>;
 
     /**
-     * @brief Get the partial elements and gc stale elements
+     * @brief Get the partial elements
      * @param epoch 
-     * @param threshold In the process of searching, remove the element with 
-     * epoch smaller than threshold.
-     * @return std::vector<body_elem_type> 
+     * @return body_elem_type 
      */
-    body_elem_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
+    body_elem_type get(epoch::epoch_t epoch);
+
+    /**
+     * @brief gc
+     * @pre get mtx_ lock
+     * 
+     */
+    void gc();
 
     void push(body_elem_type elem);
 
@@ -51,13 +56,19 @@ public:
     using body_type = std::vector<body_elem_type>;
 
     /**
-     * @brief Get the partial elements and gc stale elements
-     * @param epoch 
-     * @param threshold In the process of searching, remove the element with 
-     * epoch smaller than threshold.
-     * @return std::vector<body_elem_type> 
+     * @brief gc
+     * @pre get mtx_ lock
+     * 
      */
-    body_elem_type get_and_gc(epoch::epoch_t epoch, epoch::epoch_t threshold);
+    void gc();
+
+    /**
+     * @brief Get the partial elements
+     * @param epoch 
+     * @return true found  
+     * @return false not found  
+     */
+    bool find(epoch::epoch_t epoch);
 
     epoch::epoch_t get_max_epoch() {
         return max_epoch_.load(std::memory_order_acquire);
