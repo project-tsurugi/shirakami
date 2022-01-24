@@ -49,6 +49,7 @@
  */
 DEFINE_uint64(d, 1, "Duration of benchmark in seconds."); // NOLINT
 DEFINE_uint64(rec, 1000, "# records.");                   // NOLINT
+DEFINE_uint64(value_size, 8, "value size.");                   // NOLINT
 
 using namespace shirakami;
 

@@ -1,6 +1,8 @@
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 read_by_bt::body_elem_type read_by_bt::get(epoch::epoch_t const epoch) {
@@ -18,7 +20,9 @@ read_by_bt::body_elem_type read_by_bt::get(epoch::epoch_t const epoch) {
 }
 
 void read_by_bt::gc() {
-    const auto threshold = ongoing_tx::get_lowest_epoch();
+    const auto ce = epoch::get_global_epoch();
+    auto threshold = ongoing_tx::get_lowest_epoch();
+    if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) {
         if ((*itr).first < threshold) {
             itr = body_.erase(itr);
@@ -31,7 +35,9 @@ void read_by_bt::gc() {
 
 void read_by_bt::push(body_elem_type const elem) {
     std::unique_lock<std::mutex> lk(mtx_);
-    const auto threshold = ongoing_tx::get_lowest_epoch();
+    const auto ce = epoch::get_global_epoch();
+    auto threshold = ongoing_tx::get_lowest_epoch();
+    if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) {
         if ((*itr).first < elem.first) {
             // check gc
@@ -52,7 +58,9 @@ void read_by_bt::push(body_elem_type const elem) {
 }
 
 void read_by_occ::gc() {
-    const auto threshold = ongoing_tx::get_lowest_epoch();
+    const auto ce = epoch::get_global_epoch();
+    auto threshold = ongoing_tx::get_lowest_epoch();
+    if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) {
         if ((*itr) < threshold) {
             itr = body_.erase(itr);
@@ -64,7 +72,9 @@ void read_by_occ::gc() {
 
 bool read_by_occ::find(epoch::epoch_t const epoch) {
     std::unique_lock<std::mutex> lk(mtx_);
-    const auto threshold = ongoing_tx::get_lowest_epoch();
+    const auto ce = epoch::get_global_epoch();
+    auto threshold = ongoing_tx::get_lowest_epoch();
+    if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) {
         if ((*itr) < epoch) {
             // check gc

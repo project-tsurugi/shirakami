@@ -12,3 +12,4 @@
  */
 DECLARE_uint64(d);
 DECLARE_uint64(rec);
+DECLARE_uint64(value_size);

@@ -48,7 +48,7 @@ void brock_insert(Storage const st, size_t const start, size_t const end) {
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
-        rc = upsert(token, st, make_key(key_len, i), std::string(val_len, '0'));
+        rc = upsert(token, st, make_key(key_len, i), std::string(FLAGS_value_size, '0'));
         if (rc != Status::OK) { LOG(FATAL) << rc; }
         ++ctr;
         if (ctr > 10) { // NOLINT
