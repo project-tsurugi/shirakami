@@ -95,6 +95,7 @@ bool read_by_occ::find(epoch::epoch_t const epoch) {
 }
 
 void read_by_occ::push(body_elem_type const elem) {
+#if 0
     // optimization
     if (get_max_epoch() == elem) { return; }
 
@@ -120,6 +121,20 @@ void read_by_occ::push(body_elem_type const elem) {
     body_.insert(body_.begin(), elem);
 
     gc();
+#endif
+
+    auto& me = get_max_epoch_ref();
+    auto ce = get_max_epoch();
+    for (;;) {
+        if (ce < elem) {
+            if (me.compare_exchange_weak(ce, elem, std::memory_order_release,
+                                         std::memory_order_acquire)) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
     return;
 }
 

@@ -74,6 +74,8 @@ public:
         return max_epoch_.load(std::memory_order_acquire);
     }
 
+    std::atomic<epoch::epoch_t>& get_max_epoch_ref() { return max_epoch_; }
+
     void push(body_elem_type elem);
 
     void set_max_epoch(epoch::epoch_t const ep) {
@@ -81,7 +83,7 @@ public:
     }
 
 private:
-    std::atomic<std::uint64_t> max_epoch_{0};
+    std::atomic<epoch::epoch_t> max_epoch_{0};
 
     std::mutex mtx_;
 
