@@ -18,6 +18,7 @@
 #include <ctime>
 #include <map>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -54,6 +55,12 @@ class session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
+#if PARAM_READ_SET_CONT == 0
+    using read_set_type = std::vector<read_set_obj>;
+#elif PARAM_READ_SET_CONT == 1
+    using read_set_type = std::unordered_map<Record*, read_set_obj>;
+#endif
+
     class scan_handler {
     public:
         using scan_cache_type = std::map<
@@ -145,7 +152,7 @@ public:
 
     tid_word& get_mrctid() { return mrc_tid_; } // NOLINT
 
-    std::vector<read_set_obj>& get_read_set() { // NOLINT
+    read_set_type& get_read_set() { // NOLINT
         return read_set;
     }
 
@@ -340,7 +347,7 @@ private:
     /**
      * about holding operation info.
      */
-    std::vector<read_set_obj> read_set{};
+    read_set_type read_set{};
     local_write_set write_set{};
 
     /**

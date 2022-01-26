@@ -26,8 +26,13 @@ void session::clean_up_scan_caches() {
     std::size_t ctr(1);
     for (auto&& itr : read_set) {
         std::cout << "Element #" << ctr << " of read set." << std::endl;
+#if PARAM_READ_SET_CONT == 0
         std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
         Record& record = itr.get_rec_read();
+#elif PARAM_READ_SET_CONT == 1
+        std::cout << "rec_ptr_ : " << itr.second.get_rec_ptr() << std::endl;
+        Record& record = itr.second.get_rec_read();
+#endif
         Tuple& tuple = record.get_tuple();
         std::cout << "tidw_ :vv" << record.get_tidw() << std::endl;
         std::string_view key_view;

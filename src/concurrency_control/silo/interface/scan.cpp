@@ -33,14 +33,16 @@ Status close_scan(Token token, ScanHandle handle) { // NOLINT
     return Status::OK;
 }
 
-Status open_scan(Token token, Storage storage, const std::string_view l_key, // NOLINT
+Status open_scan(Token token, Storage storage,
+                 const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
                  const scan_endpoint r_end, ScanHandle& handle) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::open_scan(ti, storage, l_key, l_end, r_key, r_end, handle);
+        return snapshot_interface::open_scan(ti, storage, l_key, l_end, r_key,
+                                             r_end, handle);
     }
 
     for (ScanHandle i = 0;; ++i) {
@@ -55,10 +57,14 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t index_rec_ptr{1};
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
+    std::vector<std::pair<yakushima::node_version64_body,
+                          yakushima::node_version64*>>
+            nvec;
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_res, &nvec); // NOLINT
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key,
+                    parse_scan_endpoint(l_end), r_key,
+                    parse_scan_endpoint(r_end), scan_res, &nvec); // NOLINT
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -83,11 +89,15 @@ Status open_scan(Token token, Storage storage, const std::string_view l_key, // 
         }
     }
 
-    std::get<session::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle]) = storage;
-    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    std::get<session::scan_handler::scan_cache_storage_pos>(
+            ti->get_scan_cache()[handle]) = storage;
+    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(
+            ti->get_scan_cache()[handle]);
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)), std::get<index_nvec_body>(nvec.at(i + nvec_delta)), std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)),
+                         std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
+                         std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }
 
     return Status::OK;
@@ -107,12 +117,11 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]);
+    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+            ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 retry_by_continue:
-    if (scan_buf.size() == scan_index) {
-        return Status::WARN_SCAN_LIMIT;
-    }
+    if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
 
     auto itr = scan_buf.begin() + scan_index;
 
@@ -135,11 +144,20 @@ retry_by_continue:
         goto retry_by_continue; // NOLINT
     }
 
+#if PARAM_READ_SET_CONT == 1
+    // check local read set
+    auto rsitr = ti->get_read_set().find(std::get<0>(*itr));
+    if (rsitr != ti->get_read_set().end()) {
+        tuple = (*rsitr).get_rec_read().get_tuple();
+        return Status::OK;
+    }
+#endif
 
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->get_write_set().search(const_cast<Record*>(std::get<0>(*itr))); // NOLINT
+    const write_set_obj* inws = ti->get_write_set().search(
+            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (inws != nullptr) {
         ++scan_index;
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -154,34 +172,41 @@ retry_by_continue:
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    Storage storage{std::get<session::scan_handler::scan_cache_storage_pos>(ti->get_scan_cache()[handle])};
+    Storage storage{std::get<session::scan_handler::scan_cache_storage_pos>(
+            ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
 
     Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
-    if (rr != Status::OK) {
-        return rr;
-    }
+    if (rr != Status::OK) { return rr; }
+#if PARAM_READ_SET_CONT == 0
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
+#elif PARAM_READ_SET_CONT == 1
+    auto pr =
+            ti->get_read_set().insert(std::make_pair(std::get<0>(*itr), rsob));
+    tuple = (*pr.first).get_rec_read().get_tuple();
+#endif
     ++scan_index;
 
     // create node set info
     auto& ns = ti->get_node_set();
-    if (ns.empty() ||
-        std::get<1>(ns.back()) != std::get<2>(*itr)) {
+    if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
         ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
     }
 
     return Status::OK;
 }
 
-Status scan_key(Token token, Storage storage, const std::string_view l_key, const scan_endpoint l_end, // NOLINT
-                const std::string_view r_key, const scan_endpoint r_end, std::vector<const Tuple*>& result) {
+Status scan_key(Token token, Storage storage, const std::string_view l_key,
+                const scan_endpoint l_end, // NOLINT
+                const std::string_view r_key, const scan_endpoint r_end,
+                std::vector<const Tuple*>& result) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::scan_key(ti, storage, l_key, l_end, r_key, r_end, result);
+        return snapshot_interface::scan_key(ti, storage, l_key, l_end, r_key,
+                                            r_end, result);
     }
 
     // as a precaution
@@ -190,15 +215,20 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
     constexpr std::size_t scan_buf_rec_ptr{1};
-    std::vector<std::pair<yakushima::node_version64_body, yakushima::node_version64*>> nvec;
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end), scan_buf, &nvec); // NOLINT
+    std::vector<std::pair<yakushima::node_version64_body,
+                          yakushima::node_version64*>>
+            nvec;
+    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key,
+                    parse_scan_endpoint(l_end), r_key,
+                    parse_scan_endpoint(r_end), scan_buf, &nvec); // NOLINT
 
     std::int64_t index_ctr{-1};
     for (auto&& elem : scan_buf) {
         ++index_ctr;
 
         // check whether it is deleted
-        tid_word target_tid{loadAcquire((*std::get<scan_buf_rec_ptr>(elem))->get_tidw().get_obj())};
+        tid_word target_tid{loadAcquire(
+                (*std::get<scan_buf_rec_ptr>(elem))->get_tidw().get_obj())};
         if (!target_tid.get_latest() && target_tid.get_absent()) {
             /**
              * You can skip it with deleted record.
@@ -216,7 +246,8 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         }
 
         // Check local write set.
-        write_set_obj* inws = ti->get_write_set().search(*std::get<scan_buf_rec_ptr>(elem)); // NOLINT
+        write_set_obj* inws = ti->get_write_set().search(
+                *std::get<scan_buf_rec_ptr>(elem)); // NOLINT
         if (inws != nullptr) {
             /**
              * If the record was already update/insert in the same transaction,
@@ -241,13 +272,20 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
             continue;
         }
 
-        ti->get_read_set().emplace_back(storage, const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
-        Status rr = read_record(ti->get_read_set().back().get_rec_read(), const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
+        ti->get_read_set().emplace_back(
+                storage,
+                const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
+        Status rr = read_record(
+                ti->get_read_set().back().get_rec_read(),
+                const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
         if (rr != Status::OK) {
             // cancel this scan.
             if (read_set_init_size != ti->get_read_set().size()) {
-                ti->get_read_set().erase(ti->get_read_set().begin() + read_set_init_size,
-                                         ti->get_read_set().begin() + (ti->get_read_set().size() - read_set_init_size));
+                ti->get_read_set().erase(ti->get_read_set().begin() +
+                                                 read_set_init_size,
+                                         ti->get_read_set().begin() +
+                                                 (ti->get_read_set().size() -
+                                                  read_set_init_size));
             }
             return rr;
         }
@@ -282,7 +320,9 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key, cons
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = std::get<session::scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle]).size();
+    size = std::get<session::scan_handler::scan_cache_vec_pos>(
+                   ti->get_scan_cache()[handle])
+                   .size();
     return Status::OK;
 }
 
