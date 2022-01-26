@@ -58,6 +58,7 @@ void read_by_bt::push(body_elem_type const elem) {
 }
 
 void read_by_occ::gc() {
+#if PARAM_READ_BY_MODE == 0
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
@@ -68,9 +69,11 @@ void read_by_occ::gc() {
             return;
         }
     }
+#endif
 }
 
 bool read_by_occ::find(epoch::epoch_t const epoch) {
+#if PARAM_READ_BY_MODE == 0
     std::unique_lock<std::mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
@@ -92,10 +95,13 @@ bool read_by_occ::find(epoch::epoch_t const epoch) {
     }
 
     return false;
+#elif PARAM_READ_BY_MODE == 1
+    return get_max_epoch() == epoch;
+#endif
 }
 
 void read_by_occ::push(body_elem_type const elem) {
-#if 0
+#if PARAM_READ_BY_MODE == 0
     // optimization
     if (get_max_epoch() == elem) { return; }
 
@@ -121,7 +127,8 @@ void read_by_occ::push(body_elem_type const elem) {
     body_.insert(body_.begin(), elem);
 
     gc();
-#endif
+    return;
+#elif PARAM_READ_BY_MODE == 1
 
     auto& me = get_max_epoch_ref();
     auto ce = get_max_epoch();
@@ -136,6 +143,8 @@ void read_by_occ::push(body_elem_type const elem) {
         }
     }
     return;
+
+#endif
 }
 
 } // namespace shirakami

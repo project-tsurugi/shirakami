@@ -110,6 +110,17 @@ else ()
     add_definitions(-DPARAM_SNAPSHOT_EPOCH=${PARAM_SNAPSHOT_EPOCH})
 endif ()
  
+if (NOT DEFINED PARAM_READ_BY_MODE)
+    message("PARAM_READ_BY_MODE is '1'")
+    add_definitions(-DPARAM_READ_BY_MODE=1)
+elseif ((PARAM_READ_BY_MODE EQUAL 0) OR (PARAM_READ_BY_MODE EQUAL 1))
+    message("PARAM_READ_BY_MODE is '${PARAM_READ_BY_MODE}'")
+    add_definitions(-DPARAM_READ_BY_MODE=${PARAM_READ_BY_MODE})
+else ()
+    message(FATAL_ERROR "Setting of PARAM_READ_BY_MODE is invalid.")
+endif ()
+
+
 if (BUILD_WP)
     add_definitions(-DWP)
 

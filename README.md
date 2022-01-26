@@ -57,12 +57,15 @@ Available options:
   + `-DBUILD_PWAL=ON`
      * Enable parallel write-ahead-logging (default: `OFF` )
 
-        * <font color="red"> This option will be abolished because we plan to use mainly cpr as logging method.
+        * <font color="red"> This option will be abolished because we plan to
+        use mainly cpr as logging method.
       So this option have a bug because our development hasn't caught up.
       </font>
 
       * `-DPWAL_ENABLE_READ_LOG=ON`
-        * Enable to log read log with write log to verify whether committed schedule is valid.
+        * Enable to log read log with write log to verify whether committed
+        schedule is valid.
+
   + `-DBUILD_CPR=ON`
      * Enable concurrent prefix recovery.
      * Default: `ON`
@@ -74,19 +77,30 @@ Available options:
        * Default: `112`
 
     - `-DPARAM_EPOCH_TIME=<epoch time (ms)>`
-       * Epoch time related with latency of commit (durable) and span of resource management.
+       * Epoch time related with latency of commit (durable) and span of
+       resource management.
        * Default: `40`
 
     - `-DPARAM_RETRY_READ`
-       * The number of retry read without give-up due to conflicts at reading record.
+       * The number of retry read without give-up due to conflicts at reading
+       record.
        * Default : `0`
 
     - `BUILD_WP=ON`
        * Enable write preserve logic in concurrency control.
-       <font color="red"> Note that write preserve logic is developed now, so it is not stable.
-       Therefore, default is OFF.
+       <font color="red"> Note that write preserve logic is developed now, so
+       it is not stable. Therefore, default is OFF.
        </font>
        * Default: `OFF`
+
+       - `-DPARAM_READ_BY_MODE=<0 or 1>`
+
+          * How occ tx leaves read-anti-info. Mode 0 is the basic method, and the
+          performance of occ tx is worse than that of mode 1. Mode 1 degrades
+          batch performance other than the highest priority, but occ tx has very
+          good performance.
+
+          * Default: `1`
 
   + PWAL
     - `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>`
@@ -127,39 +141,61 @@ Available options:
 ## Recommendation
 
 ### Setting options
+
 * For high throughput
   + Common workloads
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent transaction thread size>`
-      - The value of this option is the maximum number of parallel sessions. If it is unnecessarily large, the management cost will increase and the efficiency will decrease.
+      - The value of this option is the maximum number of parallel sessions.
+      If it is unnecessarily large, the management cost will increase and the
+      efficiency will decrease.
+
     - `-DBUILD_PWAL=OFF -DBUILD_CPR=ON`
       - PWAL generates a log record for each transaction.
-      In comparison, CPR, a checkpointing technology, has almost no work until the timing of logging comes.
+      In comparison, CPR, a checkpointing technology, has almost no work until
+      the timing of logging comes.
+
     - `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
       - Checkpointing logging has little work until it's time to log.
     - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=<large num, ex. 10000>`
-      - Performance is good when a large number is reserved so that area rearrangement does not occur.
+      - Performance is good when a large number is reserved so that area
+      rearrangement does not occur.
+
   + For high contention workloads
     - `-DPARAM_EPOCH_TIME=<medium num, ex. 10>`
-      - For workloads that repeatedly insert and delete the same primary key, new inserts will be rejected until physical unhooking occurs in garbage collection, so set a small value here to execute frequently.
-      If this value is too small, the cache will be polluted frequently, so make sure it is not too small.
+      - For workloads that repeatedly insert and delete the same primary key,
+      new inserts will be rejected until physical unhooking occurs in garbage
+      collection, so set a small value here to execute frequently. If this
+      value is too small, the cache will be polluted frequently, so make sure
+      it is not too small.
+
     - `-DPARAM_RETRY_READ=<small num, ex. 0>`
-      - When reading fails in the read phase, it is better to return the failure without retrying in an environment with high contention.
-      This is because in an environment with high contention, the abort rate is high, so retries are likely to be wasted work.
+      - When reading fails in the read phase, it is better to return the
+      failure without retrying in an environment with high contention. This is
+      because in an environment with high contention, the abort rate is high,
+      so retries are likely to be wasted work.
+
   + For low contention workloads
     - `-DPARAM_EPOCH_TIME=<large num, ex. 1000>`
-      - In the single version concurrency control mode, garbage collection basically causes performance degradation, so set a large value here and execute it infrequently.
+      - In the single version concurrency control mode, garbage collection
+      basically causes performance degradation, so set a large value here
+      and execute it infrequently.
+
     - `-DPARAM_RETRY_READ=<medium num, ex. 20>`
-      - When reading fails in the read phase, you may try until the reading succeeds in an environment with low contention.
-      Because, as a result, the probability of aborting is small.
-- For low latency
-  - `-DPARAM_EPOCH_TIME=<small time, ex. 10> -DPARAM_CHECKPOINT_REST_EPOCH=<small time, ex. 10>`
+      - When reading fails in the read phase, you may try until the reading
+      succeeds in an environment with low contention. Because, as a result,
+      the probability of aborting is small.
+
+* For low latency
+  + `-DPARAM_EPOCH_TIME=<small time, ex. 10> -DPARAM_CHECKPOINT_REST_EPOCH=<small time, ex. 10>`
     - Frequent logging improves latency but worsens throughput.
-- For fast testing
-  - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=0`
+* For fast testing
+  + `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=0`
     - It is faster not to allocate unnecessary memory.
-  - `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
-    - If you do not enable the option of the fin function that waits for logging IO to finish, it is faster to finish the test before logging IO occurs.
+  + `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
+    - If you do not enable the option of the fin function that waits for
+    logging IO to finish, it is faster to finish the test before logging IO occurs.
     
+
 ## Install 
 
 ```sh
