@@ -98,10 +98,15 @@ Status read_verify(Token token, tid_word& max_rset) {
 
     tid_word check;
     for (auto&& itr : ti->get_read_set()) {
-        const Record* rec_ptr = itr.get_rec_ptr();
+#if PARAM_READ_SET_CONT == 0
+        auto& rsobj = itr;
+#elif PARAM_READ_SET_CONT == 1
+        auto& rsobj = itr.second;
+#endif
+        const Record* rec_ptr = rsobj.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-        if ((itr.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
-             itr.get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
+        if ((rsobj.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
+             rsobj.get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
             check.get_absent() // check whether it was deleted.
             || (check.get_lock() &&
                 (ti->get_write_set().search(const_cast<Record*>(rec_ptr)) ==

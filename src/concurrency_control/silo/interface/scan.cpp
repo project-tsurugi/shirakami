@@ -147,9 +147,10 @@ retry_by_continue:
 
 #if PARAM_READ_SET_CONT == 1
     // check local read set
-    auto rsitr = ti->get_read_set().find(std::get<0>(*itr));
+    auto rsitr = ti->get_read_set().find(
+            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (rsitr != ti->get_read_set().end()) {
-        tuple = (*rsitr).get_rec_read().get_tuple();
+        tuple = &(*rsitr).second.get_rec_read().get_tuple();
         return Status::OK;
     }
 #endif
@@ -183,9 +184,9 @@ retry_by_continue:
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
 #elif PARAM_READ_SET_CONT == 1
-    auto pr =
-            ti->get_read_set().insert(std::make_pair(std::get<0>(*itr), rsob));
-    tuple = (*pr.first).get_rec_read().get_tuple();
+    auto pr = ti->get_read_set().insert(std::make_pair(
+            const_cast<Record*>(std::get<0>(*itr)), std::move(rsob)));
+    tuple = &(*pr.first).second.get_rec_read().get_tuple();
 #endif
     ++scan_index;
 
@@ -212,7 +213,6 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key,
 
     // as a precaution
     result.clear();
-    auto read_set_init_size{ti->get_read_set().size()};
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
     constexpr std::size_t scan_buf_rec_ptr{1};
@@ -225,6 +225,9 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key,
             parse_scan_endpoint(r_end), scan_buf, &nvec);
 
     std::int64_t index_ctr{-1};
+
+    std::vector<read_set_obj> rsobs;
+    rsobs.reserve(scan_buf.size());
     for (auto&& elem : scan_buf) {
         ++index_ctr;
 
@@ -274,30 +277,45 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key,
             continue;
         }
 
-        ti->get_read_set().emplace_back(
+#if PARAM_READ_SET_CONT == 1
+        // check local read set
+        auto rsitr = ti->get_read_set().find(*std::get<scan_buf_rec_ptr>(elem));
+        if (rsitr != ti->get_read_set().end()) {
+            result.emplace_back(&(*rsitr).second.get_rec_read().get_tuple());
+            continue;
+        }
+#endif
+
+
+        read_set_obj rs_ob(
                 storage,
                 const_cast<Record*>((*std::get<scan_buf_rec_ptr>(elem))));
         Status rr = read_record(
-                ti->get_read_set().back().get_rec_read(),
+                rs_ob.get_rec_read(),
                 const_cast<Record*>(*std::get<scan_buf_rec_ptr>(elem)));
         if (rr != Status::OK) {
             // cancel this scan.
-            if (read_set_init_size != ti->get_read_set().size()) {
-                ti->get_read_set().erase(ti->get_read_set().begin() +
-                                                 read_set_init_size,
-                                         ti->get_read_set().begin() +
-                                                 (ti->get_read_set().size() -
-                                                  read_set_init_size));
-            }
             return rr;
         }
+        rsobs.emplace_back(std::move(rs_ob));
     }
 
-    if (read_set_init_size != ti->get_read_set().size()) {
-        for (auto itr = ti->get_read_set().begin() + read_set_init_size;
-             itr != ti->get_read_set().end(); ++itr) {
-            result.emplace_back(&itr->get_rec_read().get_tuple());
-        }
+
+// success this scana
+// reserve rset
+#if PARAM_READ_SET_CONT == 0
+    ti->get_read_set().reserve(ti->get_read_set().size() + rsobs.size());
+#endif
+    for (auto&& elem : rsobs) {
+#if PARAM_READ_SET_CONT == 0
+        ti->get_read_set().emplace_back(std::move(elem));
+        result.emplace_back(
+                &ti->get_read_set().back().get_rec_read().get_tuple());
+#elif PARAM_READ_SET_CONT == 1
+        auto pr = ti->get_read_set().insert(std::make_pair(
+                const_cast<Record*>(elem.get_rec_ptr()), std::move(elem)));
+        result.emplace_back(&(*pr.first).second.get_rec_read().get_tuple());
+#endif
     }
 
     // create node set info
