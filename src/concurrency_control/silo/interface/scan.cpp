@@ -62,9 +62,10 @@ Status open_scan(Token token, Storage storage,
             nvec;
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key,
-                    parse_scan_endpoint(l_end), r_key,
-                    parse_scan_endpoint(r_end), scan_res, &nvec); // NOLINT
+    yakushima::scan(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            l_key, parse_scan_endpoint(l_end), r_key,
+            parse_scan_endpoint(r_end), scan_res, &nvec);
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -218,9 +219,10 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key,
     std::vector<std::pair<yakushima::node_version64_body,
                           yakushima::node_version64*>>
             nvec;
-    yakushima::scan({reinterpret_cast<char*>(&storage), sizeof(storage)}, l_key,
-                    parse_scan_endpoint(l_end), r_key,
-                    parse_scan_endpoint(r_end), scan_buf, &nvec); // NOLINT
+    yakushima::scan(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            l_key, parse_scan_endpoint(l_end), r_key,
+            parse_scan_endpoint(r_end), scan_buf, &nvec);
 
     std::int64_t index_ctr{-1};
     for (auto&& elem : scan_buf) {
