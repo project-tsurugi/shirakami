@@ -1,9 +1,8 @@
-#include <bitset>
-
 #include "concurrency_control/silo/include/tuple_local.h"
-#include "gtest/gtest.h"
 
 #include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
 
 namespace shirakami::testing {
 
