@@ -234,6 +234,8 @@ extern Status leave(Token token); // NOLINT
  * @param[in] r_key
  * @param[in] r_end
  * @param[out] handle the handle to identify scanned result. This handle will be
+ * @param[in] max_size Default is 0. If this argument is 0, it will not use 
+ * this argument. This argument limits the number of results.
  * deleted at abort function.
  * @attention This scan limits range which is specified by @b l_key, @b l_end, @b r_key, 
  * and @b r_end.
@@ -244,7 +246,8 @@ extern Status leave(Token token); // NOLINT
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key, // NOLINT
-                        scan_endpoint r_end, ScanHandle& handle);
+                        scan_endpoint r_end, ScanHandle& handle,
+                        std::size_t max_size = 0);
 
 /**
  * @brief This function reads the one records from the scan_cache which was created at 
@@ -282,6 +285,9 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @param[in] r_key the key to indicate the ending of the range, null if the end is open.
  * @param[in] r_end indicate whether the @b r_key is exclusive.
  * @param[out] result output parameter to pass the found Tuple pointers.
+ * @param[in] max_size Default is 0. If this argument is 0, it will not use 
+ * this argument. This argument limits the number of results.
+ * deleted at abort function.
  * Empty when nothing is found for the given key range.
  * Returned tuple pointers are valid until commit/abort.
  * @return Status::OK success.
@@ -297,7 +303,8 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
 extern Status scan_key(Token token, Storage storage,
                        std::string_view l_key, // NOLINT
                        scan_endpoint l_end, std::string_view r_key,
-                       scan_endpoint r_end, std::vector<const Tuple*>& result);
+                       scan_endpoint r_end, std::vector<const Tuple*>& result,
+                       std::size_t max_size = 0);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
@@ -361,8 +368,8 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
  */
 extern Status tx_begin(Token token, bool read_only = false,       // NOLINT
-                     bool for_batch = false,                    // NOLINT
-                     std::vector<Storage> write_preserve = {}); // NOLINT
+                       bool for_batch = false,                    // NOLINT
+                       std::vector<Storage> write_preserve = {}); // NOLINT
 
 /**
  * @brief It updates the record for the given key.

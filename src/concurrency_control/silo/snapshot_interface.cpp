@@ -17,7 +17,7 @@ namespace shirakami::snapshot_interface {
 
 extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key, // NOLINT
-                        scan_endpoint r_end, ScanHandle& handle) {
+                        scan_endpoint r_end, ScanHandle& handle, std::size_t max_size) {
 
     for (ScanHandle i = 0;; ++i) {
         auto itr = ti->get_scan_cache().find(i);
@@ -34,7 +34,7 @@ extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
     yakushima::scan(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res);
+            parse_scan_endpoint(r_end), scan_res, nullptr, max_size);
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -169,7 +169,7 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
 Status scan_key(session* ti, Storage storage, const std::string_view l_key,
                 const scan_endpoint l_end, // NOLINT
                 const std::string_view r_key, const scan_endpoint r_end,
-                std::vector<const Tuple*>& result) {
+                std::vector<const Tuple*>& result, std::size_t max_size) {
     // as a precaution
     result.clear();
 
@@ -178,7 +178,7 @@ Status scan_key(session* ti, Storage storage, const std::string_view l_key,
     yakushima::scan(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_buf);
+            parse_scan_endpoint(r_end), scan_buf, nullptr, max_size);
 
     if (scan_buf.empty()) return Status::WARN_NOT_FOUND;
     for (auto&& elem : scan_buf) {

@@ -29,19 +29,20 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-wp-wp_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/tmp/wp_test_log");
     }
 
     void SetUp() override {
-        std::call_once(init_google, call_once_f);
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/wp_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
+    static inline std::once_flag init_google_;
+    static inline std::string log_dir_;
 };
 
 TEST_F(wp_test, wp_meta_basic) { // NOLINT

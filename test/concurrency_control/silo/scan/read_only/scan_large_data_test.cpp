@@ -40,7 +40,7 @@ private:
 };
 
 TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
-    constexpr static size_t NUM_QUERIES = 20;
+    constexpr static size_t NUM_QUERIES = 10;
     constexpr static size_t NUM_RECORDS = 100;
 
     Storage storage{};

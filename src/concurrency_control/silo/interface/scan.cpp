@@ -36,13 +36,13 @@ Status close_scan(Token token, ScanHandle handle) { // NOLINT
 Status open_scan(Token token, Storage storage,
                  const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
-                 const scan_endpoint r_end, ScanHandle& handle) {
+                 const scan_endpoint r_end, ScanHandle& handle, std::size_t const max_size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::open_scan(ti, storage, l_key, l_end, r_key,
-                                             r_end, handle);
+                                             r_end, handle, max_size);
     }
 
     for (ScanHandle i = 0;; ++i) {
@@ -65,7 +65,7 @@ Status open_scan(Token token, Storage storage,
     yakushima::scan(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res, &nvec);
+            parse_scan_endpoint(r_end), scan_res, &nvec, max_size);
     if (scan_res.empty()) {
         /**
          * scan couldn't find any records.
@@ -202,13 +202,13 @@ retry_by_continue:
 Status scan_key(Token token, Storage storage, const std::string_view l_key,
                 const scan_endpoint l_end, // NOLINT
                 const std::string_view r_key, const scan_endpoint r_end,
-                std::vector<const Tuple*>& result) {
+                std::vector<const Tuple*>& result, std::size_t const max_size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::scan_key(ti, storage, l_key, l_end, r_key,
-                                            r_end, result);
+                                            r_end, result, max_size);
     }
 
     // as a precaution
@@ -222,7 +222,7 @@ Status scan_key(Token token, Storage storage, const std::string_view l_key,
     yakushima::scan(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_buf, &nvec);
+            parse_scan_endpoint(r_end), scan_buf, &nvec, max_size);
 
     std::int64_t index_ctr{-1};
 
