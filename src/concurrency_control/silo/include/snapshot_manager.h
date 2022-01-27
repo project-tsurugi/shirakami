@@ -17,7 +17,7 @@
 namespace shirakami::snapshot_manager
 {
 /**
- * @details 25 epoch equals to 1 snapshot epoch.
+ * @details PARAM_SNAPSHOT_EPOCH (default 25) epoch equals to 1 snapshot epoch.
  */
 constexpr size_t snapshot_epoch_times = PARAM_SNAPSHOT_EPOCH;
 

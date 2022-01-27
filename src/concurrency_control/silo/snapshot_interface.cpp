@@ -9,6 +9,8 @@
 
 #include "shirakami/tuple.h"
 
+#include "glog/logging.h"
+
 using namespace shirakami;
 
 namespace shirakami::snapshot_interface {
@@ -94,11 +96,17 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
     auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
-    if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
 
-    auto itr = scan_buf.begin() + scan_index;
-    ++scan_index;
-    return read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple);
+    for (;;) {
+        if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
+
+        auto itr = scan_buf.begin() + scan_index;
+        ++scan_index;
+        auto rc{read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple)};
+        if (rc == Status::OK || rc == Status::WARN_CONCURRENT_INSERT) {
+            return rc;
+        }
+    }
 }
 
 extern Status read_record(session* const ti, Record* const rec_ptr,
@@ -109,7 +117,9 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
     for (;;) {
         // phase 1-1 : wait releasing lock
         for (tid = loadAcquire(rec_ptr->get_tidw().get_obj()); tid.get_lock();
-             _mm_pause(), tid = loadAcquire(rec_ptr->get_tidw().get_obj())) {}
+             _mm_pause(), tid = loadAcquire(rec_ptr->get_tidw().get_obj())) {
+            if (tid.get_absent()) return Status::WARN_CONCURRENT_INSERT;
+        }
 
         // phase 1-2 : check snapshot epoch
         if (snapshot_manager::get_snap_epoch(ti->get_epoch()) >
