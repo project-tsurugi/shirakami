@@ -19,7 +19,7 @@ namespace shirakami {
                   << std::endl;
         std::abort();
     }
-    return r.ru_maxrss;
+    return r.ru_maxrss; // NOLINT
 }
 
 [[maybe_unused]] static void displayRusageRUMaxrss() { // NOLINT
