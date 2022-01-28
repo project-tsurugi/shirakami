@@ -8,6 +8,8 @@ set terminal pdfcairo enhanced color
 set ylabel "throughput[tps]"
 set y2label "maxrss[kb]"
 
+set y2tics
+
 if (exist("tname")) {
        set title tname
        if (tname eq "vt") {

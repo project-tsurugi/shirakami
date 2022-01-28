@@ -205,10 +205,10 @@ gen_graph() {
 main() {
     echo "start main"
     # cleanup escaped pdf
-    #rm -f /tmp/bcc_8*pdf
-    #build 1
-    #exp 1
-    #gen_graph 1
+    rm -f /tmp/bcc_8*pdf
+    build 1
+    exp 1
+    gen_graph 1
     exp 2
     gen_graph 2
     build 2
