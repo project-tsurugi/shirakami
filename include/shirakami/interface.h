@@ -245,9 +245,9 @@ extern Status leave(Token token); // NOLINT
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
-                        scan_endpoint l_end, std::string_view r_key, // NOLINT
+                        scan_endpoint l_end, std::string_view r_key,
                         scan_endpoint r_end, ScanHandle& handle,
-                        std::size_t max_size = 0);
+                        std::size_t max_size = 0); // NOLINT
 
 /**
  * @brief This function reads the one records from the scan_cache which was created at 
@@ -299,11 +299,10 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
  * so it called abort().
  */
-extern Status scan_key(Token token, Storage storage,
-                       std::string_view l_key, // NOLINT
+extern Status scan_key(Token token, Storage storage, std::string_view l_key,
                        scan_endpoint l_end, std::string_view r_key,
                        scan_endpoint r_end, std::vector<const Tuple*>& result,
-                       std::size_t max_size = 0);
+                       std::size_t max_size = 0); // NOLINT
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.

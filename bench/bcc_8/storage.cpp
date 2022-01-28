@@ -63,7 +63,7 @@ void brock_insert(Storage const st, size_t const start, size_t const end) {
 }
 
 std::size_t comp_para_build_num(const std::size_t rec) {
-    if (rec <= 10000) return 1;
+    if (rec <= 10000) return 1; // NOLINT
 
     return std::thread::hardware_concurrency();
 }

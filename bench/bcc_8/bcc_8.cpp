@@ -84,7 +84,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        gen_tx_rw(opr_set, key_size, rec_size, FLAGS_tx_size, 100, rnd, zipf);
+        gen_tx_rw(opr_set, key_size, rec_size, FLAGS_tx_size, 100, // NOLINT
+                  rnd, zipf);
 
         for (auto&& itr : opr_set) {
             Status rc{};
