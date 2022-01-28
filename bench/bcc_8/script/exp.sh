@@ -26,7 +26,7 @@ exp() {
 
     duration=5
     epoch=5
-    skews=(0, 0.33, 0.66, 0.99)
+    skews=(0 0.33 0.66 0.99)
     skew=0
     tx_sizes=(10 100 1000 10000)
     tx_size=1000
@@ -182,13 +182,14 @@ gen_graph() {
     echo "start gen_graph"
     cd ../../build_cc_release/bench/bcc_8
     if test $1 -eq 1; then
-        gnuplot -e 'tname="vector - tx size"' ./../../../bench/bcc_8/script/graph.plt
+    echo "koko"
+        gnuplot -e 'tname="vt"' ./../../../bench/bcc_8/script/graph.plt
     elif test $1 -eq 2; then
-        gnuplot -e 'tname="vector - skew"' ./../../../bench/bcc_8/script/graph.plt
+        gnuplot -e 'tname="vs"' ./../../../bench/bcc_8/script/graph.plt
     elif test $1 -eq 3; then
-        gnuplot -e 'tname="unordered_map - tx size"' ./../../../bench/bcc_8/script/graph.plt
+        gnuplot -e 'tname="ut"' ./../../../bench/bcc_8/script/graph.plt
     elif test $1 -eq 4; then
-        gnuplot -e 'tname="unordered_map - skew"' ./../../../bench/bcc_8/script/graph.plt
+        gnuplot -e 'tname="us"' ./../../../bench/bcc_8/script/graph.plt
     else
         echo "BAG $LINENO"
         exit
@@ -204,10 +205,10 @@ gen_graph() {
 main() {
     echo "start main"
     # cleanup escaped pdf
-    rm -f /tmp/bcc_8*pdf
-    build 1
-    exp 1
-    gen_graph 1
+    #rm -f /tmp/bcc_8*pdf
+    #build 1
+    #exp 1
+    #gen_graph 1
     exp 2
     gen_graph 2
     build 2
@@ -215,7 +216,7 @@ main() {
     gen_graph 3
     exp 2
     gen_graph 4
-    ## return escaped pdf
+    ### return escaped pdf
     cp /tmp/bcc_8*pdf ./../../build_cc_release/bench/bcc_8/
 }
 
