@@ -65,7 +65,7 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
     auto* ti = static_cast<session*>(s);
     std::vector<ScanHandle> handles{};
     for (std::size_t i = 0, n = NUM_QUERIES; i < n; ++i) {
-        ScanHandle handle;
+        ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         handles.emplace_back(handle);
