@@ -1,8 +1,10 @@
 #include <bitset>
 
 #include "clock.h"
+#include "memory.h"
 
 #include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/silo/include/session.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 #include "concurrency_control/silo/include/tuple_local.h"
 
@@ -59,6 +61,8 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s, true));
     std::size_t read_ct{0};
+    std::size_t single_scan_maxrss{};
+    auto* ti = static_cast<session*>(s);
     for (std::size_t i = 0, n = NUM_QUERIES; i < n; ++i) {
         ScanHandle handle{};
         Tuple* tuple{};
@@ -67,6 +71,7 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
                                             "", scan_endpoint::INF, handle));
             for (;;) {
                 auto rc{read_from_scan(s, handle, tuple)};
+                ASSERT_EQ(ti->get_read_set().size(), 0);
                 if (rc == Status::OK) {
                     ++read_ct;
                     continue;
@@ -76,9 +81,17 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
             }
         }
         ASSERT_EQ(Status::OK, close_scan(s, handle));
+        if (i == 0) {
+            single_scan_maxrss = getRusageRUMaxrss();
+            LOG(INFO) << "single " << single_scan_maxrss;
+        }
     }
 
+    std::size_t final_maxrss{getRusageRUMaxrss()};
+    LOG(INFO) << "final " << final_maxrss;
     ASSERT_EQ(read_ct, NUM_QUERIES * NUM_RECORDS);
+    //ASSERT_EQ(single_scan_maxrss <= final_maxrss, 1);
+    //ASSERT_EQ(final_maxrss < single_scan_maxrss * 1.1, 1);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
