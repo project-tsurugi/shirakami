@@ -63,14 +63,19 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
     std::size_t read_ct{0};
     std::size_t single_scan_maxrss{};
     auto* ti = static_cast<session*>(s);
+    std::vector<ScanHandle> handles{};
     for (std::size_t i = 0, n = NUM_QUERIES; i < n; ++i) {
-        ScanHandle handle{};
+        ScanHandle handle;
+        ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
+                                        scan_endpoint::INF, handle));
+        handles.emplace_back(handle);
+    }
+
+    for (std::size_t i = 0, n = NUM_QUERIES; i < n; ++i) {
         Tuple* tuple{};
         {
-            ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF,
-                                            "", scan_endpoint::INF, handle));
             for (;;) {
-                auto rc{read_from_scan(s, handle, tuple)};
+                auto rc{read_from_scan(s, handles.at(i), tuple)};
                 ASSERT_EQ(ti->get_read_set().size(), 0);
                 if (rc == Status::OK) {
                     ++read_ct;
@@ -80,18 +85,19 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
                 LOG(FATAL);
             }
         }
-        ASSERT_EQ(Status::OK, close_scan(s, handle));
         if (i == 0) {
             single_scan_maxrss = getRusageRUMaxrss();
             LOG(INFO) << "single " << single_scan_maxrss;
         }
     }
 
+    for (auto&& elem : handles) { ASSERT_EQ(Status::OK, close_scan(s, elem)); }
+
     std::size_t final_maxrss{getRusageRUMaxrss()};
     LOG(INFO) << "final " << final_maxrss;
     ASSERT_EQ(read_ct, NUM_QUERIES * NUM_RECORDS);
-    //ASSERT_EQ(single_scan_maxrss <= final_maxrss, 1);
-    //ASSERT_EQ(final_maxrss < single_scan_maxrss * 1.1, 1);
+    ASSERT_EQ(single_scan_maxrss <= final_maxrss, 1);
+    ASSERT_EQ(final_maxrss < single_scan_maxrss * 1.1, 1);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
