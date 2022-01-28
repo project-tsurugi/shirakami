@@ -234,9 +234,9 @@ extern Status leave(Token token); // NOLINT
  * @param[in] r_key
  * @param[in] r_end
  * @param[out] handle the handle to identify scanned result. This handle will be
+ * deleted at abort function.
  * @param[in] max_size Default is 0. If this argument is 0, it will not use 
  * this argument. This argument limits the number of results.
- * deleted at abort function.
  * @attention This scan limits range which is specified by @b l_key, @b l_end, @b r_key, 
  * and @b r_end.
  * @return Status::OK success.
@@ -285,11 +285,10 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  * @param[in] r_key the key to indicate the ending of the range, null if the end is open.
  * @param[in] r_end indicate whether the @b r_key is exclusive.
  * @param[out] result output parameter to pass the found Tuple pointers.
+ * Empty when nothing is found for the given key range.
+ * Returned tuple pointers are valid until next calling function.
  * @param[in] max_size Default is 0. If this argument is 0, it will not use 
  * this argument. This argument limits the number of results.
- * deleted at abort function.
- * Empty when nothing is found for the given key range.
- * Returned tuple pointers are valid until commit/abort.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation 
  * of this transaction.
