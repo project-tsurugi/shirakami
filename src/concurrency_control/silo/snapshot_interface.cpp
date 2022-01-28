@@ -86,6 +86,9 @@ Status lookup_snapshot(session* ti, Storage storage, std::string_view key,
 
 extern Status read_from_scan(session* ti, const ScanHandle handle,
                              Tuple*& tuple) { // NOLINT
+    // opt for small memory
+    ti->get_read_only_tuples().clear();
+
     /**
      * Check whether the handle is valid.
      */
@@ -172,6 +175,9 @@ Status scan_key(session* ti, Storage storage, const std::string_view l_key,
                 std::vector<const Tuple*>& result, std::size_t max_size) {
     // as a precaution
     result.clear();
+
+    // optimize for small memory
+    ti->get_read_only_tuples().clear();
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_buf;
     constexpr std::size_t scan_buf_rec_ptr{1};
