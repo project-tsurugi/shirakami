@@ -20,6 +20,7 @@ add_subdirectory(rocksdb)
 add_subdirectory(ycsb)
 add_subdirectory(ycsb_mb_nc)
 add_subdirectory(ycsb_ol_bt_nc)
+add_subdirectory(bcc_8)
 
 if (BUILD_WP)
 # for wp bench.
@@ -27,5 +28,4 @@ if (BUILD_WP)
     add_subdirectory(bcc_5)
     add_subdirectory(bcc_6)
     add_subdirectory(bcc_7)
-    add_subdirectory(bcc_8)
 endif ()

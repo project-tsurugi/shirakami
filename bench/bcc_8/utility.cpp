@@ -8,8 +8,6 @@
 
 #include "memory.h"
 
-#include "concurrency_control/wp/include/garbage.h"
-
 #include "glog/logging.h"
 
 void check_flags() {

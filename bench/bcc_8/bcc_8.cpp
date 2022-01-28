@@ -75,7 +75,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
     Token token{};
     std::vector<opr_obj> opr_set;
-    opr_set.reserve(tx_size);
+    opr_set.reserve(FLAGS_tx_size);
     while (Status::OK != enter(token)) { _mm_pause(); }
 
     std::size_t ct_commit{0};
@@ -84,7 +84,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        gen_tx_rw(opr_set, key_size, rec_size, tx_size, 100, rnd, zipf);
+        gen_tx_rw(opr_set, key_size, rec_size, FLAGS_tx_size, 100, rnd, zipf);
 
         for (auto&& itr : opr_set) {
             Status rc{};
