@@ -42,7 +42,7 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) { // NOLINT
 }
 
 [[nodiscard]] std::string Tuple::Impl::get_value() { // NOLINT
-    std::unique_lock<std::mutex> lk{mtx_value_};
+    std::shared_lock<std::shared_mutex> lk{mtx_value_};
     return value_;
 }
 
