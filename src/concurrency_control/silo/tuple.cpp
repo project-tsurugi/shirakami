@@ -24,8 +24,8 @@ Tuple::Impl::Impl(const Impl& right) : key_(right.key_) {
 #if PARAM_VAL_PRO == 0
     if (right.need_delete_pvalue_) {
         this->need_delete_pvalue_ = true;
-        this->pvalue_.store(new std::string(*right.pvalue_.load(
-                                    std::memory_order_acquire)), // NOLINT
+        this->pvalue_.store(new std::string(*right.pvalue_.load( // NOLINT
+                                    std::memory_order_acquire)),
                             std::memory_order_release);
     } else {
         this->need_delete_pvalue_ = false;

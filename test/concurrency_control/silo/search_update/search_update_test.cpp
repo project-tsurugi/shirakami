@@ -39,11 +39,11 @@ private:
 
 /**
  * test list
- * point_read_update
- * repeatable_read_update_diff_payload_size_by_mt
+ * pointReadUpdate
+ * repeatableReadUpdateDiffPayloadSizeByMt
  */
 
-TEST_F(search_update, point_read_update) { // NOLINT
+TEST_F(search_update, pointReadUpdate) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
     std::string k("k");   // NOLINT
@@ -60,7 +60,7 @@ TEST_F(search_update, point_read_update) { // NOLINT
 }
 
 TEST_F(search_update, // NOLINT
-       repeatable_read_update_diff_payload_size_by_mt) {
+       repeatableReadUpdateDiffPayloadSizeByMt) {
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
     std::string k("k");       // NOLINT
@@ -80,7 +80,7 @@ TEST_F(search_update, // NOLINT
     std::mutex mtx_ready;
     std::condition_variable cond;
     auto work = [st, k, &ready, &mtx_ready, &cond, &work_a_cnt,
-                 &work_b_cnt](std::string v, bool is_a) {
+                 &work_b_cnt](const& std::string v, bool is_a) {
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
 
@@ -99,9 +99,8 @@ TEST_F(search_update, // NOLINT
             Tuple* tuple{};
             auto rc{search_key(s, st, k, tuple)};
             for (;;) {
-                if (rc == Status::OK) {
-                    break;
-                } else if (rc == Status::WARN_CONCURRENT_UPDATE) {
+                if (rc == Status::OK) { break; }
+                if (rc == Status::WARN_CONCURRENT_UPDATE) {
                     rc = search_key(s, st, k, tuple);
                 } else {
                     LOG(FATAL);
@@ -130,9 +129,8 @@ TEST_F(search_update, // NOLINT
             // go
             cond.notify_all();
             break;
-        } else {
-            _mm_pause();
         }
+        _mm_pause();
     }
 
     work_a.join();
