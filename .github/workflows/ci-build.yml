@@ -51,7 +51,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=OFF -DBUILD_WP=ON ..
           cmake --build . --target all --clean-first -- -j
 
-      - id: CTest
+      - id: CTest_CC
         name: CTest
         continue-on-error: false
         env:
@@ -60,9 +60,25 @@ jobs:
         run: |
           cd build
           ctest --verbose --timeout 20 -j 100
-          cd ../build_cpr
+
+      - id: CTest_CPR
+        name: CTest
+        continue-on-error: false
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build_cpr
           ctest --verbose --timeout 20 -j 100
-          cd ../build_wp
+
+      - id: CTest_WP
+        name: CTest
+        continue-on-error: false
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build_wp
           ctest --verbose --timeout 20 -j 100
 
       - id: Clang-Tidy
