@@ -52,7 +52,7 @@ jobs:
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest_CC
-        name: CTest
+        name: CTest_CC
         continue-on-error: false
         env:
           GTEST_OUTPUT: xml
@@ -62,7 +62,7 @@ jobs:
           ctest --verbose --timeout 20 -j 100
 
       - id: CTest_CPR
-        name: CTest
+        name: CTest_CPR
         continue-on-error: false
         env:
           GTEST_OUTPUT: xml
@@ -72,7 +72,7 @@ jobs:
           ctest --verbose --timeout 20 -j 100
 
       - id: CTest_WP
-        name: CTest
+        name: CTest_WP
         continue-on-error: false
         env:
           GTEST_OUTPUT: xml
