@@ -205,14 +205,14 @@ void write_phase(session* const ti, const tid_word& max_r_set,
     auto process = [ti, max_tid](write_set_obj* we_ptr) {
         Record* rec_ptr = we_ptr->get_rec_ptr();
 #ifdef CPR
-        std::string_view value_view{};
+        std::string value{};
         if (we_ptr->get_op() == OP_TYPE::INSERT) {
-            value_view = rec_ptr->get_tuple().get_value();
+            value = rec_ptr->get_tuple().get_value();
         } else if (we_ptr->get_op() == OP_TYPE::UPDATE) {
-            value_view = we_ptr->get_tuple().get_value();
+            value = we_ptr->get_tuple().get_value();
         }
         ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, we_ptr->get_op(),
-                              rec_ptr, value_view);
+                              rec_ptr, value);
 #endif
         auto safely_snap_work = [&rec_ptr, &ti] {
             if (snapshot_manager::get_snap_epoch(ti->get_epoch()) !=

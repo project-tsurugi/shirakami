@@ -214,7 +214,7 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
                 if (!elem.get_delete_op()) {
                     if (existing_record != nullptr) {
                         existing_record->get_tuple().get_pimpl()->set_value(
-                                elem.get_val().data(), elem.get_val().size());
+                                {elem.get_val().data(), elem.get_val().size()});
                     } else {
                         Record* rec_ptr = new Record(elem.get_key(), // NOLINT
                                                      elem.get_val());
