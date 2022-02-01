@@ -1,4 +1,8 @@
 
+#include <xmmintrin.h>
+
+#include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 
@@ -33,20 +37,109 @@ private:
     static inline std::once_flag init_google;
 };
 
+/**
+ * test list
+ * point_read_update
+ * repeatable_read_update_diff_payload_size_by_mt
+ */
+
 TEST_F(search_update, point_read_update) { // NOLINT
-    Storage storage{};
-    ASSERT_EQ(Status::OK, register_storage(storage));
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(upsert(s, storage, k, v), Status::OK);
+    ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-    ASSERT_EQ(Status::OK, update(s, storage, k, v2));
+    ASSERT_EQ(Status::OK, search_key(s, st, k, tuple));
+    ASSERT_EQ(Status::OK, update(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+}
+
+TEST_F(search_update, // NOLINT
+       repeatable_read_update_diff_payload_size_by_mt) {
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+    std::string k("k");       // NOLINT
+    std::string v1(8, 'v');   // NOLINT
+    std::string v2(100, 'v'); // NOLINT
+
+    // prepare data
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(upsert(s, st, k, v1), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+
+    std::atomic<std::size_t> ready{0};
+    std::atomic<std::size_t> work_a_cnt{0};
+    std::atomic<std::size_t> work_b_cnt{0};
+    std::mutex mtx_ready;
+    std::condition_variable cond;
+    auto work = [st, k, &ready, &mtx_ready, &cond, &work_a_cnt,
+                 &work_b_cnt](std::string v, bool is_a) {
+        Token s{};
+        ASSERT_EQ(Status::OK, enter(s));
+
+        ++ready;
+        // wait for other
+        {
+            std::unique_lock<std::mutex> lk{mtx_ready};
+
+            cond.wait(lk, [&ready] { return ready == 2; });
+        }
+        if (ready != 2) { LOG(FATAL); }
+
+        LOG(INFO) << "start work";
+
+        for (;;) {
+            Tuple* tuple{};
+            auto rc{search_key(s, st, k, tuple)};
+            for (;;) {
+                if (rc == Status::OK) {
+                    break;
+                } else if (rc == Status::WARN_CONCURRENT_UPDATE) {
+                    rc = search_key(s, st, k, tuple);
+                } else {
+                    LOG(FATAL);
+                }
+            }
+            ASSERT_EQ(Status::OK, update(s, st, k, v));
+            rc = commit(s); // NOLINT
+            if (rc == Status::OK) {
+                if (is_a) {
+                    ++work_a_cnt;
+                } else {
+                    ++work_b_cnt;
+                }
+            }
+            if (work_a_cnt > 100 && work_b_cnt > 100) { break; } // NOLINT
+        }
+        ASSERT_EQ(Status::OK, leave(s));
+    };
+
+    std::thread work_a(work, v1, true);
+    std::thread work_b(work, v2, false);
+
+    // ready
+    for (;;) {
+        if (ready == 2) {
+            // go
+            cond.notify_all();
+            break;
+        } else {
+            _mm_pause();
+        }
+    }
+
+    work_a.join();
+    work_b.join();
+
+    LOG(INFO) << "work_a_cnt:\t" << work_a_cnt;
+    LOG(INFO) << "work_b_cnt:\t" << work_b_cnt;
 }
 
 } // namespace shirakami::testing
