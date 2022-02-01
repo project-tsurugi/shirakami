@@ -92,13 +92,6 @@ Available options:
        * what container read set use. Mode 0 is vector. Mode 1 is unorderd_map.
        * Default: `0`
 
-    - `-DPARAM_VAL_PRO=<0 or 1>`
-       * <font color="red"> It is under development and should not be used.
-       </font>
-       * what protocol value operating use. mode 0 is rcu, mode 1 is reader-
-       writer mtx.
-       * Default: `0`
-
     - `BUILD_WP=ON`
        * Enable write preserve logic in concurrency control.
        <font color="red"> Note that write preserve logic is developed now, so

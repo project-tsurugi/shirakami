@@ -27,7 +27,7 @@ public:
     Tuple& operator=(Tuple&& right);      // NOLINT
 
     [[nodiscard]] std::string_view get_key() const;   // NOLINT
-    [[nodiscard]] std::string_view get_value() const; // NOLINT
+    [[nodiscard]] std::string get_value() const; // NOLINT
     Impl* get_pimpl();                                // NOLINT
     const Impl* get_pimpl_cst() const;                // NOLINT
 

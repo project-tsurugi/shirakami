@@ -21,15 +21,18 @@ namespace shirakami {
 class write_set_obj { // NOLINT
 public:
     // for insert/delete operation
-    write_set_obj(Storage storage, OP_TYPE op, Record* rec_ptr) : op_(op), rec_ptr_(rec_ptr) {
-        storage_ = {reinterpret_cast<char*>(&storage), sizeof(storage)}; // NOLINT
+    write_set_obj(Storage storage, OP_TYPE op, Record* rec_ptr)
+        : op_(op), rec_ptr_(rec_ptr) {
+        storage_ = {reinterpret_cast<char*>(&storage),
+                    sizeof(storage)}; // NOLINT
     }
 
     // for update/
-    write_set_obj(Storage storage, std::string_view key, std::string_view val, const OP_TYPE op,
-                  Record* const rec_ptr)
+    write_set_obj(Storage storage, std::string_view key, std::string_view val,
+                  const OP_TYPE op, Record* const rec_ptr)
         : op_(op), rec_ptr_(rec_ptr), tuple_(key, val) {
-        storage_ = {reinterpret_cast<char*>(&storage), sizeof(storage)}; // NOLINT
+        storage_ = {reinterpret_cast<char*>(&storage),
+                    sizeof(storage)}; // NOLINT
     }
 
     write_set_obj(const write_set_obj& right) = delete;
@@ -68,9 +71,7 @@ public:
      * @return Tuple&
      */
     Tuple& get_tuple(const OP_TYPE op) { // NOLINT
-        if (op == OP_TYPE::UPDATE) {
-            return get_tuple_to_local();
-        }
+        if (op == OP_TYPE::UPDATE) { return get_tuple_to_local(); }
         // insert/delete
         return get_tuple_to_db();
     }
@@ -80,9 +81,7 @@ public:
      * @return const Tuple& const
      */
     [[nodiscard]] const Tuple& get_tuple(const OP_TYPE op) const { // NOLINT
-        if (op == OP_TYPE::UPDATE) {
-            return get_tuple_to_local();
-        }
+        if (op == OP_TYPE::UPDATE) { return get_tuple_to_local(); }
         // insert/delete
         return get_tuple_to_db();
     }
@@ -123,12 +122,10 @@ public:
         (this->get_op() == OP_TYPE::UPDATE ? this->get_tuple_to_local()
                                            : this->get_tuple_to_db())
                 .get_pimpl()
-                ->set_value(val.data(), val.size());
+                ->set_value(val);
     }
 
-    void set_op(OP_TYPE new_op) {
-        op_ = new_op;
-    }
+    void set_op(OP_TYPE new_op) { op_ = new_op; }
 
 private:
     std::string storage_;
@@ -146,7 +143,8 @@ public:
     read_set_obj() { this->rec_ptr = nullptr; }
 
     explicit read_set_obj(Storage storage, const Record* rec_ptr) {
-        storage_ = {reinterpret_cast<char*>(&storage), sizeof(storage)}; // NOLINT
+        storage_ = {reinterpret_cast<char*>(&storage),
+                    sizeof(storage)}; // NOLINT
         this->rec_ptr = rec_ptr;
     }
 

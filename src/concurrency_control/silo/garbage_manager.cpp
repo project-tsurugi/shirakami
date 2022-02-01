@@ -29,23 +29,6 @@ void gc_handler::clear_rec() {
     rec_cont.clear();
 }
 
-void gc_handler::clear_val() {
-    auto& cache_val = get_cache_val();
-    if (cache_val.first != nullptr) {
-        delete cache_val.first; // NOLINT
-        cache_val = {};
-    }
-    auto& val_cont = get_val_cont();
-    while (!val_cont.empty()) {
-        val_cont.try_pop(cache_val);
-        if (cache_val.first != nullptr) {
-            delete cache_val.first; // NOLINT
-            cache_val = {};
-        }
-    }
-    val_cont.clear();
-}
-
 void gc_handler::clear_snap() {
     auto& cache_snap = get_cache_snap();
     if (cache_snap.second != nullptr) {
@@ -86,25 +69,6 @@ void gc_handler::gc_rec() {
     }
 }
 
-void gc_handler::gc_val() {
-    auto& cont = get_val_cont();
-    auto& cache = get_cache_val();
-
-    while (!cont.empty() || cache.first != nullptr) {
-        if (cache.first == nullptr && !cont.try_pop(cache)) {
-            break; // nothing
-        }
-        // cache is not null
-
-        if (cache.second < epoch::get_reclamation_epoch()) {
-            delete cache.first; // NOLINT
-            cache = {};
-        } else {
-            break;
-        }
-    }
-}
-
 void gc_handler::gc_snap() {
     auto& cont = get_snap_cont();
     auto& cache = get_cache_snap();
@@ -135,7 +99,7 @@ void gc_handler::gc_snap() {
         auto process = [&gc_handle]() {
             gc_handle.clear();
         };
-        if (gc_handle.get_rec_cont().size() > 1000 || gc_handle.get_val_cont().size() > 1000 || gc_handle.get_snap_cont().size() > 1000) { // NOLINT
+        if (gc_handle.get_rec_cont().size() > 1000 || gc_handle.get_snap_cont().size() > 1000) { // NOLINT
             // Considering clean up time of test and benchmark.
             thv.emplace_back(process);
         } else {

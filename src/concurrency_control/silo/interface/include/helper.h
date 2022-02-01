@@ -32,7 +32,7 @@ inline std::atomic<bool> initialized_{false};
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-Status read_record(Record &res, const Record* dest, bool read_value = true);  // NOLINT
+Status read_record(Record &res, Record* dest, bool read_value = true);  // NOLINT
 
 /**
  * @brief setter of @a intialized_.

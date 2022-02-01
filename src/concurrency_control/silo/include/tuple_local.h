@@ -30,88 +30,39 @@ public:
 
     Impl& operator=(Impl&& right); // NOLINT
 
-    ~Impl() {
-#if PARAM_VAL_PRO == 0
-        if (this->need_delete_pvalue_) {
-            delete pvalue_.load(std::memory_order_acquire); // NOLINT
-        }
-#endif
-    }
-
+    /**
+     * @brief Get the key object
+     * @note key will not be changed.
+     * @return std::string_view 
+     */
     [[nodiscard]] std::string_view get_key() const; // NOLINT
 
-    [[nodiscard]] std::string_view get_value() const; // NOLINT
-
-#if PARAM_VAL_PRO == 0
-    [[nodiscard]] const std::string* get_val_ptr() const {
-        return pvalue_.load(std::memory_order_acquire);
-    }
-#endif
+    /**
+     * @brief Get the value object
+     * @note value may be changed.
+     * @return std::string 
+     */
+    [[nodiscard]] std::string get_value(); // NOLINT
 
     void reset();
 
-    /**
-     * @brief set key and value
-     * @details Substitute argment for key_.
-     * If a memory area has already been allocated for value, that area is
-     * released. Allocates a new memory area for value and initializes it.
-     * @param[in] key_ptr Pointer to key
-     * @param[in] key_length Size of key
-     * @param[in] value_ptr Pointer to value
-     * @param[in] value_length Size of value
-     * @return void
-     */
-    void set(const char* key_ptr, std::size_t key_length, const char* value_ptr,
-             std::size_t value_length);
+    void set(std::string_view const key, std::string_view const val) {
+        key_ = key;
+        std::unique_lock<std::mutex> lk{mtx_value_};
+        value_ = val;
+    }
 
-    /**
-     * @brief For reading record not to deep copy value.
-     */
-    void set(std::string_view key, const std::string* value);
+    [[maybe_unused]] void set_key(std::string_view key) { key_ = key; }
 
-#if PARAM_VAL_PRO == 1
-    void set(std::string_view key, std::string_view val);
-#endif
-
-    /**
-     * @brief set key of data in local
-     * @details The memory area of old local data is overwritten..
-     * @return void
-     */
-    [[maybe_unused]] void set_key(const char* key_ptr, std::size_t key_length);
-
-    /**
-     * @brief set value of data in local
-     * @details The memory area of old local data is released immediately.
-     * @return void
-     */
-    void set_value(const char* value_ptr, std::size_t value_length);
-
-#if PARAM_VAL_PRO == 0
-    /**
-     * @brief Set value
-     * @details Update value and preserve old value, so this
-     * function is called by updater in write_phase.
-     * @param[in] value_ptr Pointer to value
-     * @param[in] value_length Size of value
-     * @param[out] old_value To tell the caller the old value.
-     * @return void
-     */
-    void set_value(const char* value_ptr, std::size_t value_length,
-                   std::string** old_value);
-#elif PARAM_VAL_PRO == 1
-    void set_value(std::string_view value) { value_ = value; }
-#endif
+    [[maybe_unused]] void set_value(std::string_view val) {
+        std::unique_lock<std::mutex> lk{mtx_value_};
+        value_ = val;
+    }
 
 private:
     std::string key_{};
-
-#if PARAM_VAL_PRO == 0
-    std::atomic<std::string*> pvalue_{nullptr};
-    bool need_delete_pvalue_{false};
-#elif PARAM_VAL_PRO == 1
     std::string value_{};
-#endif
+    std::mutex mtx_value_{};
 };
 
 } // namespace shirakami

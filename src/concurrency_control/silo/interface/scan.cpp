@@ -36,7 +36,8 @@ Status close_scan(Token token, ScanHandle handle) { // NOLINT
 Status open_scan(Token token, Storage storage,
                  const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
-                 const scan_endpoint r_end, ScanHandle& handle, std::size_t const max_size) {
+                 const scan_endpoint r_end, ScanHandle& handle,
+                 std::size_t const max_size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
@@ -178,7 +179,8 @@ retry_by_continue:
             ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
 
-    Status rr = read_record(rsob.get_rec_read(), std::get<0>(*itr));
+    Status rr = read_record(rsob.get_rec_read(),
+                            const_cast<Record*>(std::get<0>(*itr)));
     if (rr != Status::OK) { return rr; }
 #if PARAM_READ_SET_CONT == 0
     ti->get_read_set().emplace_back(std::move(rsob));

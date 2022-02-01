@@ -270,31 +270,10 @@ void write_phase(session* const ti, const tid_word& max_r_set,
                     rec_ptr->set_version(ti->get_version() + 1);
                 }
 #endif
-// update value
-#if PARAM_VAL_PRO == 0
-                std::string* old_value{};
-#endif
-                std::string_view new_value_view =
+                // update value
+                std::string new_value =
                         we_ptr->get_tuple(we_ptr->get_op()).get_value();
-                rec_ptr->get_tuple().get_pimpl()->set_value(
-                        new_value_view.data(), new_value_view.size()
-#if PARAM_VAL_PRO == 0
-                                                       ,
-                        &old_value);
-#elif PARAM_VAL_PRO == 1
-                );
-#endif
-#if PARAM_VAL_PRO == 0
-                if (old_value != nullptr) {
-                    ti->get_gc_handle().get_val_cont().push(
-                            std::make_pair(old_value, ti->get_epoch()));
-                } else {
-                    /**
-                     *  null insert is not expected.
-                     */
-                    LOG(FATAL) << "Null insert is not expected.";
-                }
-#endif
+                rec_ptr->get_tuple().get_pimpl()->set_value(new_value);
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }

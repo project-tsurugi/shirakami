@@ -38,36 +38,27 @@ static void set_garbage_manager_thread_end(const bool tf) {
 
 class gc_handler {
 public:
-    using value_type = std::pair<std::string*, epoch::epoch_t>;
     using snap_type = std::pair<epoch::epoch_t, Record*>;
 
     void clear() {
         clear_rec();
         clear_snap();
-        clear_val();
     }
 
     void clear_rec();
 
     void clear_snap();
 
-    void clear_val();
-
     void gc_rec();
 
     void gc_snap();
 
-    void gc_val();
-
     void gc() {
         gc_rec();
         gc_snap();
-        gc_val();
     }
 
     Record*& get_cache_rec() { return cache_rec_; }
-
-    value_type& get_cache_val() { return cache_val_; }
 
     snap_type& get_cache_snap() { return cache_snap_; }
 
@@ -75,13 +66,9 @@ public:
 
     concurrent_queue<snap_type>& get_snap_cont() { return snap_cont_; }
 
-    concurrent_queue<value_type>& get_val_cont() { return val_cont_; }
-
 private:
     Record* cache_rec_{};
     concurrent_queue<Record*> rec_cont_;
-    value_type cache_val_{};
-    concurrent_queue<value_type> val_cont_;
     snap_type cache_snap_{};
     concurrent_queue<snap_type> snap_cont_;
 };
