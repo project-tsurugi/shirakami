@@ -21,6 +21,7 @@ add_subdirectory(ycsb)
 add_subdirectory(ycsb_mb_nc)
 add_subdirectory(ycsb_ol_bt_nc)
 add_subdirectory(bcc_8)
+add_subdirectory(bcc_9)
 
 if (BUILD_WP)
 # for wp bench.
