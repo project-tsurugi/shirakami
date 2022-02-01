@@ -7,6 +7,8 @@
 
 namespace shirakami {
 
+Tuple::Impl::Impl(const Impl& right) : key_(right.key_), val_(right.val_) {}
+
 Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}
 
 Tuple::Tuple(std::string_view key, std::string_view val)
@@ -38,6 +40,6 @@ const Tuple::Impl* Tuple::get_pimpl_cst() const { // NOLINT
 
 std::string_view Tuple::get_key() const { return pimpl_->get_key(); }
 
-std::string_view Tuple::get_value() const { return pimpl_->get_val(); }
+std::string Tuple::get_value() const { return pimpl_->get_val(); }
 
 } // namespace shirakami
