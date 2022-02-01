@@ -270,13 +270,21 @@ void write_phase(session* const ti, const tid_word& max_r_set,
                     rec_ptr->set_version(ti->get_version() + 1);
                 }
 #endif
-                // update value
+// update value
+#if PARAM_VAL_PRO == 0
                 std::string* old_value{};
+#endif
                 std::string_view new_value_view =
                         we_ptr->get_tuple(we_ptr->get_op()).get_value();
                 rec_ptr->get_tuple().get_pimpl()->set_value(
-                        new_value_view.data(), new_value_view.size(),
+                        new_value_view.data(), new_value_view.size()
+#if PARAM_VAL_PRO == 0
+                                                       ,
                         &old_value);
+#elif PARAM_VAL_PRO == 1
+                );
+#endif
+#if PARAM_VAL_PRO == 0
                 if (old_value != nullptr) {
                     ti->get_gc_handle().get_val_cont().push(
                             std::make_pair(old_value, ti->get_epoch()));
@@ -286,6 +294,7 @@ void write_phase(session* const ti, const tid_word& max_r_set,
                      */
                     LOG(FATAL) << "Null insert is not expected.";
                 }
+#endif
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;
             }
@@ -313,6 +322,7 @@ void write_phase(session* const ti, const tid_word& max_r_set,
 #endif
                 storeRelease(rec_ptr->get_tidw().get_obj(),
                              delete_tid.get_obj());
+                // for delayed unhook
                 ti->get_cleanup_handle().push(
                         {std::string(we_ptr->get_storage()), rec_ptr});
                 break;

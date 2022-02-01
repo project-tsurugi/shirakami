@@ -6,6 +6,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <string>
 
 #include "shirakami/tuple.h"
@@ -30,16 +31,22 @@ public:
     Impl& operator=(Impl&& right); // NOLINT
 
     ~Impl() {
+#if PARAM_VAL_PRO == 0
         if (this->need_delete_pvalue_) {
             delete pvalue_.load(std::memory_order_acquire); // NOLINT
         }
+#endif
     }
 
     [[nodiscard]] std::string_view get_key() const; // NOLINT
 
     [[nodiscard]] std::string_view get_value() const; // NOLINT
 
-    [[nodiscard]] const std::string* get_val_ptr() const { return pvalue_.load(std::memory_order_acquire); }
+#if PARAM_VAL_PRO == 0
+    [[nodiscard]] const std::string* get_val_ptr() const {
+        return pvalue_.load(std::memory_order_acquire);
+    }
+#endif
 
     void reset();
 
@@ -62,6 +69,10 @@ public:
      */
     void set(std::string_view key, const std::string* value);
 
+#if PARAM_VAL_PRO == 1
+    void set(std::string_view key, std::string_view val);
+#endif
+
     /**
      * @brief set key of data in local
      * @details The memory area of old local data is overwritten..
@@ -76,6 +87,7 @@ public:
      */
     void set_value(const char* value_ptr, std::size_t value_length);
 
+#if PARAM_VAL_PRO == 0
     /**
      * @brief Set value
      * @details Update value and preserve old value, so this
@@ -87,11 +99,19 @@ public:
      */
     void set_value(const char* value_ptr, std::size_t value_length,
                    std::string** old_value);
+#elif PARAM_VAL_PRO == 1
+    void set_value(std::string_view value) { value_ = value; }
+#endif
 
 private:
     std::string key_{};
+
+#if PARAM_VAL_PRO == 0
     std::atomic<std::string*> pvalue_{nullptr};
     bool need_delete_pvalue_{false};
+#elif PARAM_VAL_PRO == 1
+    std::string value_{};
+#endif
 };
 
 } // namespace shirakami

@@ -253,7 +253,11 @@ Status read_record(Record& res, const Record* const dest,
         if (read_value) {
             res.get_tuple().get_pimpl()->set(
                     dest->get_tuple().get_key(),
+#if PARAM_VAL_PRO == 0
                     dest->get_tuple().get_pimpl_cst()->get_val_ptr());
+#elif PARAM_VAL_PRO == 1
+                    dest->get_tuple().get_pimpl_cst()->get_value());
+#endif
         }
         // todo optimization by shallow copy about key (Now, key is deep copy, value is shallow copy).
 
