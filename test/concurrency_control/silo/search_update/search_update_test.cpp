@@ -80,7 +80,7 @@ TEST_F(search_update, // NOLINT
     std::mutex mtx_ready;
     std::condition_variable cond;
     auto work = [st, k, &ready, &mtx_ready, &cond, &work_a_cnt,
-                 &work_b_cnt](const& std::string v, bool is_a) {
+                 &work_b_cnt](std::string const& v, bool is_a) {
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
 
