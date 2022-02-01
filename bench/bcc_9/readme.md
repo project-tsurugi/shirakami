@@ -1,4 +1,4 @@
-# BCC-9 value 操作戦略に関するベンチマーク
+# (old benchmark) BCC-9 value 操作戦略に関するベンチマーク
 
 ## 目的
 

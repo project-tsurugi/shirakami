@@ -127,9 +127,9 @@ main() {
     echo "start main"
     # cleanup escaped pdf
     rm -f /tmp/bcc_9*pdf
-    build 1
-    exp
-    gen_graph 1
+    #build 1
+    #exp
+    #gen_graph 1
     build 2
     exp
     gen_graph 2
