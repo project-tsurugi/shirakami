@@ -22,6 +22,8 @@ public:
 
     Impl(Impl&& right);
 
+    ~Impl() = default;
+
     /**
      * @brief copy assign operator
      * @pre this is called by read_record function at xact.concurrency_control only .

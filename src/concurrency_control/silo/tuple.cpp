@@ -49,7 +49,6 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) { // NOLINT
 void Tuple::Impl::reset() {
     key_.clear();
     value_.clear();
-    return;
 }
 
 Tuple::Tuple() : pimpl_(std::make_unique<Impl>()) {}

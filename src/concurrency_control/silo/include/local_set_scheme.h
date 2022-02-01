@@ -23,16 +23,16 @@ public:
     // for insert/delete operation
     write_set_obj(Storage storage, OP_TYPE op, Record* rec_ptr)
         : op_(op), rec_ptr_(rec_ptr) {
-        storage_ = {reinterpret_cast<char*>(&storage),
-                    sizeof(storage)}; // NOLINT
+        storage_ = {reinterpret_cast<char*>(&storage), // NOLINT
+                    sizeof(storage)};
     }
 
     // for update/
     write_set_obj(Storage storage, std::string_view key, std::string_view val,
                   const OP_TYPE op, Record* const rec_ptr)
         : op_(op), rec_ptr_(rec_ptr), tuple_(key, val) {
-        storage_ = {reinterpret_cast<char*>(&storage),
-                    sizeof(storage)}; // NOLINT
+        storage_ = {reinterpret_cast<char*>(&storage), // NOLINT
+                    sizeof(storage)};
     }
 
     write_set_obj(const write_set_obj& right) = delete;
@@ -143,8 +143,8 @@ public:
     read_set_obj() { this->rec_ptr = nullptr; }
 
     explicit read_set_obj(Storage storage, const Record* rec_ptr) {
-        storage_ = {reinterpret_cast<char*>(&storage),
-                    sizeof(storage)}; // NOLINT
+        storage_ = {reinterpret_cast<char*>(&storage), // NOLINT
+                    sizeof(storage)};
         this->rec_ptr = rec_ptr;
     }
 
