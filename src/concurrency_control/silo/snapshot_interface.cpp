@@ -17,7 +17,8 @@ namespace shirakami::snapshot_interface {
 
 extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key, // NOLINT
-                        scan_endpoint r_end, ScanHandle& handle, std::size_t max_size) {
+                        scan_endpoint r_end, ScanHandle& handle,
+                        std::size_t max_size) {
 
     for (ScanHandle i = 0;; ++i) {
         auto itr = ti->get_scan_cache().find(i);
@@ -133,13 +134,13 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
              * So this case should escape the value to other memory address.
              */
             if (tid.get_absent()) return Status::WARN_NOT_FOUND;
-            Tuple escape_tuple{};
-            if (read_value) { escape_tuple = rec_ptr->get_tuple(); }
+            std::string read_value_st;
+            if (read_value) { read_value_st = rec_ptr->get_tuple().get_value(); }
             if (tid == loadAcquire(rec_ptr->get_tidw().get_obj())) {
                 // success atomic read
                 if (read_value) {
-                    ti->get_read_only_tuples().emplace_back(
-                            std::move(escape_tuple));
+                    ti->get_read_only_tuples().emplace_back(rec_ptr->get_key(),
+                                                            read_value_st);
                     tuple = &ti->get_read_only_tuples().back();
                 }
                 return Status::OK;
