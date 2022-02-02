@@ -97,12 +97,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 Tuple* tp{};
                 auto rc{search_key(token, get_st(), itr.get_key(), tp)};
-                for (;;) {
-                    if (rc == Status::OK) {
-                        break;
-                    } else {
-                        LOG(FATAL) << "ec: " << rc << std::endl;
-                    }
+                if (rc != Status::OK) {
+                    LOG(FATAL) << "ec: " << rc << std::endl;
                 }
             } else {
                 LOG(FATAL) << "unkown operation";
