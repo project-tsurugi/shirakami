@@ -36,14 +36,10 @@ TEST_F(storage, multiple_storages) { // NOLINT
     ASSERT_EQ(Status::OK, commit(token)); // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(Status::OK, upsert(token, storage0, k, v1));
-#ifdef CPR
-    while (Status::OK != search_key(token, storage1, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(token, storage1, k, tuple));
-#endif
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v0.data(), v0.size()), 0);
+    std::string val{};
+    tuple->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v0.data(), v0.size()), 0);
     ASSERT_EQ(Status::OK, commit(token)); // NOLINT
 }
 

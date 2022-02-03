@@ -340,7 +340,11 @@ void create_checkpoint() {
         if (scan_res.empty()) { return; }
         for (auto&& elem : scan_res) {
             Tuple& tuple{(*std::get<1>(elem))->get_tuple()};
-            l_recs.emplace_back(st_view, tuple.get_key(), tuple.get_value());
+            std::string key{};
+            tuple.get_key(key);
+            std::string val{};
+            tuple.get_value(val);
+            l_recs.emplace_back(st_view, key, val);
         }
     };
 

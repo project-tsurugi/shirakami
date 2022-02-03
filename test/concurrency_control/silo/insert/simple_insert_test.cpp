@@ -65,10 +65,11 @@ TEST_F(simple_insert, insert) { // NOLINT
         ASSERT_NE(rec_ptr, nullptr);
         {
             Tuple& tuple_ref{rec_ptr->get_tuple()};
-            ASSERT_EQ(memcmp(tuple_ref.get_key().data(), key_view.data(),
-                             key_view.size()),
-                      0);
-            std::string read_value{tuple_ref.get_value()};
+            std::string key{};
+            tuple_ref.get_key(key);
+            ASSERT_EQ(memcmp(key.data(), key_view.data(), key_view.size()), 0);
+            std::string read_value{};
+            tuple_ref.get_value(read_value);
             ASSERT_EQ(memcmp(read_value.data(), value_view.data(),
                              value_view.size()),
                       0);

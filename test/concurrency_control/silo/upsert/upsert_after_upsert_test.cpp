@@ -60,7 +60,9 @@ TEST_F(upsert_after_upsert, double_upsert) { // NOLINT
     ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v3));
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
               search_key(s, st, k, tuple));
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v3.data(), v3.size()), 0);
+    std::string val{};
+    tuple->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v3.data(), v3.size()), 0);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }

@@ -135,12 +135,13 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
              */
             if (tid.get_absent()) return Status::WARN_NOT_FOUND;
             std::string read_value_st;
-            if (read_value) { read_value_st = rec_ptr->get_tuple().get_value(); }
+            if (read_value) { rec_ptr->get_tuple().get_value(read_value_st); }
             if (tid == loadAcquire(rec_ptr->get_tidw().get_obj())) {
                 // success atomic read
                 if (read_value) {
-                    ti->get_read_only_tuples().emplace_back(rec_ptr->get_key(),
-                                                            read_value_st);
+                    std::string key{};
+                    rec_ptr->get_key(key);
+                    ti->get_read_only_tuples().emplace_back(key, read_value_st);
                     tuple = &ti->get_read_only_tuples().back();
                 }
                 return Status::OK;

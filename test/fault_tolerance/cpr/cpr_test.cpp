@@ -38,7 +38,7 @@ public:
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
@@ -99,19 +99,26 @@ TEST_F(cpr_test, cpr_action_against_null_db) { // NOLINT
 }
 
 TEST_F(cpr_test, cpr_recovery) { // NOLINT
-    init(true, get_log_dir()); // NOLINT
+    init(true, get_log_dir());   // NOLINT
     Token token{};
     ASSERT_EQ(enter(token), Status::OK);
     Tuple* tup{};
     ASSERT_EQ(search_key(token, storage, "a", tup), Status::OK);
-    ASSERT_EQ(std::string(tup->get_key()), "a");   // NOLINT
-    ASSERT_EQ(std::string(tup->get_value()), "A"); // NOLINT
-    std::string tup_key{tup->get_key()};
+    std::string key{};
+    tup->get_key(key);
+    ASSERT_EQ(key, "a"); // NOLINT
+    std::string val{};
+    tup->get_value(val);
+    ASSERT_EQ(val, "A"); // NOLINT
+    std::string tup_key{};
+    tup->get_key(tup_key);
     Tuple* tup2{};
     ASSERT_EQ(search_key(token, storage, "b", tup2), Status::OK);
-    ASSERT_EQ(std::string(tup2->get_key()), "b");   // NOLINT
-    ASSERT_EQ(std::string(tup2->get_value()), "B"); // NOLINT
-    ASSERT_EQ(commit(token), Status::OK);           // NOLINT
+    tup2->get_key(key);
+    ASSERT_EQ(key, "b"); // NOLINT
+    tup2->get_value(val);
+    ASSERT_EQ(val, "B");                  // NOLINT
+    ASSERT_EQ(commit(token), Status::OK); // NOLINT
     ASSERT_EQ(delete_record(token, storage, tup_key), Status::OK);
     ASSERT_EQ(commit(token), Status::OK); // NOLINT
     cpr::wait_next_checkpoint();
@@ -126,9 +133,13 @@ TEST_F(cpr_test, cpr_recovery_again) { // NOLINT
     ASSERT_EQ(enter(token), Status::OK);
     Tuple* tup{};
     ASSERT_EQ(search_key(token, storage, "b", tup), Status::OK);
-    ASSERT_EQ(std::string(tup->get_key()), "b");   // NOLINT
-    ASSERT_EQ(std::string(tup->get_value()), "B"); // NOLINT
-    ASSERT_EQ(commit(token), Status::OK);          // NOLINT
+    std::string key{};
+    tup->get_key(key);
+    ASSERT_EQ(key, "b"); // NOLINT
+    std::string val{};
+    tup->get_value(val);
+    ASSERT_EQ(val, "B");                  // NOLINT
+    ASSERT_EQ(commit(token), Status::OK); // NOLINT
     ASSERT_EQ(leave(token), Status::OK);
     fin(false); // NOLINT
 }

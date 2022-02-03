@@ -34,17 +34,19 @@ public:
 
     /**
      * @brief Get the key object
+     * @param out[out] result
      * @note key will not be changed.
-     * @return std::string_view 
+     * @return void
      */
-    [[nodiscard]] std::string_view get_key() const; // NOLINT
+    void get_key(std::string& out) const; // NOLINT
 
     /**
      * @brief Get the value object
+     * @param out[out] result
      * @note value may be changed.
-     * @return std::string 
+     * @return void
      */
-    [[nodiscard]] std::string get_value(); // NOLINT
+    void get_value(std::string& out); // NOLINT
 
     void reset();
 

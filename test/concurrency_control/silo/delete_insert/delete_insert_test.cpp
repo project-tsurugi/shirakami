@@ -80,7 +80,9 @@ TEST_F(delete_insert, delete_insert_delete) { // NOLINT
     ASSERT_NE(rec_d_ptr, nullptr);
     Record* rec_ptr{*rec_d_ptr};
     ASSERT_NE(rec_ptr, nullptr);
-    ASSERT_EQ(rec_ptr->get_tuple().get_value(), v);
+    std::string val{};
+    rec_ptr->get_tuple().get_value(val);
+    ASSERT_EQ(val, v);
 }
 
 } // namespace shirakami::testing

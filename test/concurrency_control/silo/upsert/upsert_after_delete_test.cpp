@@ -43,8 +43,8 @@ public:
 
 TEST_F(upsert_after_delete, upsert) { // NOLINT
     register_storage(st);
-    std::string k("k");  // NOLINT
-    std::string v("v");  // NOLINT
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
@@ -83,7 +83,9 @@ TEST_F(upsert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Tuple* tup{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, tup));
-    ASSERT_EQ(memcmp(tup->get_value().data(), v2.data(), v2.size()), 0);
+    std::string val{};
+    tup->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

@@ -98,7 +98,9 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
                     _mm_pause();
                 }
                 std::size_t v{};
-                memcpy(&v, tuple->get_value().data(), sizeof(v));
+                std::string val{};
+                tuple->get_value(val);
+                memcpy(&v, val.data(), sizeof(v));
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
@@ -127,7 +129,9 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
         Tuple* tuple{};
         ASSERT_EQ(search_key(s, storage, elem, tuple), Status::OK);
         std::size_t v{};
-        memcpy(&v, tuple->get_value().data(), sizeof(v));
+        std::string val{};
+        tuple->get_value(val);
+        memcpy(&v, val.data(), sizeof(v));
         ASSERT_EQ(v, thread_num);
     }
     commit(s);

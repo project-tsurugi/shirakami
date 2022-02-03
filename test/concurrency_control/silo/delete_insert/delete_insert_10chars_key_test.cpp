@@ -30,16 +30,13 @@ TEST_F(delete_insert_10chars_key, delete_insert_with_10chars) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> records{};
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, records)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, records));
-#endif
+    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k,
+                                   scan_endpoint::INCLUSIVE, records));
     EXPECT_EQ(1, records.size());
     for (auto&& t : records) {
-        ASSERT_EQ(Status::OK, delete_record(s, storage, t->get_key()));
+        std::string key{};
+        t->get_key(key);
+        ASSERT_EQ(Status::OK, delete_record(s, storage, key));
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

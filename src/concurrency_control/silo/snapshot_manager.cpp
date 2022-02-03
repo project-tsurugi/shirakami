@@ -28,7 +28,8 @@ void snapshot_manager_func() {
      */
     std::pair<std::string, Record*> cache_for_queue{"", nullptr};
 
-    while (likely(!snapshot_manager_thread_end.load(std::memory_order_acquire))) {
+    while (likely(
+            !snapshot_manager_thread_end.load(std::memory_order_acquire))) {
         // todo parametrize  for build options.
         sleepMs(1);
 
@@ -61,7 +62,9 @@ void snapshot_manager_func() {
                     yakushima::enter(yaku_token);
                     yaku_entered = true;
                 }
-                yakushima::remove(yaku_token, elem.first, elem.second->get_tuple().get_key());
+                std::string key{};
+                elem.second->get_tuple().get_key(key);
+                yakushima::remove(yaku_token, elem.first, key);
                 release_rec_cont.emplace_back(
                         std::make_pair(maybe_smallest_ew, elem.second));
             } else {
@@ -69,16 +72,15 @@ void snapshot_manager_func() {
                 break;
             }
         }
-        if (yaku_entered) {
-            yakushima::leave(yaku_token);
-        }
+        if (yaku_entered) { yakushima::leave(yaku_token); }
 
         if (!release_rec_cont.empty()) {
             std::size_t erase_num{0};
             for (auto&& elem : release_rec_cont) {
                 if (elem.first < maybe_smallest_ew) {
 #ifdef CPR
-                    if (elem.second->get_version() + 1 >= cpr::global_phase_version::get_gpv().get_version()) {
+                    if (elem.second->get_version() + 1 >=
+                        cpr::global_phase_version::get_gpv().get_version()) {
                         break;
                     }
 #endif

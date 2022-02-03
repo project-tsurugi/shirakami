@@ -35,14 +35,14 @@ void session::clean_up_scan_caches() {
 #endif
         Tuple& tuple = record.get_tuple();
         std::cout << "tidw_ :vv" << record.get_tidw() << std::endl;
-        std::string_view key_view;
-        std::string_view value_view;
-        key_view = tuple.get_key();
-        value_view = tuple.get_value();
-        std::cout << "key : " << key_view << std::endl;
-        std::cout << "key_size : " << key_view.size() << std::endl;
-        std::cout << "value : " << value_view << std::endl;
-        std::cout << "value_size : " << value_view.size() << std::endl;
+        std::string key;
+        std::string val;
+        tuple.get_key(key);
+        tuple.get_value(val);
+        std::cout << "key : " << key << std::endl;
+        std::cout << "key_size : " << key.size() << std::endl;
+        std::cout << "value : " << val << std::endl;
+        std::cout << "value_size : " << val.size() << std::endl;
         std::cout << "----------" << std::endl;
         ++ctr;
     }
@@ -53,14 +53,15 @@ Status session::check_delete_after_write(Record* rec_ptr) {
     auto process = [this](write_set_obj* we_ptr) {
         if (we_ptr->get_op() == OP_TYPE::INSERT) {
             Record* record = we_ptr->get_rec_ptr();
-            std::string_view key_view = record->get_tuple().get_key();
+            std::string key{};
+            record->get_tuple().get_key(key);
             yakushima::remove(get_yakushima_token(), we_ptr->get_storage(),
-                              key_view);
+                              key);
             this->gc_handle_.get_rec_cont().push(we_ptr->get_rec_ptr());
 
             /**
-                 * create information for garbage collection.
-                 */
+              * create information for garbage collection.
+              */
             tid_word deletetid;
             deletetid.set_lock(false);
             deletetid.set_latest(
@@ -230,7 +231,9 @@ void session::regi_diff_upd_set(std::string_view const storage,
                                 Record* const record,
                                 std::string_view const value_view) {
     auto& map{get_diff_upd_set()};
-    map[std::string(storage)][std::string{record->get_tuple().get_key()}] =
+    std::string key{};
+    record->get_tuple().get_key(key);
+    map[std::string(storage)][key] =
             std::make_tuple(tid, op_type == OP_TYPE::DELETE, value_view);
 }
 

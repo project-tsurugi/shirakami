@@ -40,7 +40,8 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     epoch::epoch_t ce = epoch::get_global_epoch();
-    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::get_global_epoch())) {
+    while (snapshot_manager::get_snap_epoch(ce) ==
+           snapshot_manager::get_snap_epoch(epoch::get_global_epoch())) {
         sleepMs(1);
     }
     // change snap epoch
@@ -49,10 +50,15 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
-    Record* rec_ptr{*std::get<0>(yakushima::get<Record*>({reinterpret_cast<char*>(&storage), sizeof(storage)}, k))}; // NOLINT
+    Record* rec_ptr{*std::get<0>(yakushima::get<Record*>(
+            {reinterpret_cast<char*>(&storage), sizeof(storage)},
+            k))}; // NOLINT
     ASSERT_NE(rec_ptr, nullptr);
-    ASSERT_EQ(rec_ptr->get_tuple().get_value(), std::string_view(v2));
-    ASSERT_EQ(rec_ptr->get_snap_ptr()->get_tuple().get_value(), std::string_view(v));
+    std::string val{};
+    rec_ptr->get_tuple().get_value(val);
+    ASSERT_EQ(val, std::string_view(v2));
+    rec_ptr->get_snap_ptr()->get_tuple().get_value(val);
+    ASSERT_EQ(val, std::string_view(v));
 }
 
 } // namespace shirakami::testing

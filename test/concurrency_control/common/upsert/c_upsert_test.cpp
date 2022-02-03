@@ -62,7 +62,9 @@ TEST_F(upsert_test, simple) { // NOLINT
     ASSERT_NE(rec_d_ptr, nullptr);
     Record* rec_ptr{*rec_d_ptr};
     ASSERT_NE(rec_ptr, nullptr);
-    ASSERT_EQ(rec_ptr->get_key(), k);
+    std::string key{};
+    rec_ptr->get_key(key);
+    ASSERT_EQ(key, k);
     ASSERT_EQ(upsert(s, storage, k, v2), Status::OK);
     ASSERT_EQ(commit(s), Status::OK);
     ASSERT_EQ(leave(s), Status::OK);

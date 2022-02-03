@@ -207,9 +207,9 @@ void write_phase(session* const ti, const tid_word& max_r_set,
 #ifdef CPR
         std::string value{};
         if (we_ptr->get_op() == OP_TYPE::INSERT) {
-            value = rec_ptr->get_tuple().get_value();
+            rec_ptr->get_tuple().get_value(value);
         } else if (we_ptr->get_op() == OP_TYPE::UPDATE) {
-            value = we_ptr->get_tuple().get_value();
+            we_ptr->get_tuple().get_value(value);
         }
         ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, we_ptr->get_op(),
                               rec_ptr, value);
@@ -219,9 +219,12 @@ void write_phase(session* const ti, const tid_word& max_r_set,
                 snapshot_manager::get_snap_epoch(
                         rec_ptr->get_tidw().get_epoch())) {
                 // update safely snap
+                std::string key{};
+                rec_ptr->get_tuple().get_key(key);
+                std::string val{};
+                rec_ptr->get_tuple().get_value(val);
                 auto* new_rec = // NOLINT
-                        new Record(rec_ptr->get_tuple().get_key(),
-                                   rec_ptr->get_tuple().get_value());
+                        new Record(key, val);
                 new_rec->get_tidw().set_epoch(rec_ptr->get_tidw().get_epoch());
                 new_rec->get_tidw().set_latest(true);
                 new_rec->get_tidw().set_lock(false);
@@ -271,8 +274,8 @@ void write_phase(session* const ti, const tid_word& max_r_set,
                 }
 #endif
                 // update value
-                std::string new_value =
-                        we_ptr->get_tuple(we_ptr->get_op()).get_value();
+                std::string new_value{};
+                we_ptr->get_tuple(we_ptr->get_op()).get_value(new_value);
                 rec_ptr->get_tuple().get_pimpl()->set_value(new_value);
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;

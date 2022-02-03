@@ -26,10 +26,10 @@ public:
     Tuple& operator=(const Tuple& right); // NOLINT
     Tuple& operator=(Tuple&& right);      // NOLINT
 
-    [[nodiscard]] std::string_view get_key() const;   // NOLINT
-    [[nodiscard]] std::string get_value() const; // NOLINT
-    Impl* get_pimpl();                                // NOLINT
-    const Impl* get_pimpl_cst() const;                // NOLINT
+    void get_key(std::string& out) const;   // NOLINT
+    void get_value(std::string& out) const; // NOLINT
+    Impl* get_pimpl();                      // NOLINT
+    const Impl* get_pimpl_cst() const;      // NOLINT
 
 private:
     std::unique_ptr<Impl> pimpl_;

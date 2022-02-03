@@ -56,7 +56,7 @@ public:
         return *this;
     }
 
-    std::string_view get_key() { return tuple_.get_key(); }
+    void get_key(std::string& out) { return tuple_.get_key(out); }
 
     [[nodiscard]] Record* get_snap_ptr() const {
         return snap_ptr_.load(std::memory_order_acquire);

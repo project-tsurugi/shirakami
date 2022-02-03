@@ -70,13 +70,12 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     LOG(INFO) << "snapshot epoch "
               << snapshot_manager::get_snap_epoch(epoch::get_global_epoch());
     ASSERT_EQ(tx_begin(s2, true), Status::OK); // stop progressing of epoch
-    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));         // NOLINT
 
     // check no snapshot
     ASSERT_EQ(Status::OK, open_scan(s2, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT,
-              read_from_scan(s2, handle, tuple));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s2, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // wait 2 snapshot epoch
@@ -89,11 +88,15 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s1, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    ASSERT_EQ(memcmp(tuple->get_key().data(), k1.data(), k1.size()), 0);
+    std::string key{};
+    tuple->get_key(key);
+    ASSERT_EQ(memcmp(key.data(), k1.data(), k1.size()), 0);
     ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    ASSERT_EQ(memcmp(tuple->get_key().data(), k2.data(), k2.size()), 0);
+    tuple->get_key(key);
+    ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    ASSERT_EQ(memcmp(tuple->get_key().data(), k3.data(), k3.size()), 0);
+    tuple->get_key(key);
+    ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
     ASSERT_EQ(Status::OK, close_scan(s1, handle));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, leave(s1));

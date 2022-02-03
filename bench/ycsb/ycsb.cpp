@@ -33,10 +33,10 @@
 
 #include "clock.h"
 #include "compiler.h"
+#include "concurrency_control/silo/include/tuple_local.h"
 #include "cpu.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "concurrency_control/silo/include/tuple_local.h"
 
 #if defined(CPR)
 
@@ -54,38 +54,44 @@ using namespace shirakami;
 /**
  * general option.
  */
-DEFINE_uint64(                                                           // NOLINT
-        cpumhz, 2100,                                                    // NOLINT
+DEFINE_uint64(        // NOLINT
+        cpumhz, 2100, // NOLINT
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
-        "time.");                                                        // NOLINT
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
-DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8.");   // NOLINT
-DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
-DEFINE_uint64(record, 10, "# database records(tuples).");                // NOLINT
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
-DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
-DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
-DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
+        "time.");                                                      // NOLINT
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
+DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
+DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
+DEFINE_uint64(record, 10, "# database records(tuples).");              // NOLINT
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");         // NOLINT
+DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
+DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
+DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
 
 /**
  * batch option.
  */
-DEFINE_bool(include_long_tx, false, "If it is true, one of # worker threads executes long tx."); // NOLINT
-DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");                                     // NOLINT
-DEFINE_uint64(long_tx_rratio, 100, "rate of reads in long transactions.");                       // NOLINT
+DEFINE_bool(
+        include_long_tx, false,
+        "If it is true, one of # worker threads executes long tx."); // NOLINT
+DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");         // NOLINT
+DEFINE_uint64(long_tx_rratio, 100,
+              "rate of reads in long transactions."); // NOLINT
 
 /**
  * scan option.
  */
-DEFINE_bool(include_scan_tx, false, "If it is true, one of # worker threads executese scan tx."); // NOLINT
-DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");                                   // NOLINT
+DEFINE_bool(
+        include_scan_tx, false,
+        "If it is true, one of # worker threads executese scan tx."); // NOLINT
+DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");       // NOLINT
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
 
 static void invoke_leader();
 
-static void worker(size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res);
+static void worker(size_t thid, char& ready, const bool& start,
+                   const bool& quit, std::vector<Result>& res);
 
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
@@ -95,7 +101,8 @@ static void invoke_leader() {
     std::vector<char> readys(FLAGS_thread); // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
-        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
+        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
+                         std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
     printf("start ycsb exp.\n"); // NOLINT
@@ -105,9 +112,7 @@ static void invoke_leader() {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(FLAGS_duration) != 0) {
-        LOG(FATAL) << "sleep error.";
-    }
+    if (sleep(FLAGS_duration) != 0) { LOG(FATAL) << "sleep error."; }
 #endif
     storeRelease(quit, true);
     printf("stop ycsb exp.\n"); // NOLINT
@@ -118,7 +123,8 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    printf("cpr_global_version:\t%zu\n", cpr::global_phase_version::get_gpv().get_version()); // NOLINT
+    printf("cpr_global_version:\t%zu\n",
+           cpr::global_phase_version::get_gpv().get_version()); // NOLINT
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
@@ -128,7 +134,8 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
+        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring "
+                      "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
@@ -141,23 +148,27 @@ static void load_flags() {
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        LOG(FATAL) << "Number of operations in a transaction must be larger than 0.";
+        LOG(FATAL) << "Number of operations in a transaction must be larger "
+                      "than 0.";
     }
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        LOG(FATAL) << "Number of database records(tuples) must be large than 0.";
+        LOG(FATAL)
+                << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 to 100.";
+        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 "
+                      "to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
+        LOG(FATAL) << "Access skew of transaction must be in the range 0 to "
+                      "0.999... .";
     }
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
@@ -171,12 +182,14 @@ static void load_flags() {
     }
 
     std::cout << "batch options" << std::endl;
-    std::cout << "FLAGS_include_long_tx: " << FLAGS_include_long_tx << std::endl;
+    std::cout << "FLAGS_include_long_tx: " << FLAGS_include_long_tx
+              << std::endl;
     std::cout << "FLAGS_long_tx_ops: " << FLAGS_long_tx_ops << std::endl;
     std::cout << "FLAGS_long_tx_rratio: " << FLAGS_long_tx_rratio << std::endl;
 
     std::cout << "scan options" << std::endl;
-    std::cout << "FLAGS_include_scan_tx: " << FLAGS_include_scan_tx << std::endl;
+    std::cout << "FLAGS_include_scan_tx: " << FLAGS_include_scan_tx
+              << std::endl;
     std::cout << "FLAGS_scan_elem_num: " << FLAGS_scan_elem_num << std::endl;
 
     printf("Fin load_flags()\n"); // NOLINT
@@ -194,9 +207,7 @@ int main(int argc, char* argv[]) try { // NOLINT
      */
     std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
     path += "/log/checkpoint";
-    if (boost::filesystem::exists(path)) {
-        boost::filesystem::remove(path);
-    }
+    if (boost::filesystem::exists(path)) { boost::filesystem::remove(path); }
 
     std::string log_dir = MAC2STR(PROJECT_ROOT);
     log_dir.append("/build/bench/ycsb_log");
@@ -206,9 +217,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     fin();
 
     return 0;
-} catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-}
+} catch (std::exception& e) { std::cerr << e.what() << std::endl; }
 
 bool isReady(const std::vector<char>& readys) { // NOLINT
     for (const char& b : readys) {              // NOLINT
@@ -218,9 +227,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) {
-        _mm_pause();
-    }
+    while (!isReady(readys)) { _mm_pause(); }
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
@@ -253,15 +260,18 @@ void worker(const std::size_t thid, char& ready, const bool& start,
              * special workloads.
              */
             if (FLAGS_include_long_tx) {
-                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
+                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record,
+                          FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
                 tx_begin(token, false, true);
             } else if (FLAGS_include_scan_tx) {
-                gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_scan_elem_num, rnd, zipf);
+                gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record,
+                            FLAGS_scan_elem_num, rnd, zipf);
             } else {
                 LOG(FATAL) << "fatal error";
             }
         } else {
-            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
+            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops,
+                      FLAGS_rratio, rnd, zipf);
         }
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
@@ -270,24 +280,31 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 for (;;) {
 
                     auto ret = search_key(token, storage, itr.get_key(), tuple);
-                    if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
+                    if (ret == Status::OK ||
+                        ret == Status::WARN_READ_FROM_OWN_OPERATION)
+                        break;
 #ifndef NDEBUG
                     assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
 #endif
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                auto ret = update(token, storage, itr.get_key(), std::string(FLAGS_val_length, '0'));
+                auto ret = update(token, storage, itr.get_key(),
+                                  std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK || ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
+                assert(ret == Status::OK ||
+                       ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);
                 std::vector<const Tuple*> scan_res;
                 //                scan_key(token, storage, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),scan_endpoint::INCLUSIVE, scan_res);
-                scan_key(token, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, scan_res);
+                scan_key(token, storage, "", scan_endpoint::INF, "",
+                         scan_endpoint::INF, scan_res);
                 std::cout << "list" << std::endl;
                 for (auto&& it : scan_res) {
-                    std::cout << it->get_key() << std::endl;
+                    std::string key{};
+                    it->get_key(key);
+                    std::cout << key << std::endl;
                     std::flush(std::cout);
                 }
                 exit(1);
@@ -318,8 +335,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                    myres.get().get_local_abort_counts(),
                    myres.get().get_local_commit_counts() / FLAGS_duration,
                    static_cast<double>(myres.get().get_local_abort_counts()) /
-                           static_cast<double>(myres.get().get_local_commit_counts() +
-                                               myres.get().get_local_abort_counts()));
+                           static_cast<double>(
+                                   myres.get().get_local_commit_counts() +
+                                   myres.get().get_local_abort_counts()));
         } else if (FLAGS_include_scan_tx) {
             printf("scan_tx_commit_counts:\t%lu\n" // NOLINT
                    "scan_tx_abort_counts:\t%lu\n"
@@ -329,8 +347,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                    myres.get().get_local_abort_counts(),
                    myres.get().get_local_commit_counts() / FLAGS_duration,
                    static_cast<double>(myres.get().get_local_abort_counts()) /
-                           static_cast<double>(myres.get().get_local_commit_counts() +
-                                               myres.get().get_local_abort_counts()));
+                           static_cast<double>(
+                                   myres.get().get_local_commit_counts() +
+                                   myres.get().get_local_abort_counts()));
         }
     }
 }

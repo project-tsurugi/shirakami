@@ -251,9 +251,11 @@ Status read_record(Record& res, Record* const dest,
         }
 
         if (read_value) {
-            std::string read_value{dest->get_tuple().get_pimpl()->get_value()};
-            res.get_tuple().get_pimpl()->set(dest->get_tuple().get_key(),
-                                             read_value);
+            std::string read_value{};
+            dest->get_tuple().get_pimpl()->get_value(read_value);
+            std::string key{};
+            dest->get_tuple().get_key(key);
+            res.get_tuple().get_pimpl()->set(key, read_value);
         }
         // todo optimization by shallow copy about key (Now, key is deep copy, value is shallow copy).
 

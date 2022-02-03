@@ -37,13 +37,13 @@ Tuple::Impl& Tuple::Impl::operator=(Impl&& right) { // NOLINT
     return *this;
 }
 
-[[nodiscard]] std::string_view Tuple::Impl::get_key() const { // NOLINT
-    return std::string_view{key_.data(), key_.size()};
+void Tuple::Impl::get_key(std::string& out) const { // NOLINT
+    out = key_;
 }
 
-[[nodiscard]] std::string Tuple::Impl::get_value() { // NOLINT
+void Tuple::Impl::get_value(std::string& out) { // NOLINT
     std::shared_lock<std::shared_mutex> lk{mtx_value_};
-    return value_;
+    out = value_;
 }
 
 void Tuple::Impl::reset() {
@@ -74,12 +74,12 @@ Tuple& Tuple::operator=(Tuple&& right) { // NOLINT
     return *this;
 }
 
-std::string_view Tuple::get_key() const { // NOLINT
-    return pimpl_->get_key();
+void Tuple::get_key(std::string& out) const { // NOLINT
+    return pimpl_->get_key(out);
 }
 
-std::string Tuple::get_value() const { // NOLINT
-    return pimpl_->get_value();
+void Tuple::get_value(std::string& out) const { // NOLINT
+    return pimpl_->get_value(out);
 }
 
 Tuple::Impl* Tuple::get_pimpl() { return pimpl_.get(); } // NOLINT

@@ -25,9 +25,7 @@ void cleanup_manager_func() {
         sleepMs(PARAM_EPOCH_TIME / 2); // NOLINT
 
         shirakami::Token token{};
-        while (Status::OK != shirakami::enter(token)) {
-            _mm_pause();
-        }
+        while (Status::OK != shirakami::enter(token)) { _mm_pause(); }
 
         for (auto&& elem : session_table::get_session_table()) {
             auto& handle = elem.get_cleanup_handle();
@@ -46,18 +44,22 @@ void cleanup_manager_func() {
                 storage = cache.first;
                 rec_ptr = cache.second;
 
-                if (rec_ptr->get_tidw().get_epoch() < epoch::get_global_epoch()) {
+                if (rec_ptr->get_tidw().get_epoch() <
+                    epoch::get_global_epoch()) {
                     // removing process
 
-                    std::string_view key_view = rec_ptr->get_tuple().get_key();
+                    std::string key{};
+                    rec_ptr->get_tuple().get_key(key);
 
                     if (rec_ptr->get_snap_ptr() == nullptr) {
                         // if no snapshot, it can immediately remove.
                         auto* ti = static_cast<session*>(token);
-                        yakushima::remove(ti->get_yakushima_token(), storage, key_view);
+                        yakushima::remove(ti->get_yakushima_token(), storage,
+                                          key);
                         ti->get_gc_handle().get_rec_cont().push(rec_ptr);
                     } else {
-                        snapshot_manager::remove_rec_cont.push({storage, rec_ptr});
+                        snapshot_manager::remove_rec_cont.push(
+                                {storage, rec_ptr});
                     }
                     cache = {"", nullptr}; // clear cache
                 } else {

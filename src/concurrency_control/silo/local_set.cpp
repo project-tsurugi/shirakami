@@ -15,14 +15,14 @@ namespace shirakami {
         std::cout << "Element #" << ctr << " of write set." << std::endl;
         std::cout << "rec_ptr_ : " << we_ptr->get_rec_ptr() << std::endl;
         std::cout << "op_ : " << we_ptr->get_op() << std::endl;
-        std::string_view key_view;
-        std::string_view value_view;
-        key_view = we_ptr->get_tuple().get_key();
-        value_view = we_ptr->get_tuple().get_value();
-        std::cout << "key : " << key_view << std::endl;
-        std::cout << "key_size : " << key_view.size() << std::endl;
-        std::cout << "value : " << value_view << std::endl;
-        std::cout << "value_size : " << value_view.size() << std::endl;
+        std::string key;
+        std::string value;
+        we_ptr->get_tuple().get_key(key);
+        we_ptr->get_tuple().get_value(value);
+        std::cout << "key : " << key << std::endl;
+        std::cout << "key_size : " << key.size() << std::endl;
+        std::cout << "value : " << value << std::endl;
+        std::cout << "value_size : " << value.size() << std::endl;
         std::cout << "----------" << std::endl;
         ++ctr;
     };
@@ -56,12 +56,14 @@ void local_write_set::push(write_set_obj&& elem) {
     }
 }
 
-void local_write_set::remove_inserted_records_from_yakushima(shirakami::Token shirakami_token, yakushima::Token yakushima_token) {
+void local_write_set::remove_inserted_records_from_yakushima(
+        shirakami::Token shirakami_token, yakushima::Token yakushima_token) {
     auto process = [shirakami_token, yakushima_token](write_set_obj* we_ptr) {
         if (we_ptr->get_op() == OP_TYPE::INSERT) {
             Record* record = we_ptr->get_rec_ptr();
-            std::string_view key_view = record->get_tuple().get_key();
-            yakushima::remove(yakushima_token, we_ptr->get_storage(), key_view);
+            std::string key{};
+            record->get_tuple().get_key(key);
+            yakushima::remove(yakushima_token, we_ptr->get_storage(), key);
             auto* ti = static_cast<session*>(shirakami_token);
             ti->get_gc_handle().get_rec_cont().push(we_ptr->get_rec_ptr());
 
@@ -70,7 +72,8 @@ void local_write_set::remove_inserted_records_from_yakushima(shirakami::Token sh
              */
             tid_word deletetid;
             deletetid.set_lock(false);
-            deletetid.set_latest(false); // latest false mean that it asks checkpoint thread to remove from index.
+            deletetid.set_latest(
+                    false); // latest false mean that it asks checkpoint thread to remove from index.
             deletetid.set_absent(false);
             deletetid.set_epoch(ti->get_epoch());
             storeRelease(record->get_tidw().obj_, deletetid.obj_); // NOLINT
@@ -93,16 +96,12 @@ void local_write_set::remove_inserted_records_from_yakushima(shirakami::Token sh
 write_set_obj* local_write_set::search(Record* rec_ptr) {
     if (for_batch_) {
         auto ret{cont_for_bt_.find(rec_ptr)};
-        if (ret == cont_for_bt_.end()) {
-            return nullptr;
-        }
+        if (ret == cont_for_bt_.end()) { return nullptr; }
         return &std::get<1>(*ret);
     }
     for (auto&& elem : get_cont_for_ol()) {
         write_set_obj* we_ptr = &elem;
-        if (rec_ptr == we_ptr->get_rec_ptr()) {
-            return we_ptr;
-        }
+        if (rec_ptr == we_ptr->get_rec_ptr()) { return we_ptr; }
     }
     return nullptr;
 }
@@ -142,10 +141,12 @@ void local_write_set::unlock(std::size_t num) {
     auto process = [](write_set_obj* we_ptr) {
         tid_word expected{};
         tid_word desired{};
-        expected = loadAcquire(we_ptr->get_rec_ptr()->get_tidw().obj_); // NOLINT
+        expected =
+                loadAcquire(we_ptr->get_rec_ptr()->get_tidw().obj_); // NOLINT
         desired = expected;
         desired.set_lock(false);
-        storeRelease(we_ptr->get_rec_ptr()->get_tidw().obj_, desired.obj_); // NOLINT
+        storeRelease(we_ptr->get_rec_ptr()->get_tidw().obj_,
+                     desired.obj_); // NOLINT
     };
     std::size_t ctr{0};
     if (get_for_batch()) {

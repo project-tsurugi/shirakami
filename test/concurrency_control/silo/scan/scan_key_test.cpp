@@ -92,12 +92,16 @@ TEST_F(scan_key_test, basic) { // NOLINT
     uint64_t ctr(0);
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -107,10 +111,13 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -120,12 +127,16 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -135,10 +146,13 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         }
         ++ctr;
     }
@@ -148,16 +162,22 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 5);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(itr->get_key().size(), 0);
+            itr->get_key(key);
+            ASSERT_EQ(key.size(), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k6.data(), k6.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 3) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 4) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -167,10 +187,13 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 2);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(itr->get_key().size(), 0);
+            itr->get_key(key);
+            ASSERT_EQ(key.size(), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k6.data(), k6.size()), 0);
         }
         ++ctr;
     }
@@ -195,12 +218,16 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 3);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -210,16 +237,22 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 5);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(itr->get_key().size(), 0);
+            itr->get_key(key);
+            ASSERT_EQ(key.size(), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k6.data(), k6.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 3) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 4) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }
@@ -229,16 +262,22 @@ TEST_F(scan_key_test, basic) { // NOLINT
     ctr = 0;
     ASSERT_EQ(records.size(), 5);
     for (auto&& itr : records) {
+        std::string key{};
         if (ctr == 0) {
-            ASSERT_EQ(itr->get_key().size(), 0);
+            itr->get_key(key);
+            ASSERT_EQ(key.size(), 0);
         } else if (ctr == 1) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k6.data(), k6.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k6.data(), k6.size()), 0);
         } else if (ctr == 2) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k.data(), k.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
         } else if (ctr == 3) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k2.data(), k2.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
         } else if (ctr == 4) {
-            ASSERT_EQ(memcmp(itr->get_key().data(), k3.data(), k3.size()), 0);
+            itr->get_key(key);
+            ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
         }
         ++ctr;
     }

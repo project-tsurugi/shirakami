@@ -45,9 +45,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             Tuple* t{};
 #ifdef CPR
-            while (Status::OK != search_key(s, storage, k, t)) {
-                ;
-            }
+            while (Status::OK != search_key(s, storage, k, t)) { ; }
 #else
             ASSERT_EQ(Status::OK, search_key(s, storage, k, t));
 #endif
@@ -65,13 +63,15 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             while (res == Status::WARN_CONCURRENT_UPDATE) {
                 res = search_key(s, storage, k, t);
             }
-            if (res != Status::OK) {
-                LOG(FATAL) << "fatal error";
-            }
+            if (res != Status::OK) { LOG(FATAL) << "fatal error"; }
             ASSERT_NE(nullptr, t);
-            v = *reinterpret_cast<std::int64_t*>(const_cast<char*>(t->get_value().data())); // NOLINT
+            std::string val{};
+            t->get_value(val);
+            v = *reinterpret_cast<std::int64_t*>( // NOLINT
+                    const_cast<char*>(val.data()));
             v++;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // NOLINT
+            std::this_thread::sleep_for(
+                    std::chrono::milliseconds(100)); // NOLINT
             ASSERT_EQ(Status::OK, update(s, storage, k,
                                          {reinterpret_cast<char*>(&v), // NOLINT
                                           sizeof(std::int64_t)}));
@@ -84,16 +84,12 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
             Tuple* tuple{};
-#ifdef CPR
-            while (Status::OK != search_key(s, storage, k, tuple)) {
-                ;
-            }
-#else
             ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
             ASSERT_NE(nullptr, tuple);
+            std::string value{};
+            tuple->get_value(value);
             std::int64_t v{*reinterpret_cast<std::int64_t*>( // NOLINT
-                    const_cast<char*>(tuple->get_value().data()))};
+                    const_cast<char*>(value.data()))};
             ASSERT_EQ(10, v);
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));

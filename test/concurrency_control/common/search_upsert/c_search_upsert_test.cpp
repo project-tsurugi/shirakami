@@ -43,13 +43,20 @@ TEST_F(search_upsert, simple) { // NOLINT
     Tuple* tuple{};
     ASSERT_EQ(search_key(s, storage, k, tuple), Status::WARN_NOT_FOUND);
     ASSERT_EQ(upsert(s, storage, k, v), Status::OK);
-    ASSERT_EQ(search_key(s, storage, k, tuple), Status::WARN_READ_FROM_OWN_OPERATION);
-    ASSERT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
+    ASSERT_EQ(search_key(s, storage, k, tuple),
+              Status::WARN_READ_FROM_OWN_OPERATION);
+    std::string key{};
+    tuple->get_key(key);
+    ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
+    std::string val{};
+    tuple->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v.data(), v.size()), 0);
     ASSERT_EQ(commit(s), Status::OK);
     ASSERT_EQ(search_key(s, storage, k, tuple), Status::OK);
-    ASSERT_EQ(memcmp(tuple->get_key().data(), k.data(), k.size()), 0);
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
+    tuple->get_key(key);
+    ASSERT_EQ(memcmp(key.data(), k.data(), k.size()), 0);
+    tuple->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v.data(), v.size()), 0);
     ASSERT_EQ(commit(s), Status::OK);
     ASSERT_EQ(leave(s), Status::OK);
 }

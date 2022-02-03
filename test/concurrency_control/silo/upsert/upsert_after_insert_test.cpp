@@ -43,7 +43,8 @@ public:
 };
 
 TEST_F(upsert_after_delete, txs) { // NOLINT
-    google::InitGoogleLogging("shirakami-test-concurrency_control-upsert-upsert_after_insert_test");
+    google::InitGoogleLogging("shirakami-test-concurrency_control-upsert-"
+                              "upsert_after_insert_test");
     register_storage(st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
@@ -56,9 +57,11 @@ TEST_F(upsert_after_delete, txs) { // NOLINT
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    Tuple *tuple{};
+    Tuple* tuple{};
     ASSERT_EQ(Status::OK, search_key(s1, st, k, tuple));
-    ASSERT_EQ(memcmp(tuple->get_value().data(), v.data(), v.size()), 0);
+    std::string val{};
+    tuple->get_value(val);
+    ASSERT_EQ(memcmp(val.data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
