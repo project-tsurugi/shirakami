@@ -145,8 +145,8 @@ void local_write_set::unlock(std::size_t num) {
                 loadAcquire(we_ptr->get_rec_ptr()->get_tidw().obj_); // NOLINT
         desired = expected;
         desired.set_lock(false);
-        storeRelease(we_ptr->get_rec_ptr()->get_tidw().obj_,
-                     desired.obj_); // NOLINT
+        storeRelease(we_ptr->get_rec_ptr()->get_tidw().obj_, // NOLINT
+                     desired.obj_);                          // NOLINT
     };
     std::size_t ctr{0};
     if (get_for_batch()) {

@@ -49,7 +49,7 @@
  */
 DEFINE_uint64(d, 1, "Duration of benchmark in seconds."); // NOLINT
 DEFINE_uint64(rec, 1000, "# records.");                   // NOLINT
-DEFINE_uint64(value_size, 8, "value size.");                   // NOLINT
+DEFINE_uint64(value_size, 8, "value size.");              // NOLINT
 
 using namespace shirakami;
 
@@ -84,7 +84,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
-        gen_tx_rw(opr_set, key_len, FLAGS_rec, tx_size, 100, rnd, zipf);
+        gen_tx_rw(opr_set, key_len, FLAGS_rec, tx_size, 100, rnd, // NOLINT
+                  zipf);
 
         for (auto&& itr : opr_set) {
             Status rc{};

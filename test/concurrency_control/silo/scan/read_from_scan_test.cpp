@@ -27,8 +27,8 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_; // NOLINT
+    static inline std::string log_dir_; // NOLINT
 };
 
 TEST_F(simple_scan, read_from_scan) { // NOLINT

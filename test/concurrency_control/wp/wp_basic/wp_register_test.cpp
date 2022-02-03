@@ -44,8 +44,8 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_google; // NOLINT
+    static inline std::string log_dir_;       // NOLINT
 };
 
 TEST_F(wp_register_test, single_register) { // NOLINT

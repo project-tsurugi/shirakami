@@ -55,10 +55,10 @@ using namespace shirakami;
 /**
  * general option.
  */
-DEFINE_uint64(        // NOLINT
-        cpumhz, 2100, // NOLINT
-        "# cpu MHz of execution environment. It is used measuring some " // NOLINT
-        "time.");                                                      // NOLINT
+DEFINE_uint64( // NOLINT
+        cpumhz, 2100,
+        "# cpu MHz of execution environment. It is used measuring some "
+        "time.");
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
 DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
@@ -71,20 +71,20 @@ DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
 /**
  * batch option.
  */
-DEFINE_bool(
+DEFINE_bool( // NOLINT
         include_long_tx, false,
-        "If it is true, one of # worker threads executes long tx."); // NOLINT
-DEFINE_uint64(long_tx_ops, 50, "# operations per long tx.");         // NOLINT
-DEFINE_uint64(long_tx_rratio, 100,
-              "rate of reads in long transactions."); // NOLINT
+        "If it is true, one of # worker threads executes long tx.");
+DEFINE_uint64(long_tx_ops, 50, "# operations per long tx."); // NOLINT
+DEFINE_uint64(long_tx_rratio, 100,                           // NOLINT
+              "rate of reads in long transactions.");
 
 /**
  * scan option.
  */
-DEFINE_bool(
+DEFINE_bool( // NOLINT
         include_scan_tx, false,
-        "If it is true, one of # worker threads executese scan tx."); // NOLINT
-DEFINE_uint64(scan_elem_num, 100, "# elements in scan range.");       // NOLINT
+        "If it is true, one of # worker threads executese scan tx.");
+DEFINE_uint64(scan_elem_num, 100, "# elements in scan range."); // NOLINT
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
@@ -124,8 +124,8 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    printf("cpr_global_version:\t%zu\n",
-           cpr::global_phase_version::get_gpv().get_version()); // NOLINT
+    printf("cpr_global_version:\t%zu\n", // NOLINT
+           cpr::global_phase_version::get_gpv().get_version());
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
@@ -282,8 +282,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
                     auto ret = search_key(token, storage, itr.get_key(), tuple);
                     if (ret == Status::OK ||
-                        ret == Status::WARN_READ_FROM_OWN_OPERATION)
+                        ret == Status::WARN_READ_FROM_OWN_OPERATION) {
                         break;
+                    }
 #ifndef NDEBUG
                     assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
 #endif
@@ -292,8 +293,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 auto ret = update(token, storage, itr.get_key(),
                                   std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK ||
-                       ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
+                assert(ret == Status::OK || // NOLINT
+                       ret == Status::WARN_WRITE_TO_LOCAL_WRITE);
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);

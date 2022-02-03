@@ -7,10 +7,9 @@ namespace shirakami {
 
 read_by_bt::body_elem_type read_by_bt::get(epoch::epoch_t const epoch) {
     std::unique_lock<std::mutex> lk(mtx_);
-    for (auto itr = body_.begin(); itr != body_.end(); ++itr) {
-        if ((*itr).first == epoch) {
-            return *itr;
-        } else if ((*itr).first > epoch) {
+    for (auto&& elem : body_) {
+        if (elem.first == epoch) { return elem; }
+        if (elem.first > epoch) {
             // no more due to invariant
             break;
         }
@@ -23,7 +22,7 @@ void read_by_bt::gc() {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
+    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
         if ((*itr).first < threshold) {
             itr = body_.erase(itr);
         } else {
@@ -38,7 +37,7 @@ void read_by_bt::push(body_elem_type const elem) {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
+    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
         if ((*itr).first < elem.first) {
             // check gc
             if ((*itr).first < threshold) {

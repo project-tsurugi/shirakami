@@ -51,8 +51,8 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     Record* rec_ptr{*std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},
-            k))}; // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
+            k))};
     ASSERT_NE(rec_ptr, nullptr);
     std::string val{};
     rec_ptr->get_tuple().get_value(val);

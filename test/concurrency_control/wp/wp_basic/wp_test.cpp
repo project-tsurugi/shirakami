@@ -31,7 +31,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-wp-wp_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        FLAGS_stderrthreshold = 0;        // output more than INFO
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
         log_dir_.append("/tmp/wp_test_log");
     }
@@ -44,8 +44,8 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google_;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(wp_test, wp_meta_basic) { // NOLINT
