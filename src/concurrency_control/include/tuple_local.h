@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/silo/include/tuple_local.h
+ * @file src/concurrency_control/include/tuple_local.h
  * @brief header about Tuple::Impl
  */
 
@@ -34,7 +34,7 @@ public:
 
     /**
      * @brief Get the key object
-     * @param out[out] result
+     * @param[out] out result
      * @note key will not be changed.
      * @return void
      */
@@ -42,7 +42,7 @@ public:
 
     /**
      * @brief Get the value object
-     * @param out[out] result
+     * @param[out] out result
      * @note value may be changed.
      * @return void
      */
