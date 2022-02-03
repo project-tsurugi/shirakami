@@ -1,6 +1,9 @@
-#include <bitset>
 
-#include "concurrency_control/silo/include/tuple_local.h"
+#include <bitset>
+#include <mutex>
+
+#include "concurrency_control/include/tuple_local.h"
+
 #include "gtest/gtest.h"
 
 #include "shirakami/interface.h"
@@ -11,13 +14,21 @@ using namespace shirakami;
 Storage storage;
 class delete_after_write : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/delete_after_write_test_log");
+    }
+
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/delete_after_write_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_;
+    static inline std::string log_dir_;
 };
 
 TEST_F(delete_after_write, delete_after_insert) { // NOLINT
@@ -27,7 +38,8 @@ TEST_F(delete_after_write, delete_after_insert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k1));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+              delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -39,7 +51,8 @@ TEST_F(delete_after_write, delete_after_upsert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k1));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+              delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -54,17 +67,14 @@ TEST_F(delete_after_write, delete_after_update) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, update(s, storage, k1, v2));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_OPERATION, delete_record(s, storage, k1));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_OPERATION,
+              delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     Tuple* tuple{};
 #ifdef CPR
-    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) {
-        ;
-    }
+    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) { ; }
 #else
-    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) {
-        ;
-    }
+    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, tuple)) { ; }
 #endif
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));

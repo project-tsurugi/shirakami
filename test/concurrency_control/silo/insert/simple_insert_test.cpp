@@ -5,8 +5,7 @@
 
 #include "concurrency_control/silo/include/record.h"
 
-// shirakami-impl interface library
-#include "concurrency_control/silo/include/tuple_local.h"
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

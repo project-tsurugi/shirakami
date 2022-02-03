@@ -8,7 +8,8 @@
 #include "include/garbage_manager.h"
 #include "include/session_table.h"
 #include "include/snapshot_manager.h"
-#include "include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 namespace shirakami::garbage_manager {
 

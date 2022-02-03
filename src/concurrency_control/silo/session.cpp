@@ -2,7 +2,8 @@
 #include "include/session.h"
 #include "include/garbage_manager.h"
 #include "include/snapshot_manager.h"
-#include "include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "glog/logging.h"
 

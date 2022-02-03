@@ -9,7 +9,7 @@
 
 #include "include/helper.h"
 
-#include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 

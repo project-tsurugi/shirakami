@@ -5,6 +5,7 @@ file(GLOB SOURCES
 # about cc
 if (BUILD_WP)
     file(GLOB CC_SOURCES 
+    "concurrency_control/*.cpp"
     "concurrency_control/wp/*.cpp"
     "concurrency_control/wp/interface/*.cpp"
     "concurrency_control/wp/interface/batch/*.cpp"
@@ -13,6 +14,7 @@ if (BUILD_WP)
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 else ()
     file(GLOB CC_SOURCES 
+    "concurrency_control/*.cpp"
     "concurrency_control/silo/*.cpp"
     "concurrency_control/silo/interface/*.cpp"
     )

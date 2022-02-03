@@ -7,7 +7,8 @@
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/garbage_manager.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
-#include "concurrency_control/silo/include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h" // NOLINT
 

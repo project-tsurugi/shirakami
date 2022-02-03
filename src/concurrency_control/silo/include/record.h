@@ -7,7 +7,8 @@
 
 #include "cpu.h"
 #include "tid.h"
-#include "tuple_local.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/scheme.h"
 #include "shirakami/tuple.h"

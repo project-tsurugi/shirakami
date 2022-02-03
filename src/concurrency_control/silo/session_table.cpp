@@ -5,7 +5,8 @@
 
 #include "include/session_table.h"
 #include "include/storage.h"
-#include "include/tuple_local.h" // sizeof(Tuple)
+
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #if defined(PWAL)
 

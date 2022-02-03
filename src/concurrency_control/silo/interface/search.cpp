@@ -3,7 +3,8 @@
 
 #include "concurrency_control/silo/include/session_table.h"
 #include "concurrency_control/silo/include/snapshot_interface.h"
-#include "concurrency_control/silo/include/tuple_local.h"
+
+#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 

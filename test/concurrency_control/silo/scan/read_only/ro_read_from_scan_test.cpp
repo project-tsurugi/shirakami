@@ -5,7 +5,8 @@
 
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
-#include "concurrency_control/silo/include/tuple_local.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

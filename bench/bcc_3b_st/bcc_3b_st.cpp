@@ -32,8 +32,9 @@
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "compiler.h"
-#include "concurrency_control/silo/include/tuple_local.h"
 #include "cpu.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #if defined(CPR)
 
