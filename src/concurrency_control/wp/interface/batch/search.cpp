@@ -5,10 +5,11 @@
 
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -42,10 +43,12 @@ Status search_key(session* ti, Storage const storage,
             return Status::WARN_ALREADY_DELETE;
         }
         if (read_value) {
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
-                    in_ws->get_rec_ptr()->get_key());
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_val(
-                    in_ws->get_val());
+            std::string kb{};
+            in_ws->get_rec_ptr()->get_key(kb);
+            std::string vb{};
+            in_ws->get_value(vb);
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(kb);
+            ti->get_cache_for_search_ptr()->get_pimpl()->set_value(vb);
             tuple = ti->get_cache_for_search_ptr();
         }
         return Status::WARN_READ_FROM_OWN_OPERATION;
@@ -99,9 +102,12 @@ VER_SELEC:
     }
 
     auto valid_version_tuple_register = [&ti, &rec_ptr, &ver, &tuple]() {
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(
-                rec_ptr->get_key());
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_val(ver->get_val());
+        std::string kb{};
+        rec_ptr->get_key(kb);
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(kb);
+        std::string vb{};
+        ver->get_value(vb);
+        ti->get_cache_for_search_ptr()->get_pimpl()->set_value(vb);
         tuple = ti->get_cache_for_search_ptr();
     };
 

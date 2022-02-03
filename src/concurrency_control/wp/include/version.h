@@ -39,9 +39,9 @@ public:
         return next_.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] std::string get_val() {
+    void get_value(std::string& out) {
         std::shared_lock<std::shared_mutex> lock{val_mtx_};
-        return value_;
+        out = value_;
     }
 
     [[nodiscard]] tid_word get_tid() const { return tid_; }

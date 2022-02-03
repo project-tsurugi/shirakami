@@ -79,7 +79,9 @@ TEST_F(write_skew, simple) { // NOLINT
     ASSERT_EQ(search_key(s2, st, y, tuple2), Status::ERR_FAIL_WP);
     std::size_t v1{};
     //std::size_t v2{};
-    memcpy(&v1, tuple1->get_value().data(), sizeof(v1));
+    std::string vb{};
+    tuple1->get_value(vb);
+    memcpy(&v1, vb.data(), sizeof(v1));
     ++v1;
     //1memcpy(&v2, tuple2->get_value().data(), sizeof(v2));
     //1++v2;

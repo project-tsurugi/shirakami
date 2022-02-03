@@ -34,7 +34,7 @@ public:
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
     }
 
-    std::string_view get_key() { return key_; }
+    void get_key(std::string& out) { out = key_; }
 
     [[nodiscard]] std::string* get_key_ptr() { return &key_; }
 

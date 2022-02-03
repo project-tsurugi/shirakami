@@ -81,11 +81,15 @@ public:
 
     [[nodiscard]] Storage get_storage() const { return storage_; }
 
-    [[nodiscard]] std::string get_val() const {
+    void get_value(std::string& out) const {
         if (get_op() == OP_TYPE::INSERT) {
-            return get_rec_ptr()->get_latest()->get_val();
+            get_rec_ptr()->get_latest()->get_value(out);
+            return;
         }
-        if (get_op() == OP_TYPE::UPSERT) { return val_; }
+        if (get_op() == OP_TYPE::UPSERT) {
+            out = val_;
+            return;
+        }
         LOG(FATAL) << "unreachable";
         std::abort();
     }

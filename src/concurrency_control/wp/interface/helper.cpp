@@ -9,9 +9,10 @@
 
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -168,7 +169,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 
         if (f_check.get_absent()) { return Status::WARN_CONCURRENT_DELETE; }
 
-        if (read_value) { val = rec_ptr->get_latest()->get_val(); }
+        if (read_value) { rec_ptr->get_latest()->get_value(val); }
         s_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
         if (f_check == s_check) { break; }
         f_check = s_check;

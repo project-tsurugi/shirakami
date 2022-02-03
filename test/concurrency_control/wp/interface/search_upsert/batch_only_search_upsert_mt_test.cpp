@@ -13,9 +13,10 @@
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
 #include "concurrency_control/wp/include/wp.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -119,7 +120,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 }
 
                 std::size_t v{};
-                memcpy(&v, tuple->get_value().data(), sizeof(v));
+                std::string vb{};
+                tuple->get_value(vb);
+                memcpy(&v, vb.data(), sizeof(v));
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
@@ -146,7 +149,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         Tuple* tuple{};
         ASSERT_EQ(search_key(s, st, elem, tuple), Status::OK);
         std::size_t v{};
-        memcpy(&v, tuple->get_value().data(), sizeof(v));
+        std::string vb{};
+        tuple->get_value(vb);
+        memcpy(&v, vb.data(), sizeof(v));
         ASSERT_EQ(v, th_num * trial_n);
     }
     ASSERT_EQ(leave(s), Status::OK);

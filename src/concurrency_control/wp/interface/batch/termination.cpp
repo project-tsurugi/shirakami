@@ -5,10 +5,11 @@
 
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "glog/logging.h"
 
@@ -101,8 +102,10 @@ void expose_local_write(session* ti) {
 
                 if (ti->get_valid_epoch() > pre_tid.get_epoch()) {
                     // case: first of list
+                    std::string vb{};
+                    wso.get_value(vb);
                     version* new_v{new version( // NOLINT
-                            wso.get_val(), rec_ptr->get_latest())};
+                            vb, rec_ptr->get_latest())};
                     pre_tid.set_absent(false);
                     pre_tid.set_latest(false);
                     pre_tid.set_lock(false);
@@ -120,8 +123,9 @@ void expose_local_write(session* ti) {
                     tid_word tid{ver->get_tid()};
                     for (;;) {
                         if (tid.get_epoch() < ti->get_valid_epoch()) {
-                            version* new_v{
-                                    new version(ctid, wso.get_val(), ver)};
+                            std::string vb{};
+                            wso.get_value(vb);
+                            version* new_v{new version(ctid, vb, ver)};
                             pre_ver->set_next(new_v);
                             break;
                         }

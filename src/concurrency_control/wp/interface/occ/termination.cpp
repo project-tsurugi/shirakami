@@ -5,8 +5,9 @@
 
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "glog/logging.h"
 
@@ -150,8 +151,9 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
                     // append new version
                     // gen new version
-                    version* new_v{new version(ti->get_mrc_tid(),
-                                               wso_ptr->get_val(),
+                    std::string vb{};
+                    wso_ptr->get_value(vb);
+                    version* new_v{new version(ti->get_mrc_tid(), vb,
                                                rec_ptr->get_latest())};
 
                     // update old version tid
@@ -164,8 +166,9 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    wso_ptr->get_rec_ptr()->get_latest()->set_value(
-                            wso_ptr->get_val());
+                    std::string vb{};
+                    wso_ptr->get_value(vb);
+                    wso_ptr->get_rec_ptr()->get_latest()->set_value(vb);
                 }
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
@@ -263,10 +266,10 @@ extern Status commit(session* ti, // NOLINT
     // write phase
     write_phase(ti, ce);
 
-    // This calculation can be done outside the critical section.
-    #ifdef BCC_7
+// This calculation can be done outside the critical section.
+#ifdef BCC_7
     register_read_by_occ(ti);
-    #endif
+#endif
 
     // clean up local set
     ti->clean_up();

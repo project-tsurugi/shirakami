@@ -3,8 +3,9 @@
 #include "concurrency_control/wp/include/local_set.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "yakushima/include/kvs.h"
 

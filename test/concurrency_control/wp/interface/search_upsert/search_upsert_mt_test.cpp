@@ -108,7 +108,9 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                         }
                     }
                     std::size_t v{};
-                    memcpy(&v, tuple->get_value().data(), sizeof(v));
+                    std::string vb{};
+                    tuple->get_value(vb);
+                    memcpy(&v, vb.data(), sizeof(v));
                     ++v;
                     std::string_view v_view{
                             reinterpret_cast<char*>(&v), // NOLINT
@@ -155,7 +157,9 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
         Tuple* tuple{};
         ASSERT_EQ(search_key(s, storage, elem, tuple), Status::OK);
         std::size_t v{};
-        memcpy(&v, tuple->get_value().data(), sizeof(v));
+        std::string vb{};
+        tuple->get_value(vb);
+        memcpy(&v, vb.data(), sizeof(v));
         ASSERT_EQ(v, batch_loop + occ_loop);
     }
     commit(s);

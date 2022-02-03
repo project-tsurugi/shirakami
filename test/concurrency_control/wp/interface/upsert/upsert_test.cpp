@@ -14,8 +14,9 @@
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -35,19 +36,20 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-wp-upsert_test");
         FLAGS_stderrthreshold = 0;
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/upsert_test_log");
     }
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/upsert_test_log");
-        init(false, log_dir); // NOLINT
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google;
+    static inline std::string log_dir_;
 };
 
 TEST_F(upsert_test, occ_simple) { // NOLINT
@@ -66,8 +68,12 @@ TEST_F(upsert_test, occ_simple) { // NOLINT
     ASSERT_NE(rec_d, nullptr);
     Record* rec{*rec_d};
     ASSERT_NE(rec, nullptr);
-    ASSERT_EQ(rec->get_latest()->get_val(), v);
-    ASSERT_EQ(rec->get_key(), k);
+    std::string vb{};
+    rec->get_latest()->get_value(vb);
+    ASSERT_EQ(vb, v);
+    std::string kb{};
+    rec->get_key(kb);
+    ASSERT_EQ(kb, k);
 
     ASSERT_EQ(Status::OK, leave(s));
 }

@@ -4,9 +4,10 @@
 #include <vector>
 
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 
-#include "include/wp.h"
+#include "concurrency_control/wp/include/wp.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
