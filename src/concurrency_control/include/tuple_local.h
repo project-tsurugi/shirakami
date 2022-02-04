@@ -53,21 +53,18 @@ public:
 
     void set(std::string_view const key, std::string_view const val) {
         key_ = key;
-        std::lock_guard<std::shared_mutex> lk{mtx_value_};
         value_ = val;
     }
 
     [[maybe_unused]] void set_key(std::string_view key) { key_ = key; }
 
     [[maybe_unused]] void set_value(std::string_view val) {
-        std::lock_guard<std::shared_mutex> lk{mtx_value_};
         value_ = val;
     }
 
 private:
     std::string key_{};
     std::string value_{};
-    std::shared_mutex mtx_value_{};
 };
 
 } // namespace shirakami

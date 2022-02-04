@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <shared_mutex>
+
 #include "cpu.h"
 #include "tid.h"
 
@@ -77,6 +79,11 @@ public:
         snap_ptr_.store(ptr, std::memory_order_release);
     }
 
+    void set_value(std::string_view const v) {
+        std::lock_guard<std::shared_mutex> lk{mtx_value_};
+        tuple_.get_pimpl()->set_value(v);
+    }
+
 #if defined(CPR)
 
     Tuple& get_stable() { return stable_; } // NOLINT
@@ -99,6 +106,7 @@ private:
     std::atomic<std::uint64_t> version_{0};
     Tuple stable_;
 #endif
+    std::shared_mutex mtx_value_;
     Tuple tuple_;
     /**
      * @details This is safely snapshot for read only transaction.

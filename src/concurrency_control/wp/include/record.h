@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <shared_mutex>
 #include <string_view>
 
 #include "concurrency_control/wp/include/read_by.h"
@@ -52,6 +53,11 @@ public:
 
     [[nodiscard]] tid_word const& get_tidw_ref() const { return tidw_; }
 
+    void get_value(std::string& out) {
+        std::shared_lock<std::shared_mutex> lock{mtx_value_};
+        get_latest()->get_value(out);
+    }
+
     void lock() { tidw_.lock(); }
 
     void set_latest(version* const ver) {
@@ -60,6 +66,11 @@ public:
 
     void set_tid(tid_word const& tid) {
         storeRelease(tidw_.get_obj(), tid.get_obj());
+    }
+
+    void set_value(std::string_view const v) {
+        std::lock_guard<std::shared_mutex> lock{mtx_value_};
+        get_latest()->set_value(v);
     }
 
     void unlock() { tidw_.unlock(); }
@@ -77,6 +88,8 @@ private:
     std::atomic<version*> latest_{nullptr};
 
     std::string key_{};
+
+    std::shared_mutex mtx_value_{};
 
     read_by_occ read_by_{};
 };

@@ -42,7 +42,6 @@ void Tuple::Impl::get_key(std::string& out) const { // NOLINT
 }
 
 void Tuple::Impl::get_value(std::string& out) { // NOLINT
-    std::shared_lock<std::shared_mutex> lk{mtx_value_};
     out = value_;
 }
 

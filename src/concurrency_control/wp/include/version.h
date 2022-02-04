@@ -40,7 +40,6 @@ public:
     }
 
     void get_value(std::string& out) {
-        std::shared_lock<std::shared_mutex> lock{val_mtx_};
         out = value_;
     }
 
@@ -51,7 +50,6 @@ public:
      * @pre This is also for initialization of version.
      */
     void set_value(std::string_view const value) {
-        std::lock_guard<std::shared_mutex> lock{val_mtx_};
         value_ = value;
     }
 
@@ -68,8 +66,6 @@ private:
      * @brief value.
      */
     std::string value_;
-
-    std::shared_mutex val_mtx_;
 
     /**
      * @brief pointer to next version.

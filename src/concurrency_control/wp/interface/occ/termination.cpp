@@ -168,7 +168,7 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     // update existing version
                     std::string vb{};
                     wso_ptr->get_value(vb);
-                    wso_ptr->get_rec_ptr()->get_latest()->set_value(vb);
+                    wso_ptr->get_rec_ptr()->set_value(vb);
                 }
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
