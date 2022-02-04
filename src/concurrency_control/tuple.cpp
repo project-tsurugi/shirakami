@@ -10,31 +10,8 @@
 namespace shirakami {
 
 Tuple::Impl::Impl(std::string_view key, std::string_view val) {
-    value_.assign(val.data(), val.size());
-    key_.assign(key.data(), key.size());
-}
-
-Tuple::Impl::Impl(const Impl& right) : key_(right.key_), value_(right.value_) {}
-
-Tuple::Impl::Impl(Impl&& right) { // NOLINT
-    this->key_ = std::move(right.key_);
-    this->value_ = std::move(right.value_);
-}
-
-Tuple::Impl& Tuple::Impl::operator=(const Impl& right) { // NOLINT
-    // process about copy assign
-    this->key_ = right.key_;
-    this->value_ = right.value_;
-
-    return *this;
-}
-
-Tuple::Impl& Tuple::Impl::operator=(Impl&& right) { // NOLINT
-    // process about move assign
-    this->key_ = std::move(right.key_);
-    this->value_ = std::move(right.value_);
-
-    return *this;
+    key_ = key;
+    value_ = val;
 }
 
 void Tuple::Impl::get_key(std::string& out) const { // NOLINT

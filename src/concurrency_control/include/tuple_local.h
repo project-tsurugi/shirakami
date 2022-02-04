@@ -13,25 +13,13 @@
 
 namespace shirakami {
 
-class Tuple::Impl {
+class Tuple::Impl { // NOLINT
 public:
-    Impl() = default;
+    Impl() = default; // NOLINT
 
     Impl(std::string_view key, std::string_view val);
 
-    Impl(const Impl& right);
-
-    Impl(Impl&& right);
-
-    ~Impl() = default;
-
-    /**
-     * @brief copy assign operator
-     * @pre this is called by read_record function at xact.concurrency_control only .
-     */
-    Impl& operator=(const Impl& right); // NOLINT
-
-    Impl& operator=(Impl&& right); // NOLINT
+    ~Impl() = default; // NOLINT
 
     /**
      * @brief Get the key object
@@ -58,9 +46,7 @@ public:
 
     [[maybe_unused]] void set_key(std::string_view key) { key_ = key; }
 
-    [[maybe_unused]] void set_value(std::string_view val) {
-        value_ = val;
-    }
+    [[maybe_unused]] void set_value(std::string_view val) { value_ = val; }
 
 private:
     std::string key_{};
