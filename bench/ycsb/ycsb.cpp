@@ -298,25 +298,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin(token, true);
-                std::vector<const Tuple*> scan_res;
-                //                scan_key(token, storage, itr.get_scan_l_key(), scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),scan_endpoint::INCLUSIVE, scan_res);
-                scan_key(token, storage, "", scan_endpoint::INF, "",
-                         scan_endpoint::INF, scan_res);
-                std::cout << "list" << std::endl;
-                for (auto&& it : scan_res) {
-                    std::string key{};
-                    it->get_key(key);
-                    std::cout << key << std::endl;
-                    std::flush(std::cout);
-                }
-                exit(1);
-#ifndef NDEBUG
-                if (scan_res.size() != FLAGS_scan_elem_num) {
-                    LOG(FATAL) << "scan fatal error " << scan_res.size();
-                } else {
-                    std::cout << "ok" << std::endl;
-                }
-#endif
+                // todo scan to open_scan and read_from_scan
             }
         }
         if (commit(token) == Status::OK) { // NOLINT

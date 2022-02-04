@@ -16,7 +16,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-Storage storage;
+Storage st;
 class phantom_protection : public ::testing::Test {
 public:
     void SetUp() override {
@@ -29,7 +29,7 @@ public:
 };
 
 TEST_F(phantom_protection, phantom_basic) { // NOLINT
-    register_storage(storage);
+    register_storage(st);
     constexpr std::size_t token_length{2};
     std::array<Token, token_length> token{};
     ASSERT_EQ(enter(token.at(0)), Status::OK);
@@ -40,20 +40,18 @@ TEST_F(phantom_protection, phantom_basic) { // NOLINT
         key.at(i) = std::string{1, static_cast<char>(i)}; // NOLINT
     }
     std::string v{"value"}; // NOLINT
-    ASSERT_EQ(Status::OK, insert(token.at(0), storage, key.at(0), v));
-    ASSERT_EQ(Status::OK, insert(token.at(0), storage, key.at(1), v));
+    ASSERT_EQ(Status::OK, insert(token.at(0), st, key.at(0), v));
+    ASSERT_EQ(Status::OK, insert(token.at(0), st, key.at(1), v));
     ASSERT_EQ(Status::OK, commit(token.at(0))); // NOLINT
     std::vector<const Tuple*> tuple_vec;
-#if defined(CPR)
-    while (Status::OK != scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(token.at(0), storage, "", scan_endpoint::INF, "", scan_endpoint::INF, tuple_vec));
-#endif
-    ASSERT_EQ(tuple_vec.size(), 2);
+    ScanHandle handle{};
+    ASSERT_EQ(Status::OK, open_scan(token.at(0), st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, handle));
+    Tuple* tuple{};
+    ASSERT_EQ(Status::OK, read_from_scan(token.at(0), handle, tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(token.at(0), handle, tuple));
     // interrupt to occur phantom
-    ASSERT_EQ(Status::OK, insert(token.at(1), storage, key.at(2), v));
+    ASSERT_EQ(Status::OK, insert(token.at(1), st, key.at(2), v));
     ASSERT_EQ(Status::OK, commit(token.at(1))); // NOLINT
     // =====
     ASSERT_EQ(Status::ERR_PHANTOM, commit(token.at(0))); // NOLINT
@@ -76,13 +74,13 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
      * but if it is interrupted by the insertion of "2" or "101",
      * phantom avoidance must be performed on the nodes A and C.
      */
-    register_storage(storage);
+    register_storage(st);
     Token token{};
     std::string v{"v"};
     ASSERT_EQ(enter(token), Status::OK);
     for (char i = 0; i <= 25; ++i) { // NOLINT
         char c = i;
-        ASSERT_EQ(insert(token, storage, std::string_view(&c, 1), v), Status::OK);
+        ASSERT_EQ(insert(token, st, std::string_view(&c, 1), v), Status::OK);
     }
     ASSERT_EQ(Status::OK, commit(token));
     /**
@@ -97,7 +95,8 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     auto delete_range = [&token](char begin, char end) {
         for (char i = begin; i <= end; ++i) {
             char c = i;
-            ASSERT_EQ(delete_record(token, storage, std::string_view(&c, 1)), Status::OK);
+            ASSERT_EQ(delete_record(token, st, std::string_view(&c, 1)),
+                      Status::OK);
         }
         ASSERT_EQ(Status::OK, commit(token));
     };
@@ -122,11 +121,16 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     sleep(1);
     char begin{1}; // NOLINT
     char end{24};  // NOLINT
-    std::vector<const Tuple*> res;
-    ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
-    ASSERT_EQ(res.size(), 7);
+    std::string_view l_view{&begin, 1};
+    std::string_view r_view{&end, 1};
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(token, st, l_view, scan_endpoint::INCLUSIVE,
+                                    r_view, scan_endpoint::INCLUSIVE, hd));
+    std::size_t ssize{};
+    ASSERT_EQ(scannable_total_index_size(token, hd, ssize), Status::OK);
+    ASSERT_EQ(ssize, 7);
     char ekey{15}; // NOLINT
-    ASSERT_EQ(insert(enemy, storage, std::string_view(&ekey, 1), v), Status::OK);
+    ASSERT_EQ(insert(enemy, st, std::string_view(&ekey, 1), v), Status::OK);
     ASSERT_EQ(commit(enemy), Status::OK);
     /**
      * now,
@@ -140,7 +144,13 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
 
     begin = 1; // NOLINT
     end = 24;  // NOLINT
-    ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
+    l_view = {&begin, 1};
+    r_view = {&end, 1};
+    ASSERT_EQ(open_scan(token, st, l_view, scan_endpoint::INCLUSIVE, r_view,
+                        scan_endpoint::INCLUSIVE, hd),
+              Status::OK);
+    Tuple* tuple{};
+    while (Status::WARN_SCAN_LIMIT != read_from_scan(token, hd, tuple)) {}
     auto* ti = static_cast<session*>(token);
     auto& ns = ti->get_node_set();
     ASSERT_EQ(ns.size(), 3);
@@ -149,7 +159,7 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     ASSERT_NE(std::get<1>(ns.at(0)), std::get<1>(ns.at(2)));
 
     ekey = 1; // NOLINT
-    ASSERT_EQ(insert(enemy, storage, std::string_view(&ekey, 1), v), Status::OK);
+    ASSERT_EQ(insert(enemy, st, std::string_view(&ekey, 1), v), Status::OK);
     ASSERT_EQ(commit(enemy), Status::OK);
     /**
      * now,
@@ -163,10 +173,15 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
 
     begin = 2; // NOLINT
     end = 24;  // NOLINT
-    ASSERT_EQ(scan_key(token, storage, std::string_view(&begin, 1), scan_endpoint::INCLUSIVE, std::string_view(&end, 1), scan_endpoint::INCLUSIVE, res), Status::OK);
-    ASSERT_EQ(res.size(), 8);
+    l_view = {&begin, 1};
+    r_view = {&end, 1};
+    ASSERT_EQ(Status::OK, open_scan(token, st, l_view, scan_endpoint::INCLUSIVE,
+                                    r_view, scan_endpoint::INCLUSIVE, hd));
+    ASSERT_EQ(Status::OK, scannable_total_index_size(token, hd, ssize));
+    ASSERT_EQ(ssize, 8);
+
     ekey = 24; // NOLINT
-    ASSERT_EQ(insert(enemy, storage, std::string_view(&ekey, 1), v), Status::OK);
+    ASSERT_EQ(insert(enemy, st, std::string_view(&ekey, 1), v), Status::OK);
     ASSERT_EQ(commit(enemy), Status::OK);
     /**
      * now,

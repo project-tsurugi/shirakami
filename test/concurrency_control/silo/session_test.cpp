@@ -84,45 +84,11 @@ TEST_F(session_test, get_txbegan_) { // NOLINT
     ASSERT_EQ(ti->get_txbegan(), false);
     // test search
     Tuple* tuple = {};
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);
-#ifdef CPR
-    while (Status::OK != search_key(s, storage, k, tuple)) {
-        ;
-    }
-#else
     ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-#endif
-    ASSERT_EQ(ti->get_txbegan(), true);
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(ti->get_txbegan(), false);
-    // test scan
-    std::vector<const Tuple*> res;
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res));
-#endif
-    ASSERT_EQ(ti->get_txbegan(), true);
-    ASSERT_EQ(Status::OK, abort(s));
-    ASSERT_EQ(ti->get_txbegan(), false);
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k, scan_endpoint::INCLUSIVE, res));
-#endif
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_txbegan(), false);

@@ -33,26 +33,29 @@ private:
 };
 
 TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
-    Storage storage{};
-    register_storage(storage);
+    Storage st{};
+    register_storage(st);
     std::string k("T6\000\200\000\000\n\200\000\000\001", 11); // NOLINT
     std::string end("T6\001", 3);                              // NOLINT
     std::string v("bbb");                                      // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, end,
-                                   scan_endpoint::EXCLUSIVE, records));
-    EXPECT_EQ(1, records.size());
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, end,
+                                    scan_endpoint::EXCLUSIVE, hd));
+    std::size_t ssize{};
+    ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, ssize));
+    ASSERT_EQ(ssize, 1);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
-    Storage storage{};
-    register_storage(storage);
+    Storage st{};
+    register_storage(st);
     // simulating 1st case in umikongo OperatorTest scan_pushdown_range
     std::string r1("T200\x00\x80\x00\x00\xc7\x80\x00\x01\x91\x80\x00\x01\x2d"
                    "\x80\x00\x00\x01", // NOLINT
@@ -74,30 +77,25 @@ TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
     std::string v("bbb");                                          // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r1, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r2, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r3, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r4, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r5, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r1, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r2, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r3, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r4, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r5, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    std::vector<const Tuple*> records{};
-#if defined(CPR)
-    while (Status::OK != scan_key(s, storage, b, scan_endpoint::INCLUSIVE, e,
-                                  scan_endpoint::EXCLUSIVE, records)) {
-        ;
-    }
-#else
-    ASSERT_EQ(Status::OK, scan_key(s, storage, b, scan_endpoint::INCLUSIVE, e,
-                                   scan_endpoint::EXCLUSIVE, records));
-#endif
-    EXPECT_EQ(1, records.size());
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, b, scan_endpoint::INCLUSIVE, e,
+                                    scan_endpoint::EXCLUSIVE, hd));
+    std::size_t ssize{};
+    ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, ssize));
+    ASSERT_EQ(ssize, 1);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
-    Storage storage{};
-    register_storage(storage);
+    Storage st{};
+    register_storage(st);
     // simulating dump failure with jogasaki-tpcc
     std::string r1(
             "CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00"
@@ -127,18 +125,18 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     std::string v("bbb");                                   // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r1, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r2, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r3, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r4, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r5, v));
-    ASSERT_EQ(Status::OK, upsert(s, storage, r6, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r1, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r2, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r3, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r4, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r5, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, r6, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ScanHandle handle{};
     Tuple* tuple{};
     {
-        ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
+        ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
         std::string key{};
@@ -164,9 +162,8 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     }
 
     {
-        ASSERT_EQ(Status::OK,
-                  open_scan(s, storage, r3, scan_endpoint::EXCLUSIVE, e,
-                            scan_endpoint::EXCLUSIVE, handle));
+        ASSERT_EQ(Status::OK, open_scan(s, st, r3, scan_endpoint::EXCLUSIVE, e,
+                                        scan_endpoint::EXCLUSIVE, handle));
         ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
         std::string key{};
         tuple->get_key(key);

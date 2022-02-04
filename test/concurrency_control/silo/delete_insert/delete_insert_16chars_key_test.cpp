@@ -20,25 +20,24 @@ public:
     void TearDown() override { fin(); }
 };
 
-Storage storage;
+Storage st;
 
 TEST_F(delete_insert_16chars_key, delete_insert_with_16chars) { // NOLINT
-    ASSERT_EQ(register_storage(storage), Status::OK);
+    ASSERT_EQ(register_storage(st), Status::OK);
     std::string k("testing_a0123456"); // NOLINT
     std::string v("bbb");              // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    std::vector<const Tuple*> tuples{};
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::INCLUSIVE, k,
-                                   scan_endpoint::INCLUSIVE, tuples));
-    EXPECT_EQ(1, tuples.size());
-    for (auto&& t : tuples) {
-        std::string key{};
-        t->get_key(key);
-        ASSERT_EQ(Status::OK, delete_record(s, storage, key));
-    }
+    ScanHandle handle;
+    ASSERT_EQ(Status::OK, open_scan(s, st, k, scan_endpoint::INCLUSIVE, k,
+                                    scan_endpoint::INCLUSIVE, handle));
+    Tuple* tuple{};
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+    std::string key{};
+    tuple->get_key(key);
+    ASSERT_EQ(Status::OK, delete_record(s, st, key));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

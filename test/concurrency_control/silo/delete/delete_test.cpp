@@ -40,22 +40,4 @@ TEST_F(delete_test, delete_) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(delete_test, all_deletes) { // NOLINT
-    register_storage(storage);
-    std::string k("testing_a0123456"); // NOLINT
-    std::string v("bbb");              // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, storage, "", scan_endpoint::INF, "",
-                                   scan_endpoint::INF, records));
-    for (auto&& t : records) {
-        std::string key{};
-        t->get_key(key);
-        ASSERT_EQ(Status::OK, delete_record(s, storage, key));
-    }
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 } // namespace shirakami::testing

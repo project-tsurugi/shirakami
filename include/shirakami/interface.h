@@ -275,36 +275,6 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                              Tuple*& result);
 
 /**
- * @brief search with the given key range and return the found tuples
- * @param[in] token the token retrieved by enter()
- * @param[in] storage the handle of storage.
- * @param[in] l_key the key to indicate the beginning of the range, null if the beginning 
- * is open.
- * @param[in] l_end indicate whether the @b l_key is exclusive (i.e. the record whose key 
- * equal to l_key is not included in the result).
- * @param[in] r_key the key to indicate the ending of the range, null if the end is open.
- * @param[in] r_end indicate whether the @b r_key is exclusive.
- * @param[out] result output parameter to pass the found Tuple pointers.
- * Empty when nothing is found for the given key range.
- * Returned tuple pointers are valid until next calling function.
- * @param[in] max_size Default is 0. If this argument is 0, it will not use 
- * this argument. This argument limits the number of results.
- * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation 
- * of this transaction.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation.
- * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
- * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other 
- * updater, and it could not complete search.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
- * so it called abort().
- */
-extern Status scan_key(Token token, Storage storage, std::string_view l_key,
-                       scan_endpoint l_end, std::string_view r_key,
-                       scan_endpoint r_end, std::vector<const Tuple*>& result,
-                       std::size_t max_size = 0); // NOLINT
-
-/**
  * @brief This function checks the size resulted at open_scan with the @b handle.
  * @param[in] token the token retrieved by enter()
  * @param[in] handle the handle to identify scanned result. This handle will be deleted 

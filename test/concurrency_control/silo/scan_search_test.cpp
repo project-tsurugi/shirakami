@@ -57,37 +57,36 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     std::string v("bbb");  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    std::vector<const Tuple*> records{};
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
-                                   scan_endpoint::EXCLUSIVE, records));
-    EXPECT_EQ(0, records.size());
+    ScanHandle handle{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(s, storage, "", scan_endpoint::INF, "",
+                        scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, upsert(s, storage, k2, v));
     ASSERT_EQ(Status::OK, upsert(s, storage, k3, v));
     ASSERT_EQ(Status::OK, upsert(s, storage, k4, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
-                                   scan_endpoint::EXCLUSIVE, records));
-    EXPECT_EQ(2, records.size());
-
+    ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                                    scan_endpoint::EXCLUSIVE, handle));
     Tuple* tuple{};
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, tuple));
     EXPECT_NE(nullptr, tuple);
     delete_record(s, storage, k2);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     for (;;) {
-        if (Status::OK == scan_key(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
-                                   scan_endpoint::EXCLUSIVE, records) &&
-            Status::OK == commit(s)) {
-            /**
-             * Delayed unhooking can result in false positive aborts.
-             * However, it will surely succeed.
-             */
-            ASSERT_EQ(1, records.size());
-            break;
-        }
+        auto rc{open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                          scan_endpoint::EXCLUSIVE, handle)};
+        if (rc != Status::OK) { continue; }
+        rc = read_from_scan(s, handle, tuple);
+        if (rc != Status::OK) { continue; }
+        rc = commit(s);
+        if (rc != Status::OK) { continue; }
         _mm_pause();
+        break;
     }
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k3));
