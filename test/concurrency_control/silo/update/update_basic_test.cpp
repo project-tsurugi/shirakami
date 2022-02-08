@@ -1,7 +1,7 @@
+
 #include <bitset>
 #include <future>
-
-#include "gtest/gtest.h"
+#include <mutex>
 
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/record.h"
@@ -13,19 +13,32 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
 
 class simple_update : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
+                                  "update-update_basic_test");
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/test_log/update_basic_log");
+    }
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/test_log/update_basic_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(simple_update, update) { // NOLINT
@@ -40,17 +53,14 @@ TEST_F(simple_update, update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-    std::string value{};
-    tuple->get_value(value);
-    ASSERT_EQ(memcmp(value.data(), v.data(), value.size()), 0);
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
+    ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-    tuple->get_value(value);
-    ASSERT_EQ(memcmp(value.data(), v2.data(), v2.size()), 0);
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
+    ASSERT_EQ(memcmp(vb.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

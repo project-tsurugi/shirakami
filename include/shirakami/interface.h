@@ -292,10 +292,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the handle of storage.
  * @param[in] key the search key
- * @param[out] tuple output parameter to pass the found Tuple pointer.
- * The ownership of the address which is pointed by the tuple is in shirakami.
- * So upper layer from shirakami don't have to be care.
- * nullptr when nothing is found for the given key.
+ * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of 
  * this transaction.
@@ -310,7 +307,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * write (insert/update/upsert) operation in the same tx.
  */
 extern Status search_key(Token token, Storage storage, std::string_view key,
-                         Tuple*& tuple); // NOLINT
+                         std::string& value); // NOLINT
 
 /**
  * @brief Transaction begins.

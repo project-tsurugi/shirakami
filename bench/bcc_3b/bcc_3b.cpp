@@ -176,8 +176,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                             target_st = storage;
                         }
                     }
-                    Tuple* tuple{};
-                    rc = search_key(token, target_st, itr.get_key(), tuple);
+                    std::string vb{};
+                    rc = search_key(token, target_st, itr.get_key(), vb);
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }

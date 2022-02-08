@@ -18,7 +18,7 @@
 namespace shirakami::occ {
 
 Status search_key(session* ti, Storage const storage,
-                  std::string_view const key, Tuple*& tuple,
+                  std::string_view const key, std::string& value,
                   bool const read_value) {
     // index access
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
@@ -26,7 +26,6 @@ Status search_key(session* ti, Storage const storage,
              sizeof(storage)},                        // NOLINT
             key))};
     if (rec_d_ptr == nullptr) {
-        if (read_value) { tuple = nullptr; }
         return Status::WARN_NOT_FOUND;
     }
     Record* rec_ptr{*rec_d_ptr};
@@ -37,15 +36,7 @@ Status search_key(session* ti, Storage const storage,
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        if (read_value) {
-            std::string kb{};
-            in_ws->get_rec_ptr()->get_key(kb);
-            std::string vb{};
-            in_ws->get_value(vb);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(kb);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_value(vb);
-            tuple = ti->get_cache_for_search_ptr();
-        }
+        if (read_value) { in_ws->get_value(value); }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -56,12 +47,8 @@ Status search_key(session* ti, Storage const storage,
     if (rs == Status::OK) {
         if (read_value) {
             ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(key);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_value(read_res);
-            tuple = ti->get_cache_for_search_ptr();
+            value = read_res;
         }
-    } else {
-        if (read_value) { tuple = nullptr; }
     }
     return rs;
 }

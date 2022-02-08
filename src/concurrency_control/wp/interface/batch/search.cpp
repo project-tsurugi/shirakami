@@ -18,7 +18,7 @@
 namespace shirakami::batch {
 
 Status search_key(session* ti, Storage const storage,
-                  std::string_view const key, Tuple*& tuple,
+                  std::string_view const key, std::string& value,
                   bool const read_value) {
     if (ti->get_mode() == tx_mode::BATCH &&
         epoch::get_global_epoch() < ti->get_valid_epoch()) {
@@ -30,10 +30,7 @@ Status search_key(session* ti, Storage const storage,
             {reinterpret_cast<const char*>(&storage), // NOLINT
              sizeof(storage)},                        // NOLINT
             key))};
-    if (rec_d_ptr == nullptr) {
-        if (read_value) { tuple = nullptr; }
-        return Status::WARN_NOT_FOUND;
-    }
+    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
     Record* rec_ptr{*rec_d_ptr};
 
     // check local write set
@@ -47,9 +44,7 @@ Status search_key(session* ti, Storage const storage,
             in_ws->get_rec_ptr()->get_key(kb);
             std::string vb{};
             in_ws->get_value(vb);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_key(kb);
-            ti->get_cache_for_search_ptr()->get_pimpl()->set_value(vb);
-            tuple = ti->get_cache_for_search_ptr();
+            value = vb;
         }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
@@ -101,18 +96,8 @@ VER_SELEC:
         f_check = s_check;
     }
 
-    auto valid_version_tuple_register = [&ti, &rec_ptr, &ver, &tuple]() {
-        std::string kb{};
-        rec_ptr->get_key(kb);
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_key(kb);
-        std::string vb{};
-        ver->get_value(vb);
-        ti->get_cache_for_search_ptr()->get_pimpl()->set_value(vb);
-        tuple = ti->get_cache_for_search_ptr();
-    };
-
     if (ti->get_valid_epoch() > f_check.get_epoch()) {
-        if (read_value) { valid_version_tuple_register(); }
+        if (read_value) { ver->get_value(value); }
         if (ver == rec_ptr->get_latest() &&
             loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) !=
                     f_check.get_obj()) {
@@ -129,7 +114,7 @@ VER_SELEC:
         if (ver == nullptr) { LOG(FATAL) << "unreachable"; }
 
         if (ti->get_valid_epoch() > ver->get_tid().get_epoch()) {
-            if (read_value) { valid_version_tuple_register(); }
+            if (read_value) { ver->get_value(value); }
             return Status::OK;
         }
     }

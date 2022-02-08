@@ -43,12 +43,8 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
                                          {reinterpret_cast<char*>(&v), // NOLINT
                                           sizeof(std::int64_t)}));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-            Tuple* t{};
-#ifdef CPR
-            while (Status::OK != search_key(s, storage, k, t)) { ; }
-#else
-            ASSERT_EQ(Status::OK, search_key(s, storage, k, t));
-#endif
+            std::string vb{};
+            ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
@@ -58,17 +54,15 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             std::int64_t v{0};
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
-            Tuple* t{};
-            Status res{search_key(s, storage, k, t)};
+            std::string vb{};
+            Status res{search_key(s, storage, k, vb)};
             while (res == Status::WARN_CONCURRENT_UPDATE) {
-                res = search_key(s, storage, k, t);
+                res = search_key(s, storage, k, vb);
             }
             if (res != Status::OK) { LOG(FATAL) << "fatal error"; }
-            ASSERT_NE(nullptr, t);
-            std::string val{};
-            t->get_value(val);
+            ASSERT_NE("", vb);
             v = *reinterpret_cast<std::int64_t*>( // NOLINT
-                    const_cast<char*>(val.data()));
+                    const_cast<char*>(vb.data()));
             v++;
             std::this_thread::sleep_for(
                     std::chrono::milliseconds(100)); // NOLINT
@@ -83,13 +77,11 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             std::string k("aa"); // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
-            Tuple* tuple{};
-            ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
-            ASSERT_NE(nullptr, tuple);
-            std::string value{};
-            tuple->get_value(value);
+            std::string vb{};
+            ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
+            ASSERT_NE("", vb);
             std::int64_t v{*reinterpret_cast<std::int64_t*>( // NOLINT
-                    const_cast<char*>(value.data()))};
+                    const_cast<char*>(vb.data()))};
             ASSERT_EQ(10, v);
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));

@@ -39,32 +39,27 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     // data access
     read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr, false);
-    if (rr == Status::OK) {
-        ti->get_read_set().emplace_back(std::move(rs_ob));
-    }
+    if (rr == Status::OK) { ti->get_read_set().emplace_back(std::move(rs_ob)); }
     return rr;
 }
 
 Status search_key(Token token, Storage storage,
                   const std::string_view key, // NOLINT
-                  Tuple*& tuple) {
+                  std::string& value) {
     auto* ti = static_cast<session*>(token);
 
     // check flags
     if (!ti->get_txbegan()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
-        return snapshot_interface::lookup_snapshot(ti, storage, key, tuple);
+        return snapshot_interface::lookup_snapshot(ti, storage, key, value);
     }
 
     // index access
     Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             key))};                                               // NOLINT
-    if (rec_double_ptr == nullptr) {
-        tuple = nullptr;
-        return Status::WARN_NOT_FOUND;
-    }
+    if (rec_double_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
     Record* rec_ptr{*rec_double_ptr};
 
     // check read own write
@@ -73,7 +68,7 @@ Status search_key(Token token, Storage storage,
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        tuple = &inws->get_tuple(inws->get_op());
+        inws->get_tuple(inws->get_op()).get_value(value);
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -82,9 +77,7 @@ Status search_key(Token token, Storage storage,
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
         ti->get_read_set().emplace_back(std::move(rs_ob));
-        tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
-    } else {
-        tuple = nullptr;
+        ti->get_read_set().back().get_rec_read().get_tuple().get_value(value);
     }
     return rr;
 }

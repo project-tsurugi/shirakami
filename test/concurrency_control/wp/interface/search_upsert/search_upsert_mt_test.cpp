@@ -96,9 +96,9 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
             }
             for (auto&& elem : keys) {
                 for (;;) {
-                    Tuple* tuple{};
+                    std::string vb{};
                     for (;;) {
-                        auto rc{search_key(s, storage, elem, tuple)};
+                        auto rc{search_key(s, storage, elem, vb)};
                         if (rc == Status::OK) { break; }
                         if (rc == Status::WARN_PREMATURE ||
                             rc == Status::WARN_CONCURRENT_UPDATE) {
@@ -108,8 +108,6 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                         }
                     }
                     std::size_t v{};
-                    std::string vb{};
-                    tuple->get_value(vb);
                     memcpy(&v, vb.data(), sizeof(v));
                     ++v;
                     std::string_view v_view{
@@ -154,11 +152,9 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
     // verify result
     ASSERT_EQ(enter(s), Status::OK);
     for (auto&& elem : keys) {
-        Tuple* tuple{};
-        ASSERT_EQ(search_key(s, storage, elem, tuple), Status::OK);
-        std::size_t v{};
         std::string vb{};
-        tuple->get_value(vb);
+        ASSERT_EQ(search_key(s, storage, elem, vb), Status::OK);
+        std::size_t v{};
         memcpy(&v, vb.data(), sizeof(v));
         ASSERT_EQ(v, batch_loop + occ_loop);
     }

@@ -129,8 +129,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
             Status rc{};
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 for (;;) {
-                    Tuple* tuple{};
-                    rc = search_key(token, storage, itr.get_key(), tuple);
+                    std::string vb{};
+                    rc = search_key(token, storage, itr.get_key(), vb);
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }

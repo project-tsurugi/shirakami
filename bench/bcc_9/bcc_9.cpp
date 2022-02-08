@@ -89,15 +89,15 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                Tuple* tp{};
-                auto rc{search_key(token, get_st(), itr.get_key(), tp)};
+                std::string vb{};
+                auto rc{search_key(token, get_st(), itr.get_key(), vb)};
                 for (;;) {
                     if (rc == Status::OK ||
                         rc == Status::WARN_READ_FROM_OWN_OPERATION) {
                         break;
                     }
                     if (rc == Status::WARN_CONCURRENT_UPDATE) {
-                        rc = search_key(token, get_st(), itr.get_key(), tp);
+                        rc = search_key(token, get_st(), itr.get_key(), vb);
                     } else {
                         LOG(FATAL) << "ec: " << rc << std::endl;
                     }

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <bitset>
+#include <mutex>
 
 // apt
 #include <glog/logging.h>
@@ -18,6 +19,8 @@
 // third party
 #include "gtest/gtest.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -26,18 +29,25 @@ Storage st{};
 
 class upsert_after_delete : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
+                                  "upsert-upsert_after_insert_test");
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/tmp/upsert_after_delete_test_log");
+    }
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/upsert_after_delete_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(upsert_after_delete, txs) { // NOLINT
-    google::InitGoogleLogging("shirakami-test-concurrency_control-upsert-"
-                              "upsert_after_insert_test");
     register_storage(st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
@@ -50,11 +60,9 @@ TEST_F(upsert_after_delete, txs) { // NOLINT
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s1, st, k, tuple));
-    std::string val{};
-    tuple->get_value(val);
-    ASSERT_EQ(memcmp(val.data(), v.data(), v.size()), 0);
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, k, vb));
+    ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));

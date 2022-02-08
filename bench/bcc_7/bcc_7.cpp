@@ -90,8 +90,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         for (auto&& itr : opr_set) {
             Status rc{};
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                Tuple* tp{};
-                rc = search_key(token, get_st(), itr.get_key(), tp);
+                std::string vb{};
+                rc = search_key(token, get_st(), itr.get_key(), vb);
                 if (rc != Status::OK) {
                     LOG(FATAL) << "ec: " << rc << std::endl;
                 }

@@ -151,8 +151,8 @@ TEST_F(simple_insert, long_key_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

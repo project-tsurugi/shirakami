@@ -108,14 +108,14 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
         init(false, get_log_dir()); // NOLINT
         gen_initial_db(st);
         ASSERT_EQ(tx_begin(s.at(0), false, std::get<0>(tc).at(0)), Status::OK);
-        Tuple* tuple{};
-        ASSERT_EQ(search_key(s.at(0), st, x, tuple), Status::OK);
+        std::string vb{};
+        ASSERT_EQ(search_key(s.at(0), st, x, vb), Status::OK);
         ASSERT_EQ(tx_begin(s.at(1), false, std::get<0>(tc).at(1)), Status::OK);
-        ASSERT_EQ(search_key(s.at(1), st, y, tuple), Status::OK);
+        ASSERT_EQ(search_key(s.at(1), st, y, vb), Status::OK);
         ASSERT_EQ(upsert(s.at(0), st, y, v.at(0)), Status::OK);
         if (std::get<1>(tc).at(0)) { ASSERT_EQ(commit(s.at(0)), Status::OK); }
         ASSERT_EQ(tx_begin(s.at(2), false, std::get<0>(tc).at(2)), Status::OK);
-        ASSERT_EQ(search_key(s.at(2), st, z, tuple), Status::OK);
+        ASSERT_EQ(search_key(s.at(2), st, z, vb), Status::OK);
         ASSERT_EQ(upsert(s.at(1), st, z, v.at(1)), Status::OK);
         if (std::get<1>(tc).at(1)) {
             ASSERT_EQ(commit(s.at(1)), Status::ERR_VALIDATION);
@@ -123,7 +123,7 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
         ASSERT_EQ(tx_begin(s.at(3), false, std::get<0>(tc).at(3)), Status::OK);
         if (std::get<1>(tc).at(3)) {
             for (;;) {
-                auto rc{search_key(s.at(3), st, a, tuple)};
+                auto rc{search_key(s.at(3), st, a, vb)};
                 if (rc == Status::WARN_PREMATURE) {
                     _mm_pause();
                 } else {
@@ -131,7 +131,7 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
                 }
             }
         } else {
-            ASSERT_EQ(search_key(s.at(3), st, a, tuple), Status::OK);
+            ASSERT_EQ(search_key(s.at(3), st, a, vb), Status::OK);
         }
         ASSERT_EQ(upsert(s.at(2), st, a, v.at(2)), Status::OK);
         if (std::get<1>(tc).at(2)) { ASSERT_EQ(commit(s.at(2)), Status::OK); }

@@ -231,10 +231,10 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         tx_begin(token, false, true);
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                Tuple* tuple{};
                 uint64_t ctr{0};
                 for (;;) {
-                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), tuple);
+                    std::string vb{};
+                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), vb);
                     if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {

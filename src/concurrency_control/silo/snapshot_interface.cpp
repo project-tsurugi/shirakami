@@ -67,22 +67,21 @@ Status lookup_snapshot(session* ti, Storage storage,
         return Status::WARN_NOT_FOUND;
     }
 
-    Tuple* dummy{};
+    std::string dummy{};
     return read_record(ti, *rec_d_ptr, dummy, false);
 }
 
 Status lookup_snapshot(session* ti, Storage storage, std::string_view key,
-                       Tuple*& ret_tuple) { // NOLINT
+                       std::string& value) { // NOLINT
     Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
             key))};
     if (rec_d_ptr == nullptr) {
         // There is no record which has the key.
-        ret_tuple = nullptr;
         return Status::WARN_NOT_FOUND;
     }
 
-    return read_record(ti, *rec_d_ptr, ret_tuple);
+    return read_record(ti, *rec_d_ptr, value);
 }
 
 extern Status read_from_scan(session* ti, const ScanHandle handle,
@@ -106,15 +105,25 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
 
         auto itr = scan_buf.begin() + scan_index;
         ++scan_index;
-        auto rc{read_record(ti, const_cast<Record*>(std::get<0>(*itr)), tuple)};
+        ti->get_read_only_tuples().clear();
+        Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
+        std::string key{};
+        rec_ptr->get_key(key);
+        ti->get_read_only_tuples().emplace_back(key, "");
+        std::string out{};
+        auto rc{read_record(ti, rec_ptr, out)};
         if (rc == Status::OK || rc == Status::WARN_CONCURRENT_INSERT) {
+            if (rc == Status::OK) {
+                ti->get_read_only_tuples().back().get_pimpl()->set_value(out);
+                tuple = &ti->get_read_only_tuples().back();
+            }
             return rc;
         }
     }
 }
 
 extern Status read_record(session* const ti, Record* const rec_ptr,
-                          Tuple*& tuple, bool read_value) { // NOLINT
+                          std::string& value, bool read_value) { // NOLINT
     tid_word tid{};
 
     // phase 1 : decide to see main record or snapshot.
@@ -142,7 +151,7 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
                     std::string key{};
                     rec_ptr->get_key(key);
                     ti->get_read_only_tuples().emplace_back(key, read_value_st);
-                    tuple = &ti->get_read_only_tuples().back();
+                    ti->get_read_only_tuples().back().get_value(value);
                 }
                 return Status::OK;
             }
@@ -164,7 +173,7 @@ extern Status read_record(session* const ti, Record* const rec_ptr,
         if (snapshot_manager::get_snap_epoch(ti->get_epoch()) >
             snapshot_manager::get_snap_epoch(
                     snap_ptr->get_tidw().get_epoch())) {
-            if (read_value) { tuple = &snap_ptr->get_tuple(); }
+            if (read_value) { snap_ptr->get_tuple().get_value(value); }
             return Status::OK;
         }
     }

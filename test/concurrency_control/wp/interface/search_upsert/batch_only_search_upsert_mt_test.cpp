@@ -105,9 +105,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
             ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
 
             for (auto&& elem : keys) {
-                Tuple* tuple{};
+                std::string vb{};
                 for (;;) {
-                    auto rc{search_key(s, st, elem, tuple)};
+                    auto rc{search_key(s, st, elem, vb)};
                     if (rc == Status::OK) { break; }
                     if (rc == Status::ERR_FAIL_WP) {
                         goto TX_BEGIN; // NOLINT
@@ -120,8 +120,6 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 }
 
                 std::size_t v{};
-                std::string vb{};
-                tuple->get_value(vb);
                 memcpy(&v, vb.data(), sizeof(v));
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
@@ -146,11 +144,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
     // verify result
     ASSERT_EQ(enter(s), Status::OK);
     for (auto&& elem : keys) {
-        Tuple* tuple{};
-        ASSERT_EQ(search_key(s, st, elem, tuple), Status::OK);
-        std::size_t v{};
         std::string vb{};
-        tuple->get_value(vb);
+        ASSERT_EQ(search_key(s, st, elem, vb), Status::OK);
+        std::size_t v{};
         memcpy(&v, vb.data(), sizeof(v));
         ASSERT_EQ(v, th_num * trial_n);
     }

@@ -32,7 +32,7 @@ public:
     }
 
     void SetUp() override {
-        std::call_once(init_google, call_once_f);
+        std::call_once(init_google_, call_once_f);
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
         log_dir.append("/build/search_upsert_multi_thread_test_log");
         init(false, log_dir); // NOLINT
@@ -41,7 +41,7 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
+    static inline std::once_flag init_google_;
 };
 
 static bool is_ready(const std::vector<char>& readys) {
@@ -93,14 +93,12 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (auto&& elem : keys) {
             for (;;) {
-                Tuple* tuple{};
-                while (search_key(s, storage, elem, tuple) != Status::OK) {
+                std::string vb{};
+                while (search_key(s, storage, elem, vb) != Status::OK) {
                     _mm_pause();
                 }
                 std::size_t v{};
-                std::string val{};
-                tuple->get_value(val);
-                memcpy(&v, val.data(), sizeof(v));
+                memcpy(&v, vb.data(), sizeof(v));
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
@@ -126,12 +124,10 @@ TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
     // verify result
     ASSERT_EQ(enter(s), Status::OK);
     for (auto&& elem : keys) {
-        Tuple* tuple{};
-        ASSERT_EQ(search_key(s, storage, elem, tuple), Status::OK);
+        std::string vb{};
+        ASSERT_EQ(search_key(s, storage, elem, vb), Status::OK);
         std::size_t v{};
-        std::string val{};
-        tuple->get_value(val);
-        memcpy(&v, val.data(), sizeof(v));
+        memcpy(&v, vb.data(), sizeof(v));
         ASSERT_EQ(v, thread_num);
     }
     commit(s);

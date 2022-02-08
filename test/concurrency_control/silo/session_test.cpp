@@ -83,12 +83,12 @@ TEST_F(session_test, get_txbegan_) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_txbegan(), false);
     // test search
-    Tuple* tuple = {};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_txbegan(), false);
-    ASSERT_EQ(Status::OK, search_key(s, storage, k, tuple));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(ti->get_txbegan(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_txbegan(), false);

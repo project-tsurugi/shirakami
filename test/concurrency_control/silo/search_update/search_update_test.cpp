@@ -21,20 +21,21 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-search_update_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        FLAGS_stderrthreshold = 0;        // output more than INFO
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/search_update_test_log");
     }
 
     void SetUp() override {
-        std::call_once(init_google, call_once_f);
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/search_update_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 /**
@@ -53,8 +54,8 @@ TEST_F(search_update, pointReadUpdate) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, search_key(s, st, k, tuple));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, update(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
@@ -96,12 +97,12 @@ TEST_F(search_update, // NOLINT
         LOG(INFO) << "start work";
 
         for (;;) {
-            Tuple* tuple{};
-            auto rc{search_key(s, st, k, tuple)};
+            std::string vb{};
+            auto rc{search_key(s, st, k, vb)};
             for (;;) {
                 if (rc == Status::OK) { break; }
                 if (rc == Status::WARN_CONCURRENT_UPDATE) {
-                    rc = search_key(s, st, k, tuple);
+                    rc = search_key(s, st, k, vb);
                 } else {
                     LOG(FATAL);
                 }

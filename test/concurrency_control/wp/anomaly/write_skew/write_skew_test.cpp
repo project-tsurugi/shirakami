@@ -73,14 +73,14 @@ TEST_F(write_skew, simple) { // NOLINT
     sleepMs(PARAM_EPOCH_TIME * 2);
 
     // read phase
-    Tuple* tuple1{};
-    Tuple* tuple2{};
-    ASSERT_EQ(search_key(s1, st, x, tuple1), Status::OK);
-    ASSERT_EQ(search_key(s2, st, y, tuple2), Status::ERR_FAIL_WP);
+    std::string vb1{};
+    std::string vb2{};
+    ASSERT_EQ(search_key(s1, st, x, vb1), Status::OK);
+    ASSERT_EQ(search_key(s2, st, y, vb2), Status::ERR_FAIL_WP);
     std::size_t v1{};
     //std::size_t v2{};
     std::string vb{};
-    tuple1->get_value(vb);
+    vb = vb1;
     memcpy(&v1, vb.data(), sizeof(v1));
     ++v1;
     //1memcpy(&v2, tuple2->get_value().data(), sizeof(v2));

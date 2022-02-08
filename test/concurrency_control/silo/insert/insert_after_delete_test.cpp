@@ -2,15 +2,17 @@
 #include <xmmintrin.h>
 
 #include <bitset>
-
-#include <glog/logging.h>
-#include <gtest/gtest.h>
+#include <mutex>
 
 #include "concurrency_control/silo/include/epoch.h"
 
 #include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
 
 namespace shirakami::testing {
 
@@ -20,13 +22,22 @@ Storage st;
 
 class insert_after_delete : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
+                                  "insert-insert_after_delete_test");
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/insert_after_delete_test_log");
+    }
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/insert_after_delete_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_google_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(insert_after_delete, independent_tx) { // NOLINT
@@ -69,11 +80,9 @@ TEST_F(insert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* tup{};
-    ASSERT_EQ(Status::OK, search_key(s, st, k, tup));
-    std::string val{};
-    tup->get_value(val);
-    ASSERT_EQ(memcmp(val.data(), v2.data(), v2.size()), 0);
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
+    ASSERT_EQ(memcmp(vb.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

@@ -16,7 +16,8 @@
 
 namespace shirakami {
 
-Status exist_key(Token const token, Storage const storage, std::string_view const key) {
+Status exist_key(Token const token, Storage const storage,
+                 std::string_view const key) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
@@ -25,7 +26,7 @@ Status exist_key(Token const token, Storage const storage, std::string_view cons
     // update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
 
-    Tuple* dummy{};
+    std::string dummy{};
     if (ti->get_mode() == tx_mode::BATCH) {
         return batch::search_key(ti, storage, key, dummy, false);
     }
@@ -37,7 +38,7 @@ Status exist_key(Token const token, Storage const storage, std::string_view cons
 }
 
 Status search_key(Token const token, Storage const storage,
-                  std::string_view const key, Tuple*& tuple) {
+                  std::string_view const key, std::string& value) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
@@ -47,10 +48,10 @@ Status search_key(Token const token, Storage const storage,
     ti->set_step_epoch(epoch::get_global_epoch());
 
     if (ti->get_mode() == tx_mode::BATCH) {
-        return batch::search_key(ti, storage, key, tuple);
+        return batch::search_key(ti, storage, key, value);
     }
     if (ti->get_mode() == tx_mode::OCC) {
-        return occ::search_key(ti, storage, key, tuple);
+        return occ::search_key(ti, storage, key, value);
     }
     LOG(FATAL) << "unreachable";
     return Status::ERR_FATAL;

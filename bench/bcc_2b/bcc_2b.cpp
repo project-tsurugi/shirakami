@@ -126,7 +126,6 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
         for (auto&& itr : opr_set) {
             Status rc{};
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                Tuple* tuple{};
                 uint64_t ctr{0};
 
                 // whether read from batch table
@@ -137,10 +136,11 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 }
 
                 for (;;) {
+                    std::string vb{};
                     rc = search_key(token,
                                     (is_ol && ol_read_bt) ? get_bt_storages()[0]
                                                           : storage,
-                                    itr.get_key(), tuple);
+                                    itr.get_key(), vb);
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }
