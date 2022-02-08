@@ -147,16 +147,6 @@ retry_by_continue:
         goto retry_by_continue; // NOLINT
     }
 
-#if PARAM_READ_SET_CONT == 1
-    // check local read set
-    auto rsitr = ti->get_read_set().find(
-            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
-    if (rsitr != ti->get_read_set().end()) {
-        tuple = &(*rsitr).second.get_rec_read().get_tuple();
-        return Status::OK;
-    }
-#endif
-
     /**
      * Check read-own-write
      */
@@ -183,14 +173,8 @@ retry_by_continue:
     Status rr = read_record(rsob.get_rec_read(),
                             const_cast<Record*>(std::get<0>(*itr)));
     if (rr != Status::OK) { return rr; }
-#if PARAM_READ_SET_CONT == 0
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
-#elif PARAM_READ_SET_CONT == 1
-    auto pr = ti->get_read_set().insert(std::make_pair(
-            const_cast<Record*>(std::get<0>(*itr)), std::move(rsob)));
-    tuple = &(*pr.first).second.get_rec_read().get_tuple();
-#endif
     ++scan_index;
 
     // create node set info

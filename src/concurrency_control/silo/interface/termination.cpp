@@ -99,11 +99,7 @@ Status read_verify(Token token, tid_word& max_rset) {
 
     tid_word check;
     for (auto&& itr : ti->get_read_set()) {
-#if PARAM_READ_SET_CONT == 0
         auto& rsobj = itr;
-#elif PARAM_READ_SET_CONT == 1
-        auto& rsobj = itr.second;
-#endif
         const Record* rec_ptr = rsobj.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
         if ((rsobj.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||

@@ -55,11 +55,7 @@ class session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-#if PARAM_READ_SET_CONT == 0
     using read_set_type = std::vector<read_set_obj>;
-#elif PARAM_READ_SET_CONT == 1
-    using read_set_type = std::unordered_map<Record*, read_set_obj>;
-#endif
 
     class scan_handler {
     public:

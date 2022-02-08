@@ -27,12 +27,6 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     if (rec_double_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
     Record* rec_ptr{*rec_double_ptr};
 
-#if PARAM_READ_SET_CONT == 1
-    // check local read set
-    auto itr = ti->get_read_set().find(rec_ptr);
-    if (itr != ti->get_read_set().end()) { return Status::OK; }
-#endif
-
     // check read own write
     write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (inws != nullptr) {
@@ -46,11 +40,7 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr, false);
     if (rr == Status::OK) {
-#if PARAM_READ_SET_CONT == 0
         ti->get_read_set().emplace_back(std::move(rs_ob));
-#elif PARAM_READ_SET_CONT == 1
-        ti->get_read_set().insert(std::make_pair(rec_ptr, std::move(rs_ob)));
-#endif
     }
     return rr;
 }
@@ -87,27 +77,12 @@ Status search_key(Token token, Storage storage,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-#if PARAM_READ_SET_CONT == 1
-    // check local read set
-    auto itr = ti->get_read_set().find(rec_ptr);
-    if (itr != ti->get_read_set().end()) {
-        tuple = &(*itr).second.get_rec_read().get_tuple();
-        return Status::OK;
-    }
-#endif
-
     // data access
     read_set_obj rs_ob(storage, rec_ptr); // NOLINT
     Status rr = read_record(rs_ob.get_rec_read(), rec_ptr);
     if (rr == Status::OK) {
-#if PARAM_READ_SET_CONT == 0
         ti->get_read_set().emplace_back(std::move(rs_ob));
         tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
-#elif PARAM_READ_SET_CONT == 1
-        auto pr = ti->get_read_set().insert(
-                std::make_pair(rec_ptr, std::move(rs_ob)));
-        tuple = &(*pr.first).second.get_rec_read().get_tuple();
-#endif
     } else {
         tuple = nullptr;
     }
