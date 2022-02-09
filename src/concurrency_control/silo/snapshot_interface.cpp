@@ -127,6 +127,7 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
         return rc;
     }
     next(static_cast<Token>(ti), handle);
+    return Status::OK;
 }
 
 extern Status read_record(session* const ti, Record* const rec_ptr,
