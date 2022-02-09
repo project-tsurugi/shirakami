@@ -274,6 +274,37 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
 extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                              Tuple*& result);
 
+#if 0
+/**
+ * @brief This function advances the cursor by one in the range opened by open_scan.
+ * 
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle identify the specific open_scan.
+ * @return Status 
+ */
+extern Status next(Token token, ScanHandle handle);
+
+/**
+ * @brief This reads the key of record pointed by the cursor.
+ * 
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle identify the specific open_scan.
+ * @param[out] key the result of this function.
+ * @return Status 
+ */
+extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
+
+/**
+ * @brief This reads the value of record pointed by the cursor.
+ * 
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle identify the specific open_scan.
+ * @param[out] value  the result of this function.
+ * @return Status 
+ */
+extern Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
+#endif
+
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
  * @param[in] token the token retrieved by enter()
