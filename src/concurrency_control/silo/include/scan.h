@@ -63,12 +63,12 @@ private:
 
 class scan_handler {
 public:
-    using scan_cache_type = std::map<
-            ScanHandle,
+    using scan_elem_type =
             std::tuple<Storage,
                        std::vector<std::tuple<const Record*,
                                               yakushima::node_version64_body,
-                                              yakushima::node_version64*>>>>;
+                                              yakushima::node_version64*>>>;
+    using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
     using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
     static constexpr std::size_t scan_cache_storage_pos = 0;
     static constexpr std::size_t scan_cache_vec_pos = 1;

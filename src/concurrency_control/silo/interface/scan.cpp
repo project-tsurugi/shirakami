@@ -140,36 +140,12 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return snapshot_interface::read_from_scan(ti, handle, tuple);
     }
 
+    scan_handler::scan_elem_type target_elem;
     auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     auto itr = scan_buf.begin() + scan_index;
-
-    for (;;) {
-        if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
-
-        // check whether it is deleted
-        tid_word target_tid{
-                loadAcquire(std::get<0>(*itr)->get_tidw().get_obj())};
-        if (!target_tid.get_latest() && target_tid.get_absent()) {
-            /**
-          * You can skip it with deleted record.
-          * The transactional scan logic is as follows.
-          * 1: Scan the index.
-          * 2: Transactional read the result of scanning the index.
-          * 3: Make sure that the transactional read has not been overwritten.
-          * 4: Check the node related to scanning for insertion / deletion to prevent phantom problem.
-          * If you observe the deleted record at point 2, you don't need to read it.
-          * As of 4, it should still be a deleted record.
-          * In other words, it suffices if there is no change in the node due to unhooking or the like.
-          * If delete interrupted between 1 and 2, 4 can detect it and abort.
-          */
-            next(token, handle);
-            itr = scan_buf.begin() + scan_index;
-            continue;
-        }
-        break;
-    }
+    if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
 
     /**
      * Check read-own-write
@@ -190,15 +166,17 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
-            ti->get_scan_cache()[handle])};
-
     tid_word tidb{};
     std::string keyb{};
     std::string valueb{};
     Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
                             valueb);
-    if (rr != Status::OK) { return rr; }
+    if (rr != Status::OK) {
+        next(token, handle);
+        return rr;
+    }
+    Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
+            ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
     rsob.get_rec_read().set_tidw(tidb);
     rsob.get_rec_read().get_tuple().get_pimpl()->set_key(keyb);

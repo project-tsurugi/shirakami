@@ -112,7 +112,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     /**
      * test
      * if read_from_scan detects the record deleted by others between open_scan
-     * and read_from_scan, it function returns Status::ERR_ILLEGAL_STATE which
+     * and read_from_scan, it function returns Status::WARN_CONCURRENT_DELETE which
      * means reading deleted record.
      */
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k4,
@@ -122,6 +122,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, storage, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::WARN_CONCURRENT_DELETE, read_from_scan(s, handle, tuple));
     ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
     tuple->get_key(key);
     ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
