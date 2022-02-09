@@ -130,15 +130,16 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
     auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
-retry_by_continue:
-    if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
-
     auto itr = scan_buf.begin() + scan_index;
 
-    // check whether it is deleted
-    tid_word target_tid{loadAcquire(std::get<0>(*itr)->get_tidw().get_obj())};
-    if (!target_tid.get_latest() && target_tid.get_absent()) {
-        /**
+    for (;;) {
+        if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
+
+        // check whether it is deleted
+        tid_word target_tid{
+                loadAcquire(std::get<0>(*itr)->get_tidw().get_obj())};
+        if (!target_tid.get_latest() && target_tid.get_absent()) {
+            /**
           * You can skip it with deleted record.
           * The transactional scan logic is as follows.
           * 1: Scan the index.
@@ -150,8 +151,11 @@ retry_by_continue:
           * In other words, it suffices if there is no change in the node due to unhooking or the like.
           * If delete interrupted between 1 and 2, 4 can detect it and abort.
           */
-        next(token, handle);
-        goto retry_by_continue; // NOLINT
+            next(token, handle);
+            itr = scan_buf.begin() + scan_index;
+            continue;
+        }
+        break;
     }
 
     /**
