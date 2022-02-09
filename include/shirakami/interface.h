@@ -283,7 +283,6 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  */
 extern Status next(Token token, ScanHandle handle);
 
-#if 0
 /**
  * @brief This reads the key of record pointed by the cursor.
  * 
@@ -303,7 +302,6 @@ extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& ke
  * @return Status 
  */
 extern Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
-#endif
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.

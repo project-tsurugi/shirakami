@@ -20,14 +20,11 @@ private:
 
 public:
     bool check_was_read(cursor_info::op_type op) {
-        if (op == op_type::read) {
-            return was_read_.test(0);
-        } else if (op == op_type::write) {
-            return was_read_.test(1);
-        } else {
-            LOG(FATAL);
-        }
+        if (op == op_type::read) { return was_read_.test(0); }
+        if (op == op_type::write) { return was_read_.test(1); }
+        LOG(FATAL);
     }
+
     void get_key(std::string& out) { out = key_; }
 
     void get_value(std::string& out) { out = value_; }

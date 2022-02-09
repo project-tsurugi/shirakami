@@ -114,6 +114,18 @@ Status next(Token token, ScanHandle handle) {
     return Status::OK;
 }
 
+Status read_key_from_scan([[maybe_unused]] Token token,
+                          [[maybe_unused]] ScanHandle handle,
+                          [[maybe_unused]] std::string& key) {
+    return Status::OK;
+}
+
+Status read_value_from_scan([[maybe_unused]] Token token,
+                            [[maybe_unused]] ScanHandle handle,
+                            [[maybe_unused]] std::string& key) {
+    return Status::OK;
+}
+
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
