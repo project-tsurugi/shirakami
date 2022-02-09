@@ -61,35 +61,35 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
-        auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 ti->get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 1));
-        auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 ti->get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 1);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 2));
-        auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 ti->get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 2);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 3));
-        auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 ti->get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 4));
-        auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 ti->get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }

@@ -45,9 +45,9 @@ extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
     /**
      * scan could find any records.
      */
-    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(
+    auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
-    std::get<session::scan_handler::scan_cache_storage_pos>(
+    std::get<scan_handler::scan_cache_storage_pos>(
             ti->get_scan_cache()[handle]) = storage;
     for (auto& elem : scan_res) {
         vec.emplace_back(*std::get<scan_res_rec_ptr>(elem),
@@ -96,7 +96,7 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+    auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 

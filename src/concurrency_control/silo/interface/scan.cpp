@@ -92,9 +92,9 @@ Status open_scan(Token token, Storage storage,
         }
     }
 
-    std::get<session::scan_handler::scan_cache_storage_pos>(
+    std::get<scan_handler::scan_cache_storage_pos>(
             ti->get_scan_cache()[handle]) = storage;
-    auto& vec = std::get<session::scan_handler::scan_cache_vec_pos>(
+    auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
@@ -120,7 +120,7 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = std::get<session::scan_handler::scan_cache_vec_pos>(
+    auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 retry_by_continue:
@@ -166,7 +166,7 @@ retry_by_continue:
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    Storage storage{std::get<session::scan_handler::scan_cache_storage_pos>(
+    Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
             ti->get_scan_cache()[handle])};
     read_set_obj rsob(storage, std::get<0>(*itr));
 
@@ -198,7 +198,7 @@ retry_by_continue:
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = std::get<session::scan_handler::scan_cache_vec_pos>(
+    size = std::get<scan_handler::scan_cache_vec_pos>(
                    ti->get_scan_cache()[handle])
                    .size();
     return Status::OK;
