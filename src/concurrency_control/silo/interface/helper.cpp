@@ -194,10 +194,10 @@ tx_begin(Token const token, bool const read_only, bool const for_batch,
     return Status::OK;
 }
 
-Status read_record(Record& res, Record* const dest,
-                   bool read_value) { // NOLINT
-    tid_word f_check;
-    tid_word s_check; // first_check, second_check for occ
+Status read_record(Record* const dest, tid_word& tid, std::string& key,
+                   std::string& value, bool read_value) { // NOLINT
+    tid_word f_check{};
+    tid_word s_check{}; // first_check, second_check for occ
 
     f_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
 
@@ -250,21 +250,17 @@ Status read_record(Record& res, Record* const dest,
             return Status::WARN_CONCURRENT_DELETE;
         }
 
-        if (read_value) {
-            std::string read_value{};
-            dest->get_tuple().get_pimpl()->get_value(read_value);
-            std::string key{};
-            dest->get_tuple().get_key(key);
-            res.get_tuple().get_pimpl()->set(key, read_value);
-        }
-        // todo optimization by shallow copy about key (Now, key is deep copy, value is shallow copy).
+        dest->get_tuple().get_key(key);
+        if (read_value) { dest->get_tuple().get_pimpl()->get_value(value); }
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));
-        if (f_check == s_check) { break; }
+        if (f_check == s_check) {
+            tid = f_check;
+            break;
+        }
         f_check = s_check;
     }
 
-    res.set_tidw(f_check);
     return Status::OK;
 }
 

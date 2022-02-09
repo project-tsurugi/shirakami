@@ -110,21 +110,22 @@ Status next(Token token, ScanHandle handle) {
     auto* ti = static_cast<session*>(token);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     ++scan_index;
+    ti->get_scan_handle().get_ci().reset();
     return Status::OK;
 }
 
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
-    if (ti->get_read_only()) {
-        return snapshot_interface::read_from_scan(ti, handle, tuple);
-    }
-
     /**
      * Check whether the handle is valid.
      */
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
         return Status::WARN_INVALID_HANDLE;
+    }
+
+    if (ti->get_read_only()) {
+        return snapshot_interface::read_from_scan(ti, handle, tuple);
     }
 
     auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
@@ -179,11 +180,17 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
 
     Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
             ti->get_scan_cache()[handle])};
-    read_set_obj rsob(storage, std::get<0>(*itr));
 
-    Status rr = read_record(rsob.get_rec_read(),
-                            const_cast<Record*>(std::get<0>(*itr)));
+    tid_word tidb{};
+    std::string keyb{};
+    std::string valueb{};
+    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
+                            valueb);
     if (rr != Status::OK) { return rr; }
+    read_set_obj rsob(storage, std::get<0>(*itr));
+    rsob.get_rec_read().set_tidw(tidb);
+    rsob.get_rec_read().get_tuple().get_pimpl()->set_key(keyb);
+    rsob.get_rec_read().get_tuple().get_pimpl()->set_value(valueb);
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
     next(token, handle);

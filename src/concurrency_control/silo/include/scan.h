@@ -76,6 +76,8 @@ public:
     static constexpr std::size_t scan_cache_storage_pos = 0;
     static constexpr std::size_t scan_cache_vec_pos = 1;
 
+    cursor_info& get_ci() { return ci_; }
+
     [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
         return scan_cache_;
     }

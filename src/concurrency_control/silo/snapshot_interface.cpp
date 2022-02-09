@@ -90,13 +90,6 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
     // opt for small memory
     ti->get_read_only_tuples().clear();
 
-    /**
-     * Check whether the handle is valid.
-     */
-    if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
-        return Status::WARN_INVALID_HANDLE;
-    }
-
     auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];

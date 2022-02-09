@@ -79,6 +79,8 @@ public:
         snap_ptr_.store(ptr, std::memory_order_release);
     }
 
+    void set_key(std::string_view const k) { tuple_.get_pimpl()->set_key(k); }
+
     void set_value(std::string_view const v) {
         std::lock_guard<std::shared_mutex> lk{mtx_value_};
         tuple_.get_pimpl()->set_value(v);

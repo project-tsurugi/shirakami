@@ -218,6 +218,10 @@ public:
         return scan_handle_.get_scan_cache();
     }
 
+    scan_handler& get_scan_handle() {
+        return scan_handle_;
+    }
+
     [[nodiscard]] yakushima::Token get_yakushima_token() { // NOLINT
         return yakushima_token_;
     }
