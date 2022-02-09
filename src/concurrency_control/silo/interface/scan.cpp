@@ -122,7 +122,7 @@ Status read_key_from_scan([[maybe_unused]] Token token,
 
 Status read_value_from_scan([[maybe_unused]] Token token,
                             [[maybe_unused]] ScanHandle handle,
-                            [[maybe_unused]] std::string& key) {
+                            [[maybe_unused]] std::string& value) {
     return Status::OK;
 }
 
