@@ -7,6 +7,7 @@
 
 #include "index/yakushima/include/scheme.h"
 
+#include "shirakami/interface.h"
 #include "shirakami/tuple.h"
 
 #include "glog/logging.h"
@@ -104,7 +105,7 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
         if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
 
         auto itr = scan_buf.begin() + scan_index;
-        ++scan_index;
+        next(static_cast<Token>(ti), handle);
         ti->get_read_only_tuples().clear();
         Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
         std::string key{};

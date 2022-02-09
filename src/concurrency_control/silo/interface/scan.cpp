@@ -106,6 +106,13 @@ Status open_scan(Token token, Storage storage,
     return Status::OK;
 }
 
+Status next(Token token, ScanHandle handle) {
+    auto* ti = static_cast<session*>(token);
+    std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+    ++scan_index;
+    return Status::OK;
+}
+
 Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                       Tuple*& tuple) {
     auto* ti = static_cast<session*>(token);
@@ -143,7 +150,7 @@ retry_by_continue:
           * In other words, it suffices if there is no change in the node due to unhooking or the like.
           * If delete interrupted between 1 and 2, 4 can detect it and abort.
           */
-        ++scan_index;
+        next(token, handle);
         goto retry_by_continue; // NOLINT
     }
 
@@ -153,7 +160,7 @@ retry_by_continue:
     const write_set_obj* inws = ti->get_write_set().search(
             const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (inws != nullptr) {
-        ++scan_index;
+        next(token, handle);
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
@@ -175,7 +182,7 @@ retry_by_continue:
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
-    ++scan_index;
+    next(token, handle);
 
     // create node set info
     auto& ns = ti->get_node_set();

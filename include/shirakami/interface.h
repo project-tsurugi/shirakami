@@ -274,7 +274,6 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
 extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
                              Tuple*& result);
 
-#if 0
 /**
  * @brief This function advances the cursor by one in the range opened by open_scan.
  * 
@@ -284,6 +283,7 @@ extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
  */
 extern Status next(Token token, ScanHandle handle);
 
+#if 0
 /**
  * @brief This reads the key of record pointed by the cursor.
  * 
