@@ -94,26 +94,25 @@ extern Status read_from_scan(session* ti, const ScanHandle handle,
             ti->get_scan_cache()[handle]);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
 
-    for (;;) {
-        if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
+    if (scan_buf.size() == scan_index) { return Status::WARN_SCAN_LIMIT; }
 
-        auto itr = scan_buf.begin() + scan_index;
-        next(static_cast<Token>(ti), handle);
-        ti->get_read_only_tuples().clear();
-        Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
-        std::string key{};
-        rec_ptr->get_key(key);
-        ti->get_read_only_tuples().emplace_back(key, "");
-        std::string out{};
-        auto rc{read_record(ti, rec_ptr, out)};
-        if (rc == Status::OK || rc == Status::WARN_CONCURRENT_INSERT) {
-            if (rc == Status::OK) {
-                ti->get_read_only_tuples().back().get_pimpl()->set_value(out);
-                tuple = &ti->get_read_only_tuples().back();
-            }
-            return rc;
+    auto itr = scan_buf.begin() + scan_index;
+    ti->get_read_only_tuples().clear();
+    Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
+    std::string key{};
+    rec_ptr->get_key(key);
+    ti->get_read_only_tuples().emplace_back(key, "");
+    std::string out{};
+    auto rc{read_record(ti, rec_ptr, out)};
+    if (rc == Status::OK || rc == Status::WARN_CONCURRENT_INSERT) {
+        if (rc == Status::OK) {
+            ti->get_read_only_tuples().back().get_pimpl()->set_value(out);
+            tuple = &ti->get_read_only_tuples().back();
         }
+        next(static_cast<Token>(ti), handle);
+        return rc;
     }
+    next(static_cast<Token>(ti), handle);
 }
 
 extern Status read_record(session* const ti, Record* const rec_ptr,

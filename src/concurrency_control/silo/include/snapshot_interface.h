@@ -28,6 +28,12 @@ extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
                         scan_endpoint r_end, ScanHandle& handle,
                         std::size_t max_size);
 
+extern Status read_key_from_scan(session* ti, ScanHandle handle,
+                                 std::string& key);
+
+extern Status read_value_from_scan(session* ti, ScanHandle handle,
+                                   std::string& key);
+
 extern Status read_from_scan(session* ti, ScanHandle handle,
                              Tuple*& tuple); // NOLINT
 

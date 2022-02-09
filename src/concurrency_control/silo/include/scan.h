@@ -12,13 +12,12 @@
 namespace shirakami {
 
 class cursor_info {
-private:
+public:
     enum class op_type {
         read,
         write,
     };
 
-public:
     bool check_was_read(cursor_info::op_type op) {
         if (op == op_type::read) { return was_read_.test(0); }
         if (op == op_type::write) { return was_read_.test(1); }

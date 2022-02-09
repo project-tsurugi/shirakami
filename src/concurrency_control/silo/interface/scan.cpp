@@ -183,6 +183,10 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
     rsob.get_rec_read().get_tuple().get_pimpl()->set_value(valueb);
     ti->get_read_set().emplace_back(std::move(rsob));
     tuple = &ti->get_read_set().back().get_rec_read().get_tuple();
+    ti->get_scan_handle().get_ci().set_key(keyb);
+    ti->get_scan_handle().get_ci().set_value(valueb);
+    ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::read);
+    ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::write);
     next(token, handle);
 
     // create node set info
