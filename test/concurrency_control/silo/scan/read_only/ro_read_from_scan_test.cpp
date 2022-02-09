@@ -68,15 +68,13 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
               read_from_scan(s2, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
-    LOG(INFO) << "snapshot epoch "
-              << snapshot_manager::get_snap_epoch(epoch::get_global_epoch());
     ASSERT_EQ(tx_begin(s2, true), Status::OK); // stop progressing of epoch
     ASSERT_EQ(Status::OK, commit(s1));         // NOLINT
 
     // check no snapshot
     ASSERT_EQ(Status::OK, open_scan(s2, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s2, handle, tuple));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, read_from_scan(s2, handle, tuple));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // wait 2 snapshot epoch
