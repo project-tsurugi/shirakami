@@ -85,6 +85,18 @@ Status lookup_snapshot(session* ti, Storage storage, std::string_view key,
     return read_record(ti, *rec_d_ptr, value);
 }
 
+extern Status read_key_from_scan(session* ti, ScanHandle handle,
+                                 std::string& key) {
+    // todo
+    return Status::OK;
+}
+
+extern Status read_value_from_scan(session* ti, ScanHandle handle,
+                                   std::string& value) {
+    // todo
+    return Status::OK;
+}
+
 extern Status read_from_scan(session* ti, const ScanHandle handle,
                              Tuple*& tuple) { // NOLINT
     // opt for small memory

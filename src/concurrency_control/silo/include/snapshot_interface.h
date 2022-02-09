@@ -32,7 +32,7 @@ extern Status read_key_from_scan(session* ti, ScanHandle handle,
                                  std::string& key);
 
 extern Status read_value_from_scan(session* ti, ScanHandle handle,
-                                   std::string& key);
+                                   std::string& value);
 
 extern Status read_from_scan(session* ti, ScanHandle handle,
                              Tuple*& tuple); // NOLINT
