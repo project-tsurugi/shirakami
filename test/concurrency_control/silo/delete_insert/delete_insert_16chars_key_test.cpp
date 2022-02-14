@@ -33,11 +33,9 @@ TEST_F(delete_insert_16chars_key, delete_insert_with_16chars) { // NOLINT
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, k, scan_endpoint::INCLUSIVE, k,
                                     scan_endpoint::INCLUSIVE, handle));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    std::string key{};
-    tuple->get_key(key);
-    ASSERT_EQ(Status::OK, delete_record(s, st, key));
+                                    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::OK, delete_record(s, st, sb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

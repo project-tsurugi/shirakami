@@ -69,11 +69,12 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
                                     scan_endpoint::EXCLUSIVE, handle));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-
     std::string vb{};
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, vb));
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, vb));
+    ASSERT_EQ(Status::OK, next(s, handle));
+
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, vb));
     ASSERT_NE("", vb);
     delete_record(s, storage, k2);
@@ -82,7 +83,8 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
         auto rc{open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
                           scan_endpoint::EXCLUSIVE, handle)};
         if (rc != Status::OK) { continue; }
-        rc = read_from_scan(s, handle, tuple);
+        rc = read_value_from_scan(s, handle, vb);
+        ASSERT_EQ(Status::OK, next(s, handle));
         if (rc != Status::OK) { continue; }
         rc = commit(s);
         if (rc != Status::OK) { continue; }
@@ -112,16 +114,13 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k4, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ScanHandle handle{};
-    Tuple* tuple{};
+    std::string sb{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k1, scan_endpoint::INCLUSIVE,
                                     k2, scan_endpoint::INCLUSIVE, handle));
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    std::string key{};
-    tuple->get_key(key);
-    ASSERT_EQ(memcmp(key.data(), k1.data(), k1.size()), 0);
-    std::string val{};
-    tuple->get_value(val);
-    ASSERT_EQ(memcmp(val.data(), v1.data(), v1.size()), 0);
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), k1.data(), k1.size()), 0);
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), v1.data(), v1.size()), 0);
 
     // record exists
     std::string vb{};
@@ -131,12 +130,13 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     // record not exist
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k3, vb));
 
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    tuple->get_key(key);
-    ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
-    tuple->get_value(val);
-    ASSERT_EQ(memcmp(val.data(), v2.data(), v2.size()), 0);
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), v2.data(), v2.size()), 0);
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k2));

@@ -39,11 +39,14 @@ TEST_F(scan_insert_test, insert_record_after_select_doesnt_find) { // NOLINT
 
     Token s1{};
     ASSERT_EQ(Status::OK, enter(s1));
-    Tuple* t{};
     ScanHandle handle{};
-    ASSERT_EQ(Status::OK, open_scan(s1, storage, k0, scan_endpoint::INCLUSIVE, k1, scan_endpoint::INCLUSIVE, handle));
-    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, read_from_scan(s1, handle, t));
-    ASSERT_FALSE(t); // NOLINT
+    ASSERT_EQ(Status::OK, open_scan(s1, storage, k0, scan_endpoint::INCLUSIVE,
+                                    k1, scan_endpoint::INCLUSIVE, handle));
+    std::string value{};
+    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
+              read_value_from_scan(s1, handle, value));
+    ASSERT_EQ(Status::OK, next(s1, handle));
+    ASSERT_EQ(value, ""); // NOLINT
     ASSERT_EQ(Status::OK, close_scan(s1, handle));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));

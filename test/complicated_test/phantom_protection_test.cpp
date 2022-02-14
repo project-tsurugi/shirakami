@@ -47,9 +47,11 @@ TEST_F(phantom_protection, phantom_basic) { // NOLINT
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(token.at(0), st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(token.at(0), handle, tuple));
-    ASSERT_EQ(Status::OK, read_from_scan(token.at(0), handle, tuple));
+    std::string value{};
+    ASSERT_EQ(Status::OK, read_value_from_scan(token.at(0), handle, value));
+    ASSERT_EQ(Status::OK, next(token.at(0), handle));
+    ASSERT_EQ(Status::OK, read_value_from_scan(token.at(0), handle, value));
+    ASSERT_EQ(Status::OK, next(token.at(0), handle));
     // interrupt to occur phantom
     ASSERT_EQ(Status::OK, insert(token.at(1), st, key.at(2), v));
     ASSERT_EQ(Status::OK, commit(token.at(1))); // NOLINT
@@ -149,8 +151,12 @@ TEST_F(phantom_protection, phantom_no_elem_nodes) { // NOLINT
     ASSERT_EQ(open_scan(token, st, l_view, scan_endpoint::INCLUSIVE, r_view,
                         scan_endpoint::INCLUSIVE, hd),
               Status::OK);
-    Tuple* tuple{};
-    while (Status::WARN_SCAN_LIMIT != read_from_scan(token, hd, tuple)) {}
+    std::string value{};
+    Status rc{};
+    do {
+        rc = read_value_from_scan(token, hd, value);
+        next(token, hd);
+    } while (rc != Status::WARN_SCAN_LIMIT);
     auto* ti = static_cast<session*>(token);
     auto& ns = ti->get_node_set();
     ASSERT_EQ(ns.size(), 3);

@@ -14,13 +14,13 @@ namespace shirakami {
 class cursor_info {
 public:
     enum class op_type {
-        read,
-        write,
+        key,
+        value,
     };
 
     bool check_was_read(cursor_info::op_type op) {
-        if (op == op_type::read) { return was_read_.test(0); }
-        if (op == op_type::write) { return was_read_.test(1); }
+        if (op == op_type::key) { return was_read_.test(0); }
+        if (op == op_type::value) { return was_read_.test(1); }
         LOG(FATAL);
     }
 
@@ -28,14 +28,20 @@ public:
 
     void get_value(std::string& out) { out = value_; }
 
+    bool get_was_read(cursor_info::op_type op) {
+        if (op == op_type::key) { return was_read_.test(0); }
+        if (op == op_type::value) { return was_read_.test(1); }
+        LOG(FATAL);
+    }
+
     void set_key(std::string_view key) { key_ = key; }
 
     void set_value(std::string_view value) { value_ = value; }
 
     void set_was_read(cursor_info::op_type op) {
-        if (op == op_type::read) {
+        if (op == op_type::key) {
             was_read_.set(0);
-        } else if (op == op_type::write) {
+        } else if (op == op_type::value) {
             was_read_.set(1);
         } else {
             LOG(FATAL);
