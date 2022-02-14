@@ -137,7 +137,23 @@ Status read_from_scan(Token token, ScanHandle handle, // NOLINT
     }
 
     if (ti->get_read_only()) {
-        return snapshot_interface::read_from_scan(ti, handle, tuple);
+        ti->get_read_only_tuples().emplace_back("", "");
+        std::string os{};
+        auto rc{snapshot_interface::read_key_from_scan(ti, handle, os)};
+        if (rc != Status::OK) {
+            next(token, handle);
+            return rc;
+        }
+        ti->get_read_only_tuples().back().get_pimpl()->set_key(os);
+        rc = snapshot_interface::read_value_from_scan(ti, handle, os);
+        if (rc != Status::OK) {
+            next(token, handle);
+            return rc;
+        }
+        ti->get_read_only_tuples().back().get_pimpl()->set_value(os);
+        tuple = &ti->get_read_only_tuples().back();
+        next(token, handle);
+        return Status::OK;
     }
 
     scan_handler::scan_elem_type target_elem;

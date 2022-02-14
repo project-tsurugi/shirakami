@@ -34,9 +34,6 @@ extern Status read_key_from_scan(session* ti, ScanHandle handle,
 extern Status read_value_from_scan(session* ti, ScanHandle handle,
                                    std::string& value);
 
-extern Status read_from_scan(session* ti, ScanHandle handle,
-                             Tuple*& tuple); // NOLINT
-
 extern Status read_record(session* ti, Record* rec_ptr, std::string& value,
                           bool read_value = true); // NOLINT
 
