@@ -46,8 +46,8 @@ TEST_F(scan_upsert, range_read_insert) { // NOLINT
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(insert(s, st, k2, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

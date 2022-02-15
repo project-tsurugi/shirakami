@@ -38,9 +38,9 @@ void scan_perf::DoInsert(int bgn_idx, int end_idx) {
     std::string v1("a"); // NOLINT
 
     for (int i = bgn_idx; i < end_idx; ++i) {
-        EXPECT_EQ(Status::OK, insert(s_, storage, {reinterpret_cast<char*>(&key_.at(i)), sizeof(key_.at(i))}, v1)); // NOLINT
+        ASSERT_EQ(Status::OK, insert(s_, storage, {reinterpret_cast<char*>(&key_.at(i)), sizeof(key_.at(i))}, v1)); // NOLINT
     }
-    EXPECT_EQ(Status::OK, commit(s_));
+    ASSERT_EQ(Status::OK, commit(s_));
 }
 
 void scan_perf::DoScan() {
@@ -49,23 +49,24 @@ void scan_perf::DoScan() {
     Tuple* tuple{};
 
     std::uint64_t start{rdtscp()};
-    EXPECT_EQ(Status::OK, open_scan(s_, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
+    ASSERT_EQ(Status::OK, open_scan(s_, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
     for (int i = 0; i < READ_TUPLES; ++i) {
-        EXPECT_EQ(Status::OK, read_from_scan(s_, handle, &tuple));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s_, handle, &tuple));
+        ASSERT_EQ(Status::OK, next(s_, handle));
     }
     /**
      * Make sure the scan size.
      */
-    EXPECT_EQ(Status::OK, scannable_total_index_size(s_, handle, scan_size));
+    ASSERT_EQ(Status::OK, scannable_total_index_size(s_, handle, scan_size));
     std::cout << "scannable_total_index_size : " << scan_size << std::endl;
-    EXPECT_EQ(Status::OK, commit(s_));
+    ASSERT_EQ(Status::OK, commit(s_));
     std::uint64_t end{rdtscp()};
     std::cout << "Result : " << end - start << " [clocks]" << std::endl;
 }
 
 TEST_F(scan_perf, read_from_scan) { // NOLINT
     register_storage(storage);
-    EXPECT_EQ(Status::OK, enter(get_s()));
+    ASSERT_EQ(Status::OK, enter(get_s()));
 
     DoInsert(0, 100); // NOLINT
     std::cout << "Perform 100 records read_from_scan on a table with 100 records."
@@ -130,7 +131,7 @@ TEST_F(scan_perf, read_from_scan) { // NOLINT
             << std::endl;
     DoScan();
 
-    EXPECT_EQ(Status::OK, leave(get_s()));
+    ASSERT_EQ(Status::OK, leave(get_s()));
 }
 
 } // namespace shirakami::testing

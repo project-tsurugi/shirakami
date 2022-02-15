@@ -134,47 +134,45 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ScanHandle handle{};
-    Tuple* tuple{};
+    std::string sb{};
     {
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        std::string key{};
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r1.data(), r1.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r2.data(), r2.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r3.data(), r3.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r4.data(), r4.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r5.data(), r5.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r6.data(), r6.size()), 0);
-        EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r1.data(), r1.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r2.data(), r2.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r3.data(), r3.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r4.data(), r4.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r5.data(), r5.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r6.data(), r6.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
 
     {
         ASSERT_EQ(Status::OK, open_scan(s, st, r3, scan_endpoint::EXCLUSIVE, e,
                                         scan_endpoint::EXCLUSIVE, handle));
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        std::string key{};
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r4.data(), r4.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r5.data(), r5.size()), 0);
-        ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-        tuple->get_key(key);
-        EXPECT_EQ(memcmp(key.data(), r6.data(), r6.size()), 0);
-        EXPECT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r4.data(), r4.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r5.data(), r5.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(memcmp(sb.data(), r6.data(), r6.size()), 0);
+        ASSERT_EQ(Status::OK, next(s, handle));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
     ASSERT_EQ(Status::OK, leave(s));

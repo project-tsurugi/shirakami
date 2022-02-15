@@ -48,10 +48,12 @@ TEST_F(delete_scan_upsert, range_read_delete) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(s, hd, tuple));
-    ASSERT_EQ(Status::OK, read_from_scan(s, hd, tuple));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, hd, tuple));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, hd, sb));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

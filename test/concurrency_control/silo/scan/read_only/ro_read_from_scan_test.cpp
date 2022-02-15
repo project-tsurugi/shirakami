@@ -63,9 +63,9 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s2, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    Tuple* tuple{};
+    std::string sb{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
-              read_from_scan(s2, handle, tuple));
+              read_key_from_scan(s2, handle, sb));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     ASSERT_EQ(tx_begin(s2, true), Status::OK); // stop progressing of epoch
@@ -74,7 +74,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     // check no snapshot
     ASSERT_EQ(Status::OK, open_scan(s2, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, read_from_scan(s2, handle, tuple));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s2, handle, sb));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // wait 2 snapshot epoch
@@ -86,16 +86,14 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(tx_begin(s1, true), Status::OK);
     ASSERT_EQ(Status::OK, open_scan(s1, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
-    ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    std::string key{};
-    tuple->get_key(key);
-    ASSERT_EQ(memcmp(key.data(), k1.data(), k1.size()), 0);
-    ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    tuple->get_key(key);
-    ASSERT_EQ(memcmp(key.data(), k2.data(), k2.size()), 0);
-    ASSERT_EQ(Status::OK, read_from_scan(s1, handle, tuple));
-    tuple->get_key(key);
-    ASSERT_EQ(memcmp(key.data(), k3.data(), k3.size()), 0);
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), k1.data(), k1.size()), 0);
+    ASSERT_EQ(Status::OK, next(s1, handle));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
+    ASSERT_EQ(Status::OK, next(s1, handle));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, handle, sb));
+    ASSERT_EQ(memcmp(sb.data(), k3.data(), k3.size()), 0);
     ASSERT_EQ(Status::OK, close_scan(s1, handle));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, leave(s1));

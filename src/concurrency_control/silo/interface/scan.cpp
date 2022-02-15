@@ -127,7 +127,8 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
     if (ti->get_read_only()) {
         std::string os{};
         auto rc{snapshot_interface::read_key_from_scan(ti, handle, os)};
-        if (rc == Status::OK) { key = os; }
+        if (rc != Status::OK) { return rc; }
+        key = os;
         return Status::OK;
     }
 

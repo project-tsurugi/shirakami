@@ -73,10 +73,11 @@ TEST_F(scan_large_data_test, simple_large_data) { // NOLINT
     }
 
     for (std::size_t i = 0, n = NUM_QUERIES; i < n; ++i) {
-        Tuple* tuple{};
+        std::string sb{};
         {
             for (;;) {
-                auto rc{read_from_scan(s, handles.at(i), tuple)};
+                auto rc{read_key_from_scan(s, handles.at(i), sb)};
+                ASSERT_EQ(Status::OK, next(s, handles.at(i)));
                 ASSERT_EQ(ti->get_read_set().size(), 0);
                 if (rc == Status::OK) {
                     ++read_ct;

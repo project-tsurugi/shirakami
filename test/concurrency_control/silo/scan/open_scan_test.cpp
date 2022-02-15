@@ -138,10 +138,12 @@ TEST_F(open_scan_test, open_scan_test2) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k2, scan_endpoint::INCLUSIVE,
                                     "sa0", scan_endpoint::EXCLUSIVE, handle));
-    Tuple* tuple{};
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, tuple));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_from_scan(s, handle, tuple));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }

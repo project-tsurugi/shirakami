@@ -45,12 +45,12 @@ TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Tuple* t{};
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, "",
                                     scan_endpoint::INF, handle));
-    ASSERT_EQ(Status::OK, read_from_scan(s, handle, t));
-    ASSERT_TRUE(t); // NOLINT
+                                    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    ASSERT_NE(sb, ""); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, insert(s, storage, k2, v));
     ASSERT_EQ(Status::OK, close_scan(s, handle));
