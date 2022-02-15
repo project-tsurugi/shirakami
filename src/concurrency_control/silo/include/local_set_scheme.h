@@ -105,7 +105,7 @@ class read_set_obj { // NOLINT
 public:
     explicit read_set_obj(const Record* rec_ptr) { rec_ptr_ = rec_ptr; }
 
-    read_set_obj(tid_word rt, const Record* rec_ptr)
+    read_set_obj(tid_word const& rt, const Record* rec_ptr)
         : read_tid_(rt), rec_ptr_(rec_ptr) {}
 
     read_set_obj(const read_set_obj& right) = delete;
