@@ -148,12 +148,7 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        if (inws->get_op() == OP_TYPE::UPDATE) {
-            const_cast<Tuple*>(&inws->get_tuple_to_local())->get_key(key);
-        } else {
-            // insert/delete
-            const_cast<Tuple*>(&inws->get_tuple_to_db())->get_key(key);
-        }
+        inws->get_key(key);
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -224,12 +219,7 @@ Status read_value_from_scan(Token token, ScanHandle handle,
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        if (inws->get_op() == OP_TYPE::UPDATE) {
-            const_cast<Tuple*>(&inws->get_tuple_to_local())->get_value(value);
-        } else {
-            // insert/delete
-            const_cast<Tuple*>(&inws->get_tuple_to_db())->get_value(value);
-        }
+        inws->get_value(value);
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 

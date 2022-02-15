@@ -11,6 +11,8 @@
 
 #include "shirakami/scheme.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 /**
@@ -28,9 +30,9 @@ public:
     }
 
     // for update/
-    write_set_obj(Storage storage, std::string_view key, std::string_view val,
-                  const OP_TYPE op, Record* const rec_ptr)
-        : op_(op), rec_ptr_(rec_ptr), tuple_(key, val) {
+    write_set_obj(Storage storage, std::string_view val, const OP_TYPE op,
+                  Record* const rec_ptr)
+        : op_(op), rec_ptr_(rec_ptr), update_value_(val) {
         storage_ = {reinterpret_cast<char*>(&storage), // NOLINT
                     sizeof(storage)};
     }
@@ -48,81 +50,42 @@ public:
         return this->get_rec_ptr() < right.get_rec_ptr();
     }
 
-    Record* get_rec_ptr() { return this->rec_ptr_; } // NOLINT
-
-    [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const { // NOLINT
-        return this->rec_ptr_;
-    }
-
-    std::string_view get_storage() { return storage_; }
-
-    /**
-     * @brief get tuple ptr appropriately by operation type.
-     * @return Tuple&
-     */
-    Tuple& get_tuple() { return get_tuple(op_); } // NOLINT
-
-    [[maybe_unused]] [[nodiscard]] const Tuple& get_tuple() const { // NOLINT
-        return get_tuple(op_);
-    }
-
-    /**
-     * @brief get tuple ptr appropriately by operation type.
-     * @return Tuple&
-     */
-    Tuple& get_tuple(const OP_TYPE op) { // NOLINT
-        if (op == OP_TYPE::UPDATE) { return get_tuple_to_local(); }
-        // insert/delete
-        return get_tuple_to_db();
-    }
-
-    /**
-     * @brief get tuple ptr appropriately by operation type.
-     * @return const Tuple& const
-     */
-    [[nodiscard]] const Tuple& get_tuple(const OP_TYPE op) const { // NOLINT
-        if (op == OP_TYPE::UPDATE) { return get_tuple_to_local(); }
-        // insert/delete
-        return get_tuple_to_db();
-    }
-
-    /**
-     * @brief get tuple ptr to local write set
-     * @return Tuple&
-     */
-    Tuple& get_tuple_to_local() { return this->tuple_; } // NOLINT
-
-    /**
-     * @brief get tuple ptr to local write set
-     * @return const Tuple&
-     */
-    [[nodiscard]] const Tuple& get_tuple_to_local() const { // NOLINT
-        return this->tuple_;
-    }
-
-    /**
-     * @brief get tuple ptr to database(global)
-     * @return Tuple&
-     */
-    Tuple& get_tuple_to_db() { return this->rec_ptr_->get_tuple(); } // NOLINT
-
-    /**
-     * @brief get tuple ptr to database(global)
-     * @return const Tuple&
-     */
-    [[nodiscard]] const Tuple& get_tuple_to_db() const { // NOLINT
-        return this->rec_ptr_->get_tuple();
-    }
+    void get_key(std::string& out) const { rec_ptr_->get_key(out); }
 
     OP_TYPE& get_op() { return op_; } // NOLINT
 
     [[nodiscard]] const OP_TYPE& get_op() const { return op_; } // NOLINT
 
-    void reset_tuple_value(std::string_view val) {
-        (this->get_op() == OP_TYPE::UPDATE ? this->get_tuple_to_local()
-                                           : this->get_tuple_to_db())
-                .get_pimpl()
-                ->set_value(val);
+    Record* get_rec_ptr() { return this->rec_ptr_; } // NOLINT
+
+    std::string_view get_storage() { return storage_; }
+
+    void get_update_value(std::string& out) const { out = update_value_; }
+
+    void get_insert_value(std::string& out) const {
+        rec_ptr_->get_tuple().get_value(out);
+    }
+
+    [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const { // NOLINT
+        return this->rec_ptr_;
+    }
+
+    void get_value(std::string& out) const {
+        if (op_ == OP_TYPE::INSERT) {
+            get_insert_value(out);
+        } else if (op_ == OP_TYPE::UPDATE) {
+            get_update_value(out);
+        }
+    }
+
+    void reset_value(std::string_view val) {
+        if (this->get_op() == OP_TYPE::UPDATE) {
+            update_value_ = val;
+        } else if (this->get_op() == OP_TYPE::INSERT) {
+            this->get_rec_ptr()->get_tuple().get_pimpl()->set_value(val);
+        } else {
+            LOG(FATAL);
+        }
     }
 
     void set_op(OP_TYPE new_op) { op_ = new_op; }
@@ -134,8 +97,8 @@ private:
      * @brief pointer to record.
      * @details For update : ptr to existing record. For insert : ptr to new existing record.
      */
-    Record* rec_ptr_; // ptr to database
-    Tuple tuple_;     // for update
+    Record* rec_ptr_;          // ptr to database
+    std::string update_value_; // for update
 };
 
 class read_set_obj { // NOLINT

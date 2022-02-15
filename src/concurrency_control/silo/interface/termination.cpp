@@ -272,7 +272,7 @@ void write_phase(session* const ti, const tid_word& max_r_set,
 #endif
                 // update value
                 std::string new_value{};
-                we_ptr->get_tuple(we_ptr->get_op()).get_value(new_value);
+                we_ptr->get_value(new_value);
                 rec_ptr->set_value(new_value);
                 storeRelease(rec_ptr->get_tidw().get_obj(), max_tid.get_obj());
                 break;

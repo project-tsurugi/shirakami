@@ -35,7 +35,7 @@ Status insert(Token token, Storage storage,
                 return Status::WARN_ALREADY_EXISTS;
             }
             if (inws->get_op() == OP_TYPE::DELETE) {
-                *inws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
+                *inws = write_set_obj{storage, val, OP_TYPE::UPDATE,
                                       inws->get_rec_ptr()};
                 return Status::WARN_WRITE_TO_LOCAL_WRITE;
             }
@@ -85,7 +85,7 @@ Status update(Token token, Storage storage, // NOLINT
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        inws->reset_tuple_value(val);
+        inws->reset_value(val);
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
@@ -98,7 +98,7 @@ Status update(Token token, Storage storage, // NOLINT
         return Status::WARN_NOT_FOUND;
     }
 
-    ti->get_write_set().push({storage, key, val, OP_TYPE::UPDATE, rec_ptr});
+    ti->get_write_set().push({storage, val, OP_TYPE::UPDATE, rec_ptr});
 
     return Status::OK;
 }
@@ -120,9 +120,9 @@ RETRY_FIND_RECORD:
         if (in_ws != nullptr) {
             if (in_ws->get_op() == OP_TYPE::INSERT ||
                 in_ws->get_op() == OP_TYPE::UPDATE) {
-                in_ws->reset_tuple_value(val);
+                in_ws->reset_value(val);
             } else if (in_ws->get_op() == OP_TYPE::DELETE) {
-                *in_ws = write_set_obj{storage, key, val, OP_TYPE::UPDATE,
+                *in_ws = write_set_obj{storage, val, OP_TYPE::UPDATE,
                                        in_ws->get_rec_ptr()};
             }
             return Status::WARN_WRITE_TO_LOCAL_WRITE;
@@ -178,7 +178,7 @@ RETRY_FIND_RECORD:
     }
 
     ti->get_write_set().push(
-            {storage, key, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
+            {storage, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
 
     return Status::OK;
 } // namespace shirakami

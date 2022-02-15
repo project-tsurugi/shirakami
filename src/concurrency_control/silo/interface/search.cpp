@@ -75,7 +75,7 @@ Status search_key(Token token, Storage storage,
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        inws->get_tuple(inws->get_op()).get_value(value);
+        inws->get_value(value);
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 

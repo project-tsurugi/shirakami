@@ -32,6 +32,7 @@ public:
         if (op == op_type::key) { return was_read_.test(0); }
         if (op == op_type::value) { return was_read_.test(1); }
         LOG(FATAL);
+        return true;
     }
 
     void set_key(std::string_view key) { key_ = key; }

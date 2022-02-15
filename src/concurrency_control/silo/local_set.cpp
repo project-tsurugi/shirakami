@@ -17,8 +17,7 @@ namespace shirakami {
         std::cout << "op_ : " << we_ptr->get_op() << std::endl;
         std::string key;
         std::string value;
-        we_ptr->get_tuple().get_key(key);
-        we_ptr->get_tuple().get_value(value);
+        we_ptr->get_rec_ptr()->get_tuple().get_key(key);
         std::cout << "key : " << key << std::endl;
         std::cout << "key_size : " << key.size() << std::endl;
         std::cout << "value : " << value << std::endl;
