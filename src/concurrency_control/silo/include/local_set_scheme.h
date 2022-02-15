@@ -103,11 +103,7 @@ private:
 
 class read_set_obj { // NOLINT
 public:
-    explicit read_set_obj(Storage storage, const Record* rec_ptr) {
-        storage_ = {reinterpret_cast<char*>(&storage), // NOLINT
-                    sizeof(storage)};
-        this->rec_ptr = rec_ptr;
-    }
+    explicit read_set_obj(const Record* rec_ptr) { this->rec_ptr = rec_ptr; }
 
     read_set_obj(const read_set_obj& right) = delete;
 
@@ -128,10 +124,7 @@ public:
         return rec_ptr;
     }
 
-    [[nodiscard]] std::string_view get_storage() { return storage_; }
-
 private:
-    std::string storage_{};
     Record rec_read{};
     const Record* rec_ptr{}; // ptr to database
 };

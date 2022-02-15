@@ -37,7 +37,7 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     }
 
     // data access
-    read_set_obj rs_ob(storage, rec_ptr); // NOLINT
+    read_set_obj rs_ob(rec_ptr); // NOLINT
     tid_word tidb{};
     std::string keyb{};
     std::string dummy_valueb{};
@@ -80,7 +80,7 @@ Status search_key(Token token, Storage storage,
     }
 
     // data access
-    read_set_obj rs_ob(storage, rec_ptr); // NOLINT
+    read_set_obj rs_ob(rec_ptr); // NOLINT
     tid_word tidb{};
     std::string keyb{};
     std::string valueb{};

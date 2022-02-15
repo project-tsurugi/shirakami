@@ -165,9 +165,7 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
     Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
                             valueb, false);
     if (rr != Status::OK) { return rr; }
-    Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
-            ti->get_scan_cache()[handle])};
-    read_set_obj rsob(storage, std::get<0>(*itr));
+    read_set_obj rsob(std::get<0>(*itr));
     rsob.get_rec_read().set_tidw(tidb);
     rsob.get_rec_read().get_tuple().get_pimpl()->set_key(keyb);
     ti->get_read_set().emplace_back(std::move(rsob));
@@ -236,9 +234,7 @@ Status read_value_from_scan(Token token, ScanHandle handle,
     Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
                             valueb);
     if (rr != Status::OK) { return rr; }
-    Storage storage{std::get<scan_handler::scan_cache_storage_pos>(
-            ti->get_scan_cache()[handle])};
-    read_set_obj rsob(storage, std::get<0>(*itr));
+    read_set_obj rsob(std::get<0>(*itr));
     rsob.get_rec_read().set_tidw(tidb);
     rsob.get_rec_read().get_tuple().get_pimpl()->set_value(valueb);
     ti->get_read_set().emplace_back(std::move(rsob));
