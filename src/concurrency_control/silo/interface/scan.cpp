@@ -160,17 +160,12 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
     }
 
     tid_word tidb{};
-    std::string keyb{};
     std::string valueb{};
-    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
+    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, key,
                             valueb, false);
     if (rr != Status::OK) { return rr; }
-    read_set_obj rsob(std::get<0>(*itr));
-    rsob.get_rec_read().set_tidw(tidb);
-    rsob.get_rec_read().get_tuple().get_pimpl()->set_key(keyb);
-    ti->get_read_set().emplace_back(std::move(rsob));
-    key = keyb;
-    ti->get_scan_handle().get_ci().set_key(keyb);
+    ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
+    ti->get_scan_handle().get_ci().set_key(key);
     ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::key);
 
     // create node set info
@@ -228,18 +223,13 @@ Status read_value_from_scan(Token token, ScanHandle handle,
         return Status::OK;
     }
 
-    tid_word tidb{};
     std::string keyb{};
-    std::string valueb{};
+    tid_word tidb{};
     Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
-                            valueb);
+                            value);
     if (rr != Status::OK) { return rr; }
-    read_set_obj rsob(std::get<0>(*itr));
-    rsob.get_rec_read().set_tidw(tidb);
-    rsob.get_rec_read().get_tuple().get_pimpl()->set_value(valueb);
-    ti->get_read_set().emplace_back(std::move(rsob));
-    value = valueb;
-    ti->get_scan_handle().get_ci().set_value(valueb);
+    ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
+    ti->get_scan_handle().get_ci().set_value(value);
     ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::value);
 
     // create node set info

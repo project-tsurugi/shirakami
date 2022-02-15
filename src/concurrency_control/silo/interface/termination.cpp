@@ -102,8 +102,8 @@ Status read_verify(Token token, tid_word& max_rset) {
         auto& rsobj = itr;
         const Record* rec_ptr = rsobj.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw().get_obj());
-        if ((rsobj.get_rec_read().get_tidw().get_epoch() != check.get_epoch() ||
-             rsobj.get_rec_read().get_tidw().get_tid() != check.get_tid()) ||
+        if ((rsobj.get_read_tid_ref().get_epoch() != check.get_epoch() ||
+             rsobj.get_read_tid_ref().get_tid() != check.get_tid()) ||
             check.get_absent() // check whether it was deleted.
             || (check.get_lock() &&
                 (ti->get_write_set().search(const_cast<Record*>(rec_ptr)) ==

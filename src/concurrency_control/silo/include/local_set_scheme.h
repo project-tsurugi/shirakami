@@ -58,8 +58,6 @@ public:
 
     Record* get_rec_ptr() { return this->rec_ptr_; } // NOLINT
 
-    std::string_view get_storage() { return storage_; }
-
     void get_update_value(std::string& out) const { out = update_value_; }
 
     void get_insert_value(std::string& out) const {
@@ -69,6 +67,8 @@ public:
     [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const { // NOLINT
         return this->rec_ptr_;
     }
+
+    std::string_view get_storage() { return storage_; }
 
     void get_value(std::string& out) const {
         if (op_ == OP_TYPE::INSERT) {
@@ -103,8 +103,11 @@ private:
 
 class read_set_obj { // NOLINT
 public:
-    explicit read_set_obj(const Record* rec_ptr) { this->rec_ptr = rec_ptr; }
+    explicit read_set_obj(const Record* rec_ptr) { rec_ptr_ = rec_ptr; }
 
+    read_set_obj(tid_word rt, const Record* rec_ptr)
+        : read_tid_(rt), rec_ptr_(rec_ptr) {}
+        
     read_set_obj(const read_set_obj& right) = delete;
 
     read_set_obj(read_set_obj&& right) = default;
@@ -112,21 +115,17 @@ public:
     read_set_obj& operator=(const read_set_obj& right) = delete; // NOLINT
     read_set_obj& operator=(read_set_obj&& right) = default;
 
-    Record& get_rec_read() { return rec_read; } // NOLINT
+    tid_word& get_read_tid_ref() { return read_tid_; }
 
-    [[nodiscard]] const Record& get_rec_read() const { // NOLINT
-        return rec_read;
-    }
-
-    const Record* get_rec_ptr() { return rec_ptr; } // NOLINT
+    const Record* get_rec_ptr() { return rec_ptr_; } // NOLINT
 
     [[maybe_unused]] [[nodiscard]] const Record* get_rec_ptr() const { // NOLINT
-        return rec_ptr;
+        return rec_ptr_;
     }
 
 private:
-    Record rec_read{};
-    const Record* rec_ptr{}; // ptr to database
+    tid_word read_tid_{};
+    const Record* rec_ptr_{}; // ptr to database
 };
 
 } // namespace shirakami

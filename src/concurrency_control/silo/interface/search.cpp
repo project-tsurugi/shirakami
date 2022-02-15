@@ -37,16 +37,11 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     }
 
     // data access
-    read_set_obj rs_ob(rec_ptr); // NOLINT
     tid_word tidb{};
     std::string keyb{};
     std::string dummy_valueb{};
     Status rr = read_record(rec_ptr, tidb, keyb, dummy_valueb, false);
-    if (rr == Status::OK) {
-        rs_ob.get_rec_read().set_tidw(tidb);
-        rs_ob.get_rec_read().set_key(keyb);
-        ti->get_read_set().emplace_back(std::move(rs_ob));
-    }
+    if (rr == Status::OK) { ti->get_read_set().emplace_back(tidb, rec_ptr); }
     return rr;
 }
 
@@ -80,17 +75,11 @@ Status search_key(Token token, Storage storage,
     }
 
     // data access
-    read_set_obj rs_ob(rec_ptr); // NOLINT
     tid_word tidb{};
     std::string keyb{};
-    std::string valueb{};
-    Status rr = read_record(rec_ptr, tidb, keyb, valueb);
+    Status rr = read_record(rec_ptr, tidb, keyb, value);
     if (rr == Status::OK) {
-        rs_ob.get_rec_read().set_tidw(tidb);
-        rs_ob.get_rec_read().set_key(keyb);
-        rs_ob.get_rec_read().set_value(valueb);
-        ti->get_read_set().emplace_back(std::move(rs_ob));
-        ti->get_read_set().back().get_rec_read().get_tuple().get_value(value);
+        ti->get_read_set().emplace_back(tidb, rec_ptr);
     }
     return rr;
 }

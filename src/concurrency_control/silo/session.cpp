@@ -24,24 +24,25 @@ void session::clean_up_scan_caches() {
 [[maybe_unused]] void session::display_read_set() {
     std::cout << "==========" << std::endl;
     std::cout << "start : session::display_read_set()" << std::endl;
-    std::size_t ctr(1);
-    for (auto&& itr : read_set) {
-        std::cout << "Element #" << ctr << " of read set." << std::endl;
-        std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
-        Record& record = itr.get_rec_read();
-        Tuple& tuple = record.get_tuple();
-        std::cout << "tidw_ :vv" << record.get_tidw() << std::endl;
-        std::string key;
-        std::string val;
-        tuple.get_key(key);
-        tuple.get_value(val);
-        std::cout << "key : " << key << std::endl;
-        std::cout << "key_size : " << key.size() << std::endl;
-        std::cout << "value : " << val << std::endl;
-        std::cout << "value_size : " << val.size() << std::endl;
-        std::cout << "----------" << std::endl;
-        ++ctr;
-    }
+    // todo
+    //std::size_t ctr(1);
+    //for (auto&& itr : read_set) {
+    //    std::cout << "Element #" << ctr << " of read set." << std::endl;
+    //    std::cout << "rec_ptr_ : " << itr.get_rec_ptr() << std::endl;
+    //    Record& record = itr.get_rec_read();
+    //    Tuple& tuple = record.get_tuple();
+    //    std::cout << "tidw_ :vv" << record.get_tidw() << std::endl;
+    //    std::string key;
+    //    std::string val;
+    //    tuple.get_key(key);
+    //    tuple.get_value(val);
+    //    std::cout << "key : " << key << std::endl;
+    //    std::cout << "key_size : " << key.size() << std::endl;
+    //    std::cout << "value : " << val << std::endl;
+    //    std::cout << "value_size : " << val.size() << std::endl;
+    //    std::cout << "----------" << std::endl;
+    //    ++ctr;
+    //}
     std::cout << "==========" << std::endl;
 }
 
