@@ -86,11 +86,6 @@ public:
     void clean_up_scan_caches();
 
     /**
-     * @brief for debug.
-     */
-    [[maybe_unused]] void display_read_set();
-
-    /**
      * @brief compare and swap for visible_.
      */
     bool cas_visible(bool& expected, bool& desired) { // NOLINT
