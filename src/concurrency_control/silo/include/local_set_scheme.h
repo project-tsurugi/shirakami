@@ -107,7 +107,7 @@ public:
 
     read_set_obj(tid_word rt, const Record* rec_ptr)
         : read_tid_(rt), rec_ptr_(rec_ptr) {}
-        
+
     read_set_obj(const read_set_obj& right) = delete;
 
     read_set_obj(read_set_obj&& right) = default;
@@ -125,6 +125,12 @@ public:
 
 private:
     tid_word read_tid_{};
+
+    /**
+     * @brief ptr to database page
+     * @note The required information is tid_word *. However, it is convenient 
+     * to use record * when searching for a local write set.
+     */
     const Record* rec_ptr_{}; // ptr to database
 };
 
