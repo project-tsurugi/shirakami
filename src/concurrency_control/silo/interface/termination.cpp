@@ -203,11 +203,7 @@ void write_phase(session* const ti, const tid_word& max_r_set,
         Record* rec_ptr = we_ptr->get_rec_ptr();
 #ifdef CPR
         std::string value{};
-        if (we_ptr->get_op() == OP_TYPE::INSERT) {
-            rec_ptr->get_tuple().get_value(value);
-        } else if (we_ptr->get_op() == OP_TYPE::UPDATE) {
-            we_ptr->get_tuple().get_value(value);
-        }
+        we_ptr->get_value(value);
         ti->regi_diff_upd_set(we_ptr->get_storage(), max_tid, we_ptr->get_op(),
                               rec_ptr, value);
 #endif
