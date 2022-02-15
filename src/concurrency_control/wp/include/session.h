@@ -1,5 +1,5 @@
 /**
- * @file session.h
+ * @file concurrency_control/wp/include/session.h
  */
 
 #pragma once
