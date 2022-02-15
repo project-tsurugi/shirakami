@@ -26,7 +26,7 @@ namespace shirakami {
 Status delete_record([[maybe_unused]] Token token,
                      [[maybe_unused]] Storage storage,
                      [[maybe_unused]] const std::string_view key) { // NOLINT
-    return Status::OK;
+    return Status::ERR_NOT_IMPLEMENTED;
 }
 
 } // namespace shirakami

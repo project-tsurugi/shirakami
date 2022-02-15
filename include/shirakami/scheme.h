@@ -220,6 +220,11 @@ enum class Status : std::int32_t {
     ERR_FATAL,
     /**
      * @brief error
+     * @details This means that it is not implemented.
+     */
+    ERR_NOT_IMPLEMENTED,
+    /**
+     * @brief error
      * @details
      * @a read_from_scan : It is the error due to phantom problems. @n
      * @a scan_key : It is the error due to phantom problems. @n
@@ -297,6 +302,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_FATAL:
             return "ERR_FATAL"sv; // NOLINT
+        case Status::ERR_NOT_IMPLEMENTED:
+            return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
         case Status::ERR_PHANTOM:

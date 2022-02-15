@@ -30,6 +30,7 @@ Status commit([[maybe_unused]] Token token, // NOLINT
 bool check_commit([[maybe_unused]] Token token, // NOLINT
                   [[maybe_unused]] std::uint64_t commit_id) {
     // todo
+    // ERR_NOT_IMPLEMENTED
     return true;
 }
 
