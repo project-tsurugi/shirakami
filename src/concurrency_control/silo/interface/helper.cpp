@@ -194,8 +194,8 @@ tx_begin(Token const token, bool const read_only, bool const for_batch,
     return Status::OK;
 }
 
-Status read_record(Record* const dest, tid_word& tid, std::string& key,
-                   std::string& value, bool read_value) { // NOLINT
+Status read_record(Record* const dest, tid_word& tid, std::string& value,
+                   bool read_value) { // NOLINT
     tid_word f_check{};
     tid_word s_check{}; // first_check, second_check for occ
 
@@ -250,7 +250,6 @@ Status read_record(Record* const dest, tid_word& tid, std::string& key,
             return Status::WARN_CONCURRENT_DELETE;
         }
 
-        dest->get_tuple().get_key(key);
         if (read_value) { dest->get_tuple().get_pimpl()->get_value(value); }
 
         s_check.set_obj(loadAcquire(dest->get_tidw().get_obj()));

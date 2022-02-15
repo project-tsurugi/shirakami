@@ -38,9 +38,8 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
 
     // data access
     tid_word tidb{};
-    std::string keyb{};
     std::string dummy_valueb{};
-    Status rr = read_record(rec_ptr, tidb, keyb, dummy_valueb, false);
+    Status rr = read_record(rec_ptr, tidb, dummy_valueb, false);
     if (rr == Status::OK) { ti->get_read_set().emplace_back(tidb, rec_ptr); }
     return rr;
 }
@@ -76,11 +75,8 @@ Status search_key(Token token, Storage storage,
 
     // data access
     tid_word tidb{};
-    std::string keyb{};
-    Status rr = read_record(rec_ptr, tidb, keyb, value);
-    if (rr == Status::OK) {
-        ti->get_read_set().emplace_back(tidb, rec_ptr);
-    }
+    Status rr = read_record(rec_ptr, tidb, value);
+    if (rr == Status::OK) { ti->get_read_set().emplace_back(tidb, rec_ptr); }
     return rr;
 }
 

@@ -28,7 +28,6 @@ inline std::atomic<bool> initialized_{false};
  * @pre the dest wasn't already read by itself.
  * @param [in] dest read record pointed by this dest.
  * @param [out] tid it is stored read tid.
- * @param [out] key it is stored read key.
  * @param [out] value it is stored read value.
  * @param [in] read_value whether read the value of record.
  * @return WARN_CONCURRENT_DELETE No corresponding record in masstree. If you
@@ -36,8 +35,8 @@ inline std::atomic<bool> initialized_{false};
  * @return Status::OK, it was ended correctly.
  * but it isn't committed yet.
  */
-Status read_record(Record* dest, tid_word& tid, std::string& key,
-                   std::string& value, bool read_value = true); // NOLINT
+Status read_record(Record* dest, tid_word& tid, std::string& value,
+                   bool read_value = true); // NOLINT
 
 /**
  * @brief setter of @a intialized_.

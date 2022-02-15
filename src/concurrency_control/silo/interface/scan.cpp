@@ -161,7 +161,8 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
 
     tid_word tidb{};
     std::string valueb{};
-    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, key,
+    const_cast<Record*>(std::get<0>(*itr))->get_key(key);
+    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
                             valueb, false);
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
@@ -223,10 +224,9 @@ Status read_value_from_scan(Token token, ScanHandle handle,
         return Status::OK;
     }
 
-    std::string keyb{};
     tid_word tidb{};
-    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, keyb,
-                            value);
+    Status rr =
+            read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, value);
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
     ti->get_scan_handle().get_ci().set_value(value);
