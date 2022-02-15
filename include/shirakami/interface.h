@@ -250,31 +250,6 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         std::size_t max_size = 0); // NOLINT
 
 /**
- * @brief This function reads the one records from the scan_cache which was created at 
- * open_scan function.
- * @details The read record is returned by @result.
- * @param[in] token the token retrieved by enter()
- * @param[in] handle input parameters to identify the specific scan_cache.
- * @param[out] result output parameter to pass the read record.
- * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by previous delete 
- * operation of this transaction.
- * @return Status::WARN_CONCURRENT_INSERT This scan was interrupted by other's insert.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete 
- * operation of other transaction.
- * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other 
- * updater, and it could not complete search.
- * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
- * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding 
- * write (insert / update / upsert) operation in the same tx.
- * @return Status::WARN_SCAN_LIMIT It have read all records in the scan_cache.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
- * so it called abort().
- */
-extern Status read_from_scan(Token token, ScanHandle handle, // NOLINT
-                             Tuple*& result);
-
-/**
  * @brief This function advances the cursor by one in the range opened by open_scan.
  * 
  * @param[in] token the token retrieved by enter()
