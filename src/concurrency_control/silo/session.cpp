@@ -11,7 +11,6 @@ namespace shirakami {
 
 void session::clean_up_local_set() {
     read_set.clear();
-    read_only_tuples_.clear();
     write_set.clear();
     node_set.clear();
 }

@@ -153,10 +153,6 @@ public:
         return visible_.load(std::memory_order_acquire);
     }
 
-    std::vector<Tuple>& get_read_only_tuples() { // NOLINT
-        return read_only_tuples_;
-    }
-
     /**
      * begin setter zone
      */
@@ -318,8 +314,6 @@ private:
      * @brief If this is true, begun transaction by this session can only do (transaction read operations).
      */
     bool read_only_{false};
-
-    std::vector<Tuple> read_only_tuples_{};
 
     /**
      * about holding operation info.
