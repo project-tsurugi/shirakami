@@ -142,8 +142,7 @@ TEST_F(open_scan_test, open_scan_test2) { // NOLINT
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, next(s, handle));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
-    ASSERT_EQ(Status::OK, next(s, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }

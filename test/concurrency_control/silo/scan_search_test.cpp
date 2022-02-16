@@ -73,29 +73,27 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, vb));
     ASSERT_EQ(Status::OK, next(s, handle));
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, vb));
-    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
 
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, vb));
     ASSERT_NE("", vb);
     delete_record(s, storage, k2);
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, tx_begin(s2));// for delay unhook of k2
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    for (;;) {
-        auto rc{open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
-                          scan_endpoint::EXCLUSIVE, handle)};
-        if (rc != Status::OK) { continue; }
-        rc = read_value_from_scan(s, handle, vb);
-        ASSERT_EQ(Status::OK, next(s, handle));
-        if (rc != Status::OK) { continue; }
-        rc = commit(s);
-        if (rc != Status::OK) { continue; }
-        _mm_pause();
-        break;
-    }
+    ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
+                                    scan_endpoint::EXCLUSIVE, handle));
+    ASSERT_EQ(Status::WARN_CONCURRENT_DELETE, read_value_from_scan(s, handle, vb));
+    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
+    ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k3));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k4));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, leave(s2));
 }
 
 TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
@@ -135,8 +133,7 @@ TEST_F(scan_search, mixing_scan_and_search) { // NOLINT
     ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
     ASSERT_EQ(memcmp(sb.data(), v2.data(), v2.size()), 0);
-    ASSERT_EQ(Status::OK, next(s, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k2));

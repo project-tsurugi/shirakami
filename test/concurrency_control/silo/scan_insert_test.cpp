@@ -45,7 +45,7 @@ TEST_F(scan_insert_test, insert_record_after_select_doesnt_find) { // NOLINT
     std::string value{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
               read_value_from_scan(s1, handle, value));
-    ASSERT_EQ(Status::OK, next(s1, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, handle));
     ASSERT_EQ(value, ""); // NOLINT
     ASSERT_EQ(Status::OK, close_scan(s1, handle));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT

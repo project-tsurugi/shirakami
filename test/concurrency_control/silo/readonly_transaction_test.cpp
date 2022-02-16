@@ -47,17 +47,17 @@ TEST_F(readonly_transaction_test, readonly_scan) { // NOLINT
 
     // trying to wait enough
     epoch::epoch_t ce = epoch::get_global_epoch();
-    while (snapshot_manager::get_snap_epoch(ce) == snapshot_manager::get_snap_epoch(epoch::get_global_epoch())) {
+    while (snapshot_manager::get_snap_epoch(ce) ==
+           snapshot_manager::get_snap_epoch(epoch::get_global_epoch())) {
         sleepMs(1);
     }
 
     tx_begin(s, true);
-    ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "", scan_endpoint::INF, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, handle));
     std::string value{};
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, value));
-    ASSERT_EQ(Status::OK, next(s, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_value_from_scan(s, handle, value));
-    ASSERT_EQ(Status::OK, next(s, handle));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }

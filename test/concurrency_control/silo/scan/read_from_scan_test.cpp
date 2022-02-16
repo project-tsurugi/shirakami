@@ -91,8 +91,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(memcmp(sb.data(), k3.data(), k3.size()), 0);
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
     ASSERT_EQ(memcmp(sb.data(), v1.data(), v1.size()), 0);
-    ASSERT_EQ(Status::OK, next(s, handle));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     /**

@@ -126,7 +126,6 @@ void read_by_occ::push(body_elem_type const elem) {
     body_.insert(body_.begin(), elem);
 
     gc();
-    return;
 #elif PARAM_READ_BY_MODE == 1
 
     auto& me = get_max_epoch_ref();
@@ -141,7 +140,6 @@ void read_by_occ::push(body_elem_type const elem) {
             break;
         }
     }
-    return;
 
 #endif
 }

@@ -111,6 +111,10 @@ Status next(Token token, ScanHandle handle) {
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     ++scan_index;
     ti->get_scan_handle().get_ci().reset();
+    if (std::get<scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle])
+                .size() <= scan_index) {
+        return Status::WARN_SCAN_LIMIT;
+    }
     return Status::OK;
 }
 

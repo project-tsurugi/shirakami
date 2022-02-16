@@ -52,8 +52,7 @@ TEST_F(delete_scan_upsert, range_read_delete) { // NOLINT
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
     ASSERT_EQ(Status::OK, next(s, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
-    ASSERT_EQ(Status::OK, next(s, hd));
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
