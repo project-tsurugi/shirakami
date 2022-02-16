@@ -23,15 +23,7 @@ namespace shirakami {
 Status close_scan(Token token, ScanHandle handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
 
-    auto itr = ti->get_scan_cache().find(handle);
-    if (itr == ti->get_scan_cache().end()) {
-        return Status::WARN_INVALID_HANDLE;
-    }
-    ti->get_scan_cache().erase(itr);
-    auto index_itr = ti->get_scan_cache_itr().find(handle);
-    ti->get_scan_cache_itr().erase(index_itr);
-
-    return Status::OK;
+    return ti->get_scan_handle().clear(handle);
 }
 
 Status open_scan(Token token, Storage storage,
@@ -110,7 +102,7 @@ Status next(Token token, ScanHandle handle) {
     auto* ti = static_cast<session*>(token);
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     ++scan_index;
-    ti->get_scan_handle().get_ci().reset();
+    ti->get_scan_handle().get_ci(handle).reset();
     if (std::get<scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle])
                 .size() <= scan_index) {
         return Status::WARN_SCAN_LIMIT;
@@ -156,10 +148,10 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    if (ti->get_scan_handle().get_ci().get_was_read(
+    if (ti->get_scan_handle().get_ci(handle).get_was_read(
                 cursor_info::op_type::key)) {
         // it already read.
-        ti->get_scan_handle().get_ci().get_key(key);
+        ti->get_scan_handle().get_ci(handle).get_key(key);
         return Status::OK;
     }
 
@@ -170,8 +162,8 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
                             valueb, false);
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
-    ti->get_scan_handle().get_ci().set_key(key);
-    ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::key);
+    ti->get_scan_handle().get_ci(handle).set_key(key);
+    ti->get_scan_handle().get_ci(handle).set_was_read(cursor_info::op_type::key);
 
     // create node set info
     auto& ns = ti->get_node_set();
@@ -221,10 +213,10 @@ Status read_value_from_scan(Token token, ScanHandle handle,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    if (ti->get_scan_handle().get_ci().get_was_read(
+    if (ti->get_scan_handle().get_ci(handle).get_was_read(
                 cursor_info::op_type::value)) {
         // it already read.
-        ti->get_scan_handle().get_ci().get_value(value);
+        ti->get_scan_handle().get_ci(handle).get_value(value);
         return Status::OK;
     }
 
@@ -233,8 +225,8 @@ Status read_value_from_scan(Token token, ScanHandle handle,
             read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, value);
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
-    ti->get_scan_handle().get_ci().set_value(value);
-    ti->get_scan_handle().get_ci().set_was_read(cursor_info::op_type::value);
+    ti->get_scan_handle().get_ci(handle).set_value(value);
+    ti->get_scan_handle().get_ci(handle).set_was_read(cursor_info::op_type::value);
 
     // create node set info
     auto& ns = ti->get_node_set();

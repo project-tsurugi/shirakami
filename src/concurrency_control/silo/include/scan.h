@@ -67,6 +67,18 @@ private:
     std::string value_{};
 };
 
+class cursor_set {
+public:
+    cursor_info& get(ScanHandle hd) { return cset_[hd]; }
+
+    void clear() { cset_.clear(); }
+
+    void clear(ScanHandle hd) { cset_.erase(hd); }
+
+private:
+    std::map<ScanHandle, cursor_info> cset_;
+};
+
 class scan_handler {
 public:
     using scan_elem_type =
@@ -79,7 +91,26 @@ public:
     static constexpr std::size_t scan_cache_storage_pos = 0;
     static constexpr std::size_t scan_cache_vec_pos = 1;
 
-    cursor_info& get_ci() { return ci_; }
+    void clear() {
+        get_scan_cache().clear();
+        get_scan_cache_itr().clear();
+        cs_.clear();
+    }
+
+    Status clear(ScanHandle hd) {
+        auto itr = get_scan_cache().find(hd);
+        if (itr == get_scan_cache().end()) {
+            return Status::WARN_INVALID_HANDLE;
+        }
+        get_scan_cache().erase(itr);
+        auto index_itr = get_scan_cache_itr().find(hd);
+        get_scan_cache_itr().erase(index_itr);
+        cs_.clear(hd);
+
+        return Status::OK;
+    }
+
+    cursor_info& get_ci(ScanHandle hd) { return cs_.get(hd); }
 
     [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
         return scan_cache_;
@@ -104,7 +135,7 @@ private:
      * @brief 
      * @attention
      */
-    cursor_info ci_{};
+    cursor_set cs_{};
 };
 
 } // namespace shirakami
