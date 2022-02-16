@@ -13,6 +13,7 @@
 
 #include "shirakami/interface.h"
 
+#include "index/yakushima/include/interface.h"
 
 namespace shirakami {
 
@@ -23,12 +24,11 @@ Status insert(Token token, Storage storage,
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
-    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};
-    if (existing_rec_ptr != nullptr) {
-        write_set_obj* inws{
-                ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
+    Record* rec_ptr{};
+    auto rc{get<Record>(storage, key, rec_ptr)};
+
+    if (rc == Status::OK) {
+        write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::INSERT ||
                 inws->get_op() == OP_TYPE::UPDATE) {
@@ -44,14 +44,10 @@ Status insert(Token token, Storage storage,
         return Status::WARN_ALREADY_EXISTS;
     }
 
-    Record* rec_ptr = new Record(key, val); // NOLINT
+    rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
-    yakushima::status insert_result{yakushima::put<Record*>(
-            ti->get_yakushima_token(),
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},      // NOLINT
-            key, &rec_ptr, sizeof(Record*), nullptr,                   // NOLINT
-            static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
-            &nvp)};
+    yakushima::status insert_result{
+            put<Record>(ti->get_yakushima_token(), storage, key, rec_ptr, nvp)};
     if (insert_result == yakushima::status::OK) {
         ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
         Status check_node_set_res{ti->update_node_set(nvp)};
@@ -75,12 +71,11 @@ Status update(Token token, Storage storage, // NOLINT
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
-    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};
-    if (existing_rec_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
-    write_set_obj* inws{
-            ti->get_write_set().search(*existing_rec_ptr)}; // NOLINT
+    Record* rec_ptr{};
+    auto rc{get<Record>(storage, key, rec_ptr)};
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+
+    write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
@@ -89,7 +84,6 @@ Status update(Token token, Storage storage, // NOLINT
         return Status::WARN_WRITE_TO_LOCAL_WRITE;
     }
 
-    Record* rec_ptr{*existing_rec_ptr};
     tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
     if (check_tid.get_absent()) {
         // The second condition checks
@@ -109,48 +103,55 @@ Status upsert(Token token, Storage storage, // NOLINT
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
 
-RETRY_FIND_RECORD:
-    Record** existing_rec_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};
-    Record* rec_ptr{};
-    if (existing_rec_ptr != nullptr) {
-        rec_ptr = *existing_rec_ptr;
-        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) {
-            if (in_ws->get_op() == OP_TYPE::INSERT ||
-                in_ws->get_op() == OP_TYPE::UPDATE) {
-                in_ws->reset_value(val);
-            } else if (in_ws->get_op() == OP_TYPE::DELETE) {
-                *in_ws = write_set_obj{storage, val, OP_TYPE::UPDATE,
-                                       in_ws->get_rec_ptr()};
+    for (;;) {
+        Record* rec_ptr{};
+        auto rc{get<Record>(storage, key, rec_ptr)};
+        if (rc == Status::OK) {
+            write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+            if (in_ws != nullptr) {
+                if (in_ws->get_op() == OP_TYPE::INSERT ||
+                    in_ws->get_op() == OP_TYPE::UPDATE) {
+                    in_ws->reset_value(val);
+                } else if (in_ws->get_op() == OP_TYPE::DELETE) {
+                    *in_ws = write_set_obj{storage, val, OP_TYPE::UPDATE,
+                                           in_ws->get_rec_ptr()};
+                }
+                return Status::WARN_WRITE_TO_LOCAL_WRITE;
             }
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
-        }
-        // do update
-    } else {
-        rec_ptr = nullptr;
-        // do insert
-    }
+            // do update
+            tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
+            if (check_tid.get_latest() && check_tid.get_absent()) {
+                /**
+                  * The record being inserted has been detected.
+                  */
+                return Status::WARN_CONCURRENT_INSERT;
+            }
+            if (!check_tid.get_latest() && check_tid.get_absent()) {
+                /**
+                  * It was detected between the logical deletion operation and the physical deletion operation (unhook operation).
+                  */
+                return Status::WARN_CONCURRENT_DELETE;
+            }
 
-    if (rec_ptr == nullptr) {
+            ti->get_write_set().push(
+                    {storage, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
+
+            return Status::OK;
+        }
+        // do insert
+
         rec_ptr = new Record(key, val); // NOLINT
         yakushima::node_version64* nvp{};
-        yakushima::status insert_result{yakushima::put<Record*>(
-                ti->get_yakushima_token(),
-                {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-                key, &rec_ptr, sizeof(Record*), nullptr,              // NOLINT
-                static_cast<yakushima::value_align_type>(
-                        sizeof(Record*)), // NOLINT
-                &nvp)};
+        yakushima::status insert_result{put<Record>(
+                ti->get_yakushima_token(), storage, key, rec_ptr, nvp)};
         if (insert_result == yakushima::status::OK) {
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_PHANTOM) {
                 /**
-                 * This This transaction is confirmed to be aborted 
-                 * because the previous scan was destroyed by an insert
-                 * by another transaction.
-                 */
+                  * This This transaction is confirmed to be aborted 
+                  * because the previous scan was destroyed by an insert
+                  * by another transaction.
+                  */
                 abort(token);
                 return Status::ERR_PHANTOM;
             }
@@ -159,28 +160,12 @@ RETRY_FIND_RECORD:
         }
         // else insert_result == Status::WARN_ALREADY_EXISTS
         // so goto update.
-        delete rec_ptr;         // NOLINT
-        goto RETRY_FIND_RECORD; // NOLINT
+        delete rec_ptr; // NOLINT
     }
-
-    tid_word check_tid(loadAcquire(rec_ptr->get_tidw().get_obj()));
-    if (check_tid.get_latest() && check_tid.get_absent()) {
-        /**
-         * The record being inserted has been detected.
-         */
-        return Status::WARN_CONCURRENT_INSERT;
-    }
-    if (!check_tid.get_latest() && check_tid.get_absent()) {
-        /**
-         * It was detected between the logical deletion operation and the physical deletion operation (unhook operation).
-         */
-        return Status::WARN_CONCURRENT_DELETE;
-    }
-
-    ti->get_write_set().push(
-            {storage, val, OP_TYPE::UPDATE, rec_ptr}); // NOLINT
 
     return Status::OK;
+
+
 } // namespace shirakami
 
 } // namespace shirakami

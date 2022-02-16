@@ -8,6 +8,8 @@
 
 #include "shirakami/interface.h"
 
+#include "index/yakushima/include/interface.h"
+
 namespace shirakami {
 
 Status exist_key(Token token, Storage storage, std::string_view const key) {
@@ -21,11 +23,9 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     }
 
     // index access
-    Record** rec_double_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};                                               // NOLINT
-    if (rec_double_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
-    Record* rec_ptr{*rec_double_ptr};
+    Record* rec_ptr{};
+    auto rc{get<Record>(storage, key, rec_ptr)};
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
 
     // check read own write
     write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
