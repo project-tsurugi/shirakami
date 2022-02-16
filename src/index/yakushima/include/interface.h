@@ -21,11 +21,10 @@ Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
 
 template<class Record>
 yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
-           Record* rec_ptr, yakushima::node_version64*& nvp) {
+                      Record* rec_ptr, yakushima::node_version64*& nvp) {
     return yakushima::put<Record*>(
-            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,
-            &rec_ptr,                                                  // NOLINT
-            sizeof(Record*), nullptr,                                  // NOLINT
+            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,       // NOLINT
+            &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
             &nvp);
 }
