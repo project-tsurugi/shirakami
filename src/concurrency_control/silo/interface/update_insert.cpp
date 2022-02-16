@@ -22,7 +22,7 @@ Status insert(Token token, Storage storage,
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
+    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
 
     Record* rec_ptr{};
     auto rc{get<Record>(storage, key, rec_ptr)};
@@ -69,7 +69,7 @@ Status update(Token token, Storage storage, // NOLINT
               const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
+    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
 
     Record* rec_ptr{};
     auto rc{get<Record>(storage, key, rec_ptr)};
@@ -101,7 +101,7 @@ Status upsert(Token token, Storage storage, // NOLINT
               const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) return Status::WARN_INVALID_HANDLE;
+    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
 
     for (;;) {
         Record* rec_ptr{};

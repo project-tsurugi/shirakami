@@ -41,6 +41,15 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
+TEST_F(simple_insert, read_only_mode_insert) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin(s, true));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, insert(s, storage, "", ""));
+    ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(simple_insert, insert) { // NOLINT
     register_storage(storage);
     std::string k("aaa"); // NOLINT
