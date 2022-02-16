@@ -11,8 +11,11 @@
 #include "include/helper.h"
 
 #include "shirakami/interface.h"
+#include "shirakami/logging.h"
 
 #include "index/yakushima/include/interface.h"
+
+#include "glog/logging.h"
 
 // sizeof(Tuple)
 
@@ -33,6 +36,7 @@ Status delete_record(Token token, Storage storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) {
+        VLOG(log_warning) << "delete on read only transaction";
         return Status::WARN_ILLEGAL_OPERATION;
     }
 

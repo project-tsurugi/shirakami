@@ -12,9 +12,11 @@
 #include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
+#include "shirakami/logging.h"
 
 #include "index/yakushima/include/interface.h"
 
+#include "glog/logging.h"
 namespace shirakami {
 
 Status insert(Token token, Storage storage,
@@ -22,7 +24,10 @@ Status insert(Token token, Storage storage,
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
+    if (ti->get_read_only()) {
+        VLOG(log_warning) << "insert on read only transaction";
+        return Status::WARN_ILLEGAL_OPERATION;
+    }
 
     Record* rec_ptr{};
     auto rc{get<Record>(storage, key, rec_ptr)};
@@ -69,7 +74,10 @@ Status update(Token token, Storage storage, // NOLINT
               const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
+    if (ti->get_read_only()) {
+        VLOG(log_warning) << "update on read only transaction";
+        return Status::WARN_ILLEGAL_OPERATION;
+    }
 
     Record* rec_ptr{};
     auto rc{get<Record>(storage, key, rec_ptr)};
@@ -101,7 +109,10 @@ Status upsert(Token token, Storage storage, // NOLINT
               const std::string_view key, const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_txbegan()) tx_begin(token); // NOLINT
-    if (ti->get_read_only()) { return Status::WARN_ILLEGAL_OPERATION; }
+    if (ti->get_read_only()) {
+        VLOG(log_warning) << "upsert on read only transaction";
+        return Status::WARN_ILLEGAL_OPERATION;
+    }
 
     for (;;) {
         Record* rec_ptr{};
