@@ -131,7 +131,8 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * was canceled and it will execute single delete_record eventually.
  * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely canceled an previous 
  * insert.
- * @return Status::WARN_CANCEL_PREVIOUS_OPERATION
+ * @return Status::WARN_CANCEL_PREVIOUS_UPDATE This delete operation merely canceled an previous
+ * update.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
@@ -160,7 +161,14 @@ extern Status enter(Token& token); // NOLINT
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
  * @return Status::OK if existence.
- * @return Status::WARN_NOT_FOUND if not existence.
+ * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
+ * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
+ * deleted.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
+ * inserted.
+ * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
+ * updated.
+ * @return Status::WARN_NOT_FOUND The target page was not found.
  */
 extern Status exist_key(Token token, Storage storage, std::string_view key);
 
@@ -188,7 +196,7 @@ extern void fin(bool force_shut_down_cpr = true); // NOLINT
  * @return Status::OK
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
  * not done anything in this call.
- * @return Status::ERR_INVALID_ARGS The args as a log directory path is invalid.
+ * @return Status::WARN_INVALID_ARGS The args as a log directory path is invalid.
  * Some files which has the same path exist.
  */
 extern Status
@@ -204,8 +212,8 @@ init(bool enable_recovery = false,                                 // NOLINT
  * @return Status::OK success
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
  * exists in db, so this function returned immediately.
- * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
- * read only mode.
+ * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * mode. So this operation was canceled.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed delete.
  * So it translated delete - insert into update.
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which 
@@ -256,7 +264,8 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * 
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
- * @return Status 
+ * @return Status::OK success.
+ * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
 extern Status next(Token token, ScanHandle handle);
 
@@ -266,7 +275,19 @@ extern Status next(Token token, ScanHandle handle);
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] key the result of this function.
- * @return Status 
+ * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE This transaction already executed 
+ * delete_record for the same page.
+ * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
+ * deleted.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
+ * inserted.
+ * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
+ * updated.
+ * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
+ * executed write operation for the same page. So this function read from the write.
+ * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
 extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
 
@@ -276,7 +297,19 @@ extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& ke
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] value  the result of this function.
- * @return Status 
+ * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE This transaction already executed 
+ * delete_record for the same page.
+ * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
+ * deleted.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
+ * inserted.
+ * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
+ * updated.
+ * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
+ * executed write operation for the same page. So this function read from the write.
+ * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
 extern Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
 
@@ -349,8 +382,9 @@ extern Status tx_begin(Token token, bool read_only = false,       // NOLINT
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
  * @return Status::OK if successful
- * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
- * read only mode.
+ * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
+ * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * mode. So this operation was canceled.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have 
  * problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, 
@@ -370,8 +404,8 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * which was inserted by this function was also read by previous scan operations, 
  * and it detects phantom problem by other transaction's write. It did abort().
  * @return Status::OK success
- * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation 
- * in read only mode.
+ * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
  * wp in batch mode.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, 
