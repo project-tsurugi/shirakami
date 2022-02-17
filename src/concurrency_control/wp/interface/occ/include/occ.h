@@ -17,6 +17,9 @@ extern Status commit(session* ti, commit_param* cp);
 extern Status search_key(session* ti, Storage storage, std::string_view key,
                          std::string& value, bool read_value = true); // NOLINT
 
+extern Status update(session* ti, Storage storage, std::string_view key,
+                     std::string_view val);
+
 extern Status upsert(session* ti, Storage storage, std::string_view key,
                      std::string_view val);
 

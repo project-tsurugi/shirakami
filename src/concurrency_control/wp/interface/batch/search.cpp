@@ -40,11 +40,7 @@ Status search_key(session* ti, Storage const storage,
             return Status::WARN_ALREADY_DELETE;
         }
         if (read_value) {
-            std::string kb{};
-            in_ws->get_rec_ptr()->get_key(kb);
-            std::string vb{};
-            in_ws->get_value(vb);
-            value = vb;
+            in_ws->get_value(value);
         }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
