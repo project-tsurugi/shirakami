@@ -44,16 +44,19 @@ Status session::check_delete_after_write(Record* rec_ptr) {
             return Status::WARN_CANCEL_PREVIOUS_INSERT;
         }
         if (we_ptr->get_op() == OP_TYPE::DELETE) {
-            return Status::WARN_ALREADY_EXISTS;
+            return Status::WARN_ALREADY_DELETE;
         }
-        return Status::WARN_CANCEL_PREVIOUS_OPERATION;
+        if (we_ptr->get_op() == OP_TYPE::UPDATE) {
+            return Status::WARN_CANCEL_PREVIOUS_UPDATE;
+        }
+        LOG(FATAL);
     };
     if (get_write_set().get_for_batch()) {
         auto&& cont = get_write_set().get_cont_for_bt();
         for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
             if (std::get<1>(*itr).get_rec_ptr() != rec_ptr) continue;
             auto ret = process(&std::get<1>(*itr));
-            if (ret != Status::WARN_ALREADY_EXISTS) { cont.erase(itr); }
+            if (ret != Status::WARN_ALREADY_DELETE) { cont.erase(itr); }
             return ret;
         }
     } else {
@@ -61,7 +64,7 @@ Status session::check_delete_after_write(Record* rec_ptr) {
         for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
             if (itr->get_rec_ptr() != rec_ptr) continue;
             auto ret = process(&(*itr));
-            if (ret != Status::WARN_ALREADY_EXISTS) { cont.erase(itr); }
+            if (ret != Status::WARN_ALREADY_DELETE) { cont.erase(itr); }
             return ret;
         }
     }

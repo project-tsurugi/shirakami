@@ -72,11 +72,11 @@ TEST_F(delete_after_write, delete_after_update) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, update(s, storage, k1, v2));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_OPERATION,
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE,
               delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     std::string vb{};
-    while (Status::WARN_NOT_FOUND != search_key(s, storage, k1, vb)) { ; }
+    ASSERT_EQ(Status::OK, search_key(s, storage, k1, vb));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }

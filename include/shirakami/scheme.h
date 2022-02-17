@@ -114,6 +114,7 @@ enum class Status : std::int32_t {
      * @a delete_record : it canceled an update/insert operation before this function and did delete operation. @n
      */
     WARN_CANCEL_PREVIOUS_OPERATION,
+    WARN_CANCEL_PREVIOUS_UPDATE,
     /**
      * @brief warning.
      * @details
@@ -273,6 +274,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_OPERATION:
             return "WARN_CANCEL_PREVIOUS_OPERATION"sv; // NOLINT
+        case Status::WARN_CANCEL_PREVIOUS_UPDATE:
+            return "WARN_CANCEL_PREVIOUS_UPDATE"sv; // NOLINT
         case Status::WARN_CONCURRENT_DELETE:
             return "WARN_CONCURRENT_DELETE"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:

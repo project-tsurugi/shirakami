@@ -66,7 +66,7 @@ extern Status list_storage(std::vector<Storage>& out);
  * @details It is user abort, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
  * @pre it did enter -> ... -> (tx_begin ->) some transactional operations (update / insert / 
- * search / delete) or no operation.
+ * upsert / search / delete) or no operation.
  * @return Status::OK success.
  */
 extern Status abort(Token token); // NOLINT
@@ -81,29 +81,26 @@ extern Status abort(Token token); // NOLINT
 extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 
 /**
- * @brief It tries commit.
+ * @brief It checks this transaction can commit and executes commit.
  * @details If this function return ERR_... status, this called abort function implicitly. 
  * Otherwise, it commits.
  * @param[in] token retrieved by enter().
  * @param[in,out] cp commit parameter to notify commit timestamp and wait obeyed to 
  * commit_param.commit_property.
- * @pre executed enter (-> tx_begin -> transaction operation).
+ * @pre you executed enter command, you didn't execute leave command.
  * @return Status::ERR_FAIL_WP This means validation failure by others write preserve.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem, 
- * so it called abort().
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
- * operations was interrupted by some
- * delete transaction between read phase and validation phase. So it called abort.
- * @return Status::ERR_VALIDATION This means read validation failure and it already 
- * executed abort(). 
- * After this, do tx_begin to start next transaction or leave to leave the session.
+ * operations was interrupted by some delete transaction between read phase and 
+ * validation phase.
+ * @return Status::ERR_VALIDATION This means read validation failed.
  * @return Status::OK success.
  */
 extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
 
 /**
  * @brief It checks whether the transaction allocated commit_id at commit function 
- * was committed.
+ * was durable.
  * @param[in] token This should be the token which was used for commit function.
  * @param[in] commit_id This should be the commit_id which was received at commit 
  * function with @b token.
@@ -114,8 +111,8 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
 /**
  * @brief Delete the all records in all tables.
- * @pre This function is called by a single thread and doesn't allow moving of 
- * other threads. 
+ * @pre This function is called by a single thread and doesn't allow concurrent 
+ * processing by other threads. 
  * This is not DML operations but DDL operations.
  * @details  It must not call tx_begin(Token token) before this calling. And 
  * it doesn't need to call enter/leave around calling this function.
@@ -130,8 +127,13 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @param[in] key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
+ * @return Status::WARN_ALREADY_DELETE You already executed delete operation. So this operation 
+ * was canceled and it will execute single delete_record eventually.
  * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely canceled an previous 
  * insert.
+ * @return Status::WARN_CANCEL_PREVIOUS_OPERATION
+ * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
  * read only mode.
  * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem 
