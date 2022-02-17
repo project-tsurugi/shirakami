@@ -7,6 +7,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "yakushima/include/kvs.h"
 
 namespace shirakami::batch {
@@ -16,13 +18,8 @@ Status insert_process(session* const ti, Storage storage,
     // try insert
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
-    yakushima::status insert_result{yakushima::put<Record*>(
-            ti->get_yakushima_token(),
-            {reinterpret_cast<char*>(&storage), sizeof(storage)},      // NOLINT
-            key, &rec_ptr, sizeof(Record*), nullptr,                   // NOLINT
-            static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
-            &nvp)};
-    if (insert_result == yakushima::status::OK) {
+    if (yakushima::status::OK ==
+        put<Record>(ti->get_yakushima_token(), storage, key, rec_ptr, nvp)) {
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_PHANTOM) {
             /**
@@ -62,13 +59,8 @@ Status upsert(session* ti, Storage storage, const std::string_view key,
 RETRY_INDEX_ACCESS:
 
     // index access to check local write set
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};                                               // NOLINT
     Record* rec_ptr{};
-    if (rec_d_ptr != nullptr) {
-        rec_ptr = *rec_d_ptr;
-
+    if (Status::OK == get<Record>(storage, key, rec_ptr)) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {

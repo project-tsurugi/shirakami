@@ -9,6 +9,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
@@ -21,14 +23,10 @@ Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
     // index access
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<const char*>(&storage), // NOLINT
-             sizeof(storage)},                        // NOLINT
-            key))};
-    if (rec_d_ptr == nullptr) {
+    Record* rec_ptr{};
+    if (get<Record>(storage, key, rec_ptr) == Status::WARN_NOT_FOUND) {
         return Status::WARN_NOT_FOUND;
     }
-    Record* rec_ptr{*rec_d_ptr};
 
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
@@ -45,10 +43,8 @@ Status search_key(session* ti, Storage const storage,
     // read version
     Status rs{read_record(rec_ptr, read_tid, read_res, read_value)};
     if (rs == Status::OK) {
-        if (read_value) {
-            ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
-            value = read_res;
-        }
+        if (read_value) { value = read_res; }
+        ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
     }
     return rs;
 }

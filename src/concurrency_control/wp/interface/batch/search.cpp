@@ -11,6 +11,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -26,12 +28,10 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // index access
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<const char*>(&storage), // NOLINT
-             sizeof(storage)},                        // NOLINT
-            key))};
-    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
-    Record* rec_ptr{*rec_d_ptr};
+    Record* rec_ptr{};
+    if (Status::WARN_NOT_FOUND == get<Record>(storage, key, rec_ptr)) {
+        return Status::WARN_NOT_FOUND;
+    }
 
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
