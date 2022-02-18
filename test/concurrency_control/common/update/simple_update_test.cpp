@@ -1,11 +1,14 @@
-#include <bitset>
-#include <future>
 
 #include "gtest/gtest.h"
 
+#ifdef WP
+
+#else
+
 #include "concurrency_control/silo/include/epoch.h"
-#include "concurrency_control/silo/include/record.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
+
+#endif
 
 #include "clock.h"
 
@@ -28,6 +31,8 @@ public:
     void TearDown() override { fin(); }
 };
 
+#ifdef WP
+#else
 TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     Storage storage{};
     register_storage(storage);
@@ -60,5 +65,7 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     rec_ptr->get_snap_ptr()->get_tuple().get_value(val);
     ASSERT_EQ(val, std::string_view(v));
 }
+
+#endif
 
 } // namespace shirakami::testing

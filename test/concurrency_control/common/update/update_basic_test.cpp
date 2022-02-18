@@ -1,13 +1,5 @@
 
-#include <bitset>
-#include <future>
 #include <mutex>
-
-#include "concurrency_control/silo/include/epoch.h"
-#include "concurrency_control/silo/include/record.h"
-#include "concurrency_control/silo/include/snapshot_manager.h"
-
-#include "clock.h"
 
 #include "shirakami/interface.h"
 

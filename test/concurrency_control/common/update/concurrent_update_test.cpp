@@ -1,19 +1,10 @@
-#include <bitset>
 #include <future>
-
-#include <glog/logging.h>
-
-#include "gtest/gtest.h"
-
-#include "concurrency_control/silo/include/epoch.h"
-#include "concurrency_control/silo/include/record.h"
-#include "concurrency_control/silo/include/snapshot_manager.h"
-
-#include "clock.h"
 
 #include "shirakami/interface.h"
 
-#include "yakushima/include/kvs.h"
+#include "glog/logging.h"
+
+#include "gtest/gtest.h"
 
 namespace shirakami::testing {
 
