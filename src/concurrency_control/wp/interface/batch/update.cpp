@@ -13,8 +13,9 @@
 
 namespace shirakami::batch {
 
-Status update(session* ti, Storage storage, const std::string_view key,
-              const std::string_view val) {
+Status update([[maybe_unused]] session* ti, [[maybe_unused]] Storage storage,
+              [[maybe_unused]] const std::string_view key,
+              [[maybe_unused]] const std::string_view val) {
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
