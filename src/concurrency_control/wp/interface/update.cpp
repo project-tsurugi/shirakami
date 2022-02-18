@@ -4,6 +4,8 @@
 #include "concurrency_control/wp/interface/batch/include/batch.h"
 #include "concurrency_control/wp/interface/occ/include/occ.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "shirakami/interface.h"
 
 namespace shirakami {

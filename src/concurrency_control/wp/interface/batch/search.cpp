@@ -22,8 +22,7 @@ namespace shirakami::batch {
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
-    if (ti->get_mode() == tx_mode::BATCH &&
-        epoch::get_global_epoch() < ti->get_valid_epoch()) {
+    if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }
 
@@ -39,9 +38,7 @@ Status search_key(session* ti, Storage const storage,
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        if (read_value) {
-            in_ws->get_value(value);
-        }
+        if (read_value) { in_ws->get_value(value); }
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
