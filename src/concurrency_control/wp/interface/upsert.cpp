@@ -21,6 +21,12 @@ Status upsert(Token token, Storage storage, const std::string_view key,
         tx_begin(token); // NOLINT
     }
 
+    // check
+    if (ti->get_read_only()) {
+        // can't write in read only mode.
+        return Status::WARN_INVALID_HANDLE;
+    }
+
     // update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
 

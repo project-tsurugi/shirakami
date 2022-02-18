@@ -38,12 +38,6 @@ Status insert_process(session* const ti, Storage st, const std::string_view key,
 
 Status upsert(session* ti, Storage storage, const std::string_view key,
               const std::string_view val) {
-    // checks
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
-
     for (;;) {
         // index access to check local write set
         Record* rec_ptr{};

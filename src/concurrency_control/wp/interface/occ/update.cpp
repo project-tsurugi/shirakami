@@ -13,12 +13,6 @@ namespace shirakami::occ {
 
 Status update(session* ti, Storage storage, const std::string_view key,
               const std::string_view val) {
-    // checks
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
-
     // index access to check local write set
     Record* rec_ptr{};
     if (Status::OK == get<Record>(storage, key, rec_ptr)) {

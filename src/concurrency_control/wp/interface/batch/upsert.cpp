@@ -47,10 +47,7 @@ Status upsert(session* ti, Storage storage, const std::string_view key,
         // not in valid epoch.
         return Status::WARN_PREMATURE;
     }
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
+
     if (ti->get_mode() == tx_mode::BATCH && !ti->check_exist_wp_set(storage)) {
         // can't write without wp.
         return Status::WARN_INVALID_ARGS;
