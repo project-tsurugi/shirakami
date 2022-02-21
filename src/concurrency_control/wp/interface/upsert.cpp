@@ -15,7 +15,7 @@
 
 namespace shirakami {
 
-Status insert_process(session* const ti, Storage st, const std::string_view key,
+inline Status insert_process(session* const ti, Storage st, const std::string_view key,
                       const std::string_view val) {
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};

@@ -21,7 +21,7 @@ Status update(Token token, Storage storage,
 
     if (ti->get_read_only()) {
         // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
+        return Status::WARN_ILLEGAL_OPERATION;
     }
 
     //update metadata
