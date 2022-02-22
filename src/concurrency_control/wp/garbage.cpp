@@ -108,6 +108,7 @@ void clean_rec_version(Record* rec_ptr) {
 void clean_st_version(Storage st) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
+    // full scan                           
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);

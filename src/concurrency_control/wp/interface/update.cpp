@@ -2,6 +2,7 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+#include "concurrency_control/wp/interface/include/helper.h"
 #include "concurrency_control/wp/interface/occ/include/occ.h"
 
 #include "index/yakushima/include/interface.h"
@@ -15,29 +16,17 @@ Status update(Token token, Storage storage,
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
 
+    // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
     }
 
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_ILLEGAL_OPERATION;
-    }
+    // check for write
+    auto rc{check_before_write_ops(ti, storage)};
+    if (rc != Status::OK) { return rc; }
 
     //update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
-
-    // batch check
-    if (ti->get_mode() == tx_mode::BATCH) {
-        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-            // not in valid epoch.
-            return Status::WARN_PREMATURE;
-        }
-        if (!ti->check_exist_wp_set(storage)) {
-            // can't write without wp.
-            return Status::WARN_INVALID_ARGS;
-        }
-    }
 
     // index access to check local write set
     Record* rec_ptr{};

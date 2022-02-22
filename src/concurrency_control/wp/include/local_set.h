@@ -61,6 +61,7 @@ public:
                   Record* const rec_ptr, std::string_view const val)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {}
 
+    // for delete
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr) {}
@@ -75,6 +76,11 @@ public:
         return get_rec_ptr() < right.get_rec_ptr();
     }
 
+    bool operator==(const write_set_obj& right) const {
+        return storage_ == right.storage_ && op_ == right.op_ &&
+               rec_ptr_ == right.rec_ptr_ && val_ == right.val_;
+    }
+    
     [[nodiscard]] OP_TYPE get_op() const { return op_; }
 
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
@@ -141,6 +147,8 @@ public:
         cont_for_occ_.clear();
         cont_for_bt_.clear();
     }
+
+    Status erase(write_set_obj* wso);
 
     [[nodiscard]] bool get_for_batch() const { return for_batch_; }
 

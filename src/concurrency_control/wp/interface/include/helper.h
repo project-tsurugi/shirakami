@@ -3,6 +3,8 @@
 
 #include <atomic>
 
+#include "concurrency_control/wp/include/session.h"
+
 namespace shirakami {
 
 /**
@@ -19,5 +21,7 @@ inline std::atomic<bool> initialized_{false};
  * @brief setter of @a intialized_.
  */
 [[maybe_unused]] static void set_initialized(bool tf) { initialized_.store(tf, std::memory_order_release); }
+
+[[maybe_unused]] extern Status check_before_write_ops(session* ti, Storage st);
 
 } // namespace shirakami

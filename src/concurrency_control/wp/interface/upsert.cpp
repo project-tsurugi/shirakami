@@ -5,6 +5,7 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"
+#include "concurrency_control/wp/interface/include/helper.h"
 #include "concurrency_control/wp/interface/occ/include/occ.h"
 
 #include "index/yakushima/include/interface.h"
@@ -15,8 +16,9 @@
 
 namespace shirakami {
 
-inline Status insert_process(session* const ti, Storage st, const std::string_view key,
-                      const std::string_view val) {
+inline Status insert_process(session* const ti, Storage st,
+                             const std::string_view key,
+                             const std::string_view val) {
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
@@ -44,31 +46,17 @@ Status upsert(Token token, Storage storage, const std::string_view key,
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
 
+    // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
     }
 
-    // check
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
+    // check for write
+    auto rc{check_before_write_ops(ti, storage)};
+    if (rc != Status::OK) { return rc; }
 
     // update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
-
-    // batch mode check
-    if (ti->get_mode() == tx_mode::BATCH) {
-        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-            // not in valid epoch.
-            return Status::WARN_PREMATURE;
-        }
-
-        if (!ti->check_exist_wp_set(storage)) {
-            // can't write without wp.
-            return Status::WARN_INVALID_ARGS;
-        }
-    }
 
     for (;;) {
         // index access to check local write set

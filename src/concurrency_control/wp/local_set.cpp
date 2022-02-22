@@ -7,6 +7,24 @@
 
 namespace shirakami {
 
+Status local_write_set::erase(write_set_obj* wso) {
+    if (for_batch_) {
+        auto result = get_ref_cont_for_bt().find(wso->get_rec_ptr());
+        if (result == get_ref_cont_for_bt().end()) {
+            return Status::WARN_NOT_FOUND;
+        }
+        get_ref_cont_for_bt().erase(result);
+    } else {
+        auto result = std::find(get_ref_cont_for_occ().begin(),
+                                get_ref_cont_for_occ().end(), *wso);
+        if (result == get_ref_cont_for_occ().end()) {
+            return Status::WARN_NOT_FOUND;
+        }
+        get_ref_cont_for_occ().erase(result);
+    }
+    return Status::OK;
+}
+
 void local_write_set::push(write_set_obj&& elem) {
     if (for_batch_) {
         cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));

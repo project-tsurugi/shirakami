@@ -20,6 +20,28 @@
 
 namespace shirakami {
 
+Status check_before_write_ops(session* const ti, Storage st) {
+    // check whether it is read only mode.
+    if (ti->get_read_only()) {
+        // can't write in read only mode.
+        return Status::WARN_ILLEGAL_OPERATION;
+    }
+
+    // batch check
+    if (ti->get_mode() == tx_mode::BATCH) {
+        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+            // not in valid epoch.
+            return Status::WARN_PREMATURE;
+        }
+        if (!ti->check_exist_wp_set(st)) {
+            // can't write without wp.
+            return Status::WARN_INVALID_ARGS;
+        }
+    }
+
+    return Status::OK;
+}
+
 Status enter(Token& token) { // NOLINT
     Status ret_status = session_table::decide_token(token);
     if (ret_status != Status::OK) return ret_status;
