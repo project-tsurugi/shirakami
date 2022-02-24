@@ -34,6 +34,15 @@ inline Status insert_process(session* const ti, Storage st, const std::string_vi
     return Status::WARN_CONCURRENT_INSERT;
 }
 
+Status try_deleted_to_inserted(session* ti, Storage st, std::string_view key, std::string_view val, Record* rec_ptr) {
+    #if 0
+    rec_ptr->get_tidw_ref().lock();
+    tid_word tid{rec_ptr->get_tidw_ref()};
+    if ()
+    #endif
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
 Status insert(Token token, Storage storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
@@ -43,32 +52,19 @@ Status insert(Token token, Storage storage,
         tx_begin(token); // NOLINT
     }
 
-    // check
-    if (ti->get_read_only()) {
-        // can't write in read only mode.
-        return Status::WARN_INVALID_HANDLE;
-    }
+    // check for write
+    auto rc{check_before_write_ops(ti, storage)};
+    if (rc != Status::OK) { return rc; }
 
     // update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
-
-    // batch mode check
-    if (ti->get_mode() == tx_mode::BATCH) {
-        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-            // not in valid epoch.
-            return Status::WARN_PREMATURE;
-        }
-
-        if (!ti->check_exist_wp_set(storage)) {
-            // can't write without wp.
-            return Status::WARN_INVALID_ARGS;
-        }
-    }
 
     for (;;) {
         // index access to check local write set
         Record* rec_ptr{};
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
+            rc = try_deleted_to_inserted(ti, storage, key, val, rec_ptr);
+// todo
             return Status::WARN_ALREADY_EXISTS;
         }
 
