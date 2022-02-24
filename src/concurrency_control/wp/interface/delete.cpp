@@ -40,9 +40,8 @@ inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
 inline void process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
-    } else if (wso->get_op() == OP_TYPE::UPDATE) {
-        ti->get_write_set().erase(wso);
     }
+    ti->get_write_set().erase(wso);
 }
 
 Status delete_record(Token token, Storage storage,

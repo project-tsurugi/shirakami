@@ -95,6 +95,8 @@ void expose_local_write(session* ti) {
                 rec_ptr->set_tid(ctid);
                 break;
             }
+            case OP_TYPE::DELETE:
+            case OP_TYPE::UPDATE:
             case OP_TYPE::UPSERT: {
                 // lock record
                 rec_ptr->get_tidw_ref().lock();
@@ -103,7 +105,7 @@ void expose_local_write(session* ti) {
                 if (ti->get_valid_epoch() > pre_tid.get_epoch()) {
                     // case: first of list
                     std::string vb{};
-                    wso.get_value(vb);
+                    if (wso.get_op() != OP_TYPE::DELETE) { wso.get_value(vb); }
                     version* new_v{new version( // NOLINT
                             vb, rec_ptr->get_latest())};
                     pre_tid.set_absent(false);
@@ -124,7 +126,9 @@ void expose_local_write(session* ti) {
                     for (;;) {
                         if (tid.get_epoch() < ti->get_valid_epoch()) {
                             std::string vb{};
-                            wso.get_value(vb);
+                            if (wso.get_op() != OP_TYPE::DELETE) {
+                                wso.get_value(vb);
+                            }
                             version* new_v{new version(ctid, vb, ver)};
                             pre_ver->set_next(new_v);
                             break;

@@ -144,6 +144,7 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                 wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
                 break;
             }
+            case OP_TYPE::DELETE:
             case OP_TYPE::UPDATE:
             case OP_TYPE::UPSERT: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
@@ -152,7 +153,9 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     // append new version
                     // gen new version
                     std::string vb{};
-                    wso_ptr->get_value(vb);
+                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                        wso_ptr->get_value(vb);
+                    }
                     version* new_v{new version(ti->get_mrc_tid(), vb,
                                                rec_ptr->get_latest())};
 
@@ -167,10 +170,16 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                 } else {
                     // update existing version
                     std::string vb{};
-                    wso_ptr->get_value(vb);
+                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                        wso_ptr->get_value(vb);
+                    }
                     wso_ptr->get_rec_ptr()->set_value(vb);
                 }
-                wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
+                tid_word update_tid{ti->get_mrc_tid()};
+                if (wso_ptr->get_op() == OP_TYPE::DELETE) {
+                    update_tid.set_absent(true);
+                }
+                wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;
             }
             default: {
