@@ -4,12 +4,12 @@
 namespace shirakami {
 
 Status close_scan([[maybe_unused]] Token token,
-                  [[maybe_unused]] ScanHandle handle) { // NOLINT
+                  [[maybe_unused]] ScanHandle handle) {
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
 Status open_scan([[maybe_unused]] Token token, [[maybe_unused]] Storage storage,
-                 [[maybe_unused]] const std::string_view l_key, // NOLINT
+                 [[maybe_unused]] const std::string_view l_key,
                  [[maybe_unused]] const scan_endpoint l_end,
                  [[maybe_unused]] const std::string_view r_key,
                  [[maybe_unused]] const scan_endpoint r_end,
@@ -18,8 +18,25 @@ Status open_scan([[maybe_unused]] Token token, [[maybe_unused]] Storage storage,
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
+Status next([[maybe_unused]] Token token,
+            [[maybe_unused]] ScanHandle handle) {
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
+Status read_key_from_scan([[maybe_unused]] Token token,
+                          [[maybe_unused]] ScanHandle handle,
+                          [[maybe_unused]] std::string& key) {
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
+Status read_value_from_scan([[maybe_unused]] Token token,
+                            [[maybe_unused]] ScanHandle handle,
+                            [[maybe_unused]] std::string& value) {
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
 [[maybe_unused]] Status
-scannable_total_index_size([[maybe_unused]] Token token, // NOLINT
+scannable_total_index_size([[maybe_unused]] Token token,
                            [[maybe_unused]] ScanHandle handle,
                            [[maybe_unused]] std::size_t& size) {
     return Status::ERR_NOT_IMPLEMENTED;
