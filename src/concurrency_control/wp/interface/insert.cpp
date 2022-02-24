@@ -2,6 +2,7 @@
 #include "concurrency_control/include/tuple_local.h"
 
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/interface/include/helper.h"
 
 #include "index/yakushima/include/interface.h"
 
@@ -9,8 +10,9 @@
 
 namespace shirakami {
 
-inline Status insert_process(session* const ti, Storage st, const std::string_view key,
-                      const std::string_view val) {
+inline Status insert_process(session* const ti, Storage st,
+                             const std::string_view key,
+                             const std::string_view val) {
     Record* rec_ptr = new Record(key, val); // NOLINT
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
@@ -34,12 +36,16 @@ inline Status insert_process(session* const ti, Storage st, const std::string_vi
     return Status::WARN_CONCURRENT_INSERT;
 }
 
-Status try_deleted_to_inserted(session* ti, Storage st, std::string_view key, std::string_view val, Record* rec_ptr) {
-    #if 0
+Status try_deleted_to_inserted([[maybe_unused]] session* ti,
+                               [[maybe_unused]] Storage st,
+                               [[maybe_unused]] std::string_view key,
+                               [[maybe_unused]] std::string_view val,
+                               [[maybe_unused]] Record* rec_ptr) {
+#if 0
     rec_ptr->get_tidw_ref().lock();
     tid_word tid{rec_ptr->get_tidw_ref()};
     if ()
-    #endif
+#endif
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
@@ -64,7 +70,7 @@ Status insert(Token token, Storage storage,
         Record* rec_ptr{};
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             rc = try_deleted_to_inserted(ti, storage, key, val, rec_ptr);
-// todo
+            // todo
             return Status::WARN_ALREADY_EXISTS;
         }
 
