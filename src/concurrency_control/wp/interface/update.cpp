@@ -8,6 +8,7 @@
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
+#include "shirakami/logging.h"
 
 namespace shirakami {
 

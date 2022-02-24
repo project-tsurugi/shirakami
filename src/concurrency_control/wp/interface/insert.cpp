@@ -8,6 +8,8 @@
 
 #include "shirakami/interface.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 inline Status insert_process(session* const ti, Storage st,
@@ -41,12 +43,16 @@ Status try_deleted_to_inserted([[maybe_unused]] session* ti,
                                [[maybe_unused]] std::string_view key,
                                [[maybe_unused]] std::string_view val,
                                [[maybe_unused]] Record* rec_ptr) {
-#if 0
     rec_ptr->get_tidw_ref().lock();
     tid_word tid{rec_ptr->get_tidw_ref()};
-    if ()
-#endif
-    return Status::ERR_NOT_IMPLEMENTED;
+    if (tid.get_absent()) {
+        tid.set_latest(true);
+        rec_ptr->set_tid(tid);
+        return Status::OK;
+    } else {
+        rec_ptr->get_tidw_ref().unlock();
+        return Status::WARN_ALREADY_EXISTS;
+    }
 }
 
 Status insert(Token token, Storage storage,
@@ -70,8 +76,15 @@ Status insert(Token token, Storage storage,
         Record* rec_ptr{};
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             rc = try_deleted_to_inserted(ti, storage, key, val, rec_ptr);
-            // todo
-            return Status::WARN_ALREADY_EXISTS;
+            if (rc == Status::OK) {
+                ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+                return Status::OK;
+            }
+            if (rc == Status::WARN_ALREADY_EXISTS) {
+                return Status::WARN_ALREADY_EXISTS;
+            }
+            LOG(ERROR) << "error. impossible code path.";
+            return Status::ERR_FATAL;
         }
 
         auto rc{insert_process(ti, storage, key, val)};

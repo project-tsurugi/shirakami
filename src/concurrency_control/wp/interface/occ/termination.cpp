@@ -137,14 +137,18 @@ Status write_lock(session* ti, tid_word& commit_tid) {
     return Status::OK;
 }
 
-void write_phase(session* ti, epoch::epoch_t ce) {
+Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
+        tid_word update_tid{ti->get_mrc_tid()};
         switch (wso_ptr->get_op()) {
             case OP_TYPE::INSERT: {
-                wso_ptr->get_rec_ptr()->set_tid(ti->get_mrc_tid());
+                wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;
             }
-            case OP_TYPE::DELETE:
+            case OP_TYPE::DELETE: {
+                update_tid.set_absent(true);
+                [[fallthrough]];
+            }
             case OP_TYPE::UPDATE:
             case OP_TYPE::UPSERT: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
@@ -156,8 +160,8 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     if (wso_ptr->get_op() != OP_TYPE::DELETE) {
                         wso_ptr->get_value(vb);
                     }
-                    version* new_v{new version(ti->get_mrc_tid(), vb,
-                                               rec_ptr->get_latest())};
+                    version* new_v{
+                            new version(update_tid, vb, rec_ptr->get_latest())};
 
                     // update old version tid
                     tid_word old_version_tid{old_tid};
@@ -175,23 +179,26 @@ void write_phase(session* ti, epoch::epoch_t ce) {
                     }
                     wso_ptr->get_rec_ptr()->set_value(vb);
                 }
-                tid_word update_tid{ti->get_mrc_tid()};
-                if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    update_tid.set_absent(true);
-                }
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;
             }
             default: {
-                LOG(FATAL) << "unknown operation type.";
-                break;
+                LOG(ERROR) << "impossible code path.";
+                return Status::ERR_FATAL;
             }
         }
+        return Status::OK;
     };
 
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        process(&elem);
+        auto rc{process(&elem)};
+        if (rc == Status::OK) { continue; }
+        if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+        LOG(ERROR) << "impossible code path.";
+        return Status::ERR_FATAL;
     }
+
+    return Status::OK;
 }
 
 Status node_verify(session* ti) {
@@ -273,7 +280,12 @@ extern Status commit(session* ti, // NOLINT
     compute_commit_tid(ti, ce, commit_tid);
 
     // write phase
-    write_phase(ti, ce);
+    rc = write_phase(ti, ce);
+    if (rc != Status::OK) {
+        if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+        LOG(ERROR) << "impossible code path.";
+        return Status::ERR_FATAL;
+    }
 
 // This calculation can be done outside the critical section.
 #ifdef BCC_7
