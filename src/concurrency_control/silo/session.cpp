@@ -16,8 +16,7 @@ void session::clean_up_local_set() {
 }
 
 void session::clean_up_scan_caches() {
-    scan_handle_.get_scan_cache().clear();
-    scan_handle_.get_scan_cache_itr().clear();
+    scan_handle_.clear();
 }
 
 Status session::check_delete_after_write(Record* rec_ptr) {
