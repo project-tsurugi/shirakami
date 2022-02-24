@@ -44,6 +44,7 @@ inline Status insert_process(session* const ti, Storage st,
 
 Status upsert(Token token, Storage storage, const std::string_view key,
               const std::string_view val) {
+    // todo update か insert を決めるのは validation phase まで遅延させる。
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
