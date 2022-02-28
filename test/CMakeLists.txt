@@ -15,12 +15,12 @@ if (NOT BUILD_WP)
 file(GLOB TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
+        "concurrency_control/common/delete/*.cpp"
         "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/upsert/*.cpp"
         "concurrency_control/common/update/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/silo/*.cpp"
-        "concurrency_control/silo/delete/*.cpp"
         "concurrency_control/silo/delete_insert/*.cpp"
         "concurrency_control/silo/delete_insert_scan/*.cpp"
         "concurrency_control/silo/delete_scan_upsert/*.cpp"
@@ -41,6 +41,7 @@ file(GLOB TEST_SOURCES
         )
 else ()
 file(GLOB TEST_SOURCES
+        "concurrency_control/common/delete/*.cpp"
         "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/update/*.cpp"
         "concurrency_control/common/upsert/*.cpp"

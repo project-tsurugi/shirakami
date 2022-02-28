@@ -29,4 +29,26 @@ yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
             &nvp);
 }
 
+template<class Record>
+yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
+                      std::string_view val) {
+    Record* rec_ptr = new Record(key, val);
+    rec_ptr->reset_ts();
+    yakushima::node_version64* nvp{};
+    auto rc{put<Record>(tk, st, key, rec_ptr, nvp)};
+    if (rc != yakushima::status::OK) { delete rec_ptr; }
+    return rc;
+}
+
+template<class Record>
+yakushima::status put(Storage st, std::string_view key, std::string_view val) {
+    yakushima::Token tk{};
+    auto rc{yakushima::enter(tk)};
+    if (rc != yakushima::status::OK) { return rc; }
+    rc = put<Record>(tk, st, key, val);
+    yakushima::leave(tk);
+    if (rc != yakushima::status::OK) { return rc; }
+    return yakushima::status::OK;
+}
+
 } // namespace shirakami

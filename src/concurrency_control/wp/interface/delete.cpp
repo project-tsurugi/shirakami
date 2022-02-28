@@ -13,6 +13,7 @@
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
+#include "shirakami/logging.h"
 
 namespace shirakami {
 
@@ -37,11 +38,20 @@ inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
     storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
 }
 
-inline void process_after_write(session* ti, write_set_obj* wso) {
+inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
+        return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
-    ti->get_write_set().erase(wso);
+    if (wso->get_op() == OP_TYPE::UPDATE) {
+        ti->get_write_set().erase(wso);
+        return Status::WARN_CANCEL_PREVIOUS_UPDATE;
+    }
+    if (wso->get_op() == OP_TYPE::DELETE) {
+        return Status::OK;
+    }
+    LOG(ERROR) << "unknown code path";
+    return Status::ERR_FATAL;
 }
 
 Status delete_record(Token token, Storage storage,
@@ -66,9 +76,12 @@ Status delete_record(Token token, Storage storage,
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
-            process_after_write(ti, in_ws);
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
+            return process_after_write(ti, in_ws);
         }
+
+        // check absent
+        tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+        if (ctid.get_absent()) { return Status::WARN_NOT_FOUND; }
 
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT

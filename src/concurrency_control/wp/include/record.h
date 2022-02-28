@@ -60,6 +60,8 @@ public:
 
     void lock() { tidw_.lock(); }
 
+    void reset_ts() { tidw_.reset(); }
+
     void set_latest(version* const ver) {
         latest_.store(ver, std::memory_order_release);
     }

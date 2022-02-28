@@ -46,7 +46,7 @@ Status update(Token token, Storage storage,
 
         // prepare write
         ti->get_write_set().push(
-                {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
         return Status::OK;
     } else {
         return Status::WARN_NOT_FOUND;

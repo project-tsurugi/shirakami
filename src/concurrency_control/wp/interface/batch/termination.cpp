@@ -84,18 +84,22 @@ void compute_tid(session* ti, tid_word& ctid) {
 }
 
 void expose_local_write(session* ti) {
-    auto process = [ti](std::pair<Record* const, write_set_obj>& wse) {
+    tid_word ctid{};
+    compute_tid(ti, ctid);
+
+    auto process = [ti](std::pair<Record* const, write_set_obj>& wse, tid_word ctid) {
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
-        tid_word ctid{};
-        compute_tid(ti, ctid);
         switch (wso.get_op()) {
             case OP_TYPE::INSERT: {
                 // unlock and set ctid
                 rec_ptr->set_tid(ctid);
                 break;
             }
-            case OP_TYPE::DELETE:
+            case OP_TYPE::DELETE: {
+                ctid.set_absent(true);
+                [[fallthrough]];
+            }
             case OP_TYPE::UPDATE:
             case OP_TYPE::UPSERT: {
                 // lock record
@@ -153,7 +157,7 @@ void expose_local_write(session* ti) {
     };
 
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-        process(wso);
+        process(wso, ctid);
     }
 }
 

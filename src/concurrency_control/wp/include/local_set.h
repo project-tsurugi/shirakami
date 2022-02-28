@@ -80,7 +80,7 @@ public:
         return storage_ == right.storage_ && op_ == right.op_ &&
                rec_ptr_ == right.rec_ptr_ && val_ == right.val_;
     }
-    
+
     [[nodiscard]] OP_TYPE get_op() const { return op_; }
 
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }
@@ -92,7 +92,7 @@ public:
             get_rec_ptr()->get_latest()->get_value(out);
             return;
         }
-        if (get_op() == OP_TYPE::UPSERT) {
+        if (get_op() == OP_TYPE::UPSERT || get_op() == OP_TYPE::UPDATE) {
             out = val_;
             return;
         }

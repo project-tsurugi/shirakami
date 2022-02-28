@@ -73,6 +73,10 @@ public:
 
     [[nodiscard]] const Tuple& get_tuple() const { return tuple_; } // NOLINT
 
+    void get_value(std::string& out) { return tuple_.get_value(out); }
+
+    void reset_ts() { tidw_.reset(); }
+
     void set_tidw(tid_word tidw) & { tidw_.set_obj(tidw.get_obj()); }
 
     void set_snap_ptr(Record* ptr) {
