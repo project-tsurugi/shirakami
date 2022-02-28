@@ -75,7 +75,7 @@ Status upsert(Token token, Storage storage, const std::string_view key,
                 return Status::WARN_WRITE_TO_LOCAL_WRITE;
             }
 
-            // prepare write
+            // prepare update
             ti->get_write_set().push(
                     {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
             return Status::OK;

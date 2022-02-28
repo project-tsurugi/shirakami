@@ -57,7 +57,11 @@ TEST_F(upsert_after_delete, txs) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, insert(s1, st, k, v));
+#ifdef WP
+    ASSERT_EQ(Status::OK, upsert(s2, st, k, v));
+#else
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, upsert(s2, st, k, v));
+#endif
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     std::string vb{};

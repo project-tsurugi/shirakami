@@ -17,8 +17,10 @@ file(GLOB TEST_SOURCES
         "concurrency_control/common/delete_insert/*.cpp"
         "concurrency_control/common/delete_search/*.cpp"
         "concurrency_control/common/delete_update/*.cpp"
+        "concurrency_control/common/delete_upsert/*.cpp"
         "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/insert/*.cpp"
+        "concurrency_control/common/insert_upsert/*.cpp"
         "concurrency_control/common/upsert/*.cpp"
         "concurrency_control/common/update/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
@@ -39,7 +41,6 @@ file(GLOB SILO_TEST_SOURCES
         "concurrency_control/silo/search/*.cpp"
         "concurrency_control/silo/search_update/*.cpp"
         "concurrency_control/silo/storage/*.cpp"
-        "concurrency_control/silo/upsert/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
         )
