@@ -54,8 +54,7 @@ TEST_F(delete_insert, delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, get_storage(), k));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE,
-              insert(s, get_storage(), k, v));
+    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -70,8 +69,7 @@ TEST_F(delete_insert, delete_insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, get_storage(), k));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE,
-              insert(s, get_storage(), k, iv));
+    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, iv));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE,
               delete_record(s, get_storage(), k));
     ASSERT_EQ(Status::OK, commit(s));                                 // NOLINT

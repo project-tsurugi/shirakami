@@ -4,7 +4,15 @@
 #include <bitset>
 #include <mutex>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/epoch.h"
+
+#else
+
 #include "concurrency_control/silo/include/epoch.h"
+
+#endif
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -27,7 +35,9 @@ public:
                                   "insert-insert_after_delete_test");
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
         log_dir_.append("/build/insert_after_delete_test_log");
+        FLAGS_stderrthreshold = 0;
     }
+
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
         init(false, log_dir_); // NOLINT
@@ -78,7 +88,8 @@ TEST_F(insert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, insert(s, st, k, v2));
+    LOG(INFO);
+    ASSERT_EQ(Status::OK, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));

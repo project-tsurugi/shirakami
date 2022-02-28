@@ -42,7 +42,7 @@ Status insert(Token token, Storage storage,
             if (inws->get_op() == OP_TYPE::DELETE) {
                 *inws = write_set_obj{storage, val, OP_TYPE::UPDATE,
                                       inws->get_rec_ptr()};
-                return Status::WARN_WRITE_TO_LOCAL_WRITE;
+                return Status::OK;
             }
         }
 
