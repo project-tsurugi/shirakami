@@ -142,7 +142,6 @@ Status storage::delete_storage(Storage storage) { // NOLINT
             LOG(FATAL) << "missing error" << std::endl
                        << " " << page_set_meta_storage << " " << storage
                        << std::endl;
-            std::abort();
         }
         delete *elem_ptr; // NOLINT
         if (yakushima::status::OK !=
@@ -152,19 +151,17 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                      sizeof(page_set_meta_storage)},
                     storage_view)) {
             LOG(FATAL) << "missing error";
-            std::abort();
         }
         if (yakushima::status::OK != yakushima::leave(ytoken)) {
             LOG(FATAL) << "missing error";
-            std::abort();
         }
     }
     if (yakushima::status::OK !=
         yakushima::delete_storage(storage_view)) { // NOLINT
         LOG(FATAL) << "missing error";
-        std::abort();
     }
 
+    storage::register_reuse_num(storage);
     return Status::OK;
 }
 

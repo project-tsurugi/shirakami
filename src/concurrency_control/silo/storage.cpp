@@ -102,8 +102,8 @@ Status storage::delete_storage(Storage storage) { // NOLINT
 
     yakushima::delete_storage(
             {reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
-    std::unique_lock lock{storage::get_mt_reuse_num()};
-    storage::get_reuse_num().emplace_back(storage);
+
+    storage::register_reuse_num(storage);
     return Status::OK;
 }
 

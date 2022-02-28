@@ -41,6 +41,11 @@ public:
 
     static Status list_storage(std::vector<Storage>& out);
 
+    static void register_reuse_num(Storage st) {
+        std::unique_lock lk {mt_reuse_num_};
+        reuse_num_.emplace_back(st);
+    }
+
     static void set_strg_ctr(Storage st) {
         strg_ctr_.store(st, std::memory_order_release);
     }
