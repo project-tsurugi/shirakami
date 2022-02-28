@@ -1,9 +1,19 @@
 
 #include <mutex>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
 #include "concurrency_control/silo/include/record.h"
 
+#endif
+
 #include "concurrency_control/include/tuple_local.h"
+
+#include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
 
@@ -13,10 +23,7 @@
 
 #include "glog/logging.h"
 
-
 namespace shirakami::testing {
-
-using namespace shirakami;
 
 class delete_insert : public ::testing::Test { // NOLINT
 public:
@@ -40,9 +47,9 @@ public:
     static Storage& get_storage() { return storage_; }
 
 private:
-    static inline std::once_flag init_google_;
-    static inline std::string log_dir_; // NOLINT
-    static inline Storage storage_;
+    static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_;        // NOLINT
+    static inline Storage storage_;            // NOLINT
 };
 
 TEST_F(delete_insert, delete_insert) { // NOLINT
@@ -72,15 +79,11 @@ TEST_F(delete_insert, delete_insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, get_storage(), k, iv));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE,
               delete_record(s, get_storage(), k));
-    ASSERT_EQ(Status::OK, commit(s));                                 // NOLINT
-    std::string_view st_view{reinterpret_cast<char*>(&get_storage()), // NOLINT
-                             sizeof(get_storage())};
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(st_view, k))};
-    ASSERT_NE(rec_d_ptr, nullptr);
-    Record* rec_ptr{*rec_d_ptr};
-    ASSERT_NE(rec_ptr, nullptr);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    Record* rec_ptr{};
+    ASSERT_EQ(Status::OK, get<Record>(get_storage(), k, rec_ptr));
     std::string val{};
-    rec_ptr->get_tuple().get_value(val);
+    rec_ptr->get_value(val);
     ASSERT_EQ(val, v);
 }
 

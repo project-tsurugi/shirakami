@@ -14,6 +14,7 @@
 
 file(GLOB TEST_SOURCES
         "concurrency_control/common/delete/*.cpp"
+        "concurrency_control/common/delete_insert/*.cpp"
         "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/insert/*.cpp"
         "concurrency_control/common/upsert/*.cpp"
@@ -26,7 +27,6 @@ file(GLOB SILO_TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
         "concurrency_control/silo/*.cpp"
-        "concurrency_control/silo/delete_insert/*.cpp"
         "concurrency_control/silo/delete_insert_scan/*.cpp"
         "concurrency_control/silo/delete_scan_upsert/*.cpp"
         "concurrency_control/silo/delete_search/*.cpp"

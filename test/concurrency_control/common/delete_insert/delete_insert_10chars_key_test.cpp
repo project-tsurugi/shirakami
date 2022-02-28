@@ -1,8 +1,19 @@
+
 #include <bitset>
+
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
 
 #include "concurrency_control/silo/include/record.h"
 
+#endif
+
 #include "concurrency_control/include/tuple_local.h"
+
+#include "index/yakushima/include/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -34,13 +45,9 @@ TEST_F(delete_insert_10chars_key, delete_insert_with_10chars) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
-    ASSERT_EQ(Status::OK, commit(s));                      // NOLINT
-    std::string_view st_view{reinterpret_cast<char*>(&st), // NOLINT
-                             sizeof(st)};
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(st_view, k))};
-    ASSERT_NE(rec_d_ptr, nullptr);
-    Record* rec_ptr{*rec_d_ptr};
-    ASSERT_NE(rec_ptr, nullptr);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    Record* rec_ptr{};
+    ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
     std::string key{};
     rec_ptr->get_key(key);
     ASSERT_EQ(Status::OK, delete_record(s, st, key));

@@ -1,10 +1,23 @@
 #include <bitset>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
+#include "concurrency_control/silo/include/record.h"
+
+#endif
+
 #include "concurrency_control/include/tuple_local.h"
+
+#include "index/yakushima/include/interface.h"
 
 #include "gtest/gtest.h"
 
 #include "shirakami/interface.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -30,11 +43,10 @@ TEST_F(delete_insert_16chars_key, delete_insert_with_16chars) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ScanHandle handle{};
-    ASSERT_EQ(Status::OK, open_scan(s, st, k, scan_endpoint::INCLUSIVE, k,
-                                    scan_endpoint::INCLUSIVE, handle));
-                                    std::string sb{};
-    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    Record* rec_ptr{};
+    ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
+    std::string sb{};
+    rec_ptr->get_key(sb);
     ASSERT_EQ(Status::OK, delete_record(s, st, sb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
