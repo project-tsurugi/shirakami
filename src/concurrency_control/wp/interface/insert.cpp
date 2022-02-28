@@ -38,11 +38,7 @@ inline Status insert_process(session* const ti, Storage st,
     return Status::WARN_CONCURRENT_INSERT;
 }
 
-Status try_deleted_to_inserted([[maybe_unused]] session* ti,
-                               [[maybe_unused]] Storage st,
-                               [[maybe_unused]] std::string_view key,
-                               [[maybe_unused]] std::string_view val,
-                               [[maybe_unused]] Record* rec_ptr) {
+Status try_deleted_to_inserted(Record* rec_ptr) {
     rec_ptr->get_tidw_ref().lock();
     tid_word tid{rec_ptr->get_tidw_ref()};
     if (tid.get_absent()) {
@@ -75,7 +71,12 @@ Status insert(Token token, Storage storage,
         // index access to check local write set
         Record* rec_ptr{};
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
-            rc = try_deleted_to_inserted(ti, storage, key, val, rec_ptr);
+            write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)};
+            if (in_ws != nullptr) {
+                if (in_ws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
+            }
+
+            rc = try_deleted_to_inserted(rec_ptr);
             if (rc == Status::OK) {
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
                 return Status::OK;

@@ -13,14 +13,15 @@
 
 namespace shirakami::occ {
 
-void unlock_write_set(session* ti) {
+void unlock_write_set(session* const ti) {
     for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
         itr.get_rec_ptr()->get_tidw_ref().unlock();
     }
 }
 
 
-void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num) {
+void unlock_not_insert_records(session* const ti,
+                               std::size_t not_insert_locked_num) {
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         if (not_insert_locked_num == 0) { break; }
         auto* wso_ptr = &(elem);
@@ -30,7 +31,21 @@ void unlock_not_insert_records(session* ti, std::size_t not_insert_locked_num) {
     }
 }
 
+void unlock_inserted_records(session* const ti) {
+    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+        auto* wso_ptr = &(elem);
+        if (wso_ptr->get_op() == OP_TYPE::INSERT) {
+            tid_word tid{};
+            tid.set_absent(true);
+            tid.set_latest(true);
+            tid.set_lock(false);
+            wso_ptr->get_rec_ptr()->set_tid(tid);
+        }
+    }
+}
+
 Status abort(session* ti) { // NOLINT
+    unlock_inserted_records(ti);
     ti->clean_up();
     return Status::OK;
 }

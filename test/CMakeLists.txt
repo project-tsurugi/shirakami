@@ -11,15 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-if (NOT BUILD_WP)
+
 file(GLOB TEST_SOURCES
-        "bench/*.cpp"
-        "complicated_test/phantom_protection_test.cpp"
         "concurrency_control/common/delete/*.cpp"
         "concurrency_control/common/helper/*.cpp"
+        "concurrency_control/common/insert/*.cpp"
         "concurrency_control/common/upsert/*.cpp"
         "concurrency_control/common/update/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
+        )
+
+if (NOT BUILD_WP)
+file(GLOB SILO_TEST_SOURCES
+        "bench/*.cpp"
+        "complicated_test/phantom_protection_test.cpp"
         "concurrency_control/silo/*.cpp"
         "concurrency_control/silo/delete_insert/*.cpp"
         "concurrency_control/silo/delete_insert_scan/*.cpp"
@@ -27,7 +32,6 @@ file(GLOB TEST_SOURCES
         "concurrency_control/silo/delete_search/*.cpp"
         "concurrency_control/silo/delete_update/*.cpp"
         "concurrency_control/silo/delete_upsert/*.cpp"
-        "concurrency_control/silo/insert/*.cpp"
         "concurrency_control/silo/insert_update/*.cpp"
         "concurrency_control/silo/scan/*.cpp"
         "concurrency_control/silo/scan/read_only/*.cpp"
@@ -39,13 +43,9 @@ file(GLOB TEST_SOURCES
         "sequence/*.cpp"
         "third_party/*.cpp"
         )
+        set(TEST_SOURCES ${TEST_SOURCES} ${SILO_TEST_SOURCES})
 else ()
-file(GLOB TEST_SOURCES
-        "concurrency_control/common/delete/*.cpp"
-        "concurrency_control/common/helper/*.cpp"
-        "concurrency_control/common/update/*.cpp"
-        "concurrency_control/common/upsert/*.cpp"
-        "concurrency_control/common/search_upsert/*.cpp"
+file(GLOB WP_TEST_SOURCES
         "concurrency_control/wp/*.cpp"
         "concurrency_control/wp/anomaly/write_crown/*.cpp"
         "concurrency_control/wp/anomaly/write_skew/*.cpp"
@@ -54,7 +54,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/wp/interface/upsert/*.cpp"
         "concurrency_control/wp/wp_basic/*.cpp"
         )
-
+        set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 endif()
 
 if (BUILD_PWAL)

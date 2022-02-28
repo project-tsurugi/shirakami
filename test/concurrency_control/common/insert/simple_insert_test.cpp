@@ -3,7 +3,15 @@
 #include <mutex>
 #include <thread>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
 #include "concurrency_control/silo/include/record.h"
+
+#endif
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -59,7 +67,7 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     std::string_view st_view{reinterpret_cast<char*>(&storage), // NOLINT
@@ -72,12 +80,11 @@ TEST_F(simple_insert, insert) { // NOLINT
         Record* rec_ptr{*rec_d_ptr};
         ASSERT_NE(rec_ptr, nullptr);
         {
-            Tuple& tuple_ref{rec_ptr->get_tuple()};
             std::string key{};
-            tuple_ref.get_key(key);
+            rec_ptr->get_key(key);
             ASSERT_EQ(memcmp(key.data(), key_view.data(), key_view.size()), 0);
             std::string read_value{};
-            tuple_ref.get_value(read_value);
+            rec_ptr->get_value(read_value);
             ASSERT_EQ(memcmp(read_value.data(), value_view.data(),
                              value_view.size()),
                       0);
