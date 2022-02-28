@@ -35,6 +35,9 @@ Status update(Token token, Storage storage,
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
+            if (in_ws->get_op() == OP_TYPE::DELETE) {
+                return Status::WARN_ALREADY_DELETE;
+            }
             if (in_ws->get_op() == OP_TYPE::INSERT) {
                 in_ws->get_rec_ptr()->get_latest()->set_value(val);
             } else {
@@ -43,6 +46,10 @@ Status update(Token token, Storage storage,
             }
             return Status::WARN_WRITE_TO_LOCAL_WRITE;
         }
+
+        // check absent
+        tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+        if (ctid.get_absent()) { return Status::WARN_NOT_FOUND; }
 
         // prepare write
         ti->get_write_set().push(
