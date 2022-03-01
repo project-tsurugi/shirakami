@@ -27,11 +27,12 @@
 #include "fileio.h"
 #include "local_set.h"
 #include "record.h"
-#include "scan.h"
 #include "tid.h"
 
 #include "cleanup_manager.h"
 #include "garbage_manager.h"
+
+#include "concurrency_control/include/scan.h"
 
 // shirakami/include/
 #include "shirakami/scheme.h"
