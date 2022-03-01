@@ -20,10 +20,14 @@ file(GLOB TEST_SOURCES
         "concurrency_control/common/delete_upsert/*.cpp"
         "concurrency_control/common/helper/*.cpp"
         "concurrency_control/common/insert/*.cpp"
+        "concurrency_control/common/insert_update/*.cpp"
         "concurrency_control/common/insert_upsert/*.cpp"
         "concurrency_control/common/upsert/*.cpp"
         "concurrency_control/common/update/*.cpp"
+        "concurrency_control/common/search/*.cpp"
+        "concurrency_control/common/search_update/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
+        "concurrency_control/common/storage/*.cpp"
         )
 
 if (NOT BUILD_WP)
@@ -33,14 +37,9 @@ file(GLOB SILO_TEST_SOURCES
         "concurrency_control/silo/*.cpp"
         "concurrency_control/silo/delete_insert_scan/*.cpp"
         "concurrency_control/silo/delete_scan_upsert/*.cpp"
-        "concurrency_control/silo/delete_upsert/*.cpp"
-        "concurrency_control/silo/insert_update/*.cpp"
         "concurrency_control/silo/scan/*.cpp"
         "concurrency_control/silo/scan/read_only/*.cpp"
         "concurrency_control/silo/scan_upsert/*.cpp"
-        "concurrency_control/silo/search/*.cpp"
-        "concurrency_control/silo/search_update/*.cpp"
-        "concurrency_control/silo/storage/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
         )

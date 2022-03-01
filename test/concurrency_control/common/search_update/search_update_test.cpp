@@ -116,7 +116,7 @@ TEST_F(search_update, // NOLINT
                     ++work_b_cnt;
                 }
             }
-            if (work_a_cnt > 100 && work_b_cnt > 100) { break; } // NOLINT
+            if (work_a_cnt > 10 && work_b_cnt > 10) { break; } // NOLINT
         }
         ASSERT_EQ(Status::OK, leave(s));
     };
