@@ -14,11 +14,11 @@ namespace shirakami {
 class storage {
 public:
     /**
-     * @brief left endpoint of storage range. [100: ?).
-     * [0:100) is for system.
+     * @brief left endpoint of storage range. [1M: ?).
+     * [0:1M) is for other system.
      * 
      */
-    static constexpr Storage initial_strg_ctr{100};
+    static constexpr Storage initial_strg_ctr{1000 * 1000};
 
     /**
      * @brief initialization.
