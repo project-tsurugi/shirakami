@@ -20,13 +20,13 @@
 
 namespace shirakami {
 
-Status close_scan(Token token, ScanHandle handle) { // NOLINT
+Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
 
     return ti->get_scan_handle().clear(handle);
 }
 
-inline Status find_open_scan_slot(session* ti, ScanHandle& out) {
+inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
     for (ScanHandle i = 0;; ++i) {
         auto itr = sh.get_scan_cache().find(i);
@@ -40,7 +40,7 @@ inline Status find_open_scan_slot(session* ti, ScanHandle& out) {
     return Status::WARN_SCAN_LIMIT;
 }
 
-Status open_scan(Token token, Storage storage,
+Status open_scan(Token const token, Storage storage,
                  const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
                  const scan_endpoint r_end, ScanHandle& handle,
@@ -74,6 +74,11 @@ Status open_scan(Token token, Storage storage,
         return Status::WARN_NOT_FOUND;
     }
 
+    /**
+     * You must ensure that new elements are not interrupted in the range at 
+     * the node that did not retrieve the element but scanned it when masstree 
+     * scanned it.
+     */
     std::size_t nvec_delta{0};
     if (scan_res.size() < nvec.size()) {
         auto add_ns = [&ti, &nvec](std::size_t n) {
@@ -91,6 +96,7 @@ Status open_scan(Token token, Storage storage,
         }
     }
 
+    // Cache a pointer to record.
     std::get<scan_handler::scan_cache_storage_pos>(
             ti->get_scan_cache()[handle]) = storage;
     auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
@@ -107,17 +113,24 @@ Status open_scan(Token token, Storage storage,
 
 Status next(Token token, ScanHandle handle) {
     auto* ti = static_cast<session*>(token);
+
+    // increment cursor
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
     ++scan_index;
-    ti->get_scan_handle().get_ci(handle).reset();
+
+    // check range of cursor
     if (std::get<scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle])
                 .size() <= scan_index) {
         return Status::WARN_SCAN_LIMIT;
     }
+
+    // reset cache in cursor
+    ti->get_scan_handle().get_ci(handle).reset();
     return Status::OK;
 }
 
-Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
+Status read_key_from_scan(Token const token, ScanHandle const handle,
+                          std::string& key) {
     auto* ti = static_cast<session*>(token);
 
     /**
@@ -182,7 +195,7 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
     return Status::OK;
 }
 
-Status read_value_from_scan(Token token, ScanHandle handle,
+Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
     auto* ti = static_cast<session*>(token);
 
@@ -246,8 +259,8 @@ Status read_value_from_scan(Token token, ScanHandle handle,
     return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(Token token, // NOLINT
-                                                   ScanHandle handle,
+[[maybe_unused]] Status scannable_total_index_size(Token const token, // NOLINT
+                                                   ScanHandle const handle,
                                                    std::size_t& size) {
     auto* ti = static_cast<session*>(token);
 
