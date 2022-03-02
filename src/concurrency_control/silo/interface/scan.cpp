@@ -26,6 +26,20 @@ Status close_scan(Token token, ScanHandle handle) { // NOLINT
     return ti->get_scan_handle().clear(handle);
 }
 
+inline Status find_open_scan_slot(session* ti, ScanHandle& out) {
+    auto& sh = ti->get_scan_handle();
+    for (ScanHandle i = 0;; ++i) {
+        auto itr = sh.get_scan_cache().find(i);
+        if (itr == sh.get_scan_cache().end()) {
+            out = i;
+            // clear cursor info
+            sh.get_scan_cache_itr()[i] = 0;
+            return Status::OK;
+        }
+    }
+    return Status::WARN_SCAN_LIMIT;
+}
+
 Status open_scan(Token token, Storage storage,
                  const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
@@ -39,15 +53,8 @@ Status open_scan(Token token, Storage storage,
                                              r_end, handle, max_size);
     }
 
-    for (ScanHandle i = 0;; ++i) {
-        auto itr = ti->get_scan_cache().find(i);
-        if (itr == ti->get_scan_cache().end()) {
-            handle = i;
-            ti->get_scan_cache_itr()[i] = 0;
-            break;
-        }
-        if (i == SIZE_MAX) return Status::WARN_SCAN_LIMIT;
-    }
+    auto rc{find_open_scan_slot(ti, handle)};
+    if (rc != Status::OK) { return rc; }
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t index_rec_ptr{1};
@@ -163,7 +170,8 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key) {
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
     ti->get_scan_handle().get_ci(handle).set_key(key);
-    ti->get_scan_handle().get_ci(handle).set_was_read(cursor_info::op_type::key);
+    ti->get_scan_handle().get_ci(handle).set_was_read(
+            cursor_info::op_type::key);
 
     // create node set info
     auto& ns = ti->get_node_set();
@@ -226,7 +234,8 @@ Status read_value_from_scan(Token token, ScanHandle handle,
     if (rr != Status::OK) { return rr; }
     ti->get_read_set().emplace_back(tidb, std::get<0>(*itr));
     ti->get_scan_handle().get_ci(handle).set_value(value);
-    ti->get_scan_handle().get_ci(handle).set_was_read(cursor_info::op_type::value);
+    ti->get_scan_handle().get_ci(handle).set_was_read(
+            cursor_info::op_type::value);
 
     // create node set info
     auto& ns = ti->get_node_set();

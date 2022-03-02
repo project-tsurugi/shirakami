@@ -12,8 +12,8 @@
 #include "garbage.h"
 #include "local_set.h"
 
-#include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/read_by.h"
+#include "concurrency_control/wp/include/tid.h"
 
 #include "concurrency_control/include/scan.h"
 
@@ -108,6 +108,8 @@ public:
      * @brief getter of @a mode_.
      */
     [[nodiscard]] tx_mode get_mode() const { return mode_; }
+
+    scan_handler& get_scan_handle() { return scan_handle_; }
 
     [[nodiscard]] epoch::epoch_t get_step_epoch() const {
         return step_epoch_.load(std::memory_order_release);
