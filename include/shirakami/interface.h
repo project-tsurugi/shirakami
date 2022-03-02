@@ -58,6 +58,7 @@ extern Status delete_storage(Storage storage);
  * @param[out] out the list of existing storage.
  * @return Status::OK if successful.
  * @return Status::WARN_NOT_FOUND if no storage.
+ * @return Status::ERR_FATAL A serious error has been detected.
  */
 extern Status list_storage(std::vector<Storage>& out);
 

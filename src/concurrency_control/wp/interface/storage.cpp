@@ -35,9 +35,7 @@ Status list_storage(std::vector<Storage>& out) {
     return storage::list_storage(out);
 }
 
-Status storage::register_storage(Storage& storage) {
-    get_new_storage_num(storage);
-
+Status storage::create_storage(Storage storage) {
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
@@ -59,14 +57,16 @@ Status storage::register_storage(Storage& storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view, &page_set_meta_ptr,
                 sizeof(page_set_meta_ptr)); // NOLINT
-        if (yakushima::status::OK != rc) {
-            LOG(FATAL) << rc;
-            std::abort();
-        }
+        if (yakushima::status::OK != rc) { LOG(FATAL) << rc; }
         yakushima::leave(ytoken);
     }
 
     return Status::OK;
+}
+
+Status storage::register_storage(Storage& storage) {
+    get_new_storage_num(storage);
+    return create_storage(storage);
 }
 
 Status storage::exist_storage(Storage storage) {
@@ -100,7 +100,7 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                         std::get<v_index>(itr));
             } else {
                 Record* target_rec{*std::get<v_index>(itr)};
-                delete target_rec;               // NOLINT
+                delete target_rec; // NOLINT
             }
         }
     } else {
@@ -109,10 +109,11 @@ Status storage::delete_storage(Storage storage) { // NOLINT
                                    std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
                 if (wp::get_finalizing()) {
-                    delete *reinterpret_cast<wp::page_set_meta**>(std::get<v_index>(scan_res[i])); // NOLINT
+                    delete *reinterpret_cast<wp::page_set_meta**>(
+                            std::get<v_index>(scan_res[i])); // NOLINT
                 } else {
                     Record* target_rec{*std::get<v_index>(scan_res[i])};
-                    delete target_rec;               // NOLINT
+                    delete target_rec; // NOLINT
                 }
             }
         };
@@ -168,13 +169,16 @@ Status storage::delete_storage(Storage storage) { // NOLINT
 Status storage::list_storage(std::vector<Storage>& out) {
     std::vector<std::pair<std::string, yakushima::tree_instance*>> rec;
     yakushima::list_storages(rec);
-    if (rec.empty()) return Status::WARN_NOT_FOUND;
+    if (rec.empty()) {
+        LOG(ERROR) << "There must be wp meta storage at least.";
+        return Status::ERR_FATAL;
+    }
     out.clear();
     for (auto&& elem : rec) {
         //Due to invariants, the type is known by the developer.
         Storage dest{};
         memcpy(&dest, elem.first.data(), sizeof(dest));
-        out.emplace_back(dest);
+        if (dest != storage::wp_meta_storage) { out.emplace_back(dest); }
     }
     return Status::OK;
 }

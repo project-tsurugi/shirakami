@@ -3,6 +3,8 @@
 #include <string_view>
 #include <vector>
 
+#include "storage.h"
+
 #include "concurrency_control/wp/include/session.h"
 
 #include "concurrency_control/wp/include/wp.h"
@@ -80,13 +82,11 @@ wp_meta::wped_type find_wp(Storage const storage) {
 Status init() {
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
-    Storage ret_storage{};
-    auto rc = register_storage(ret_storage);
-    if (Status::OK != rc) {
+    if (auto rc{storage::create_storage(storage::wp_meta_storage)};
+        rc != Status::OK) {
         LOG(FATAL) << rc;
-        std::abort();
     }
-    set_page_set_meta_storage(ret_storage);
+    set_page_set_meta_storage(storage::wp_meta_storage);
     set_initialized(true);
     return Status::OK;
 }

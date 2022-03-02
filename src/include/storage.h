@@ -13,12 +13,8 @@ namespace shirakami {
 
 class storage {
 public:
-    /**
-     * @brief left endpoint of storage range. [1M: ?).
-     * [0:1M) is for other system.
-     * 
-     */
-    static constexpr Storage initial_strg_ctr{1000 * 1000};
+    static constexpr Storage initial_strg_ctr{0};
+    static constexpr Storage wp_meta_storage{UINT64_MAX};
 
     /**
      * @brief initialization.
@@ -26,6 +22,18 @@ public:
      */
     static void init();
 
+    /**
+     * @brief Create a storage object
+     * @param[in] storage 
+     * @return Status::OK success.
+     */
+    static Status create_storage(Storage storage);
+
+    /**
+     * @brief Create a storage object
+     * @param[out] storage 
+     * @return Status::OK success.
+     */
     static Status register_storage(Storage& storage);
 
     static Status exist_storage(Storage storage);

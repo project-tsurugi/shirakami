@@ -15,6 +15,8 @@
 #include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/read_by.h"
 
+#include "concurrency_control/include/scan.h"
+
 #include "shirakami/tuple.h"
 
 #include "yakushima/include/kvs.h"
@@ -279,6 +281,11 @@ private:
     std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
 
     std::size_t batch_id_{};
+
+    /**
+     * @brief about scan operation.
+     */
+    scan_handler scan_handle_;
 };
 
 class session_table {
