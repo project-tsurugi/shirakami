@@ -81,6 +81,8 @@ public:
                rec_ptr_ == right.rec_ptr_ && val_ == right.val_;
     }
 
+    void get_key(std::string& out) const { rec_ptr_->get_key(out); }
+
     [[nodiscard]] OP_TYPE get_op() const { return op_; }
 
     [[nodiscard]] Record* get_rec_ptr() const { return rec_ptr_; }

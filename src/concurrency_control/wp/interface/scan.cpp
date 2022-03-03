@@ -1,5 +1,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
+
+#include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
 
 #include "index/yakushima/include/scheme.h"
@@ -97,6 +99,7 @@ Status open_scan(Token const token, Storage storage,
                          std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }
 
+    sh.get_scanned_storage_set().set(handle, storage);
     return Status::OK;
 }
 
@@ -119,10 +122,68 @@ Status next(Token const token, ScanHandle const handle) {
     return Status::OK;
 }
 
-Status read_key_from_scan([[maybe_unused]] Token token,
-                          [[maybe_unused]] ScanHandle handle,
-                          [[maybe_unused]] std::string& key) {
-    return Status::ERR_NOT_IMPLEMENTED;
+Status read_key_from_scan(Token const token, ScanHandle const handle,
+                          std::string& key) {
+    auto* ti = static_cast<session*>(token);
+    auto& sh = ti->get_scan_handle();
+
+    /**
+     * Check whether the handle is valid.
+     */
+    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        return Status::WARN_INVALID_HANDLE;
+    }
+
+    if (ti->get_read_only()) {
+        // todo
+        return Status::ERR_NOT_IMPLEMENTED;
+    }
+
+    scan_handler::scan_elem_type target_elem;
+    auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+            sh.get_scan_cache()[handle]);
+    std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+    auto itr = scan_buf.begin() + scan_index;
+    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+
+    /**
+     * Check read-own-write
+     */
+    const write_set_obj* inws = ti->get_write_set().search(
+            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
+    if (inws != nullptr) {
+        if (inws->get_op() == OP_TYPE::DELETE) {
+            return Status::WARN_ALREADY_DELETE;
+        }
+        inws->get_key(key);
+        return Status::WARN_READ_FROM_OWN_OPERATION;
+    }
+
+    if (sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
+        // it already read.
+        sh.get_ci(handle).get_key(key);
+        return Status::OK;
+    }
+
+    tid_word tidb{};
+    std::string valueb{};
+    const_cast<Record*>(std::get<0>(*itr))->get_key(key);
+    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
+                            valueb, false);
+    if (rr != Status::OK) { return rr; }
+    ti->get_read_set().emplace_back(sh.get_scanned_storage_set().get(handle),
+                                    const_cast<Record*>(std::get<0>(*itr)),
+                                    tidb);
+    sh.get_ci(handle).set_key(key);
+    sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+
+    // create node set info
+    auto& ns = ti->get_node_set();
+    if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
+        ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+    }
+
+    return Status::OK;
 }
 
 Status read_value_from_scan([[maybe_unused]] Token token,

@@ -79,6 +79,20 @@ private:
     std::map<ScanHandle, cursor_info> cset_;
 };
 
+class scanned_storage_set {
+public:
+    Storage get(ScanHandle const hd) { return map_[hd]; }
+
+    void clear() { map_.clear(); }
+
+    void clear(ScanHandle const hd) { map_.erase(hd); }
+
+    void set(ScanHandle const hd, Storage const st) { map_[hd] = st; };
+
+private:
+    std::map<ScanHandle, Storage> map_;
+};
+
 class scan_handler {
 public:
     using scan_elem_type =
@@ -98,14 +112,20 @@ public:
     }
 
     Status clear(ScanHandle hd) {
+        // about scan cache
         auto itr = get_scan_cache().find(hd);
         if (itr == get_scan_cache().end()) {
             return Status::WARN_INVALID_HANDLE;
         }
         get_scan_cache().erase(itr);
+
+        // about scan cache iterator
         auto index_itr = get_scan_cache_itr().find(hd);
         get_scan_cache_itr().erase(index_itr);
         cs_.clear(hd);
+
+        // about scanned storage set
+        scanned_storage_set_.clear(hd);
 
         return Status::OK;
     }
@@ -120,6 +140,10 @@ public:
         return scan_cache_itr_;
     }
 
+    scanned_storage_set& get_scanned_storage_set() {
+        return scanned_storage_set_;
+    }
+
 private:
     /**
      * @brief cache of index scan.
@@ -130,6 +154,14 @@ private:
      * @brief cursor of the scan_cache_.
      */
     scan_cache_itr_type scan_cache_itr_{};
+
+    /**
+     * @brief scanned storage set.
+     * @details As a result of being scanned, the pointer to the record 
+     * is retained. However, it does not retain the scanned storage information
+     * . Without it, you will have problems generating read sets.
+     */
+    scanned_storage_set scanned_storage_set_{};
 
     /**
      * @brief 
