@@ -211,6 +211,8 @@ init(bool enable_recovery = false,                                 // NOLINT
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
  * @return Status::OK success
+ * @return Status::WARN_ALREADY_INSERT The transaction executes two insert 
+ * command for the same page, and the second insert returns this status.
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
  * exists in db, so this function returned immediately.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
