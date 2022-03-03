@@ -39,7 +39,7 @@ void work_manager() {
         epoch::epoch_t min_batch_epoch{epoch::max_epoch};
         auto ce{epoch::get_global_epoch()};
         for (auto&& se : session_table::get_session_table()) {
-            if (se.get_visible()) {
+            if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_step_epoch());
                 if (se.get_mode() == tx_mode::BATCH) {
                     min_batch_epoch =

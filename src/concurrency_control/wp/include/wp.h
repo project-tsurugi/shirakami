@@ -150,9 +150,26 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
+    static epoch::epoch_t find_min_ep(const wped_type& wped) {
+        bool first{true};
+        epoch::epoch_t min_ep{0};
+        for (auto&& elem : wped) {
+            if (elem.first != 0) {
+                // used slot
+                if (first) {
+                    first = false;
+                    min_ep = elem.first;
+                } else if (min_ep > elem.first) {
+                    min_ep = elem.first;
+                }
+            }
+        }
+        return min_ep;
+    }
+
     static std::size_t find_min_id(const wped_type& wped) {
         bool first{true};
-        std::size_t min_id{};
+        std::size_t min_id{0};
         for (auto&& elem : wped) {
             if (elem.first != 0) {
                 // used slot

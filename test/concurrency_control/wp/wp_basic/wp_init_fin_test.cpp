@@ -57,4 +57,14 @@ TEST_F(wp_init_fin_test, init_fin) { // NOLINT
     ASSERT_EQ(Status::OK, wp::init());
 }
 
+TEST_F(wp_init_fin_test, after_init) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+    wp::wp_meta* wm{};
+    ASSERT_EQ(Status::OK, find_wp_meta(st, wm));
+    auto wps{wm->get_wped()};
+    ASSERT_EQ(0, wp::wp_meta::find_min_ep(wps));
+    ASSERT_EQ(0, wp::wp_meta::find_min_id(wps));
+}
+
 } // namespace shirakami::testing

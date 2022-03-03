@@ -60,33 +60,22 @@ Status read_verify(session* ti, tid_word read_tid, tid_word check,
     return Status::OK;
 }
 
-Status wp_verify(Storage const st, epoch::epoch_t const read_epoch) {
+Status wp_verify(Storage const st, epoch::epoch_t const read_epoch,
+                 epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) { LOG(FATAL); }
     auto wps{wm->get_wped()};
-    if (!wps.empty()) {
-        // need verify
-        bool first{true};
-        epoch::epoch_t max_epoch{};
-        for (auto&& elem : wps) {
-            if (first) {
-                max_epoch = elem.first;
-                first = false;
-            } else {
-                if (max_epoch < elem.first) { max_epoch = elem.first; }
-            }
-        }
-        // verify
-        if (max_epoch >= read_epoch) {
-            // exist valid wp. this tx should read results of this batch.
-            return Status::ERR_VALIDATION;
-        }
+    auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+    if (find_min_ep != 0 &&
+        (find_min_ep <= read_epoch || find_min_ep <= commit_epoch)) {
+        return Status::ERR_VALIDATION;
     }
     return Status::OK;
 }
 
-Status read_wp_verify(session* const ti, tid_word& commit_tid) {
+Status read_wp_verify(session* const ti, epoch::epoch_t ce,
+                      tid_word& commit_tid) {
     tid_word check{};
     for (auto&& itr : ti->get_read_set()) {
         auto* rec_ptr = itr.get_rec_ptr();
@@ -95,7 +84,7 @@ Status read_wp_verify(session* const ti, tid_word& commit_tid) {
         // verify
         // ==============================
         if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK ||
-            wp_verify(itr.get_storage(), itr.get_tid().get_epoch()) !=
+            wp_verify(itr.get_storage(), itr.get_tid().get_epoch(), ce) !=
                     Status::OK) {
             unlock_write_set(ti);
             occ::abort(ti);
@@ -104,25 +93,6 @@ Status read_wp_verify(session* const ti, tid_word& commit_tid) {
         // ==============================
 
         commit_tid = std::max(check, commit_tid);
-    }
-
-    return Status::OK;
-}
-
-Status wp_verify(session* ti) {
-    std::vector<Storage> st;
-
-    for (auto&& itr : ti->get_read_set()) {
-        st.emplace_back(itr.get_storage());
-    }
-
-    // sort and unique
-    std::sort(st.begin(), st.end());
-    st.erase(std::unique(st.begin(), st.end()), st.end());
-
-    for (auto&& elem : st) {
-        auto wps = wp::find_wp(elem);
-        if (!wp::wp_meta::empty(wps)) { return Status::ERR_FAIL_WP; }
     }
 
     return Status::OK;
@@ -277,7 +247,7 @@ extern Status commit(session* ti, // NOLINT
     epoch::epoch_t ce{epoch::get_global_epoch()};
 
     // read wp verify
-    rc = read_wp_verify(ti, commit_tid);
+    rc = read_wp_verify(ti, ce, commit_tid);
     if (rc != Status::OK) {
         unlock_write_set(ti);
         occ::abort(ti);

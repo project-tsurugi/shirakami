@@ -343,6 +343,9 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * updater, and it could not complete search.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem 
  * by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_PREMATURE In long tx mode, it have to wait for no 
+ * transactions to be located in an order older than the order in which this 
+ * transaction is located.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding 
  * write (insert/update/upsert) operation in the same tx.
  */

@@ -3,6 +3,7 @@
 
 #include <string_view>
 
+#include "concurrency_control/wp/include/garbage.h"
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/version.h"
@@ -23,6 +24,10 @@ Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+        return Status::WARN_PREMATURE;
+    }
+
+    if (garbage::get_min_step_epoch() <= ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }
 
@@ -68,6 +73,10 @@ VER_SELEC:
     // version selection
     version* ver{};
     tid_word f_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
+    /**
+     * todo enhancement: not wait lock release and optimistic read or 
+     * deterministic read.
+     */
     for (;;) {
         if (f_check.get_lock()) {
             _mm_pause();
