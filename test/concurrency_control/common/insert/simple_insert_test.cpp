@@ -67,7 +67,7 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::WARN_ALREADY_INSERT, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     std::string_view st_view{reinterpret_cast<char*>(&storage), // NOLINT
