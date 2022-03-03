@@ -107,12 +107,6 @@ enum class Status : std::int32_t {
      * This is for blocking invalid multiple initialization.
      */
     WARN_ALREADY_INIT,
-    /**
-     * @brief warning
-     * @details When tx executes insert command twice for the same page, the 
-     * second insert may return it status.
-     */
-    WARN_ALREADY_INSERT,
     WARN_CANCEL_PREVIOUS_INSERT,
     /**
      * @brief warning.
@@ -276,8 +270,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_ALREADY_EXISTS"sv; // NOLINT
         case Status::WARN_ALREADY_INIT:
             return "WARN_ALREADY_INIT"sv; // NOLINT
-        case Status::WARN_ALREADY_INSERT:
-            return "WARN_ALREADY_INSERT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_INSERT:
             return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_OPERATION:

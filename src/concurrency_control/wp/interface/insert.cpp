@@ -73,7 +73,7 @@ Status insert(Token token, Storage storage,
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)};
             if (in_ws != nullptr) {
-                if (in_ws->get_op() == OP_TYPE::INSERT) { return Status::WARN_ALREADY_INSERT; }
+                if (in_ws->get_op() == OP_TYPE::INSERT) { return Status::WARN_ALREADY_EXISTS; }
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);

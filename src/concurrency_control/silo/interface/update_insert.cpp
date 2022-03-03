@@ -35,7 +35,7 @@ Status insert(Token token, Storage storage,
     if (rc == Status::OK) {
         write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::INSERT) { return Status::WARN_ALREADY_INSERT; }
+            if (inws->get_op() == OP_TYPE::INSERT) { return Status::WARN_ALREADY_EXISTS; }
             if (inws->get_op() == OP_TYPE::UPDATE) {
                 return Status::WARN_ALREADY_EXISTS;
             }
