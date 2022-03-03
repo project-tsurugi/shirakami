@@ -55,6 +55,7 @@ public:
     void clean_up() {
         clean_up_local_set();
         clean_up_tx_property();
+        scan_handle_.clear();
     }
 
     /**

@@ -1,7 +1,15 @@
 
 #include <mutex>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/session.h"
+
+#else
+
 #include "concurrency_control/silo/include/session.h"
+
+#endif
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -58,39 +66,40 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
     // open scan
     ScanHandle handle{};
     auto* ti{static_cast<session*>(s)};
+    auto& sh = ti->get_scan_handle();
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                ti->get_scan_cache()[handle]);
+                sh.get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 1));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                ti->get_scan_cache()[handle]);
+                sh.get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 1);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 2));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                ti->get_scan_cache()[handle]);
+                sh.get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 2);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 3));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                ti->get_scan_cache()[handle]);
+                sh.get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 4));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                ti->get_scan_cache()[handle]);
+                sh.get_scan_cache()[handle]);
         ASSERT_EQ(scan_buf.size(), 3);
     }
 }
