@@ -14,7 +14,7 @@ Status tx_begin(session* const ti,
     auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
 
     // get batch id
-    auto batch_id = shirakami::wp::batch::get_counter();
+    auto batch_id = shirakami::wp::long_tx::get_counter();
 
     // compute future epoch
     auto valid_epoch = epoch::get_global_epoch() + 1;
@@ -26,7 +26,7 @@ Status tx_begin(session* const ti,
 
     // inc batch counter
     // after deciding success
-    wp::batch::set_counter(batch_id + 1);
+    wp::long_tx::set_counter(batch_id + 1);
 
     ti->set_batch_id(batch_id);
     ongoing_tx::push({valid_epoch, batch_id});

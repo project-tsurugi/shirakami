@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace shirakami::wp::batch {
+namespace shirakami::wp::long_tx {
 
 /**
  * @brief The counter serving batch id which show priority of batchs.
@@ -14,4 +14,4 @@ inline std::size_t counter{1};
 
 [[maybe_unused]] static void set_counter(std::size_t const num) { counter = num; };
 
-} // namespace shirakami::wp::long
+} // namespace shirakami::wp::long_tx
