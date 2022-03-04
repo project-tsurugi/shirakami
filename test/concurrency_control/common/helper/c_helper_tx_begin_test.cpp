@@ -49,7 +49,7 @@ private:
 TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    session* ti = static_cast<session*>(s);
+    auto* ti = static_cast<session*>(s);
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
@@ -110,7 +110,7 @@ TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
 TEST_F(c_helper_tx_begin, check_param_after_tx_begin) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    session* ti = static_cast<session*>(s);
+    auto* ti = static_cast<session*>(s);
     ASSERT_EQ(Status::OK, leave(s));
 
     ASSERT_EQ(Status::OK, tx_begin(s));
