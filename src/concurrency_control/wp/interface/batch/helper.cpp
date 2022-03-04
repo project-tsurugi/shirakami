@@ -1,5 +1,5 @@
 
-#include "concurrency_control/wp/include/batch.h"
+#include "concurrency_control/wp/include/long_tx.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/batch/include/batch.h"

@@ -14,4 +14,4 @@ inline std::size_t counter{1};
 
 [[maybe_unused]] static void set_counter(std::size_t const num) { counter = num; };
 
-} // namespace shirakami::wp::batch
+} // namespace shirakami::wp::long
