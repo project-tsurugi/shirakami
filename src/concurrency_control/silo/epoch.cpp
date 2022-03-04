@@ -32,7 +32,7 @@ bool check_epoch_loaded() { // NOLINT
     epoch_t curEpoch = get_global_epoch(); 
 
     for (auto&& itr : session_table::get_session_table()) { // NOLINT
-        if (itr.get_visible() && itr.get_txbegan() && itr.get_epoch() != curEpoch) {
+        if (itr.get_visible() && itr.get_tx_began() && itr.get_epoch() != curEpoch) {
             return false;
         }
     }

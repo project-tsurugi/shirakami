@@ -27,10 +27,10 @@ Status exist_key(Token const token, Storage const storage,
     ti->set_step_epoch(epoch::get_global_epoch());
 
     std::string dummy{};
-    if (ti->get_mode() == tx_mode::BATCH) {
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
         return batch::search_key(ti, storage, key, dummy, false);
     }
-    if (ti->get_mode() == tx_mode::OCC) {
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
         return occ::search_key(ti, storage, key, dummy, false);
     }
     LOG(FATAL) << "unreachable";
@@ -47,10 +47,10 @@ Status search_key(Token const token, Storage const storage,
     // update metadata
     ti->set_step_epoch(epoch::get_global_epoch());
 
-    if (ti->get_mode() == tx_mode::BATCH) {
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
         return batch::search_key(ti, storage, key, value);
     }
-    if (ti->get_mode() == tx_mode::OCC) {
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
         return occ::search_key(ti, storage, key, value);
     }
     LOG(FATAL) << "unreachable";

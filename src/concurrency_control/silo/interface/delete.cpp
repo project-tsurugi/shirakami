@@ -34,7 +34,7 @@ namespace shirakami {
 Status delete_record(Token token, Storage storage,
                      const std::string_view key) { // NOLINT
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_txbegan()) tx_begin(token); // NOLINT
+    if (!ti->get_tx_began()) tx_begin(token); // NOLINT
     if (ti->get_read_only()) {
         VLOG(log_warning) << "delete on read only transaction";
         return Status::WARN_ILLEGAL_OPERATION;

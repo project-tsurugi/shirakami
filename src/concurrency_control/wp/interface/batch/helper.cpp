@@ -30,7 +30,7 @@ Status tx_begin(session* const ti,
 
     ti->set_batch_id(batch_id);
     ongoing_tx::push({valid_epoch, batch_id});
-    ti->set_mode(tx_mode::BATCH);
+    ti->set_tx_type(TX_TYPE::LONG);
     ti->set_valid_epoch(valid_epoch);
 
     return Status::OK;

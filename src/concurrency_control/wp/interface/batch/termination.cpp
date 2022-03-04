@@ -48,7 +48,7 @@ void cleanup_process(session* const ti) {
      * mode, it is not idempotent, so a bug will occur.
      * 
      */
-    ti->set_mode(tx_mode::OCC);
+    ti->set_tx_type(TX_TYPE::SHORT);
 }
 
 void cancel_flag_inserted_records(session* const ti) {

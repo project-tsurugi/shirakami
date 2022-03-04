@@ -176,7 +176,7 @@ Status
 tx_begin(Token const token, bool const read_only, bool const for_batch,
          [[maybe_unused]] std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
-    if (ti->get_txbegan()) { return Status::WARN_ALREADY_BEGIN; }
+    if (ti->get_tx_began()) { return Status::WARN_ALREADY_BEGIN; }
 
     /**
       * This func includes loading latest global epoch used for epoch-base resource management. This means that this
@@ -186,6 +186,11 @@ tx_begin(Token const token, bool const read_only, bool const for_batch,
     ti->set_tx_began(true);
     ti->set_epoch(epoch::get_global_epoch());
     ti->set_read_only(read_only);
+    if (for_batch) {
+        ti->set_tx_type(TX_TYPE::LONG);
+    } else {
+        ti->set_tx_type(TX_TYPE::SHORT);
+    }
     ti->get_write_set().set_for_batch(for_batch);
 #if defined(CPR)
     ti->update_pv();

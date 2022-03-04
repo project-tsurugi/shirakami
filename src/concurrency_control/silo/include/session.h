@@ -141,9 +141,11 @@ public:
         return token_;
     }
 
-    [[nodiscard]] bool get_txbegan() const {
+    [[nodiscard]] bool get_tx_began() const {
         return tx_began_.load(std::memory_order_acquire);
     } // NOLINT
+
+    [[nodiscard]] TX_TYPE get_tx_type() const { return tx_type_; }
 
     [[nodiscard]] bool get_visible() const { // NOLINT
         return visible_.load(std::memory_order_acquire);
@@ -168,6 +170,8 @@ public:
     void set_tx_began(bool tf) {
         tx_began_.store(tf, std::memory_order_release);
     }
+
+    void set_tx_type(TX_TYPE tp) { tx_type_ = tp; }
 
     void set_visible(bool visible) {
         visible_.store(visible, std::memory_order_release);
@@ -210,9 +214,7 @@ public:
         return scan_handle_.get_scan_cache();
     }
 
-    scan_handler& get_scan_handle() {
-        return scan_handle_;
-    }
+    scan_handler& get_scan_handle() { return scan_handle_; }
 
     [[nodiscard]] yakushima::Token get_yakushima_token() { // NOLINT
         return yakushima_token_;
@@ -291,6 +293,8 @@ public:
 
 private:
     alignas(CACHE_LINE_SIZE) Token token_{};
+
+    TX_TYPE tx_type_{TX_TYPE::SHORT};
 
     tid_word mrc_tid_{}; // most recently chosen tid, for calculate new tids.
 

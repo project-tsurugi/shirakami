@@ -18,15 +18,11 @@
 #include "concurrency_control/include/scan.h"
 
 #include "shirakami/tuple.h"
+#include "shirakami/scheme.h"
 
 #include "yakushima/include/kvs.h"
 
 namespace shirakami {
-
-enum class tx_mode : char {
-    BATCH,
-    OCC,
-};
 
 class alignas(CACHE_LINE_SIZE) session {
 public:
@@ -108,7 +104,7 @@ public:
     /**
      * @brief getter of @a mode_.
      */
-    [[nodiscard]] tx_mode get_mode() const { return mode_; }
+    [[nodiscard]] TX_TYPE get_tx_type() const { return tx_type_; }
 
     scan_handler& get_scan_handle() { return scan_handle_; }
 
@@ -167,7 +163,7 @@ public:
         tx_began_.store(tf, std::memory_order_release);
     }
 
-    void set_mode(tx_mode mode) { mode_ = mode; }
+    void set_tx_type(TX_TYPE tp) { tx_type_ = tp; }
 
     void set_step_epoch(epoch::epoch_t e) {
         step_epoch_.store(e, std::memory_order_release);
@@ -207,7 +203,7 @@ public:
     }
 
 private:
-    tx_mode mode_{tx_mode::OCC};
+    TX_TYPE tx_type_{TX_TYPE::SHORT};
 
     /**
      * @brief If this is true, begun transaction by this session can only do (transaction read operations).

@@ -170,7 +170,7 @@ void checkpoint_thread() {
         do {
             continue_loop = false;
             for (auto&& elem : session_table::get_session_table()) {
-                if (elem.get_visible() && elem.get_txbegan() &&
+                if (elem.get_visible() && elem.get_tx_began() &&
                     elem.get_phase() != new_phase) {
                     continue_loop = true;
                     _mm_pause();

@@ -46,7 +46,7 @@ Status open_scan(Token const token, Storage storage,
                  const scan_endpoint r_end, ScanHandle& handle,
                  std::size_t const max_size) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_txbegan()) {
+    if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::open_scan(ti, storage, l_key, l_end, r_key,

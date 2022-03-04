@@ -28,7 +28,7 @@ Status check_before_write_ops(session* const ti, Storage st) {
     }
 
     // batch check
-    if (ti->get_mode() == tx_mode::BATCH) {
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             // not in valid epoch.
             return Status::WARN_PREMATURE;
@@ -126,11 +126,11 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         if (for_batch) {
-            ti->set_mode(tx_mode::BATCH);
+            ti->set_tx_type(TX_TYPE::LONG);
             auto rc{batch::tx_begin(ti, std::move(write_preserve))};
             if (rc != Status::OK) { return rc; }
         } else {
-            ti->set_mode(tx_mode::OCC);
+            ti->set_tx_type(TX_TYPE::SHORT);
         }
         ti->set_tx_began(true);
         ti->set_read_only(read_only);

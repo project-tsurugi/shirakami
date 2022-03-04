@@ -16,7 +16,7 @@ Status exist_key(Token token, Storage storage, std::string_view const key) {
     auto* ti = static_cast<session*>(token);
 
     // check flags
-    if (!ti->get_txbegan()) {
+    if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::lookup_snapshot(ti, storage, key);
@@ -50,7 +50,7 @@ Status search_key(Token token, Storage storage,
     auto* ti = static_cast<session*>(token);
 
     // check flags
-    if (!ti->get_txbegan()) {
+    if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
     } else if (ti->get_read_only()) {
         return snapshot_interface::lookup_snapshot(ti, storage, key, value);
