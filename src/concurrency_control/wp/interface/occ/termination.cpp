@@ -1,7 +1,7 @@
 
 #include "atomic_wrapper.h"
 
-#include "concurrency_control/wp/interface/occ/include/occ.h"
+#include "concurrency_control/wp/interface/occ/include/short_tx.h"
 
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"

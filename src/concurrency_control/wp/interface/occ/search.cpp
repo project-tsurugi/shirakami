@@ -5,7 +5,7 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/version.h"
 #include "concurrency_control/wp/include/wp.h"
-#include "concurrency_control/wp/interface/occ/include/occ.h"
+#include "concurrency_control/wp/interface/occ/include/short_tx.h"
 
 #include "concurrency_control/include/tuple_local.h"
 
