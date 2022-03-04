@@ -6,7 +6,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-namespace shirakami::batch {
+namespace shirakami::long_tx {
 
 Status tx_begin(session* const ti,
                 std::vector<Storage> write_preserve) { // NOLINT
@@ -37,4 +37,4 @@ Status tx_begin(session* const ti,
     // dtor : release wp_mutex
 }
 
-} // namespace shirakami::batch
+} // namespace shirakami::long_tx

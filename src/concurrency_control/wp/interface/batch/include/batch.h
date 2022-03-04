@@ -8,7 +8,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/tuple.h"
 
-namespace shirakami::batch {
+namespace shirakami::long_tx {
 
 extern Status abort(session* ti);
 
@@ -19,10 +19,4 @@ extern Status search_key(session* ti, Storage storage, std::string_view key,
 
 extern Status tx_begin(session* ti, std::vector<Storage> write_preserve);
 
-extern Status update(session* ti, Storage storage, std::string_view key,
-                     std::string_view val);
-
-extern Status upsert(session* ti, Storage storage, std::string_view key,
-                     std::string_view val);
-
-} // namespace shirakami::batch
+} // namespace shirakami::long_tx

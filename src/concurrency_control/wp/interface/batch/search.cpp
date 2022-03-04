@@ -18,7 +18,7 @@
 
 #include "glog/logging.h"
 
-namespace shirakami::batch {
+namespace shirakami::long_tx {
 
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
@@ -122,4 +122,4 @@ VER_SELEC:
     }
 }
 
-} // namespace shirakami::batch
+} // namespace shirakami::long_tx

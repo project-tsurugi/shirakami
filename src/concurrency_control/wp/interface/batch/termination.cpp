@@ -13,7 +13,7 @@
 
 #include "glog/logging.h"
 
-namespace shirakami::batch {
+namespace shirakami::long_tx {
 
 void remove_wps(session* ti) {
     for (auto&& storage : ti->get_wp_set()) {
@@ -224,4 +224,4 @@ extern Status commit(session* const ti, // NOLINT
     return Status::OK;
 }
 
-} // namespace shirakami::batch
+} // namespace shirakami::long_tx

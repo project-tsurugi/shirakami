@@ -127,7 +127,7 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
     if (!ti->get_tx_began()) {
         if (for_batch) {
             ti->set_tx_type(TX_TYPE::LONG);
-            auto rc{batch::tx_begin(ti, std::move(write_preserve))};
+            auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};
             if (rc != Status::OK) { return rc; }
         } else {
             ti->set_tx_type(TX_TYPE::SHORT);

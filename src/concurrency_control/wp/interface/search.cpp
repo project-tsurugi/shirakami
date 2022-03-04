@@ -28,7 +28,7 @@ Status exist_key(Token const token, Storage const storage,
 
     std::string dummy{};
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        return batch::search_key(ti, storage, key, dummy, false);
+        return long_tx::search_key(ti, storage, key, dummy, false);
     }
     if (ti->get_tx_type() == TX_TYPE::SHORT) {
         return occ::search_key(ti, storage, key, dummy, false);
@@ -48,7 +48,7 @@ Status search_key(Token const token, Storage const storage,
     ti->set_step_epoch(epoch::get_global_epoch());
 
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        return batch::search_key(ti, storage, key, value);
+        return long_tx::search_key(ti, storage, key, value);
     }
     if (ti->get_tx_type() == TX_TYPE::SHORT) {
         return occ::search_key(ti, storage, key, value);
