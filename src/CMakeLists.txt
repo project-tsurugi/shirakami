@@ -8,7 +8,7 @@ if (BUILD_WP)
     "concurrency_control/*.cpp"
     "concurrency_control/wp/*.cpp"
     "concurrency_control/wp/interface/*.cpp"
-    "concurrency_control/wp/interface/batch/*.cpp"
+    "concurrency_control/wp/interface/long_tx/*.cpp"
     "concurrency_control/wp/interface/occ/*.cpp"
     )
     set(SOURCES ${SOURCES} ${CC_SOURCES})
