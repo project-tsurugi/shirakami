@@ -31,7 +31,7 @@ Status exist_key(Token const token, Storage const storage,
         return long_tx::search_key(ti, storage, key, dummy, false);
     }
     if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        return occ::search_key(ti, storage, key, dummy, false);
+        return short_tx::search_key(ti, storage, key, dummy, false);
     }
     LOG(FATAL) << "unreachable";
     return Status::ERR_FATAL;
@@ -51,7 +51,7 @@ Status search_key(Token const token, Storage const storage,
         return long_tx::search_key(ti, storage, key, value);
     }
     if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        return occ::search_key(ti, storage, key, value);
+        return short_tx::search_key(ti, storage, key, value);
     }
     LOG(FATAL) << "unreachable";
     return Status::ERR_FATAL;

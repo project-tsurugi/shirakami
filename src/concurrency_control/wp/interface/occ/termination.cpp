@@ -11,7 +11,7 @@
 
 #include "glog/logging.h"
 
-namespace shirakami::occ {
+namespace shirakami::short_tx {
 
 void unlock_write_set(session* const ti) {
     for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
@@ -87,7 +87,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
             wp_verify(itr.get_storage(), itr.get_tid().get_epoch(), ce) !=
                     Status::OK) {
             unlock_write_set(ti);
-            occ::abort(ti);
+            short_tx::abort(ti);
             return Status::ERR_VALIDATION;
         }
         // ==============================
@@ -113,7 +113,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 if (not_insert_locked_num > 0) {
                     unlock_not_insert_records(ti, not_insert_locked_num);
                 }
-                occ::abort(ti);
+                short_tx::abort(ti);
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
         }
@@ -190,7 +190,7 @@ Status node_verify(session* ti) {
     for (auto&& itr : ti->get_node_set()) {
         if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
             unlock_write_set(ti);
-            occ::abort(ti);
+            short_tx::abort(ti);
             return Status::ERR_PHANTOM;
         }
     }
@@ -240,7 +240,7 @@ extern Status commit(session* ti, // NOLINT
     tid_word commit_tid{};
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
-        occ::abort(ti);
+        short_tx::abort(ti);
         return rc;
     }
 
@@ -250,7 +250,7 @@ extern Status commit(session* ti, // NOLINT
     rc = read_wp_verify(ti, ce, commit_tid);
     if (rc != Status::OK) {
         unlock_write_set(ti);
-        occ::abort(ti);
+        short_tx::abort(ti);
         return rc;
     }
 
@@ -258,7 +258,7 @@ extern Status commit(session* ti, // NOLINT
     rc = node_verify(ti);
     if (rc != Status::OK) {
         unlock_write_set(ti);
-        occ::abort(ti);
+        short_tx::abort(ti);
         return rc;
     }
 
@@ -283,4 +283,4 @@ extern Status commit(session* ti, // NOLINT
     return Status::OK;
 }
 
-} // namespace shirakami::occ
+} // namespace shirakami::short_tx

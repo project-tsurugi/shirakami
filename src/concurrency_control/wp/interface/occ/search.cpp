@@ -17,7 +17,7 @@
 
 #include "glog/logging.h"
 
-namespace shirakami::occ {
+namespace shirakami::short_tx {
 
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
@@ -49,4 +49,4 @@ Status search_key(session* ti, Storage const storage,
     return rs;
 }
 
-} // namespace shirakami::occ
+} // namespace shirakami::short_tx

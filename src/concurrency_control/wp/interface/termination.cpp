@@ -16,7 +16,7 @@ Status abort(Token token) { // NOLINT
     auto* ti = static_cast<session*>(token);
 
     if (ti->get_tx_type() == TX_TYPE::LONG) { return long_tx::abort(ti); }
-    return occ::abort(ti);
+    return short_tx::abort(ti);
 }
 
 Status commit([[maybe_unused]] Token token, // NOLINT
@@ -24,7 +24,7 @@ Status commit([[maybe_unused]] Token token, // NOLINT
     auto* ti = static_cast<session*>(token);
 
     if (ti->get_tx_type() == TX_TYPE::LONG) { return long_tx::commit(ti, cp); }
-    return occ::commit(ti, cp);
+    return short_tx::commit(ti, cp);
 }
 
 bool check_commit([[maybe_unused]] Token token, // NOLINT
