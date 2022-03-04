@@ -6,6 +6,7 @@
 
 #include "storage.h"
 
+#include "concurrency_control/wp/include/garbage.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/wp.h"
 
@@ -76,7 +77,10 @@ Status storage::exist_storage(Storage storage) {
     return Status::WARN_NOT_FOUND;
 }
 
-Status storage::delete_storage(Storage storage) { // NOLINT
+Status storage::delete_storage(Storage storage) {
+    // NOLINT
+    std::unique_lock lk{garbage::get_mtx_version_cleaner()};
+
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};

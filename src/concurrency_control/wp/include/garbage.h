@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <thread>
 
 #include "concurrent_queue.h"
@@ -44,6 +45,9 @@ namespace shirakami::garbage {
 // parameters for background thread
 [[maybe_unused]] inline std::size_t ver_cleaner_thd_size{0};
 
+// mutex for background thread
+inline std::mutex mtx_version_cleaner_{};
+
 // statistical data
 /**
   * @brief Record the number of gc versions.
@@ -71,6 +75,8 @@ inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 [[maybe_unused]] static bool get_flag_manager_end() {
     return flag_manager_end.load(std::memory_order_acquire);
 }
+
+[[maybe_unused]] static std::mutex& get_mtx_version_cleaner() { return mtx_version_cleaner_; }
 
 [[maybe_unused]] static std::size_t get_ver_cleaner_thd_size() {
     return ver_cleaner_thd_size;

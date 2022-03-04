@@ -108,7 +108,7 @@ void clean_rec_version(Record* rec_ptr) {
 void clean_st_version(Storage st) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
-    // full scan                           
+    // full scan
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
@@ -129,7 +129,10 @@ void clean_all_version() {
 
 void work_version_cleaner() {
     while (!get_flag_version_cleaner_end()) {
-        clean_all_version();
+        {
+            std::unique_lock lk{get_mtx_version_cleaner()};
+            clean_all_version();
+        }
         sleepMs(PARAM_EPOCH_TIME);
     }
 }
