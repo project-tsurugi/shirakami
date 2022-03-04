@@ -37,7 +37,6 @@ public:
     }
 
     void TearDown() override {
-        delete_storage(st);
         fin();
     }
 
