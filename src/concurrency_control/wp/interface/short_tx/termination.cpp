@@ -132,6 +132,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
             case OP_TYPE::DELETE: {
                 update_tid.set_absent(true);
+                update_tid.set_latest(false);
                 [[fallthrough]];
             }
             case OP_TYPE::UPDATE:

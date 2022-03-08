@@ -98,7 +98,7 @@ private:
     /**
      * @brief lowest epoch of running long tx
      * @details This variables is read by short tx and long tx both. This is 
-     * used for read_by gc.
+     * used by them for read_by gc.
      */
     static inline std::atomic<epoch::epoch_t> lowest_epoch_{0}; // NOLINT
 };
