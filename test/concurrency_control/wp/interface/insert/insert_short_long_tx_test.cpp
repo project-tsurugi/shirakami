@@ -55,27 +55,14 @@ private:
 TEST_F(insert_short_long_tx_test, long_and_short_insert_into_same_key) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
-    Token s1{};
-    ASSERT_EQ(Status::OK, enter(s1));
     std::string k{"k"};
     std::string v{"v"};
+    Token s1{};
+    ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
-
-    auto wait_epoch_update = []() {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce == epoch::get_global_epoch()) {
-                _mm_pause();
-            } else {
-                break;
-            }
-        }
-    };
-    wait_epoch_update();
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(tx_begin(s2, false, false, {}), Status::OK);
-    wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, k, v), Status::OK);
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
