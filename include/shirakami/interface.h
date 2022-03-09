@@ -215,6 +215,8 @@ init(bool enable_recovery = false,                                 // NOLINT
  * exists in db, so this function returned immediately.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
+ * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
+ * is not found.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed delete.
  * So it translated delete - insert into update.
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which 
@@ -412,6 +414,8 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
  * wp in batch mode.
+ * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
+ * is not found.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, 
  * so it overwrite its local write set.
  */

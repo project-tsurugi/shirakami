@@ -110,6 +110,13 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_insert, insert_at_non_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, insert(s, 0, "", ""));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(simple_insert, long_value_insert) { // NOLINT
     register_storage(storage);
     std::string k("CUSTOMER"); // NOLINT

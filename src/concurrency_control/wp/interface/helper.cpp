@@ -42,7 +42,17 @@ Status check_before_write_ops(session* const ti, Storage const st,
         // check wp
         wp::wp_meta* wm{};
         auto rc{wp::find_wp_meta(st, wm)};
-        if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_INVALID_ARGS; }
+        if (rc == Status::WARN_NOT_FOUND) {
+            // no storage.
+            if (op == OP_TYPE::UPDATE || op == OP_TYPE::DELETE) {
+                return Status::WARN_NOT_FOUND;
+            } else if (op == OP_TYPE::INSERT || op == OP_TYPE::UPSERT) {
+                return Status::WARN_STORAGE_NOT_FOUND;
+            } else {
+                LOG(ERROR) << "programming error";
+                return Status::ERR_FATAL;
+            }
+        }
         auto wps{wm->get_wped()};
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {

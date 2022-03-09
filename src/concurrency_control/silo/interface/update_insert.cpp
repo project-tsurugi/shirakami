@@ -35,7 +35,9 @@ Status insert(Token token, Storage storage,
     if (rc == Status::OK) {
         write_set_obj* inws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::INSERT) { return Status::WARN_ALREADY_EXISTS; }
+            if (inws->get_op() == OP_TYPE::INSERT) {
+                return Status::WARN_ALREADY_EXISTS;
+            }
             if (inws->get_op() == OP_TYPE::UPDATE) {
                 return Status::WARN_ALREADY_EXISTS;
             }
@@ -67,6 +69,8 @@ Status insert(Token token, Storage storage,
         return Status::OK;
     }
     delete rec_ptr; // NOLINT
+    rc = exist_storage(storage);
+    if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_STORAGE_NOT_FOUND; }
     return Status::WARN_ALREADY_EXISTS;
 }
 
@@ -173,6 +177,10 @@ Status upsert(Token token, Storage storage, // NOLINT
         // else insert_result == Status::WARN_ALREADY_EXISTS
         // so goto update.
         delete rec_ptr; // NOLINT
+        rc = exist_storage(storage);
+        if (rc == Status::WARN_NOT_FOUND) {
+            return Status::WARN_STORAGE_NOT_FOUND;
+        }
     }
 
     return Status::OK;

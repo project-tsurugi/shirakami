@@ -37,7 +37,7 @@ void unlock_inserted_records(session* const ti) {
         if (wso_ptr->get_op() == OP_TYPE::INSERT) {
             tid_word tid{};
             tid.set_absent(true);
-            tid.set_latest(true);
+            tid.set_latest(false);
             tid.set_lock(false);
             wso_ptr->get_rec_ptr()->set_tid(tid);
         }
