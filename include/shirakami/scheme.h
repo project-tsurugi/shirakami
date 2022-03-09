@@ -74,6 +74,20 @@ enum class scan_endpoint : char {
     INF,
 };
 
+inline constexpr std::string_view to_string_view(scan_endpoint ep) noexcept {
+    using namespace std::string_view_literals;
+    switch (ep) {
+        case scan_endpoint::EXCLUSIVE: return "EXCLUSIVE"sv;  //NOLINT
+        case scan_endpoint::INCLUSIVE: return "INCLUSIVE"sv;  //NOLINT
+        case scan_endpoint::INF: return "INF"sv;  //NOLINT
+    }
+    std::abort();
+}
+
+inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
+    return out << to_string_view(op);
+}
+
 /**
  * @brief the status which is after some function.
  *
