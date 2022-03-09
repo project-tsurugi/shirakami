@@ -14,9 +14,9 @@
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/version.h"
 
-#include "shirakami/interface.h"
+#include "index/yakushima/include/interface.h"
 
-#include "yakushima/include/kvs.h"
+#include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -82,12 +82,8 @@ TEST_F(upsert_test, new_epoch_new_version) { // NOLINT
             ASSERT_EQ(upsert(s, st, k, second_v), Status::OK);
         }
         ASSERT_EQ(commit(s), Status::OK);
-        std::string_view st_view{reinterpret_cast<char*>(&st), // NOLINT
-                                 sizeof(st)};
-        Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(st_view, k))};
-        ASSERT_NE(rec_d_ptr, nullptr);
-        Record* rec_ptr{*rec_d_ptr};
-        ASSERT_NE(rec_ptr, nullptr);
+        Record* rec_ptr{};
+        ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
         version* ver{rec_ptr->get_latest()};
         ASSERT_NE(ver, nullptr);
         std::string vb{};

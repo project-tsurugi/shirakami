@@ -43,14 +43,14 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     std::string_view storage_view = {
             reinterpret_cast<const char*>(&st), // NOLINT
             sizeof(st)};
-    auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
-            page_set_meta_storage_view, storage_view));
-
-    if (elem_ptr == nullptr) {
+    std::pair<page_set_meta**, std::size_t> out{};
+    auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
+                                           storage_view, out)};
+    if (rc != yakushima::status::OK) {
         ret = nullptr;
         return Status::WARN_NOT_FOUND;
     }
-    ret = *elem_ptr;
+    ret = *out.first;
     return Status::OK;
 }
 
@@ -111,8 +111,10 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         std::string_view storage_view = {
                 reinterpret_cast<char*>(&wp_target), // NOLINT
                 sizeof(wp_target)};
-        auto* elem_ptr = std::get<0>(yakushima::get<page_set_meta*>(
-                page_set_meta_storage_view, storage_view));
+        std::pair<page_set_meta**, std::size_t> out{};
+        auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
+                                               storage_view, out)};
+
         auto cleanup_process = [ti, &wped, batch_id]() {
             for (auto&& elem : wped) {
                 if (Status::OK != elem->remove_wp(batch_id)) {
@@ -122,12 +124,12 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             }
             ti->clean_up();
         };
-        if (elem_ptr == nullptr) {
+        if (rc != yakushima::status::OK) {
             cleanup_process();
             // dtor : release wp_mutex
             return Status::ERR_FAIL_WP;
         }
-        wp_meta* target_wp_meta = (*elem_ptr)->get_wp_meta_ptr();
+        wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
         if (Status::OK != target_wp_meta->register_wp(valid_epoch, batch_id)) {
             cleanup_process();
             return Status::ERR_FAIL_WP;

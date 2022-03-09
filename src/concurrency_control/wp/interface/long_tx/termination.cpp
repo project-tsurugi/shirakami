@@ -25,11 +25,15 @@ void remove_wps(session* ti) {
         std::string_view storage_view = {
                 reinterpret_cast<char*>(&storage), // NOLINT
                 sizeof(storage)};
-        auto* elem_ptr = std::get<0>(yakushima::get<wp::page_set_meta*>(
-                page_set_meta_storage_view, storage_view));
-        if (elem_ptr == nullptr) { LOG(FATAL); }
+        std::pair<wp::page_set_meta**, std::size_t> out{};
+        auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
+                                                   storage_view, out)};
+        if (rc != yakushima::status::OK) {
+            LOG(ERROR) << "programing error: " << rc;
+            return;
+        }
         if (Status::OK !=
-            (*elem_ptr)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {
+            (*out.first)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {
             LOG(FATAL);
         }
     }
@@ -87,7 +91,8 @@ void expose_local_write(session* ti) {
     tid_word ctid{};
     compute_tid(ti, ctid);
 
-    auto process = [ti](std::pair<Record* const, write_set_obj>& wse, tid_word ctid) {
+    auto process = [ti](std::pair<Record* const, write_set_obj>& wse,
+                        tid_word ctid) {
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         switch (wso.get_op()) {

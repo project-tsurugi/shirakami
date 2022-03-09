@@ -18,9 +18,9 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#include "shirakami/interface.h"
+#include "index/yakushima/include/interface.h"
 
-#include "yakushima/include/kvs.h"
+#include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -63,10 +63,8 @@ TEST_F(upsert_test, occ_simple) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify result
-    Record** rec_d{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&st), sizeof(st)}, k))}; // NOLINT
-    ASSERT_NE(rec_d, nullptr);
-    Record* rec{*rec_d};
+    Record* rec{};
+    ASSERT_EQ(Status::OK, get<Record>(st, k, rec));
     ASSERT_NE(rec, nullptr);
     std::string vb{};
     rec->get_latest()->get_value(vb);
@@ -101,10 +99,8 @@ TEST_F(upsert_test, bt_simple) { // NOLINT
 
     // check internal record existing
     auto check_internal_record_exist = [k](Storage st) {
-        Record** rec_d{std::get<0>(yakushima::get<Record*>(
-                {reinterpret_cast<char*>(&st), sizeof(st)}, k))}; // NOLINT
-        ASSERT_NE(rec_d, nullptr);
-        Record* rec{*rec_d};
+        Record* rec{};
+        ASSERT_EQ(Status::OK, get<Record>(st, k, rec));
         ASSERT_NE(rec, nullptr);
     };
 

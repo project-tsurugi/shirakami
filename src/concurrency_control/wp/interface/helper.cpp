@@ -44,14 +44,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         auto rc{wp::find_wp_meta(st, wm)};
         if (rc == Status::WARN_NOT_FOUND) {
             // no storage.
-            if (op == OP_TYPE::UPDATE || op == OP_TYPE::DELETE) {
-                return Status::WARN_NOT_FOUND;
-            } else if (op == OP_TYPE::INSERT || op == OP_TYPE::UPSERT) {
-                return Status::WARN_STORAGE_NOT_FOUND;
-            } else {
-                LOG(ERROR) << "programming error";
-                return Status::ERR_FATAL;
-            }
+            return Status::WARN_STORAGE_NOT_FOUND;
         }
         auto wps{wm->get_wped()};
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};

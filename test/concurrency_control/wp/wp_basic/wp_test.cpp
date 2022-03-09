@@ -58,11 +58,12 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
     std::string_view page_set_meta_storage_view = {
             reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
             sizeof(page_set_meta_storage)};
-    std::pair<wp::wp_meta**, std::size_t> wp_info =
-            yakushima::get<wp::wp_meta*>(page_set_meta_storage_view,
-                                         storage_view);
-    ASSERT_NE(wp_info.first, nullptr);
-    wp::wp_meta* wp_ptr = *wp_info.first;
+    std::pair<wp::wp_meta**, std::size_t> out{};
+    ASSERT_EQ(yakushima::status::OK,
+              yakushima::get<wp::wp_meta*>(page_set_meta_storage_view,
+                                           storage_view, out));
+    ASSERT_NE(out.first, nullptr);
+    wp::wp_meta* wp_ptr = *out.first;
     ASSERT_NE(wp_ptr, nullptr);
     ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), true);
     wp_ptr->register_wp(1, 1);

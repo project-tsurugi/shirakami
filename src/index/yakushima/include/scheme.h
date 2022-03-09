@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "shirakami/scheme.h"
+
 #include "yakushima/include/scheme.h"
 
 namespace shirakami {

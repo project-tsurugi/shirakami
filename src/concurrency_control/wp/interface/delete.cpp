@@ -47,9 +47,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         ti->get_write_set().erase(wso);
         return Status::WARN_CANCEL_PREVIOUS_UPDATE;
     }
-    if (wso->get_op() == OP_TYPE::DELETE) {
-        return Status::OK;
-    }
+    if (wso->get_op() == OP_TYPE::DELETE) { return Status::OK; }
     LOG(ERROR) << "unknown code path";
     return Status::ERR_FATAL;
 }
@@ -72,12 +70,11 @@ Status delete_record(Token token, Storage storage,
 
     // index access to check local write set
     Record* rec_ptr{};
-    if (Status::OK == get<Record>(storage, key, rec_ptr)) {
+    rc = get<Record>(storage, key, rec_ptr);
+    if (Status::OK == rc) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) {
-            return process_after_write(ti, in_ws);
-        }
+        if (in_ws != nullptr) { return process_after_write(ti, in_ws); }
 
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
@@ -86,9 +83,13 @@ Status delete_record(Token token, Storage storage,
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
         return Status::OK;
-    } else {
-        return Status::WARN_NOT_FOUND;
     }
+    if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_NOT_FOUND; }
+    if (rc == Status::WARN_STORAGE_NOT_FOUND) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    LOG(ERROR) << "programming error: " << rc;
+    return Status::ERR_FATAL;
 }
 
 } // namespace shirakami

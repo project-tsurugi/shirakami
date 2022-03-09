@@ -139,16 +139,17 @@ Status storage::delete_storage(Storage storage) {
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
             _mm_pause();
         }
-        auto* elem_ptr = std::get<0>(yakushima::get<wp::page_set_meta*>(
+        std::pair<wp::page_set_meta**, std::size_t> out{};
+        auto rc{yakushima::get<wp::page_set_meta*>(
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
                  sizeof(page_set_meta_storage)},
-                storage_view));
-        if (elem_ptr == nullptr) {
+                storage_view, out)};
+        if (rc != yakushima::status::OK) {
             LOG(FATAL) << "missing error" << std::endl
                        << " " << page_set_meta_storage << " " << storage
                        << std::endl;
         }
-        delete *elem_ptr; // NOLINT
+        delete *out.first; // NOLINT
         if (yakushima::status::OK !=
             yakushima::remove(
                     ytoken,
