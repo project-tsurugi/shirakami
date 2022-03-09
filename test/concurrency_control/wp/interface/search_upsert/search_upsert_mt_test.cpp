@@ -101,7 +101,8 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                         auto rc{search_key(s, storage, elem, vb)};
                         if (rc == Status::OK) { break; }
                         if (rc == Status::WARN_PREMATURE ||
-                            rc == Status::WARN_CONCURRENT_UPDATE) {
+                            rc == Status::WARN_CONCURRENT_UPDATE ||
+                            rc == Status::WARN_CONFLICT_ON_WRITE_PRESERVE) {
                             _mm_pause();
                         } else {
                             LOG(FATAL) << rc << " " << bt;
