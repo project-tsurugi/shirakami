@@ -57,7 +57,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
             // exist valid wp
-            return Status::WARN_FAIL_FOR_WP;
+            return Status::WARN_CONFLICT_ON_WRITE_PRESERVE;
         }
     }
 

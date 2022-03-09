@@ -28,7 +28,7 @@ inline Status wp_verify(session* const ti, Storage const st) {
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep <= ti->get_step_epoch()) {
-        return Status::WARN_FAIL_FOR_WP;
+        return Status::WARN_CONFLICT_ON_WRITE_PRESERVE;
     }
     return Status::OK;
 }

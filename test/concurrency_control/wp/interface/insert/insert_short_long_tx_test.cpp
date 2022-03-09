@@ -76,7 +76,7 @@ TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     };
     wait_epoch_update();
 
-    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_FAIL_FOR_WP);
+    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_CONFLICT_ON_WRITE_PRESERVE);
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s2));
@@ -110,7 +110,7 @@ TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
-    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_FAIL_FOR_WP);
+    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_CONFLICT_ON_WRITE_PRESERVE);
 
     ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
