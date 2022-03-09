@@ -64,7 +64,7 @@ TEST_F(delete_test, delete_) { // NOLINT
 TEST_F(delete_test, delete_at_non_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, storage, ""));
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, delete_record(s, storage, ""));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }

@@ -5,6 +5,7 @@
 #include "include/snapshot_interface.h"
 #include "include/snapshot_manager.h"
 
+#include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
 
 #include "shirakami/interface.h"
@@ -33,16 +34,10 @@ extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
 
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t scan_res_rec_ptr{1};
-    yakushima::scan(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res, nullptr, max_size);
-    if (scan_res.empty()) {
-        /**
-         * scan couldn't find any records.
-         */
-        return Status::WARN_NOT_FOUND;
-    }
+    auto rc{scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res,
+                 nullptr)};
+    if (rc != Status::OK) { return rc; }
+
     /**
      * scan could find any records.
      */
@@ -60,29 +55,21 @@ extern Status open_scan(session* ti, Storage storage, std::string_view l_key,
 
 Status lookup_snapshot(session* ti, Storage storage,
                        std::string_view key) { // NOLINT
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};
-    if (rec_d_ptr == nullptr) {
-        // There is no record which has the key.
-        return Status::WARN_NOT_FOUND;
-    }
+    Record* rec_ptr{};
+    auto rc{get<Record>(storage, key, rec_ptr)};
+    if (rc != Status::OK) { return rc; }
 
     std::string dummy{};
-    return read_record(ti, *rec_d_ptr, dummy, false);
+    return read_record(ti, rec_ptr, dummy, false);
 }
 
 Status lookup_snapshot(session* ti, Storage storage, std::string_view key,
                        std::string& value) { // NOLINT
-    Record** rec_d_ptr{std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            key))};
-    if (rec_d_ptr == nullptr) {
-        // There is no record which has the key.
-        return Status::WARN_NOT_FOUND;
-    }
+    Record* rec_ptr{};
+    auto rc{get<Record>(storage, key, rec_ptr)};
+    if (rc != Status::OK) { return rc; }
 
-    return read_record(ti, *rec_d_ptr, value);
+    return read_record(ti, rec_ptr, value);
 }
 
 extern Status read_key_from_scan([[maybe_unused]] session* ti,

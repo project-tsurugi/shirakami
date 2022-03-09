@@ -15,9 +15,9 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#include "shirakami/interface.h"
+#include "index/yakushima/include/interface.h"
 
-#include "yakushima/include/kvs.h"
+#include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -74,11 +74,8 @@ TEST_F(simple_insert, insert) { // NOLINT
                              sizeof(storage)};
     auto check_records = [st_view](std::string_view key_view,
                                    std::string_view value_view) {
-        Record** rec_d_ptr{
-                std::get<0>(yakushima::get<Record*>(st_view, key_view))};
-        ASSERT_NE(rec_d_ptr, nullptr);
-        Record* rec_ptr{*rec_d_ptr};
-        ASSERT_NE(rec_ptr, nullptr);
+        Record* rec_ptr{};
+        ASSERT_EQ(Status::OK, get<Record>(storage, key_view, rec_ptr));
         {
             std::string key{};
             rec_ptr->get_key(key);

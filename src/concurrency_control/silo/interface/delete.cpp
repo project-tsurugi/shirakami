@@ -42,7 +42,7 @@ Status delete_record(Token token, Storage storage,
 
     Record* rec_ptr{};
     auto rc{get<Record>(storage, key, rec_ptr)};
-    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+    if (rc != Status::OK) { return rc; }
 
     Status check = ti->check_delete_after_write(rec_ptr);
     if (check == Status::WARN_CANCEL_PREVIOUS_INSERT ||

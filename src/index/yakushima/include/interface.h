@@ -1,22 +1,44 @@
 
 #include <string_view>
 
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
+#include "concurrency_control/silo/include/record.h"
+
+#endif
+
+#include "index/yakushima/include/scheme.h"
+
 #include "shirakami/scheme.h"
 
 #include "yakushima/include/kvs.h"
+
+#include "glog/logging.h"
 
 namespace shirakami {
 
 template<class Record>
 Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
-    Record** rec_d_ptr{
-            yakushima::get<Record*>({reinterpret_cast<char*>(&st), // NOLINT
+    std::pair<Record**, std::size_t> out{};
+    auto rc{yakushima::get<Record*>({reinterpret_cast<char*>(&st), // NOLINT
                                      sizeof(st)},
-                                    key)
-                    .first};
-    if (rec_d_ptr == nullptr) { return Status::WARN_NOT_FOUND; }
-    rec_ptr = *rec_d_ptr;
-    return Status::OK;
+                                    key, out)};
+    if (rc == yakushima::status::OK) {
+        rec_ptr = *out.first;
+        return Status::OK;
+    }
+    if (rc == yakushima::status::WARN_NOT_EXIST) {
+        return Status::WARN_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    LOG(ERROR) << "programming error";
+    return Status::ERR_FATAL;
 }
 
 template<class Record>
@@ -49,6 +71,29 @@ yakushima::status put(Storage st, std::string_view key, std::string_view val) {
     yakushima::leave(tk);
     if (rc != yakushima::status::OK) { return rc; }
     return yakushima::status::OK;
+}
+
+static inline Status
+scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
+     std::string_view const r_key, scan_endpoint const r_end,
+     std::size_t const max_size,
+     std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+     std::vector<std::pair<yakushima::node_version64_body,
+                           yakushima::node_version64*>>* nvec) {
+    auto rc{yakushima::scan(
+            {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            l_key, parse_scan_endpoint(l_end), r_key,
+            parse_scan_endpoint(r_end), scan_res, nvec, max_size)};
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_NOT_EXIST ||
+        rc == yakushima::status::OK_ROOT_IS_NULL) {
+        return Status::WARN_NOT_FOUND;
+    }
+    if (rc == yakushima::status::OK) { return Status::OK; }
+    LOG(ERROR) << "programming error: " << rc;
+    return Status::ERR_FATAL;
 }
 
 } // namespace shirakami

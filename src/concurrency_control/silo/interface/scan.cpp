@@ -13,6 +13,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
 
 #include "shirakami/interface.h"
@@ -61,18 +62,11 @@ Status open_scan(Token const token, Storage storage,
     std::vector<std::pair<yakushima::node_version64_body,
                           yakushima::node_version64*>>
             nvec;
+    rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
+    if (rc != Status::OK) { return rc; }
+
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    yakushima::scan(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res, &nvec, max_size);
-    if (scan_res.empty()) {
-        /**
-         * scan couldn't find any records.
-         */
-        return Status::WARN_NOT_FOUND;
-    }
 
     /**
      * You must ensure that new elements are not interrupted in the range at 

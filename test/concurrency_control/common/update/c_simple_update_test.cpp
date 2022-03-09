@@ -3,18 +3,21 @@
 
 #ifdef WP
 
+#include "concurrency_control/wp/include/record.h"
+
 #else
 
 #include "concurrency_control/silo/include/epoch.h"
+#include "concurrency_control/silo/include/record.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
 
 #endif
 
+#include "index/yakushima/include/interface.h"
+
 #include "clock.h"
 
 #include "shirakami/interface.h"
-
-#include "yakushima/include/kvs.h"
 
 namespace shirakami::testing {
 
@@ -55,10 +58,8 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
-    Record* rec_ptr{*std::get<0>(yakushima::get<Record*>(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            k))};
-    ASSERT_NE(rec_ptr, nullptr);
+    Record* rec_ptr{};
+    ASSERT_EQ(Status::OK, get<Record>(storage, k, rec_ptr));
     std::string val{};
     rec_ptr->get_tuple().get_value(val);
     ASSERT_EQ(val, std::string_view(v2));
