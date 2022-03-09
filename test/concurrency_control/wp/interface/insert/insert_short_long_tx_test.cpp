@@ -52,7 +52,7 @@ private:
     static inline std::string log_dir_;       // NOLINT
 };
 
-TEST_F(insert_short_long_tx_test, long_and_short_insert_into_same_key) { // NOLINT
+TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     std::string k{"k"};
@@ -64,8 +64,53 @@ TEST_F(insert_short_long_tx_test, long_and_short_insert_into_same_key) { // NOLI
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(tx_begin(s2, false, false, {}), Status::OK);
 
-    ASSERT_EQ(insert(s2, st, k, v), Status::OK);
+    auto wait_epoch_update = []() {
+        epoch::epoch_t ce{epoch::get_global_epoch()};
+        for (;;) {
+            if (ce == epoch::get_global_epoch()) {
+                _mm_pause();
+            } else {
+                break;
+            }
+        }
+    };
+    wait_epoch_update();
+
+    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_FAIL_FOR_WP);
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
+
+    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+    ASSERT_EQ(Status::OK, leave(s1));
+}
+
+TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    std::string k{"k"};
+    std::string v{"v"};
+    Token s1{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(tx_begin(s2, false, false, {}), Status::OK);
+
+    auto wait_epoch_update = []() {
+        epoch::epoch_t ce{epoch::get_global_epoch()};
+        for (;;) {
+            if (ce == epoch::get_global_epoch()) {
+                _mm_pause();
+            } else {
+                break;
+            }
+        }
+    };
+    wait_epoch_update();
+
+    ASSERT_EQ(insert(s1, st, k, v), Status::OK);
+    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_FAIL_FOR_WP);
 
     ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));

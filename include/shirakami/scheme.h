@@ -139,6 +139,11 @@ enum class Status : std::int32_t {
     WARN_CONCURRENT_UPDATE,
     /**
      * @brief warning
+     * @details This means fail due to long tx's wp.
+     */
+    WARN_FAIL_FOR_WP,
+    /**
+     * @brief warning
      * @details This means that you executed an illegal operation.
      */
     WARN_ILLEGAL_OPERATION,
@@ -282,6 +287,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_CONCURRENT_INSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_UPDATE:
             return "WARN_CONCURRENT_UPDATE"sv; // NOLINT
+        case Status::WARN_FAIL_FOR_WP:
+            return "WARN_FAIL_FOR_WP"sv; // NOLINT
         case Status::WARN_ILLEGAL_OPERATION:
             return "WARN_ILLEGAL_OPERATION"sv; // NOLINT
         case Status::WARN_INVARIANT:

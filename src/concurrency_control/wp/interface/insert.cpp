@@ -1,4 +1,6 @@
 
+#include "atomic_wrapper.h"
+
 #include "concurrency_control/include/tuple_local.h"
 
 #include "concurrency_control/wp/include/session.h"
@@ -39,13 +41,28 @@ inline Status insert_process(session* const ti, Storage st,
 }
 
 Status try_deleted_to_inserted(Record* rec_ptr) {
+    tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+    // point 1
+    if (check.get_latest() && check.get_absent()) {
+        return Status::WARN_CONCURRENT_INSERT;
+    }
+    if (!check.get_absent()) {
+        return Status::WARN_ALREADY_EXISTS;
+    }
+    // The page was deleted at point 1.
+
     rec_ptr->get_tidw_ref().lock();
+    // point 2
     tid_word tid{rec_ptr->get_tidw_ref()};
     if (tid.get_absent()) {
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
         return Status::OK;
     } else {
+        /**
+         * The deleted page was changed to living page by someone between 
+         * point 1 and point 2.
+         */
         rec_ptr->get_tidw_ref().unlock();
         return Status::WARN_ALREADY_EXISTS;
     }
@@ -61,7 +78,7 @@ Status insert(Token token, Storage storage,
     }
 
     // check for write
-    auto rc{check_before_write_ops(ti, storage)};
+    auto rc{check_before_write_ops(ti, storage, OP_TYPE::INSERT)};
     if (rc != Status::OK) { return rc; }
 
     // update metadata
@@ -86,12 +103,9 @@ Status insert(Token token, Storage storage,
             if (rc == Status::OK) {
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
                 return Status::OK;
+            } else {
+                return rc;
             }
-            if (rc == Status::WARN_ALREADY_EXISTS) {
-                return Status::WARN_ALREADY_EXISTS;
-            }
-            LOG(ERROR) << "error. impossible code path.";
-            return Status::ERR_FATAL;
         }
 
         auto rc{insert_process(ti, storage, key, val)};

@@ -20,7 +20,8 @@
 
 namespace shirakami {
 
-Status check_before_write_ops(session* const ti, Storage st) {
+Status check_before_write_ops(session* const ti, Storage const st,
+                              OP_TYPE const op) {
     // check whether it is read only mode.
     if (ti->get_read_only()) {
         // can't write in read only mode.
@@ -36,6 +37,17 @@ Status check_before_write_ops(session* const ti, Storage st) {
         if (!ti->check_exist_wp_set(st)) {
             // can't write without wp.
             return Status::WARN_INVALID_ARGS;
+        }
+    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        // check wp
+        wp::wp_meta* wm{};
+        auto rc{wp::find_wp_meta(st, wm)};
+        if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_INVALID_ARGS; }
+        auto wps{wm->get_wped()};
+        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+        if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
+            // exist valid wp
+            return Status::WARN_FAIL_FOR_WP;
         }
     }
 

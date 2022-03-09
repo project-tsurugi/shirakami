@@ -22,6 +22,6 @@ inline std::atomic<bool> initialized_{false};
  */
 [[maybe_unused]] static void set_initialized(bool tf) { initialized_.store(tf, std::memory_order_release); }
 
-[[maybe_unused]] extern Status check_before_write_ops(session* ti, Storage st);
+[[maybe_unused]] extern Status check_before_write_ops(session* ti, Storage st, OP_TYPE op);
 
 } // namespace shirakami

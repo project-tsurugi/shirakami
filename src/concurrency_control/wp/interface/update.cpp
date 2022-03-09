@@ -23,7 +23,7 @@ Status update(Token token, Storage storage,
     }
 
     // check for write
-    auto rc{check_before_write_ops(ti, storage)};
+    auto rc{check_before_write_ops(ti, storage, OP_TYPE::UPDATE)};
     if (rc != Status::OK) { return rc; }
 
     //update metadata
