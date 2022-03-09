@@ -30,7 +30,7 @@ public:
 
     void TearDown() override { fin(); }
 
-    Storage get_st() const { return st_; }
+    [[nodiscard]] Storage get_st() const { return st_; }
 
 private:
     Storage st_{};

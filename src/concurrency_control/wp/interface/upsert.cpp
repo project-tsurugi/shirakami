@@ -4,8 +4,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/wp/interface/include/helper.h"
+#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"
 
 #include "index/yakushima/include/interface.h"
@@ -81,7 +81,13 @@ Status upsert(Token token, Storage storage, const std::string_view key,
             return Status::OK;
         }
 
-        auto rc{insert_process(ti, storage, key, val)};
+        // check exist storage.
+        auto rc{exist_storage(storage)};
+        if (rc == Status::WARN_NOT_FOUND) {
+            return Status::WARN_STORAGE_NOT_FOUND;
+        } // exist
+
+        rc = insert_process(ti, storage, key, val);
         if (rc != Status::WARN_CONCURRENT_INSERT) { return rc; }
     }
 }

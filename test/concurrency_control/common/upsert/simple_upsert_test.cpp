@@ -36,9 +36,7 @@ public:
         register_storage(st);
     }
 
-    void TearDown() override {
-        fin();
-    }
+    void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
@@ -51,6 +49,13 @@ TEST_F(simple_upsert, read_only_mode_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin(s, true));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, upsert(s, {}, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(simple_upsert, upsert_at_non_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, upsert(s, 5, "", ""));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
