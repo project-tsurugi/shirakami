@@ -19,9 +19,27 @@
 
 namespace shirakami::short_tx {
 
+inline Status wp_verify(session* const ti, Storage const st) {
+    wp::wp_meta* wm{};
+    auto rc{wp::find_wp_meta(st, wm)};
+    if (rc != Status::OK) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    auto wps{wm->get_wped()};
+    auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+    if (find_min_ep <= ti->get_step_epoch()) {
+        return Status::WARN_FAIL_FOR_WP;
+    }
+    return Status::OK;
+}
+
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
+    // check wp
+    auto rc{wp_verify(ti, storage)};
+    if (rc != Status::OK) { return rc; }
+
     // index access
     Record* rec_ptr{};
     if (get<Record>(storage, key, rec_ptr) == Status::WARN_NOT_FOUND) {

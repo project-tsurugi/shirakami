@@ -11,6 +11,8 @@
 
 #include "atomic_wrapper.h"
 
+#include "concurrency_control/wp/include/epoch.h"
+
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
@@ -41,6 +43,90 @@ public:
 private:
     static inline std::once_flag init_; // NOLINT
 };
+
+inline void wait_epoch_update() {
+    epoch::epoch_t ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce == epoch::get_global_epoch()) {
+            _mm_pause();
+        } else {
+            break;
+        }
+    }
+}
+
+TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token ss{}; // short
+    Token sb{}; // long
+    ASSERT_EQ(enter(ss), Status::OK);
+    ASSERT_EQ(enter(sb), Status::OK);
+    // prepare data
+    ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    ASSERT_EQ(tx_begin(ss), Status::OK);
+    ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_FAIL_FOR_WP, search_key(ss, st, "", vb));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
+    ASSERT_EQ(leave(ss), Status::OK);
+    ASSERT_EQ(leave(sb), Status::OK);
+}
+
+TEST_F(search_upsert, short_search_finish_before_valid_wp) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token ss{}; // short
+    Token sb{}; // long
+    ASSERT_EQ(enter(ss), Status::OK);
+    ASSERT_EQ(enter(sb), Status::OK);
+    // prepare data
+    ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(tx_begin(ss), Status::OK);
+        ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+        std::string vb{};
+        ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
+        ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    }
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
+    ASSERT_EQ(leave(ss), Status::OK);
+    ASSERT_EQ(leave(sb), Status::OK);
+}
+
+TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token ss{}; // short
+    Token sb{}; // long
+    ASSERT_EQ(enter(ss), Status::OK);
+    ASSERT_EQ(enter(sb), Status::OK);
+    // prepare data
+    ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(tx_begin(ss), Status::OK);
+        ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+        std::string vb{};
+        ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
+    }
+    wait_epoch_update();
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(ss)); // NOLINT
+    // due to wp
+    ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
+    ASSERT_EQ(leave(ss), Status::OK);
+    ASSERT_EQ(leave(sb), Status::OK);
+}
 
 TEST_F(search_upsert, short_long_conflict) { // NOLINT
     Storage st{};
