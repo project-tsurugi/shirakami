@@ -205,11 +205,11 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
                 Storage st{};
                 memcpy(&st, elem.get_storage().data(), sizeof(st));
                 used_storage.emplace_back(st);
-                Record** result_search = std::get<0>(
-                        get<Record*>(elem.get_storage(), elem.get_key()));
+                std::pair<Record**, std::size_t> out{};
                 Record* existing_record{nullptr};
-                if (result_search != nullptr) {
-                    existing_record = *result_search;
+                if (yakushima::get<Record*>(elem.get_storage(), elem.get_key(),
+                                            out) == yakushima::status::OK) {
+                    existing_record = *out.first;
                 }
                 if (!elem.get_delete_op()) {
                     if (existing_record != nullptr) {

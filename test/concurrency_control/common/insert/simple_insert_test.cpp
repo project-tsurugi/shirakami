@@ -70,9 +70,7 @@ TEST_F(simple_insert, insert) { // NOLINT
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    std::string_view st_view{reinterpret_cast<char*>(&storage), // NOLINT
-                             sizeof(storage)};
-    auto check_records = [st_view](std::string_view key_view,
+    auto check_records = [](std::string_view key_view,
                                    std::string_view value_view) {
         Record* rec_ptr{};
         ASSERT_EQ(Status::OK, get<Record>(storage, key_view, rec_ptr));
