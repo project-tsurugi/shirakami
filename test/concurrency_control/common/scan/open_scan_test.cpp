@@ -46,6 +46,16 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
+TEST_F(open_scan_test, scan_at_non_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ScanHandle hd{};
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND,
+              open_scan(s, {}, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        hd));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(open_scan_test, max_size_test) { // NOLINT
     Storage storage{};
     register_storage(storage);
@@ -137,22 +147,22 @@ TEST_F(open_scan_test, multi_open_reading_values) { // NOLINT
     ScanHandle handle{};
     ScanHandle handle2{};
     ASSERT_EQ(Status::WARN_NOT_FOUND,
-            open_scan(s, storage, "", scan_endpoint::INF, "",
-                    scan_endpoint::INF, handle));
+              open_scan(s, storage, "", scan_endpoint::INF, "",
+                        scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, insert(s, storage, "a/1", "1"));
     ASSERT_EQ(Status::OK, insert(s, storage, "b/3", "3"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, open_scan(s, storage, "a/", scan_endpoint::INCLUSIVE, "",
-            scan_endpoint::INF, handle));
+    ASSERT_EQ(Status::OK, open_scan(s, storage, "a/", scan_endpoint::INCLUSIVE,
+                                    "", scan_endpoint::INF, handle));
     ASSERT_EQ(0, handle);
 
     std::string sb{};
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
     ASSERT_EQ("1", sb);
 
-    ASSERT_EQ(Status::OK, open_scan(s, storage, "b/", scan_endpoint::INCLUSIVE, "",
-            scan_endpoint::INF, handle2));
+    ASSERT_EQ(Status::OK, open_scan(s, storage, "b/", scan_endpoint::INCLUSIVE,
+                                    "", scan_endpoint::INF, handle2));
     ASSERT_EQ(1, handle2);
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle2, sb));
     ASSERT_EQ("3", sb);

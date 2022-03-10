@@ -4,7 +4,9 @@
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
 
+#include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
+
 
 #include "shirakami/interface.h"
 
@@ -53,15 +55,9 @@ Status open_scan(Token const token, Storage storage,
             nvec;
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    yakushima::scan(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}, // NOLINT
-            l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res, &nvec, max_size);
-    if (scan_res.empty()) {
-        /**
-         * scan couldn't find any records.
-         */
-        return Status::WARN_NOT_FOUND;
+    rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
+    if (rc != Status::OK) {
+        return rc;
     }
 
     /**
