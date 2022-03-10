@@ -45,24 +45,12 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
-TEST_F(simple_update, update) { // NOLINT
-    Storage storage{};
-    register_storage(storage);
-    std::string k("aaa");  // NOLINT
-    std::string v("aaa");  // NOLINT
-    std::string v2("bbb"); // NOLINT
+TEST_F(simple_update, read_only_mode_update) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, storage, k, v));
+    ASSERT_EQ(Status::OK, tx_begin(s, true));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, update(s, {}, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(yakushima::status::OK, put<Record>(storage, k, v));
-    ASSERT_EQ(Status::OK, update(s, storage, k, v2));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Record* rec_ptr{};
-    ASSERT_EQ(Status::OK, get<Record>(storage, k, rec_ptr));
-    std::string vb{};
-    rec_ptr->get_value(vb);
-    ASSERT_EQ(vb, v2);
     ASSERT_EQ(Status::OK, leave(s));
 }
 

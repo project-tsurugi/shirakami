@@ -1,17 +1,9 @@
 
-#include "gtest/gtest.h"
-
-#ifdef WP
-
-#include "concurrency_control/wp/include/record.h"
-
-#else
+#include <mutex>
 
 #include "concurrency_control/silo/include/epoch.h"
 #include "concurrency_control/silo/include/record.h"
 #include "concurrency_control/silo/include/snapshot_manager.h"
-
-#endif
 
 #include "index/yakushima/include/interface.h"
 
@@ -19,23 +11,35 @@
 
 #include "shirakami/interface.h"
 
+#include "glog/logging.h"
+#include "gtest/gtest.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
 
 class simple_update : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
+                                  "update-c_simple_update_test");
+        FLAGS_stderrthreshold = 0;
+        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
+        log_dir_.append("/build/test_log/simple_update_test_log");
+    }
+
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/test_log/simple_update_test_log");
-        init(false, log_dir); // NOLINT
+        std::call_once(init_, call_once_f);
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_;   // NOLINT
+    static inline std::string log_dir_{}; // NOLINT
 };
 
-#ifdef WP
-#else
 TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     Storage storage{};
     register_storage(storage);
@@ -66,7 +70,5 @@ TEST_F(simple_update, update_twice_for_creating_snap) { // NOLINT
     rec_ptr->get_snap_ptr()->get_tuple().get_value(val);
     ASSERT_EQ(val, std::string_view(v));
 }
-
-#endif
 
 } // namespace shirakami::testing

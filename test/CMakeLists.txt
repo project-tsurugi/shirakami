@@ -39,6 +39,7 @@ file(GLOB SILO_TEST_SOURCES
         "bench/*.cpp"
         "complicated_test/phantom_protection_test.cpp"
         "concurrency_control/silo/*.cpp"
+        "concurrency_control/silo/interface/update/*.cpp"
         "concurrency_control/silo/scan/read_only/*.cpp"
         "sequence/*.cpp"
         "third_party/*.cpp"
