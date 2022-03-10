@@ -97,4 +97,94 @@ TEST_F(insert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 
+TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
+    register_storage(st);
+    {
+        Token s{};
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, insert(s, st, k, v));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            std::string vb{};
+            ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+            ASSERT_EQ(v, vb);
+        }
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, delete_record(s, st, k));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            EXPECT_EQ(Status::OK, insert(s, st, k, v));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            std::string vb{};
+            ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
+            ASSERT_EQ(v, vb);
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+    }
+}
+
+TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
+    std::string k("k1"); // NOLINT
+    std::string k2("k2"); // NOLINT
+    std::string v("v"); // NOLINT
+    register_storage(st);
+    {
+        Token s{};
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, insert(s, st, k, v));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            std::string vb{}, vb2{};
+            ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
+            ASSERT_EQ(Status::OK, delete_record(s, st, k));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            EXPECT_EQ(Status::OK, insert(s, st, k2, v));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+        {
+            ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK, tx_begin(s));
+            std::string vb{};
+            ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, vb));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK, leave(s));
+        }
+    }
+}
 } // namespace shirakami::testing
