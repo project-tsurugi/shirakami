@@ -15,6 +15,7 @@
 file(GLOB TEST_SOURCES
         "concurrency_control/common/delete/*.cpp"
         "concurrency_control/common/delete_insert/*.cpp"
+        "concurrency_control/common/delete_insert_search/*.cpp"
         "concurrency_control/common/delete_insert_scan/*.cpp"
         "concurrency_control/common/delete_scan_upsert/*.cpp"
         "concurrency_control/common/delete_search/*.cpp"
