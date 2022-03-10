@@ -96,6 +96,8 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * validation phase.
  * @return Status::ERR_VALIDATION This means read validation failed.
  * @return Status::OK success.
+ * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
+ * for finishing commit by other tx.
  */
 extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
 

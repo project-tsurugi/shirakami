@@ -136,6 +136,14 @@ TEST_F(c_helper_tx_begin, check_param_after_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin(s, false, true));
     ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::LONG);
+    auto wait_next_epoch = []() {
+        auto ep = epoch::get_global_epoch();
+        for (;;) {
+            if (ep != epoch::get_global_epoch()) { break; }
+            _mm_pause();
+        }
+    };
+    wait_next_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s, true, false));
@@ -146,6 +154,7 @@ TEST_F(c_helper_tx_begin, check_param_after_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin(s, true, true));
     ASSERT_EQ(ti->get_read_only(), true);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::LONG);
+    wait_next_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

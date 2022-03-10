@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <shared_mutex>
 #include <string_view>
 
@@ -42,6 +43,8 @@ public:
     [[nodiscard]] version* get_latest() const {
         return latest_.load(std::memory_order_acquire);
     }
+
+    std::mutex& get_lk_for_gc() { return lk_for_gc_; }
 
     read_by_occ& get_read_by() { return read_by_; }
 
@@ -94,6 +97,8 @@ private:
     std::shared_mutex mtx_value_{};
 
     read_by_occ read_by_{};
+
+    std::mutex lk_for_gc_{};
 };
 
 } // namespace shirakami

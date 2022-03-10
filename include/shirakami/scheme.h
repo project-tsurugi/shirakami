@@ -77,9 +77,12 @@ enum class scan_endpoint : char {
 inline constexpr std::string_view to_string_view(scan_endpoint ep) noexcept {
     using namespace std::string_view_literals;
     switch (ep) {
-        case scan_endpoint::EXCLUSIVE: return "EXCLUSIVE"sv;  //NOLINT
-        case scan_endpoint::INCLUSIVE: return "INCLUSIVE"sv;  //NOLINT
-        case scan_endpoint::INF: return "INF"sv;  //NOLINT
+        case scan_endpoint::EXCLUSIVE:
+            return "EXCLUSIVE"sv; //NOLINT
+        case scan_endpoint::INCLUSIVE:
+            return "INCLUSIVE"sv; //NOLINT
+        case scan_endpoint::INF:
+            return "INF"sv; //NOLINT
     }
     std::abort();
 }
@@ -232,6 +235,11 @@ enum class Status : std::int32_t {
     WARN_STORAGE_NOT_FOUND,
     /**
      * @brief warning
+     * @details Wait for some tx to commit.
+     */
+    WARN_WAITING_FOR_OTHER_TX,
+    /**
+     * @brief warning
      * @details
      * @a update : It already executed update/insert, so it up date the value which is going to be updated. @n
      * @a upsert : It already did insert/update/upsert, so it overwrite its local write set. @n
@@ -330,6 +338,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_SCAN_LIMIT"sv; // NOLINT
         case Status::WARN_STORAGE_NOT_FOUND:
             return "WARN_STORAGE_NOT_FOUND"sv; // NOLINT
+        case Status::WARN_WAITING_FOR_OTHER_TX:
+            return "WARN_WAITING_FOR_OTHER_TX"sv; // NOLINT
         case Status::WARN_WRITE_TO_LOCAL_WRITE:
             return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
         case Status::OK:

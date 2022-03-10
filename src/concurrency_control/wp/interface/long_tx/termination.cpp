@@ -165,10 +165,6 @@ void expose_local_write(session* ti) {
     }
 }
 
-void wait_for_preceding_bt(session* const ti) {
-    while (ongoing_tx::exist_preceding_id(ti->get_batch_id())) { _mm_pause(); }
-}
-
 void register_read_by(session* const ti) {
     auto& rbset = ti->get_read_by_bt_set();
     for (auto&& elem : rbset) {
@@ -202,13 +198,27 @@ Status verify_read_by(session* const ti) {
     return Status::OK;
 }
 
+Status check_wait_for_preceding_bt(session* const ti) {
+    if (ongoing_tx::exist_preceding_id(ti->get_batch_id())) {
+        return Status::WARN_WAITING_FOR_OTHER_TX;
+    }
+    return Status::OK;
+}
+
 extern Status commit(session* const ti, // NOLINT
                      [[maybe_unused]] commit_param* const cp) {
+    // check premature
+    if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+        return Status::WARN_PREMATURE;
+    }
+
     prepare_commit(ti);
-    wait_for_preceding_bt(ti);
+    auto rc{check_wait_for_preceding_bt(ti)};
+    if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
+
 
     // verify read by
-    auto rc{verify_read_by(ti)};
+    rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
         return Status::ERR_VALIDATION;
