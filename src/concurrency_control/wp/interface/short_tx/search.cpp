@@ -40,9 +40,8 @@ Status search_key(session* ti, Storage const storage,
 
     // index access
     Record* rec_ptr{};
-    if (get<Record>(storage, key, rec_ptr) == Status::WARN_NOT_FOUND) {
-        return Status::WARN_NOT_FOUND;
-    }
+    rc = get<Record>(storage, key, rec_ptr);
+    if (rc != Status::OK) { return rc; }
 
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT

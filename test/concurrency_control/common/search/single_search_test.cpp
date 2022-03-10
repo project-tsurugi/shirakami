@@ -37,6 +37,14 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
+TEST_F(single_search, search_at_non_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, search_key(s, {}, "", vb));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(single_search, search) { // NOLINT
     register_storage(storage);
     std::string k("aaa"); // NOLINT
