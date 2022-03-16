@@ -93,9 +93,12 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
 
 /**
  * @brief the status which is after some function.
- *
- * Warn is no problem for progressing.
- * ERR is problem for progressing.
+ * OK is success return code.
+ * WARN_... is no problem for extra progressing due to work but last command was canceled.
+ * ERR_... is problem for extra progressing so it was executed abort command internally.
+ * INTERNAL_BEGIN is a boundary between public status and internal status.
+ * INTERNAL_WARN .. is return code for internal implements.
+ * INTERNAL_ERR... is also return code for internal implements.
  */
 enum class Status : std::int32_t {
     /**
@@ -296,6 +299,10 @@ enum class Status : std::int32_t {
      * read phase and validation phase. So it called abort. @n
      */
     ERR_WRITE_TO_DELETED_RECORD,
+    INTERNAL_BEGIN = 100000,
+    INTERNAL_WARN_CONCURRENT_INSERT,
+    INTERNAL_WARN_NOT_DELETED,
+    INTERNAL_WARN_PREMATURE,
 };
 
 inline constexpr std::string_view to_string_view( // NOLINT
@@ -370,6 +377,14 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_VALIDATION"sv; // NOLINT
         case Status::ERR_WRITE_TO_DELETED_RECORD:
             return "ERR_WRITE_TO_DELETED_RECORD"sv; // NOLINT
+        case Status::INTERNAL_BEGIN:
+            return "INTERNAL_BEGIN"sv; // NOLINT
+        case Status::INTERNAL_WARN_NOT_DELETED:
+            return "INTERNAL_WARN_NOT_DELETED"sv; // NOLINT
+        case Status::INTERNAL_WARN_CONCURRENT_INSERT:
+            return "INTERNAL_WARN_CONCURRENT_INSERT"sv; // NOLINT
+        case Status::INTERNAL_WARN_PREMATURE:
+            return "INTERNAL_WARN_PREMATURE"sv; // NOLINT
     }
     std::abort();
 }

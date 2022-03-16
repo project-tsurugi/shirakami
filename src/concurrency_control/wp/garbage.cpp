@@ -4,6 +4,7 @@
 #include "clock.h"
 #include "storage.h"
 
+#include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/garbage.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
@@ -86,7 +87,72 @@ void delete_version_list(version* ver) {
     }
 }
 
-void clean_rec_version(Record* rec_ptr) {
+Status check_unhooking_key_state(tid_word check) {
+    if (check.get_latest() && check.get_absent()) {
+        return Status::INTERNAL_WARN_CONCURRENT_INSERT;
+    }
+    if (!check.get_absent()) { return Status::INTERNAL_WARN_NOT_DELETED; }
+    return Status::OK;
+}
+
+/**
+ * @brief check timestamp of the key whether it can unhook.
+ * 
+ * @param[in] check 
+ * @return Status::OK it can unhook from the point of view of timestamp.
+ * @return Status::INTERNAL_WARN_PREMATURE it can't unhook from the point of 
+ * view of timestamp.
+ */
+inline Status check_unhooking_key_ts(tid_word check) {
+    epoch::epoch_t ce{epoch::get_global_epoch()};
+    if (check.get_epoch() < ce) { return Status::OK; }
+    return Status::INTERNAL_WARN_PREMATURE;
+}
+
+/**
+ * @brief check whether it can unhook the key. If check was passed, it 
+ * executes unhooking.
+ * @param[in] rec_ptr 
+ * @return Status::OK unhooked key
+ * @return Status::INTERNAL_WARN_CONCURRENT_INSERT the key is inserted 
+ * concurrently.
+ * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
+ */
+inline Status unhooking_key(Record* rec_ptr) {
+    tid_word check{};
+
+    check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+    // check timestamp whether it can unhook.
+    auto rc = check_unhooking_key_ts(check);
+    if (rc != Status::OK) { return rc; }
+
+    // check before w lock
+    rc = check_unhooking_key_state(check);
+    if (rc != Status::OK) { return rc; }
+
+    // w lock
+    rec_ptr->get_tidw_ref().lock();
+
+    // check after w lock
+    rc = check_unhooking_key_state(check);
+    if (rc != Status::OK) {
+        rec_ptr->get_tidw_ref().unlock();
+        return rc;
+    }
+
+    // unhook and register gc container
+    // todo
+    rec_ptr->get_tidw_ref().unlock();
+    return Status::OK;
+}
+
+void unhooking_keys_and_pruning_versions(Record* rec_ptr) {
+    // unhooking keys
+    if (unhooking_key(rec_ptr) == Status::OK) {
+        // unhooked the key.
+        return;
+    }
+
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(rec_ptr, pre_ver)};
     if (ver == nullptr) { return; }
@@ -105,7 +171,7 @@ void clean_rec_version(Record* rec_ptr) {
     }
 }
 
-void clean_st_version(Storage st) {
+inline void unhooking_keys_and_pruning_versions(Storage st) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
     // full scan
@@ -113,16 +179,18 @@ void clean_st_version(Storage st) {
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
     for (auto&& sr : scan_res) {
-        clean_rec_version(*std::get<1>(sr));
+        unhooking_keys_and_pruning_versions(*std::get<1>(sr));
         if (get_flag_cleaner_end()) { break; }
     }
 }
 
-void clean_all_version() {
+inline void unhooking_keys_and_pruning_versions() {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
-        if (wp::get_page_set_meta_storage() != st) { clean_st_version(st); }
+        if (wp::get_page_set_meta_storage() != st) {
+            unhooking_keys_and_pruning_versions(st);
+        }
         if (get_flag_cleaner_end()) { break; }
     }
 }
@@ -131,7 +199,7 @@ void work_cleaner() {
     while (!get_flag_cleaner_end()) {
         {
             std::unique_lock lk{get_mtx_cleaner()};
-            clean_all_version();
+            unhooking_keys_and_pruning_versions();
         }
         sleepMs(PARAM_EPOCH_TIME);
     }
