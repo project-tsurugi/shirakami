@@ -79,7 +79,7 @@ Status storage::exist_storage(Storage storage) {
 
 Status storage::delete_storage(Storage storage) {
     // NOLINT
-    std::unique_lock lk{garbage::get_mtx_version_cleaner()};
+    std::unique_lock lk{garbage::get_mtx_cleaner()};
 
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT

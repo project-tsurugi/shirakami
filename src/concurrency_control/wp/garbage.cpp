@@ -17,8 +17,7 @@ namespace shirakami::garbage {
 void init() {
     // clear global flags
     set_flag_manager_end(false);
-    set_flag_unhook_cleaner_end(false);
-    set_flag_version_cleaner_end(false);
+    set_flag_cleaner_end(false);
 
     // clear global statistical data
     get_gc_ct_ver().store(0, std::memory_order_release);
@@ -29,8 +28,7 @@ void init() {
 void fin() {
     // set flags
     set_flag_manager_end(true);
-    set_flag_unhook_cleaner_end(true);
-    set_flag_version_cleaner_end(true);
+    set_flag_cleaner_end(true);
 
     join_bg_threads();
 }
@@ -116,7 +114,7 @@ void clean_st_version(Storage st) {
                     yakushima::scan_endpoint::INF, scan_res);
     for (auto&& sr : scan_res) {
         clean_rec_version(*std::get<1>(sr));
-        if (get_flag_version_cleaner_end()) { break; }
+        if (get_flag_cleaner_end()) { break; }
     }
 }
 
@@ -125,23 +123,16 @@ void clean_all_version() {
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
         if (wp::get_page_set_meta_storage() != st) { clean_st_version(st); }
-        if (get_flag_version_cleaner_end()) { break; }
+        if (get_flag_cleaner_end()) { break; }
     }
 }
 
-void work_version_cleaner() {
-    while (!get_flag_version_cleaner_end()) {
+void work_cleaner() {
+    while (!get_flag_cleaner_end()) {
         {
-            std::unique_lock lk{get_mtx_version_cleaner()};
+            std::unique_lock lk{get_mtx_cleaner()};
             clean_all_version();
         }
-        sleepMs(PARAM_EPOCH_TIME);
-    }
-}
-
-void work_unhook_cleaner() {
-    while (!get_flag_unhook_cleaner_end()) {
-        // todo add work
         sleepMs(PARAM_EPOCH_TIME);
     }
 }
