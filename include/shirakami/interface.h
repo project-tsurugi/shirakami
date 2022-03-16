@@ -83,14 +83,18 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 
 /**
  * @brief It checks this transaction can commit and executes commit.
- * @details If this function return ERR_... status, this called abort function implicitly. 
- * Otherwise, it commits.
+ * @details If this function return ERR_... status, this called abort function 
+ * implicitly. Otherwise, it commits.
  * @param[in] token retrieved by enter().
- * @param[in,out] cp commit parameter to notify commit timestamp and wait obeyed to 
- * commit_param.commit_property.
+ * @param[in,out] cp commit parameter to notify commit timestamp and wait 
+ * obeyed to commit_param.commit_property.
  * @pre you executed enter command, you didn't execute leave command.
- * @return Status::ERR_FAIL_WP This means validation failure by others write preserve.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom problem.
+ * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
+ * about write preserve.
+ * @return Status::ERR_FAIL_WP This means validation failure by others write 
+ * preserve.
+ * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
+ * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
  * operations was interrupted by some delete transaction between read phase and 
  * validation phase.
