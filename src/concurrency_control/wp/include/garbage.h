@@ -16,9 +16,17 @@ namespace shirakami::garbage {
 //================================================================================
 /**
  * @brief executor of garbage collection for versions.
- * @details Perform a GC based on the time stamp determined by the manager.
+ * @details Perform version pruning of GC based on the timestamp determined 
+ * by the manager.
  */
 [[maybe_unused]] inline std::thread version_cleaner; // NOLINT
+
+/**
+ * @brief executor of garbage collection for unhook page from index.
+ * @details Perform unhook operation of GC based on the timestamp determined 
+ * by the manager.
+ */
+[[maybe_unused]] inline std::thread unhook_cleaner; // NOLINT
 
 /**
  * @brief garbage collection manager thread.
@@ -31,22 +39,43 @@ namespace shirakami::garbage {
 
 [[maybe_unused]] void work_version_cleaner();
 
+[[maybe_unused]] void work_unhook_cleaner();
+
 // invoker for bg threads
 [[maybe_unused]] static void invoke_bg_threads() {
     manager = std::thread(work_manager);
     version_cleaner = std::thread(work_version_cleaner);
+    unhook_cleaner = std::thread(work_unhook_cleaner);
 }
 
 // flags for background thread
 [[maybe_unused]] inline std::atomic<bool> flag_version_cleaner_end{false};
 
+[[maybe_unused]] inline std::atomic<bool> flag_unhook_cleaner_end{false};
+
 [[maybe_unused]] inline std::atomic<bool> flag_manager_end{false};
 
 // parameters for background thread
+/**
+ * @brief thread size of version cleaner (pruner).
+ */
 [[maybe_unused]] inline std::size_t ver_cleaner_thd_size{0};
 
+/**
+ * @brief thread size of unhook cleaner.
+ */
+[[maybe_unused]] inline std::size_t unhook_cleaner_thd_size{0};
+
 // mutex for background thread
+/**
+ * @brief mutex for operation about version cleaner.
+ */
 inline std::mutex mtx_version_cleaner_{};
+
+/**
+ * @brief mutex for operation about unhook cleaner.
+ */
+inline std::mutex mtx_unhook_cleaner_{};
 
 // statistical data
 /**
@@ -55,6 +84,10 @@ inline std::mutex mtx_version_cleaner_{};
 inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
 // setter
+[[maybe_unused]] static void set_flag_unhook_cleaner_end(bool const tf) {
+    flag_unhook_cleaner_end.store(tf, std::memory_order_release);
+}
+
 [[maybe_unused]] static void set_flag_version_cleaner_end(bool const tf) {
     flag_version_cleaner_end.store(tf, std::memory_order_release);
 }
@@ -67,7 +100,15 @@ inline std::atomic<std::uint64_t> gc_ct_ver_{0};
     ver_cleaner_thd_size = n;
 }
 
+[[maybe_unused]] static void set_unhook_cleaner_thd_size(std::size_t const n) {
+    unhook_cleaner_thd_size = n;
+}
+
 // getter
+[[maybe_unused]] static bool get_flag_unhook_cleaner_end() {
+    return flag_unhook_cleaner_end.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static bool get_flag_version_cleaner_end() {
     return flag_version_cleaner_end.load(std::memory_order_acquire);
 }
@@ -76,18 +117,31 @@ inline std::atomic<std::uint64_t> gc_ct_ver_{0};
     return flag_manager_end.load(std::memory_order_acquire);
 }
 
-[[maybe_unused]] static std::mutex& get_mtx_version_cleaner() { return mtx_version_cleaner_; }
+[[maybe_unused]] static std::mutex& get_mtx_unhook_cleaner() {
+    return mtx_unhook_cleaner_;
+}
+
+[[maybe_unused]] static std::mutex& get_mtx_version_cleaner() {
+    return mtx_version_cleaner_;
+}
+
+[[maybe_unused]] static std::size_t get_unhook_cleaner_thd_size() {
+    return unhook_cleaner_thd_size;
+}
 
 [[maybe_unused]] static std::size_t get_ver_cleaner_thd_size() {
     return ver_cleaner_thd_size;
 }
 
-[[maybe_unused]] static std::atomic<std::uint64_t>& get_gc_ct_ver() { return gc_ct_ver_; }
+[[maybe_unused]] static std::atomic<std::uint64_t>& get_gc_ct_ver() {
+    return gc_ct_ver_;
+}
 
 // join about bg threads
 [[maybe_unused]] static void join_bg_threads() {
     manager.join();
     version_cleaner.join();
+    unhook_cleaner.join();
 }
 
 //================================================================================

@@ -17,6 +17,7 @@ namespace shirakami::garbage {
 void init() {
     // clear global flags
     set_flag_manager_end(false);
+    set_flag_unhook_cleaner_end(false);
     set_flag_version_cleaner_end(false);
 
     // clear global statistical data
@@ -28,6 +29,7 @@ void init() {
 void fin() {
     // set flags
     set_flag_manager_end(true);
+    set_flag_unhook_cleaner_end(true);
     set_flag_version_cleaner_end(true);
 
     join_bg_threads();
@@ -133,6 +135,13 @@ void work_version_cleaner() {
             std::unique_lock lk{get_mtx_version_cleaner()};
             clean_all_version();
         }
+        sleepMs(PARAM_EPOCH_TIME);
+    }
+}
+
+void work_unhook_cleaner() {
+    while (!get_flag_unhook_cleaner_end()) {
+        // todo add work
         sleepMs(PARAM_EPOCH_TIME);
     }
 }
