@@ -83,12 +83,17 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
 
         // verify
         // ==============================
-        if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK ||
-            wp_verify(itr.get_storage(), itr.get_tid().get_epoch(), ce) !=
-                    Status::OK) {
+        if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
             unlock_write_set(ti);
             short_tx::abort(ti);
             return Status::ERR_VALIDATION;
+        }
+
+        if (wp_verify(itr.get_storage(), itr.get_tid().get_epoch(), ce) !=
+            Status::OK) {
+            unlock_write_set(ti);
+            short_tx::abort(ti);
+            return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
         }
         // ==============================
 

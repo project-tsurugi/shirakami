@@ -113,6 +113,8 @@ TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
     // prepare data
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    // end prepare data
+    // start test
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
         ASSERT_EQ(tx_begin(ss), Status::OK);
@@ -121,10 +123,12 @@ TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
         ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
     }
     wait_epoch_update();
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(ss)); // NOLINT
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE, commit(ss)); // NOLINT
     // due to wp
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
+    // end test
+    // cleanup test program
     ASSERT_EQ(leave(ss), Status::OK);
     ASSERT_EQ(leave(sb), Status::OK);
 }

@@ -241,14 +241,22 @@ enum class Status : std::int32_t {
     /**
      * @brief warning
      * @details
-     * @a update : It already executed update/insert, so it up date the value which is going to be updated. @n
-     * @a upsert : It already did insert/update/upsert, so it overwrite its local write set. @n
+     * @a update : It already executed update/insert, so it up date the value 
+     * which is going to be updated. @n
+     * @a upsert : It already did insert/update/upsert, so it overwrite its 
+     * local write set. @n
      */
     WARN_WRITE_TO_LOCAL_WRITE,
     /**
      * @brief success status.
      */
     OK,
+    /**
+     * @brief error
+     * @details This means conflicts on write preserve and tx was executed 
+     * abort process internally.
+     */
+    ERR_CONFLICT_ON_WRITE_PRESERVE,
     ERR_CPR_ORDER_VIOLATION,
     /**
      * @brief error
@@ -344,6 +352,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
         case Status::OK:
             return "OK"sv; // NOLINT
+        case Status::ERR_CONFLICT_ON_WRITE_PRESERVE:
+            return "ERR_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
         case Status::ERR_CPR_ORDER_VIOLATION:
             return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
         case Status::ERR_FAIL_WP:
