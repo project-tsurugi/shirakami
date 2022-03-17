@@ -151,4 +151,22 @@ TEST_F(search_upsert, short_long_conflict) { // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
+TEST_F(search_upsert, avoid_premature_by_wait) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s{};  // short
+    Token s2{}; // long
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    std::string vb{};
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(200ms); // enough to wait assinged epoch
+    ASSERT_EQ(search_key(s2, st, "", vb), Status::OK);
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
 } // namespace shirakami::testing
