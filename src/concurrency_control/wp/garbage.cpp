@@ -11,6 +11,10 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "index/yakushima/include/interface.h"
+
+#include "yakushima/include/kvs.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::garbage {
@@ -105,23 +109,32 @@ Status check_unhooking_key_state(tid_word check) {
  */
 inline Status check_unhooking_key_ts(tid_word check) {
     epoch::epoch_t ce{epoch::get_global_epoch()};
-    if (check.get_epoch() < ce) { return Status::OK; }
+    if (
+            // epoch change enable decide serial order.
+            check.get_epoch() < ce &&
+            // this records snapshot is not needed by current and future long tx.
+            check.get_epoch() < garbage::get_min_batch_epoch()) {
+        return Status::OK;
+    }
     return Status::INTERNAL_WARN_PREMATURE;
 }
 
 /**
  * @brief check whether it can unhook the key. If check was passed, it 
  * executes unhooking.
+ * @param[in] st 
  * @param[in] rec_ptr 
  * @return Status::OK unhooked key
  * @return Status::INTERNAL_WARN_CONCURRENT_INSERT the key is inserted 
  * concurrently.
  * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
  */
-inline Status unhooking_key(Record* rec_ptr) {
+inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     tid_word check{};
 
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
+    // ====================
+    // check before lock for reducing lock
     // check timestamp whether it can unhook.
     auto rc = check_unhooking_key_ts(check);
     if (rc != Status::OK) { return rc; }
@@ -129,27 +142,55 @@ inline Status unhooking_key(Record* rec_ptr) {
     // check before w lock
     rc = check_unhooking_key_state(check);
     if (rc != Status::OK) { return rc; }
+    // ====================
 
     // w lock
     rec_ptr->get_tidw_ref().lock();
+    // reload ts
+    check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
 
+    // ====================
+    // main check after lock
     // check after w lock
+    rc = check_unhooking_key_ts(check);
+    if (rc != Status::OK) { return rc; }
+
     rc = check_unhooking_key_state(check);
     if (rc != Status::OK) {
         rec_ptr->get_tidw_ref().unlock();
         return rc;
     }
+    // ====================
 
     // unhook and register gc container
-    // todo
+    // unhook
+    std::string kb{};
+    rec_ptr->get_key(kb);
+    rc = remove(ytk, st, kb);
+    if (rc != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
+
+    // register
+    auto& cont = garbage::get_container_rec();
+    cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
+
+    // unlock
     rec_ptr->get_tidw_ref().unlock();
+
     return Status::OK;
 }
 
-void unhooking_keys_and_pruning_versions(Record* rec_ptr) {
+void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
+                                         Record* rec_ptr) {
     // unhooking keys
-    if (unhooking_key(rec_ptr) == Status::OK) {
+    auto rc{unhooking_key(ytk, st, rec_ptr)};
+    if (rc == Status::OK) {
         // unhooked the key.
+        return;
+    } else if (rc == Status::ERR_FATAL) {
+        LOG(ERROR) << "programming error";
         return;
     }
 
@@ -175,13 +216,16 @@ inline void unhooking_keys_and_pruning_versions(Storage st) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
     // full scan
+    yakushima::Token ytk{};
+    while (yakushima::enter(ytk) != yakushima::status::OK) { _mm_pause(); }
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
     for (auto&& sr : scan_res) {
-        unhooking_keys_and_pruning_versions(*std::get<1>(sr));
+        unhooking_keys_and_pruning_versions(ytk, st, *std::get<1>(sr));
         if (get_flag_cleaner_end()) { break; }
     }
+    yakushima::leave(ytk);
 }
 
 inline void unhooking_keys_and_pruning_versions() {
@@ -195,11 +239,25 @@ inline void unhooking_keys_and_pruning_versions() {
     }
 }
 
+void release_key_memory() {
+    auto& cont = garbage::get_container_rec();
+    auto ce = epoch::get_global_epoch();
+    for (auto itr = cont.begin(); itr != cont.end();) {
+        if ((*itr).second < ce) {
+            delete (*itr).first;
+            itr = cont.erase(itr);
+        } else {
+            break;
+        }
+    }
+}
+
 void work_cleaner() {
     while (!get_flag_cleaner_end()) {
         {
             std::unique_lock lk{get_mtx_cleaner()};
             unhooking_keys_and_pruning_versions();
+            release_key_memory();
         }
         sleepMs(PARAM_EPOCH_TIME);
     }

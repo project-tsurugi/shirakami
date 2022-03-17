@@ -302,6 +302,7 @@ enum class Status : std::int32_t {
     INTERNAL_BEGIN = 100000,
     INTERNAL_WARN_CONCURRENT_INSERT,
     INTERNAL_WARN_NOT_DELETED,
+    INTERNAL_WARN_NOT_FOUND,
     INTERNAL_WARN_PREMATURE,
 };
 
@@ -381,6 +382,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "INTERNAL_BEGIN"sv; // NOLINT
         case Status::INTERNAL_WARN_NOT_DELETED:
             return "INTERNAL_WARN_NOT_DELETED"sv; // NOLINT
+        case Status::INTERNAL_WARN_NOT_FOUND:
+            return "INTERNAL_WARN_NOT_FOUND"sv; // NOLINT
         case Status::INTERNAL_WARN_CONCURRENT_INSERT:
             return "INTERNAL_WARN_CONCURRENT_INSERT"sv; // NOLINT
         case Status::INTERNAL_WARN_PREMATURE:

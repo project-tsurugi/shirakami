@@ -39,6 +39,7 @@ void unlock_inserted_records(session* const ti) {
             tid.set_absent(true);
             tid.set_latest(false);
             tid.set_lock(false);
+            tid.set_epoch(ti->get_step_epoch());
             wso_ptr->get_rec_ptr()->set_tid(tid);
         }
     }

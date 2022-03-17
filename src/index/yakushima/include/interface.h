@@ -96,4 +96,13 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
     return Status::ERR_FATAL;
 }
 
+static inline Status remove(yakushima::Token tk, Storage st,
+                            std::string_view key) {
+    auto rc{yakushima::remove(
+            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            key)};
+    if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
+    return Status::OK;
+}
+
 } // namespace shirakami
