@@ -163,8 +163,9 @@ TEST_F(search_upsert, avoid_premature_by_wait) { // NOLINT
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
     std::string vb{};
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(200ms); // enough to wait assinged epoch
-    ASSERT_EQ(search_key(s2, st, "", vb), Status::OK);
+    //std::this_thread::sleep_for(200ms); // enough to wait assinged epoch
+    //ASSERT_EQ(search_key(s2, st, "", vb), Status::OK);
+    while (search_key(s2, st, "", vb) != Status::OK) { _mm_pause(); }
     ASSERT_EQ(leave(s), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
 }
