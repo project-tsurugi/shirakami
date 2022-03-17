@@ -76,8 +76,6 @@ TEST_F(write_skew, simple) { // NOLINT
     std::string vb1{};
     std::string vb2{};
     ASSERT_EQ(search_key(s2, st, x, vb1), Status::WARN_PREMATURE); // for update min_step_epoch
-    ASSERT_EQ(search_key(s1, st, x, vb1), Status::WARN_PREMATURE); // for update min_step_epoch
-    sleepMs(PARAM_EPOCH_TIME * 2); // wait for updating min_step_epoch
     ASSERT_EQ(search_key(s1, st, x, vb1), Status::OK);
     ASSERT_EQ(search_key(s2, st, y, vb2), Status::ERR_FAIL_WP);
     std::size_t v1{};
