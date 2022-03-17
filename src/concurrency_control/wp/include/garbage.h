@@ -6,6 +6,7 @@
 #include "concurrent_queue.h"
 
 #include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/version.h"
 
 #include "glog/logging.h"
@@ -61,6 +62,15 @@ inline std::mutex mtx_cleaner_{};
   */
 inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
+
+// container for gc
+/**
+ * @brief container of records which was unhooked from index.
+ * First of elements is pointer to record. Second of elements is epoch after 
+ * unhooking record.
+ */
+inline std::vector<std::pair<Record*, epoch::epoch_t>> container_rec_{};
+
 // setter
 [[maybe_unused]] static void set_flag_cleaner_end(bool const tf) {
     flag_cleaner_end.store(tf, std::memory_order_release);
@@ -75,6 +85,11 @@ inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 }
 
 // getter
+[[maybe_unused]] static std::vector<std::pair<Record*, epoch::epoch_t>>&
+get_container_rec() {
+    return container_rec_;
+}
+
 [[maybe_unused]] static bool get_flag_cleaner_end() {
     return flag_cleaner_end.load(std::memory_order_acquire);
 }
