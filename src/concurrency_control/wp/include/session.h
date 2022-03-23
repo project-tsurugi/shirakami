@@ -18,6 +18,7 @@
 #include "concurrency_control/include/scan.h"
 
 #include "shirakami/scheme.h"
+#include "shirakami/transaction_state.h"
 #include "shirakami/tuple.h"
 
 #include "yakushima/include/kvs.h"
@@ -308,6 +309,8 @@ private:
      * to update @a valid_epoch_  automatically.
      */
     std::atomic<bool> operating_{false};
+
+    //todo bool has_tx_status_handle_{false};
 };
 
 class session_table {
