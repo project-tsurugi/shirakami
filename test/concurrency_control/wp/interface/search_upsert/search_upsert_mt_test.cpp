@@ -124,7 +124,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
             } else {
                 ++occ_loop;
             }
-            if (batch_loop.load(std::memory_order_acquire) > 10) { // NOLINT
+            if (batch_loop.load(std::memory_order_acquire) > 3) { // NOLINT
                 break;
             }
         }

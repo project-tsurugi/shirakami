@@ -138,7 +138,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{1000}); // NOLINT
+        std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
             ASSERT_EQ(Status::OK, tx_begin(s));
@@ -146,7 +146,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{1000}); // NOLINT
+        std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
             ASSERT_EQ(Status::OK, tx_begin(s));

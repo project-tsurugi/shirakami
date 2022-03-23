@@ -64,7 +64,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
-    const int trial_n{6};
+    const int trial_n{2};
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
 
