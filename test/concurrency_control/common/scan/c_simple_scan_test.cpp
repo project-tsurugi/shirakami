@@ -4,9 +4,10 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#include "gtest/gtest.h"
-
 #include "shirakami/interface.h"
+
+#include "glog/logging.h"
+#include "gtest/gtest.h"
 
 namespace shirakami::testing {
 
@@ -16,6 +17,9 @@ class simple_scan : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
+                                  "scan-c_simple_scan_test");
+        FLAGS_stderrthreshold = 0;        // output more than INFO
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
         log_dir_.append("/build/test_log/simple_scan_test_log");
     }

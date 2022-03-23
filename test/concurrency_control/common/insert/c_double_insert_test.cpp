@@ -51,7 +51,7 @@ private:
 };
 
 TEST_F(double_insert, insert_after_user_abort) { // NOLINT
-    Storage st;
+    Storage st{};
     register_storage(st);
     std::string k("k");
     std::string v("v");

@@ -14,6 +14,12 @@ namespace shirakami {
 
 Status close_scan(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        return Status::WARN_NOT_BEGIN;
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
 
     return ti->get_scan_handle().clear(handle);
 }
@@ -39,7 +45,12 @@ Status open_scan(Token const token, Storage storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else if (ti->get_read_only()) {
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
+
+    if (ti->get_read_only()) {
         // todo stale snapshot read only tx mode.
         return Status::ERR_NOT_IMPLEMENTED;
     }
@@ -56,9 +67,7 @@ Status open_scan(Token const token, Storage storage,
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
-    if (rc != Status::OK) {
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     /**
      * You must ensure that new elements are not interrupted in the range at 
@@ -101,8 +110,21 @@ Status open_scan(Token const token, Storage storage,
 
 Status next(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        return Status::WARN_NOT_BEGIN;
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
 
     auto& sh = ti->get_scan_handle();
+    /**
+     * Check whether the handle is valid.
+     */
+    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        return Status::WARN_INVALID_HANDLE;
+    }
+
     // increment cursor
     std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
     ++scan_index;
@@ -121,6 +143,13 @@ Status next(Token const token, ScanHandle const handle) {
 Status read_key_from_scan(Token const token, ScanHandle const handle,
                           std::string& key) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        return Status::WARN_NOT_BEGIN;
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
+
     auto& sh = ti->get_scan_handle();
 
     /**
@@ -185,6 +214,13 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
 Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        return Status::WARN_NOT_BEGIN;
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
+
     auto& sh = ti->get_scan_handle();
 
     /**
@@ -250,6 +286,13 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
                                                    ScanHandle const handle,
                                                    std::size_t& size) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) {
+        return Status::WARN_NOT_BEGIN;
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
+    }
+
     auto& sh = ti->get_scan_handle();
 
     if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {

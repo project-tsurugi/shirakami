@@ -27,8 +27,8 @@ class open_scan_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-silo-scan-open_scan_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
+                                  "scan-c_open_scan_test");
         FLAGS_stderrthreshold = 0;        // output more than INFO
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
         log_dir_.append("/tmp/open_scan_test_log");

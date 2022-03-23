@@ -59,14 +59,14 @@ Status delete_record(Token token, Storage storage,
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
     }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::DELETE)};
     if (rc != Status::OK) { return rc; }
-
-    //update metadata
-    ti->set_step_epoch(epoch::get_global_epoch());
 
     // index access to check local write set
     Record* rec_ptr{};

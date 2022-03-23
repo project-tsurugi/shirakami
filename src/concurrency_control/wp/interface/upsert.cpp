@@ -50,14 +50,14 @@ Status upsert(Token token, Storage storage, const std::string_view key,
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
+    } else {
+        // update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
     }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::UPSERT)};
     if (rc != Status::OK) { return rc; }
-
-    // update metadata
-    ti->set_step_epoch(epoch::get_global_epoch());
 
     for (;;) {
         // index access to check local write set

@@ -33,6 +33,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/common/search_update/*.cpp"
         "concurrency_control/common/search_upsert/*.cpp"
         "concurrency_control/common/storage/*.cpp"
+        "concurrency_control/common/termination/*.cpp"
         )
 
 if (NOT BUILD_WP)

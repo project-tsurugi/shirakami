@@ -1,8 +1,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/wp/interface/include/helper.h"
+#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"
 
 #include "index/yakushima/include/interface.h"
@@ -20,14 +20,14 @@ Status update(Token token, Storage storage,
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
+    } else {
+        //update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
     }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::UPDATE)};
     if (rc != Status::OK) { return rc; }
-
-    //update metadata
-    ti->set_step_epoch(epoch::get_global_epoch());
 
     // index access to check local write set
     Record* rec_ptr{};

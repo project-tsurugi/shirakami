@@ -188,6 +188,11 @@ enum class Status : std::int32_t {
     WARN_INVALID_HANDLE,
     /**
      * @brief warning
+     * @details The status that the user calls api which needs tx_begin and some operations.
+     */
+    WARN_NOT_BEGIN,
+    /**
+     * @brief warning
      * @details
      * @a delete_record : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
      * @a open_scan : The scan couldn't find any records. @n
@@ -340,6 +345,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_INVALID_ARGS"sv; // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv; // NOLINT
+        case Status::WARN_NOT_BEGIN:
+            return "WARN_NOT_BEGIN"sv; // NOLINT
         case Status::WARN_NOT_FOUND:
             return "WARN_NOT_FOUND"sv; // NOLINT
         case Status::WARN_NOT_IN_A_SESSION:

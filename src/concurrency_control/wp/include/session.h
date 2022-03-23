@@ -17,8 +17,8 @@
 
 #include "concurrency_control/include/scan.h"
 
-#include "shirakami/tuple.h"
 #include "shirakami/scheme.h"
+#include "shirakami/tuple.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -52,6 +52,7 @@ public:
         clean_up_local_set();
         clean_up_tx_property();
         scan_handle_.clear();
+        set_operating(false);
     }
 
     /**
@@ -156,6 +157,10 @@ public:
     // because Tuple is small size data.
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
+
+    void set_operating(bool tf) {
+        operating_.store(tf, std::memory_order_release);
+    }
 
     void set_read_only(bool tf) { read_only_ = tf; }
 
@@ -285,6 +290,20 @@ private:
      * @brief about scan operation.
      */
     scan_handler scan_handle_;
+
+    /**
+     * @brief This variable shows whether this session (transaction (tx)) is processing 
+     * public api now.
+     * @details Process from public api of tx update @a valid_epoch_.
+     * But that is not update when public api of tx is not called.
+     * So if public api of tx is not called for a long time, 
+     * @a valid_epoch_ is also not updated. And if @a valid_epoch_ is not 
+     * update for a long time, long tx can not find to be able to start 
+     * process because the short tx may be serialized before the long tx.
+     * To resolve that situation, it use this variable for background thread 
+     * to update @a valid_epoch_  automatically.
+     */
+    std::atomic<bool> operating_{false};
 };
 
 class session_table {

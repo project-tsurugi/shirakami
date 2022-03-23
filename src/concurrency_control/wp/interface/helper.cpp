@@ -140,6 +140,8 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                 std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
+        ti->set_operating(true);
+        ti->set_step_epoch(epoch::get_global_epoch());
         if (for_batch) {
             ti->set_tx_type(TX_TYPE::LONG);
             auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};

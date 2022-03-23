@@ -78,6 +78,8 @@ extern Status abort(Token token); // NOLINT
  * @param[in] handle identify the specific scan which was opened at open_scan.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE The @b handle is invalid.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * can't execute it.
  */
 extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 
@@ -274,6 +276,8 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @return Status::OK success.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
 extern Status next(Token token, ScanHandle handle);
@@ -294,6 +298,8 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * can't execute it.
  * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
  * executed write operation for the same page. So this function read from the write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
@@ -316,6 +322,8 @@ extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& ke
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * can't execute it.
  * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
  * executed write operation for the same page. So this function read from the write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
@@ -328,8 +336,10 @@ extern Status read_value_from_scan(Token token, ScanHandle handle, std::string& 
  * @param[in] handle the handle to identify scanned result. This handle will be deleted 
  * at abort function.
  * @param[out] size the size resulted at open_scan with the @a handle .
- * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
  * @return Status::OK success.
+ * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * can't execute it.
  */
 [[maybe_unused]] extern Status
 scannable_total_index_size(Token token, ScanHandle handle,

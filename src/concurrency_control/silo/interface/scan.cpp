@@ -23,6 +23,7 @@ namespace shirakami {
 
 Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     return ti->get_scan_handle().clear(handle);
 }
@@ -107,6 +108,14 @@ Status open_scan(Token const token, Storage storage,
 
 Status next(Token token, ScanHandle handle) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+
+    /**
+     * Check whether the handle is valid.
+     */
+    if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
+        return Status::WARN_INVALID_HANDLE;
+    }
 
     // increment cursor
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
@@ -126,6 +135,7 @@ Status next(Token token, ScanHandle handle) {
 Status read_key_from_scan(Token const token, ScanHandle const handle,
                           std::string& key) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     /**
      * Check whether the handle is valid.
@@ -192,6 +202,7 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
 Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     /**
      * Check whether the handle is valid.
@@ -257,6 +268,7 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
                                                    ScanHandle const handle,
                                                    std::size_t& size) {
     auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
         /**

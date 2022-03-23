@@ -21,10 +21,10 @@ Status exist_key(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
+    } else {
+        // update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
     }
-
-    // update metadata
-    ti->set_step_epoch(epoch::get_global_epoch());
 
     std::string dummy{};
     if (ti->get_tx_type() == TX_TYPE::LONG) {
@@ -42,10 +42,10 @@ Status search_key(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
+    } else {
+        // update metadata
+        ti->set_step_epoch(epoch::get_global_epoch());
     }
-
-    // update metadata
-    ti->set_step_epoch(epoch::get_global_epoch());
 
     if (ti->get_tx_type() == TX_TYPE::LONG) {
         return long_tx::search_key(ti, storage, key, value);
