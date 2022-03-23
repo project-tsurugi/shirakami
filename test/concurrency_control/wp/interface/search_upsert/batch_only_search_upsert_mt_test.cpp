@@ -49,7 +49,7 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
+    static inline std::once_flag init_google; // NOLINT
 };
 
 static bool is_ready(const std::vector<char>& readys) {

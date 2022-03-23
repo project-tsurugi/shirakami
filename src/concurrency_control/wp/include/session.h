@@ -84,6 +84,10 @@ public:
      */
     [[nodiscard]] tid_word get_mrc_tid() const { return mrc_tid_; }
 
+    [[nodiscard]] bool get_operating() const {
+        return operating_.load(std::memory_order_acquire);
+    }
+
     /**
      * @brief getter of @a read_only_
      */

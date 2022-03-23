@@ -3,19 +3,33 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
+#include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/include/tuple_local.h"
 
 namespace shirakami::epoch {
 
+inline void check_epoch_load_and_update_idle_living_tx() {
+    auto ce{epoch::get_global_epoch()};
+    for (auto&& itr : session_table::get_session_table()) {
+        if (!itr.get_operating()) {
+            // this session is not processing now.
+            if (itr.get_step_epoch() < ce) { itr.set_step_epoch(ce); }
+        }
+    }
+}
+
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
         sleepMs(PARAM_EPOCH_TIME);
-        auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
-        std::unique_lock<std::mutex> lk{get_ep_mtx()};
-        set_global_epoch(get_global_epoch() + 1);
-        // dtor : release wp_mutex
+        {
+            auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
+            std::unique_lock<std::mutex> lk{get_ep_mtx()};
+            set_global_epoch(get_global_epoch() + 1);
+            // dtor : release wp_mutex
+        }
+        check_epoch_load_and_update_idle_living_tx();
     }
 }
 
