@@ -189,7 +189,7 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     std::string vb{};
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(200ms); // wait enough for assigned epoch
-    ASSERT_EQ(search_key(s2, st, "a", vb), Status::OK);
+    ASSERT_EQ(search_key(s2, st, "a", vb), Status::ERR_FAIL_WP);
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(leave(s1), Status::OK);
