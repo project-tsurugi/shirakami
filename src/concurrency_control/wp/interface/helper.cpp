@@ -36,7 +36,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         }
         if (!ti->check_exist_wp_set(st)) {
             // can't write without wp.
-            return Status::WARN_INVALID_ARGS;
+            return Status::WARN_WRITE_WITHOUT_WP;
         }
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         // check wp

@@ -256,6 +256,12 @@ enum class Status : std::int32_t {
      */
     WARN_WRITE_TO_LOCAL_WRITE,
     /**
+     * @brief warning
+     * @details If the long mode transaction tries to write to some area 
+     * without wp, this code will be returned.
+     */
+    WARN_WRITE_WITHOUT_WP,
+    /**
      * @brief success status.
      */
     OK,
@@ -365,6 +371,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_WAITING_FOR_OTHER_TX"sv; // NOLINT
         case Status::WARN_WRITE_TO_LOCAL_WRITE:
             return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
+        case Status::WARN_WRITE_WITHOUT_WP:
+            return "WARN_WRITE_WITHOUT_WP"sv; // NOLINT
         case Status::OK:
             return "OK"sv; // NOLINT
         case Status::ERR_CONFLICT_ON_WRITE_PRESERVE:

@@ -26,18 +26,18 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class upsert_to_not_wp_area_test : public ::testing::Test { // NOLINT
+class update_to_not_wp_area_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "upsert_to_not_wp_area_test");
+                                  "update_to_not_wp_area_test");
         FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
         std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/upsert_to_not_wp_area_test_log");
+        log_dir.append("/build/update_to_not_wp_area_test_log");
         init(false, log_dir); // NOLINT
     }
 
@@ -47,7 +47,7 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
+TEST_F(update_to_not_wp_area_test, simple) { // NOLINT
     Storage st_1{};
     ASSERT_EQ(register_storage(st_1), Status::OK);
     Storage st_2{};
@@ -56,6 +56,11 @@ TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"k"};
     std::string v{"v"};
+    // prepare test data
+    ASSERT_EQ(Status::OK, upsert(s, st_1, k, v));
+    ASSERT_EQ(Status::OK, upsert(s, st_2, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
     // upsert with no wp
     ASSERT_EQ(Status::OK, tx_begin(s, false, true));
     auto wait_change_epoch = []() {
@@ -66,13 +71,13 @@ TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
         }
     };
     wait_change_epoch();
-    ASSERT_EQ(upsert(s, st_1, k, v), Status::WARN_WRITE_WITHOUT_WP);
+    ASSERT_EQ(update(s, st_1, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // upsert with invalid wp
     ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st_1}));
     wait_change_epoch();
-    ASSERT_EQ(upsert(s, st_2, k, v), Status::WARN_WRITE_WITHOUT_WP);
+    ASSERT_EQ(update(s, st_2, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
