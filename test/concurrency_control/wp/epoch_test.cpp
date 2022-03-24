@@ -93,4 +93,17 @@ TEST_F(epoch_test, check_progress_of_step_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(epoch_test, check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    auto* ti{static_cast<session*>(s)};
+    ti->set_operating(true);
+    auto first_epoch{ti->get_step_epoch()};
+    sleepMs(PARAM_EPOCH_TIME * 2);
+    auto second_epoch{ti->get_step_epoch()};
+    ASSERT_EQ(first_epoch, second_epoch);
+    LOG(INFO) << first_epoch << " " << second_epoch;
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
