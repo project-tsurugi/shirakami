@@ -139,13 +139,15 @@ Status leave(Token const token) { // NOLINT
 Status tx_begin(Token const token, bool const read_only, bool const for_batch,
                 std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
     if (!ti->get_tx_began()) {
-        ti->set_operating(true);
-        ti->set_step_epoch(epoch::get_global_epoch());
         if (for_batch) {
             ti->set_tx_type(TX_TYPE::LONG);
             auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};
-            if (rc != Status::OK) { return rc; }
+            if (rc != Status::OK) {
+                ti->process_before_finish_step();
+                return rc;
+            }
         } else {
             ti->set_tx_type(TX_TYPE::SHORT);
         }
@@ -153,9 +155,11 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
         ti->set_read_only(read_only);
         ti->get_write_set().set_for_batch(for_batch);
     } else {
+        ti->process_before_finish_step();
         return Status::WARN_ALREADY_BEGIN;
     }
 
+    ti->process_before_finish_step();
     return Status::OK;
 }
 

@@ -76,14 +76,15 @@ Status insert(Token const token, Storage const storage,
 
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        // update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::INSERT)};
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
 
     for (;;) {
         // index access to check local write set
@@ -92,12 +93,13 @@ Status insert(Token const token, Storage const storage,
             write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)};
             if (in_ws != nullptr) {
                 if (in_ws->get_op() == OP_TYPE::INSERT) {
+                    ti->process_before_finish_step();
                     return Status::WARN_ALREADY_EXISTS;
                 }
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);
-                    LOG(INFO);
+                    ti->process_before_finish_step();
                     return Status::OK;
                 }
             }
@@ -105,14 +107,19 @@ Status insert(Token const token, Storage const storage,
             rc = try_deleted_to_inserted(rec_ptr, val);
             if (rc == Status::OK) {
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+                ti->process_before_finish_step();
                 return Status::OK;
             } else {
+                ti->process_before_finish_step();
                 return rc;
             }
         }
 
         auto rc{insert_process(ti, storage, key, val)};
-        if (rc == Status::OK) { return Status::OK; }
+        if (rc == Status::OK) {
+            ti->process_before_finish_step();
+            return Status::OK;
+        }
     }
 }
 

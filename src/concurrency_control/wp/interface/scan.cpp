@@ -14,13 +14,10 @@ namespace shirakami {
 
 Status close_scan(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    ti->process_before_start_step();
 
+    ti->process_before_finish_step();
     return ti->get_scan_handle().clear(handle);
 }
 
@@ -45,18 +42,20 @@ Status open_scan(Token const token, Storage storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
     if (ti->get_read_only()) {
         // todo stale snapshot read only tx mode.
+        ti->process_before_finish_step();
         return Status::ERR_NOT_IMPLEMENTED;
     }
 
     auto rc{find_open_scan_slot(ti, handle)};
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
 
     // scan for index
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
@@ -67,7 +66,10 @@ Status open_scan(Token const token, Storage storage,
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
 
     /**
      * You must ensure that new elements are not interrupted in the range at 
@@ -105,23 +107,21 @@ Status open_scan(Token const token, Storage storage,
     }
 
     sh.get_scanned_storage_set().set(handle, storage);
+    ti->process_before_finish_step();
     return Status::OK;
 }
 
 Status next(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
     /**
      * Check whether the handle is valid.
      */
     if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
     }
 
@@ -132,23 +132,21 @@ Status next(Token const token, ScanHandle const handle) {
     // check range of cursor
     if (std::get<scan_handler::scan_cache_vec_pos>(sh.get_scan_cache()[handle])
                 .size() <= scan_index) {
+        ti->process_before_finish_step();
         return Status::WARN_SCAN_LIMIT;
     }
 
     // reset cache in cursor
     ti->get_scan_handle().get_ci(handle).reset();
+    ti->process_before_finish_step();
     return Status::OK;
 }
 
 Status read_key_from_scan(Token const token, ScanHandle const handle,
                           std::string& key) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
 
@@ -156,11 +154,13 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
      * Check whether the handle is valid.
      */
     if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
     }
 
     if (ti->get_read_only()) {
         // todo
+        ti->process_before_finish_step();
         return Status::ERR_NOT_IMPLEMENTED;
     }
 
@@ -169,7 +169,10 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
             sh.get_scan_cache()[handle]);
     std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
     auto itr = scan_buf.begin() + scan_index;
-    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+    if (scan_buf.size() <= scan_index) {
+        ti->process_before_finish_step();
+        return Status::WARN_SCAN_LIMIT;
+    }
 
     /**
      * Check read-own-write
@@ -178,15 +181,18 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
             const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
+            ti->process_before_finish_step();
             return Status::WARN_ALREADY_DELETE;
         }
         inws->get_key(key);
+        ti->process_before_finish_step();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
     if (sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
         sh.get_ci(handle).get_key(key);
+        ti->process_before_finish_step();
         return Status::OK;
     }
 
@@ -195,7 +201,10 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
     const_cast<Record*>(std::get<0>(*itr))->get_key(key);
     Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
                             valueb, false);
-    if (rr != Status::OK) { return rr; }
+    if (rr != Status::OK) {
+        ti->process_before_finish_step();
+        return rr;
+    }
     ti->get_read_set().emplace_back(sh.get_scanned_storage_set().get(handle),
                                     const_cast<Record*>(std::get<0>(*itr)),
                                     tidb);
@@ -208,18 +217,15 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
         ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
     }
 
+    ti->process_before_finish_step();
     return Status::OK;
 }
 
 Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
 
@@ -227,11 +233,13 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
      * Check whether the handle is valid.
      */
     if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
     }
 
     if (ti->get_read_only()) {
         // todo
+        ti->process_before_finish_step();
         return Status::ERR_NOT_IMPLEMENTED;
     }
 
@@ -240,7 +248,10 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
             sh.get_scan_cache()[handle]);
     std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
     auto itr = scan_buf.begin() + scan_index;
-    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+    if (scan_buf.size() <= scan_index) {
+        ti->process_before_finish_step();
+        return Status::WARN_SCAN_LIMIT;
+    }
 
     /**
      * Check read-own-write
@@ -249,9 +260,11 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
             const_cast<Record*>(std::get<0>(*itr))); // NOLINT
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
+            ti->process_before_finish_step();
             return Status::WARN_ALREADY_DELETE;
         }
         inws->get_value(value);
+        ti->process_before_finish_step();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
@@ -259,13 +272,17 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
                 cursor_info::op_type::value)) {
         // it already read.
         ti->get_scan_handle().get_ci(handle).get_value(value);
+        ti->process_before_finish_step();
         return Status::OK;
     }
 
     tid_word tidb{};
     Status rr =
             read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, value);
-    if (rr != Status::OK) { return rr; }
+    if (rr != Status::OK) {
+        ti->process_before_finish_step();
+        return rr;
+    }
     ti->get_read_set().emplace_back(sh.get_scanned_storage_set().get(handle),
                                     const_cast<Record*>(std::get<0>(*itr)),
                                     tidb);
@@ -279,6 +296,7 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
         ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
     }
 
+    ti->process_before_finish_step();
     return Status::OK;
 }
 
@@ -286,12 +304,8 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
                                                    ScanHandle const handle,
                                                    std::size_t& size) {
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
 
@@ -299,12 +313,14 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
         /**
          * the handle was invalid.
          */
+        ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
     }
 
     size = std::get<scan_handler::scan_cache_vec_pos>(
                    sh.get_scan_cache()[handle])
                    .size();
+    ti->process_before_finish_step();
     return Status::OK;
 }
 

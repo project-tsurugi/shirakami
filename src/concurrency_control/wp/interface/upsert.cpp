@@ -50,14 +50,15 @@ Status upsert(Token token, Storage storage, const std::string_view key,
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        // update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::UPSERT)};
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
 
     for (;;) {
         // index access to check local write set
@@ -72,23 +73,29 @@ Status upsert(Token token, Storage storage, const std::string_view key,
                     in_ws->set_op(OP_TYPE::UPSERT);
                     in_ws->set_val(val);
                 }
+                ti->process_before_finish_step();
                 return Status::WARN_WRITE_TO_LOCAL_WRITE;
             }
 
             // prepare update
             ti->get_write_set().push(
                     {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+            ti->process_before_finish_step();
             return Status::OK;
         }
 
         // check exist storage.
         auto rc{exist_storage(storage)};
         if (rc == Status::WARN_NOT_FOUND) {
+            ti->process_before_finish_step();
             return Status::WARN_STORAGE_NOT_FOUND;
         } // exist
 
         rc = insert_process(ti, storage, key, val);
-        if (rc != Status::WARN_CONCURRENT_INSERT) { return rc; }
+        if (rc != Status::WARN_CONCURRENT_INSERT) {
+            ti->process_before_finish_step();
+            return rc;
+        }
     }
 }
 

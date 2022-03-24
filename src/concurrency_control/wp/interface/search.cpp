@@ -21,20 +21,21 @@ Status exist_key(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        // update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
     std::string dummy{};
+    Status rc{};
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        return long_tx::search_key(ti, storage, key, dummy, false);
+        rc = long_tx::search_key(ti, storage, key, dummy, false);
+    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        rc = short_tx::search_key(ti, storage, key, dummy, false);
+    } else {
+        LOG(FATAL) << "unreachable";
+        return Status::ERR_FATAL;
     }
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        return short_tx::search_key(ti, storage, key, dummy, false);
-    }
-    LOG(FATAL) << "unreachable";
-    return Status::ERR_FATAL;
+    ti->process_before_finish_step();
+    return rc;
 }
 
 Status search_key(Token const token, Storage const storage,
@@ -42,19 +43,20 @@ Status search_key(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        // update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
+    Status rc{};
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        return long_tx::search_key(ti, storage, key, value);
+        rc = long_tx::search_key(ti, storage, key, value);
+    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        rc = short_tx::search_key(ti, storage, key, value);
+    } else {
+        LOG(FATAL) << "unreachable";
+        return Status::ERR_FATAL;
     }
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        return short_tx::search_key(ti, storage, key, value);
-    }
-    LOG(FATAL) << "unreachable";
-    return Status::ERR_FATAL;
+    ti->process_before_finish_step();
+    return rc;
 }
 
 } // namespace shirakami

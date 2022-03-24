@@ -29,18 +29,6 @@ Status search_key(session* ti, Storage const storage,
         return Status::WARN_PREMATURE;
     }
 
-    if (garbage::get_min_step_epoch() <= ti->get_valid_epoch()) {
-        /**
-         * This tx may have min step epoch.
-         * So it waits update by garbage manager about min step epoch 
-         * including update of this api call.
-         */
-        sleepMs(PARAM_EPOCH_TIME * 3);
-        if (garbage::get_min_step_epoch() <= ti->get_valid_epoch()) {
-            return Status::WARN_PREMATURE;
-        }
-    }
-
     // index access
     Record* rec_ptr{};
     if (Status::WARN_NOT_FOUND == get<Record>(storage, key, rec_ptr)) {

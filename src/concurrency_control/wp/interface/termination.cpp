@@ -17,13 +17,17 @@ Status abort(Token token) { // NOLINT
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
-    if (ti->get_tx_type() == TX_TYPE::LONG) { return long_tx::abort(ti); }
-    return short_tx::abort(ti);
+    Status rc{};
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
+        rc = long_tx::abort(ti);
+    } else {
+        rc = short_tx::abort(ti);
+    }
+    ti->process_before_finish_step();
+    return rc;
 }
 
 Status commit([[maybe_unused]] Token token, // NOLINT
@@ -32,13 +36,17 @@ Status commit([[maybe_unused]] Token token, // NOLINT
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
-    if (ti->get_tx_type() == TX_TYPE::LONG) { return long_tx::commit(ti, cp); }
-    return short_tx::commit(ti, cp);
+    Status rc{};
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
+        rc = long_tx::commit(ti, cp);
+    } else {
+        rc = short_tx::commit(ti, cp);
+    }
+    ti->process_before_finish_step();
+    return rc;
 }
 
 bool check_commit([[maybe_unused]] Token token, // NOLINT

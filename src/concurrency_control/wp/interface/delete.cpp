@@ -55,18 +55,20 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
 Status delete_record(Token token, Storage storage,
                      const std::string_view key) { // NOLINT
     auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
 
     // check whether it already began.
     if (!ti->get_tx_began()) {
         tx_begin(token); // NOLINT
-    } else {
-        //update metadata
-        ti->set_step_epoch(epoch::get_global_epoch());
     }
+    ti->process_before_start_step();
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, OP_TYPE::DELETE)};
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
 
     // index access to check local write set
     Record* rec_ptr{};
@@ -74,21 +76,33 @@ Status delete_record(Token token, Storage storage,
     if (Status::OK == rc) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) { return process_after_write(ti, in_ws); }
+        if (in_ws != nullptr) {
+            ti->process_before_finish_step();
+            return process_after_write(ti, in_ws);
+        }
 
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-        if (ctid.get_absent()) { return Status::WARN_NOT_FOUND; }
+        if (ctid.get_absent()) {
+            ti->process_before_finish_step();
+            return Status::WARN_NOT_FOUND;
+        }
 
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+        ti->process_before_finish_step();
         return Status::OK;
     }
-    if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_NOT_FOUND; }
+    if (rc == Status::WARN_NOT_FOUND) {
+        ti->process_before_finish_step();
+        return Status::WARN_NOT_FOUND;
+    }
     if (rc == Status::WARN_STORAGE_NOT_FOUND) {
+        ti->process_before_finish_step();
         return Status::WARN_STORAGE_NOT_FOUND;
     }
     LOG(ERROR) << "programming error: " << rc;
+    ti->process_before_finish_step();
     return Status::ERR_FATAL;
 }
 

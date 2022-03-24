@@ -53,7 +53,6 @@ public:
         clean_up_local_set();
         clean_up_tx_property();
         scan_handle_.clear();
-        set_operating(false);
     }
 
     /**
@@ -145,6 +144,19 @@ public:
      * @brief get the yakushima token used by this session.
      */
     yakushima::Token get_yakushima_token() { return yakushima_token_; }
+
+    void process_before_start_step() {
+        set_operating(true);
+        set_step_epoch(epoch::get_global_epoch());
+    }
+
+    void process_before_finish_step() {
+        if (!get_operating()) {
+            LOG(ERROR) << "programming error";
+        } else {
+            set_operating(false);
+        }
+    }
 
     void push_to_read_set(read_set_obj&& elem) {
         read_set_.emplace_back(std::move(elem));
