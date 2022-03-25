@@ -102,6 +102,7 @@ void expose_local_write(session* ti) {
                 break;
             }
             case OP_TYPE::DELETE: {
+                ctid.set_latest(false);
                 ctid.set_absent(true);
                 [[fallthrough]];
             }

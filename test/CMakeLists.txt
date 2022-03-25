@@ -13,6 +13,7 @@
 # limitations under the License.
 
 file(GLOB TEST_SOURCES
+        "concurrency_control/common/*.cpp"
         "concurrency_control/common/delete/*.cpp"
         "concurrency_control/common/delete_insert/*.cpp"
         "concurrency_control/common/delete_insert_search/*.cpp"

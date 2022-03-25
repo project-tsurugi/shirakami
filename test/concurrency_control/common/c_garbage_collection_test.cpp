@@ -5,8 +5,15 @@
 
 #include "clock.h"
 
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/session.h"
+#ifdef WP
+
+#include "concurrency_control/wp/include/record.h"
+
+#else
+
+#include "concurrency_control/silo/include/record.h"
+
+#endif
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -21,11 +28,11 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class garbage_collection_test : public ::testing::Test { // NOLINT
+class c_garbage_collection_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "garbage_collection_test");
+                                  "c_garbage_collection_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -40,7 +47,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
+TEST_F(c_garbage_collection_test, key_gc_delete_by_short) { // NOLINT
     // prepare storage
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
@@ -52,15 +59,6 @@ TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // prepare situation
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
-    auto wait_change_epoch = []() {
-        auto ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce != epoch::get_global_epoch()) { break; }
-            _mm_pause();
-        }
-    };
-    wait_change_epoch();
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
