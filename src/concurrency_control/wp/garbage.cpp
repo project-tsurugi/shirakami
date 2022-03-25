@@ -189,7 +189,8 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
     if (rc == Status::OK) {
         // unhooked the key.
         return;
-    } else if (rc == Status::ERR_FATAL) {
+    }
+    if (rc == Status::ERR_FATAL) {
         LOG(ERROR) << "programming error";
         return;
     }
@@ -239,6 +240,11 @@ inline void unhooking_keys_and_pruning_versions() {
     }
 }
 
+void force_release_key_memory() {
+    auto& cont = garbage::get_container_rec();
+    for (auto& elem : cont) { delete elem.first; }
+}
+
 void release_key_memory() {
     auto& cont = garbage::get_container_rec();
     auto ce = epoch::get_global_epoch();
@@ -261,6 +267,8 @@ void work_cleaner() {
         }
         sleepMs(PARAM_EPOCH_TIME);
     }
+
+    force_release_key_memory();
 }
 
 } // namespace shirakami::garbage
