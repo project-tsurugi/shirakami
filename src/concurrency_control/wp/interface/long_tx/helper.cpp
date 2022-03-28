@@ -39,4 +39,10 @@ Status tx_begin(session* const ti,
     // dtor : release wp_mutex
 }
 
+Status version_function([[maybe_unused]] Record* rec,
+                        [[maybe_unused]] epoch::epoch_t ep,
+                        [[maybe_unused]] version*& ver) {
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
 } // namespace shirakami::long_tx
