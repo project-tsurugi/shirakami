@@ -9,14 +9,16 @@ namespace shirakami {
 /**
  * @brief identifier of issued transaction status handle.
  */
-using TransactionStateHandle = std::uint64_t;
+using TxStateHandle = std::uint64_t;
+
+constexpr static TxStateHandle undefined_handle = 0;
 
 /**
  * @brief transaction status
  * @attention Monitoring the status will degrade the performance, so keep it 
  * to the minimum necessary.
  */
-class TransactionState final {
+class TxState final {
 public:
     enum class StateKind : std::int64_t {
         /**
@@ -56,40 +58,40 @@ public:
     /**
      * @brief create new object (unkonwn state)
      */
-    TransactionState() = default;
+    TxState() = default;
 
-    explicit TransactionState(StateKind kind) noexcept : kind_(kind) {}
+    explicit TxState(StateKind kind) noexcept : kind_(kind) {}
 
     /**
      * @brief destruct the object
      */
-    ~TransactionState() = default;
+    ~TxState() = default;
 
     /**
      * @brief copy constructor
      */
-    TransactionState(TransactionState const& other) = default;
+    TxState(TxState const& other) = default;
 
     /**
      * @brief copy assignment
      */
-    TransactionState& operator=(TransactionState const& other) = default;
+    TxState& operator=(TxState const& other) = default;
 
     /**
      * @brief move constructor
      */
-    TransactionState(TransactionState&& other) noexcept = default;
+    TxState(TxState&& other) noexcept = default;
 
     /**
      * @brief move assignment
      */
-    TransactionState& operator=(TransactionState&& other) noexcept = default;
+    TxState& operator=(TxState&& other) noexcept = default;
 
     /**
      * @brief returns the transaction operation kind.
      * @return the transaction operation kind.
      */
-    constexpr StateKind state_kind() const noexcept { return kind_; }
+    [[nodiscard]] constexpr StateKind state_kind() const noexcept { return kind_; }
 
 private:
     StateKind kind_{StateKind::UNKNOWN};
@@ -101,8 +103,8 @@ private:
  * @return constexpr std::string_view the corresponded label
  */
 inline constexpr std::string_view
-to_string_view(TransactionState::StateKind value) {
-    using StateKind = TransactionState::StateKind;
+to_string_view(TxState::StateKind value) {
+    using StateKind = TxState::StateKind;
     switch (value) {
         case StateKind::UNKNOWN:
             return "UNKNOWN";
@@ -128,7 +130,7 @@ to_string_view(TransactionState::StateKind value) {
  * @return std::ostream&  the target stream
  */
 inline std::ostream& operator<<(std::ostream& out,
-                                TransactionState::StateKind value) {
+                                TxState::StateKind value) {
     return out << to_string_view(value);
 }
 
@@ -138,7 +140,7 @@ inline std::ostream& operator<<(std::ostream& out,
  * @param value the source object
  * @return std::ostream& the target stream
  */
-inline std::ostream& operator<<(std::ostream& out, TransactionState value) {
+inline std::ostream& operator<<(std::ostream& out, TxState value) {
     return out << to_string_view(value.state_kind());
 }
 

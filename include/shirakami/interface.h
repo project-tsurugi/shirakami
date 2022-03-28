@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "scheme.h"
+#include "transaction_state.h"
 #include "tuple.h"
 
 /**
@@ -304,7 +305,8 @@ extern Status next(Token token, ScanHandle handle);
  * executed write operation for the same page. So this function read from the write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
-extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
+extern Status read_key_from_scan(Token token, ScanHandle handle,
+                                 std::string& key);
 
 /**
  * @brief This reads the value of record pointed by the cursor.
@@ -328,7 +330,8 @@ extern Status read_key_from_scan(Token token, ScanHandle handle, std::string& ke
  * executed write operation for the same page. So this function read from the write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
-extern Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
+extern Status read_value_from_scan(Token token, ScanHandle handle,
+                                   std::string& value);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
@@ -522,4 +525,39 @@ extern Status read_sequence(SequenceId id, SequenceVersion* version,
  */
 extern Status delete_sequence(SequenceId id);
 
+//==========
+// transaction state
+
+/**
+ * @brief acquire transaction state handle.
+ * @param[in] token The token of the transaction pointed to by the handle you 
+ * want to acquire.
+ * @param[out] handle The acquired handle.
+ * @return Status::OK success. If you call this api more than once, this api 
+ * also returns Status::OK and the same @a handle.
+ * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * @a token, this call returns this status.
+ */
+Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
+
+/**
+ * @brief release transaction state handle.
+ * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
+ * @return Status::OK success.
+ * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * handle @a handle, this call returns this status.
+ */
+Status release_tx_state_handle(TxStateHandle handle);
+
+/**
+ * @brief check the status of the transaction.
+ * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
+ * @param[out] out The acquired status by this call.
+ * @return Status::OK success.
+ * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * handle @a handle, this call returns this status.
+ */
+Status tx_check(TxStateHandle handle, TxState& out);
+
+//==========
 } // namespace shirakami
