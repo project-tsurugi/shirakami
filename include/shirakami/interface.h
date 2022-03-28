@@ -533,8 +533,10 @@ extern Status delete_sequence(SequenceId id);
  * @param[in] token The token of the transaction pointed to by the handle you 
  * want to acquire.
  * @param[out] handle The acquired handle.
- * @return Status::OK success. If you call this api more than once, this api 
- * also returns Status::OK and the same @a handle.
+ * @attention acquire_tx_state_handle and release_tx_state_handle should be 
+ * called together. If you call one side more than other side, warning will 
+ * be returned.
+ * @return Status::OK success.
  * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
  * @a token, this call returns this status.
  */
@@ -543,8 +545,11 @@ Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
 /**
  * @brief release transaction state handle.
  * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
+ * @attention acquire_tx_state_handle and release_tx_state_handle should be 
+ * called together. If you call one side more than other side, warning will 
+ * be returned.
  * @return Status::OK success.
- * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid 
  * handle @a handle, this call returns this status.
  */
 Status release_tx_state_handle(TxStateHandle handle);
@@ -554,10 +559,11 @@ Status release_tx_state_handle(TxStateHandle handle);
  * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
  * @param[out] out The acquired status by this call.
  * @return Status::OK success.
- * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid 
  * handle @a handle, this call returns this status.
  */
 Status tx_check(TxStateHandle handle, TxState& out);
 
 //==========
+
 } // namespace shirakami
