@@ -67,57 +67,38 @@ Status search_key(session* ti, Storage const storage,
         return Status::WARN_NOT_FOUND;
     }
 
-VER_SELEC:
-    // version selection
+    // version function
     version* ver{};
-    tid_word f_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
-    /**
-     * todo enhancement: not wait lock release and optimistic read or 
-     * deterministic read.
-     */
-    for (;;) {
-        if (f_check.get_lock()) {
-            _mm_pause();
-            f_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
-            continue;
-        }
-        ver = rec_ptr->get_latest();
-        tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
-        if (s_check.get_lock()) {
-            _mm_pause();
-            f_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
-            continue;
-        }
-        if (f_check == s_check) {
-            // Whatever value tid is, ver is the latest version.
-            break;
-        }
-        _mm_pause();
-        f_check = s_check;
+    bool is_latest{false};
+    tid_word f_check{};
+    rc = version_function_with_optimistic_check(rec_ptr, ti->get_valid_epoch(),
+                                                ver, is_latest, f_check);
+
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+    if (rc != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
     }
 
-    if (ti->get_valid_epoch() > f_check.get_epoch()) {
+    // read latest version after version function
+    if (is_latest) {
         if (read_value) { ver->get_value(value); }
         if (ver == rec_ptr->get_latest() &&
-            loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) !=
+            loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
                     f_check.get_obj()) {
-            // read latest version and fail optimistic read.
-            goto VER_SELEC; // NOLINT
-        }
-        // read latest version
-        return Status::OK;
-    }
-
-    // read non latest version
-    for (;;) {
-        ver = ver->get_next();
-        if (ver == nullptr) { LOG(FATAL) << "unreachable"; }
-
-        if (ti->get_valid_epoch() > ver->get_tid().get_epoch()) {
-            if (read_value) { ver->get_value(value); }
+            // success optimistic read latest version
             return Status::OK;
         }
+        /**
+         * else: fail to do optimistic read latest version. retry version 
+         * function
+         */
+        version_function_without_optimistic_check(ti->get_valid_epoch(), ver);
     }
+
+    // read non-latest version after version function
+    if (read_value) { ver->get_value(value); }
+    return Status::OK;
 }
 
 } // namespace shirakami::long_tx

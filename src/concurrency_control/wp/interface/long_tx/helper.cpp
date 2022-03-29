@@ -39,10 +39,54 @@ Status tx_begin(session* const ti,
     // dtor : release wp_mutex
 }
 
-Status version_function([[maybe_unused]] Record* rec,
-                        [[maybe_unused]] epoch::epoch_t ep,
-                        [[maybe_unused]] version*& ver) {
-    return Status::ERR_NOT_IMPLEMENTED;
+Status version_function_without_optimistic_check(epoch::epoch_t ep,
+                                                 version*& ver) {
+    for (;;) {
+        ver = ver->get_next();
+        if (ver == nullptr) { return Status::WARN_NOT_FOUND; }
+
+        if (ep > ver->get_tid().get_epoch()) { return Status::OK; }
+    }
+
+    LOG(ERROR) << "programming error";
+    return Status::ERR_FATAL;
+}
+
+Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
+                                              version*& ver, bool& is_latest,
+                                              tid_word& f_check) {
+    // initialize
+    is_latest = false;
+
+    f_check = loadAcquire(&rec->get_tidw_ref().get_obj());
+
+    if (f_check.get_lock() && f_check.get_latest() && f_check.get_absent()) {
+        // until WP-2, it is not found because the inserter must be short tx.
+        return Status::WARN_NOT_FOUND;
+    }
+
+    for (;;) {
+        if (f_check.get_lock()) {
+            /**
+             * not inserting records and the owner may be escape the value 
+             * which is the target for this tx.
+             */
+            _mm_pause();
+            f_check = loadAcquire(&rec->get_tidw_ref().get_obj());
+            continue;
+        }
+        break;
+    }
+    // here, the target for this tx must be escaped.
+
+    ver = rec->get_latest();
+
+    if (ep > f_check.get_epoch()) {
+        is_latest = true;
+        return Status::OK;
+    }
+
+    return version_function_without_optimistic_check(ep, ver);
 }
 
 } // namespace shirakami::long_tx
