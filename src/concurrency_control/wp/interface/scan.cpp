@@ -142,8 +142,16 @@ Status next(Token const token, ScanHandle const handle) {
     return Status::OK;
 }
 
-Status read_key_from_scan(Token const token, ScanHandle const handle,
-                          std::string& key) {
+/**
+ * @brief 
+ * @param token 
+ * @param handle 
+ * @param key_read if this is true, this reads key. if not, this reads value.
+ * @param buf 
+ * @return Status 
+ */
+Status read_from_scan(Token token, ScanHandle handle, bool key_read,
+                      std::string& buf) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     ti->process_before_start_step();
@@ -184,120 +192,78 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
             ti->process_before_finish_step();
             return Status::WARN_ALREADY_DELETE;
         }
-        inws->get_key(key);
+        if (key_read) {
+            inws->get_key(buf);
+        } else {
+            inws->get_value(buf);
+        }
         ti->process_before_finish_step();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
-    if (sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
+    if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
-        sh.get_ci(handle).get_key(key);
+        sh.get_ci(handle).get_key(buf);
+        ti->process_before_finish_step();
+        return Status::OK;
+    }
+    if (!key_read &&
+        sh.get_ci(handle).get_was_read(cursor_info::op_type::value)) {
+        // it already read.
+        sh.get_ci(handle).get_value(buf);
         ti->process_before_finish_step();
         return Status::OK;
     }
 
-    tid_word tidb{};
-    std::string valueb{};
-    const_cast<Record*>(std::get<0>(*itr))->get_key(key);
-    Status rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
-                            valueb, false);
-    if (rr != Status::OK) {
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        tid_word tidb{};
+        std::string valueb{};
+        Status rr{};
+        if (key_read) {
+            const_cast<Record*>(std::get<0>(*itr))->get_key(buf);
+            rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
+                             valueb, false);
+        } else {
+            rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, buf);
+        }
+        if (rr != Status::OK) {
+            ti->process_before_finish_step();
+            return rr;
+        }
+        ti->get_read_set().emplace_back(
+                sh.get_scanned_storage_set().get(handle),
+                const_cast<Record*>(std::get<0>(*itr)), tidb);
+        if (key_read) {
+            sh.get_ci(handle).set_key(buf);
+            sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+        } else {
+            sh.get_ci(handle).set_value(buf);
+            sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
+        }
+
+        // create node set info
+        auto& ns = ti->get_node_set();
+        if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
+            ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+        }
+
         ti->process_before_finish_step();
-        return rr;
+        return Status::OK;
+    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+        return Status::ERR_NOT_IMPLEMENTED;
     }
-    ti->get_read_set().emplace_back(sh.get_scanned_storage_set().get(handle),
-                                    const_cast<Record*>(std::get<0>(*itr)),
-                                    tidb);
-    sh.get_ci(handle).set_key(key);
-    sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+    LOG(ERROR) << "programming error";
+    return Status::ERR_NOT_IMPLEMENTED;
+}
 
-    // create node set info
-    auto& ns = ti->get_node_set();
-    if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
-        ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
-    }
-
-    ti->process_before_finish_step();
-    return Status::OK;
+Status read_key_from_scan(Token const token, ScanHandle const handle,
+                          std::string& key) {
+    return read_from_scan(token, handle, true, key);
 }
 
 Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
-    auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
-
-    auto& sh = ti->get_scan_handle();
-
-    /**
-     * Check whether the handle is valid.
-     */
-    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-        ti->process_before_finish_step();
-        return Status::WARN_INVALID_HANDLE;
-    }
-
-    if (ti->get_read_only()) {
-        // todo
-        ti->process_before_finish_step();
-        return Status::ERR_NOT_IMPLEMENTED;
-    }
-
-    scan_handler::scan_elem_type target_elem;
-    auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-            sh.get_scan_cache()[handle]);
-    std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-    auto itr = scan_buf.begin() + scan_index;
-    if (scan_buf.size() <= scan_index) {
-        ti->process_before_finish_step();
-        return Status::WARN_SCAN_LIMIT;
-    }
-
-    /**
-     * Check read-own-write
-     */
-    const write_set_obj* inws = ti->get_write_set().search(
-            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
-    if (inws != nullptr) {
-        if (inws->get_op() == OP_TYPE::DELETE) {
-            ti->process_before_finish_step();
-            return Status::WARN_ALREADY_DELETE;
-        }
-        inws->get_value(value);
-        ti->process_before_finish_step();
-        return Status::WARN_READ_FROM_OWN_OPERATION;
-    }
-
-    if (ti->get_scan_handle().get_ci(handle).get_was_read(
-                cursor_info::op_type::value)) {
-        // it already read.
-        ti->get_scan_handle().get_ci(handle).get_value(value);
-        ti->process_before_finish_step();
-        return Status::OK;
-    }
-
-    tid_word tidb{};
-    Status rr =
-            read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, value);
-    if (rr != Status::OK) {
-        ti->process_before_finish_step();
-        return rr;
-    }
-    ti->get_read_set().emplace_back(sh.get_scanned_storage_set().get(handle),
-                                    const_cast<Record*>(std::get<0>(*itr)),
-                                    tidb);
-    ti->get_scan_handle().get_ci(handle).set_value(value);
-    ti->get_scan_handle().get_ci(handle).set_was_read(
-            cursor_info::op_type::value);
-
-    // create node set info
-    auto& ns = ti->get_node_set();
-    if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
-        ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
-    }
-
-    ti->process_before_finish_step();
-    return Status::OK;
+    return read_from_scan(token, handle, false, value);
 }
 
 [[maybe_unused]] Status scannable_total_index_size(Token const token,
