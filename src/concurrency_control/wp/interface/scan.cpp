@@ -250,7 +250,53 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->process_before_finish_step();
         return Status::OK;
     } else if (ti->get_tx_type() == TX_TYPE::LONG) {
-        return Status::ERR_NOT_IMPLEMENTED;
+        version* ver{};
+        bool is_latest{false};
+        tid_word f_check{};
+        auto rc{long_tx::version_function_with_optimistic_check(
+                rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
+        if (rc == Status::WARN_NOT_FOUND) { return rc; }
+        if (rc != Status::OK) {
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
+        }
+
+        // read latest version after version function
+        if (is_latest) {
+            if (key_read) {
+                rec_ptr->get_key(buf);
+                sh.get_ci(handle).set_key(buf);
+                sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+            } else {
+                ver->get_value(buf);
+                sh.get_ci(handle).set_value(buf);
+                sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
+            }
+            if (ver == rec_ptr->get_latest() &&
+                loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
+                        f_check.get_obj()) {
+                // success optimistic read latest version
+                return Status::OK;
+            }
+            /**
+              * else: fail to do optimistic read latest version. retry version 
+              * function
+              */
+            long_tx::version_function_without_optimistic_check(ti->get_valid_epoch(),
+                                                      ver);
+        }
+
+        // read non-latest version after version function
+        if (!key_read) { ver->get_value(buf); }
+
+        if (key_read) {
+            sh.get_ci(handle).set_key(buf);
+            sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+        } else {
+            sh.get_ci(handle).set_value(buf);
+            sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
+        }
+        return Status::OK;
     }
     LOG(ERROR) << "programming error";
     return Status::ERR_NOT_IMPLEMENTED;
