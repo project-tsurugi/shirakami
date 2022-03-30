@@ -14,7 +14,7 @@ bool session::check_exist_wp_set(Storage storage) const {
 
 void session::clean_up_local_set() {
     node_set_.clear();
-    read_by_bt_set_.clear();
+    point_read_by_bt_set_.clear();
     read_by_occ_set_.clear();
     read_set_.clear();
     wp_set_.clear();

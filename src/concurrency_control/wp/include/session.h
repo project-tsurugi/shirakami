@@ -29,7 +29,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-    using read_by_bt_set_type = std::vector<read_by_bt*>;
+    using point_read_by_bt_set_type = std::vector<point_read_by_bt*>;
     using read_by_occ_set_type = std::vector<read_by_occ*>;
     using read_set_type = std::vector<read_set_obj>;
 
@@ -93,7 +93,7 @@ public:
      */
     [[nodiscard]] bool get_read_only() const { return read_only_; }
 
-    read_by_bt_set_type& get_read_by_bt_set() { return read_by_bt_set_; }
+    point_read_by_bt_set_type& get_point_read_by_bt_set() { return point_read_by_bt_set_; }
 
     read_by_occ_set_type& get_read_by_occ_set() { return read_by_occ_set_; }
 
@@ -248,7 +248,7 @@ private:
      */
     std::atomic<bool> tx_began_{false};
 
-    read_by_bt_set_type read_by_bt_set_{};
+    point_read_by_bt_set_type point_read_by_bt_set_{};
 
     read_by_occ_set_type read_by_occ_set_{};
 

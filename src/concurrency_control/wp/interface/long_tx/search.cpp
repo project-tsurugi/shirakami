@@ -59,10 +59,10 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // register read_by_set
-    read_by_bt* rbp{};
+    point_read_by_bt* rbp{};
     auto rc = wp::find_read_by(storage, rbp);
     if (rc == Status::OK) {
-        ti->get_read_by_bt_set().emplace_back(rbp);
+        ti->get_point_read_by_bt_set().emplace_back(rbp);
     } else {
         return Status::WARN_NOT_FOUND;
     }

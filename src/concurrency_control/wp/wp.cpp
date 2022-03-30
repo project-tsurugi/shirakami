@@ -54,7 +54,7 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     return Status::OK;
 }
 
-Status find_read_by(Storage const st, read_by_bt*& ret) {
+Status find_read_by(Storage const st, point_read_by_bt*& ret) {
     page_set_meta* psm{};
     auto rc{find_page_set_meta(st, psm)};
     if (rc == Status::WARN_NOT_FOUND) { return rc; }

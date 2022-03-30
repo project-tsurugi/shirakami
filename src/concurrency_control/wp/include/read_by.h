@@ -17,9 +17,11 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 
+#include "shirakami/scheme.h"
+
 namespace shirakami {
 
-class read_by_bt {
+class point_read_by_bt {
 public:
     using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using body_type = std::vector<body_elem_type>;
@@ -47,6 +49,18 @@ private:
      * @brief body
      * @details std::pair.first is epoch. the second is batch_id.
      */
+    body_type body_;
+};
+
+class range_read_by_bt {
+public:
+    using body_elem_type =
+            std::tuple<std::string, scan_endpoint, std::string, scan_endpoint,
+                       epoch::epoch_t, std::size_t>;
+    using body_type = std::vector<body_elem_type>;
+
+private:
+    std::mutex mtx_;
     body_type body_;
 };
 

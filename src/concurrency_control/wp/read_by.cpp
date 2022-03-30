@@ -5,7 +5,7 @@
 
 namespace shirakami {
 
-read_by_bt::body_elem_type read_by_bt::get(epoch::epoch_t const epoch) {
+point_read_by_bt::body_elem_type point_read_by_bt::get(epoch::epoch_t const epoch) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
         if (elem.first == epoch) { return elem; }
@@ -18,7 +18,7 @@ read_by_bt::body_elem_type read_by_bt::get(epoch::epoch_t const epoch) {
     return body_elem_type{0, 0};
 }
 
-void read_by_bt::gc() {
+void point_read_by_bt::gc() {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
@@ -32,7 +32,7 @@ void read_by_bt::gc() {
     }
 }
 
-void read_by_bt::push(body_elem_type const elem) {
+void point_read_by_bt::push(body_elem_type const elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();

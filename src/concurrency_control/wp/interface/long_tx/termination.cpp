@@ -167,7 +167,7 @@ void expose_local_write(session* ti) {
 }
 
 void register_read_by(session* const ti) {
-    auto& rbset = ti->get_read_by_bt_set();
+    auto& rbset = ti->get_point_read_by_bt_set();
     for (auto&& elem : rbset) {
         elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
     }
@@ -176,19 +176,19 @@ void register_read_by(session* const ti) {
 void prepare_commit(session* const ti) {
     // optimizations
     // shrink read_by_set
-    auto& rbset = ti->get_read_by_bt_set();
+    auto& rbset = ti->get_point_read_by_bt_set();
     std::sort(rbset.begin(), rbset.end());
     rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
 }
 
 Status verify_read_by(session* const ti) {
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-        read_by_bt* rbp{};
+        point_read_by_bt* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
             auto rb{rbp->get(ti->get_valid_epoch())};
 
-            if (rb != read_by_bt::body_elem_type(0, 0) &&
+            if (rb != point_read_by_bt::body_elem_type(0, 0) &&
                 rb.second < ti->get_batch_id()) {
                 return Status::ERR_VALIDATION;
             }
