@@ -49,4 +49,5 @@ extern Status version_function_with_optimistic_check(Record* rec,
  */
 extern Status version_function_without_optimistic_check(epoch::epoch_t ep,
                                                         version*& ver);
+
 } // namespace shirakami::long_tx

@@ -4,6 +4,8 @@
 #include "concurrency_control/wp/include/helper.h"
 #include "concurrency_control/wp/include/session.h"
 
+#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
+
 #include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
 
@@ -185,8 +187,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     /**
      * Check read-own-write
      */
-    const write_set_obj* inws = ti->get_write_set().search(
-            const_cast<Record*>(std::get<0>(*itr))); // NOLINT
+    Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))}; // NOLINT
+    const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             ti->process_before_finish_step();
@@ -221,18 +223,16 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         Status rr{};
         if (key_read) {
             const_cast<Record*>(std::get<0>(*itr))->get_key(buf);
-            rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb,
-                             valueb, false);
+            rr = read_record(rec_ptr, tidb, valueb, false);
         } else {
-            rr = read_record(const_cast<Record*>(std::get<0>(*itr)), tidb, buf);
+            rr = read_record(rec_ptr, tidb, buf);
         }
         if (rr != Status::OK) {
             ti->process_before_finish_step();
             return rr;
         }
         ti->get_read_set().emplace_back(
-                sh.get_scanned_storage_set().get(handle),
-                const_cast<Record*>(std::get<0>(*itr)), tidb);
+                sh.get_scanned_storage_set().get(handle), rec_ptr, tidb);
         if (key_read) {
             sh.get_ci(handle).set_key(buf);
             sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
