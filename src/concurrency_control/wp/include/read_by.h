@@ -27,9 +27,9 @@ public:
     using body_type = std::vector<body_elem_type>;
 
     /**
-     * @brief Get the partial elements
-     * @param epoch 
-     * @return body_elem_type 
+     * @brief get equal epoch's read_by
+     * @param[in] epoch 
+     * @return body_elem_type
      */
     body_elem_type get(epoch::epoch_t epoch);
 
@@ -58,6 +58,12 @@ public:
             std::tuple<std::string, scan_endpoint, std::string, scan_endpoint,
                        epoch::epoch_t, std::size_t>;
     using body_type = std::vector<body_elem_type>;
+
+    body_elem_type get(epoch::epoch_t ep);
+
+    void gc();
+
+    void push(body_elem_type elem);
 
 private:
     std::mutex mtx_;

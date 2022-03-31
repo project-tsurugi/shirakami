@@ -47,6 +47,12 @@ Status open_scan(Token const token, Storage storage,
     }
     ti->process_before_start_step();
 
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
+        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+            return Status::WARN_PREMATURE;
+        }
+    }
+    
     if (ti->get_read_only()) {
         // todo stale snapshot read only tx mode.
         ti->process_before_finish_step();
