@@ -41,7 +41,7 @@ extern Status version_function_with_optimistic_check(Record* rec,
 /**
  * @brief version function for long tx.
  * @param[in] ep long tx's epoch.
- * @param[in][out] ver in: the start point version of version traverse. out: the 
+ * @param[in,out] ver in: the start point version of version traverse. out: the 
  * target version to read.
  * @return Status::OK success.
  * @return Status::WARN_NOT_FOUND the target version is not found.
