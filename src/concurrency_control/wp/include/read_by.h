@@ -54,12 +54,23 @@ private:
 
 class range_read_by_bt {
 public:
+    /**
+     * body element type
+     * 0: long tx's epoch. 1: long tx's id. 2: left key. 3: left 
+     * endpoint property. 4: right key. 5: right endpoint property.
+     */
+    static constexpr std::size_t index_epoch = 0;
+    static constexpr std::size_t index_tx_id = 1;
+    static constexpr std::size_t index_l_key = 2;
+    static constexpr std::size_t index_l_ep = 3;
+    static constexpr std::size_t index_r_key = 4;
+    static constexpr std::size_t index_r_ep = 5;
     using body_elem_type =
-            std::tuple<std::string, scan_endpoint, std::string, scan_endpoint,
-                       epoch::epoch_t, std::size_t>;
+            std::tuple<epoch::epoch_t, std::size_t, std::string, scan_endpoint,
+                       std::string, scan_endpoint>;
     using body_type = std::vector<body_elem_type>;
 
-    body_elem_type get(epoch::epoch_t ep);
+    body_elem_type get(epoch::epoch_t ep, std::string_view key);
 
     void gc();
 

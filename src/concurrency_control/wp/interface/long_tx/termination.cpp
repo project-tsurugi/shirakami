@@ -167,9 +167,16 @@ void expose_local_write(session* ti) {
 }
 
 void register_read_by(session* const ti) {
-    auto& rbset = ti->get_point_read_by_bt_set();
-    for (auto&& elem : rbset) {
+    // point read
+    for (auto&& elem : ti->get_point_read_by_bt_set()) {
         elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
+    }
+
+    // range read
+    for (auto&& elem : ti->get_range_read_by_bt_set()) {
+        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_batch_id(),
+                                 std::get<1>(elem), std::get<2>(elem),
+                                 std::get<3>(elem), std::get<4>(elem)});
     }
 }
 
@@ -193,9 +200,29 @@ Status verify_read_by(session* const ti) {
                 return Status::ERR_VALIDATION;
             }
         } else {
-            LOG(FATAL);
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
+        }
+
+        if (wso.second.get_op() == OP_TYPE::INSERT ||
+            wso.second.get_op() == OP_TYPE::DELETE) {
+            range_read_by_bt* rrbp{};
+            auto rc{wp::find_read_by(wso.second.get_storage(), rrbp)};
+            if (rc == Status::OK) {
+                std::string keyb{};
+                wso.first->get_key(keyb);
+                auto rb{rrbp->get(ti->get_valid_epoch(), keyb)};
+
+                if (rb != range_read_by_bt::body_elem_type{}) {
+                    return Status::ERR_VALIDATION;
+                }
+            } else {
+                LOG(ERROR) << "programming error";
+                return Status::ERR_FATAL;
+            }
         }
     }
+
     return Status::OK;
 }
 

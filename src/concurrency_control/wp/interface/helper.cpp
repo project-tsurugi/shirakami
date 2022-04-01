@@ -222,4 +222,33 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     return Status::OK;
 }
 
+Status try_deleted_to_inserted(Record* const rec_ptr,
+                               std::string_view const val) {
+    tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+    // point 1
+    if (check.get_latest() && check.get_absent()) {
+        return Status::WARN_CONCURRENT_INSERT;
+    }
+    if (!check.get_absent()) { return Status::WARN_ALREADY_EXISTS; }
+    // The page was deleted at point 1.
+
+    rec_ptr->get_tidw_ref().lock();
+    // point 2
+    tid_word tid{rec_ptr->get_tidw_ref()};
+    if (tid.get_absent()) {
+        // success
+        tid.set_latest(true);
+        rec_ptr->set_tid(tid);
+        rec_ptr->set_value(val);
+        return Status::OK;
+    } else {
+        /**
+         * The deleted page was changed to living page by someone between 
+         * point 1 and point 2.
+         */
+        rec_ptr->get_tidw_ref().unlock();
+        return Status::WARN_ALREADY_EXISTS;
+    }
+}
+
 } // namespace shirakami

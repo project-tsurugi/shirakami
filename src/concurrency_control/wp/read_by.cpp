@@ -5,7 +5,8 @@
 
 namespace shirakami {
 
-point_read_by_bt::body_elem_type point_read_by_bt::get(epoch::epoch_t const epoch) {
+point_read_by_bt::body_elem_type
+point_read_by_bt::get(epoch::epoch_t const epoch) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
         if (elem.first == epoch) { return elem; }
@@ -56,18 +57,39 @@ void point_read_by_bt::push(body_elem_type const elem) {
     }
 }
 
-#if 0
-range_read_by_bt::body_elem_type range_read_by_bt::get(epoch::epoch_t const epoch) {
+range_read_by_bt::body_elem_type
+range_read_by_bt::get(epoch::epoch_t const ep, std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (elem.first == epoch) { return elem; }
-        if (elem.first > epoch) {
+        if (std::get<range_read_by_bt::index_epoch>(elem) == ep) {
+            // check the key is right from left point
+            if (std::get<range_read_by_bt::index_l_ep>(elem) ==
+                        scan_endpoint::INF ||                          // inf
+                std::get<range_read_by_bt::index_l_key>(elem) < key || // right
+                (std::get<range_read_by_bt::index_l_key>(elem) == key &&
+                 std::get<range_read_by_bt::index_l_ep>(elem) ==
+                         scan_endpoint::INCLUSIVE) // same
+            ) {
+                // check the key is left from right point
+                if (std::get<range_read_by_bt::index_r_ep>(elem) ==
+                            scan_endpoint::INF || // inf
+                    std::get<range_read_by_bt::index_r_key>(elem) >
+                            key || // left
+                    (std::get<range_read_by_bt::index_r_key>(elem) == key &&
+                     std::get<range_read_by_bt::index_r_ep>(elem) ==
+                             scan_endpoint::INCLUSIVE) // same
+                ) {
+                    return elem;
+                }
+            }
+        }
+        if (std::get<range_read_by_bt::index_epoch>(elem) > ep) {
             // no more due to invariant
             break;
         }
     }
 
-    return body_elem_type{0, 0};
+    return body_elem_type{};
 }
 
 void range_read_by_bt::gc() {
@@ -75,7 +97,7 @@ void range_read_by_bt::gc() {
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if ((*itr).first < threshold) {
+        if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
             itr = body_.erase(itr);
         } else {
             // no more gc
@@ -90,25 +112,20 @@ void range_read_by_bt::push(body_elem_type const elem) {
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if ((*itr).first < elem.first) {
+        if (std::get<range_read_by_bt::index_epoch>(*itr) <
+            std::get<range_read_by_bt::index_epoch>(elem)) {
             // check gc
-            if ((*itr).first < threshold) {
+            if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
                 itr = body_.erase(itr);
             } else {
                 ++itr;
             }
             continue;
         }
-        if ((*itr).first == elem.first) {
-            if ((*itr).second > elem.second) { (*itr).second = elem.second; }
-            return;
-        }
         body_.insert(itr, elem);
         return;
     }
 }
-
-#endif
 
 void read_by_occ::gc() {
 #if PARAM_READ_BY_MODE == 0

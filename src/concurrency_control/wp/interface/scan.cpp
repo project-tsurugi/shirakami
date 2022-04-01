@@ -52,14 +52,14 @@ Status open_scan(Token const token, Storage storage,
             return Status::WARN_PREMATURE;
         }
     }
-    
+
     if (ti->get_read_only()) {
         // todo stale snapshot read only tx mode.
         ti->process_before_finish_step();
         return Status::ERR_NOT_IMPLEMENTED;
     }
 
-    auto rc{find_open_scan_slot(ti, handle)};
+    auto rc = find_open_scan_slot(ti, handle);
     if (rc != Status::OK) {
         ti->process_before_finish_step();
         return rc;
@@ -77,6 +77,23 @@ Status open_scan(Token const token, Storage storage,
     if (rc != Status::OK) {
         ti->process_before_finish_step();
         return rc;
+    }
+
+    range_read_by_bt* rbp{};
+    rc = wp::find_read_by(storage, rbp);
+    if (rc == Status::OK) {
+        /**
+          * register read_by_set
+          * todo: enhancement: 
+          * The range is modified according to the execution of 
+          * read_from_scan, and the range is fixed and registered at the end of 
+          * the transaction.
+          */
+        ti->get_range_read_by_bt_set().emplace_back(
+                std::make_tuple(rbp, l_key, l_end, r_key, r_end));
+    } else {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
     }
 
     /**
@@ -209,6 +226,23 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
 
+#if 0 // todo
+    Storage st = std::get<scan_handler::scan_cache_storage_pos>(
+            sh.get_scan_cache()[handle]);
+    // wp verify
+    auto wps = wp::find_wp(storage);
+    if (!wp::wp_meta::empty(wps) &&
+        wp::wp_meta::find_min_id(wps) != ti->get_batch_id()) {
+        abort(ti); // or wait
+        /**
+         * because: You have to wait for the end of the transaction to read 
+         * the prefixed batch write.
+         * 
+         */
+        return Status::ERR_FAIL_WP;
+    }
+#endif
+
     if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
         sh.get_ci(handle).get_key(buf);
@@ -288,8 +322,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
               * else: fail to do optimistic read latest version. retry version 
               * function
               */
-            long_tx::version_function_without_optimistic_check(ti->get_valid_epoch(),
-                                                      ver);
+            long_tx::version_function_without_optimistic_check(
+                    ti->get_valid_epoch(), ver);
         }
 
         // read non-latest version after version function
