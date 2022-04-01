@@ -295,7 +295,9 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         tid_word f_check{};
         auto rc{long_tx::version_function_with_optimistic_check(
                 rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
-        if (rc == Status::WARN_NOT_FOUND) { return rc; }
+        if (rc == Status::WARN_NOT_FOUND) {
+            return rc;
+        }
         if (rc != Status::OK) {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
