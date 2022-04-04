@@ -130,8 +130,6 @@ TEST_F(single_long_scan_test,
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-#if 0
-// todo
 TEST_F(single_long_scan_test,
        write_one_page_between_long_start_and_inf) { // NOLINT
     Storage st{};
@@ -161,7 +159,5 @@ TEST_F(single_long_scan_test,
     ASSERT_EQ(Status::OK, leave(ss));
     ASSERT_EQ(Status::OK, leave(sl));
 }
-
-#endif
 
 } // namespace shirakami::testing
