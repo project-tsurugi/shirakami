@@ -141,6 +141,9 @@ Status tx_begin(Token const token, bool const read_only, bool const for_batch,
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     if (!ti->get_tx_began()) {
+        if (read_only && !write_preserve.empty()) {
+            return Status::WARN_ILLEGAL_OPERATION;
+        }
         if (for_batch) {
             ti->set_tx_type(TX_TYPE::LONG);
             auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};

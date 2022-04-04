@@ -14,6 +14,8 @@
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/version.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
@@ -47,6 +49,14 @@ private:
     static inline std::once_flag init_google;
 };
 
+void wait_change_epoch() {
+    auto ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 TEST_F(long_delete_test, start_before_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -57,6 +67,37 @@ TEST_F(long_delete_test, start_before_epoch) { // NOLINT
         ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
         ASSERT_EQ(Status::WARN_PREMATURE, delete_record(s, st, ""));
     }
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_delete_test, single_long_delete) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    wait_change_epoch();
+    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    wait_change_epoch();
+    wait_change_epoch();
+    // verify key existence
+    Record* rec_ptr{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, "", rec_ptr));
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_delete_test, delete_at_non_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {}));
+    wait_change_epoch();
+    ASSERT_EQ(Status::WARN_WRITE_WITHOUT_WP, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 

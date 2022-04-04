@@ -243,6 +243,7 @@ inline void unhooking_keys_and_pruning_versions() {
 void force_release_key_memory() {
     auto& cont = garbage::get_container_rec();
     for (auto& elem : cont) { delete elem.first; }
+    cont.clear();
 }
 
 void release_key_memory() {

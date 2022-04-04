@@ -45,4 +45,12 @@ TEST_F(helper, tx_begin_wp) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(helper, tx_begin_read_only_and_wp) { // NOLINT
+    Token s{};
+    Storage st{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, tx_begin(s, true, true, {st}));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
