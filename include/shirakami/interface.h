@@ -272,8 +272,9 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         std::size_t max_size = 0); // NOLINT
 
 /**
- * @brief This function advances the cursor by one in the range opened by open_scan.
- * 
+ * @brief advance cursor
+ * @details This function advances the cursor by one in the range opened by 
+ * open_scan. 
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @return Status::OK success.
@@ -293,16 +294,19 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
  * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
- * deleted.
+ * deleted. You can continue transaction processing.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
- * inserted.
+ * inserted. Please wait to finish the concurrent transaction which is 
+ * inserting the target page or call abort api call.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
- * updated.
+ * updated. Please wait to finish the concurrent transaction which is updating
+ * the target page or call abort api call.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
  * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
- * executed write operation for the same page. So this function read from the write.
+ * executed write operation for the same page. So this function read from the 
+ * write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
 extern Status read_key_from_scan(Token token, ScanHandle handle,
@@ -318,11 +322,13 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
  * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
- * deleted.
+ * deleted. You can continue transaction processing.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
- * inserted.
+ * inserted. Please wait to finish the concurrent transaction which is 
+ * inserting the target page or call abort api call.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
- * updated.
+ * updated. Please wait to finish the concurrent transaction which is updating
+ * the target page or call abort api call.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
