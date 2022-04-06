@@ -73,6 +73,20 @@ TEST_F(single_long_scan_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(single_long_scan_test, no_page_before_long_tx_begin) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    wait_change_epoch();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
