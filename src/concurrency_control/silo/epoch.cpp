@@ -58,6 +58,7 @@ void epocher() {
             _mm_pause();
         }
 
+        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};    
         kGlobalEpoch++;
     }
 }

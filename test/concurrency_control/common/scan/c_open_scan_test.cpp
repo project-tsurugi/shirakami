@@ -56,6 +56,65 @@ TEST_F(open_scan_test, scan_at_non_existing_storage) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(open_scan_test, open_scan_find_no_index) { // NOLINT
+    Storage st{};
+    register_storage(st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test
+    ScanHandle hd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
+    /**
+     * It's index scan find own inserting record only.
+     */
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(open_scan_test, open_scan_find_some_index_nothing_to_read) { // NOLINT
+    Storage st{};
+    register_storage(st);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
+    ScanHandle hd{};
+
+    // test
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
+    /**
+     * It's index scan find s2's inserting record only, but it is not be able 
+     * to read immediately. So it should returns WARN_NOT_FOUND.
+     * 
+     */
+
+    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(open_scan_test, open_scan_read_own_insert_one) { // NOLINT
+    Storage st{};
+    register_storage(st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
+
+    // test
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    /**
+     * It's index scan find own inserting record only.
+     */
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(open_scan_test, max_size_test) { // NOLINT
     Storage storage{};
     register_storage(storage);

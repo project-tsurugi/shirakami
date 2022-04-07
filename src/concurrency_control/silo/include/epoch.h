@@ -6,6 +6,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <thread>
 
 namespace shirakami::epoch {
@@ -24,6 +25,8 @@ namespace shirakami::epoch {
  * So epoch_t should be int64_t.
  */
 using epoch_t = std::int64_t;
+
+inline std::mutex kEpMtx;
 
 [[maybe_unused]] inline std::atomic<epoch_t> kGlobalEpoch{0}; // NOLINT
 
@@ -45,6 +48,8 @@ inline std::atomic<bool> kEpochThreadEnd;         // NOLINT
  * @pre this function is called by invoke_core_thread function.
  */
 [[maybe_unused]] extern void epocher();
+
+[[maybe_unused]] static std::mutex& get_ep_mtx() { return kEpMtx; }
 
 [[maybe_unused]] static bool get_epoch_thread_end() { // NOLINT
     return kEpochThreadEnd.load(std::memory_order_acquire);
@@ -74,7 +79,8 @@ inline std::atomic<bool> kEpochThreadEnd;         // NOLINT
     kGlobalEpoch.store(epo, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_reclamation_epoch(const epoch_t epo) { // NOLINT
+[[maybe_unused]] static void
+set_reclamation_epoch(const epoch_t epo) { // NOLINT
     kReclamationEpoch.store(epo, std::memory_order_release);
 }
 

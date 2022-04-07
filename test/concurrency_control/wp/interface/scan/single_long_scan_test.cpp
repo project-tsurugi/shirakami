@@ -81,8 +81,8 @@ TEST_F(single_long_scan_test, no_page_before_long_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
     wait_change_epoch();
     ScanHandle hd{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "",
-                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -160,15 +160,8 @@ TEST_F(single_long_scan_test,
     ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     ScanHandle hd{};
-    ASSERT_EQ(Status::OK, open_scan(sl, st, "", scan_endpoint::INF, "",
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(sl, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    std::string sb{};
-    ASSERT_EQ(sb, "");
-    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(sl, hd, sb));
-    ASSERT_EQ(sb, "");
-    ASSERT_EQ(Status::WARN_NOT_FOUND, read_value_from_scan(sl, hd, sb));
-    ASSERT_EQ(sb, "");
-    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(sl, hd));
     ASSERT_EQ(Status::OK, commit(sl));
     ASSERT_EQ(Status::OK, leave(ss));
     ASSERT_EQ(Status::OK, leave(sl));

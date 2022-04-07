@@ -1,4 +1,6 @@
 
+#include "atomic_wrapper.h"
+
 #include "concurrency_control/include/tuple_local.h"
 
 #include "concurrency_control/wp/include/helper.h"
@@ -11,6 +13,8 @@
 
 
 #include "shirakami/interface.h"
+
+#include "glog/logging.h"
 
 namespace shirakami {
 
@@ -35,6 +39,45 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
         }
     }
     return Status::WARN_SCAN_LIMIT;
+}
+
+Status check_not_found(
+        session* ti,
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res) {
+    for (auto& elem : scan_res) {
+        Record* rec_ptr{*std::get<1>(elem)};
+        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+        if (!tid.get_absent()) {
+            // inserted page.
+            if (ti->get_tx_type() == TX_TYPE::SHORT) { return Status::OK; }
+            if (ti->get_tx_type() == TX_TYPE::LONG) {
+                version* ver = rec_ptr->get_latest();
+                if (tid.get_epoch() < ti->get_valid_epoch()) {
+                    // latest version check
+                    return Status::OK;
+                }
+                for (;;) {
+                    ver = ver->get_next();
+                    if (ver == nullptr) { break; }
+                    if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                        return Status::OK;
+                    }
+                }
+                if (ver == nullptr) { continue; }
+            } else {
+                LOG(ERROR) << "programming error";
+                return Status::ERR_FATAL;
+            }
+        } else if (tid.get_latest()) {
+            // inserting page.
+            // check read own write
+            write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+            if (inws != nullptr) {
+                if (inws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
+            }
+        }
+    }
+    return Status::WARN_NOT_FOUND;
 }
 
 Status open_scan(Token const token, Storage storage,
@@ -78,22 +121,31 @@ Status open_scan(Token const token, Storage storage,
         ti->process_before_finish_step();
         return rc;
     }
+    // not empty
 
-    range_read_by_bt* rbp{};
-    rc = wp::find_read_by(storage, rbp);
-    if (rc == Status::OK) {
-        /**
+    rc = check_not_found(ti, scan_res);
+    if (rc != Status::OK) {
+        ti->process_before_finish_step();
+        return rc;
+    }
+
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
+        range_read_by_bt* rbp{};
+        rc = wp::find_read_by(storage, rbp);
+        if (rc == Status::OK) {
+            /**
           * register read_by_set
           * todo: enhancement: 
           * The range is modified according to the execution of 
           * read_from_scan, and the range is fixed and registered at the end of 
           * the transaction.
           */
-        ti->get_range_read_by_bt_set().emplace_back(
-                std::make_tuple(rbp, l_key, l_end, r_key, r_end));
-    } else {
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
+            ti->get_range_read_by_bt_set().emplace_back(
+                    std::make_tuple(rbp, l_key, l_end, r_key, r_end));
+        } else {
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
+        }
     }
 
     /**
@@ -295,9 +347,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         tid_word f_check{};
         auto rc{long_tx::version_function_with_optimistic_check(
                 rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
-        if (rc == Status::WARN_NOT_FOUND) {
-            return rc;
-        }
+        if (rc == Status::WARN_NOT_FOUND) { return rc; }
         if (rc != Status::OK) {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;

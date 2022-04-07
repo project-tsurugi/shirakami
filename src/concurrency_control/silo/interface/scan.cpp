@@ -42,6 +42,26 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
     return Status::WARN_SCAN_LIMIT;
 }
 
+Status check_not_found(
+        session* ti,
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res) {
+    for (auto& elem : scan_res) {
+        Record* rec_ptr{*std::get<1>(elem)};
+        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+        if (!tid.get_absent()) { return Status::OK; }
+        if (tid.get_latest()) {
+            // inserting page.
+            //check read own write
+            write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+            if (inws != nullptr) {
+                if (inws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
+                // else: other tx is inserting the page.
+            }
+        }
+    }
+    return Status::WARN_NOT_FOUND;
+}
+
 Status open_scan(Token const token, Storage storage,
                  const std::string_view l_key, // NOLINT
                  const scan_endpoint l_end, const std::string_view r_key,
@@ -64,6 +84,10 @@ Status open_scan(Token const token, Storage storage,
                           yakushima::node_version64*>>
             nvec;
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
+    if (rc != Status::OK) { return rc; }
+    // not empty
+
+    rc = check_not_found(ti, scan_res);
     if (rc != Status::OK) { return rc; }
 
     constexpr std::size_t index_nvec_body{0};

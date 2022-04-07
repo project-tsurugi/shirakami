@@ -274,7 +274,7 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
 /**
  * @brief advance cursor
  * @details This function advances the cursor by one in the range opened by 
- * open_scan. 
+ * open_scan. It skips deleted record.
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @return Status::OK success.
