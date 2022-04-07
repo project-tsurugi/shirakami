@@ -44,12 +44,16 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
 
 Status check_not_found(
         session* ti,
-        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res) {
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+        std::size_t& head_deleted_records) {
+    head_deleted_records = 0;
+    bool once_not_deleted{false};
     for (auto& elem : scan_res) {
         Record* rec_ptr{*std::get<1>(elem)};
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) { return Status::OK; }
         if (tid.get_latest()) {
+            once_not_deleted = true;
             // inserting page.
             //check read own write
             write_set_obj* inws = ti->get_write_set().search(rec_ptr);
@@ -57,8 +61,11 @@ Status check_not_found(
                 if (inws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
                 // else: other tx is inserting the page.
             }
+        } else {
+            if (!once_not_deleted) { ++head_deleted_records; }
         }
     }
+
     return Status::WARN_NOT_FOUND;
 }
 
@@ -87,7 +94,8 @@ Status open_scan(Token const token, Storage storage,
     if (rc != Status::OK) { return rc; }
     // not empty
 
-    rc = check_not_found(ti, scan_res);
+    std::size_t head_deleted_records{};
+    rc = check_not_found(ti, scan_res, head_deleted_records);
     if (rc != Status::OK) { return rc; }
 
     constexpr std::size_t index_nvec_body{0};
@@ -127,6 +135,9 @@ Status open_scan(Token const token, Storage storage,
                          std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }
 
+    // increment for head deleted records
+    std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+    scan_index += head_deleted_records;
     return Status::OK;
 }
 
