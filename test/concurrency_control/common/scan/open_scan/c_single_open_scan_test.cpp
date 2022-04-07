@@ -73,7 +73,7 @@ TEST_F(open_scan_test, open_scan_find_no_index) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(open_scan_test,
+TEST_F(open_scan_test,                                               // NOLINT
        open_scan_find_some_index_nothing_to_read_due_to_inserting) { // NOLINT
     Storage st{};
     register_storage(st);
@@ -98,7 +98,7 @@ TEST_F(open_scan_test,
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(open_scan_test,
+TEST_F(open_scan_test,                                             // NOLINT
        open_scan_find_some_index_nothing_to_read_due_to_deleted) { // NOLINT
     Storage st{};
     register_storage(st);
@@ -140,37 +140,6 @@ TEST_F(open_scan_test, open_scan_read_own_insert_one) { // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
 }
-
-#ifndef WP
-TEST_F(open_scan_test, open_scan_skip_head_deleted_record) { // NOLINT
-    Storage st{};
-    register_storage(st);
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    // prepare data
-    std::string k1{"k1"};
-    std::string k2{"k2"};
-    ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-    ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    {
-        std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
-                epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-        // test
-        ScanHandle hd{};
-        ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd));
-        std::string sb{};
-        ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
-        ASSERT_EQ(sb, k2);
-    }
-    ASSERT_EQ(Status::OK, leave(s));
-}
-#endif
 
 TEST_F(open_scan_test, open_scan_test) { // NOLINT
     Storage storage{};

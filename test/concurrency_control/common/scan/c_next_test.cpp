@@ -82,7 +82,7 @@ TEST_F(c_next, next_for_two) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    session* ti = static_cast<session*>(s);
+    auto* ti = static_cast<session*>(s);
     auto before_next{ti->get_scan_handle().get_scan_cache_itr()[hd]};
     ASSERT_EQ(Status::OK, next(s, hd));
     auto after_next{ti->get_scan_handle().get_scan_cache_itr()[hd]};

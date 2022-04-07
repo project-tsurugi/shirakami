@@ -80,12 +80,12 @@ TEST_F(scan_search, scan_key_search_key) { // NOLINT
     delete_record(s, storage, k2);
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin(s2));// for delay unhook of k2
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_begin(s2)); // for delay unhook of k2
+    ASSERT_EQ(Status::OK, commit(s));    // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::EXCLUSIVE, k4,
                                     scan_endpoint::EXCLUSIVE, handle));
-    ASSERT_EQ(Status::WARN_CONCURRENT_DELETE, read_value_from_scan(s, handle, vb));
-    ASSERT_EQ(Status::OK, next(s, handle));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
