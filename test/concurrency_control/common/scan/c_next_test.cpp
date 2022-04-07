@@ -91,4 +91,17 @@ TEST_F(c_next, next_for_two) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+#if 0
+TEST_F(c_next, next_skip_deleted_record) { // NOLINT
+    Storage st{};
+    register_storage(st);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+#endif
+
 } // namespace shirakami::testing
