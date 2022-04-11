@@ -46,7 +46,6 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
-#ifndef WP
 TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
     Storage st{};
     register_storage(st);
@@ -145,7 +144,5 @@ TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
     }
     ASSERT_EQ(Status::OK, leave(s));
 }
-
-#endif
 
 } // namespace shirakami::testing

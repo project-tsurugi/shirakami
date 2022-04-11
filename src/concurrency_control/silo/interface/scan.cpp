@@ -94,8 +94,8 @@ Status open_scan(Token const token, Storage storage,
     if (rc != Status::OK) { return rc; }
     // not empty
 
-    std::size_t head_deleted_records{};
-    rc = check_not_found(ti, scan_res, head_deleted_records);
+    std::size_t head_deleted_recs{};
+    rc = check_not_found(ti, scan_res, head_deleted_recs);
     if (rc != Status::OK) { return rc; }
 
     constexpr std::size_t index_nvec_body{0};
@@ -137,7 +137,7 @@ Status open_scan(Token const token, Storage storage,
 
     // increment for head deleted records
     std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
-    scan_index += head_deleted_records;
+    scan_index += head_deleted_recs;
     return Status::OK;
 }
 

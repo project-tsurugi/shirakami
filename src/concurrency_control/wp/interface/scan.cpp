@@ -43,7 +43,10 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
 
 Status check_not_found(
         session* ti,
-        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res) {
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+        std::size_t& head_skip_rec_n) {
+    head_skip_rec_n = 0;
+    bool once_not_skip{false};
     for (auto& elem : scan_res) {
         Record* rec_ptr{*std::get<1>(elem)};
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
@@ -51,11 +54,11 @@ Status check_not_found(
             // inserted page.
             if (ti->get_tx_type() == TX_TYPE::SHORT) { return Status::OK; }
             if (ti->get_tx_type() == TX_TYPE::LONG) {
-                version* ver = rec_ptr->get_latest();
                 if (tid.get_epoch() < ti->get_valid_epoch()) {
                     // latest version check
                     return Status::OK;
                 }
+                version* ver = rec_ptr->get_latest();
                 for (;;) {
                     ver = ver->get_next();
                     if (ver == nullptr) { break; }
@@ -63,19 +66,36 @@ Status check_not_found(
                         return Status::OK;
                     }
                 }
-                if (ver == nullptr) { continue; }
             } else {
                 LOG(ERROR) << "programming error";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
+            if (ti->get_tx_type() == TX_TYPE::SHORT) { once_not_skip = true; }
             // inserting page.
             // check read own write
             write_set_obj* inws = ti->get_write_set().search(rec_ptr);
             if (inws != nullptr) {
                 if (inws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
             }
+        } else {
+            // absent && not latest == deleted
+            if (ti->get_tx_type() == TX_TYPE::LONG) {
+                if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                    // there may be readable rec
+                    version* ver = rec_ptr->get_latest();
+                    for (;;) {
+                        ver = ver->get_next();
+                        if (ver == nullptr) { break; }
+                        if (ver->get_tid().get_epoch() <
+                            ti->get_valid_epoch()) {
+                            return Status::OK;
+                        }
+                    }
+                }
+            }
         }
+        if (!once_not_skip) { ++head_skip_rec_n; }
     }
     return Status::WARN_NOT_FOUND;
 }
@@ -123,7 +143,8 @@ Status open_scan(Token const token, Storage storage,
     }
     // not empty
 
-    rc = check_not_found(ti, scan_res);
+    std::size_t head_skip_rec_n{};
+    rc = check_not_found(ti, scan_res, head_skip_rec_n);
     if (rc != Status::OK) {
         ti->process_before_finish_step();
         return rc;
@@ -182,6 +203,11 @@ Status open_scan(Token const token, Storage storage,
                          std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
                          std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }
+
+    // increment for head skipped records
+    std::size_t& scan_index =
+            ti->get_scan_handle().get_scan_cache_itr()[handle];
+    scan_index += head_skip_rec_n;
 
     sh.get_scanned_storage_set().set(handle, storage);
     ti->process_before_finish_step();
