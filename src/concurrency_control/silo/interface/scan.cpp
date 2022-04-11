@@ -151,15 +151,39 @@ Status next(Token token, ScanHandle handle) {
     if (ti->get_scan_cache().find(handle) == ti->get_scan_cache().end()) {
         return Status::WARN_INVALID_HANDLE;
     }
+    // valid handle
 
     // increment cursor
-    std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
-    ++scan_index;
+    for (;;) {
+        std::size_t& scan_index = ti->get_scan_cache_itr()[handle];
+        ++scan_index;
+        // check range of cursor
+        if (std::get<scan_handler::scan_cache_vec_pos>(
+                    ti->get_scan_cache()[handle])
+                    .size() <= scan_index) {
+            return Status::WARN_SCAN_LIMIT;
+        }
 
-    // check range of cursor
-    if (std::get<scan_handler::scan_cache_vec_pos>(ti->get_scan_cache()[handle])
-                .size() <= scan_index) {
-        return Status::WARN_SCAN_LIMIT;
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+                ti->get_scan_cache()[handle]);
+        auto itr = scan_buf.begin() + scan_index;
+        Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
+
+        // check local write set
+        const write_set_obj* inws =
+                ti->get_write_set().search(rec_ptr); // NOLINT
+        if (inws != nullptr) {
+            /**
+             * If it exists, read from scan api call should be able to read the
+             * record.
+             */
+            break;
+        }
+        // not in local write set
+
+        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+        if (!tid.get_absent()) { break; }
+        if (tid.get_latest()) { break; }
     }
 
     // reset cache in cursor

@@ -29,6 +29,7 @@ file(GLOB TEST_SOURCES
         "concurrency_control/common/upsert/*.cpp"
         "concurrency_control/common/update/*.cpp"
         "concurrency_control/common/scan/*.cpp"
+        "concurrency_control/common/scan/next/*.cpp"
         "concurrency_control/common/scan/open_scan/*.cpp"
         "concurrency_control/common/scan_upsert/*.cpp"
         "concurrency_control/common/search/*.cpp"

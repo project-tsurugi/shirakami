@@ -91,32 +91,4 @@ TEST_F(c_next, next_for_two) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-#if 0
-TEST_F(c_next, next_skip_deleted_record) { // NOLINT
-    Storage st{};
-    register_storage(st);
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    // prepare data
-    std::string k1{"k1"};
-    std::string k2{"k2"};
-    ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-    ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    {
-        std::unique_lock<std::mutex> stop_epoch_due_to_stop_gc{
-                epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ScanHandle hd{};
-        ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
-                                        scan_endpoint::INF, hd));
-                                        // the cursor must point k2
-    }
-
-    ASSERT_EQ(Status::OK, leave(s));
-}
-#endif
-
 } // namespace shirakami::testing
