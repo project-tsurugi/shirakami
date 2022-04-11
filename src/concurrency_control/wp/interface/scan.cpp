@@ -405,7 +405,11 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
 
         // read non-latest version after version function
-        if (!key_read) { ver->get_value(buf); }
+        if (key_read) {
+            rec_ptr->get_key(buf);
+        } else {
+            ver->get_value(buf);
+        }
 
         if (key_read) {
             sh.get_ci(handle).set_key(buf);
