@@ -290,9 +290,7 @@ Status next(Token const token, ScanHandle const handle) {
         } else {
             // absent && not latest == deleted
             if (ti->get_tx_type() == TX_TYPE::LONG) {
-                LOG(INFO);
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
-                    LOG(INFO);
                     // there may be readable rec
                     version* ver = rec_ptr->get_latest();
                     for (;;) {
@@ -311,7 +309,6 @@ Status next(Token const token, ScanHandle const handle) {
             }
         }
     }
-    LOG(INFO);
 
     // reset cache in cursor
     ti->get_scan_handle().get_ci(handle).reset();
