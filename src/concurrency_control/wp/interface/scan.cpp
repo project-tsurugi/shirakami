@@ -332,6 +332,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     auto& sh = ti->get_scan_handle();
 
+    // ==========
     /**
      * Check whether the handle is valid.
      */
@@ -345,6 +346,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->process_before_finish_step();
         return Status::ERR_NOT_IMPLEMENTED;
     }
+    // ==========
 
     scan_handler::scan_elem_type target_elem;
     auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
@@ -356,6 +358,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::WARN_SCAN_LIMIT;
     }
 
+    // ==========
     /**
      * Check read-own-write
      */
@@ -374,23 +377,36 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->process_before_finish_step();
         return Status::WARN_READ_FROM_OWN_OPERATION;
     }
+    // ==========
 
-#if 0 // todo
+    // ==========
+    // wp verify section 
     Storage st = std::get<scan_handler::scan_cache_storage_pos>(
             sh.get_scan_cache()[handle]);
-    // wp verify
-    auto wps = wp::find_wp(storage);
-    if (!wp::wp_meta::empty(wps) &&
-        wp::wp_meta::find_min_id(wps) != ti->get_batch_id()) {
-        abort(ti); // or wait
-        /**
+    auto wps = wp::find_wp(st);
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+        if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
+            abort(ti);
+            return Status::ERR_FAIL_WP;
+        }
+    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+        if (!wp::wp_meta::empty(wps) &&
+            wp::wp_meta::find_min_id(wps) != ti->get_batch_id()) {
+            abort(ti); // or wait
+            /**
          * because: You have to wait for the end of the transaction to read 
          * the prefixed batch write.
          * 
          */
-        return Status::ERR_FAIL_WP;
+            return Status::ERR_FAIL_WP;
+        }
+    } else {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
     }
-#endif
+    // ==========
+
 
     if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
