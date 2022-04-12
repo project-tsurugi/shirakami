@@ -227,17 +227,91 @@ Status next(Token const token, ScanHandle const handle) {
         ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
     }
+    // valid handle
 
     // increment cursor
-    std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-    ++scan_index;
+    for (;;) {
+        std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+        ++scan_index;
 
-    // check range of cursor
-    if (std::get<scan_handler::scan_cache_vec_pos>(sh.get_scan_cache()[handle])
-                .size() <= scan_index) {
-        ti->process_before_finish_step();
-        return Status::WARN_SCAN_LIMIT;
+        // check range of cursor
+        if (std::get<scan_handler::scan_cache_vec_pos>(
+                    sh.get_scan_cache()[handle])
+                    .size() <= scan_index) {
+            ti->process_before_finish_step();
+            return Status::WARN_SCAN_LIMIT;
+        }
+
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+                sh.get_scan_cache()[handle]);
+        auto itr = scan_buf.begin() + scan_index;
+        Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
+
+        // check local write set
+        const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+        if (inws != nullptr) {
+            /**
+             * If it exists, read from scan api call should be able to read 
+             * the record.
+             */
+            break;
+        }
+        // not in local write set
+
+        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+        if (!tid.get_absent()) {
+            if (ti->get_tx_type() == TX_TYPE::SHORT) { break; }
+            if (ti->get_tx_type() == TX_TYPE::LONG) {
+                if (tid.get_epoch() < ti->get_valid_epoch()) { break; }
+                version* ver = rec_ptr->get_latest();
+                for (;;) {
+                    ver = ver->get_next();
+                    if (ver == nullptr) { break; }
+                    if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                        break;
+                    }
+                }
+                if (ver != nullptr) {
+                    // there is a readable rec
+                    break;
+                }
+            } else {
+                LOG(ERROR) << "programming error";
+                return Status::ERR_FATAL;
+            }
+        } else if (tid.get_latest()) {
+            // check read own inserting
+            write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+            if (inws != nullptr) {
+                if (inws->get_op() == OP_TYPE::INSERT) { break; }
+            }
+
+            if (ti->get_tx_type() == TX_TYPE::SHORT) { break; }
+        } else {
+            // absent && not latest == deleted
+            if (ti->get_tx_type() == TX_TYPE::LONG) {
+                LOG(INFO);
+                if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                    LOG(INFO);
+                    // there may be readable rec
+                    version* ver = rec_ptr->get_latest();
+                    for (;;) {
+                        ver = ver->get_next();
+                        if (ver == nullptr) { break; }
+                        if (ver->get_tid().get_epoch() <
+                            ti->get_valid_epoch()) {
+                            break;
+                        }
+                    }
+                    if (ver != nullptr) {
+                        // there is a readable rec
+                        break;
+                    }
+                }
+            }
+        }
     }
+    LOG(INFO);
 
     // reset cache in cursor
     ti->get_scan_handle().get_ci(handle).reset();

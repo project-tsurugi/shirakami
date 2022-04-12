@@ -4,15 +4,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/session.h"
-
-#else
-
-#include "concurrency_control/silo/include/session.h"
-
-#endif
 
 #include "shirakami/interface.h"
 
@@ -23,15 +15,15 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class c_next : public ::testing::Test { // NOLINT
+class next_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
-                                  "scan-c_next_skip_drec_test_test");
+                                  "scan-next_skip_drec_test_test");
         FLAGS_stderrthreshold = 0;        // output more than INFO
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/test_log/c_next_skip_drec_test_log");
+        log_dir_.append("/build/test_log/next_skip_drec_test_log");
     }
 
     void SetUp() override {
@@ -46,7 +38,7 @@ private:
     static inline std::string log_dir_; // NOLINT
 };
 
-TEST_F(c_next, next_skip_one_drec) { // NOLINT
+TEST_F(next_test, next_skip_one_drec) { // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -81,7 +73,7 @@ TEST_F(c_next, next_skip_one_drec) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(c_next, next_skip_two_drec) { // NOLINT
+TEST_F(next_test, next_skip_two_drec) { // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -119,7 +111,7 @@ TEST_F(c_next, next_skip_two_drec) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(c_next, next_skip_three_drec) { // NOLINT
+TEST_F(next_test, next_skip_three_drec) { // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};

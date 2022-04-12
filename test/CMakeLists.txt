@@ -60,6 +60,8 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/wp/interface/helper/*.cpp"
         "concurrency_control/wp/interface/insert/*.cpp"
         "concurrency_control/wp/interface/scan/*.cpp"
+        "concurrency_control/wp/interface/scan/open_scan/*.cpp"
+        "concurrency_control/wp/interface/scan/next/*.cpp"
         "concurrency_control/wp/interface/search/*.cpp"
         "concurrency_control/wp/interface/search_upsert/*.cpp"
         "concurrency_control/wp/interface/termination/*.cpp"
