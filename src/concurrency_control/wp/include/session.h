@@ -333,7 +333,32 @@ private:
      */
     std::atomic<bool> operating_{false};
 
-    //todo bool has_tx_status_handle_{false};
+    /**
+     * @brief whether acquire_tx_state_handle api is called for current tx.
+     * @details If this is true, @a current_tx_status_handle_ is valid object.
+     */
+    bool has_current_tx_status_handle_{false};
+
+    /**
+     * @brief Current tx status.
+     */
+    TxState current_tx_status_handle_{};
+
+    /**
+     * @brief Old tx status.
+     * @details If user uses @a commit api by using early lock release, this 
+     * session will be used after that for new tx and it may conflict between 
+     * old @a current_tx_status_handle_ and new that. So old tx's one is stored 
+     * for this container.
+     */
+    std::vector<TxState> old_tx_status_handles_{};
+
+    /**
+     * @brief mutex for @a old_tx_status_handles_
+     * @details Old tx's status may be checked by some thread. So it is used for 
+     * concurrency control between them.
+     */
+    std::mutex mtx_old_{};
 };
 
 class session_table {

@@ -532,7 +532,10 @@ extern Status read_sequence(SequenceId id, SequenceVersion* version,
 extern Status delete_sequence(SequenceId id);
 
 //==========
-// transaction state
+/**
+ * transaction state api.
+ * These api is able at BUILD_WP=ON build mode.
+ */
 
 /**
  * @brief acquire transaction state handle.
