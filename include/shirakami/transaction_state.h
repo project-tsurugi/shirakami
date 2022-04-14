@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <iostream>
 #include <string_view>
@@ -20,6 +21,8 @@ constexpr static TxStateHandle undefined_handle = 0;
  */
 class TxState final {
 public:
+    static constexpr TxStateHandle handle_initial_value = 1;
+
     enum class StateKind : std::int64_t {
         /**
       * @brief This status means the transaction is unknown status.
@@ -87,14 +90,25 @@ public:
      */
     TxState& operator=(TxState&& other) noexcept = default;
 
+    static void init() {
+        handle_ctr_.store(handle_initial_value, std::memory_order_release);
+    }
+
+    static TxStateHandle get_handle_ctr() {
+        return handle_ctr_.load(std::memory_order_acquire);
+    }
+
     /**
      * @brief returns the transaction operation kind.
      * @return the transaction operation kind.
      */
-    [[nodiscard]] constexpr StateKind state_kind() const noexcept { return kind_; }
+    [[nodiscard]] constexpr StateKind state_kind() const noexcept {
+        return kind_;
+    }
 
 private:
     StateKind kind_{StateKind::UNKNOWN};
+    static inline std::atomic<TxStateHandle> handle_ctr_{1};
 };
 
 /**
@@ -102,8 +116,7 @@ private:
  * @param[in] value the enum value
  * @return constexpr std::string_view the corresponded label
  */
-inline constexpr std::string_view
-to_string_view(TxState::StateKind value) {
+inline constexpr std::string_view to_string_view(TxState::StateKind value) {
     using StateKind = TxState::StateKind;
     switch (value) {
         case StateKind::UNKNOWN:
@@ -129,8 +142,7 @@ to_string_view(TxState::StateKind value) {
  * @param value the source enum value
  * @return std::ostream&  the target stream
  */
-inline std::ostream& operator<<(std::ostream& out,
-                                TxState::StateKind value) {
+inline std::ostream& operator<<(std::ostream& out, TxState::StateKind value) {
     return out << to_string_view(value);
 }
 

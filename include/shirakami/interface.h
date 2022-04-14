@@ -546,6 +546,10 @@ extern Status delete_sequence(SequenceId id);
  * called together. If you call one side more than other side, warning will 
  * be returned.
  * @return Status::OK success.
+ * @return Status::WARN_ALREADY_EXISTS This api was already called for this tx.
+ * It updates @a handle by existing one.
+ * @return Status::WARN_NOT_BEGIN The tx linked this session is not begun. So 
+ * it can't acquire state handle.
  * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
  * @a token, this call returns this status.
  */

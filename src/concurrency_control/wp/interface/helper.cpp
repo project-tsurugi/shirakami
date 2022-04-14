@@ -94,6 +94,9 @@ init([[maybe_unused]] bool enable_recovery,
      [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
+    // about tx state
+    TxState::init();
+
     // about storage
     storage::init();
 

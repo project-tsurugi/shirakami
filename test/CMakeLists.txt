@@ -65,6 +65,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/wp/interface/search/*.cpp"
         "concurrency_control/wp/interface/search_upsert/*.cpp"
         "concurrency_control/wp/interface/termination/*.cpp"
+        "concurrency_control/wp/interface/tx_state/*.cpp"
         "concurrency_control/wp/interface/update/*.cpp"
         "concurrency_control/wp/interface/upsert/*.cpp"
         "concurrency_control/wp/wp_basic/*.cpp"
