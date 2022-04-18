@@ -72,8 +72,12 @@ void cancel_flag_inserted_records(session* const ti) {
     }
 }
 
-Status abort(session* ti) { // NOLINT
+Status abort(session* const ti) { // NOLINT
     cancel_flag_inserted_records(ti);
+
+    // about tx state
+    // this should before clean up
+    ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
     // clean up
     cleanup_process(ti);
@@ -262,8 +266,13 @@ extern Status commit(session* const ti, // NOLINT
      */
 
 
+    // about transaction state
+    // this should before clean up
+    ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
+
     // clean up
     cleanup_process(ti);
+
     return Status::OK;
 }
 

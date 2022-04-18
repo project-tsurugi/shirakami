@@ -46,7 +46,12 @@ void unlock_inserted_records(session* const ti) {
 }
 
 Status abort(session* ti) { // NOLINT
+    // about tx state
+    ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
+
+    // about inserted records
     unlock_inserted_records(ti);
+
     ti->clean_up();
     return Status::OK;
 }
@@ -283,6 +288,11 @@ extern Status commit(session* ti, // NOLINT
 #ifdef BCC_7
     register_read_by_occ(ti);
 #endif
+
+    // about tx state
+    // this should be before clean_up func
+    // todo think logging
+    ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
 
     // clean up local set
     ti->clean_up();

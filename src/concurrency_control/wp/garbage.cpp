@@ -201,7 +201,7 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
     // Some occ maybe reads the payload of version.
     for (;;) {
         if (ver == nullptr ||
-            ver->get_tid().get_epoch() < get_min_step_epoch()) {
+            ver->get_tid().get_epoch() <= get_min_step_epoch()) {
             break;
         }
         pre_ver = ver;

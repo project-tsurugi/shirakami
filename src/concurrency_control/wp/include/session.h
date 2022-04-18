@@ -52,11 +52,18 @@ public:
      */
     [[nodiscard]] bool check_exist_wp_set(Storage storage) const;
 
+    void clear_about_tx_state() {
+        set_has_current_tx_state_handle(false);
+        set_current_tx_state_handle(undefined_handle);
+        set_current_tx_state_ptr(nullptr);
+    }
+
     void clean_up() {
         clean_up_local_set();
         clean_up_tx_property();
         scan_handle_.clear();
-        set_has_current_tx_state_handle(false);
+        // about transaction state
+        clear_about_tx_state();
     }
 
     /**
@@ -82,14 +89,16 @@ public:
     Tuple* get_cache_for_search_ptr() { return &cache_for_search_; }
 
     // ==========
-    // about tx state
+    // about transaction state
     bool get_has_current_tx_state_handle() const {
         return has_current_tx_state_handle_;
     }
 
     bool get_current_tx_state_handle() const {
-        return current_tx_state_handle_;
+        return current_tx_state_handle_.load(std::memory_order_acquire);
     }
+
+    TxState* get_current_tx_state_ptr() const { return current_tx_state_ptr_; }
     // ==========
 
     node_set_type& get_node_set() { return node_set_; }
@@ -195,14 +204,23 @@ public:
     // because Tuple is small size data.
 
     //==========
-    // about tx state
+    // about transaction state
     void set_current_tx_state_handle(TxStateHandle hd) {
-        current_tx_state_handle_ = hd;
+        current_tx_state_handle_.store(hd, std::memory_order_release);
     }
 
     void set_has_current_tx_state_handle(bool tf) {
         has_current_tx_state_handle_ = tf;
     }
+
+    void set_current_tx_state_ptr(TxState* ptr) { current_tx_state_ptr_ = ptr; }
+
+    void set_tx_state_if_valid(TxState::StateKind st) {
+        if (get_has_current_tx_state_handle()) {
+            get_current_tx_state_ptr()->set_kind(st);
+        }
+    }
+
     //==========
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
@@ -365,28 +383,9 @@ private:
      */
     bool has_current_tx_state_handle_{false};
 
-    TxStateHandle current_tx_state_handle_{};
+    std::atomic<TxStateHandle> current_tx_state_handle_{};
 
-    /**
-     * @brief Current tx state.
-     */
-    TxState current_tx_state_{};
-
-    /**
-     * @brief Old tx state.
-     * @details If user uses @a commit api by using early lock release, this 
-     * session will be used after that for new tx and it may conflict between 
-     * old @a current_tx_status_handle_ and new that. So old tx's one is stored 
-     * for this container.
-     */
-    std::vector<TxState> old_tx_state_handles_{};
-
-    /**
-     * @brief mutex for @a old_tx_state_handles_
-     * @details Old tx's status may be checked by some thread. So it is used for 
-     * concurrency control between them.
-     */
-    std::mutex mtx_old_{};
+    TxState* current_tx_state_ptr_{};
     // ==========
 };
 

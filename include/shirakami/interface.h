@@ -545,6 +545,7 @@ extern Status delete_sequence(SequenceId id);
  * @attention acquire_tx_state_handle and release_tx_state_handle should be 
  * called together. If you call one side more than other side, warning will 
  * be returned.
+ * @pre The transaction linked @a token already executed @a tx_begin api.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_EXISTS This api was already called for this tx.
  * It updates @a handle by existing one.
@@ -552,6 +553,7 @@ extern Status delete_sequence(SequenceId id);
  * it can't acquire state handle.
  * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
  * @a token, this call returns this status.
+ * @return Status::ERR_FATAL It occurs some programming error.
  */
 Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
 
