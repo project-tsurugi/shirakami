@@ -44,8 +44,8 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google;
-    static inline std::string log_dir_;
+    static inline std::once_flag init_google; // NOLINT
+    static inline std::string log_dir_;       // NOLINT
 };
 
 void wait_change_epoch() {
@@ -61,7 +61,7 @@ TEST_F(scan_test, short_find_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
 
-    Token s; // for short
+    Token s{}; // for short
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare data
@@ -70,7 +70,7 @@ TEST_F(scan_test, short_find_wp) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // prepare test
-    Token sl; // for long
+    Token sl{}; // for long
     ASSERT_EQ(Status::OK, enter(sl));
     ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {st}));
     wait_change_epoch();
@@ -91,7 +91,7 @@ TEST_F(scan_test, long_find_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
 
-    Token s; // wp-er
+    Token s{}; // wp-er
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare data
@@ -100,7 +100,7 @@ TEST_F(scan_test, long_find_wp) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // prepare test
-    Token sl; // finder
+    Token sl{}; // finder
     ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
     ASSERT_EQ(Status::OK, enter(sl));
     ASSERT_EQ(Status::OK, tx_begin(sl, false, true));

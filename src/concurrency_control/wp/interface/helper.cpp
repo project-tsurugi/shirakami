@@ -247,14 +247,13 @@ Status try_deleted_to_inserted(Record* const rec_ptr,
         rec_ptr->set_tid(tid);
         rec_ptr->set_value(val);
         return Status::OK;
-    } else {
-        /**
-         * The deleted page was changed to living page by someone between 
-         * point 1 and point 2.
-         */
-        rec_ptr->get_tidw_ref().unlock();
-        return Status::WARN_ALREADY_EXISTS;
     }
+    /**
+      * The deleted page was changed to living page by someone between 
+      * point 1 and point 2.
+      */
+    rec_ptr->get_tidw_ref().unlock();
+    return Status::WARN_ALREADY_EXISTS;
 }
 
 } // namespace shirakami

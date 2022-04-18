@@ -63,7 +63,7 @@ inline void wait_epoch_update() {
     }
 }
 
-TEST_F(insert_long_long_tx_test,
+TEST_F(insert_long_long_tx_test,               // NOLINT
        different_key_same_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -96,7 +96,7 @@ TEST_F(insert_long_long_tx_test,
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,
+TEST_F(insert_long_long_tx_test,               // NOLINT
        different_key_same_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.
@@ -130,7 +130,7 @@ TEST_F(insert_long_long_tx_test,
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,
+TEST_F(insert_long_long_tx_test,                    // NOLINT
        different_key_different_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -161,7 +161,7 @@ TEST_F(insert_long_long_tx_test,
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,
+TEST_F(insert_long_long_tx_test,                    // NOLINT
        different_key_different_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.

@@ -106,7 +106,7 @@ void range_read_by_bt::gc() {
     }
 }
 
-void range_read_by_bt::push(body_elem_type const elem) {
+void range_read_by_bt::push(body_elem_type const& elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();

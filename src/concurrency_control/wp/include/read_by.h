@@ -74,7 +74,7 @@ public:
 
     void gc();
 
-    void push(body_elem_type elem);
+    void push(body_elem_type const& elem);
 
 private:
     std::mutex mtx_;

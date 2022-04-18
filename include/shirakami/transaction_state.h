@@ -140,8 +140,7 @@ public:
 
     static void insert_tx_state(TxStateHandle hd) {
         std::lock_guard<std::shared_mutex> lk{mtx_hc_};
-        handle_container_.insert(std::make_pair<TxStateHandle, TxState>(
-                TxStateHandle(hd), TxState()));
+        handle_container_.insert(std::make_pair(TxStateHandle(hd), TxState()));
     }
 
     static std::atomic<TxStateHandle>& get_handle_ctr() { return handle_ctr_; }
@@ -162,11 +161,15 @@ public:
         return handle_ctr_.fetch_add(1);
     }
 
-    std::uint64_t get_durable_epoch() const { return durable_epoch_; }
+    [[nodiscard]] std::uint64_t get_durable_epoch() const {
+        return durable_epoch_;
+    }
 
-    std::uint64_t get_serial_epoch() const { return serial_epoch_; }
+    [[nodiscard]] std::uint64_t get_serial_epoch() const {
+        return serial_epoch_;
+    }
 
-    Token get_token() { return token_; }
+    [[nodiscard]] Token get_token() { return token_; }
 
     static TxState& get_tx_state(TxStateHandle hd) {
         std::shared_lock<std::shared_mutex> lk{mtx_hc_};
@@ -212,11 +215,11 @@ private:
      * 2: There is a case which it needs long tx's id.
      */
     Token token_{};
-    static inline std::atomic<TxStateHandle> handle_ctr_{1};
-    static inline handle_container_type handle_container_;
-    static inline std::shared_mutex mtx_hc_;
-    static inline std::vector<TxStateHandle> reuse_ctr_container_;
-    static inline std::mutex mtx_reuse_ctr_container_;
+    static inline std::atomic<TxStateHandle> handle_ctr_{1};       // NOLINT
+    static inline handle_container_type handle_container_;         // NOLINT
+    static inline std::shared_mutex mtx_hc_;                       // NOLINT
+    static inline std::vector<TxStateHandle> reuse_ctr_container_; // NOLINT
+    static inline std::mutex mtx_reuse_ctr_container_;             // NOLINT
 };
 
 /**

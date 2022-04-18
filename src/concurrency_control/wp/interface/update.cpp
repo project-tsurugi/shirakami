@@ -62,10 +62,9 @@ Status update(Token token, Storage storage,
                 {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
         ti->process_before_finish_step();
         return Status::OK;
-    } else {
-        ti->process_before_finish_step();
-        return Status::WARN_NOT_FOUND;
     }
+    ti->process_before_finish_step();
+    return Status::WARN_NOT_FOUND;
 }
 
 } // namespace shirakami

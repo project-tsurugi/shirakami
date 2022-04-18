@@ -80,10 +80,9 @@ Status insert(Token const token, Storage const storage,
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
                 ti->process_before_finish_step();
                 return Status::OK;
-            } else {
-                ti->process_before_finish_step();
-                return rc;
             }
+            ti->process_before_finish_step();
+            return rc;
         }
 
         auto rc{insert_process(ti, storage, key, val)};

@@ -85,7 +85,7 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
 
 #ifdef WP
 TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
-    Storage st;
+    Storage st{};
     register_storage(st);
     std::string k("k");
     std::string v("v");

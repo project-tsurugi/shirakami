@@ -53,6 +53,14 @@ private:
     static inline std::string log_dir_;       // NOLINT
 };
 
+void wait_change_epoch() {
+    auto ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 TEST_F(batch_upsert_test, bt_simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -65,7 +73,7 @@ TEST_F(batch_upsert_test, bt_simple) { // NOLINT
     ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
     epoch::get_ep_mtx().unlock();
-    sleepMs(100);
+    wait_change_epoch();
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, upsert(s2, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));

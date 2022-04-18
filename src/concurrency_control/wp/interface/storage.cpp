@@ -113,8 +113,8 @@ Status storage::delete_storage(Storage storage) {
                                    std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
                 if (wp::get_finalizing()) {
-                    delete *reinterpret_cast<wp::page_set_meta**>(
-                            std::get<v_index>(scan_res[i])); // NOLINT
+                    delete *reinterpret_cast<wp::page_set_meta**>( // NOLINT
+                            std::get<v_index>(scan_res[i]));
                 } else {
                     Record* target_rec{*std::get<v_index>(scan_res[i])};
                     delete target_rec; // NOLINT

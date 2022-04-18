@@ -86,19 +86,23 @@ public:
 
     [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
 
-    Tuple* get_cache_for_search_ptr() { return &cache_for_search_; }
+    [[nodiscard]] Tuple* get_cache_for_search_ptr() {
+        return &cache_for_search_;
+    }
 
     // ==========
     // about transaction state
-    bool get_has_current_tx_state_handle() const {
+    [[nodiscard]] bool get_has_current_tx_state_handle() const {
         return has_current_tx_state_handle_;
     }
 
-    bool get_current_tx_state_handle() const {
+    [[nodiscard]] TxStateHandle get_current_tx_state_handle() const {
         return current_tx_state_handle_.load(std::memory_order_acquire);
     }
 
-    TxState* get_current_tx_state_ptr() const { return current_tx_state_ptr_; }
+    [[nodiscard]] TxState* get_current_tx_state_ptr() const {
+        return current_tx_state_ptr_;
+    }
     // ==========
 
     node_set_type& get_node_set() { return node_set_; }
@@ -215,7 +219,7 @@ public:
 
     void set_current_tx_state_ptr(TxState* ptr) { current_tx_state_ptr_ = ptr; }
 
-    void set_tx_state_if_valid(TxState::StateKind st) {
+    void set_tx_state_if_valid(TxState::StateKind st) const {
         if (get_has_current_tx_state_handle()) {
             get_current_tx_state_ptr()->set_kind(st);
         }

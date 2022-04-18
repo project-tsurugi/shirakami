@@ -112,7 +112,7 @@ TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_scan_test,
+TEST_F(single_long_scan_test,                              // NOLINT
        write_one_page_between_long_begin_and_long_start) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -144,7 +144,7 @@ TEST_F(single_long_scan_test,
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(single_long_scan_test,
+TEST_F(single_long_scan_test,                       // NOLINT
        write_one_page_between_long_start_and_inf) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -160,8 +160,8 @@ TEST_F(single_long_scan_test,
     ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     ScanHandle hd{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(sl, st, "", scan_endpoint::INF, "",
-                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(sl, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, commit(sl));
     ASSERT_EQ(Status::OK, leave(ss));
     ASSERT_EQ(Status::OK, leave(sl));

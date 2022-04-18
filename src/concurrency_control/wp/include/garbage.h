@@ -54,13 +54,13 @@ namespace shirakami::garbage {
 /**
  * @brief mutex for operation about cleaner.
  */
-inline std::mutex mtx_cleaner_{};
+[[maybe_unused]] inline std::mutex mtx_cleaner_{};
 
 // statistical data
 /**
   * @brief Record the number of gc versions.
   */
-inline std::atomic<std::uint64_t> gc_ct_ver_{0};
+[[maybe_unused]] inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
 
 // container for gc
@@ -69,7 +69,9 @@ inline std::atomic<std::uint64_t> gc_ct_ver_{0};
  * First of elements is pointer to record. Second of elements is epoch after 
  * unhooking record.
  */
-inline std::vector<std::pair<Record*, epoch::epoch_t>> container_rec_{};
+[[maybe_unused]] inline std::vector< // NOLINT
+        std::pair<Record*, epoch::epoch_t>>
+        container_rec_{};
 
 // setter
 [[maybe_unused]] static void set_flag_cleaner_end(bool const tf) {

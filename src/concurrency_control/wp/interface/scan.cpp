@@ -380,7 +380,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     // ==========
 
     // ==========
-    // wp verify section 
+    // wp verify section
     Storage st = std::get<scan_handler::scan_cache_storage_pos>(
             sh.get_scan_cache()[handle]);
     auto wps = wp::find_wp(st);
@@ -454,7 +454,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
         ti->process_before_finish_step();
         return Status::OK;
-    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+    }
+    if (ti->get_tx_type() == TX_TYPE::LONG) {
         version* ver{};
         bool is_latest{false};
         tid_word f_check{};
