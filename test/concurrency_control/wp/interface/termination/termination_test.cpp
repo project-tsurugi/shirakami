@@ -67,10 +67,8 @@ TEST_F(termination_test, commit_long_long) { // NOLINT
         }
     };
     wait_next_epoch();
-    // wait for high priority long tx's commit
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

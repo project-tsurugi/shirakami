@@ -144,12 +144,11 @@ TEST_F(search_upsert, short_long_conflict) { // NOLINT
     ASSERT_EQ(enter(s2), Status::OK);
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
     std::string vb{};
-    while (search_key(s2, st, "", vb) == Status::WARN_PREMATURE) {
-        _mm_pause();
-    }
+    wait_epoch_update();
     ASSERT_EQ(leave(s), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
 }
+
 
 TEST_F(search_upsert, avoid_premature_by_wait) { // NOLINT
     Storage st{};
@@ -161,9 +160,8 @@ TEST_F(search_upsert, avoid_premature_by_wait) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(enter(s2), Status::OK);
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    wait_epoch_update();
     std::string vb{};
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(200ms); // enough to wait assinged epoch
     ASSERT_EQ(search_key(s2, st, "", vb), Status::OK);
     ASSERT_EQ(leave(s), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
@@ -173,7 +171,7 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
-    Token s0{};  // short
+    Token s0{}; // short
     Token s1{}; // long
     Token s2{}; // long
     ASSERT_EQ(enter(s0), Status::OK);
@@ -186,13 +184,38 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
     ASSERT_EQ(tx_begin(s2, false, true, {}), Status::OK);
+    wait_epoch_update();
     std::string vb{};
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(200ms); // wait enough for assigned epoch
     ASSERT_EQ(search_key(s2, st, "a", vb), Status::ERR_FAIL_WP);
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(leave(s1), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
 }
+
+TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    {
+        // prepare data
+        Token s{};
+        ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+        ASSERT_EQ(Status::OK, commit(s));
+        ASSERT_EQ(leave(s), Status::OK);
+    }
+    Token s1{}; // long
+    Token s2{}; // long
+    ASSERT_EQ(enter(s1), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(tx_begin(s1, false, true, {}), Status::OK);
+    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(leave(s1), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
 } // namespace shirakami::testing

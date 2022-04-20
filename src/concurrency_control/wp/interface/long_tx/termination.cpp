@@ -245,12 +245,12 @@ extern Status commit(session* const ti, // NOLINT
     }
 
     prepare_commit(ti);
-    auto rc{check_wait_for_preceding_bt(ti)};
-    if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
+    //auto rc{check_wait_for_preceding_bt(ti)};
+    //if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
 
 
     // verify read by
-    rc = verify_read_by(ti);
+    auto rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
         return Status::ERR_VALIDATION;
