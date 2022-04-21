@@ -28,6 +28,9 @@ Status search_key(session* ti, Storage const storage,
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }
+    if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
+        return Status::WARN_PREMATURE;
+    }
 
     // index access
     Record* rec_ptr{};

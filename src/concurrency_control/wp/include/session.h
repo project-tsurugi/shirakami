@@ -85,6 +85,15 @@ public:
     void clear_tx_property();
 
     /**
+     * @brief long tx find high priority short.
+     * @pre This is called by long tx.
+     * @return Status::OK success
+     * @return Status::WARN_PREMATURE There is a high priority short tx.
+     * @return Status::ERR_FATAL programming error.
+     */
+    Status find_high_priority_short();
+
+    /**
      * @brief Find wp about @a st from wp set.
      * @param st target storage.
      * @return Status::OK success.
@@ -304,6 +313,11 @@ public:
     }
 
 private:
+    /**
+     * @brief tx type.
+     * @attention For internal. Don't clear at tx termination. This is used for
+     * lock-free coordination for multi-threads.
+     */
     TX_TYPE tx_type_{TX_TYPE::SHORT};
 
     /**
@@ -355,6 +369,8 @@ private:
      * @details Memorize the epoch in which the latest transitional step was
      * performed. Examining this information for all workers determines some 
      * free memory space.
+     * @attention For internal. Don't clear at tx termination. This is used for
+     * lock-free coordination for multi-threads.
      */
     std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
 

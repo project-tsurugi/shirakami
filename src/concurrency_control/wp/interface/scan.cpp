@@ -114,6 +114,9 @@ Status open_scan(Token const token, Storage storage,
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }
+        if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
+            return Status::WARN_PREMATURE;
+        }
     }
 
     if (ti->get_read_only()) {
