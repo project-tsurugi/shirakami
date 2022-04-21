@@ -122,10 +122,13 @@ void expose_local_write(session* ti) {
                     if (wso.get_op() != OP_TYPE::DELETE) { wso.get_value(vb); }
                     version* new_v{new version( // NOLINT
                             vb, rec_ptr->get_latest())};
+                    // prepare tid for old version
                     pre_tid.set_absent(false);
                     pre_tid.set_latest(false);
                     pre_tid.set_lock(false);
+                    // set old version tid
                     rec_ptr->get_latest()->set_tid(pre_tid);
+                    // set latest
                     rec_ptr->set_latest(new_v);
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);

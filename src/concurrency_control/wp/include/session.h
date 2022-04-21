@@ -52,29 +52,37 @@ public:
      */
     [[nodiscard]] bool check_exist_wp_set(Storage storage) const;
 
+    void clear_about_long_tx_metadata() {
+        set_read_version_max_epoch(0);
+        set_batch_id(0);
+        set_valid_epoch(0);
+    }
+
     void clear_about_tx_state() {
         set_has_current_tx_state_handle(false);
         set_current_tx_state_handle(undefined_handle);
         set_current_tx_state_ptr(nullptr);
     }
 
+    void clear_about_scan() { scan_handle_.clear(); }
+
     void clean_up() {
-        clean_up_local_set();
-        clean_up_tx_property();
-        scan_handle_.clear();
-        // about transaction state
+        clear_local_set();
+        clear_tx_property();
+        clear_about_scan();
         clear_about_tx_state();
+        clear_about_long_tx_metadata();
     }
 
     /**
      * @brief clean up about local set.
      */
-    void clean_up_local_set();
+    void clear_local_set();
 
     /**
      * @brief clean up tx_began.
      */
-    void clean_up_tx_property();
+    void clear_tx_property();
 
     /**
      * @brief Find wp about @a st from wp set.
@@ -84,14 +92,12 @@ public:
      */
     [[nodiscard]] Status find_wp(Storage st) const;
 
-    [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
-
+    // ========== start: getter
     [[nodiscard]] Tuple* get_cache_for_search_ptr() {
         return &cache_for_search_;
     }
 
-    // ==========
-    // about transaction state
+    // ========== start: tx state
     [[nodiscard]] bool get_has_current_tx_state_handle() const {
         return has_current_tx_state_handle_;
     }
@@ -103,7 +109,7 @@ public:
     [[nodiscard]] TxState* get_current_tx_state_ptr() const {
         return current_tx_state_ptr_;
     }
-    // ==========
+    // ========== end: tx state
 
     node_set_type& get_node_set() { return node_set_; }
 
@@ -163,12 +169,6 @@ public:
      */
     bool get_visible() { return visible_.load(std::memory_order_acquire); }
 
-    std::vector<Storage>& get_wp_set() { return wp_set_; }
-
-    [[nodiscard]] const std::vector<Storage>& get_wp_set() const {
-        return wp_set_;
-    }
-
     /**
      * @brief get the local write set.
      */
@@ -178,6 +178,23 @@ public:
      * @brief get the yakushima token used by this session.
      */
     yakushima::Token get_yakushima_token() { return yakushima_token_; }
+
+    // ========== start: long tx
+
+    [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
+
+    std::vector<Storage>& get_wp_set() { return wp_set_; }
+
+    [[nodiscard]] const std::vector<Storage>& get_wp_set() const {
+        return wp_set_;
+    }
+
+    [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
+        return read_version_max_epoch_;
+    }
+
+    // ========== end: long tx
+    // ========== end: getter
 
     void process_before_start_step() {
         set_operating(true);
@@ -200,15 +217,13 @@ public:
         write_set_.push(std::move(elem));
     }
 
-    void set_batch_id(std::size_t bid) { batch_id_ = bid; }
-
+    // ========== start: setter
     void set_cache_for_search(Tuple tuple) {
         cache_for_search_ = std::move(tuple);
     } // NOLINT
     // because Tuple is small size data.
 
-    //==========
-    // about transaction state
+    // ========== start: tx state
     void set_current_tx_state_handle(TxStateHandle hd) {
         current_tx_state_handle_.store(hd, std::memory_order_release);
     }
@@ -225,7 +240,7 @@ public:
         }
     }
 
-    //==========
+    // ========== end: tx state
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
@@ -245,10 +260,6 @@ public:
         step_epoch_.store(e, std::memory_order_release);
     }
 
-    void set_valid_epoch(epoch::epoch_t ep) {
-        valid_epoch_.store(ep, std::memory_order_release);
-    }
-
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
     void set_wp_set(std::vector<Storage> const& wps) { wp_set_ = wps; }
@@ -256,6 +267,20 @@ public:
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
     }
+
+    // ========== start: long tx
+
+    void set_batch_id(std::size_t bid) { batch_id_ = bid; }
+
+    void set_read_version_max_epoch(epoch::epoch_t ep) {
+        read_version_max_epoch_ = ep;
+    }
+
+    void set_valid_epoch(epoch::epoch_t ep) {
+        valid_epoch_.store(ep, std::memory_order_release);
+    }
+
+    // ========== end: setter
 
     Status update_node_set(yakushima::node_version64* nvp) { // NOLINT
         for (auto&& elem : node_set_) {
@@ -321,14 +346,6 @@ private:
     Tuple cache_for_search_;
 
     /**
-     * @brief local wp set.
-     * @details If this session processes long transaction in a batch mode and 
-     * executes transactional write operations, it is for cheking whether the 
-     * target of the operation was write preserved properly by use this infomation.
-     */
-    std::vector<Storage> wp_set_{};
-
-    /**
      * @brief local write set.
      */
     local_write_set write_set_{};
@@ -351,14 +368,6 @@ private:
      */
     node_set_type node_set_{};
 
-    // for batch field
-    /**
-     * @brief read write batch executes write preserve preserve.
-     */
-    std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
-
-    std::size_t batch_id_{};
-
     /**
      * @brief about scan operation.
      */
@@ -378,8 +387,7 @@ private:
      */
     std::atomic<bool> operating_{false};
 
-    // ==========
-    // about transaction state
+    // ========== start: tx state
 
     /**
      * @brief whether acquire_tx_state_handle api is called for current tx.
@@ -390,7 +398,38 @@ private:
     std::atomic<TxStateHandle> current_tx_state_handle_{};
 
     TxState* current_tx_state_ptr_{};
-    // ==========
+    // ========== end: tx state
+
+    // ========== start: long tx
+    /**
+     * @brief long tx's id.
+     * 
+     */
+    std::size_t batch_id_{};
+
+    /**
+     * @brief read write batch executes write preserve preserve.
+     */
+    std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
+
+    /**
+     * @brief local wp set.
+     * @details If this session processes long transaction in a batch mode and 
+     * executes transactional write operations, it is for cheking whether the 
+     * target of the operation was write preserved properly by use this 
+     * infomation.
+     */
+    std::vector<Storage> wp_set_{};
+
+    /**
+     * @brief The max (created) epoch in the versions which was read by this 
+     * long tx.
+     * @details When a transaction attempts a preamble, it checks this value 
+     * to determine if it is breaking its boundaries.
+     */
+    epoch::epoch_t read_version_max_epoch_{};
+
+    // ========== end: long tx
 };
 
 class session_table {

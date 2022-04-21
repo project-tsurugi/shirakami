@@ -87,6 +87,11 @@ Status search_key(session* ti, Storage const storage,
             loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
                     f_check.get_obj()) {
             // success optimistic read latest version
+            // check max epoch of read version
+            auto read_epoch{f_check.get_epoch()};
+            if (read_epoch > ti->get_read_version_max_epoch()) {
+                ti->set_read_version_max_epoch(read_epoch);
+            }
             return Status::OK;
         }
         /**
@@ -98,6 +103,11 @@ Status search_key(session* ti, Storage const storage,
 
     // read non-latest version after version function
     if (read_value) { ver->get_value(value); }
+    // check max epoch of read version
+    auto read_epoch{ver->get_tid().get_epoch()};
+    if (read_epoch > ti->get_read_version_max_epoch()) {
+        ti->set_read_version_max_epoch(read_epoch);
+    }
     return Status::OK;
 }
 

@@ -34,7 +34,7 @@ void session_table::fin_session_table() {
     std::vector<std::thread> th_vc;
     th_vc.reserve(get_session_table().size());
     for (auto&& itr : get_session_table()) {
-        auto process = [&itr]() { itr.clean_up_local_set(); };
+        auto process = [&itr]() { itr.clear_local_set(); };
         th_vc.emplace_back(process);
     }
 

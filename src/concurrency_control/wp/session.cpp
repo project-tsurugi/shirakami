@@ -12,7 +12,7 @@ bool session::check_exist_wp_set(Storage storage) const {
     return false;
 }
 
-void session::clean_up_local_set() {
+void session::clear_local_set() {
     node_set_.clear();
     point_read_by_bt_set_.clear();
     range_read_by_bt_set_.clear();
@@ -22,7 +22,7 @@ void session::clean_up_local_set() {
     write_set_.clear();
 }
 
-void session::clean_up_tx_property() { set_tx_began(false); }
+void session::clear_tx_property() { set_tx_began(false); }
 
 Status session::find_wp(Storage st) const {
     for (auto&& elem : get_wp_set()) {
