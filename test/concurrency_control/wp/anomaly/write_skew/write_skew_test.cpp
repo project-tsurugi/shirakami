@@ -46,6 +46,14 @@ private:
     static inline std::string log_dir_;        // NOLINT
 };
 
+inline void wait_change_epoch() {
+    auto ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 TEST_F(write_skew, simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -70,29 +78,27 @@ TEST_F(write_skew, simple) { // NOLINT
     epoch::get_ep_mtx().unlock();
 
     // wait change epoch
-    sleepMs(PARAM_EPOCH_TIME * 2);
+    wait_change_epoch();
 
     // read phase
     std::string vb1{};
     std::string vb2{};
     ASSERT_EQ(search_key(s1, st, x, vb1), Status::OK);
-    ASSERT_EQ(search_key(s2, st, y, vb2), Status::ERR_FAIL_WP);
+    ASSERT_EQ(search_key(s2, st, y, vb2), Status::OK);
     std::size_t v1{};
-    //std::size_t v2{};
-    std::string vb{};
-    vb = vb1;
-    memcpy(&v1, vb.data(), sizeof(v1));
+    std::size_t v2{};
+    memcpy(&v1, vb1.data(), sizeof(v1));
     ++v1;
-    //1memcpy(&v2, tuple2->get_value().data(), sizeof(v2));
-    //1++v2;
+    memcpy(&v2, vb2.data(), sizeof(v2));
+    ++v2;
     std::string v1_view{reinterpret_cast<char*>(&v1), sizeof(v1)}; // NOLINT
-    //std::string v2_view{reinterpret_cast<char*>(&v2), sizeof(v2)};
+    std::string v2_view{reinterpret_cast<char*>(&v2), sizeof(v2)};
     ASSERT_EQ(upsert(s1, st, y, v1_view), Status::OK);
-    //ASSERT_EQ(upsert(s2, st, x, v2_view), Status::OK);
+    ASSERT_EQ(upsert(s2, st, x, v2_view), Status::OK);
 
     // commit phase
     ASSERT_EQ(commit(s1), Status::OK);
-    //ASSERT_NE(commit(s2), Status::OK);
+    ASSERT_EQ(commit(s2), Status::ERR_VALIDATION); // s2 will break s1's read
 
 
     ASSERT_EQ(leave(s1), Status::OK);

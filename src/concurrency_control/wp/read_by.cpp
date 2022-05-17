@@ -5,20 +5,29 @@
 
 namespace shirakami {
 
-point_read_by_bt::body_elem_type
-point_read_by_bt::get(epoch::epoch_t const epoch) {
-    std::unique_lock<std::mutex> lk(mtx_);
+bool point_read_by_bt::is_exist(epoch::epoch_t const epoch,
+                                std::size_t ltx_id) {
+    std::shared_lock<std::shared_mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (elem.first == epoch) { return elem; }
-        if (elem.first > epoch) {
-            // no more due to invariant
+        if (elem.second < ltx_id) {
+            // elem is high priori than this.
+            if (epoch <= elem.first) {
+                // todo: include false positive
+                return true;
+            }
+        } else if (elem.second == ltx_id) {
+            LOG(ERROR) << "programming error";
+            return true;
+        } else {
+            // elem is low priori than this.
             break;
         }
     }
 
-    return body_elem_type{0, 0};
+    return false;
 }
 
+#if 0
 void point_read_by_bt::gc() {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
@@ -32,14 +41,16 @@ void point_read_by_bt::gc() {
         }
     }
 }
+#endif
 
 void point_read_by_bt::push(body_elem_type const elem) {
-    std::unique_lock<std::mutex> lk(mtx_);
+    std::lock_guard<std::shared_mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if ((*itr).first < elem.first) {
+        if ((*itr).second < elem.second) {
+            // high priori
             // check gc
             if ((*itr).first < threshold) {
                 itr = body_.erase(itr);
@@ -47,14 +58,15 @@ void point_read_by_bt::push(body_elem_type const elem) {
                 ++itr;
             }
             continue;
-        }
-        if ((*itr).first == elem.first) {
-            if ((*itr).second > elem.second) { (*itr).second = elem.second; }
+        } else if ((*itr).second == elem.second) {
+            LOG(ERROR) << "programming error";
             return;
         }
-        body_.insert(itr, elem);
-        return;
+        // low priori
+        break;
     }
+    body_.emplace_back(elem);
+    return;
 }
 
 range_read_by_bt::body_elem_type

@@ -30,14 +30,14 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class upsert_long_long_tx_test : public ::testing::Test { // NOLINT
+class shirakami_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-upsert_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
+                                  "interface-upsert-upsert_long_long_tx_test");
         FLAGS_stderrthreshold = 0;
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/upsert_test_log");
+        log_dir_.append("/build/upsert_long_long_tx_test_log");
     }
 
     void SetUp() override {
@@ -55,15 +55,12 @@ private:
 inline void wait_epoch_update() {
     epoch::epoch_t ce{epoch::get_global_epoch()};
     for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
     }
 }
 
-TEST_F(upsert_long_long_tx_test,               // NOLINT
+TEST_F(shirakami_test,                         // NOLINT
        different_key_same_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -96,7 +93,7 @@ TEST_F(upsert_long_long_tx_test,               // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(upsert_long_long_tx_test,               // NOLINT
+TEST_F(shirakami_test,                         // NOLINT
        different_key_same_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.
@@ -123,13 +120,14 @@ TEST_F(upsert_long_long_tx_test,               // NOLINT
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
 
-    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(upsert_long_long_tx_test,                    // NOLINT
+TEST_F(shirakami_test,                              // NOLINT
        different_key_different_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -160,7 +158,7 @@ TEST_F(upsert_long_long_tx_test,                    // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(upsert_long_long_tx_test,                    // NOLINT
+TEST_F(shirakami_test,                              // NOLINT
        different_key_different_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.
@@ -185,8 +183,9 @@ TEST_F(upsert_long_long_tx_test,                    // NOLINT
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
 
-    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

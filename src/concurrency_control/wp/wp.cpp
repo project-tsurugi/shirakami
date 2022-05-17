@@ -17,7 +17,21 @@
 
 #include "glog/logging.h"
 
+using namespace shirakami;
+
 namespace shirakami::wp {
+
+void extract_higher_priori_ltx_info(session* const ti,
+                                    wp_meta* const wp_meta_ptr,
+                                    wp_meta::wped_type const& wps) {
+    for (auto&& wped : wps) {
+        if (wped.second != 0) {
+            if (wped.second < ti->get_batch_id()) {
+                ti->get_overtaken_ltx_set()[wp_meta_ptr].insert(wped.second);
+            }
+        }
+    }
+}
 
 Status fin() {
     if (!get_initialized()) { return Status::WARN_NOT_INIT; }
@@ -107,8 +121,6 @@ Status write_preserve(Token token, std::vector<Storage> storage,
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());
 
     ti->get_wp_set().reserve(storage.size());
-    std::vector<wp_meta*> wped{};
-    wped.reserve(storage.size());
 
     for (auto&& wp_target : storage) {
         Storage page_set_meta_storage = get_page_set_meta_storage();
@@ -123,11 +135,11 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
                                                storage_view, out)};
 
-        auto cleanup_process = [ti, &wped, batch_id]() {
-            for (auto&& elem : wped) {
-                if (Status::OK != elem->remove_wp(batch_id)) {
-                    LOG(FATAL) << "vanish registered wp.";
-                    std::abort();
+        auto cleanup_process = [ti, batch_id]() {
+            for (auto&& elem : ti->get_wp_set()) {
+                if (Status::OK != elem.second->remove_wp(batch_id)) {
+                    LOG(ERROR) << "programming error";
+                    return;
                 }
             }
             ti->clean_up();
@@ -142,8 +154,8 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             cleanup_process();
             return Status::ERR_FAIL_WP;
         }
-        wped.emplace_back(target_wp_meta); // for fast cleanup at failure
-        ti->get_wp_set().emplace_back(wp_target);
+        ti->get_wp_set().emplace_back(
+                std::make_pair(wp_target, target_wp_meta));
     }
 
     return Status::OK;

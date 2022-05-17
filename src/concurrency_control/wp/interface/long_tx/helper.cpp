@@ -8,6 +8,17 @@
 
 namespace shirakami::long_tx {
 
+Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
+    for (auto&& elem : ti->get_wp_set()) {
+        auto rc{elem.second->change_wp_epoch(ti->get_batch_id(), target)};
+        if (rc != Status::OK) {
+            LOG(ERROR) << "programming error";
+            return rc;
+        }
+    }
+    return Status::OK;
+}
+
 Status tx_begin(session* const ti,
                 std::vector<Storage> write_preserve) { // NOLINT
     // get wp mutex

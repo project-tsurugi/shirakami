@@ -6,6 +6,7 @@
 
 #include <array>
 #include <atomic>
+#include <set>
 
 #include "cpu.h"
 #include "epoch.h"
@@ -14,6 +15,7 @@
 
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/include/scan.h"
 
@@ -35,6 +37,9 @@ public:
                                    scan_endpoint, std::string, scan_endpoint>>;
     using read_by_occ_set_type = std::vector<read_by_occ*>;
     using read_set_type = std::vector<read_set_obj>;
+    using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
+    using overtaken_ltx_set_type =
+            std::map<wp::wp_meta*, std::set<std::size_t>>;
 
     /**
      * @brief compare and swap for visible_.
@@ -192,11 +197,13 @@ public:
 
     [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
 
-    std::vector<Storage>& get_wp_set() { return wp_set_; }
-
-    [[nodiscard]] const std::vector<Storage>& get_wp_set() const {
-        return wp_set_;
+    overtaken_ltx_set_type& get_overtaken_ltx_set() {
+        return overtaken_ltx_set_;
     }
+
+    wp_set_type& get_wp_set() { return wp_set_; }
+
+    [[nodiscard]] const wp_set_type& get_wp_set() const { return wp_set_; }
 
     [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
         return read_version_max_epoch_;
@@ -271,7 +278,7 @@ public:
 
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
-    void set_wp_set(std::vector<Storage> const& wps) { wp_set_ = wps; }
+    void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
 
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
@@ -423,6 +430,8 @@ private:
      */
     std::size_t batch_id_{};
 
+    overtaken_ltx_set_type overtaken_ltx_set_;
+
     /**
      * @brief read write batch executes write preserve preserve.
      */
@@ -430,12 +439,12 @@ private:
 
     /**
      * @brief local wp set.
-     * @details If this session processes long transaction in a batch mode and 
+     * @details If this session processes long transaction in a long tx mode and 
      * executes transactional write operations, it is for cheking whether the 
      * target of the operation was write preserved properly by use this 
      * infomation.
      */
-    std::vector<Storage> wp_set_{};
+    wp_set_type wp_set_{};
 
     /**
      * @brief The max (created) epoch in the versions which was read by this 

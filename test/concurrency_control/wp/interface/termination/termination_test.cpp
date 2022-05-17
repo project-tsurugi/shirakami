@@ -52,7 +52,7 @@ private:
     static inline std::string log_dir_;       // NOLINT
 };
 
-TEST_F(termination_test, commit_long_long) { // NOLINT
+TEST_F(termination_test, commit_long_long_low_high) { // NOLINT
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -67,8 +67,30 @@ TEST_F(termination_test, commit_long_long) { // NOLINT
         }
     };
     wait_next_epoch();
-    ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(termination_test, commit_long_long_high_low) { // NOLINT
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, tx_begin(s1, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(s2, false, true));
+    auto wait_next_epoch = []() {
+        auto ep{epoch::get_global_epoch()};
+        for (;;) {
+            if (ep != epoch::get_global_epoch()) { break; }
+            _mm_pause();
+        }
+    };
+    wait_next_epoch();
+    ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

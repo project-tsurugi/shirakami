@@ -63,6 +63,14 @@ static void wait_for_ready(const std::vector<char>& readys) {
     while (!is_ready(readys)) { _mm_pause(); }
 }
 
+void wait_epoch_update() {
+    epoch::epoch_t ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
     const int trial_n{2};
     Storage st{};
@@ -70,7 +78,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
 
     // begin: initialize table
     // ==============================
-    std::size_t th_num{3}; // NOLINT
+    std::size_t th_num{8}; // NOLINT
     //if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
     std::vector<std::string> keys(th_num);
     Token s{};
@@ -103,6 +111,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         for (std::size_t i = 0; i < trial_n; ++i) {
         TX_BEGIN:
             ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+            wait_epoch_update();
 
             for (auto&& elem : keys) {
                 std::string vb{};
@@ -111,9 +120,6 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                     if (rc == Status::OK) { break; }
                     if (rc == Status::ERR_FAIL_WP) {
                         goto TX_BEGIN; // NOLINT
-                    }
-                    if (rc == Status::WARN_PREMATURE) {
-                        _mm_pause();
                     } else {
                         LOG(FATAL);
                     }
@@ -124,10 +130,24 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
+                ASSERT_EQ(shirakami::tx_begin(s, false, true, {st}),
+                          Status::WARN_ALREADY_BEGIN);
                 ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
             }
-            if (commit(s) != Status::OK) {
-                goto TX_BEGIN; // NOLINT
+
+            // commit phase
+            for (;;) {
+                auto rc = commit(s);
+                if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
+                    _mm_pause();
+                    continue;
+                } else if (rc == Status::OK) {
+                    break;
+                } else if (rc == Status::ERR_VALIDATION) {
+                    goto TX_BEGIN;
+                } else {
+                    LOG(FATAL) << rc;
+                }
             }
         }
     };

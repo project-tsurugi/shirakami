@@ -4,6 +4,7 @@
 #include <mutex>
 #include <thread>
 
+#include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/include/tuple_local.h"
@@ -77,6 +78,35 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
     ASSERT_EQ(wps.at(0).first, 0);
     ASSERT_EQ(wps.at(0).second, 0);
     wp_ptr->clear_wped();
+}
+
+TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
+    std::array<Token, 3> ss;
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(enter(ss.at(0)), Status::OK);
+    ASSERT_EQ(enter(ss.at(1)), Status::OK);
+    ASSERT_EQ(enter(ss.at(2)), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(0), false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(1), false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(2), false, true, {st}), Status::OK);
+    auto wps = wp::find_wp(st);
+    session* ti{static_cast<session*>(ss.at(2))};
+    ASSERT_EQ(ti->get_overtaken_ltx_set().size(), 0);
+    wp::wp_meta* wp_meta_ptr{};
+    wp::find_wp_meta(st, wp_meta_ptr);
+    wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
+    auto& ols = ti->get_overtaken_ltx_set();
+    ASSERT_EQ(ols.at(wp_meta_ptr).size(), 2);
+    ASSERT_NE(ols.at(wp_meta_ptr)
+                      .find(static_cast<session*>(ss.at(0))->get_batch_id()),
+              ols.at(wp_meta_ptr).end());
+    ASSERT_NE(ols.at(wp_meta_ptr)
+                      .find(static_cast<session*>(ss.at(1))->get_batch_id()),
+              ols.at(wp_meta_ptr).end());
+    ASSERT_EQ(leave(ss.at(0)), Status::OK);
+    ASSERT_EQ(leave(ss.at(1)), Status::OK);
+    ASSERT_EQ(leave(ss.at(2)), Status::OK);
 }
 
 } // namespace shirakami::testing

@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -29,21 +30,15 @@ public:
     /**
      * @brief get equal epoch's read_by
      * @param[in] epoch 
+     * @param[in] ltx_id 
      * @return body_elem_type
      */
-    body_elem_type get(epoch::epoch_t epoch);
-
-    /**
-     * @brief gc
-     * @pre get mtx_ lock
-     * 
-     */
-    void gc();
+    bool is_exist(epoch::epoch_t epoch, std::size_t ltx_id);
 
     void push(body_elem_type elem);
 
 private:
-    std::mutex mtx_;
+    std::shared_mutex mtx_;
 
     /**
      * @brief body
