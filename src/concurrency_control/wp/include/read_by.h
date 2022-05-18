@@ -78,16 +78,6 @@ private:
 
 class read_by_occ {
 public:
-    using body_elem_type = epoch::epoch_t;
-    using body_type = std::vector<body_elem_type>;
-
-    /**
-     * @brief gc
-     * @pre get mtx_ lock
-     * 
-     */
-    void gc();
-
     /**
      * @brief Get the partial elements
      * @param epoch 
@@ -102,7 +92,7 @@ public:
 
     std::atomic<epoch::epoch_t>& get_max_epoch_ref() { return max_epoch_; }
 
-    void push(body_elem_type elem);
+    void push(epoch::epoch_t elem);
 
     void set_max_epoch(epoch::epoch_t const ep) {
         max_epoch_.store(ep, std::memory_order_release);
@@ -112,12 +102,6 @@ private:
     std::atomic<epoch::epoch_t> max_epoch_{0};
 
     std::mutex mtx_;
-
-    /**
-     * @brief body
-     * @details std::pair.first is epoch. the second is batch_id.
-     */
-    body_type body_;
 };
 
 } // namespace shirakami

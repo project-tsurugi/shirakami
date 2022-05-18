@@ -93,7 +93,8 @@ TEST_F(epoch_test, check_progress_of_step_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(epoch_test, check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
+TEST_F(epoch_test,
+       check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti{static_cast<session*>(s)};
@@ -104,6 +105,22 @@ TEST_F(epoch_test, check_not_progress_of_step_epoch_if_operating_true) { // NOLI
     ASSERT_EQ(first_epoch, second_epoch);
     LOG(INFO) << first_epoch << " " << second_epoch;
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(epoch_test, ptp) { // NOLINT
+    ASSERT_EQ(epoch::ptp_init_val, epoch::get_perm_to_proc());
+    epoch::epoch_t ce{};
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ce = epoch::get_global_epoch();
+        epoch::set_perm_to_proc(1);
+    }
+    sleepMs(PARAM_EPOCH_TIME * 2);
+    ASSERT_EQ(epoch::get_perm_to_proc(), 0);
+    ASSERT_EQ(ce + 1, epoch::get_global_epoch());
+    epoch::set_perm_to_proc(epoch::ptp_init_val);
+    sleepMs(PARAM_EPOCH_TIME * 2);
+    ASSERT_NE(ce + 1, epoch::get_global_epoch());
 }
 
 } // namespace shirakami::testing

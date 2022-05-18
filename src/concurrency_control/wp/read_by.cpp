@@ -123,78 +123,11 @@ void range_read_by_bt::push(body_elem_type const& elem) {
     }
 }
 
-void read_by_occ::gc() {
-#if PARAM_READ_BY_MODE == 0
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
-        if ((*itr) < threshold) {
-            itr = body_.erase(itr);
-        } else {
-            return;
-        }
-    }
-#endif
-}
-
 bool read_by_occ::find(epoch::epoch_t const epoch) {
-#if PARAM_READ_BY_MODE == 0
-    std::unique_lock<std::mutex> lk(mtx_);
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
-        if ((*itr) < epoch) {
-            // check gc
-            if ((*itr) < threshold) {
-                itr = body_.erase(itr);
-            } else {
-                ++itr;
-            }
-            continue;
-        }
-        if ((*itr) == epoch) { // found
-            return *itr;
-        }
-        return false;
-    }
-
-    return false;
-#elif PARAM_READ_BY_MODE == 1
     return get_max_epoch() == epoch;
-#endif
 }
 
-void read_by_occ::push(body_elem_type const elem) {
-#if PARAM_READ_BY_MODE == 0
-    // optimization
-    if (get_max_epoch() == elem) { return; }
-
-    std::unique_lock<std::mutex> lk(mtx_);
-
-    // if empty
-    if (body_.empty()) {
-        // push back
-        body_.emplace_back(elem);
-        set_max_epoch(elem);
-        return;
-    }
-
-    for (auto ritr = body_.rbegin(); ritr != body_.rend(); ++ritr) {
-        if ((*ritr) < elem) {
-            if (ritr == body_.rbegin()) { set_max_epoch(elem); }
-            body_.insert(ritr.base(), elem);
-            gc();
-            return;
-        }
-    }
-
-    body_.insert(body_.begin(), elem);
-
-    gc();
-#elif PARAM_READ_BY_MODE == 1
-
+void read_by_occ::push(epoch::epoch_t const elem) {
     auto& me = get_max_epoch_ref();
     auto ce = get_max_epoch();
     for (;;) {
@@ -207,8 +140,6 @@ void read_by_occ::push(body_elem_type const elem) {
             break;
         }
     }
-
-#endif
 }
 
 } // namespace shirakami

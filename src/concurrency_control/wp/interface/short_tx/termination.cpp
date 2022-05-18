@@ -284,7 +284,7 @@ extern Status commit(session* ti, // NOLINT
         return Status::ERR_FATAL;
     }
 
-// This calculation can be done outside the critical section.
+    // This calculation can be done outside the critical section.
     register_read_by_occ(ti);
 
     // about tx state

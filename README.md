@@ -93,15 +93,6 @@ Available options:
        </font>
        * Default: `OFF`
 
-       - `-DPARAM_READ_BY_MODE=<0 or 1>`
-
-          * How occ tx leaves read-anti-info. Mode 0 is the basic method, and the
-          performance of occ tx is worse than that of mode 1. Mode 1 degrades
-          batch performance other than the highest priority, but occ tx has very
-          good performance.
-
-          * Default: `1`
-
   + PWAL
     - `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>`
        * This is one of trigger of group commit.

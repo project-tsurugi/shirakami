@@ -203,6 +203,7 @@ Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
     auto this_id = ti->get_batch_id();
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+        // for ltx
         point_read_by_bt* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
@@ -212,6 +213,13 @@ Status verify_read_by(session* const ti) {
         } else {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
+        }
+
+        // for stx
+        auto* rec_ptr{wso.first};
+        if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
+            // this will break commited stx's read
+            return Status::ERR_VALIDATION;
         }
 
         if (wso.second.get_op() == OP_TYPE::INSERT ||

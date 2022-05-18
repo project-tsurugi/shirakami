@@ -8,6 +8,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::epoch {
 
 inline void check_epoch_load_and_update_idle_living_tx() {
@@ -26,6 +28,23 @@ void epoch_thread_work() {
         {
             auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
             std::unique_lock<std::mutex> lk{get_ep_mtx()};
+            for (;;) {
+                auto ptp{epoch::get_perm_to_proc()};
+                if (ptp < -1) {
+                    LOG(ERROR) << "programming error";
+                    return;
+                } else if (ptp == -1) {
+                    // ptp invalid
+                    break;
+                } else if (ptp == 0) {
+                    // wait to lock release
+                    _mm_pause();
+                } else {
+                    // ptp allow epoch inclement
+                    epoch::set_perm_to_proc(ptp - 1);
+                    break;
+                }
+            }
             set_global_epoch(get_global_epoch() + 1);
             // dtor : release wp_mutex
         }

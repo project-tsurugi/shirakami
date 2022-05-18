@@ -49,4 +49,26 @@ static constexpr epoch_t max_epoch{INT64_MAX};
     global_epoch.store(epo, std::memory_order_release);
 }
 
+// For DEBUG and TEST
+//==========
+using ptp_body_type = int;
+static constexpr ptp_body_type ptp_init_val{-1};
+
+/**
+ * @brief For debug and test: permission to proceed epoch
+ * @details If this is -1, this variable is invalid. If not, epoch manager can
+ * proceed epoch for the value of this.
+ */
+[[maybe_unused]] inline std::atomic<ptp_body_type> perm_to_proc_{-1};
+
+[[maybe_unused]] static void set_perm_to_proc(ptp_body_type num) {
+    perm_to_proc_.store(num, std::memory_order_release);
+}
+
+[[maybe_unused]] static ptp_body_type get_perm_to_proc() {
+    return perm_to_proc_.load(std::memory_order_acquire);
+}
+
+//==========
+
 } // namespace shirakami::epoch
