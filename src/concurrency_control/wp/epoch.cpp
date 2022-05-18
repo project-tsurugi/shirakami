@@ -33,10 +33,12 @@ void epoch_thread_work() {
                 if (ptp < -1) {
                     LOG(ERROR) << "programming error";
                     return;
-                } else if (ptp == -1) {
+                }
+                if (ptp == -1) {
                     // ptp invalid
                     break;
-                } else if (ptp == 0) {
+                }
+                if (ptp == 0) {
                     // wait to lock release
                     _mm_pause();
                 } else {

@@ -109,7 +109,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         storeRelease(readys.at(th_num), 1);
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
-        TX_BEGIN:
+        TX_BEGIN: // NOLINT
             ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
             wait_epoch_update();
 
@@ -141,13 +141,10 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                     _mm_pause();
                     continue;
-                } else if (rc == Status::OK) {
-                    break;
-                } else if (rc == Status::ERR_VALIDATION) {
-                    goto TX_BEGIN;
-                } else {
-                    LOG(FATAL) << rc;
                 }
+                if (rc == Status::OK) { break; }
+                if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
+                LOG(FATAL) << rc;
             }
         }
     };

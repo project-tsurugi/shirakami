@@ -92,7 +92,7 @@ TEST_F(write_skew, simple) { // NOLINT
     memcpy(&v2, vb2.data(), sizeof(v2));
     ++v2;
     std::string v1_view{reinterpret_cast<char*>(&v1), sizeof(v1)}; // NOLINT
-    std::string v2_view{reinterpret_cast<char*>(&v2), sizeof(v2)};
+    std::string v2_view{reinterpret_cast<char*>(&v2), sizeof(v2)}; // NOLINT
     ASSERT_EQ(upsert(s1, st, y, v1_view), Status::OK);
     ASSERT_EQ(upsert(s2, st, x, v2_view), Status::OK);
 

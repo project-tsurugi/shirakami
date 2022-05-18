@@ -81,7 +81,7 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
 }
 
 TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
-    std::array<Token, 3> ss;
+    std::array<Token, 3> ss{};
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     ASSERT_EQ(enter(ss.at(0)), Status::OK);

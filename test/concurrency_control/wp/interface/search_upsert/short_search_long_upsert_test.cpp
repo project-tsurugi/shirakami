@@ -170,7 +170,7 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         epoch::get_ep_mtx().unlock();
         wait_epoch_update();
         ASSERT_EQ(epoch::get_perm_to_proc(), 0);
-        session* ltx1s = static_cast<session*>(ltx1);
+        auto* ltx1s = static_cast<session*>(ltx1);
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
         Token stx{};
         ASSERT_EQ(enter(stx), Status::OK);

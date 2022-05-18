@@ -6,7 +6,7 @@
 namespace shirakami {
 
 bool point_read_by_long::is_exist(epoch::epoch_t const epoch,
-                                std::size_t ltx_id) {
+                                  std::size_t ltx_id) {
     std::shared_lock<std::shared_mutex> lk(mtx_);
     for (auto&& elem : body_) {
         if (elem.second < ltx_id) {
@@ -42,7 +42,8 @@ void point_read_by_long::push(body_elem_type const elem) {
                 ++itr;
             }
             continue;
-        } else if ((*itr).second == elem.second) {
+        }
+        if ((*itr).second == elem.second) {
             LOG(ERROR) << "programming error";
             return;
         }
@@ -50,7 +51,6 @@ void point_read_by_long::push(body_elem_type const elem) {
         break;
     }
     body_.emplace_back(elem);
-    return;
 }
 
 range_read_by_long::body_elem_type
@@ -60,8 +60,9 @@ range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
         if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
             // check the key is right from left point
             if (std::get<range_read_by_long::index_l_ep>(elem) ==
-                        scan_endpoint::INF ||                          // inf
-                std::get<range_read_by_long::index_l_key>(elem) < key || // right
+                        scan_endpoint::INF || // inf
+                std::get<range_read_by_long::index_l_key>(elem) <
+                        key || // right
                 (std::get<range_read_by_long::index_l_key>(elem) == key &&
                  std::get<range_read_by_long::index_l_ep>(elem) ==
                          scan_endpoint::INCLUSIVE) // same

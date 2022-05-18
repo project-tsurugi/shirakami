@@ -80,7 +80,7 @@ TEST_F(epoch_no_stop_test, check_progress_of_step_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(epoch_no_stop_test,
+TEST_F(epoch_no_stop_test,                                   // NOLINT
        check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));

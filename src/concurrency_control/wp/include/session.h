@@ -96,7 +96,7 @@ public:
      * @return Status::WARN_PREMATURE There is a high priority short tx.
      * @return Status::ERR_FATAL programming error.
      */
-    Status find_high_priority_short();
+    [[nodiscard]] Status find_high_priority_short() const;
 
     /**
      * @brief Find wp about @a st from wp set.
@@ -149,7 +149,9 @@ public:
         return range_read_by_long_set_;
     }
 
-    point_read_by_short_set_type& get_point_read_by_short_set() { return point_read_by_short_set_; }
+    point_read_by_short_set_type& get_point_read_by_short_set() {
+        return point_read_by_short_set_;
+    }
 
     read_set_type& get_read_set() { return read_set_; }
 
