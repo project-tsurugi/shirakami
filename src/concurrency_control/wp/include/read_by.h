@@ -76,7 +76,7 @@ private:
     body_type body_;
 };
 
-class read_by_occ {
+class read_by_short {
 public:
     /**
      * @brief Get the partial elements

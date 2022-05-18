@@ -123,11 +123,11 @@ void range_read_by_bt::push(body_elem_type const& elem) {
     }
 }
 
-bool read_by_occ::find(epoch::epoch_t const epoch) {
+bool read_by_short::find(epoch::epoch_t const epoch) {
     return get_max_epoch() == epoch;
 }
 
-void read_by_occ::push(epoch::epoch_t const elem) {
+void read_by_short::push(epoch::epoch_t const elem) {
     auto& me = get_max_epoch_ref();
     auto ce = get_max_epoch();
     for (;;) {

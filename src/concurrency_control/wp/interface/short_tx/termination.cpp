@@ -226,7 +226,7 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     ti->set_mrc_tid(commit_tid);
 }
 
-void register_read_by_occ(session* const ti) {
+void register_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
     std::vector<Record*> recs{};
@@ -285,7 +285,7 @@ extern Status commit(session* ti, // NOLINT
     }
 
     // This calculation can be done outside the critical section.
-    register_read_by_occ(ti);
+    register_read_by_short(ti);
 
     // about tx state
     // this should be before clean_up func
