@@ -6,6 +6,7 @@
 
 #include <array>
 #include <atomic>
+#include <set>
 
 #include "cpu.h"
 #include "epoch.h"
@@ -14,6 +15,7 @@
 
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "concurrency_control/include/scan.h"
 
@@ -29,12 +31,15 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-    using point_read_by_bt_set_type = std::vector<point_read_by_bt*>;
-    using range_read_by_bt_set_type =
-            std::vector<std::tuple<range_read_by_bt*, std::string,
+    using point_read_by_long_set_type = std::vector<point_read_by_long*>;
+    using range_read_by_long_set_type =
+            std::vector<std::tuple<range_read_by_long*, std::string,
                                    scan_endpoint, std::string, scan_endpoint>>;
-    using read_by_occ_set_type = std::vector<read_by_occ*>;
+    using point_read_by_short_set_type = std::vector<point_read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
+    using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
+    using overtaken_ltx_set_type =
+            std::map<wp::wp_meta*, std::set<std::size_t>>;
 
     /**
      * @brief compare and swap for visible_.
@@ -54,7 +59,7 @@ public:
 
     void clear_about_long_tx_metadata() {
         set_read_version_max_epoch(0);
-        set_batch_id(0);
+        set_long_tx_id(0);
         set_valid_epoch(0);
     }
 
@@ -91,7 +96,7 @@ public:
      * @return Status::WARN_PREMATURE There is a high priority short tx.
      * @return Status::ERR_FATAL programming error.
      */
-    Status find_high_priority_short();
+    [[nodiscard]] Status find_high_priority_short() const;
 
     /**
      * @brief Find wp about @a st from wp set.
@@ -136,15 +141,17 @@ public:
      */
     [[nodiscard]] bool get_read_only() const { return read_only_; }
 
-    point_read_by_bt_set_type& get_point_read_by_bt_set() {
-        return point_read_by_bt_set_;
+    point_read_by_long_set_type& get_point_read_by_long_set() {
+        return point_read_by_long_set_;
     }
 
-    range_read_by_bt_set_type& get_range_read_by_bt_set() {
-        return range_read_by_bt_set_;
+    range_read_by_long_set_type& get_range_read_by_long_set() {
+        return range_read_by_long_set_;
     }
 
-    read_by_occ_set_type& get_read_by_occ_set() { return read_by_occ_set_; }
+    point_read_by_short_set_type& get_point_read_by_short_set() {
+        return point_read_by_short_set_;
+    }
 
     read_set_type& get_read_set() { return read_set_; }
 
@@ -190,13 +197,15 @@ public:
 
     // ========== start: long tx
 
-    [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
+    [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
 
-    std::vector<Storage>& get_wp_set() { return wp_set_; }
-
-    [[nodiscard]] const std::vector<Storage>& get_wp_set() const {
-        return wp_set_;
+    overtaken_ltx_set_type& get_overtaken_ltx_set() {
+        return overtaken_ltx_set_;
     }
+
+    wp_set_type& get_wp_set() { return wp_set_; }
+
+    [[nodiscard]] const wp_set_type& get_wp_set() const { return wp_set_; }
 
     [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
         return read_version_max_epoch_;
@@ -271,7 +280,7 @@ public:
 
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
-    void set_wp_set(std::vector<Storage> const& wps) { wp_set_ = wps; }
+    void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
 
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
@@ -279,7 +288,7 @@ public:
 
     // ========== start: long tx
 
-    void set_batch_id(std::size_t bid) { batch_id_ = bid; }
+    void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
     void set_read_version_max_epoch(epoch::epoch_t ep) {
         read_version_max_epoch_ = ep;
@@ -341,11 +350,11 @@ private:
      */
     std::atomic<bool> tx_began_{false};
 
-    point_read_by_bt_set_type point_read_by_bt_set_{};
+    point_read_by_long_set_type point_read_by_long_set_{};
 
-    range_read_by_bt_set_type range_read_by_bt_set_{};
+    range_read_by_long_set_type range_read_by_long_set_{};
 
-    read_by_occ_set_type read_by_occ_set_{};
+    point_read_by_short_set_type point_read_by_short_set_{};
 
     /**
      * @brief local read set.
@@ -421,7 +430,9 @@ private:
      * @brief long tx's id.
      * 
      */
-    std::size_t batch_id_{};
+    std::size_t long_tx_id_{};
+
+    overtaken_ltx_set_type overtaken_ltx_set_;
 
     /**
      * @brief read write batch executes write preserve preserve.
@@ -430,12 +441,12 @@ private:
 
     /**
      * @brief local wp set.
-     * @details If this session processes long transaction in a batch mode and 
+     * @details If this session processes long transaction in a long tx mode and 
      * executes transactional write operations, it is for cheking whether the 
      * target of the operation was write preserved properly by use this 
      * infomation.
      */
-    std::vector<Storage> wp_set_{};
+    wp_set_type wp_set_{};
 
     /**
      * @brief The max (created) epoch in the versions which was read by this 

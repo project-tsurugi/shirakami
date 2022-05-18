@@ -59,7 +59,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 20 -j 100
+          ctest --verbose --timeout 20 -j 224
 
       - id: CTest_CPR
         name: CTest_CPR

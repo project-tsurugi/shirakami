@@ -154,7 +154,7 @@ Status open_scan(Token const token, Storage storage,
     }
 
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        range_read_by_bt* rbp{};
+        range_read_by_long* rbp{};
         rc = wp::find_read_by(storage, rbp);
         if (rc == Status::OK) {
             /**
@@ -164,7 +164,7 @@ Status open_scan(Token const token, Storage storage,
           * read_from_scan, and the range is fixed and registered at the end of 
           * the transaction.
           */
-            ti->get_range_read_by_bt_set().emplace_back(
+            ti->get_range_read_by_long_set().emplace_back(
                     std::make_tuple(rbp, l_key, l_end, r_key, r_end));
         } else {
             LOG(ERROR) << "programming error";
@@ -395,7 +395,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
     } else if (ti->get_tx_type() == TX_TYPE::LONG) {
         if (!wp::wp_meta::empty(wps) &&
-            wp::wp_meta::find_min_id(wps) < ti->get_batch_id()) {
+            wp::wp_meta::find_min_id(wps) < ti->get_long_tx_id()) {
             abort(ti); // or wait
             /**
          * because: You have to wait for the end of the transaction to read 

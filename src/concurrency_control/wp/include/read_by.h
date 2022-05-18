@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -21,7 +22,7 @@
 
 namespace shirakami {
 
-class point_read_by_bt {
+class point_read_by_long {
 public:
     using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using body_type = std::vector<body_elem_type>;
@@ -29,30 +30,24 @@ public:
     /**
      * @brief get equal epoch's read_by
      * @param[in] epoch 
+     * @param[in] ltx_id 
      * @return body_elem_type
      */
-    body_elem_type get(epoch::epoch_t epoch);
-
-    /**
-     * @brief gc
-     * @pre get mtx_ lock
-     * 
-     */
-    void gc();
+    bool is_exist(epoch::epoch_t epoch, std::size_t ltx_id);
 
     void push(body_elem_type elem);
 
 private:
-    std::mutex mtx_;
+    std::shared_mutex mtx_;
 
     /**
      * @brief body
-     * @details std::pair.first is epoch. the second is batch_id.
+     * @details std::pair.first is epoch. the second is long_tx_id.
      */
     body_type body_;
 };
 
-class range_read_by_bt {
+class range_read_by_long {
 public:
     /**
      * body element type
@@ -81,18 +76,8 @@ private:
     body_type body_;
 };
 
-class read_by_occ {
+class point_read_by_short {
 public:
-    using body_elem_type = epoch::epoch_t;
-    using body_type = std::vector<body_elem_type>;
-
-    /**
-     * @brief gc
-     * @pre get mtx_ lock
-     * 
-     */
-    void gc();
-
     /**
      * @brief Get the partial elements
      * @param epoch 
@@ -107,7 +92,7 @@ public:
 
     std::atomic<epoch::epoch_t>& get_max_epoch_ref() { return max_epoch_; }
 
-    void push(body_elem_type elem);
+    void push(epoch::epoch_t elem);
 
     void set_max_epoch(epoch::epoch_t const ep) {
         max_epoch_.store(ep, std::memory_order_release);
@@ -117,12 +102,6 @@ private:
     std::atomic<epoch::epoch_t> max_epoch_{0};
 
     std::mutex mtx_;
-
-    /**
-     * @brief body
-     * @details std::pair.first is epoch. the second is batch_id.
-     */
-    body_type body_;
 };
 
 } // namespace shirakami

@@ -22,7 +22,12 @@
 
 #include "glog/logging.h"
 
-namespace shirakami::wp {
+namespace shirakami {
+
+// forward declaration
+class session;
+
+namespace wp {
 
 class wp_lock {
 public:
@@ -75,6 +80,8 @@ public:
     using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using wped_type = std::array<wped_elem_type, WP_MAX_OVERLAP>;
     using wped_used_type = std::bitset<WP_MAX_OVERLAP>;
+    using wp_result_set_type =
+            std::vector<std::pair<epoch::epoch_t, std::size_t>>;
 
     wp_meta() { init(); }
 
@@ -89,6 +96,20 @@ public:
 
     void clear_wped() {
         for (auto&& elem : wped_) { elem = {0, 0}; }
+    }
+
+    Status change_wp_epoch(std::size_t id, epoch::epoch_t target) {
+        wp_lock_.lock();
+        for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+            if (wped_.at(i).second == id) {
+                set_wped(i, {target, id});
+                wp_lock_.unlock();
+                return Status::OK;
+            }
+        }
+        LOG(ERROR) << "programming error";
+        wp_lock_.unlock();
+        return Status::ERR_FATAL;
     }
 
     void display() {
@@ -133,6 +154,12 @@ public:
         return wped_used_;
     }
 
+    wp_lock& get_wp_lock() { return wp_lock_; }
+
+    std::shared_mutex& get_mtx_wp_result_set() { return mtx_wp_result_set_; }
+
+    wp_result_set_type& get_wp_result_set() { return wp_result_set_; }
+
     /**
      * @brief check the space of write preserve.
      * @param[out] at If this function returns Status::OK, the value of @a at 
@@ -167,6 +194,27 @@ public:
         return min_ep;
     }
 
+    static std::pair<epoch::epoch_t, std::size_t>
+    find_min_ep_id(const wped_type& wped) {
+        bool first{true};
+        std::size_t min_id{0};
+        std::size_t min_ep{0};
+        for (auto&& elem : wped) {
+            if (elem.first != 0) {
+                // used slot
+                if (first) {
+                    first = false;
+                    min_ep = elem.first;
+                    min_id = elem.second;
+                } else if (min_id > elem.second) {
+                    min_ep = elem.first;
+                    min_id = elem.second;
+                }
+            }
+        }
+        return {min_ep, min_id};
+    }
+
     static std::size_t find_min_id(const wped_type& wped) {
         bool first{true};
         std::size_t min_id{0};
@@ -197,14 +245,18 @@ public:
         return Status::OK;
     }
 
-    /**
-     * @brief remove element from wped_
-     * @param[in] id batch id.
-     * @return Status::OK success.
-     * @return Status::WARN_NOT_FOUND fail.
-     */
-    [[nodiscard]] Status remove_wp(std::size_t const id) {
+    [[nodiscard]] Status
+    register_wp_result_and_remove_wp(epoch::epoch_t const ep,
+                                     std::size_t const id) {
+        {
+            std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
+            wp_result_set_.emplace_back(std::make_pair(ep, id));
+        }
         wp_lock_.lock();
+        return remove_wp_without_lock(id);
+    }
+
+    [[nodiscard]] Status remove_wp_without_lock(std::size_t const id) {
         for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
             if (wped_.at(i).second == id) {
                 set_wped(i, {0, 0});
@@ -216,8 +268,18 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
-    void set_wped(std::size_t const pos,
-                  wped_elem_type const val) {
+    /**
+     * @brief remove element from wped_
+     * @param[in] id batch id.
+     * @return Status::OK success.
+     * @return Status::WARN_NOT_FOUND fail.
+     */
+    [[nodiscard]] Status remove_wp(std::size_t const id) {
+        wp_lock_.lock();
+        return remove_wp_without_lock(id);
+    }
+
+    void set_wped(std::size_t const pos, wped_elem_type const val) {
         wped_.at(pos) = val;
     }
 
@@ -242,19 +304,27 @@ private:
      * @brief mutex for wped_
      */
     wp_lock wp_lock_;
+
+    wp_result_set_type wp_result_set_;
+
+    /**
+     * @brief mutex for @a wp_result_set_;
+     * 
+     */
+    std::shared_mutex mtx_wp_result_set_;
 };
 
 class page_set_meta {
 public:
-    point_read_by_bt* get_point_read_by_ptr() { return &point_read_by_; }
+    point_read_by_long* get_point_read_by_ptr() { return &point_read_by_; }
 
-    range_read_by_bt* get_range_read_by_ptr() { return &range_read_by_; }
+    range_read_by_long* get_range_read_by_ptr() { return &range_read_by_; }
 
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
 private:
-    point_read_by_bt point_read_by_;
-    range_read_by_bt range_read_by_;
+    point_read_by_long point_read_by_;
+    range_read_by_long range_read_by_;
     wp_meta wp_meta_;
 };
 
@@ -279,6 +349,15 @@ inline std::mutex wp_mutex;
 inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 
 /**
+ * @brief extract ltxs info higher priority than @a ltx_id from @a wps.
+ * @param[in] ti The transaction which executes on this session takes information.
+ * @param[in] wp_meta_ptr wp information.
+ * @param[in] wps wp information.
+ */
+void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
+                                    wp_meta::wped_type const& wps);
+
+/**
  * @brief termination process about wp.
  */
 [[maybe_unused]] extern Status fin();
@@ -291,9 +370,9 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
 
-[[maybe_unused]] extern Status find_read_by(Storage st, range_read_by_bt*& ret);
+[[maybe_unused]] extern Status find_read_by(Storage st, range_read_by_long*& ret);
 
-[[maybe_unused]] extern Status find_read_by(Storage st, point_read_by_bt*& ret);
+[[maybe_unused]] extern Status find_read_by(Storage st, point_read_by_long*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 
@@ -348,7 +427,8 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 
 [[maybe_unused]] extern Status write_preserve(Token token,
                                               std::vector<Storage> storage,
-                                              std::size_t batch_id,
+                                              std::size_t long_tx_id,
                                               epoch::epoch_t valid_epoch);
 
-} // namespace shirakami::wp
+} // namespace wp
+} // namespace shirakami

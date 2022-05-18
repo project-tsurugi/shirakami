@@ -63,7 +63,7 @@ TEST_F(upsert_after_upsert, double_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(upsert_after_upsert, manyUpsert) { // NOLINT
+TEST_F(upsert_after_upsert, multi_upsert) { // NOLINT
     std::string k("K");
     std::string v(1000, 'v'); // NOLINT
     Token s{};
@@ -73,7 +73,7 @@ TEST_F(upsert_after_upsert, manyUpsert) { // NOLINT
 
     ASSERT_EQ(tx_begin(s2), Status::OK); // to block gc
 
-    for (std::size_t i = 0; i < 1000; ++i) { // NOLINT
+    for (std::size_t i = 0; i < 100; ++i) { // NOLINT
         ASSERT_EQ(Status::OK, upsert(s, st, k, v));
         ASSERT_EQ(Status::OK, commit(s));
     }

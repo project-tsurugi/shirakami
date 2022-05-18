@@ -5,41 +5,36 @@
 
 namespace shirakami {
 
-point_read_by_bt::body_elem_type
-point_read_by_bt::get(epoch::epoch_t const epoch) {
-    std::unique_lock<std::mutex> lk(mtx_);
+bool point_read_by_long::is_exist(epoch::epoch_t const epoch,
+                                  std::size_t ltx_id) {
+    std::shared_lock<std::shared_mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (elem.first == epoch) { return elem; }
-        if (elem.first > epoch) {
-            // no more due to invariant
-            break;
-        }
-    }
-
-    return body_elem_type{0, 0};
-}
-
-void point_read_by_bt::gc() {
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if ((*itr).first < threshold) {
-            itr = body_.erase(itr);
+        if (elem.second < ltx_id) {
+            // elem is high priori than this.
+            if (epoch <= elem.first) {
+                // todo: include false positive
+                return true;
+            }
+        } else if (elem.second == ltx_id) {
+            LOG(ERROR) << "programming error";
+            return true;
         } else {
-            // no more gc
+            // elem is low priori than this.
             break;
         }
     }
+
+    return false;
 }
 
-void point_read_by_bt::push(body_elem_type const elem) {
-    std::unique_lock<std::mutex> lk(mtx_);
+void point_read_by_long::push(body_elem_type const elem) {
+    std::lock_guard<std::shared_mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if ((*itr).first < elem.first) {
+        if ((*itr).second < elem.second) {
+            // high priori
             // check gc
             if ((*itr).first < threshold) {
                 itr = body_.erase(itr);
@@ -48,42 +43,44 @@ void point_read_by_bt::push(body_elem_type const elem) {
             }
             continue;
         }
-        if ((*itr).first == elem.first) {
-            if ((*itr).second > elem.second) { (*itr).second = elem.second; }
+        if ((*itr).second == elem.second) {
+            LOG(ERROR) << "programming error";
             return;
         }
-        body_.insert(itr, elem);
-        return;
+        // low priori
+        break;
     }
+    body_.emplace_back(elem);
 }
 
-range_read_by_bt::body_elem_type
-range_read_by_bt::get(epoch::epoch_t const ep, std::string_view const key) {
+range_read_by_long::body_elem_type
+range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (std::get<range_read_by_bt::index_epoch>(elem) == ep) {
+        if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
             // check the key is right from left point
-            if (std::get<range_read_by_bt::index_l_ep>(elem) ==
-                        scan_endpoint::INF ||                          // inf
-                std::get<range_read_by_bt::index_l_key>(elem) < key || // right
-                (std::get<range_read_by_bt::index_l_key>(elem) == key &&
-                 std::get<range_read_by_bt::index_l_ep>(elem) ==
+            if (std::get<range_read_by_long::index_l_ep>(elem) ==
+                        scan_endpoint::INF || // inf
+                std::get<range_read_by_long::index_l_key>(elem) <
+                        key || // right
+                (std::get<range_read_by_long::index_l_key>(elem) == key &&
+                 std::get<range_read_by_long::index_l_ep>(elem) ==
                          scan_endpoint::INCLUSIVE) // same
             ) {
                 // check the key is left from right point
-                if (std::get<range_read_by_bt::index_r_ep>(elem) ==
+                if (std::get<range_read_by_long::index_r_ep>(elem) ==
                             scan_endpoint::INF || // inf
-                    std::get<range_read_by_bt::index_r_key>(elem) >
+                    std::get<range_read_by_long::index_r_key>(elem) >
                             key || // left
-                    (std::get<range_read_by_bt::index_r_key>(elem) == key &&
-                     std::get<range_read_by_bt::index_r_ep>(elem) ==
+                    (std::get<range_read_by_long::index_r_key>(elem) == key &&
+                     std::get<range_read_by_long::index_r_ep>(elem) ==
                              scan_endpoint::INCLUSIVE) // same
                 ) {
                     return elem;
                 }
             }
         }
-        if (std::get<range_read_by_bt::index_epoch>(elem) > ep) {
+        if (std::get<range_read_by_long::index_epoch>(elem) > ep) {
             // no more due to invariant
             break;
         }
@@ -92,12 +89,12 @@ range_read_by_bt::get(epoch::epoch_t const ep, std::string_view const key) {
     return body_elem_type{};
 }
 
-void range_read_by_bt::gc() {
+void range_read_by_long::gc() {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
+        if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
             itr = body_.erase(itr);
         } else {
             // no more gc
@@ -106,16 +103,16 @@ void range_read_by_bt::gc() {
     }
 }
 
-void range_read_by_bt::push(body_elem_type const& elem) {
+void range_read_by_long::push(body_elem_type const& elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_bt::index_epoch>(*itr) <
-            std::get<range_read_by_bt::index_epoch>(elem)) {
+        if (std::get<range_read_by_long::index_epoch>(*itr) <
+            std::get<range_read_by_long::index_epoch>(elem)) {
             // check gc
-            if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
+            if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
                 itr = body_.erase(itr);
             } else {
                 ++itr;
@@ -127,78 +124,11 @@ void range_read_by_bt::push(body_elem_type const& elem) {
     }
 }
 
-void read_by_occ::gc() {
-#if PARAM_READ_BY_MODE == 0
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
-        if ((*itr) < threshold) {
-            itr = body_.erase(itr);
-        } else {
-            return;
-        }
-    }
-#endif
-}
-
-bool read_by_occ::find(epoch::epoch_t const epoch) {
-#if PARAM_READ_BY_MODE == 0
-    std::unique_lock<std::mutex> lk(mtx_);
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) {
-        if ((*itr) < epoch) {
-            // check gc
-            if ((*itr) < threshold) {
-                itr = body_.erase(itr);
-            } else {
-                ++itr;
-            }
-            continue;
-        }
-        if ((*itr) == epoch) { // found
-            return *itr;
-        }
-        return false;
-    }
-
-    return false;
-#elif PARAM_READ_BY_MODE == 1
+bool point_read_by_short::find(epoch::epoch_t const epoch) {
     return get_max_epoch() == epoch;
-#endif
 }
 
-void read_by_occ::push(body_elem_type const elem) {
-#if PARAM_READ_BY_MODE == 0
-    // optimization
-    if (get_max_epoch() == elem) { return; }
-
-    std::unique_lock<std::mutex> lk(mtx_);
-
-    // if empty
-    if (body_.empty()) {
-        // push back
-        body_.emplace_back(elem);
-        set_max_epoch(elem);
-        return;
-    }
-
-    for (auto ritr = body_.rbegin(); ritr != body_.rend(); ++ritr) {
-        if ((*ritr) < elem) {
-            if (ritr == body_.rbegin()) { set_max_epoch(elem); }
-            body_.insert(ritr.base(), elem);
-            gc();
-            return;
-        }
-    }
-
-    body_.insert(body_.begin(), elem);
-
-    gc();
-#elif PARAM_READ_BY_MODE == 1
-
+void point_read_by_short::push(epoch::epoch_t const elem) {
     auto& me = get_max_epoch_ref();
     auto ce = get_max_epoch();
     for (;;) {
@@ -211,8 +141,6 @@ void read_by_occ::push(body_elem_type const elem) {
             break;
         }
     }
-
-#endif
 }
 
 } // namespace shirakami

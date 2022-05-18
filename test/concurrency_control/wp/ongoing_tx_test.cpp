@@ -51,7 +51,6 @@ TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
 }
 
 TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
-
     // register
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
     ongoing_tx::push({1, 1});
@@ -82,6 +81,40 @@ TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
     ongoing_tx::remove_id(1);
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
+}
+
+TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
+    ongoing_tx::push({2, 2});
+    ongoing_tx::push({3, 3});
+
+    auto& cont = ongoing_tx::get_tx_info();
+    for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
+        if (itr->second == 2) {
+            ASSERT_EQ(itr->first, 2);
+        } else if (itr->second == 3) {
+            ASSERT_EQ(itr->first, 3);
+        } else {
+            ASSERT_EQ(true, false); // not reachable
+        }
+    }
+
+    // fail case
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              ongoing_tx::change_epoch_without_lock(3, 1, 1, 1));
+
+    // success case
+    ASSERT_EQ(Status::OK, ongoing_tx::change_epoch_without_lock(3, 2, 2, 2));
+
+    // verify
+    for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
+        if (itr->second == 2) {
+            ASSERT_EQ(itr->first, 2);
+        } else if (itr->second == 3) {
+            ASSERT_EQ(itr->first, 2);
+        } else {
+            ASSERT_EQ(true, false); // not reachable
+        }
+    }
 }
 
 } // namespace shirakami::testing

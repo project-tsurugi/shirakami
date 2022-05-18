@@ -15,8 +15,9 @@
 
 namespace shirakami::long_tx {
 
-void remove_wps(session* ti) {
-    for (auto&& storage : ti->get_wp_set()) {
+void register_wp_result_and_remove_wps(session* ti) {
+    for (auto&& elem : ti->get_wp_set()) {
+        Storage storage = elem.first;
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         std::string_view page_set_meta_storage_view = {
                 reinterpret_cast<char*>( // NOLINT
@@ -33,7 +34,10 @@ void remove_wps(session* ti) {
             return;
         }
         if (Status::OK !=
-            (*out.first)->get_wp_meta_ptr()->remove_wp(ti->get_batch_id())) {
+            (*out.first)
+                    ->get_wp_meta_ptr()
+                    ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
+                                                       ti->get_long_tx_id())) {
             LOG(FATAL);
         }
     }
@@ -41,8 +45,8 @@ void remove_wps(session* ti) {
 
 void cleanup_process(session* const ti) {
     // global effect
-    remove_wps(ti);
-    ongoing_tx::remove_id(ti->get_batch_id());
+    register_wp_result_and_remove_wps(ti);
+    ongoing_tx::remove_id(ti->get_long_tx_id());
 
     // local effect
     ti->clean_up();
@@ -175,13 +179,13 @@ void expose_local_write(session* ti) {
 
 void register_read_by(session* const ti) {
     // point read
-    for (auto&& elem : ti->get_point_read_by_bt_set()) {
-        elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
+    for (auto&& elem : ti->get_point_read_by_long_set()) {
+        elem->push({ti->get_valid_epoch(), ti->get_long_tx_id()});
     }
 
     // range read
-    for (auto&& elem : ti->get_range_read_by_bt_set()) {
-        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_batch_id(),
+    for (auto&& elem : ti->get_range_read_by_long_set()) {
+        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_long_tx_id(),
                                  std::get<1>(elem), std::get<2>(elem),
                                  std::get<3>(elem), std::get<4>(elem)});
     }
@@ -190,20 +194,20 @@ void register_read_by(session* const ti) {
 void prepare_commit(session* const ti) {
     // optimizations
     // shrink read_by_set
-    auto& rbset = ti->get_point_read_by_bt_set();
+    auto& rbset = ti->get_point_read_by_long_set();
     std::sort(rbset.begin(), rbset.end());
     rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
 }
 
 Status verify_read_by(session* const ti) {
+    auto this_epoch = ti->get_valid_epoch();
+    auto this_id = ti->get_long_tx_id();
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-        point_read_by_bt* rbp{};
+        // for ltx
+        point_read_by_long* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
-            auto rb{rbp->get(ti->get_valid_epoch())};
-
-            if (rb != point_read_by_bt::body_elem_type(0, 0) &&
-                rb.second < ti->get_batch_id()) {
+            if (rbp->is_exist(this_epoch, this_id)) {
                 return Status::ERR_VALIDATION;
             }
         } else {
@@ -211,16 +215,23 @@ Status verify_read_by(session* const ti) {
             return Status::ERR_FATAL;
         }
 
+        // for stx
+        auto* rec_ptr{wso.first};
+        if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
+            // this will break commited stx's read
+            return Status::ERR_VALIDATION;
+        }
+
         if (wso.second.get_op() == OP_TYPE::INSERT ||
             wso.second.get_op() == OP_TYPE::DELETE) {
-            range_read_by_bt* rrbp{};
+            range_read_by_long* rrbp{};
             auto rc{wp::find_read_by(wso.second.get_storage(), rrbp)};
             if (rc == Status::OK) {
                 std::string keyb{};
                 wso.first->get_key(keyb);
-                auto rb{rrbp->get(ti->get_valid_epoch(), keyb)};
+                auto rb{rrbp->get(this_epoch, keyb)};
 
-                if (rb != range_read_by_bt::body_elem_type{}) {
+                if (rb != range_read_by_long::body_elem_type{}) {
                     return Status::ERR_VALIDATION;
                 }
             } else {
@@ -230,11 +241,52 @@ Status verify_read_by(session* const ti) {
         }
     }
 
+    // for overtaken set
+
+    auto gc_threshold = ongoing_tx::get_lowest_epoch();
+    for (auto&& oe : ti->get_overtaken_ltx_set()) {
+        wp::wp_meta* wp_meta_ptr{oe.first};
+        std::lock_guard<std::shared_mutex> lk{
+                wp_meta_ptr->get_mtx_wp_result_set()};
+        bool is_first_item_before_gc_threshold{true};
+        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
+             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
+            for (auto&& hid : oe.second) {
+                if ((*wp_result_itr).second == hid) {
+                    // the itr show overtaken ltx
+                    if ((*wp_result_itr).first < ti->get_valid_epoch()) {
+                        // this tx should have read the result of the ltx.
+                        return Status::ERR_VALIDATION;
+                    }
+                    // verify success
+                    break;
+                }
+            }
+
+            // not match. check gc
+            if ((*wp_result_itr).first < gc_threshold) {
+                // should gc
+                if (is_first_item_before_gc_threshold) {
+                    // not remove
+                    is_first_item_before_gc_threshold = false;
+                    ++wp_result_itr;
+                } else {
+                    // remove
+                    wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
+                            wp_result_itr);
+                }
+            } else {
+                // else. should not gc
+                ++wp_result_itr;
+            }
+        }
+    }
+
     return Status::OK;
 }
 
 Status check_wait_for_preceding_bt(session* const ti) {
-    if (ongoing_tx::exist_preceding_id(ti->get_batch_id())) {
+    if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id())) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
     return Status::OK;
@@ -247,13 +299,16 @@ extern Status commit(session* const ti, // NOLINT
         return Status::WARN_PREMATURE;
     }
 
+    /**
+     * WP2: If it is possible to prepend the order, it waits for a transaction 
+     * with a higher priority than itself to finish the operation.
+     */
     prepare_commit(ti);
-    //auto rc{check_wait_for_preceding_bt(ti)};
-    //if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
-
+    auto rc = check_wait_for_preceding_bt(ti);
+    if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
 
     // verify read by
-    auto rc = verify_read_by(ti);
+    rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
         return Status::ERR_VALIDATION;

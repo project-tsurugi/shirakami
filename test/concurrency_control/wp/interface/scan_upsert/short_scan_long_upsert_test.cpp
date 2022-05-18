@@ -81,7 +81,7 @@ TEST_F(short_scan_long_upsert_test, short_scan_find_valid_wp) { // NOLINT
     ASSERT_EQ(leave(sb), Status::OK);
 }
 
-TEST_F(short_scan_long_upsert_test,
+TEST_F(short_scan_long_upsert_test,         // NOLINT
        short_scan_finish_before_valid_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -110,7 +110,7 @@ TEST_F(short_scan_long_upsert_test,
     ASSERT_EQ(leave(sb), Status::OK);
 }
 
-TEST_F(short_scan_long_upsert_test,
+TEST_F(short_scan_long_upsert_test,        // NOLINT
        short_scan_finish_after_valid_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
