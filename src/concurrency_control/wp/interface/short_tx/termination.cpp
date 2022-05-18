@@ -285,9 +285,7 @@ extern Status commit(session* ti, // NOLINT
     }
 
 // This calculation can be done outside the critical section.
-#ifdef BCC_7
     register_read_by_occ(ti);
-#endif
 
     // about tx state
     // this should be before clean_up func
