@@ -67,6 +67,18 @@ TEST_F(epoch_test, check_no_or_one_change_epoch) { // NOLINT
     ASSERT_EQ(leave(token), Status::OK);
 }
 
+TEST_F(epoch_test, check_progress_of_step_epoch) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    auto* ti{static_cast<session*>(s)};
+    auto first_epoch{ti->get_step_epoch()};
+    sleepMs(PARAM_EPOCH_TIME * 2);
+    auto second_epoch{ti->get_step_epoch()};
+    ASSERT_NE(first_epoch, second_epoch);
+    LOG(INFO) << first_epoch << " " << second_epoch;
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(epoch_test, stop_epoch) { // NOLINT
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
@@ -79,18 +91,6 @@ TEST_F(epoch_test, stop_epoch) { // NOLINT
     sleepMs(PARAM_EPOCH_TIME * 2);
     epoch::epoch_t second{epoch::get_global_epoch()};
     ASSERT_NE(first, second);
-}
-
-TEST_F(epoch_test, check_progress_of_step_epoch) { // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    auto* ti{static_cast<session*>(s)};
-    auto first_epoch{ti->get_step_epoch()};
-    sleepMs(PARAM_EPOCH_TIME * 2);
-    auto second_epoch{ti->get_step_epoch()};
-    ASSERT_NE(first_epoch, second_epoch);
-    LOG(INFO) << first_epoch << " " << second_epoch;
-    ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(epoch_test,
