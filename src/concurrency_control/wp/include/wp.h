@@ -318,13 +318,13 @@ class page_set_meta {
 public:
     point_read_by_long* get_point_read_by_ptr() { return &point_read_by_; }
 
-    range_read_by_bt* get_range_read_by_ptr() { return &range_read_by_; }
+    range_read_by_long* get_range_read_by_ptr() { return &range_read_by_; }
 
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
 private:
     point_read_by_long point_read_by_;
-    range_read_by_bt range_read_by_;
+    range_read_by_long range_read_by_;
     wp_meta wp_meta_;
 };
 
@@ -370,7 +370,7 @@ void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
 
-[[maybe_unused]] extern Status find_read_by(Storage st, range_read_by_bt*& ret);
+[[maybe_unused]] extern Status find_read_by(Storage st, range_read_by_long*& ret);
 
 [[maybe_unused]] extern Status find_read_by(Storage st, point_read_by_long*& ret);
 

@@ -53,33 +53,33 @@ void point_read_by_long::push(body_elem_type const elem) {
     return;
 }
 
-range_read_by_bt::body_elem_type
-range_read_by_bt::get(epoch::epoch_t const ep, std::string_view const key) {
+range_read_by_long::body_elem_type
+range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (std::get<range_read_by_bt::index_epoch>(elem) == ep) {
+        if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
             // check the key is right from left point
-            if (std::get<range_read_by_bt::index_l_ep>(elem) ==
+            if (std::get<range_read_by_long::index_l_ep>(elem) ==
                         scan_endpoint::INF ||                          // inf
-                std::get<range_read_by_bt::index_l_key>(elem) < key || // right
-                (std::get<range_read_by_bt::index_l_key>(elem) == key &&
-                 std::get<range_read_by_bt::index_l_ep>(elem) ==
+                std::get<range_read_by_long::index_l_key>(elem) < key || // right
+                (std::get<range_read_by_long::index_l_key>(elem) == key &&
+                 std::get<range_read_by_long::index_l_ep>(elem) ==
                          scan_endpoint::INCLUSIVE) // same
             ) {
                 // check the key is left from right point
-                if (std::get<range_read_by_bt::index_r_ep>(elem) ==
+                if (std::get<range_read_by_long::index_r_ep>(elem) ==
                             scan_endpoint::INF || // inf
-                    std::get<range_read_by_bt::index_r_key>(elem) >
+                    std::get<range_read_by_long::index_r_key>(elem) >
                             key || // left
-                    (std::get<range_read_by_bt::index_r_key>(elem) == key &&
-                     std::get<range_read_by_bt::index_r_ep>(elem) ==
+                    (std::get<range_read_by_long::index_r_key>(elem) == key &&
+                     std::get<range_read_by_long::index_r_ep>(elem) ==
                              scan_endpoint::INCLUSIVE) // same
                 ) {
                     return elem;
                 }
             }
         }
-        if (std::get<range_read_by_bt::index_epoch>(elem) > ep) {
+        if (std::get<range_read_by_long::index_epoch>(elem) > ep) {
             // no more due to invariant
             break;
         }
@@ -88,12 +88,12 @@ range_read_by_bt::get(epoch::epoch_t const ep, std::string_view const key) {
     return body_elem_type{};
 }
 
-void range_read_by_bt::gc() {
+void range_read_by_long::gc() {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
+        if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
             itr = body_.erase(itr);
         } else {
             // no more gc
@@ -102,16 +102,16 @@ void range_read_by_bt::gc() {
     }
 }
 
-void range_read_by_bt::push(body_elem_type const& elem) {
+void range_read_by_long::push(body_elem_type const& elem) {
     std::unique_lock<std::mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_bt::index_epoch>(*itr) <
-            std::get<range_read_by_bt::index_epoch>(elem)) {
+        if (std::get<range_read_by_long::index_epoch>(*itr) <
+            std::get<range_read_by_long::index_epoch>(elem)) {
             // check gc
-            if (std::get<range_read_by_bt::index_epoch>(*itr) < threshold) {
+            if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
                 itr = body_.erase(itr);
             } else {
                 ++itr;

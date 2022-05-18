@@ -32,8 +32,8 @@ public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
     using point_read_by_long_set_type = std::vector<point_read_by_long*>;
-    using range_read_by_bt_set_type =
-            std::vector<std::tuple<range_read_by_bt*, std::string,
+    using range_read_by_long_set_type =
+            std::vector<std::tuple<range_read_by_long*, std::string,
                                    scan_endpoint, std::string, scan_endpoint>>;
     using read_by_short_set_type = std::vector<read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
@@ -145,8 +145,8 @@ public:
         return point_read_by_long_set_;
     }
 
-    range_read_by_bt_set_type& get_range_read_by_bt_set() {
-        return range_read_by_bt_set_;
+    range_read_by_long_set_type& get_range_read_by_long_set() {
+        return range_read_by_long_set_;
     }
 
     read_by_short_set_type& get_read_by_short_set() { return read_by_short_set_; }
@@ -350,7 +350,7 @@ private:
 
     point_read_by_long_set_type point_read_by_long_set_{};
 
-    range_read_by_bt_set_type range_read_by_bt_set_{};
+    range_read_by_long_set_type range_read_by_long_set_{};
 
     read_by_short_set_type read_by_short_set_{};
 

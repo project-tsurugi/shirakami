@@ -47,7 +47,7 @@ private:
     body_type body_;
 };
 
-class range_read_by_bt {
+class range_read_by_long {
 public:
     /**
      * body element type
