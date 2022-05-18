@@ -5,7 +5,7 @@
 
 namespace shirakami {
 
-bool point_read_by_bt::is_exist(epoch::epoch_t const epoch,
+bool point_read_by_long::is_exist(epoch::epoch_t const epoch,
                                 std::size_t ltx_id) {
     std::shared_lock<std::shared_mutex> lk(mtx_);
     for (auto&& elem : body_) {
@@ -27,7 +27,7 @@ bool point_read_by_bt::is_exist(epoch::epoch_t const epoch,
     return false;
 }
 
-void point_read_by_bt::push(body_elem_type const elem) {
+void point_read_by_long::push(body_elem_type const elem) {
     std::lock_guard<std::shared_mutex> lk(mtx_);
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();

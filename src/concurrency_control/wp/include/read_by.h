@@ -22,7 +22,7 @@
 
 namespace shirakami {
 
-class point_read_by_bt {
+class point_read_by_long {
 public:
     using body_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using body_type = std::vector<body_elem_type>;

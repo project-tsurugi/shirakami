@@ -179,7 +179,7 @@ void expose_local_write(session* ti) {
 
 void register_read_by(session* const ti) {
     // point read
-    for (auto&& elem : ti->get_point_read_by_bt_set()) {
+    for (auto&& elem : ti->get_point_read_by_long_set()) {
         elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
     }
 
@@ -194,7 +194,7 @@ void register_read_by(session* const ti) {
 void prepare_commit(session* const ti) {
     // optimizations
     // shrink read_by_set
-    auto& rbset = ti->get_point_read_by_bt_set();
+    auto& rbset = ti->get_point_read_by_long_set();
     std::sort(rbset.begin(), rbset.end());
     rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
 }
@@ -204,7 +204,7 @@ Status verify_read_by(session* const ti) {
     auto this_id = ti->get_batch_id();
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         // for ltx
-        point_read_by_bt* rbp{};
+        point_read_by_long* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
             if (rbp->is_exist(this_epoch, this_id)) {
