@@ -26,7 +26,7 @@ void extract_higher_priori_ltx_info(session* const ti,
                                     wp_meta::wped_type const& wps) {
     for (auto&& wped : wps) {
         if (wped.second != 0) {
-            if (wped.second < ti->get_batch_id()) {
+            if (wped.second < ti->get_long_tx_id()) {
                 ti->get_overtaken_ltx_set()[wp_meta_ptr].insert(wped.second);
             }
         }
@@ -114,7 +114,7 @@ Status init() {
 }
 
 Status write_preserve(Token token, std::vector<Storage> storage,
-                      std::size_t batch_id, epoch::epoch_t valid_epoch) {
+                      std::size_t long_tx_id, epoch::epoch_t valid_epoch) {
     // decide storage form
     auto* ti = static_cast<session*>(token);
     std::sort(storage.begin(), storage.end());
@@ -135,9 +135,9 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
                                                storage_view, out)};
 
-        auto cleanup_process = [ti, batch_id]() {
+        auto cleanup_process = [ti, long_tx_id]() {
             for (auto&& elem : ti->get_wp_set()) {
-                if (Status::OK != elem.second->remove_wp(batch_id)) {
+                if (Status::OK != elem.second->remove_wp(long_tx_id)) {
                     LOG(ERROR) << "programming error";
                     return;
                 }
@@ -150,7 +150,7 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             return Status::ERR_FAIL_WP;
         }
         wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
-        if (Status::OK != target_wp_meta->register_wp(valid_epoch, batch_id)) {
+        if (Status::OK != target_wp_meta->register_wp(valid_epoch, long_tx_id)) {
             cleanup_process();
             return Status::ERR_FAIL_WP;
         }

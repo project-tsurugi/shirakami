@@ -395,7 +395,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
     } else if (ti->get_tx_type() == TX_TYPE::LONG) {
         if (!wp::wp_meta::empty(wps) &&
-            wp::wp_meta::find_min_id(wps) < ti->get_batch_id()) {
+            wp::wp_meta::find_min_id(wps) < ti->get_long_tx_id()) {
             abort(ti); // or wait
             /**
          * because: You have to wait for the end of the transaction to read 

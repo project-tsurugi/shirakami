@@ -37,7 +37,7 @@ void register_wp_result_and_remove_wps(session* ti) {
             (*out.first)
                     ->get_wp_meta_ptr()
                     ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
-                                                       ti->get_batch_id())) {
+                                                       ti->get_long_tx_id())) {
             LOG(FATAL);
         }
     }
@@ -46,7 +46,7 @@ void register_wp_result_and_remove_wps(session* ti) {
 void cleanup_process(session* const ti) {
     // global effect
     register_wp_result_and_remove_wps(ti);
-    ongoing_tx::remove_id(ti->get_batch_id());
+    ongoing_tx::remove_id(ti->get_long_tx_id());
 
     // local effect
     ti->clean_up();
@@ -180,12 +180,12 @@ void expose_local_write(session* ti) {
 void register_read_by(session* const ti) {
     // point read
     for (auto&& elem : ti->get_point_read_by_long_set()) {
-        elem->push({ti->get_valid_epoch(), ti->get_batch_id()});
+        elem->push({ti->get_valid_epoch(), ti->get_long_tx_id()});
     }
 
     // range read
     for (auto&& elem : ti->get_range_read_by_long_set()) {
-        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_batch_id(),
+        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_long_tx_id(),
                                  std::get<1>(elem), std::get<2>(elem),
                                  std::get<3>(elem), std::get<4>(elem)});
     }
@@ -201,7 +201,7 @@ void prepare_commit(session* const ti) {
 
 Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
-    auto this_id = ti->get_batch_id();
+    auto this_id = ti->get_long_tx_id();
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         // for ltx
         point_read_by_long* rbp{};
@@ -286,7 +286,7 @@ Status verify_read_by(session* const ti) {
 }
 
 Status check_wait_for_preceding_bt(session* const ti) {
-    if (ongoing_tx::exist_preceding_id(ti->get_batch_id())) {
+    if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id())) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
     return Status::OK;

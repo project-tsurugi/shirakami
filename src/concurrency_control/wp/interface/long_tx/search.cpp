@@ -61,7 +61,7 @@ Status search_key(session* ti, Storage const storage,
         auto wps = wp_meta_ptr->get_wped();
         if (wp::wp_meta::empty(wps)) { break; }
         auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
-        if (ep_id.second < ti->get_batch_id()) {
+        if (ep_id.second < ti->get_long_tx_id()) {
             // the wp is higher priority long tx than this.
             if (ti->get_read_version_max_epoch() > ep_id.first) {
                 /** 
@@ -85,7 +85,7 @@ Status search_key(session* ti, Storage const storage,
                   * verify ongoing tx is not changed.
                   */
                 if (ongoing_tx::change_epoch_without_lock(
-                            ti->get_batch_id(), ep_id.first, ep_id.second,
+                            ti->get_long_tx_id(), ep_id.first, ep_id.second,
                             ep_id.first) != Status::OK) {
                     // Maybe it doesn't have to be prefixed.
                     continue;

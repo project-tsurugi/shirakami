@@ -42,7 +42,7 @@ private:
 
     /**
      * @brief body
-     * @details std::pair.first is epoch. the second is batch_id.
+     * @details std::pair.first is epoch. the second is long_tx_id.
      */
     body_type body_;
 };

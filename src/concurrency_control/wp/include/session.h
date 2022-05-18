@@ -59,7 +59,7 @@ public:
 
     void clear_about_long_tx_metadata() {
         set_read_version_max_epoch(0);
-        set_batch_id(0);
+        set_long_tx_id(0);
         set_valid_epoch(0);
     }
 
@@ -195,7 +195,7 @@ public:
 
     // ========== start: long tx
 
-    [[nodiscard]] std::size_t get_batch_id() const { return batch_id_; }
+    [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
 
     overtaken_ltx_set_type& get_overtaken_ltx_set() {
         return overtaken_ltx_set_;
@@ -286,7 +286,7 @@ public:
 
     // ========== start: long tx
 
-    void set_batch_id(std::size_t bid) { batch_id_ = bid; }
+    void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
     void set_read_version_max_epoch(epoch::epoch_t ep) {
         read_version_max_epoch_ = ep;
@@ -428,7 +428,7 @@ private:
      * @brief long tx's id.
      * 
      */
-    std::size_t batch_id_{};
+    std::size_t long_tx_id_{};
 
     overtaken_ltx_set_type overtaken_ltx_set_;
 

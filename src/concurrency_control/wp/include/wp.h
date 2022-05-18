@@ -427,7 +427,7 @@ void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
 
 [[maybe_unused]] extern Status write_preserve(Token token,
                                               std::vector<Storage> storage,
-                                              std::size_t batch_id,
+                                              std::size_t long_tx_id,
                                               epoch::epoch_t valid_epoch);
 
 } // namespace wp

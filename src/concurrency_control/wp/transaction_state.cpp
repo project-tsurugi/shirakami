@@ -82,7 +82,7 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             out.set_kind(TxState::StateKind::STARTED); // for external
         } else if (ts.state_kind() == TxState::StateKind::STARTED) {
             auto* ti = static_cast<session*>(ts.get_token());
-            if (ongoing_tx::exist_preceding_id(ti->get_batch_id())) {
+            if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id())) {
                 ts.set_kind(
                         TxState::StateKind::WAITING_CC_COMMIT); // for internal
                 out.set_kind(

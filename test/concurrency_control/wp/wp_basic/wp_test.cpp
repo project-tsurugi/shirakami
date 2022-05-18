@@ -99,10 +99,10 @@ TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     auto& ols = ti->get_overtaken_ltx_set();
     ASSERT_EQ(ols.at(wp_meta_ptr).size(), 2);
     ASSERT_NE(ols.at(wp_meta_ptr)
-                      .find(static_cast<session*>(ss.at(0))->get_batch_id()),
+                      .find(static_cast<session*>(ss.at(0))->get_long_tx_id()),
               ols.at(wp_meta_ptr).end());
     ASSERT_NE(ols.at(wp_meta_ptr)
-                      .find(static_cast<session*>(ss.at(1))->get_batch_id()),
+                      .find(static_cast<session*>(ss.at(1))->get_long_tx_id()),
               ols.at(wp_meta_ptr).end());
     ASSERT_EQ(leave(ss.at(0)), Status::OK);
     ASSERT_EQ(leave(ss.at(1)), Status::OK);
