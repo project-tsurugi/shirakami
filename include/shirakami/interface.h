@@ -546,6 +546,7 @@ extern Status delete_sequence(SequenceId id);
  * called together. If you call one side more than other side, warning will 
  * be returned.
  * @pre The transaction linked @a token already executed @a tx_begin api.
+ * @post Call release_tx_state_handle using @a handle.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_EXISTS This api was already called for this tx.
  * It updates @a handle by existing one.
