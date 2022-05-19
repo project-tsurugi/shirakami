@@ -19,7 +19,8 @@ using TxStateHandle = std::uint64_t;
 constexpr static TxStateHandle undefined_handle = 0;
 
 /**
- * @brief transaction status
+ * @brief Transaction status
+ * @details A mechanism for monitoring various states of a running transaction.
  * @attention Monitoring the status will degrade the performance, so keep it 
  * to the minimum necessary.
  */
@@ -28,6 +29,10 @@ public:
     using handle_container_type = std::map<TxStateHandle, TxState>;
     static constexpr TxStateHandle handle_initial_value = 1;
 
+    /**
+     * @brief A various states of a running transaction.
+     * 
+     */
     enum class StateKind : std::int64_t {
         /**
           * @brief This status means the transaction is unknown status.
