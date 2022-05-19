@@ -246,6 +246,17 @@ void register_point_read_by_short(session* const ti) {
     }
 }
 
+void register_range_read_by_short(session* const ti) {
+    auto ce{ti->get_mrc_tid().get_epoch()};
+
+    auto& cont = ti->get_range_read_by_short_set();
+    std::sort(cont.begin(), cont.end());
+    cont.erase(std::unique(cont.begin(), cont.end()), cont.end());
+    for (auto&& itr : cont) {
+        itr->push(ce);
+    }
+}
+
 extern Status commit(session* ti, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
     // write lock phase
@@ -286,6 +297,7 @@ extern Status commit(session* ti, // NOLINT
 
     // This calculation can be done outside the critical section.
     register_point_read_by_short(ti);
+    register_range_read_by_short(ti);
 
     // about tx state
     // this should be before clean_up func

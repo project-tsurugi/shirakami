@@ -170,6 +170,18 @@ Status open_scan(Token const token, Storage storage,
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
         }
+    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        wp::page_set_meta* psm{};
+        auto rc{wp::find_page_set_meta(storage, psm)};
+        if (rc == Status::WARN_NOT_FOUND) { 
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
+        }
+        range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
+        ti->get_range_read_by_short_set().emplace_back(rrbs);
+    } else {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
     }
 
     /**

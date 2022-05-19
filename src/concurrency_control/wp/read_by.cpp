@@ -143,4 +143,23 @@ void point_read_by_short::push(epoch::epoch_t const elem) {
     }
 }
 
+bool range_read_by_short::find(epoch::epoch_t const epoch) {
+    return get_max_epoch() == epoch;
+}
+
+void range_read_by_short::push(epoch::epoch_t const elem) {
+    auto& me = get_max_epoch_ref();
+    auto ce = get_max_epoch();
+    for (;;) {
+        if (ce < elem) {
+            if (me.compare_exchange_weak(ce, elem, std::memory_order_release,
+                                         std::memory_order_acquire)) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+}
+
 } // namespace shirakami

@@ -72,7 +72,7 @@ Status find_read_by(Storage const st, range_read_by_long*& ret) {
     page_set_meta* psm{};
     auto rc{find_page_set_meta(st, psm)};
     if (rc == Status::WARN_NOT_FOUND) { return rc; }
-    ret = psm->get_range_read_by_ptr();
+    ret = psm->get_range_read_by_long_ptr();
     return Status::OK;
 }
 
@@ -80,7 +80,7 @@ Status find_read_by(Storage const st, point_read_by_long*& ret) {
     page_set_meta* psm{};
     auto rc{find_page_set_meta(st, psm)};
     if (rc == Status::WARN_NOT_FOUND) { return rc; }
-    ret = psm->get_point_read_by_ptr();
+    ret = psm->get_point_read_by_long_ptr();
     return Status::OK;
 }
 

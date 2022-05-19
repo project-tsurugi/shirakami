@@ -104,4 +104,33 @@ private:
     std::mutex mtx_;
 };
 
+class range_read_by_short {
+public:
+    /**
+     * @brief Get the partial elements
+     * @param epoch 
+     * @return true found  
+     * @return false not found  
+     */
+    bool find(epoch::epoch_t epoch);
+
+    epoch::epoch_t get_max_epoch() {
+        return max_epoch_.load(std::memory_order_acquire);
+    }
+
+    std::atomic<epoch::epoch_t>& get_max_epoch_ref() { return max_epoch_; }
+
+    void push(epoch::epoch_t elem);
+
+    void set_max_epoch(epoch::epoch_t const ep) {
+        max_epoch_.store(ep, std::memory_order_release);
+    }
+
+private:
+    // firstly, it express range by 0 or 1.
+    std::atomic<epoch::epoch_t> max_epoch_{0};
+
+    std::mutex mtx_;
+};
+
 } // namespace shirakami

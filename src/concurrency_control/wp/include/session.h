@@ -36,6 +36,7 @@ public:
             std::vector<std::tuple<range_read_by_long*, std::string,
                                    scan_endpoint, std::string, scan_endpoint>>;
     using point_read_by_short_set_type = std::vector<point_read_by_short*>;
+    using range_read_by_short_set_type = std::vector<range_read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     using overtaken_ltx_set_type =
@@ -151,6 +152,10 @@ public:
 
     point_read_by_short_set_type& get_point_read_by_short_set() {
         return point_read_by_short_set_;
+    }
+
+    range_read_by_short_set_type& get_range_read_by_short_set() {
+        return range_read_by_short_set_;
     }
 
     read_set_type& get_read_set() { return read_set_; }
@@ -355,6 +360,8 @@ private:
     range_read_by_long_set_type range_read_by_long_set_{};
 
     point_read_by_short_set_type point_read_by_short_set_{};
+
+    range_read_by_short_set_type range_read_by_short_set_{};
 
     /**
      * @brief local read set.

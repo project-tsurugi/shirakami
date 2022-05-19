@@ -203,6 +203,8 @@ Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
     auto this_id = ti->get_long_tx_id();
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+        //==========
+        // about point read
         // for ltx
         point_read_by_long* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
@@ -221,17 +223,27 @@ Status verify_read_by(session* const ti) {
             // this will break commited stx's read
             return Status::ERR_VALIDATION;
         }
+        //==========
 
+        //==========
+        // about range read
         if (wso.second.get_op() == OP_TYPE::INSERT ||
             wso.second.get_op() == OP_TYPE::DELETE) {
-            range_read_by_long* rrbp{};
-            auto rc{wp::find_read_by(wso.second.get_storage(), rrbp)};
-            if (rc == Status::OK) {
+            // for long
+            wp::page_set_meta* psm{};
+            if (Status::OK ==
+                wp::find_page_set_meta(wso.second.get_storage(), psm)) {
+                range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
                 std::string keyb{};
                 wso.first->get_key(keyb);
                 auto rb{rrbp->get(this_epoch, keyb)};
 
                 if (rb != range_read_by_long::body_elem_type{}) {
+                    return Status::ERR_VALIDATION;
+                }
+
+                range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
+                if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
                     return Status::ERR_VALIDATION;
                 }
             } else {
