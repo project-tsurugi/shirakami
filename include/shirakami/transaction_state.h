@@ -31,7 +31,8 @@ public:
 
     /**
      * @brief A various states of a running transaction.
-     * 
+     * @details Details of state transition is discribed at 
+     * shirakami/docs/transaction_state.md
      */
     enum class StateKind : std::int64_t {
         /**
@@ -39,7 +40,8 @@ public:
           */
         UNKNOWN = 0,
         /**
-          * @brief This status means the transaction was started and waits for own epoch.
+          * @brief This status means the transaction was started and waits for 
+          * own epoch.
           */
         WAITING_START,
         /**
