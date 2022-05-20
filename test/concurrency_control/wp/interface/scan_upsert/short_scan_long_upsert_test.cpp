@@ -12,6 +12,9 @@
 #include "atomic_wrapper.h"
 
 #include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/session.h"
+
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -144,75 +147,76 @@ TEST_F(short_scan_long_upsert_test,        // NOLINT
     ASSERT_EQ(leave(sb), Status::OK);
 }
 
-#if 0
-TEST_F(short_scan_long_upsert_test, avoid_premature_by_wait) { // NOLINT
-    Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
-    Token s{};  // short
-    Token s2{}; // long
-    ASSERT_EQ(enter(s), Status::OK);
-    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
-    wait_epoch_update();
-    std::string vb{};
-    ASSERT_EQ(search_key(s2, st, "", vb), Status::OK);
-    ASSERT_EQ(leave(s), Status::OK);
-    ASSERT_EQ(leave(s2), Status::OK);
-}
 
-TEST_F(short_scan_long_upsert_test, reading_higher_priority_wp) { // NOLINT
-    // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
-    Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
-    Token s0{}; // short
-    Token s1{}; // long
-    Token s2{}; // long
-    ASSERT_EQ(enter(s0), Status::OK);
-    ASSERT_EQ(Status::OK, insert(s0, st, "a", "A"));
-    ASSERT_EQ(Status::OK, insert(s0, st, "b", "B"));
-    ASSERT_EQ(Status::OK, commit(s0));
-    // end of data preparation
-
-    ASSERT_EQ(enter(s1), Status::OK);
-    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
-    ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {}), Status::OK);
-    wait_epoch_update();
-    std::string vb{};
-    ASSERT_EQ(search_key(s2, st, "a", vb), Status::ERR_FAIL_WP);
-    ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, commit(s2));
-    ASSERT_EQ(leave(s1), Status::OK);
-    ASSERT_EQ(leave(s2), Status::OK);
-}
-
-TEST_F(short_scan_long_upsert_test, reading_lower_priority_wp) { // NOLINT
-    Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+TEST_F(short_scan_long_upsert_test,             // NOLINT
+       old_short_search_long_upsert_conflict) { // NOLINT
+    /**
+     * ltx1: w(x)
+     * ltx2: r(x)w(y), find w(x) and do forewarding and conflict on stx
+     * stx: range_r(y), e_ltx1 <= epoch < e_ltx2
+     * serial order: ltx2(abort) < ltx1(commit) < stx(commit)
+     */
+    Storage st_x{};
+    Storage st_y{};
+    ASSERT_EQ(register_storage(st_x), Status::OK);
+    ASSERT_EQ(register_storage(st_y), Status::OK);
+    std::string x{"x"};
+    std::string y{"y"};
     {
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
-        ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+        ASSERT_EQ(Status::OK, upsert(s, st_x, x, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st_y, y, ""));
         ASSERT_EQ(Status::OK, commit(s));
+        LOG(INFO) << "short commit at " << epoch::get_global_epoch();
         ASSERT_EQ(leave(s), Status::OK);
     }
-    Token s1{}; // long
-    Token s2{}; // long
-    ASSERT_EQ(enter(s1), Status::OK);
-    ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, false, true, {}), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
-    wait_epoch_update();
-    std::string vb{};
-    ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(leave(s1), Status::OK);
-    ASSERT_EQ(leave(s2), Status::OK);
-}
+    {
+        // test
+        epoch::get_ep_mtx().lock();
+        Token ltx1{};
+        ASSERT_EQ(enter(ltx1), Status::OK);
+        ASSERT_EQ(Status::OK, tx_begin(ltx1, false, true, {st_x}));
+        epoch::set_perm_to_proc(1);
+        epoch::get_ep_mtx().unlock();
+        wait_epoch_update();
+        ASSERT_EQ(epoch::get_perm_to_proc(), 0);
+        auto* ltx1s = static_cast<session*>(ltx1);
+        LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
+        Token stx{};
+        ASSERT_EQ(enter(stx), Status::OK);
+        std::string buf{};
+        ScanHandle hd{};
+        ASSERT_EQ(Status::OK, open_scan(stx, st_y, "", scan_endpoint::INF, "",
+                                        scan_endpoint::INF, hd));
+        ASSERT_EQ(Status::OK, read_key_from_scan(stx, hd, buf));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(stx, hd));
+        ASSERT_EQ(Status::OK, commit(stx));
+        // verify stx epoch
+        ASSERT_EQ(epoch::get_global_epoch(), ltx1s->get_valid_epoch());
+        // unlock epoch proceeding
+        epoch::set_perm_to_proc(epoch::ptp_init_val);
 
-#endif
+        // about ltx2
+        Token ltx2{};
+        ASSERT_EQ(enter(ltx2), Status::OK);
+        ASSERT_EQ(Status::OK, tx_begin(ltx2, false, true, {st_y}));
+        wait_epoch_update();
+        ASSERT_EQ(Status::OK, search_key(ltx2, st_x, x, buf));
+        ASSERT_EQ(Status::OK, upsert(ltx2, st_y, y, ""));
+
+        // about ltx1
+        ASSERT_EQ(Status::OK, upsert(ltx1, st_x, x, ""));
+        ASSERT_EQ(Status::OK, commit(ltx1));
+
+        // about ltx2
+        ASSERT_EQ(Status::ERR_VALIDATION, commit(ltx2));
+
+        ASSERT_EQ(leave(stx), Status::OK);
+        ASSERT_EQ(leave(ltx1), Status::OK);
+        ASSERT_EQ(leave(ltx2), Status::OK);
+    }
+}
 
 } // namespace shirakami::testing
