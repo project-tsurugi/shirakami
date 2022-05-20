@@ -27,22 +27,6 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GHA_PAT }}
 
-      - id: CMake_Build
-        name: CMake_Build
-        run: |
-          mkdir -p build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=OFF ..
-          cmake --build . --target all --clean-first -- -j
-
-      - id: CMake_Build_with_cpr
-        name: CMake_Build_with_cpr
-        run: |
-          mkdir -p build_cpr
-          cd build_cpr
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=ON ..
-          cmake --build . --target all --clean-first -- -j
-
       - id: CMake_Build_with_wp
         name: CMake_Build_with_wp
         run: |
@@ -50,26 +34,6 @@ jobs:
           cd build_wp
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=OFF -DBUILD_WP=ON ..
           cmake --build . --target all --clean-first -- -j
-
-      - id: CTest_CC
-        name: CTest_CC
-        continue-on-error: false
-        env:
-          GTEST_OUTPUT: xml
-          ASAN_OPTIONS: detect_stack_use_after_return=true
-        run: |
-          cd build
-          ctest --verbose --timeout 20 -j 224
-
-      - id: CTest_CPR
-        name: CTest_CPR
-        continue-on-error: false
-        env:
-          GTEST_OUTPUT: xml
-          ASAN_OPTIONS: detect_stack_use_after_return=true
-        run: |
-          cd build_cpr
-          ctest --verbose --timeout 20 -j 100
 
       - id: CTest_WP
         name: CTest_WP
@@ -80,18 +44,6 @@ jobs:
         run: |
           cd build_wp
           ctest --verbose --timeout 20 -j 100
-
-      - id: Clang-Tidy
-        name: Clang-Tidy
-        run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build/clang-tidy.log
-        if: matrix.container-tag != 'ubuntu-18.04'
-
-      - id: Clang-Tidy_cpr
-        name: Clang-Tidy_cpr
-        run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build_cpr/clang-tidy-fix.yaml -p build_cpr -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build_cpr/clang-tidy.log
-        if: matrix.container-tag != 'ubuntu-18.04'
 
       - id: Clang-Tidy_wp
         name: Clang-Tidy_wp
