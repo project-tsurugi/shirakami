@@ -54,7 +54,7 @@ jobs:
       - id: Doxygen
         name: Doxygen
         run: |
-          cd build
+          cd build_wp
           make doxygen 2> >(tee doxygen-error.log)
         if: matrix.container-tag != 'ubuntu-18.04'
 
