@@ -39,7 +39,7 @@ void point_read_by_long::push(body_elem_type const elem) {
             if ((*itr).first < threshold) {
                 itr = body_.erase(itr);
             } else {
-                ++itr;
+                break;
             }
             continue;
         }
@@ -53,8 +53,8 @@ void point_read_by_long::push(body_elem_type const elem) {
     body_.emplace_back(elem);
 }
 
-range_read_by_long::body_elem_type
-range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
+bool range_read_by_long::is_exist(epoch::epoch_t const ep,
+                                  std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
         if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
@@ -76,7 +76,7 @@ range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
                      std::get<range_read_by_long::index_r_ep>(elem) ==
                              scan_endpoint::INCLUSIVE) // same
                 ) {
-                    return elem;
+                    return true;
                 }
             }
         }
@@ -86,21 +86,7 @@ range_read_by_long::get(epoch::epoch_t const ep, std::string_view const key) {
         }
     }
 
-    return body_elem_type{};
-}
-
-void range_read_by_long::gc() {
-    const auto ce = epoch::get_global_epoch();
-    auto threshold = ongoing_tx::get_lowest_epoch();
-    if (threshold == 0) { threshold = ce; }
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
-            itr = body_.erase(itr);
-        } else {
-            // no more gc
-            break;
-        }
-    }
+    return false;
 }
 
 void range_read_by_long::push(body_elem_type const& elem) {
@@ -108,20 +94,25 @@ void range_read_by_long::push(body_elem_type const& elem) {
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
+    std::size_t tx_id = std::get<range_read_by_long::index_tx_id>(elem);
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_long::index_epoch>(*itr) <
-            std::get<range_read_by_long::index_epoch>(elem)) {
-            // check gc
+        if (std::get<range_read_by_long::index_tx_id>(*itr) < tx_id) {
+            // high priori
             if (std::get<range_read_by_long::index_epoch>(*itr) < threshold) {
+                // gc
                 itr = body_.erase(itr);
-            } else {
-                ++itr;
+                continue;
             }
-            continue;
+            // can't gc
+            break;
+        } else if (std::get<range_read_by_long::index_tx_id>(*itr) == tx_id) {
+            LOG(ERROR) << "programming error";
+            return;
         }
-        body_.insert(itr, elem);
-        return;
+        // low priori
+        break;
     }
+    body_.emplace_back(elem);
 }
 
 bool point_read_by_short::find(epoch::epoch_t const epoch) {

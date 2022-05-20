@@ -236,9 +236,9 @@ Status verify_read_by(session* const ti) {
                 range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
                 std::string keyb{};
                 wso.first->get_key(keyb);
-                auto rb{rrbp->get(this_epoch, keyb)};
+                auto rb{rrbp->is_exist(this_epoch, keyb)};
 
-                if (rb != range_read_by_long::body_elem_type{}) {
+                if (rb) {
                     return Status::ERR_VALIDATION;
                 }
 

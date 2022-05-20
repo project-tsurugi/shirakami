@@ -65,9 +65,7 @@ public:
                        std::string, scan_endpoint>;
     using body_type = std::vector<body_elem_type>;
 
-    body_elem_type get(epoch::epoch_t ep, std::string_view key);
-
-    void gc();
+    bool is_exist(epoch::epoch_t ep, std::string_view key);
 
     void push(body_elem_type const& elem);
 
