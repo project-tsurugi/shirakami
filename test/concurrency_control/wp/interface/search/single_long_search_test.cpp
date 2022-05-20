@@ -47,6 +47,14 @@ private:
     static inline std::once_flag init_google;
 };
 
+void wait_epoch_update() {
+    auto ce{epoch::get_global_epoch()};
+    for (;;) {
+        if (ce != epoch::get_global_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 TEST_F(single_long_search_test, start_before_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -59,6 +67,18 @@ TEST_F(single_long_search_test, start_before_epoch) { // NOLINT
         ASSERT_EQ(Status::WARN_PREMATURE, search_key(s, st, "", sb));
     } // start epoch
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(single_long_search_test, avoid_premature_by_wait) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(search_key(s, st, "", vb), Status::WARN_NOT_FOUND);
+    ASSERT_EQ(leave(s), Status::OK);
 }
 
 } // namespace shirakami::testing

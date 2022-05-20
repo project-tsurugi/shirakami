@@ -26,14 +26,14 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class search_upsert : public ::testing::Test { // NOLINT
+class scan_upsert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "search_upsert-search_upsert_test");
+                                  "scan_upsert-long_tx_only_scan_upsert_test");
         FLAGS_stderrthreshold = 0;
         log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/search_upsert_test_log");
+        log_dir_.append("/build/long_tx_only_scan_upsert_test_log");
     }
 
     void SetUp() override {
@@ -59,7 +59,8 @@ inline void wait_epoch_update() {
     }
 }
 
-TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
+#if 0
+TEST_F(scan_upsert, reading_higher_priority_wp) { // NOLINT
     // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -93,7 +94,7 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
-TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
+TEST_F(scan_upsert, reading_lower_priority_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     {
@@ -118,7 +119,7 @@ TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
-TEST_F(search_upsert, read_modify_write) { // NOLINT
+TEST_F(scan_upsert, read_modify_write) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     std::string init_val{"i"};
@@ -165,5 +166,7 @@ TEST_F(search_upsert, read_modify_write) { // NOLINT
         ASSERT_EQ(leave(s), Status::OK);
     }
 }
+
+#endif
 
 } // namespace shirakami::testing
