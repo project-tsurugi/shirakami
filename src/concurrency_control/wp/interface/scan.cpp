@@ -4,6 +4,7 @@
 #include "concurrency_control/include/tuple_local.h"
 
 #include "concurrency_control/wp/include/helper.h"
+#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
 
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
@@ -173,7 +174,7 @@ Status open_scan(Token const token, Storage storage,
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
-        if (rc == Status::WARN_NOT_FOUND) { 
+        if (rc == Status::WARN_NOT_FOUND) {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
         }
@@ -398,23 +399,60 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     // wp verify section
     Storage st = std::get<scan_handler::scan_cache_storage_pos>(
             sh.get_scan_cache()[handle]);
-    auto wps = wp::find_wp(st);
     if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        auto wps = wp::find_wp(st);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
             abort(ti);
             return Status::ERR_FAIL_WP;
         }
     } else if (ti->get_tx_type() == TX_TYPE::LONG) {
-        if (!wp::wp_meta::empty(wps) &&
-            wp::wp_meta::find_min_id(wps) < ti->get_long_tx_id()) {
-            abort(ti); // or wait
-            /**
-         * because: You have to wait for the end of the transaction to read 
-         * the prefixed batch write.
-         * 
-         */
-            return Status::ERR_FAIL_WP;
+        for (;;) {
+            wp::wp_meta* wp_meta_ptr{};
+            if (wp::find_wp_meta(st, wp_meta_ptr) != Status::OK) {
+                // todo special case. interrupt DDL
+                return Status::WARN_STORAGE_NOT_FOUND;
+            }
+            auto wps = wp_meta_ptr->get_wped();
+            if (wp::wp_meta::empty(wps)) { break; }
+            auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
+            if (ep_id.second < ti->get_long_tx_id()) {
+                // the wp is higher priority long tx than this.
+                if (ti->get_read_version_max_epoch() > ep_id.first) {
+                    /** 
+                      * If this tx try put before, old read operation of this will 
+                      * be invalid. 
+                      */
+                    shirakami::abort(ti); // or wait
+                    return Status::ERR_FAIL_WP;
+                }
+                // try put before
+                // pessimistic check
+                {
+                    /**
+                      * take lock: ongoing tx.
+                      * If not coordinated with ongoing tx, the GC may delete 
+                      * even the necessary information.
+                      */
+                    std::lock_guard<std::shared_mutex> ongo_lk{
+                            ongoing_tx::get_mtx()};
+                    /**
+                      * verify ongoing tx is not changed.
+                      */
+                    if (ongoing_tx::change_epoch_without_lock(
+                                ti->get_long_tx_id(), ep_id.first, ep_id.second,
+                                ep_id.first) != Status::OK) {
+                        // Maybe it doesn't have to be prefixed.
+                        continue;
+                    }
+                    // the high priori tx exists yet.
+                    ti->set_valid_epoch(ep_id.first);
+                    // change wp epoch
+                    long_tx::change_wp_epoch(ti, ep_id.first);
+                    wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
+                }
+            }
+            break;
         }
     } else {
         LOG(ERROR) << "programming error";

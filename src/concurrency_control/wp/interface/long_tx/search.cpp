@@ -52,7 +52,6 @@ Status search_key(session* ti, Storage const storage,
     // wp verify
     // 1: optimistic early check, 2: pessimistic check.
     // here, 1: optimistic early check
-    [[maybe_unused]] bool read_need_verify{false};
     for (;;) {
         wp::wp_meta* wp_meta_ptr{};
         if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
@@ -95,7 +94,6 @@ Status search_key(session* ti, Storage const storage,
                 // change wp epoch
                 change_wp_epoch(ti, ep_id.first);
                 wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
-                read_need_verify = true;
             }
         }
         break;

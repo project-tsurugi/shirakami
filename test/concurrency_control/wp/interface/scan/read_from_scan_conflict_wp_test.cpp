@@ -98,6 +98,7 @@ TEST_F(scan_test, long_find_wp) { // NOLINT
     std::string k{"k"};
     ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    wait_change_epoch();
 
     // prepare test
     Token sl{}; // finder
@@ -111,7 +112,8 @@ TEST_F(scan_test, long_find_wp) { // NOLINT
                                     scan_endpoint::INF, hd));
     // test
     std::string sb{};
-    ASSERT_EQ(Status::ERR_FAIL_WP, read_key_from_scan(sl, hd, sb));
+    // forwarding
+    ASSERT_EQ(Status::OK, read_key_from_scan(sl, hd, sb));
 
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(sl));

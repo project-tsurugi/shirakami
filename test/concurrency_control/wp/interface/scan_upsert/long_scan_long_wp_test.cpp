@@ -67,6 +67,7 @@ TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s0, st, "a", "A"));
     ASSERT_EQ(Status::OK, insert(s0, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s0));
+    wait_epoch_update();
     // end of data preparation
 
     ASSERT_EQ(enter(s1), Status::OK);
@@ -79,7 +80,7 @@ TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
                         hd),
               Status::OK);
     std::string buf{};
-    ASSERT_EQ(Status::ERR_FAIL_WP, read_key_from_scan(s2, hd, buf));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, buf));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(leave(s1), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
