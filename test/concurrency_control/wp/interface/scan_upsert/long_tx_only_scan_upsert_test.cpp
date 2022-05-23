@@ -59,17 +59,18 @@ inline void wait_epoch_update() {
     }
 }
 
-#if 0
 TEST_F(scan_upsert, reading_higher_priority_wp) { // NOLINT
-    // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
+    /**
+     * prepare data and test search on higher priority WP 
+     * (causing WARN_PREMATURE)
+     */
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s0{}; // short
     Token s1{}; // long
     Token s2{}; // long
     ASSERT_EQ(enter(s0), Status::OK);
-    ASSERT_EQ(Status::OK, insert(s0, st, "a", "A"));
-    ASSERT_EQ(Status::OK, insert(s0, st, "b", "B"));
+    ASSERT_EQ(Status::OK, insert(s0, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s0));
     wait_epoch_update();
     // end of data preparation
@@ -84,7 +85,10 @@ TEST_F(scan_upsert, reading_higher_priority_wp) { // NOLINT
     session* ti2{static_cast<session*>(s2)};
     ASSERT_NE(ti1->get_valid_epoch(), ti2->get_valid_epoch());
     std::string vb{};
-    ASSERT_EQ(search_key(s2, st, "a", vb), Status::OK);
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     ASSERT_EQ(ti1->get_valid_epoch(), ti2->get_valid_epoch());
     ASSERT_EQ(*ti2->get_overtaken_ltx_set().begin()->second.begin(),
               ti1->get_long_tx_id());
@@ -110,10 +114,14 @@ TEST_F(scan_upsert, reading_lower_priority_wp) { // NOLINT
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
     ASSERT_EQ(tx_begin(s1, false, true, {}), Status::OK);
+    wait_epoch_update();
     ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, hd, vb));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(leave(s1), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
@@ -144,13 +152,21 @@ TEST_F(scan_upsert, read_modify_write) { // NOLINT
         ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
         wait_epoch_update();
         std::string vb{};
-        ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
+        ScanHandle hd{};
+        ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
+                                        scan_endpoint::INF, hd));
+        ASSERT_EQ(Status::OK, read_value_from_scan(s1, hd, vb));
         ASSERT_EQ(vb, init_val);
         ASSERT_EQ(upsert(s1, st, "", s1_val), Status::OK);
-        ASSERT_EQ(search_key(s2, st, "", vb), Status::OK); // forewarding
+        ScanHandle hd2{};
+        ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                        scan_endpoint::INF, hd2));
+        ASSERT_EQ(Status::OK, read_value_from_scan(s2, hd, vb)); // forwarding
         ASSERT_EQ(vb, init_val);
         ASSERT_EQ(upsert(s2, st, "", s2_val), Status::OK);
         ASSERT_EQ(Status::OK, commit(s1));
+        auto* ti2{static_cast<session*>(s2)};
+        ASSERT_EQ(1, ti2->get_overtaken_ltx_set().size());
         ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
         ASSERT_EQ(leave(s1), Status::OK);
         ASSERT_EQ(leave(s2), Status::OK);
@@ -166,7 +182,5 @@ TEST_F(scan_upsert, read_modify_write) { // NOLINT
         ASSERT_EQ(leave(s), Status::OK);
     }
 }
-
-#endif
 
 } // namespace shirakami::testing

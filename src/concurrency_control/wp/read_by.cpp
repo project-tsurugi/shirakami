@@ -105,7 +105,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
             }
             // can't gc
             break;
-        } 
+        }
         if (std::get<range_read_by_long::index_tx_id>(*itr) == tx_id) {
             LOG(ERROR) << "programming error";
             return;

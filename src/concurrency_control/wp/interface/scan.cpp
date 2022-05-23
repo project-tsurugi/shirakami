@@ -155,23 +155,28 @@ Status open_scan(Token const token, Storage storage,
     }
 
     if (ti->get_tx_type() == TX_TYPE::LONG) {
-        range_read_by_long* rbp{};
-        rc = wp::find_read_by(storage, rbp);
-        if (rc == Status::OK) {
-            /**
+        wp::page_set_meta* psm{};
+        rc = wp::find_page_set_meta(storage, psm);
+        if (rc != Status::OK) {
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
+        }
+        point_read_by_long* prbp{psm->get_point_read_by_long_ptr()};
+        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
+        /**
           * register read_by_set
           * todo: enhancement: 
           * The range is modified according to the execution of 
           * read_from_scan, and the range is fixed and registered at the end of 
           * the transaction.
           */
-            ti->get_range_read_by_long_set().emplace_back(
-                    std::make_tuple(rbp, l_key, l_end, r_key, r_end));
-        } else {
-            LOG(ERROR) << "programming error";
-            return Status::ERR_FATAL;
-        }
-    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        ti->get_range_read_by_long_set().emplace_back(
+                std::make_tuple(rrbp, l_key, l_end, r_key, r_end));
+        // include false positive
+        ti->get_point_read_by_long_set().emplace_back(prbp);
+    }
+
+    else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
         if (rc == Status::WARN_NOT_FOUND) {
@@ -459,7 +464,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::ERR_FATAL;
     }
     // ==========
-
 
     if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
