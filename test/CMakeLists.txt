@@ -57,6 +57,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/wp/anomaly/write_skew/*.cpp"
         "concurrency_control/wp/interface/*.cpp"
         "concurrency_control/wp/interface/delete/*.cpp"
+        "concurrency_control/wp/interface/delete_insert/*.cpp"
         "concurrency_control/wp/interface/helper/*.cpp"
         "concurrency_control/wp/interface/insert/*.cpp"
         "concurrency_control/wp/interface/scan/*.cpp"

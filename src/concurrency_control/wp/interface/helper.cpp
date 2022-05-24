@@ -229,8 +229,12 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 }
 
 Status try_deleted_to_inserted(Record* const rec_ptr,
-                               std::string_view const val) {
+                               std::string_view const val,
+                               tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+    // record found_tid
+    found_tid = check;
+
     // point 1
     if (check.get_latest() && check.get_absent()) {
         return Status::WARN_CONCURRENT_INSERT;

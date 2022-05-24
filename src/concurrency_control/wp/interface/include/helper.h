@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tid.h"
 
 namespace shirakami {
 
@@ -31,6 +32,7 @@ inline std::atomic<bool> initialized_{false};
 }
 
 [[maybe_unused]] extern Status try_deleted_to_inserted(Record* rec_ptr,
-                                                       std::string_view val);
+                                                       std::string_view val,
+                                                       tid_word& found_tid);
 
 } // namespace shirakami

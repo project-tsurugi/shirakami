@@ -221,7 +221,9 @@ init(bool enable_recovery = false,                                 // NOLINT
  * @param[in] val the value of the inserted record
  * @return Status::OK success
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
- * exists in db, so this function returned immediately.
+ * exists in db, so this function returned immediately. And it is treated that 
+ * the read operation for the record was executed by this operation to depend on
+ *  existing the record.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 

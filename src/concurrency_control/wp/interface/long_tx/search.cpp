@@ -105,8 +105,8 @@ Status search_key(session* ti, Storage const storage,
     if (rc == Status::OK) {
         ti->get_point_read_by_long_set().emplace_back(rbp);
     } else {
-        // todo. err_fatal programming error?
-        return Status::WARN_NOT_FOUND;
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
     }
 
     // version function

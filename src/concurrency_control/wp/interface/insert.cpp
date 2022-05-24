@@ -75,11 +75,31 @@ Status insert(Token const token, Storage const storage,
                 }
             }
 
-            rc = try_deleted_to_inserted(rec_ptr, val);
+            tid_word found_tid{};
+            rc = try_deleted_to_inserted(rec_ptr, val, found_tid);
             if (rc == Status::OK) {
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
                 ti->process_before_finish_step();
                 return Status::OK;
+            } else if (rc == Status::WARN_ALREADY_EXISTS) {
+                // make read set
+                if (ti->get_tx_type() == TX_TYPE::SHORT) {
+                    ti->get_read_set().emplace_back(storage, rec_ptr,
+                                                    found_tid);
+                } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+                    // register read_by_set
+                    point_read_by_long* rbp{};
+                    auto rc = wp::find_read_by(storage, rbp);
+                    if (rc == Status::OK) {
+                        ti->get_point_read_by_long_set().emplace_back(rbp);
+                    } else {
+                        LOG(ERROR) << "programming error";
+                        return Status::ERR_FATAL;
+                    }
+                } else {
+                    LOG(ERROR) << "programming error";
+                    return Status::ERR_FATAL;
+                }
             }
             ti->process_before_finish_step();
             return rc;
