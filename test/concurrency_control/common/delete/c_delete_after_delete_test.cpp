@@ -10,9 +10,7 @@ Storage storage;
 class delete_after_delete : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/delete_after_delete_test_log");
-        init(false, log_dir); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

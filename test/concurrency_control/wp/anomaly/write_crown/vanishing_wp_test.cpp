@@ -32,22 +32,17 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-wp-vanishing_wp_test");
         FLAGS_stderrthreshold = 0;
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/tmp/vanishing_wp_test_log");
     }
-
-    static std::string_view get_log_dir() { return log_dir_; }
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
 };
 
 void generate_test_case(
@@ -105,7 +100,7 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
     generate_test_case(test_case);
 
     for (auto&& tc : test_case) {
-        init(false, get_log_dir()); // NOLINT
+        init(); // NOLINT
         gen_initial_db(st);
         ASSERT_EQ(tx_begin(s.at(0), false, std::get<0>(tc).at(0)), Status::OK);
         std::string vb{};

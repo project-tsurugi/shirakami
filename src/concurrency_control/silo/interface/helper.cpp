@@ -78,9 +78,8 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     std::cerr << "fin() : " << e.what() << std::endl;
 }
 
-Status
-init([[maybe_unused]] bool enable_recovery,
-     [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
+Status init(bool const enable_recovery,
+            const std::string_view log_directory_path) { // NOLINT
 
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -92,7 +91,7 @@ init([[maybe_unused]] bool enable_recovery,
     storage::init();
 
 // start about logging
-#if defined(PWAL) || defined(CPR)
+#if defined(PWAL)
     /**
      * The default value of log_directory is PROJECT_ROOT.
      */

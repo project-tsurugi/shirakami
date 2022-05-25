@@ -34,16 +34,13 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/c_helper_tx_begin_test_log");
-        init(false, log_dir); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_; // NOLINT
-    static inline std::string log_dir_; // NOLINT
 };
 
 TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT

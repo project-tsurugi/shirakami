@@ -54,6 +54,8 @@ Available options:
     - Enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug` )
 
 * Logging method (You can select at most one method.)
+----
+BUILD_WP=OFF
   + `-DBUILD_PWAL=ON`
      * Enable parallel write-ahead-logging (default: `OFF` )
 
@@ -69,7 +71,11 @@ Available options:
   + `-DBUILD_CPR=ON`
      * Enable concurrent prefix recovery.
      * Default: `ON`
-
+----
+BUILD_WP=ON
+  + `-DBUILD_PWAL=ON`
+    * Enable parallel write-ahead-logging (default: `OFF`)
+----
 * Parameter setting
   + Concurrency Control
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>`

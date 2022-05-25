@@ -19,19 +19,16 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "delete_insert_scan_test");
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/tmp/insert_delete_scan_test_log");
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
 };
 
 Storage storage;

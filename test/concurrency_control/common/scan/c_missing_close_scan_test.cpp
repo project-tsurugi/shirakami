@@ -22,22 +22,18 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-scan-open_scan_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/tmp/open_scan_test_log");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(true, log_dir_+std::to_string(testcase_number_++)); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(false); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
-    static inline std::size_t testcase_number_{};
 };
 
 TEST_F(missing_close_scan_test, read_first) { // NOLINT
@@ -56,7 +52,7 @@ TEST_F(missing_close_scan_test, read_first) { // NOLINT
         ASSERT_EQ(Status::OK, tx_begin(s));
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
-                scan_endpoint::INF, handle));
+                                        scan_endpoint::INF, handle));
         ASSERT_EQ(0, handle);
 
         std::string sb{};
@@ -64,7 +60,7 @@ TEST_F(missing_close_scan_test, read_first) { // NOLINT
         ASSERT_EQ("a", sb);
         ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
         ASSERT_EQ("", sb);
-//        ASSERT_EQ(Status::OK, close_scan(s, handle)); // lack of close_scan caused mis-use of garbage scan handle
+        //        ASSERT_EQ(Status::OK, close_scan(s, handle)); // lack of close_scan caused mis-use of garbage scan handle
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     }
@@ -86,7 +82,7 @@ TEST_F(missing_close_scan_test, read_second) { // NOLINT
         ASSERT_EQ(Status::OK, tx_begin(s));
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
-                scan_endpoint::INF, handle));
+                                        scan_endpoint::INF, handle));
         ASSERT_EQ(0, handle);
 
         std::string sb{};

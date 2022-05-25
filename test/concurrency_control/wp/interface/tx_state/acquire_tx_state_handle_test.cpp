@@ -19,20 +19,17 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
                                   "acquire_tx_state_handle_test");
         FLAGS_stderrthreshold = 0;
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/acquire_tx_state_handle_test_log");
     }
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google; // NOLINT
-    static inline std::string log_dir_;       // NOLINT
 };
 
 TEST_F(acquire_tx_state_handle_test, before_after_commit_abort) { // NOLINT

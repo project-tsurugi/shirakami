@@ -27,21 +27,11 @@ using namespace shirakami;
 Storage storage;
 class delete_test : public ::testing::Test { // NOLINT
 public:
-    static void call_once_f() {
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/delete_test_log");
-    }
-
     void SetUp() override {
-        std::call_once(init_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
-
-private:
-    static inline std::string log_dir_{}; // NOLINT
-    static inline std::once_flag init_{}; // NOLINT
 };
 
 TEST_F(delete_test, delete_) { // NOLINT

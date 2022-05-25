@@ -6,7 +6,7 @@
 
 #include "shirakami/scheme.h"
 
-namespace shirakami::limestone {
+namespace shirakami {
 
 class write_version_type {
 public:

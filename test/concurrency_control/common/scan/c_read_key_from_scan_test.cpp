@@ -29,20 +29,17 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
                                   "scan-c_read_key_from_scan_test");
         FLAGS_stderrthreshold = 0;        // output more than INFO
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/test_log/c_read_key_from_scan_test_log");
     }
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_; // NOLINT
-    static inline std::string log_dir_; // NOLINT
 };
 
 TEST_F(simple_scan, read_key_from_scan_with_not_begin) { // NOLINT

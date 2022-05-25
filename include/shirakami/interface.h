@@ -11,15 +11,6 @@
 #include "transaction_state.h"
 #include "tuple.h"
 
-/**
- * @brief It is for logging to decide file name.
- */
-#define STRING(macro) #macro // NOLINT
-/**
- * @brief It is for logging to decide file name.
- */
-#define MAC2STR(macro) STRING(macro) // NOLINT
-
 namespace shirakami {
 
 /**
@@ -209,9 +200,8 @@ extern void fin(bool force_shut_down_cpr = true); // NOLINT
  * @return Status::WARN_INVALID_ARGS The args as a log directory path is invalid.
  * Some files which has the same path exist.
  */
-extern Status
-init(bool enable_recovery = false,                                 // NOLINT
-     std::string_view log_directory_path = MAC2STR(PROJECT_ROOT)); // NOLINT
+extern Status init(bool enable_recovery = false,              // NOLINT
+                   std::string_view log_directory_path = ""); // NOLINT
 
 /**
  * @brief insert the record with given key/value

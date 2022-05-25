@@ -23,21 +23,18 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
                                   "scan-c_open_scan_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/tmp/open_scan_test_log");
+        FLAGS_stderrthreshold = 0;                      // output more than INFO
     }
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
 };
 
 void wait_change_epoch() {
@@ -57,8 +54,8 @@ TEST_F(open_scan_test,            // NOLINT
     ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
     wait_change_epoch();
     ScanHandle hd{};
-    ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "",
-                        scan_endpoint::INF, hd),
+    ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        hd),
               Status::WARN_PREMATURE);
     ASSERT_EQ(leave(s), Status::OK);
 }

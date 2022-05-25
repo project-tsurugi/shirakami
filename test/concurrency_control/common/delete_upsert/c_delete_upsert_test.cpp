@@ -12,9 +12,7 @@ using namespace shirakami;
 class delete_upsert_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/delete_upsert_test_log");
-        init(false, log_dir); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

@@ -22,19 +22,16 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "search-simple_search_test");
         FLAGS_stderrthreshold = 0;
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/simple_search_test_log");
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(simple_search, search_search) { // NOLINT

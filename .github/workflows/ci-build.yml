@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p build_wp
           cd build_wp
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=OFF -DBUILD_WP=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_CPR=OFF -DBUILD_PWAL=OFF -DBUILD_WP=ON ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest_WP

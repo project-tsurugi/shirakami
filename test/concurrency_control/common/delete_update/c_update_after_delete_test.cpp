@@ -27,20 +27,17 @@ Storage st;
 class update_after_delete : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/test_log/update_after_delete_test_log");
         FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
-    static inline std::string log_dir_; // NOLINT
     static inline std::once_flag init_; // NOLINT
 };
 

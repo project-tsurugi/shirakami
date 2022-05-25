@@ -159,8 +159,8 @@ int main(int argc, char* argv[]) try { // NOLINT
     init_gflags(argc, argv);
     check_flags();
 
-    std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/tmp/shirakami_bench_bcc_10_log");
+    std::string log_dir = "/tmp";
+    log_dir.append("/shirakami_bench_bcc_10_log");
     init(false, log_dir); // NOLINT
     init_db();
     if (FLAGS_read_only) {

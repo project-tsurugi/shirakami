@@ -31,21 +31,18 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-wp_"
                                   "basic-wp_init_fin_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/build/wp_init_fin_test_log");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google; // NOLINT
-    static inline std::string log_dir_;       // NOLINT
 };
 
 TEST_F(wp_init_fin_test, init_fin) { // NOLINT

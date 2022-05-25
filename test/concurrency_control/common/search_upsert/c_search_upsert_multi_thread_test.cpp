@@ -33,9 +33,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/search_upsert_multi_thread_test_log");
-        init(false, log_dir); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
