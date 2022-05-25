@@ -44,6 +44,7 @@ option(BUILD_ROCKSDB_BENCH "Build rocksdb benchmark." OFF)
 
 option(FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD "If the command clang-format is available, format source files before each build. Turn this off if the build time is too slow." OFF)
 
+find_package(limestone REQUIRED)
 find_package(Boost
         COMPONENTS filesystem)
 find_package(Doxygen)

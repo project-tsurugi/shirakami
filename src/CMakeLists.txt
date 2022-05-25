@@ -45,6 +45,7 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(shirakami
         PUBLIC api
+        PRIVATE limestone
         PRIVATE Boost::filesystem
         PRIVATE glog::glog
         PRIVATE tsl::hopscotch_map
