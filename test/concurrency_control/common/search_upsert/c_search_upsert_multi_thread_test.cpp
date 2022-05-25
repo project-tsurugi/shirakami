@@ -33,7 +33,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(); // NOLINT
+        init(false, "/tmp/shirakami_c_search_upsert_multi_thread_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

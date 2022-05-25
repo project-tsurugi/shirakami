@@ -22,7 +22,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(); // NOLINT
+        init(false, "/tmp/shirakami_c_delete_search_test"); // NOLINT
         register_storage(st_);
     }
 

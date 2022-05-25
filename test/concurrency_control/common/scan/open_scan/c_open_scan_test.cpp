@@ -34,7 +34,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(); // NOLINT
+        init(false, "/tmp/shirakami_c_open_scan_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

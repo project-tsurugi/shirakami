@@ -28,7 +28,7 @@ using namespace shirakami;
 class delete_insert_10chars_key : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init(); // NOLINT
+        init(false, "c_delete_insert_10chars_key_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

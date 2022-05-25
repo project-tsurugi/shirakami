@@ -29,12 +29,14 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
                                   "scan-c_open_scan_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(); // NOLINT
+        init(false, "/tmp/"
+                    "shirakami_c_single_open_scan_skip_head_deleted_records_"
+                    "test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

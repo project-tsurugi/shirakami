@@ -3,8 +3,15 @@
  */
 
 #include <glog/logging.h>
+#include <linux/unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <chrono>
 
 #include "storage.h"
+#include "tsc.h"
 
 #include "include/helper.h"
 
@@ -22,6 +29,8 @@
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
+
+#define gettid() syscall(SYS_gettid)
 
 namespace shirakami {
 
@@ -91,15 +100,16 @@ Status init(bool const enable_recovery,
     storage::init();
 
 // start about logging
-#if defined(PWAL)
+#if defined(PWAL) || defined(CPR)
     /**
      * The default value of log_directory is PROJECT_ROOT.
      */
     Log::set_kLogDirectory(log_directory_path);
-    if (log_directory_path == MAC2STR(PROJECT_ROOT)) {
-        std::string log_dir = Log::get_kLogDirectory();
-        log_dir.append("/log");
-        Log::set_kLogDirectory(log_dir);
+    if (log_directory_path == "") {
+        int tid = gettid();
+        std::uint64_t tsc = rdtsc();
+        Log::set_kLogDirectory("/tmp/shirakami/" + std::to_string(tid) + "-" +
+                               std::to_string(tsc));
     }
 
     // set checkpoint path

@@ -24,13 +24,15 @@ public:
 
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(); // NOLINT
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT
+    static inline std::string log_dir_{
+            "/tmp/shirakami_c_delete_after_write_test"};
 };
 
 TEST_F(delete_after_write, delete_after_insert) { // NOLINT

@@ -16,7 +16,7 @@ using namespace shirakami;
 class simple_scan : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init(); // NOLINT
+        init(false, "/tmp/shirakami_c_close_scan_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

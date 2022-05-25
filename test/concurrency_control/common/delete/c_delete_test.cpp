@@ -28,7 +28,7 @@ Storage storage;
 class delete_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init(); // NOLINT
+        init(false, "shirakami_c_delete_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

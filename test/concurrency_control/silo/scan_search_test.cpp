@@ -33,15 +33,10 @@ namespace shirakami::testing {
 class scan_search : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        std::string log_dir{MAC2STR(PROJECT_ROOT)}; // NOLINT
-        log_dir.append("/build/scan_search_test_log");
-        init(false, log_dir); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override {
-#if defined(RECOVERY)
-        shirakami::cpr::wait_next_checkpoint();
-#endif
         fin();
     }
 };

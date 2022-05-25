@@ -22,7 +22,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_google, call_once_f);
-        init(); // NOLINT
+        init(false, "/tmp/shirakami_c_scan_upsert_test"); // NOLINT
     }
 
     void TearDown() override { fin(); }

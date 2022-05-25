@@ -10,10 +10,13 @@ Storage storage;
 class delete_after_delete : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init(); // NOLINT
+        init(false, log_dir_); // NOLINT
     }
 
     void TearDown() override { fin(); }
+
+private:
+    std::string log_dir_{"/tmp/shirakami_c_delete_after_delete_test"}; // NOLINT
 };
 
 TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
