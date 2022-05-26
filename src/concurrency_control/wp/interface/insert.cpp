@@ -81,7 +81,8 @@ Status insert(Token const token, Storage const storage,
                 ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
                 ti->process_before_finish_step();
                 return Status::OK;
-            } else if (rc == Status::WARN_ALREADY_EXISTS) {
+            }
+            if (rc == Status::WARN_ALREADY_EXISTS) {
                 // make read set
                 if (ti->get_tx_type() == TX_TYPE::SHORT) {
                     ti->get_read_set().emplace_back(storage, rec_ptr,

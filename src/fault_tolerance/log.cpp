@@ -31,11 +31,6 @@
 
 #include "fault_tolerance/include/cpr.h"
 
-#elif defined(PWAL)
-
-#include "pwal.h"
-using namespace shirakami::pwal;
-
 #endif
 
 #include "glog/logging.h"
@@ -70,7 +65,8 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
 }
 
 [[maybe_unused]] void Log::recovery_from_log() {
-#if defined(PWAL)
+#if 0
+// pwal old code
     std::vector<LogRecord> log_set;
     for (auto i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         File logfile{};
@@ -171,8 +167,9 @@ void storage_ctr_adjust(std::vector<Storage>& used_storage) {
         commit(s); // NOLINT
     }
     leave(s);
+#endif
 
-#elif defined(CPR)
+#if defined(CPR)
     std::vector<Storage> used_storage;
     auto process_from_file = [&used_storage](const std::string& fname) {
         std::ifstream logf;

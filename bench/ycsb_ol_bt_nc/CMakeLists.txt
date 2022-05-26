@@ -19,6 +19,7 @@ target_link_libraries(ycsb_ol_bt_nc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
+        PRIVATE limestone
         )
 
 target_include_directories(ycsb_ol_bt_nc

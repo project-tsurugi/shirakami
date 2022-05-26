@@ -12,6 +12,7 @@
 #include "epoch.h"
 #include "garbage.h"
 #include "local_set.h"
+#include "lpwal.h"
 
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"
@@ -217,6 +218,13 @@ public:
     }
 
     // ========== end: long tx
+
+    // ========== start: logging
+#if defined(PWAL)
+    lpwal::handler& get_lpwal_handle() { return lpwal_handle_; }
+#endif
+    // ========== end: logging
+
     // ========== end: getter
 
     void process_before_start_step() {
@@ -464,6 +472,15 @@ private:
     epoch::epoch_t read_version_max_epoch_{};
 
     // ========== end: long tx
+
+    // ========== start: logging
+#if defined(PWAL)
+    /**
+     * @brief The handle about pwal for datastore limestone.
+     */
+    lpwal::handler lpwal_handle_{};
+#endif
+    // ========== end: logging
 };
 
 class session_table {

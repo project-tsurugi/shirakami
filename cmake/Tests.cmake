@@ -79,6 +79,7 @@ function(register_tests)
                 if (fname MATCHES "hopscotch_map_test")
                     target_link_libraries(${test_name}
                             PRIVATE tsl::hopscotch_map
+                            PRIVATE limestone
                             )
                 elseif((fname MATCHES "clock_test") OR
                 (fname MATCHES "error_test") OR
@@ -105,7 +106,10 @@ function(register_tests)
             else()
                 target_link_libraries(${test_name} PRIVATE gtest_main)
             endif()
-            target_link_libraries(${test_name} PRIVATE Threads::Threads)
+            target_link_libraries(${test_name} 
+                            PRIVATE limestone
+                            PRIVATE Threads::Threads
+                            )
 
             set_compile_options(${test_name})
 

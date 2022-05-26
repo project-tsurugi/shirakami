@@ -20,6 +20,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "delete_delete_after_write_test");
+        log_dir_ = "/tmp/shirakami_c_delete_after_write_test";
     }
 
     void SetUp() override {
@@ -31,8 +32,7 @@ public:
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_{
-            "/tmp/shirakami_c_delete_after_write_test"};
+    static inline std::string log_dir_{};      // NOLINT
 };
 
 TEST_F(delete_after_write, delete_after_insert) { // NOLINT

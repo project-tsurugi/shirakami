@@ -8,6 +8,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "datastore/limestone/env.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::epoch {
@@ -47,7 +49,13 @@ void epoch_thread_work() {
                     break;
                 }
             }
-            set_global_epoch(get_global_epoch() + 1);
+            // change epoch
+            auto new_epoch{get_global_epoch() + 1};
+            set_global_epoch(new_epoch);
+#ifdef PWAL
+            // change also datastore's epoch
+            shirakami::datastore::get_datastore()->switch_epoch(new_epoch);
+#endif
             // dtor : release wp_mutex
         }
         check_epoch_load_and_update_idle_living_tx();

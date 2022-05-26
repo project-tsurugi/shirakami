@@ -19,6 +19,7 @@ target_link_libraries(bcc_7
         PRIVATE tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
+        PRIVATE limestone
         )
 
 target_include_directories(bcc_7

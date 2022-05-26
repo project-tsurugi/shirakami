@@ -14,7 +14,11 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "datastore/limestone/env.h"
+
 #include "shirakami/interface.h"
+
+#include "limestone/api/datastore.h"
 
 #include "glog/logging.h"
 
@@ -73,6 +77,8 @@ Status enter(Token& token) { // NOLINT
 void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
+    // about datastore
+    
     // about engine
     garbage::fin();
     epoch::fin();
@@ -94,11 +100,30 @@ init([[maybe_unused]] bool enable_recovery,
      [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
-    // about tx state
-    TxState::init();
-
     // about storage
     storage::init();
+
+#if defined(PWAL)
+    // todo
+#if 0
+    // about logging
+    // start datastore
+    datastore::start_datastore(limestone::detail::configuration(log_directory_path));
+    if (enable_recovery) {
+        /**
+         * 初動では永続化できたものを全てリカバリする。
+         * epoch 指定のリカバリでは init に epoch を受け取らないといけないので、
+         * すぐには世代管理に対応できない。
+         */
+        datastore::get_datastore()->recover();
+    }
+    datastore::add_persistent_callback(epoch::set_durable_epoch);
+    datastore::get_datastore()->ready();
+#endif
+#endif
+
+    // about tx state
+    TxState::init();
 
     // about cc
     session_table::init_session_table(enable_recovery);

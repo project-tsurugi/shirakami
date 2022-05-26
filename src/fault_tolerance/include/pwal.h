@@ -12,10 +12,10 @@
 
 #include "fileio.h"
 
-#include "kvs/interface.h"
-#include "kvs/scheme.h"
+#include "shirakami/interface.h"
+#include "shirakami/scheme.h"
 
-#include "concurrency_control/include/tid.h"
+#include "concurrency_control/silo/include/tid.h"
 
 namespace shirakami::pwal {
 

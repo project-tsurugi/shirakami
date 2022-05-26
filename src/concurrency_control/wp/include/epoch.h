@@ -23,6 +23,8 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 [[maybe_unused]] inline std::atomic<epoch_t> global_epoch{
         initial_epoch}; // NOLINT
 
+[[maybe_unused]] inline std::atomic<epoch_t> durable_epoch{0};
+
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
 
 [[maybe_unused]] inline std::atomic<bool> epoch_thread_end; // NOLINT
@@ -47,6 +49,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 
 [[maybe_unused]] static void set_global_epoch(const epoch_t epo) { // NOLINT
     global_epoch.store(epo, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_durable_epoch(epoch_t ep) {
+    durable_epoch.store(ep, std::memory_order_release);
 }
 
 // For DEBUG and TEST

@@ -75,10 +75,10 @@ file(GLOB WP_TEST_SOURCES
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 endif()
 
-if (BUILD_PWAL)
-    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")
-    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
-endif ()
+#if (BUILD_PWAL)
+#    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")
+#    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
+#endif ()
 
 if (BUILD_CPR)
     file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr/*.cpp")
@@ -89,6 +89,7 @@ register_tests(
         TARGET shirakami
         DEPENDS
           shirakami-impl
+          PRIVATE limestone
           PRIVATE glog::glog
           PRIVATE ${tbb_prefix}tbb
           PRIVATE ${tbb_prefix}tbbmalloc

@@ -184,6 +184,20 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 return Status::ERR_FATAL;
             }
         }
+#ifdef PWAL
+        // add log records to local wal buffer
+        std::string key{};
+        wso_ptr->get_rec_ptr()->get_key(key);
+        std::string val{};
+        wso_ptr->get_value(val);
+        ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
+                wso_ptr->get_op() == OP_TYPE::DELETE,
+                lpwal::write_version_type(
+                        update_tid.get_epoch(),
+                        lpwal::write_version_type::gen_minor_write_version(
+                                false, update_tid.get_tid())),
+                wso_ptr->get_storage(), key, val));
+#endif
         return Status::OK;
     };
 
@@ -252,9 +266,7 @@ void register_range_read_by_short(session* const ti) {
     auto& cont = ti->get_range_read_by_short_set();
     std::sort(cont.begin(), cont.end());
     cont.erase(std::unique(cont.begin(), cont.end()), cont.end());
-    for (auto&& itr : cont) {
-        itr->push(ce);
-    }
+    for (auto&& itr : cont) { itr->push(ce); }
 }
 
 extern Status commit(session* ti, // NOLINT
@@ -298,6 +310,16 @@ extern Status commit(session* ti, // NOLINT
     // This calculation can be done outside the critical section.
     register_point_read_by_short(ti);
     register_range_read_by_short(ti);
+
+    // flush log if need
+#if defined(PWAL)
+    auto oldest_log_epoch{ti->get_lpwal_handle().get_oldest_log_epoch()};
+    if (oldest_log_epoch != 0 &&
+        oldest_log_epoch != epoch::get_global_epoch()) {
+        // should flush
+        shirakami::lpwal::flush_log(ti->get_lpwal_handle());
+    }
+#endif
 
     // about tx state
     // this should be before clean_up func
