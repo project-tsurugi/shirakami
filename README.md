@@ -70,7 +70,7 @@ BUILD_WP=OFF
 
   + `-DBUILD_CPR=ON`
      * Enable concurrent prefix recovery.
-     * Default: `ON`
+     * Default: `OFF`
 ----
 BUILD_WP=ON
   + `-DBUILD_PWAL=ON`
@@ -94,10 +94,7 @@ BUILD_WP=ON
 
     - `BUILD_WP=ON`
        * Enable write preserve logic in concurrency control.
-       <font color="red"> Note that write preserve logic is developed now, so
-       it is not stable. Therefore, default is OFF.
-       </font>
-       * Default: `OFF`
+       * Default: `ON`
 
   + PWAL
     - `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>`
