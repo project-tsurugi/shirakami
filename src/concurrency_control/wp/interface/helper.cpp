@@ -78,7 +78,7 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
     // about datastore
-    
+
     // about engine
     garbage::fin();
     epoch::fin();
@@ -105,10 +105,10 @@ init([[maybe_unused]] bool enable_recovery,
 
 #if defined(PWAL)
     // todo
-#if 0
     // about logging
     // start datastore
-    datastore::start_datastore(limestone::detail::configuration(log_directory_path));
+    //datastore::start_datastore(limestone::detail::configuration(log_directory_path));
+    // ^no definition
     if (enable_recovery) {
         /**
          * 初動では永続化できたものを全てリカバリする。
@@ -117,9 +117,9 @@ init([[maybe_unused]] bool enable_recovery,
          */
         datastore::get_datastore()->recover();
     }
-    datastore::add_persistent_callback(epoch::set_durable_epoch);
+    datastore::get_datastore()->add_persistent_callback(
+            epoch::set_durable_epoch);
     datastore::get_datastore()->ready();
-#endif
 #endif
 
     // about tx state
