@@ -8,7 +8,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#include "datastore/limestone/env.h"
+#include "datastore/limestone/include/datastore.h"
 
 #include "glog/logging.h"
 

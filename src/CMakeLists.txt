@@ -10,6 +10,7 @@ if (BUILD_WP)
     "concurrency_control/wp/interface/*.cpp"
     "concurrency_control/wp/interface/long_tx/*.cpp"
     "concurrency_control/wp/interface/short_tx/*.cpp"
+    "datastore/limestone/*.cpp"
     )
     set(SOURCES ${SOURCES} ${CC_SOURCES})
 else ()

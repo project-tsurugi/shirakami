@@ -573,5 +573,16 @@ Status release_tx_state_handle(TxStateHandle handle);
 Status tx_check(TxStateHandle handle, TxState& out);
 
 //==========
+/**
+ * About datastore
+ */
+
+/**
+ * @brief Get the datastore object which is used by shirakami engine.
+ * @return void* 
+ */
+void* get_datastore();
+
+//==========
 
 } // namespace shirakami

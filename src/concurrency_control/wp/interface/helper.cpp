@@ -4,6 +4,7 @@
 
 #include "atomic_wrapper.h"
 #include "storage.h"
+#include "tsc.h"
 
 #include "include/helper.h"
 
@@ -14,7 +15,7 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
-#include "datastore/limestone/env.h"
+#include "datastore/limestone/include/datastore.h"
 
 #include "shirakami/interface.h"
 
@@ -78,6 +79,10 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
     if (!get_initialized()) { return; }
 
     // about datastore
+#if defined(PWAL)
+    // datastore::get_datastore()->shutdown();
+    // no function body, so comment out for preventing compile error
+#endif
 
     // about engine
     garbage::fin();
@@ -106,20 +111,35 @@ init([[maybe_unused]] bool enable_recovery,
 #if defined(PWAL)
     // todo
     // about logging
+    // set log_directory
+    std::string log_dir(log_directory_path);
+    if (log_dir == "") {
+        int tid = syscall(SYS_gettid);
+        std::uint64_t tsc = rdtsc();
+        log_dir = "/tmp/shirakami/" + std::to_string(tid) + "-" +
+                  std::to_string(tsc);
+    }
+
     // start datastore
     //datastore::start_datastore(limestone::detail::configuration(log_directory_path));
-    // ^no definition
+    // ^no definition of configuration
     if (enable_recovery) {
         /**
          * 初動では永続化できたものを全てリカバリする。
          * epoch 指定のリカバリでは init に epoch を受け取らないといけないので、
          * すぐには世代管理に対応できない。
          */
-        datastore::get_datastore()->recover();
+        datastore::get_datastore()->recover(); // should execute before ready()
     }
     datastore::get_datastore()->add_persistent_callback(
-            epoch::set_durable_epoch);
+            epoch::set_durable_epoch); // should execute before ready()
+    /**
+     * This executes create_channel and pass it to shirakami's executor.
+     */
+    datastore::init_about_session_table(log_dir);
     datastore::get_datastore()->ready();
+
+    datastore::recovery_from_datastore();
 #endif
 
     // about tx state

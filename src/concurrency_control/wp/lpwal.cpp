@@ -29,13 +29,9 @@ void add_entry_from_logs([[maybe_unused]] handler& handle) {
 }
 
 void flush_log(handler& handle) {
-    /**
-      * It writes the implementation here because of the file dependency, 
-      * but it separates it to the source file eventually.
-      */
-    // handle.get_log_channel().begin_session(); // now no source
+    handle.get_log_channel_ptr()->begin_session();
     add_entry_from_logs(handle);
-    // handle.get_log_channel().end_session(); // now no source
+    handle.get_log_channel_ptr()->end_session();
 }
 
 } // namespace shirakami::lpwal

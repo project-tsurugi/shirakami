@@ -134,9 +134,15 @@ public:
         return logs_.front().get_wv().get_major_write_version();
     }
 
-    limestone::api::log_channel& get_log_channel() { return log_channel_; }
+    limestone::api::log_channel* get_log_channel_ptr() {
+        return log_channel_ptr_;
+    }
 
     void push_log(log_record const& log) { logs_.emplace_back(log); }
+
+    void set_log_channel_ptr(limestone::api::log_channel* ptr) {
+        log_channel_ptr_ = ptr;
+    }
 
 private:
     /**
@@ -147,7 +153,7 @@ private:
     /**
      * @brief log channel
      */
-    limestone::api::log_channel log_channel_{};
+    limestone::api::log_channel* log_channel_ptr_{};
 };
 
 /**
