@@ -121,7 +121,7 @@ init([[maybe_unused]] bool enable_recovery,
     }
 
     // start datastore
-    //datastore::start_datastore(limestone::detail::configuration(log_directory_path));
+    // datastore::start_datastore(limestone::api::configuration(log_directory_path));
     // ^no definition of configuration
     if (enable_recovery) {
         /**

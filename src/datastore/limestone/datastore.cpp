@@ -5,6 +5,8 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#include "shirakami/scheme.h"
+
 #include "datastore/limestone/include/datastore.h"
 
 namespace shirakami::datastore {
@@ -21,15 +23,28 @@ void init_about_session_table(std::string_view log_dir_path) {
 
 void recovery_from_datastore() {
     [[maybe_unused]] limestone::api::snapshot ss;
+#if 1
+    // todo delete. for temporally impl.
+    [[maybe_unused]] limestone::api::cursor cs{};
+#else
+    // todo use
     //[[maybe_unused]] limestone::api::cursor cs{ss.get_cursor()};
-    // comment out due to not implementation body(未定義参照)
+#endif
+// comment out due to not implementation body(未定義参照)
 
-    /**
-     * todo
-     * cursor implementation is not yet
-     * cursor から storage, key, value を引き出し、shirakami KVS に
-     * 格納し、next() でカーソルを進めることをク繰り返す。
+/**
+     * The cursor point the first entry at calling first next(). 
      */
+#if 0
+    while (cs.next()) { // the next body is none.
+        [[maybe_unused]] Storage st{cs.storage()};
+        std::string key{};
+        std::string val{};
+        cs.key(key);
+        cs.value(val);
+        // todo create kvs entry from these info.
+    }
+#endif
 }
 
 #endif
