@@ -130,7 +130,6 @@ init([[maybe_unused]] bool enable_recovery,
     boost::filesystem::path metadata_path("/tmp/shirakami");
     datastore::start_datastore(
             limestone::api::configuration(data_locations, metadata_path));
-    // ^no definition of configuration
     if (enable_recovery) {
         /**
          * 初動では永続化できたものを全てリカバリする。
