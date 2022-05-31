@@ -54,28 +54,9 @@ Available options:
     - Enable code coverage analysis (requires `-DCMAKE_BUILD_TYPE=Debug` )
 
 * Logging method (You can select at most one method.)
-----
-BUILD_WP=OFF
   + `-DBUILD_PWAL=ON`
-     * Enable parallel write-ahead-logging (default: `OFF` )
+    * Enable parallel write-ahead-logging using limestone (default: `OFF`)
 
-        * <font color="red"> This option will be abolished because we plan to
-        use mainly cpr as logging method.
-      So this option have a bug because our development hasn't caught up.
-      </font>
-
-      * `-DPWAL_ENABLE_READ_LOG=ON`
-        * Enable to log read log with write log to verify whether committed
-        schedule is valid.
-
-  + `-DBUILD_CPR=ON`
-     * Enable concurrent prefix recovery.
-     * Default: `OFF`
-----
-BUILD_WP=ON
-  + `-DBUILD_PWAL=ON`
-    * Enable parallel write-ahead-logging (default: `OFF`)
-----
 * Parameter setting
   + Concurrency Control
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>`
@@ -91,39 +72,6 @@ BUILD_WP=ON
        * The number of retry read without give-up due to conflicts at reading
        record.
        * Default : `0`
-
-    - `BUILD_WP=ON`
-       * Enable write preserve logic in concurrency control.
-       * Default: `ON`
-
-  + PWAL
-    - `-DPARAM_PWAL_LOG_GCOMMIT_THRESHOLD=<# operations of group commit in a batch>`
-       * This is one of trigger of group commit.
-       If thread local pwal buffer has log records more than this number, it tries group commit.
-       * Default: `1000`
-
-  + CPR
-    - `-DPARAM_CHECKPOINT_REST_EPOCH=<time (ms)>`
-      * The rest time after each checkpoint.
-      * Default: `40`
-    - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=<num>`
-      * The number of regularly reserving memory for cpr's differences sets.
-      If you use for practically and seek high performance, set big number.
-      If you set big number and run ctest, it takes so much time, so default is 0.
-
-      * Default: `0`
-    - `-DCPR_DIFF_HOPSCOTCH=ON`
-      * Use hopscotch hash for cpr's differences sets.
-      * Default: `ON`
-    - `-DCPR_DIFF_UM=OFF`
-      * Use std::unordered_map for cpr's differences sets.
-      * Note : This maintenance has not kept up with the latest version.
-      * Default: `OFF`
-   - `-DCPR_DIFF_VEC=OFF`
-
-      * Use std::vector for cpr's differences sets.
-      * Note : This maintenance has not kept up with the latest version.
-      * Default: `OFF`
 
 * Benchmarking (project_root/bench)
   + RocksDB
@@ -142,17 +90,6 @@ BUILD_WP=ON
       - The value of this option is the maximum number of parallel sessions.
       If it is unnecessarily large, the management cost will increase and the
       efficiency will decrease.
-
-    - `-DBUILD_PWAL=OFF -DBUILD_CPR=ON`
-      - PWAL generates a log record for each transaction.
-      In comparison, CPR, a checkpointing technology, has almost no work until
-      the timing of logging comes.
-
-    - `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
-      - Checkpointing logging has little work until it's time to log.
-    - `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=<large num, ex. 10000>`
-      - Performance is good when a large number is reserved so that area
-      rearrangement does not occur.
 
   + For high contention workloads
     - `-DPARAM_EPOCH_TIME=<medium num, ex. 10>`
@@ -183,12 +120,6 @@ BUILD_WP=ON
   + `-DPARAM_EPOCH_TIME=<small time, ex. 10> -DPARAM_CHECKPOINT_REST_EPOCH=<small time, ex. 10>`
     - Frequent logging improves latency but worsens throughput.
 * For fast testing
-  + `-DPARAM_CPR_DIFF_SET_RESERVE_NUM=0`
-    - It is faster not to allocate unnecessary memory.
-  + `-DPARAM_CHECKPOINT_REST_EPOCH=<large num, ex. 1000>`
-    - If you do not enable the option of the fin function that waits for
-    logging IO to finish, it is faster to finish the test before logging IO occurs.
-    
 
 ## Install 
 

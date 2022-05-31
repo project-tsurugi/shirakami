@@ -3,34 +3,15 @@ file(GLOB SOURCES
         )
 
 # about cc
-if (BUILD_WP)
-    file(GLOB CC_SOURCES 
-    "concurrency_control/*.cpp"
-    "concurrency_control/wp/*.cpp"
-    "concurrency_control/wp/interface/*.cpp"
-    "concurrency_control/wp/interface/long_tx/*.cpp"
-    "concurrency_control/wp/interface/short_tx/*.cpp"
-    "datastore/limestone/*.cpp"
-    )
-    set(SOURCES ${SOURCES} ${CC_SOURCES})
-else ()
-    file(GLOB CC_SOURCES 
-    "concurrency_control/*.cpp"
-    "concurrency_control/silo/*.cpp"
-    "concurrency_control/silo/interface/*.cpp"
-    )
-    set(SOURCES ${SOURCES} ${CC_SOURCES})
-
-    if (BUILD_PWAL)
-        file(GLOB LOGGING_SOURCES "fault_tolerance/pwal.cpp")
-        set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
-    endif ()
-    
-    if (BUILD_CPR)
-        file(GLOB LOGGING_SOURCES "fault_tolerance/cpr.cpp")
-        set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
-    endif ()
-endif ()
+file(GLOB CC_SOURCES 
+"concurrency_control/*.cpp"
+"concurrency_control/wp/*.cpp"
+"concurrency_control/wp/interface/*.cpp"
+"concurrency_control/wp/interface/long_tx/*.cpp"
+"concurrency_control/wp/interface/short_tx/*.cpp"
+"datastore/limestone/*.cpp"
+)
+set(SOURCES ${SOURCES} ${CC_SOURCES})
 
 add_library(shirakami
         ${SOURCES}

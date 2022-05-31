@@ -32,12 +32,7 @@ option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 # transaction processing logic
 option(BUILD_PWAL "Build parallel write ahead logging as logging." OFF)
 option(PWAL_ENABLE_READ_LOG "PWAL log read (/ write) informations to verify whether committed schedule is valid." OFF)
-option(BUILD_CPR "Build concurrent prefix recovery as logging." OFF)
 option(BUILD_WP "Build write preserve logic in concurrency control." ON)
-
-# cpr logic
-option(CPR_DIFF_HOPSCOTCH "Use hopscotch hash for diff sets" ON)
-option(CPR_DIFF_UM "Use std::unordered_map for diff sets" OFF)
 
 # benchmark
 option(BUILD_ROCKSDB_BENCH "Build rocksdb benchmark." OFF)
