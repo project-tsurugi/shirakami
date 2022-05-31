@@ -98,7 +98,10 @@ public:
             out = val_;
             return;
         }
-        LOG(FATAL) << "unreachable";
+        if (get_op() == OP_TYPE::DELETE) {
+            return;
+        }
+        LOG(FATAL) << "programming error";
         std::abort();
     }
 
