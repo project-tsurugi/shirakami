@@ -14,7 +14,7 @@ inline std::unique_ptr<limestone::api::datastore> datastore_; // NOLINT
 }
 
 [[maybe_unused]] static void
-start_datastore(limestone::api::configuration conf) {
+start_datastore(limestone::api::configuration const& conf) {
     datastore_ = std::make_unique<limestone::api::datastore>(conf);
 }
 
