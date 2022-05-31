@@ -36,34 +36,52 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
           cmake --build . --target install --clean-first -- -j
 
-      - id: CMake_Build_with_wp
-        name: CMake_Build_with_wp
+      - id: CMake_Build
+        name: CMake_Build
         run: |
-          mkdir -p build_wp
-          cd build_wp
+          mkdir -p build
+          cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local ..
           cmake --build . --target all --clean-first -- -j
 
-      - id: CTest_WP
-        name: CTest_WP
+      - id: CMake_Build_with_PWAL
+        name: CMake_Build_with_PWAL
+        run: |
+          mkdir -p build_pwal
+          cd build_pwal
+          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
+          cmake --build . --target all --clean-first -- -j
+
+      - id: CTest
+        name: CTest
         continue-on-error: false
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
-          cd build_wp
+          cd build
+          ctest --verbose --timeout 20 -j 100
+
+      - id: CTest_with_PWAL
+        name: CTest_with_PWAL
+        continue-on-error: false
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build_pwal
           ctest --verbose --timeout 20 -j 100
 
       - id: Clang-Tidy_wp
         name: Clang-Tidy_wp
         run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build_wp/clang-tidy-fix.yaml -p build_wp -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build_wp/clang-tidy.log
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build/clang-tidy.log
         if: matrix.container-tag != 'ubuntu-18.04'
 
       - id: Doxygen
         name: Doxygen
         run: |
-          cd build_wp
+          cd build
           make doxygen 2> >(tee doxygen-error.log)
         if: matrix.container-tag != 'ubuntu-18.04'
 
