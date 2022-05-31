@@ -12,79 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-file(GLOB TEST_SOURCES
-        "concurrency_control/common/*.cpp"
-        "concurrency_control/common/delete/*.cpp"
-        "concurrency_control/common/delete_insert/*.cpp"
-        "concurrency_control/common/delete_insert_search/*.cpp"
-        "concurrency_control/common/delete_insert_scan/*.cpp"
-        "concurrency_control/common/delete_scan_upsert/*.cpp"
-        "concurrency_control/common/delete_search/*.cpp"
-        "concurrency_control/common/delete_update/*.cpp"
-        "concurrency_control/common/delete_upsert/*.cpp"
-        "concurrency_control/common/helper/*.cpp"
-        "concurrency_control/common/insert/*.cpp"
-        "concurrency_control/common/insert_update/*.cpp"
-        "concurrency_control/common/insert_upsert/*.cpp"
-        "concurrency_control/common/upsert/*.cpp"
-        "concurrency_control/common/update/*.cpp"
-        "concurrency_control/common/scan/*.cpp"
-        "concurrency_control/common/scan/next/*.cpp"
-        "concurrency_control/common/scan/open_scan/*.cpp"
-        "concurrency_control/common/scan_upsert/*.cpp"
-        "concurrency_control/common/search/*.cpp"
-        "concurrency_control/common/search_update/*.cpp"
-        "concurrency_control/common/search_upsert/*.cpp"
-        "concurrency_control/common/storage/*.cpp"
-        "concurrency_control/common/termination/*.cpp"
-        )
 
-if (NOT BUILD_WP)
-file(GLOB SILO_TEST_SOURCES
-        "bench/*.cpp"
-        "complicated_test/phantom_protection_test.cpp"
-        "concurrency_control/silo/*.cpp"
-        "concurrency_control/silo/interface/update/*.cpp"
-        "concurrency_control/silo/scan/read_only/*.cpp"
-        "sequence/*.cpp"
-        "third_party/*.cpp"
-        )
-        set(TEST_SOURCES ${TEST_SOURCES} ${SILO_TEST_SOURCES})
-else ()
 file(GLOB WP_TEST_SOURCES
-        "concurrency_control/wp/*.cpp"
-        "concurrency_control/wp/anomaly/write_crown/*.cpp"
-        "concurrency_control/wp/anomaly/write_skew/*.cpp"
-        "concurrency_control/wp/interface/*.cpp"
-        "concurrency_control/wp/interface/delete/*.cpp"
-        "concurrency_control/wp/interface/delete_insert/*.cpp"
-        "concurrency_control/wp/interface/helper/*.cpp"
-        "concurrency_control/wp/interface/insert/*.cpp"
-        "concurrency_control/wp/interface/scan/*.cpp"
-        "concurrency_control/wp/interface/scan_upsert/*.cpp"
-        "concurrency_control/wp/interface/scan/open_scan/*.cpp"
-        "concurrency_control/wp/interface/scan/next/*.cpp"
-        "concurrency_control/wp/interface/search/*.cpp"
-        "concurrency_control/wp/interface/search_upsert/*.cpp"
-        "concurrency_control/wp/interface/termination/*.cpp"
-        "concurrency_control/wp/interface/tx_state/*.cpp"
-        "concurrency_control/wp/interface/update/*.cpp"
-        "concurrency_control/wp/interface/upsert/*.cpp"
-        "concurrency_control/wp/wp_basic/*.cpp"
+        "concurrency_control/short_tx/*.cpp"
+        "concurrency_control/short_tx/delete/*.cpp"
+        "concurrency_control/short_tx/delete_insert/*.cpp"
+        "concurrency_control/short_tx/delete_insert_search/*.cpp"
+        "concurrency_control/short_tx/delete_insert_scan/*.cpp"
+        "concurrency_control/short_tx/delete_scan_upsert/*.cpp"
+        "concurrency_control/short_tx/delete_search/*.cpp"
+        "concurrency_control/short_tx/delete_update/*.cpp"
+        "concurrency_control/short_tx/delete_upsert/*.cpp"
+        "concurrency_control/short_tx/helper/*.cpp"
+        "concurrency_control/short_tx/insert/*.cpp"
+        "concurrency_control/short_tx/insert_update/*.cpp"
+        "concurrency_control/short_tx/insert_upsert/*.cpp"
+        "concurrency_control/short_tx/upsert/*.cpp"
+        "concurrency_control/short_tx/update/*.cpp"
+        "concurrency_control/short_tx/scan/*.cpp"
+        "concurrency_control/short_tx/scan/next/*.cpp"
+        "concurrency_control/short_tx/scan/open_scan/*.cpp"
+        "concurrency_control/short_tx/scan_upsert/*.cpp"
+        "concurrency_control/short_tx/search/*.cpp"
+        "concurrency_control/short_tx/search_update/*.cpp"
+        "concurrency_control/short_tx/search_upsert/*.cpp"
+        "concurrency_control/short_tx/storage/*.cpp"
+        "concurrency_control/short_tx/termination/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/anomaly/write_crown/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/anomaly/write_skew/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/delete/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/delete_insert/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/helper/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/insert/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/scan/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/scan_upsert/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/scan/open_scan/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/scan/next/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/search/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/search_upsert/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/termination/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/tx_state/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/update/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
+        "concurrency_control/long_tx_or_hybrid/wp_basic/*.cpp"
         "datastore/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
-endif()
-
-#if (BUILD_PWAL)
-#    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/pwal_test.cpp")
-#    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
-#endif ()
-
-if (BUILD_CPR)
-    file(GLOB FAULT_TOLERANCE_TESTS "fault_tolerance/cpr/*.cpp")
-    set(TEST_SOURCES ${TEST_SOURCES} ${FAULT_TOLERANCE_TESTS})
-endif ()
 
 register_tests(
         TARGET shirakami
