@@ -71,6 +71,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/wp/interface/update/*.cpp"
         "concurrency_control/wp/interface/upsert/*.cpp"
         "concurrency_control/wp/wp_basic/*.cpp"
+        "datastore/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 endif()
