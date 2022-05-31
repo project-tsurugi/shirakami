@@ -1,9 +1,12 @@
 
 #include "boost/filesystem/path.hpp"
 
+#include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
 
 #include "concurrency_control/include/tuple_local.h"
+
+#include "index/yakushima/include/interface.h"
 
 #include "shirakami/scheme.h"
 
@@ -23,28 +26,29 @@ void init_about_session_table(std::string_view log_dir_path) {
 
 void recovery_from_datastore() {
     [[maybe_unused]] limestone::api::snapshot ss;
-#if 1
-    // todo delete. for temporally impl.
-    [[maybe_unused]] limestone::api::cursor cs{};
-#else
-    // todo use
-    //[[maybe_unused]] limestone::api::cursor cs{ss.get_cursor()};
-#endif
-// comment out due to not implementation body(未定義参照)
+    [[maybe_unused]] limestone::api::cursor cs{ss.get_cursor()};
 
-/**
+    /**
      * The cursor point the first entry at calling first next(). 
      */
-#if 0
+    yakushima::Token tk{};
+    if (yakushima::enter(tk) != yakushima::status::OK) {
+        LOG(ERROR) << "programming error";
+    }
     while (cs.next()) { // the next body is none.
         [[maybe_unused]] Storage st{cs.storage()};
         std::string key{};
         std::string val{};
         cs.key(key);
         cs.value(val);
-        // todo create kvs entry from these info.
+        // create kvs entry from these info.
+        if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
+            LOG(ERROR) << "not unique. to discuss or programming error.";
+        }
     }
-#endif
+    if (yakushima::leave(tk) != yakushima::status::OK) {
+        LOG(ERROR) << "programming error";
+    }
 }
 
 #endif

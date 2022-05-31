@@ -21,6 +21,8 @@
 
 #include "limestone/api/datastore.h"
 
+#include "boost/filesystem/path.hpp"
+
 #include "glog/logging.h"
 
 namespace shirakami {
@@ -121,7 +123,13 @@ init([[maybe_unused]] bool enable_recovery,
     }
 
     // start datastore
-    // datastore::start_datastore(limestone::api::configuration(log_directory_path));
+    std::string data_location_str(log_directory_path);
+    boost::filesystem::path data_location(data_location_str);
+    std::vector<boost::filesystem::path> data_locations;
+    data_locations.emplace_back(data_location);
+    boost::filesystem::path metadata_path("/tmp/shirakami");
+    //datastore::start_datastore(
+    //        limestone::api::configuration(data_locations, metadata_path));
     // ^no definition of configuration
     if (enable_recovery) {
         /**
