@@ -138,15 +138,6 @@ enum class Status : std::int32_t {
     /**
      * @brief warning.
      * @details
-     * @a read_from_scan : The read targets was deleted by delete operation of concurrent transaction. @n
-     * @a read_record : The read targets was deleted by delete operation of concurrent transaction. @n
-     * @a scan_key : The read targets was deleted by delete operation of concurrent transaction. @n
-     * @a search_key : The read targets was deleted by delete operation of concurrent transaction. @n
-     */
-    WARN_CONCURRENT_DELETE,
-    /**
-     * @brief warning.
-     * @details
      * @a read_record : The expected operation could not be performed because a record being inserted in
      * parallel was detected. @n
      * @a read_from_scan : The expected operation could not be performed because a record being inserted in
@@ -335,8 +326,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_CANCEL_PREVIOUS_OPERATION"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_UPDATE:
             return "WARN_CANCEL_PREVIOUS_UPDATE"sv; // NOLINT
-        case Status::WARN_CONCURRENT_DELETE:
-            return "WARN_CONCURRENT_DELETE"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:
             return "WARN_CONCURRENT_INSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_UPDATE:

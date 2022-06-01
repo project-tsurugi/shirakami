@@ -149,8 +149,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
             ASSERT_EQ(Status::OK, tx_begin(s));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
-            ASSERT_EQ(true, rc == Status::WARN_NOT_FOUND ||
-                                    rc == Status::WARN_CONCURRENT_DELETE);
+            ASSERT_EQ(true, rc == Status::WARN_NOT_FOUND);
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }

@@ -109,7 +109,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::WARN_CONCURRENT_DELETE,
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
               read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, next(s, handle));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));

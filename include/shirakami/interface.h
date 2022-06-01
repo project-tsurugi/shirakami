@@ -163,8 +163,6 @@ extern Status enter(Token& token); // NOLINT
  * @param[in] key input parameter about the key.
  * @return Status::OK if existence.
  * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
- * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
- * deleted.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
@@ -285,8 +283,6 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
- * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
- * deleted. You can continue transaction processing.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -313,8 +309,6 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
- * @return Status::WARN_CONCURRENT_DELETE The target page is concurrently 
- * deleted. You can continue transaction processing.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -353,20 +347,19 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete operation of 
- * this transaction.
- * @return Status::WARN_CONCURRENT_DELETE The read targets was deleted by delete operation 
- * of concurrent transaction.
- * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by other's insert.
- * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record by other 
- * updater, and it could not complete search.
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have problem 
- * by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
+ * operation of this transaction.
+ * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
+ * other's insert.
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
+ * by other updater, and it could not complete search.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
+ * have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_PREMATURE In long tx mode, it have to wait for no 
  * transactions to be located in an order older than the order in which this 
  * transaction is located.
- * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding 
- * write (insert/update/upsert) operation in the same tx.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's 
+ * preceding write (insert/update/upsert) operation in the same tx.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
  * tx's wp and executed abort command internally.
  */

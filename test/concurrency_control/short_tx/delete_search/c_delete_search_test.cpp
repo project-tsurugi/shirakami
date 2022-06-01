@@ -17,7 +17,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-delete_search_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -63,9 +63,7 @@ TEST_F(delete_search, delete_search_) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::string vb{};
     auto rc{search_key(s, st, k, vb)};
-    if (rc != Status::WARN_NOT_FOUND            // may BUILD_WP=OFF
-        && rc != Status::WARN_CONCURRENT_DELETE // BUILD_WP=ON
-    ) {
+    if (rc != Status::WARN_NOT_FOUND) {
         ASSERT_EQ(true, false);
     } else {
         LOG(INFO) << rc;

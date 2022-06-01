@@ -45,7 +45,7 @@ TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, "",
                                     scan_endpoint::INF, handle));
-                                    std::string sb{};
+    std::string sb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
     ASSERT_NE(sb, ""); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
@@ -56,12 +56,7 @@ TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, vb));
     ASSERT_NE("", vb); // NOLINT
     Status ret = search_key(s, storage, k, vb);
-    ASSERT_TRUE(ret == Status::WARN_NOT_FOUND ||
-                ret == Status::WARN_CONCURRENT_DELETE); // NOLINT
-    /**
-     * Status::WARN_CONCURRENT_DELETE : Detected records that were deleted but remained in the index so that CPR threads
-     * could be found, or read only snapshot transactions could be found.
-     */
+    ASSERT_TRUE(ret == Status::WARN_NOT_FOUND); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
