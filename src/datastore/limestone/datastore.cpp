@@ -25,8 +25,7 @@ void init_about_session_table(std::string_view log_dir_path) {
 }
 
 void recovery_from_datastore() {
-    [[maybe_unused]] limestone::api::snapshot ss{get_datastore()->get_snapshot()};
-    [[maybe_unused]] limestone::api::cursor cs{ss.get_cursor()};
+    limestone::api::snapshot* ss(get_datastore()->get_snapshot());
 
     /**
      * The cursor point the first entry at calling first next(). 
@@ -35,12 +34,12 @@ void recovery_from_datastore() {
     if (yakushima::enter(tk) != yakushima::status::OK) {
         LOG(ERROR) << "programming error";
     }
-    while (cs.next()) { // the next body is none.
-        [[maybe_unused]] Storage st{cs.storage()};
+    while (ss->get_cursor().next()) { // the next body is none.
+        Storage st{ss->get_cursor().storage()};
         std::string key{};
         std::string val{};
-        cs.key(key);
-        cs.value(val);
+        ss->get_cursor().key(key);
+        ss->get_cursor().value(val);
         // create kvs entry from these info.
         if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
             LOG(ERROR) << "not unique. to discuss or programming error.";
