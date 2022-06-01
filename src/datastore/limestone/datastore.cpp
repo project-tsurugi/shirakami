@@ -25,8 +25,8 @@ void init_about_session_table(std::string_view log_dir_path) {
 }
 
 void recovery_from_datastore() {
-    [[maybe_unused]] limestone::api::snapshot ss;
-    [[maybe_unused]] limestone::api::cursor cs{ss.get_cursor()};
+    [[maybe_unused]] limestone::api::snapshot* ss{get_datastore()->snapshot()};
+    [[maybe_unused]] limestone::api::cursor cs{ss->get_cursor()};
 
     /**
      * The cursor point the first entry at calling first next(). 
