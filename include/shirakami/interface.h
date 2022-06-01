@@ -367,6 +367,8 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * transaction is located.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's preceding 
  * write (insert/update/upsert) operation in the same tx.
+ * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
+ * tx's wp and executed abort command internally.
  */
 extern Status search_key(Token token, Storage storage, std::string_view key,
                          std::string& value); // NOLINT

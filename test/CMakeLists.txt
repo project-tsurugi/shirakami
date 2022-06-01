@@ -57,6 +57,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx_or_hybrid/interface/update/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
         "concurrency_control/long_tx_or_hybrid/wp_basic/*.cpp"
+        "concurrency_control/hybrid/search_wp/*.cpp"
         "datastore/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})

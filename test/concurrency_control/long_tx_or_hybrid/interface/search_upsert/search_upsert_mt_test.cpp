@@ -94,14 +94,18 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
             }
             for (auto&& elem : keys) {
                 for (;;) {
+                SHORT_TX_RETRY: // NOLINT
                     std::string vb{};
                     for (;;) {
                         auto rc{search_key(s, storage, elem, vb)};
                         if (rc == Status::OK) { break; }
                         if (rc == Status::WARN_PREMATURE ||
-                            rc == Status::WARN_CONCURRENT_UPDATE ||
-                            rc == Status::WARN_CONFLICT_ON_WRITE_PRESERVE) {
+                            rc == Status::WARN_CONCURRENT_UPDATE) {
                             _mm_pause();
+                        } else if (rc ==
+                                   Status::ERR_CONFLICT_ON_WRITE_PRESERVE) {
+                            ASSERT_EQ(bt, false); // fail only short
+                            goto SHORT_TX_RETRY;  // NOLINT
                         } else {
                             LOG(FATAL) << rc << " " << bt;
                         }
