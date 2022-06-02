@@ -29,7 +29,7 @@ namespace shirakami::lpwal {
  * @brief log directory pointed at initialize.
  * 
  */
-inline std::string log_dir_{""};
+inline std::string log_dir_{""}; // NOLINT
 
 /**
  * @brief Whether log_dir is pointed at initialize.
