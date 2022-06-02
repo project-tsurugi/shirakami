@@ -30,7 +30,7 @@ public:
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, "/tmp/shirakami_c_simple_insert_upsert_test"); // NOLINT
+        init(); // NOLINT
         register_storage(st);
     }
 

@@ -159,9 +159,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     init_gflags(argc, argv);
     check_flags();
 
-    std::string log_dir = "/tmp";
-    log_dir.append("/shirakami_bench_bcc_10_log");
-    init(false, log_dir); // NOLINT
+    init(); // NOLINT
     init_db();
     if (FLAGS_read_only) {
         sleepMs(PARAM_SNAPSHOT_EPOCH * PARAM_EPOCH_TIME * 2);

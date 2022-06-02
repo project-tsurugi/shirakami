@@ -24,7 +24,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(false, "/tmp/shirakami_c_simple_scan_test"); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

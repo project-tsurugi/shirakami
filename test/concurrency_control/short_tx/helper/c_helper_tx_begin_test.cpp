@@ -34,7 +34,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(false, "/tmp/shirakami_c_helper_tx_begin_test"); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

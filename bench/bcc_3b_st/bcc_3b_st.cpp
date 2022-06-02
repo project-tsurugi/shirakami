@@ -246,9 +246,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     init_gflags(argc, argv);
     check_flags();
 
-    std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/build/bench/bcc_3b_st");
-    init(false, log_dir); // NOLINT
+    init(); // NOLINT
     init_db();
     invoke_leader();
     fin();

@@ -12,7 +12,7 @@ using namespace shirakami;
 class delete_upsert_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
-        init(false, "/tmp/shirakami_c_delete_upsert_test"); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

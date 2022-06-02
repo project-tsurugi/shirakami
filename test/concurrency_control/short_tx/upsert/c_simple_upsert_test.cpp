@@ -26,13 +26,11 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "upsert-simple_upsert_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
-        log_dir_ = MAC2STR(PROJECT_ROOT); // NOLINT
-        log_dir_.append("/tmp/simple_upsert_test_log");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
-        init(false, log_dir_); // NOLINT
+        init(); // NOLINT
         register_storage(st);
     }
 
@@ -40,7 +38,6 @@ public:
 
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline std::string log_dir_;        // NOLINT
 };
 
 TEST_F(simple_upsert, read_only_mode_upsert) { // NOLINT

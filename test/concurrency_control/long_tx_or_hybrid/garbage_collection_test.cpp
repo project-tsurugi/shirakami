@@ -31,7 +31,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init();
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

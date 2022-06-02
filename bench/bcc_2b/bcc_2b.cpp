@@ -237,9 +237,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     init_gflags(argc, argv);
     check_flags();
 
-    std::string log_dir = "/tmp";
-    log_dir.append("/shirakami_bench__bcc_2b");
-    init(false, log_dir); // NOLINT
+    init(); // NOLINT
     init_db();
     invoke_leader();
     fin();

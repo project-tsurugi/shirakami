@@ -15,7 +15,7 @@ class simple_scan : public ::testing::Test { // NOLINT
 
 public:
     void SetUp() override {
-        init(false, "/tmp/shirakami_c_read_from_scan_test"); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }

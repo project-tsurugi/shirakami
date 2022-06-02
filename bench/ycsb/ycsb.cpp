@@ -203,16 +203,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 
-    /**
-     * This program doesn't assume recovery.
-     */
-    std::string path{MAC2STR(PROJECT_ROOT)}; // NOLINT
-    path += "/log/checkpoint";
-    if (boost::filesystem::exists(path)) { boost::filesystem::remove(path); }
-
-    std::string log_dir = MAC2STR(PROJECT_ROOT);
-    log_dir.append("/build/bench/ycsb_log");
-    init(false, log_dir); // NOLINT
+    init(); // NOLINT
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length, FLAGS_thread);
     invoke_leader();
     fin();
