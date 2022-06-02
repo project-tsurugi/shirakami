@@ -19,9 +19,13 @@ target_link_libraries(ycsb_ol_bt_nc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
-        PRIVATE limestone
         )
 
+if (BUILD_PWAL)
+  target_link_libraries(ycsb_ol_bt_nc
+          PRIVATE limestone
+  )
+endif()
 target_include_directories(ycsb_ol_bt_nc
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/include

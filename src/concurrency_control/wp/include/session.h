@@ -12,7 +12,12 @@
 #include "epoch.h"
 #include "garbage.h"
 #include "local_set.h"
+
+#ifdef PWAL
+
 #include "lpwal.h"
+
+#endif
 
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"

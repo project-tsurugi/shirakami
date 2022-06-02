@@ -9,9 +9,16 @@ file(GLOB CC_SOURCES
 "concurrency_control/wp/interface/*.cpp"
 "concurrency_control/wp/interface/long_tx/*.cpp"
 "concurrency_control/wp/interface/short_tx/*.cpp"
-"datastore/limestone/*.cpp"
 )
 set(SOURCES ${SOURCES} ${CC_SOURCES})
+
+# about logging
+if (BUILD_PWAL)
+  file(GLOB LOGGING_SOURCES
+    "datastore/limestone/*.cpp"
+  )
+  set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
+endif()
 
 add_library(shirakami
         ${SOURCES}
@@ -27,7 +34,6 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(shirakami
         PUBLIC api
-        PRIVATE limestone
         PRIVATE Boost::filesystem
         PRIVATE glog::glog
         PRIVATE tsl::hopscotch_map
@@ -36,6 +42,12 @@ target_link_libraries(shirakami
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Threads::Threads
         )
+
+if (BUILD_PWAL)
+  target_link_libraries(shirakami
+        PRIVATE limestone
+  )
+endif()
 
 set_target_properties(shirakami
         PROPERTIES

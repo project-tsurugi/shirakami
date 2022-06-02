@@ -63,14 +63,26 @@ file(GLOB WP_TEST_SOURCES
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 
-register_tests(
-        TARGET shirakami
-        DEPENDS
-          shirakami-impl
-          PRIVATE limestone
-          PRIVATE glog::glog
-          PRIVATE ${tbb_prefix}tbb
-          PRIVATE ${tbb_prefix}tbbmalloc
-          PRIVATE ${tbb_prefix}tbbmalloc_proxy
-        SOURCES ${TEST_SOURCES}
-)
+if (BUILD_PWAL)
+  register_tests(
+          TARGET shirakami
+          DEPENDS
+            shirakami-impl
+            PRIVATE glog::glog
+            PRIVATE ${tbb_prefix}tbb
+            PRIVATE ${tbb_prefix}tbbmalloc
+            PRIVATE ${tbb_prefix}tbbmalloc_proxy
+          SOURCES ${TEST_SOURCES}
+  )
+else()
+  register_tests(
+          TARGET shirakami
+          DEPENDS
+            shirakami-impl
+            PRIVATE glog::glog
+            PRIVATE ${tbb_prefix}tbb
+            PRIVATE ${tbb_prefix}tbbmalloc
+            PRIVATE ${tbb_prefix}tbbmalloc_proxy
+          SOURCES ${TEST_SOURCES}
+  )
+endif()

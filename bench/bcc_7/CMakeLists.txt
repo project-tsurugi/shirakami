@@ -19,8 +19,13 @@ target_link_libraries(bcc_7
         PRIVATE tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
-        PRIVATE limestone
         )
+
+if (BUILD_PWAL)
+  target_link_libraries(bcc_7
+        PRIVATE limestone
+  )
+endif()
 
 target_include_directories(bcc_7
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include

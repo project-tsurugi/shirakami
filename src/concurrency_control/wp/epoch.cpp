@@ -8,7 +8,11 @@
 
 #include "concurrency_control/include/tuple_local.h"
 
+#ifdef PWAL
+
 #include "datastore/limestone/include/datastore.h"
+
+#endif
 
 #include "glog/logging.h"
 
