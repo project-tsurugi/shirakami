@@ -31,6 +31,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 
 [[maybe_unused]] inline std::mutex ep_mtx_; // NOLINT
 
+[[maybe_unused]] static epoch_t get_durable_epoch() { // NOLINT
+    return durable_epoch.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static bool get_epoch_thread_end() { // NOLINT
     return epoch_thread_end.load(std::memory_order_acquire);
 }

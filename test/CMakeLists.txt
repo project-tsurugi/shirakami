@@ -59,9 +59,15 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx_or_hybrid/wp_basic/*.cpp"
         "concurrency_control/hybrid/search_wp/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
-        "datastore/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
+
+if (BUILD_PWAL)
+  file (GLOB LOGGING_TEST_SOURCES
+        "datastore/*.cpp"
+        )
+  set(TEST_SOURCES ${TEST_SOURCES} ${LOGGING_TEST_SOURCES})
+endif()
 
 if (BUILD_PWAL)
   register_tests(

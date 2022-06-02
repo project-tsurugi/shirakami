@@ -34,12 +34,9 @@ public:
         FLAGS_stderrthreshold = 0;
     }
 
-    void SetUp() override {
-        std::call_once(init_google, call_once_f);
-        init(); // NOLINT
-    }
+    void SetUp() override { std::call_once(init_google, call_once_f); }
 
-    void TearDown() override { fin(); }
+    void TearDown() override {}
 
 private:
     static inline std::once_flag init_google; // NOLINT
@@ -54,6 +51,7 @@ void wait_change_epoch() {
 }
 
 TEST_F(limestone_test, check_output) { // NOLINT
+    init();                            // NOLINT
     // prepare test
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
@@ -73,6 +71,51 @@ TEST_F(limestone_test, check_output) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_epoch();
     ASSERT_EQ(Status::OK, leave(s));
+    fin();
+}
+
+TEST_F(limestone_test, DISABLED_check_recovery) { // NOLINT
+    // start
+    init(false, "/tmp/shirakami");       // NOLINT
+
+    // storage creation
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    // data creation
+    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
+    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    // want durable epoch
+    auto want_de{epoch::get_global_epoch()};
+    wait_change_epoch();
+    // trigger of flushing (*1)
+    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT, (*1) log is flushed.
+    ASSERT_EQ(Status::OK, leave(s));
+
+    // wait durable for limestone
+    for (;;) {
+        if (want_de < epoch::get_durable_epoch()) {
+            _mm_pause();
+        }
+        break;
+    }
+    fin();
+
+    // start
+    init(true, "/tmp/shirakami"); // NOLINT
+
+    // test: log exist
+    std::string vb{};
+    ASSERT_EQ(Status::OK, enter(s));
+    // test: check recovery
+    ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
+    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+
+    fin();
 }
 
 } // namespace shirakami::testing

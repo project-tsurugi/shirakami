@@ -160,7 +160,7 @@ init([[maybe_unused]] bool enable_recovery,
     datastore::init_about_session_table(log_dir);
     datastore::get_datastore()->ready();
 
-    datastore::recovery_from_datastore();
+    if (enable_recovery) { datastore::recovery_from_datastore(); }
 #endif
 
     // about tx state
