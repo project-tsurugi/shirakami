@@ -13,14 +13,29 @@
 
 #include <string_view>
 
+#include <boost/filesystem.hpp>
+
 #include "concurrency_control/wp/include/epoch.h"
 
 #include "shirakami/scheme.h"
 
-#include "fault_tolerance/include/limestone.h"
 #include "limestone/api/log_channel.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::lpwal {
+
+/**
+ * @brief log directory pointed at initialize.
+ * 
+ */
+inline std::string log_dir_{""};
+
+/**
+ * @brief Whether log_dir is pointed at initialize.
+ * 
+ */
+inline bool log_dir_pointed_{false};
 
 class write_version_type {
 public:
@@ -160,6 +175,54 @@ private:
  * @brief flushing log. 1: begin log_channel, 2: add_entry, 
  * 3: end log_channel
  */
-void flush_log(handler& handle);
+[[maybe_unused]] extern void flush_log(handler& handle);
+
+/**
+ * @brief Set the log dir object
+ * 
+ * @param log_dir 
+ */
+[[maybe_unused]] static void set_log_dir(std::string_view const log_dir) {
+    log_dir_ = log_dir;
+}
+
+/**
+ * @brief Get the log dir object
+ * 
+ * @return std::string_view 
+ */
+[[maybe_unused]] static std::string_view get_log_dir() { return log_dir_; }
+
+/**
+ * @brief Set the log dir pointed object
+ * 
+ * @param tf 
+ */
+[[maybe_unused]] static void set_log_dir_pointed(bool const tf) {
+    log_dir_pointed_ = tf;
+}
+
+/**
+ * @brief Get the log dir pointed object
+ * 
+ * @return true 
+ * @return false 
+ */
+[[maybe_unused]] static bool get_log_dir_pointed() { return log_dir_pointed_; }
+
+[[maybe_unused]] static void clean_up_metadata() {
+    log_dir_ = "";
+    log_dir_pointed_ = false;
+}
+
+[[maybe_unused]] static void remove_under_log_dir() {
+    std::string ld{get_log_dir()};
+    const boost::filesystem::path path(ld);
+    try {
+        boost::filesystem::remove(path);
+    } catch (boost::filesystem::filesystem_error& ex) {
+        LOG(ERROR) << "file system error: " << ex.what() << " : " << path;
+    }
+}
 
 } // namespace shirakami::lpwal

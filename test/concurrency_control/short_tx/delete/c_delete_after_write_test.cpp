@@ -61,23 +61,4 @@ TEST_F(delete_after_write, delete_after_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(delete_after_write, delete_after_update) { // NOLINT
-    register_storage(storage);
-    std::string k1("k");  // NOLINT
-    std::string v1("v1"); // NOLINT
-    std::string v2("v2"); // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, update(s, storage, k1, v2));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE,
-              delete_record(s, storage, k1));
-    ASSERT_EQ(Status::OK, commit(s));
-    std::string vb{};
-    ASSERT_EQ(Status::OK, search_key(s, storage, k1, vb));
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 } // namespace shirakami::testing

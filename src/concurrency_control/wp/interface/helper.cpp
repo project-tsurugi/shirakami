@@ -9,6 +9,7 @@
 #include "include/helper.h"
 
 #include "concurrency_control/wp/include/epoch_internal.h"
+#include "concurrency_control/wp/include/lpwal.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
@@ -82,8 +83,12 @@ void fin([[maybe_unused]] bool force_shut_down_cpr) try {
 
     // about datastore
 #if defined(PWAL)
-    // datastore::get_datastore()->shutdown();
-    // no function body, so comment out for preventing compile error
+    datastore::get_datastore()->shutdown();
+    if (!lpwal::get_log_dir_pointed()) {
+        // log dir was not pointed. So remove log dir
+        lpwal::remove_under_log_dir();
+    }
+    lpwal::clean_up_metadata();
 #endif
 
     // about engine
@@ -120,7 +125,11 @@ init([[maybe_unused]] bool enable_recovery,
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami/" + std::to_string(tid) + "-" +
                   std::to_string(tsc);
+        lpwal::set_log_dir_pointed(false);
+    } else {
+        lpwal::set_log_dir_pointed(true);
     }
+    lpwal::set_log_dir(log_dir);
 
     // start datastore
     std::string data_location_str(log_directory_path);

@@ -6,7 +6,6 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-Storage storage;
 class delete_after_delete : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
@@ -20,6 +19,7 @@ private:
 };
 
 TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
+    Storage storage{};
     register_storage(storage);
     std::string k1("k");  // NOLINT
     std::string v1("v1"); // NOLINT
@@ -53,6 +53,7 @@ TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
 }
 
 TEST_F(delete_after_delete, delete_after_delete_in_tx) { // NOLINT
+    Storage storage{};
     register_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT

@@ -5,15 +5,9 @@
 #include <future>
 #include <mutex>
 
-#ifdef WP
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
-
-#else
-
-#include "concurrency_control/silo/include/epoch.h"
-
-#endif
 
 #include "shirakami/interface.h"
 
@@ -22,17 +16,13 @@
 
 namespace shirakami::testing {
 
-Storage st;
-
 class update_after_delete : public ::testing::Test { // NOLINT
 public:
-    static void call_once_f() {
-        FLAGS_stderrthreshold = 0;
-    }
+    static void call_once_f() { FLAGS_stderrthreshold = 0; }
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(false, "/tmp/shirakami_c_update_after_delete_test"); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
@@ -42,6 +32,7 @@ private:
 };
 
 TEST_F(update_after_delete, independent_tx) { // NOLINT
+    Storage st{};
     register_storage(st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
@@ -57,6 +48,7 @@ TEST_F(update_after_delete, independent_tx) { // NOLINT
 }
 
 TEST_F(update_after_delete, same_tx) { // NOLINT
+    Storage st{};
     register_storage(st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT

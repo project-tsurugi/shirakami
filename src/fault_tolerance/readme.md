@@ -1,3 +1,0 @@
-# Fault tolerance
-
-todo write
