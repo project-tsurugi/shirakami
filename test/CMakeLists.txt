@@ -36,6 +36,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/search/*.cpp"
         "concurrency_control/short_tx/search_update/*.cpp"
         "concurrency_control/short_tx/search_upsert/*.cpp"
+        "concurrency_control/short_tx/search_upsert/multi_thread/*.cpp"
         "concurrency_control/short_tx/storage/*.cpp"
         "concurrency_control/short_tx/termination/*.cpp"
         "concurrency_control/long_tx_or_hybrid/*.cpp"
