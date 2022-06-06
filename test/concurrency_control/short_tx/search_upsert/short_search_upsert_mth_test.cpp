@@ -22,12 +22,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class search_upsert_multi_thread : public ::testing::Test { // NOLINT
+class search_upsert_mth : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-common-"
-                "search_upsert_search_upsert_multi_thread_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
+                                  "search_upsert-short_search_upsert_mth_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -53,7 +52,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
     while (!is_ready(readys)) { _mm_pause(); }
 }
 
-TEST_F(search_upsert_multi_thread, rmw) { // NOLINT
+TEST_F(search_upsert_mth, rmw) { // NOLINT
     // multi thread rmw tests.
 
     // generate keys and table

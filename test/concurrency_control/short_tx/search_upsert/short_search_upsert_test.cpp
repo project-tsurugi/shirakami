@@ -12,11 +12,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class search_upsert : public ::testing::Test { // NOLINT
+class short_search_upsert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
-                                  "search_upsert-search_upsert_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
+                                  "search_upsert-short_search_upsert_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,7 +31,7 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(search_upsert, simple) { // NOLINT
+TEST_F(short_search_upsert, simple) { // NOLINT
     Token s{};
     Storage storage{};
     ASSERT_EQ(register_storage(storage), Status::OK);
