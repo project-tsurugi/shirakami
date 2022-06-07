@@ -45,8 +45,18 @@ public:
 
     void TearDown() override {}
 
+    std::string_view get_data_log_dir() { return data_log_dir_; }
+
+    std::string_view get_metadata_log_dir() { return metadata_log_dir_; }
+
+    void set_data_log_dir(std::string_view ld) { data_log_dir_ = ld; }
+
+    void set_metadata_log_dir(std::string_view ld) { metadata_log_dir_ = ld; }
+
 private:
-    static inline std::once_flag init_google; // NOLINT
+    static inline std::once_flag init_google;    // NOLINT
+    static inline std::string data_log_dir_;     // NOLINT
+    static inline std::string metadata_log_dir_; // NOLINT
 };
 
 std::size_t dir_size(boost::filesystem::path path) {
@@ -62,14 +72,14 @@ std::size_t dir_size(boost::filesystem::path path) {
     return total_file_size;
 }
 
-TEST_F(limestone_unit_test, simple) {
+TEST_F(limestone_unit_test, logging) {
     // decide test dir name
     int tid = syscall(SYS_gettid);
     std::uint64_t tsc = rdtsc();
-    std::string test_dir =
+    std::string data_dir =
             "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
-    std::string metadata_dir = test_dir + "m";
-    boost::filesystem::path data_location(test_dir);
+    std::string metadata_dir = data_dir + "m";
+    boost::filesystem::path data_location(data_dir);
     boost::filesystem::path metadata_path(metadata_dir);
 
     // prepare durable epoch
@@ -96,6 +106,8 @@ TEST_F(limestone_unit_test, simple) {
     std::unique_ptr<limestone::api::datastore> datastore;
     datastore = std::make_unique<limestone::api::datastore>(
             limestone::api::configuration({data_location}, metadata_path));
+    set_data_log_dir(data_dir);
+    set_metadata_log_dir(metadata_dir);
     limestone::api::datastore* d_ptr{datastore.get()};
     d_ptr->add_persistent_callback(set_limestone_durable_epoch);
 
@@ -111,7 +123,9 @@ TEST_F(limestone_unit_test, simple) {
     // flush logs
     lc->begin_session();
     std::string k{"k"};
-    lc->add_entry(2, k, "value", {1, 0}); // (*1)
+    std::string v{"v"};
+    Storage st{2};                   // NOLINT
+    lc->add_entry(st, k, v, {1, 0}); // (*1)
     lc->end_session();
 
     // change new epoch
@@ -132,7 +146,8 @@ TEST_F(limestone_unit_test, simple) {
     // flush logs
     lc->begin_session();
     std::string k2{"k2"};
-    lc->add_entry(2, k2, "value", {2, 0}); // (*2)
+    std::string v2{"v2"};
+    lc->add_entry(st, k2, v2, {2, 0}); // (*2)
     lc->end_session();
 
     // change new epoch
@@ -152,6 +167,39 @@ TEST_F(limestone_unit_test, simple) {
 
     // clean up
     d_ptr->shutdown();
+}
+
+TEST_F(limestone_unit_test, DISABLED_recover) { // NOLINT
+    // disable due to L188
+    std::string data_log_dir_str{get_data_log_dir()};
+    std::string metadata_log_dir_str{get_metadata_log_dir()};
+    boost::filesystem::path data_location(data_log_dir_str);
+    boost::filesystem::path metadata_path(metadata_log_dir_str);
+
+    // start datastore
+    std::unique_ptr<limestone::api::datastore> datastore;
+    datastore = std::make_unique<limestone::api::datastore>(
+            limestone::api::configuration({data_location}, metadata_path));
+    limestone::api::datastore* d_ptr{datastore.get()};
+    d_ptr->recover();
+    d_ptr->ready();
+
+    limestone::api::snapshot* ss{d_ptr->get_snapshot()};
+    ASSERT_TRUE(ss->get_cursor().next()); // point first
+    Storage st{2};                        // NOLINT
+    ASSERT_EQ(ss->get_cursor().storage(), st);
+    std::string buf{};
+    ss->get_cursor().key(buf);
+    ASSERT_EQ(buf, "k");
+    ss->get_cursor().value(buf);
+    ASSERT_EQ(buf, "v");
+    ASSERT_TRUE(ss->get_cursor().next()); // point second
+    ASSERT_EQ(ss->get_cursor().storage(), st);
+    ss->get_cursor().key(buf);
+    ASSERT_EQ(buf, "k2");
+    ss->get_cursor().value(buf);
+    ASSERT_EQ(buf, "v2");
+    ASSERT_FALSE(ss->get_cursor().next()); // point none
 }
 
 } // namespace shirakami::testing
