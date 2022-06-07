@@ -61,16 +61,16 @@ jobs:
         run: |
           cd build
           ctest --verbose --timeout 20 -j 100
-
-      - id: CTest_with_PWAL
-        name: CTest_with_PWAL
-        continue-on-error: false
-        env:
-          GTEST_OUTPUT: xml
-          ASAN_OPTIONS: detect_stack_use_after_return=true
-        run: |
-          cd build_pwal
-          ctest --verbose --timeout 20 -j 100
+# pending test
+#      - id: CTest_with_PWAL
+#        name: CTest_with_PWAL
+#        continue-on-error: false
+#        env:
+#          GTEST_OUTPUT: xml
+#          ASAN_OPTIONS: detect_stack_use_after_return=true
+#        run: |
+#          cd build_pwal
+#          ctest --verbose --timeout 20 -j 100
 
       - id: Clang-Tidy_wp
         name: Clang-Tidy_wp
