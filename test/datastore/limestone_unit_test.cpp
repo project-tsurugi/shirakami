@@ -72,7 +72,7 @@ std::size_t dir_size(boost::filesystem::path path) {
     return total_file_size;
 }
 
-TEST_F(limestone_unit_test, logging) {
+TEST_F(limestone_unit_test, DISABLED_logging_and_recover) {
     // decide test dir name
     int tid = syscall(SYS_gettid);
     std::uint64_t tsc = rdtsc();
@@ -167,26 +167,16 @@ TEST_F(limestone_unit_test, logging) {
 
     // clean up
     d_ptr->shutdown();
-}
-
-TEST_F(limestone_unit_test, DISABLED_recover) { // NOLINT
-    // disable due to L188
-    std::string data_log_dir_str{get_data_log_dir()};
-    std::string metadata_log_dir_str{get_metadata_log_dir()};
-    boost::filesystem::path data_location(data_log_dir_str);
-    boost::filesystem::path metadata_path(metadata_log_dir_str);
 
     // start datastore
-    std::unique_ptr<limestone::api::datastore> datastore;
     datastore = std::make_unique<limestone::api::datastore>(
             limestone::api::configuration({data_location}, metadata_path));
-    limestone::api::datastore* d_ptr{datastore.get()};
+    d_ptr = datastore.get();
     d_ptr->recover();
     d_ptr->ready();
 
     limestone::api::snapshot* ss{d_ptr->get_snapshot()};
     ASSERT_TRUE(ss->get_cursor().next()); // point first
-    Storage st{2};                        // NOLINT
     ASSERT_EQ(ss->get_cursor().storage(), st);
     std::string buf{};
     ss->get_cursor().key(buf);
