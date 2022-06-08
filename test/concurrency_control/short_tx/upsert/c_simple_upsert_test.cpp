@@ -43,7 +43,7 @@ private:
 TEST_F(simple_upsert, read_only_mode_upsert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, true));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, upsert(s, {}, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));

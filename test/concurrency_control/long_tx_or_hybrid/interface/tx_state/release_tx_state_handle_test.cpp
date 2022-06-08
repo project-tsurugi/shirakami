@@ -35,7 +35,7 @@ private:
 TEST_F(release_tx_state_handle_test, call_twice) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     TxStateHandle hd{};
     LOG(INFO);
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));

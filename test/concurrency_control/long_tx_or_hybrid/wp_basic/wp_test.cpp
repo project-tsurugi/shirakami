@@ -84,9 +84,9 @@ TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     ASSERT_EQ(enter(ss.at(0)), Status::OK);
     ASSERT_EQ(enter(ss.at(1)), Status::OK);
     ASSERT_EQ(enter(ss.at(2)), Status::OK);
-    ASSERT_EQ(tx_begin(ss.at(0), false, true, {st}), Status::OK);
-    ASSERT_EQ(tx_begin(ss.at(1), false, true, {st}), Status::OK);
-    ASSERT_EQ(tx_begin(ss.at(2), false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(0), TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(1), TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(ss.at(2), TX_TYPE::LONG, {st}), Status::OK);
     auto wps = wp::find_wp(st);
     session* ti{static_cast<session*>(ss.at(2))};
     ASSERT_EQ(ti->get_overtaken_ltx_set().size(), 0);

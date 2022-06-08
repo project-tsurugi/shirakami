@@ -79,7 +79,7 @@ TEST_F(upsert_test, bt_simple) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"k"};
     std::string v{"v"};
-    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
 
     auto wait_epoch_update = []() {
         epoch::epoch_t ce{epoch::get_global_epoch()};
@@ -106,7 +106,7 @@ TEST_F(upsert_test, bt_simple) { // NOLINT
     // after abort, exist with deleted state.
     check_internal_record_exist(st);
 
-    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s));

@@ -46,16 +46,20 @@ private:
 };
 
 void generate_test_case(
-        std::vector<std::tuple<std::array<bool, 4>, std::array<bool, 4>>>&
+        // bool shows it can commit.
+        std::vector<std::tuple<std::array<TX_TYPE, 4>, std::array<bool, 4>>>&
                 test_case) {
-    auto add_test = [&test_case](bool ib1, bool ib2, bool ib3, bool ib4,
-                                 bool cc1, bool cc2, bool cc3, bool cc4) {
+    auto add_test = [&test_case](TX_TYPE ib1, TX_TYPE ib2, TX_TYPE ib3,
+                                 TX_TYPE ib4, bool cc1, bool cc2, bool cc3,
+                                 bool cc4) {
+        using t_type = std::array<TX_TYPE, 4>;
         using c_type = std::array<bool, 4>;
-        test_case.emplace_back(std::make_tuple(c_type{ib1, ib2, ib3, ib4},
+        test_case.emplace_back(std::make_tuple(t_type{ib1, ib2, ib3, ib4},
                                                c_type{cc1, cc2, cc3, cc4}));
     };
 
-    add_test(0, 0, 0, 0, 1, 0, 1, 0); // NOLINT
+    add_test(TX_TYPE::SHORT, TX_TYPE::SHORT, TX_TYPE::SHORT, TX_TYPE::SHORT, 1,
+             0, 1, 0); // NOLINT
     //add_test(0, 0, 0, 1, 1, 0, 1, 1);
     // Batch mode can only be tested after w-w constraint relaxation.
 }
@@ -94,7 +98,8 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
     // prepare test case container
     // tuple.first : std::array: <is_batch, 4>
     // tuple.second: std::array: <can_commit, 4>
-    std::vector<std::tuple<std::array<bool, 4>, std::array<bool, 4>>> test_case;
+    std::vector<std::tuple<std::array<TX_TYPE, 4>, std::array<bool, 4>>>
+            test_case;
 
     // generate test case
     generate_test_case(test_case);
@@ -102,20 +107,20 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
     for (auto&& tc : test_case) {
         init(); // NOLINT
         gen_initial_db(st);
-        ASSERT_EQ(tx_begin(s.at(0), false, std::get<0>(tc).at(0)), Status::OK);
+        ASSERT_EQ(tx_begin(s.at(0), std::get<0>(tc).at(0)), Status::OK);
         std::string vb{};
         ASSERT_EQ(search_key(s.at(0), st, x, vb), Status::OK);
-        ASSERT_EQ(tx_begin(s.at(1), false, std::get<0>(tc).at(1)), Status::OK);
+        ASSERT_EQ(tx_begin(s.at(1), std::get<0>(tc).at(1)), Status::OK);
         ASSERT_EQ(search_key(s.at(1), st, y, vb), Status::OK);
         ASSERT_EQ(upsert(s.at(0), st, y, v.at(0)), Status::OK);
         if (std::get<1>(tc).at(0)) { ASSERT_EQ(commit(s.at(0)), Status::OK); }
-        ASSERT_EQ(tx_begin(s.at(2), false, std::get<0>(tc).at(2)), Status::OK);
+        ASSERT_EQ(tx_begin(s.at(2), std::get<0>(tc).at(2)), Status::OK);
         ASSERT_EQ(search_key(s.at(2), st, z, vb), Status::OK);
         ASSERT_EQ(upsert(s.at(1), st, z, v.at(1)), Status::OK);
         if (std::get<1>(tc).at(1)) {
             ASSERT_EQ(commit(s.at(1)), Status::ERR_VALIDATION);
         }
-        ASSERT_EQ(tx_begin(s.at(3), false, std::get<0>(tc).at(3)), Status::OK);
+        ASSERT_EQ(tx_begin(s.at(3), std::get<0>(tc).at(3)), Status::OK);
         if (std::get<1>(tc).at(3)) {
             for (;;) {
                 auto rc{search_key(s.at(3), st, a, vb)};

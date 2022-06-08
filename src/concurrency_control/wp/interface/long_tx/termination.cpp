@@ -139,10 +139,13 @@ void expose_local_write(session* ti) {
                     rec_ptr->set_tid(ctid);
                 } else if (ti->get_valid_epoch() == pre_tid.get_epoch()) {
                     // para write
-                    rec_ptr->get_tidw_ref().unlock();
                     should_log = false;
+                    ctid.set_tid(pre_tid.get_tid());
+                    ctid.set_epoch(pre_tid.get_epoch());
+                    rec_ptr->set_tid(ctid);
                 } else {
                     // case: middle of list
+                    should_log = false;
                     version* pre_ver{rec_ptr->get_latest()};
                     version* ver{rec_ptr->get_latest()->get_next()};
                     tid_word tid{ver->get_tid()};
@@ -158,7 +161,6 @@ void expose_local_write(session* ti) {
                         }
                         if (tid.get_epoch() == ti->get_valid_epoch()) {
                             // para (partial order) write, invisible write
-                            should_log = false;
                             break;
                         }
                         pre_ver = ver;
@@ -175,18 +177,20 @@ void expose_local_write(session* ti) {
             }
         }
 #ifdef PWAL
-        // add log records to local wal buffer
-        std::string key{};
-        wso.get_rec_ptr()->get_key(key);
-        std::string val{};
-        wso.get_value(val);
-        ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
-                wso.get_op() == OP_TYPE::DELETE,
-                lpwal::write_version_type(
-                        ti->get_valid_epoch(),
-                        lpwal::write_version_type::gen_minor_write_version(
-                                true, ti->get_long_tx_id())),
-                wso.get_storage(), key, val));
+        if (should_log) {
+            // add log records to local wal buffer
+            std::string key{};
+            wso.get_rec_ptr()->get_key(key);
+            std::string val{};
+            wso.get_value(val);
+            ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
+                    wso.get_op() == OP_TYPE::DELETE,
+                    lpwal::write_version_type(
+                            ti->get_valid_epoch(),
+                            lpwal::write_version_type::gen_minor_write_version(
+                                    true, ti->get_long_tx_id())),
+                    wso.get_storage(), key, val));
+        }
 #endif
     };
 

@@ -68,7 +68,7 @@ TEST_F(short_scan_long_upsert_test, short_scan_find_valid_wp) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     ASSERT_EQ(tx_begin(ss), Status::OK);
-    ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
@@ -95,7 +95,7 @@ TEST_F(short_scan_long_upsert_test,         // NOLINT
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
         ASSERT_EQ(tx_begin(ss), Status::OK);
-        ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+        ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));
@@ -126,7 +126,7 @@ TEST_F(short_scan_long_upsert_test,        // NOLINT
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
         ASSERT_EQ(tx_begin(ss), Status::OK);
-        ASSERT_EQ(tx_begin(sb, false, true, {st}), Status::OK);
+        ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));
@@ -174,7 +174,7 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
         epoch::get_ep_mtx().lock();
         Token ltx1{};
         ASSERT_EQ(enter(ltx1), Status::OK);
-        ASSERT_EQ(Status::OK, tx_begin(ltx1, false, true, {st_x}));
+        ASSERT_EQ(Status::OK, tx_begin(ltx1, TX_TYPE::LONG, {st_x}));
         epoch::set_perm_to_proc(1);
         epoch::get_ep_mtx().unlock();
         wait_epoch_update();
@@ -198,7 +198,7 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
         // about ltx2
         Token ltx2{};
         ASSERT_EQ(enter(ltx2), Status::OK);
-        ASSERT_EQ(Status::OK, tx_begin(ltx2, false, true, {st_y}));
+        ASSERT_EQ(Status::OK, tx_begin(ltx2, TX_TYPE::LONG, {st_y}));
         wait_epoch_update();
         ASSERT_EQ(Status::OK, search_key(ltx2, st_x, x, buf));
         ASSERT_EQ(Status::OK, upsert(ltx2, st_y, y, ""));

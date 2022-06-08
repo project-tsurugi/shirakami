@@ -36,8 +36,7 @@ Status session::find_high_priority_short() const {
 
     for (auto&& itr : session_table::get_session_table()) {
         if (itr.get_visible() && itr.get_tx_type() == TX_TYPE::SHORT &&
-            !itr.get_read_only() && itr.get_operating() &&
-            itr.get_step_epoch() < get_valid_epoch()) {
+            itr.get_operating() && itr.get_step_epoch() < get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }
     }

@@ -62,7 +62,7 @@ TEST_F(long_delete_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
         ASSERT_EQ(Status::WARN_PREMATURE, delete_record(s, st, ""));
     }
     ASSERT_EQ(Status::OK, leave(s));
@@ -75,7 +75,7 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     wait_change_epoch();
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -92,7 +92,7 @@ TEST_F(long_delete_test, delete_at_non_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
     wait_change_epoch();
     ASSERT_EQ(Status::WARN_WRITE_WITHOUT_WP, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));

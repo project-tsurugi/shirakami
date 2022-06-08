@@ -68,7 +68,7 @@ TEST_F(next_test, next_not_skip_1_drec) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ScanHandle hd{};
@@ -119,7 +119,7 @@ TEST_F(next_test, next_not_skip_2_drec) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ScanHandle hd{};
@@ -173,7 +173,7 @@ TEST_F(next_test, next_not_skip_3_drec) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ScanHandle hd{};

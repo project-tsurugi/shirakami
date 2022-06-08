@@ -51,7 +51,7 @@ TEST_F(open_scan_test,            // NOLINT
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
     wait_change_epoch();
     ScanHandle hd{};
     ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,

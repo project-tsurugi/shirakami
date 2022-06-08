@@ -254,7 +254,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             if (FLAGS_include_long_tx) {
                 gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record,
                           FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
-                tx_begin(token, false, true);
+                tx_begin(token, TX_TYPE::LONG);
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record,
                             FLAGS_scan_elem_num, rnd, zipf);
@@ -287,7 +287,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                        ret == Status::WARN_WRITE_TO_LOCAL_WRITE);
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
-                tx_begin(token, true);
+                tx_begin(token, TX_TYPE::READ_ONLY);
                 // todo scan to open_scan and read_from_scan
             }
         }

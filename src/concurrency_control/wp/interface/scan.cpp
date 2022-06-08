@@ -120,12 +120,6 @@ Status open_scan(Token const token, Storage storage,
         }
     }
 
-    if (ti->get_read_only()) {
-        // todo stale snapshot read only tx mode.
-        ti->process_before_finish_step();
-        return Status::ERR_NOT_IMPLEMENTED;
-    }
-
     auto rc = find_open_scan_slot(ti, handle);
     if (rc != Status::OK) {
         ti->process_before_finish_step();
@@ -360,12 +354,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
         ti->process_before_finish_step();
         return Status::WARN_INVALID_HANDLE;
-    }
-
-    if (ti->get_read_only()) {
-        // todo
-        ti->process_before_finish_step();
-        return Status::ERR_NOT_IMPLEMENTED;
     }
     // ==========
 

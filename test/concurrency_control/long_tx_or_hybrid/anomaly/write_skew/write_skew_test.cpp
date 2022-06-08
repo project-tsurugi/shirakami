@@ -70,8 +70,8 @@ TEST_F(write_skew, simple) { // NOLINT
     // stop epoch
     // epoch align 2 tx.
     epoch::get_ep_mtx().lock();
-    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
     epoch::get_ep_mtx().unlock();
 
     // wait change epoch

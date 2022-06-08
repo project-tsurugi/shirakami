@@ -48,7 +48,7 @@ TEST_F(short_update_after_long_delete, independent_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

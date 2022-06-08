@@ -5,15 +5,7 @@
 
 #include "clock.h"
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/record.h"
-
-#else
-
-#include "concurrency_control/silo/include/record.h"
-
-#endif
 
 #include "concurrency_control/include/tuple_local.h"
 

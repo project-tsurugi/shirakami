@@ -69,7 +69,7 @@ TEST_F(upsert_test, new_epoch_new_version) { // NOLINT
         std::string second_v{"v2"};
         // Writing after the epoch has changed should be the new version.
         if (bt) {
-            ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+            ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
             for (;;) {
                 auto rc{upsert(s, st, k, second_v)};
                 if (Status::OK == rc) { break; }
@@ -96,7 +96,7 @@ TEST_F(upsert_test, new_epoch_new_version) { // NOLINT
     process(st, false);
     LOG(INFO) << "clear about occ";
     // for batch
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     process(st, true);
     LOG(INFO) << "clear about batch";
     ASSERT_EQ(Status::OK, leave(s));

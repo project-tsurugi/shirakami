@@ -68,9 +68,9 @@ TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
     // end of data preparation
 
     ASSERT_EQ(enter(s1), Status::OK);
-    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {}), Status::OK);
+    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {}), Status::OK);
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(open_scan(s2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
@@ -98,8 +98,8 @@ TEST_F(long_scan_long_wp_test, reading_lower_priority_wp) { // NOLINT
     Token s2{}; // long
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, false, true, {}), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {}), Status::OK);
+    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",

@@ -52,7 +52,7 @@ TEST_F(single_long_update_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
         ASSERT_EQ(Status::WARN_PREMATURE, update(s, st, "", ""));
     } // start epoch
     ASSERT_EQ(Status::OK, leave(s));

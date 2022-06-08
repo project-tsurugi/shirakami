@@ -44,7 +44,7 @@ TEST_F(tx_check_test, tx_check_not_begin) { // NOLINT
 TEST_F(tx_check_test, short_tx_road_to_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxState buf{};
@@ -60,7 +60,7 @@ TEST_F(tx_check_test, short_tx_road_to_abort) { // NOLINT
 TEST_F(tx_check_test, short_tx_road_to_commit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     ASSERT_EQ(Status::OK, commit(s));
@@ -86,7 +86,7 @@ TEST_F(tx_check_test, long_tx_road_to_abort) { // NOLINT
     TxState buf{};
     {
         std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
         ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
@@ -112,7 +112,7 @@ TEST_F(tx_check_test, long_tx_road_to_commit) { // NOLINT
     TxState buf{};
     {
         std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
         ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);

@@ -46,7 +46,7 @@ void work_manager() {
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_step_epoch());
-                if (se.get_tx_type() == TX_TYPE::LONG) {
+                if (se.get_tx_type() != TX_TYPE::SHORT) {
                     min_batch_epoch =
                             std::min(min_batch_epoch, se.get_valid_epoch());
                 }
@@ -194,6 +194,7 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
         LOG(ERROR) << "programming error";
         return;
     }
+    LOG(INFO) << rc;
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(rec_ptr, pre_ver)};

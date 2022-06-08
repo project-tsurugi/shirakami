@@ -60,7 +60,7 @@ TEST_F(single_long_search_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
         std::string sb{};
         ASSERT_EQ(Status::WARN_PREMATURE, search_key(s, st, "", sb));
     } // start epoch
@@ -72,7 +72,7 @@ TEST_F(single_long_search_test, avoid_premature_by_wait) { // NOLINT
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(search_key(s, st, "", vb), Status::WARN_NOT_FOUND);

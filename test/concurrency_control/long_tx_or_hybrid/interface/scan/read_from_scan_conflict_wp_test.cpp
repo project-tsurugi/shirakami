@@ -69,7 +69,7 @@ TEST_F(scan_test, short_find_wp) { // NOLINT
     // prepare test
     Token sl{}; // for long
     ASSERT_EQ(Status::OK, enter(sl));
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {st}));
     wait_change_epoch();
 
     ScanHandle hd{};
@@ -99,9 +99,9 @@ TEST_F(scan_test, long_find_wp) { // NOLINT
 
     // prepare test
     Token sl{}; // finder
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     ASSERT_EQ(Status::OK, enter(sl));
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG));
     wait_change_epoch();
 
     ScanHandle hd{};

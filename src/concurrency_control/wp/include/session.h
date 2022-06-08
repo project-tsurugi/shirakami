@@ -143,11 +143,6 @@ public:
         return operating_.load(std::memory_order_acquire);
     }
 
-    /**
-     * @brief getter of @a read_only_
-     */
-    [[nodiscard]] bool get_read_only() const { return read_only_; }
-
     point_read_by_long_set_type& get_point_read_by_long_set() {
         return point_read_by_long_set_;
     }
@@ -284,8 +279,6 @@ public:
         operating_.store(tf, std::memory_order_release);
     }
 
-    void set_read_only(bool tf) { read_only_ = tf; }
-
     void set_tx_began(bool tf) {
         tx_began_.store(tf, std::memory_order_release);
     }
@@ -346,11 +339,6 @@ private:
      * lock-free coordination for multi-threads.
      */
     TX_TYPE tx_type_{TX_TYPE::SHORT};
-
-    /**
-     * @brief If this is true, begun transaction by this session can only do (transaction read operations).
-     */
-    bool read_only_{false};
 
     /**
      * @brief most recently chosen tid for calculate new tid of occ.

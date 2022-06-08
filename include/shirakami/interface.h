@@ -389,8 +389,7 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @return Status::OK success.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
  */
-extern Status tx_begin(Token token, bool read_only = false,       // NOLINT
-                       bool for_batch = false,                    // NOLINT
+extern Status tx_begin(Token token, TX_TYPE tx_type = TX_TYPE::SHORT,
                        std::vector<Storage> write_preserve = {}); // NOLINT
 
 /**

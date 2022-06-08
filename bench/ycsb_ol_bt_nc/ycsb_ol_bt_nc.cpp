@@ -124,7 +124,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready, const bool& s
                   rnd, zipf);
 
         if (!is_ol) {
-            tx_begin(token, false, true);
+            tx_begin(token, TX_TYPE::LONG);
         }
 
         for (auto&& itr : opr_set) {

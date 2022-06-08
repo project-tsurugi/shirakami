@@ -67,8 +67,8 @@ TEST_F(batch_upsert_test, bt_simple) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     epoch::get_ep_mtx().lock();
     // epoch align 2 tx
-    ASSERT_EQ(tx_begin(s, false, true, {st}), Status::OK);
-    ASSERT_EQ(tx_begin(s2, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
     epoch::get_ep_mtx().unlock();
     wait_change_epoch();
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));

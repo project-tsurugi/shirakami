@@ -54,8 +54,8 @@ TEST_F(termination_test, commit_long_long_low_high) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin(s1, false, true));
-    ASSERT_EQ(Status::OK, tx_begin(s2, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
     auto wait_next_epoch = []() {
         auto ep{epoch::get_global_epoch()};
         for (;;) {
@@ -76,8 +76,8 @@ TEST_F(termination_test, commit_long_long_high_low) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin(s1, false, true));
-    ASSERT_EQ(Status::OK, tx_begin(s2, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
     auto wait_next_epoch = []() {
         auto ep{epoch::get_global_epoch()};
         for (;;) {

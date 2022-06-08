@@ -65,7 +65,7 @@ TEST_F(open_scan_test,           // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -110,7 +110,7 @@ TEST_F(open_scan_test,           // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -161,7 +161,7 @@ TEST_F(open_scan_test,             // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, false, true, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));

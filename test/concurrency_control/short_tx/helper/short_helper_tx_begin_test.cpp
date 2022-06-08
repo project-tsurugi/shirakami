@@ -2,15 +2,9 @@
 #include <array>
 #include <mutex>
 
-#ifdef WP
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/session.h"
-
-#else
-
-#include "concurrency_control/silo/include/session.h"
-
-#endif
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -50,11 +44,9 @@ TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
     // must not change
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -63,95 +55,60 @@ TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, true));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
     // must not change
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, false));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
     // must not change
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, true, false));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
     // must not change
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin(s));
     // expected
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, true, true));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
     // must not change
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(c_helper_tx_begin, check_param_after_tx_begin) { // NOLINT
+TEST_F(c_helper_tx_begin, check_param_tx_type_after_tx_begin) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti = static_cast<session*>(s);
     ASSERT_EQ(Status::OK, leave(s));
 
     ASSERT_EQ(Status::OK, tx_begin(s));
-    ASSERT_EQ(ti->get_read_only(), false);
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s, false));
-    ASSERT_EQ(ti->get_read_only(), false);
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::READ_ONLY);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK, tx_begin(s));
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s, true));
-    ASSERT_EQ(ti->get_read_only(), true);
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
-    ASSERT_EQ(ti->get_read_only(), false);
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true));
-    ASSERT_EQ(ti->get_read_only(), false);
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
     ASSERT_EQ(ti->get_tx_type(), TX_TYPE::LONG);
-    auto wait_next_epoch = []() {
-        auto ep = epoch::get_global_epoch();
-        for (;;) {
-            if (ep != epoch::get_global_epoch()) { break; }
-            _mm_pause();
-        }
-    };
-    wait_next_epoch();
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, tx_begin(s, true, false));
-    ASSERT_EQ(ti->get_read_only(), true);
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, tx_begin(s, true, true));
-    ASSERT_EQ(ti->get_read_only(), true);
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::LONG);
-    wait_next_epoch();
+    wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

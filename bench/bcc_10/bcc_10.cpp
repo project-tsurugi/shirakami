@@ -88,9 +88,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                   rnd, zipf);
 
         if (FLAGS_read_only) {
-            if (tx_begin(token, true) != Status::OK) { LOG(FATAL); }
+            if (tx_begin(token, TX_TYPE::READ_ONLY) != Status::OK) {
+                LOG(FATAL);
+            }
         } else {
-            if (tx_begin(token, false) != Status::OK) { LOG(FATAL); }
+            if (tx_begin(token) != Status::OK) { LOG(FATAL); }
         }
 
         for (auto&& itr : opr_set) {

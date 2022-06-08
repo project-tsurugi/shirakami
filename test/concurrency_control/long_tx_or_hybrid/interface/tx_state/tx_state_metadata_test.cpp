@@ -40,7 +40,7 @@ TEST_F(tx_state_metadata_test, after_init) { // NOLINT
 TEST_F(tx_state_metadata_test, before_after_commit_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     auto* ti{static_cast<session*>(s)};
     ASSERT_EQ(false, ti->get_has_current_tx_state_handle());
     TxStateHandle hd{};
@@ -50,7 +50,7 @@ TEST_F(tx_state_metadata_test, before_after_commit_abort) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(false, ti->get_has_current_tx_state_handle());
     ASSERT_EQ(nullptr, ti->get_current_tx_state_ptr());
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     ASSERT_EQ(false, ti->get_has_current_tx_state_handle());
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     ASSERT_EQ(true, ti->get_has_current_tx_state_handle());

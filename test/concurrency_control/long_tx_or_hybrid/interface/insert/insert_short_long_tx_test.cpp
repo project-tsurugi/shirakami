@@ -56,10 +56,10 @@ TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     std::string v{"v"};
     Token s1{};
     ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s2, false, false, {}), Status::OK);
+    ASSERT_EQ(tx_begin(s2), Status::OK);
 
     auto wait_epoch_update = []() {
         epoch::epoch_t ce{epoch::get_global_epoch()};
@@ -89,10 +89,10 @@ TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
     std::string v{"v"};
     Token s1{};
     ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(tx_begin(s1, false, true, {st}), Status::OK);
+    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s2, false, false, {}), Status::OK);
+    ASSERT_EQ(tx_begin(s2), Status::OK);
 
     auto wait_epoch_update = []() {
         epoch::epoch_t ce{epoch::get_global_epoch()};

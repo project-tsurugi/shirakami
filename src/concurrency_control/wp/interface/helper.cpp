@@ -36,7 +36,7 @@ namespace shirakami {
 Status check_before_write_ops(session* const ti, Storage const st,
                               OP_TYPE const op) {
     // check whether it is read only mode.
-    if (ti->get_read_only()) {
+    if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
         // can't write in read only mode.
         return Status::WARN_ILLEGAL_OPERATION;
     }
@@ -205,27 +205,28 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-Status tx_begin(Token const token, bool const read_only, bool const for_batch,
+Status tx_begin(Token const token, TX_TYPE const tx_type,
                 std::vector<Storage> write_preserve) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     if (!ti->get_tx_began()) {
-        if (read_only && !write_preserve.empty()) {
-            return Status::WARN_ILLEGAL_OPERATION;
+        if (!write_preserve.empty()) {
+            if (tx_type == TX_TYPE::READ_ONLY || tx_type == TX_TYPE::SHORT) {
+                return Status::WARN_ILLEGAL_OPERATION;
+            }
         }
-        if (for_batch) {
-            ti->set_tx_type(TX_TYPE::LONG);
+        if (tx_type == TX_TYPE::LONG) {
             auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};
             if (rc != Status::OK) {
                 ti->process_before_finish_step();
                 return rc;
             }
+            ti->get_write_set().set_for_batch(true);
         } else {
-            ti->set_tx_type(TX_TYPE::SHORT);
+            ti->get_write_set().set_for_batch(false);
         }
+        ti->set_tx_type(tx_type);
         ti->set_tx_began(true);
-        ti->set_read_only(read_only);
-        ti->get_write_set().set_for_batch(for_batch);
     } else {
         ti->process_before_finish_step();
         return Status::WARN_ALREADY_BEGIN;

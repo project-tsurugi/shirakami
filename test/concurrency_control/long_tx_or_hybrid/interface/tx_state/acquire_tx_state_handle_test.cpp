@@ -43,7 +43,7 @@ TEST_F(acquire_tx_state_handle_test, before_after_commit_abort) { // NOLINT
 TEST_F(acquire_tx_state_handle_test, twice_call_in_the_same_tx) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, false));
+    ASSERT_EQ(Status::OK, tx_begin(s));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxStateHandle hd2{};

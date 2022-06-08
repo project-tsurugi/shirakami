@@ -45,7 +45,7 @@ private:
 TEST_F(simple_update, read_only_mode_update) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, true));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, update(s, {}, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

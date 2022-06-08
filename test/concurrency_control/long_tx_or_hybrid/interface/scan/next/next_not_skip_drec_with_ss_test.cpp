@@ -61,7 +61,7 @@ TEST_F(next_test, next_not_skip_1_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_epoch();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
     wait_change_epoch();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -109,7 +109,7 @@ TEST_F(next_test, next_not_skip_2_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_epoch();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
     wait_change_epoch();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -163,7 +163,7 @@ TEST_F(next_test, next_not_skip_3_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_epoch();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
     wait_change_epoch();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));

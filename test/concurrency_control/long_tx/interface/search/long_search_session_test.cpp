@@ -82,7 +82,7 @@ TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
     stop_log_epoch_insert_wait_epoch_update(k3, ep3);
 
     // prepare test
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
     wait_epoch_update();
 
     // test
@@ -130,7 +130,7 @@ TEST_F(search_session, read_version_epoch_descending_order) { // NOLINT
     stop_log_epoch_insert_wait_epoch_update(k3, ep3);
 
     // prepare test
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
     wait_epoch_update();
 
     // test

@@ -60,7 +60,7 @@ TEST_F(single_long_scan_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
         ScanHandle hd{};
         ASSERT_EQ(Status::WARN_PREMATURE,
                   open_scan(s, st, "", scan_endpoint::INF, "",
@@ -76,7 +76,7 @@ TEST_F(single_long_scan_test, no_page_before_long_tx_begin) { // NOLINT
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     wait_change_epoch();
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
@@ -95,7 +95,7 @@ TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
     std::string v{"v"};
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
     wait_change_epoch();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -123,7 +123,7 @@ TEST_F(single_long_scan_test,                              // NOLINT
     std::string v{"v"};
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {st}));
         ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
         ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     }
@@ -153,7 +153,7 @@ TEST_F(single_long_scan_test,                       // NOLINT
     // prepare data
     std::string k{"k"};
     std::string v{"v"};
-    ASSERT_EQ(Status::OK, tx_begin(sl, false, true, {st}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {st}));
     wait_change_epoch();
     ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT

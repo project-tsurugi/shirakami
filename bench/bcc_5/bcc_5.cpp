@@ -88,7 +88,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
         gen_tx_rw(opr_set, key_len, rec_num, tx_size, 0, rnd, zipf);
 
         // wp
-        if (!is_ol && tx_begin(token, false, true, {get_bt_storages().at(0)}) !=
+        if (!is_ol && tx_begin(token, TX_TYPE::LONG, {get_bt_storages().at(0)}) !=
                               Status::OK) {
             LOG(FATAL);
         }
