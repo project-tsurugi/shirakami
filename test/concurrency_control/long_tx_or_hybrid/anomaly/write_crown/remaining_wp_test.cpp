@@ -58,8 +58,8 @@ void generate_test_case(
                                                c_type{cc1, cc2, cc3, cc4}));
     };
 
-    add_test(TX_TYPE::SHORT, TX_TYPE::SHORT, TX_TYPE::SHORT, TX_TYPE::SHORT, 0,
-             1, 1, 1); // NOLINT
+    add_test(TX_TYPE::SHORT, TX_TYPE::SHORT, TX_TYPE::SHORT, // NOLINT
+             TX_TYPE::SHORT, 0, 1, 1, 1);                    // NOLINT
     // Batch mode can only be tested after w-w constraint relaxation.
 }
 

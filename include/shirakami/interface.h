@@ -374,10 +374,8 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * the transaction. Specify true for read_only to execute a fast read only transaction 
  * that just reads snapshots.
  * @param[in] token
- * @param[in] read_only If this is true, it uses read only mode which transactional 
- * reads read stale snapshot.
- * @param[in] for_batch If this is true, local write set is represented by std::map.
- * If this is false, local write set is represented by std::vector.
+ * @param[in] tx_type It shows a transaction type of this transaction. TX_TYPE::
+ * SHORT or TX_TYPE::LONG or TX_TYPE::READ_ONLY.
  * @param[in] write_preserve Notice of writing required for special protocols for long 
  * transactions. A write that does not give this notice cannot be executed.
  * If the user mistakenly sets a duplicate element in write_preserve, it will be 
@@ -389,8 +387,8 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @return Status::OK success.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
  */
-extern Status tx_begin(Token token, TX_TYPE tx_type = TX_TYPE::SHORT,
-                       std::vector<Storage> write_preserve = {}); // NOLINT
+extern Status tx_begin(Token token, TX_TYPE tx_type = TX_TYPE::SHORT, // NOLINT
+                       std::vector<Storage> write_preserve = {});     // NOLINT
 
 /**
  * @brief It updates the record for the given key.
