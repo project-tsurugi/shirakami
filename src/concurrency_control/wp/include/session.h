@@ -21,9 +21,8 @@
 
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/tid.h"
+#include "concurrency_control/wp/include/scan.h"
 #include "concurrency_control/wp/include/wp.h"
-
-#include "concurrency_control/include/scan.h"
 
 #include "shirakami/scheme.h"
 #include "shirakami/transaction_state.h"

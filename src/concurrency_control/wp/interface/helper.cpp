@@ -10,6 +10,7 @@
 
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 
@@ -22,8 +23,6 @@
 #include "limestone/api/datastore.h"
 
 #endif
-
-#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

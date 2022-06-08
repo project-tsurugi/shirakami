@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
+#include "concurrency_control/wp/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 

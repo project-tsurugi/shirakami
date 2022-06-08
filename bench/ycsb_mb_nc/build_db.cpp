@@ -22,7 +22,7 @@
 #include "clock.h"
 #include "random.h"
 
-#include "concurrency_control/include/tuple_local.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

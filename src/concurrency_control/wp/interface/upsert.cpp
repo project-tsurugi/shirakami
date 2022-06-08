@@ -2,8 +2,8 @@
 
 #include "atomic_wrapper.h"
 
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/interface/include/helper.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"

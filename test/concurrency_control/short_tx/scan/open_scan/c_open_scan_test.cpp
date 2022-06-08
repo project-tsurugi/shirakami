@@ -1,17 +1,8 @@
 
 #include <mutex>
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/session.h"
-
-#else
-
-#include "concurrency_control/silo/include/session.h"
-
-#endif
-
-#include "concurrency_control/include/tuple_local.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

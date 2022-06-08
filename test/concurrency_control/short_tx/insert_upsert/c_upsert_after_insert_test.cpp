@@ -9,17 +9,8 @@
 
 #include "compiler.h"
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/epoch.h"
-
-#else
-
-#include "concurrency_control/silo/include/epoch.h"
-
-#endif
-
-#include "concurrency_control/include/tuple_local.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

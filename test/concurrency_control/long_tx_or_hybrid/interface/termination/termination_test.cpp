@@ -14,9 +14,8 @@
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/record.h"
 #include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
-
-#include "concurrency_control/include/tuple_local.h"
 
 #include "index/yakushima/include/interface.h"
 

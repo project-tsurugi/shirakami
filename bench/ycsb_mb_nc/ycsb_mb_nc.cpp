@@ -37,13 +37,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-#include "concurrency_control/include/tuple_local.h"
-
-#if defined(CPR)
-
-#include "fault_tolerance/include/cpr.h"
-
-#endif
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

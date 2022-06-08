@@ -1,7 +1,6 @@
 
 #include "include/session.h"
-
-#include "concurrency_control/include/tuple_local.h"
+#include "include/tuple_local.h"
 
 namespace shirakami {
 
