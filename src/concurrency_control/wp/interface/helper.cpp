@@ -136,7 +136,7 @@ init([[maybe_unused]] bool enable_recovery,
     lpwal::set_log_dir(log_dir);
 
     // start datastore
-    std::string data_location_str(log_directory_path);
+    std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
     std::vector<boost::filesystem::path> data_locations;
     data_locations.emplace_back(data_location);

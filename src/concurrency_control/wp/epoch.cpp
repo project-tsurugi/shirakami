@@ -56,6 +56,8 @@ void epoch_thread_work() {
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
 #ifdef PWAL
+            // before changing epoch, flush log of this epoch
+
             // change also datastore's epoch
             shirakami::datastore::get_datastore()->switch_epoch(new_epoch);
 #endif
