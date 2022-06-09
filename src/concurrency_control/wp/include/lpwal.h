@@ -11,7 +11,10 @@
 
 #pragma once
 
+#include <atomic>
+#include <mutex>
 #include <string_view>
+#include <thread>
 
 #include <boost/filesystem.hpp>
 
@@ -29,13 +32,24 @@ namespace shirakami::lpwal {
  * @brief log directory pointed at initialize.
  * 
  */
-inline std::string log_dir_{""}; // NOLINT
+[[maybe_unused]] inline std::string log_dir_{""}; // NOLINT
 
 /**
  * @brief Whether log_dir is pointed at initialize.
  * 
  */
-inline bool log_dir_pointed_{false};
+[[maybe_unused]] inline bool log_dir_pointed_{false}; // NOLINT
+
+/**
+ * @brief It shows whether it is in fin().
+ */
+[[maybe_unused]] inline std::atomic<bool> stopping_{false}; // NOLINT
+
+/**
+ * @brief This thread is collecting each worker's log.
+ * 
+ */
+[[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
 
 class write_version_type {
 public:
@@ -144,22 +158,52 @@ public:
 
     logs_type& get_logs() { return logs_; }
 
-    epoch::epoch_t get_oldest_log_epoch() {
-        if (logs_.empty()) { return 0; }
-        return logs_.front().get_wv().get_major_write_version();
+    epoch::epoch_t get_min_log_epoch() {
+        return min_log_epoch_.load(std::memory_order_acquire);
     }
+
+    std::mutex& get_mtx_logs() { return mtx_logs_; }
 
     limestone::api::log_channel* get_log_channel_ptr() {
         return log_channel_ptr_;
     }
 
-    void push_log(log_record const& log) { logs_.emplace_back(log); }
+    void push_log(log_record const& log) {
+        if (logs_.empty()) {
+            set_min_log_epoch(log.get_wv().get_major_write_version());
+        }
+        logs_.emplace_back(log);
+    }
+
+    void set_last_flushed_epoch(epoch::epoch_t e) {
+        last_flushed_epoch_.store(e, std::memory_order_release);
+    }
 
     void set_log_channel_ptr(limestone::api::log_channel* ptr) {
         log_channel_ptr_ = ptr;
     }
 
+    void set_min_log_epoch(epoch::epoch_t e) {
+        min_log_epoch_.store(e, std::memory_order_release);
+    }
+
 private:
+    /**
+     * @brief max epoch of flushed log. It is used for computing durable epoch.
+     * 
+     */
+    std::atomic<epoch::epoch_t> last_flushed_epoch_{0};
+
+    /**
+     * @brief minimum epoch of logs_. If this is 0, no log.
+     */
+    std::atomic<epoch::epoch_t> min_log_epoch_{0};
+
+    /**
+     * @brief mutex for logs_
+     */
+    std::mutex mtx_logs_;
+
     /**
      * @brief log records
      */
@@ -224,5 +268,32 @@ private:
         LOG(ERROR) << "file system error: " << ex.what() << " : " << path;
     }
 }
+
+// getter of global variables
+[[maybe_unused]] static bool get_stopping() {
+    return stopping_.load(std::memory_order_acquire);
+}
+
+// setter of global variables
+[[maybe_unused]] static void set_stopping(bool tf) {
+    stopping_.store(tf, std::memory_order_release);
+}
+
+/**
+ * @brief start daemon thread collecting each worker thread's log.
+ */
+extern void init();
+
+/**
+ * @brief join daemon thread which was started at init().
+ * 
+ */
+extern void fin();
+
+/**
+ * @brief flush remaining log.
+ * @pre This can not exist DML concurrently
+ */
+extern void flush_remaining_log();
 
 } // namespace shirakami::lpwal

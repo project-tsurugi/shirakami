@@ -200,6 +200,9 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
         return Status::OK;
     };
 
+#ifdef PWAL
+    std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
+#endif
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto rc{process(&elem)};
         if (rc == Status::OK) { continue; }
@@ -312,7 +315,7 @@ extern Status commit(session* ti, // NOLINT
 
     // flush log if need
 #if defined(PWAL)
-    auto oldest_log_epoch{ti->get_lpwal_handle().get_oldest_log_epoch()};
+    auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
     if (oldest_log_epoch != 0 &&
         oldest_log_epoch != epoch::get_global_epoch()) {
         // should flush

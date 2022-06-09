@@ -175,7 +175,7 @@ extern Status exist_key(Token token, Storage storage, std::string_view key);
  * @brief do delete operations for all records, join core threads and delete the
  * remaining garbage (heap) objects.
  * @pre It already did init() and invoked core threads.
- * @param[in] force_shut_down_cpr If true, interrupt cpr logging and shut down. 
+ * @param[in] force_shut_down_logging If true, interrupt logging and shut down. 
  * Otherwise wait for the end of logging.
  * @details It do delete operations for all records. init() did invoking core 
  * threads detached. 
@@ -184,7 +184,7 @@ extern Status exist_key(Token token, Storage storage, std::string_view key);
  * Then, it delete the remaining garbage (heap) object by using private interface.
  * @return void
  */
-extern void fin(bool force_shut_down_cpr = true); // NOLINT
+extern void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
  * @brief initialize shirakami environment

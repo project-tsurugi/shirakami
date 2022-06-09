@@ -82,11 +82,25 @@ Status enter(Token& token) { // NOLINT
     return Status::OK;
 }
 
-void fin([[maybe_unused]] bool force_shut_down_cpr) try {
+void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
 
     // about datastore
 #if defined(PWAL)
+    lpwal::fin(); // stop damon
+    if (!force_shut_down_logging) {
+        // flush remaining log
+        lpwal::flush_remaining_log();
+
+        // wait durable above flushing
+        auto ce{epoch::get_global_epoch()};
+        for (;;) {
+            if (epoch::get_durable_epoch() >= ce) { break; }
+            _mm_pause();
+            LOG(INFO) << epoch::get_durable_epoch() << " " << ce;
+            sleep(1);
+        }
+    }
     datastore::get_datastore()->shutdown();
     if (!lpwal::get_log_dir_pointed()) {
         // log dir was not pointed. So remove log dir
@@ -120,9 +134,6 @@ init([[maybe_unused]] bool enable_recovery,
     storage::init();
 
 #if defined(PWAL)
-    // todo
-    // about logging
-    // set log_directory
     std::string log_dir(log_directory_path);
     if (log_dir == "") {
         int tid = syscall(SYS_gettid);
@@ -180,6 +191,9 @@ init([[maybe_unused]] bool enable_recovery,
     // about epoch
     epoch::init();
     garbage::init();
+#ifdef PWAL
+    lpwal::init(); // start damon
+#endif
 
     set_initialized(true);
     return Status::OK;

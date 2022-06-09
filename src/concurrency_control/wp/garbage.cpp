@@ -193,7 +193,6 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
         LOG(ERROR) << "programming error";
         return;
     }
-    LOG(INFO) << rc;
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(rec_ptr, pre_ver)};

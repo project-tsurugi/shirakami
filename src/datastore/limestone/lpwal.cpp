@@ -1,5 +1,10 @@
 
+#include "clock.h"
+
+#include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/lpwal.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h" // for size
 
 #include "limestone/api/write_version_type.h"
 
@@ -9,7 +14,6 @@ namespace shirakami::lpwal {
   * @brief It executes log_channel_.add_entry for entire logs_.
   */
 void add_entry_from_logs([[maybe_unused]] handler& handle) {
-#if 1
     for (auto&& log_elem : handle.get_logs()) {
         if (log_elem.get_is_delete()) {
             // this is delete
@@ -36,13 +40,72 @@ void add_entry_from_logs([[maybe_unused]] handler& handle) {
     }
 
     handle.get_logs().clear();
-#endif
+    handle.set_min_log_epoch(0);
+}
+
+void daemon_work() {
+    for (;;) {
+        // sleep epoch time
+        sleepMs(PARAM_EPOCH_TIME);
+
+        // check fin
+        if (get_stopping()) { break; }
+
+
+        // do work
+        for (auto&& es : session_table::get_session_table()) {
+            auto oldest_log_epoch{es.get_lpwal_handle().get_min_log_epoch()};
+            if (oldest_log_epoch != 0 &&
+                oldest_log_epoch != epoch::get_global_epoch()) {
+                flush_log(es.get_lpwal_handle());
+            }
+        }
+    }
+}
+
+void init() {
+    // initialize "some" global variables
+    set_stopping(false);
+    // start damon thread
+    daemon_thread_ = std::thread(daemon_work);
+}
+
+void fin() {
+    // issue signal for daemon
+    set_stopping(true);
+
+    // join damon thread
+    daemon_thread_.join();
+
+    // clean up signal
+    set_stopping(false);
 }
 
 void flush_log(handler& handle) {
-    handle.get_log_channel_ptr()->begin_session();
-    add_entry_from_logs(handle);
-    handle.get_log_channel_ptr()->end_session();
+    // this is called worker or daemon, so use try_lock
+    if (handle.get_mtx_logs().try_lock()) {
+        // register epoch before flush work
+        auto ce{epoch::get_global_epoch()};
+
+        if (!handle.get_logs().empty()) {
+            handle.get_log_channel_ptr()->begin_session();
+            add_entry_from_logs(handle);
+            handle.get_log_channel_ptr()->end_session();
+        }
+
+        // register last flushed epoch
+        handle.set_last_flushed_epoch(ce);
+
+        handle.get_mtx_logs().unlock();
+    }
+}
+
+void flush_remaining_log() {
+    for (auto&& es : session_table::get_session_table()) {
+        es.get_lpwal_handle().get_log_channel_ptr()->begin_session();
+        add_entry_from_logs(es.get_lpwal_handle());
+        es.get_lpwal_handle().get_log_channel_ptr()->end_session();
+    }
 }
 
 } // namespace shirakami::lpwal

@@ -193,6 +193,9 @@ void expose_local_write(session* ti) {
 #endif
     };
 
+#ifdef PWAL
+    std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
+#endif
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         process(wso, ctid);
     }
@@ -349,7 +352,7 @@ extern Status commit(session* const ti, // NOLINT
 
     expose_local_write(ti);
 #if defined(PWAL)
-    auto oldest_log_epoch{ti->get_lpwal_handle().get_oldest_log_epoch()};
+    auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
     if (oldest_log_epoch != 0 &&
         oldest_log_epoch != epoch::get_global_epoch()) {
         // should flush

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/lpwal.h"
@@ -24,6 +25,7 @@
 #include "glog/logging.h"
 
 #include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
 
 namespace shirakami::testing {
 
@@ -45,23 +47,29 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void wait_change_epoch() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
+std::size_t dir_size(boost::filesystem::path path) {
+    std::size_t total_file_size{0};
+    BOOST_FOREACH (const boost::filesystem::path& p,
+                   std::make_pair(boost::filesystem::directory_iterator(path),
+                                  boost::filesystem::directory_iterator())) {
+        if (!boost::filesystem::is_directory(p)) {
+            total_file_size += boost::filesystem::file_size(p);
+        }
     }
+
+    return total_file_size;
 }
 
 TEST_F(limestone_integration_test,
-       DISABLED_check_wal_file_existence_and_extention) { // NOLINT
+       check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
-    init(); // NOLINT
+    init(false, "/tmp/shirakami"); // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
+    LOG(INFO) << epoch::get_durable_epoch();
     // prepare data
     std::string k{"k"};
     epoch::epoch_t target_epoch{};
@@ -71,16 +79,8 @@ TEST_F(limestone_integration_test,
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
         target_epoch = epoch::get_global_epoch();
     }
-    wait_change_epoch();
-    epoch::epoch_t target_epoch2{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
-        target_epoch2 = epoch::get_global_epoch();
-    }
-    // ordered limestone to flush (*1) log
 
+    LOG(INFO) << epoch::get_durable_epoch();
     // wait durable (*1) log
     for (;;) {
         if (epoch::get_durable_epoch() >= target_epoch) { break; }
@@ -91,31 +91,35 @@ TEST_F(limestone_integration_test,
     std::string log_dir_str{lpwal::get_log_dir()};
     boost::filesystem::path log_path{log_dir_str};
     // verify
-    boost::uintmax_t size1 = boost::filesystem::file_size(log_path);
+    boost::uintmax_t size1 = dir_size(log_path);
     ASSERT_EQ(size1 != 0, true);
 
-    // check extention log
-    wait_change_epoch();
-    ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*3)
-    // ordered limestone to flush (*2) log
+    LOG(INFO) << epoch::get_durable_epoch();
+    epoch::epoch_t target_epoch2{};
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
+        target_epoch2 = epoch::get_global_epoch();
+    }
 
-    // wait durable (*1) log
+    LOG(INFO) << epoch::get_durable_epoch();
+    // wait durable (*2) log
     for (;;) {
         if (epoch::get_durable_epoch() >= target_epoch2) { break; }
         _mm_pause();
     }
 
-    // verify22
-    boost::uintmax_t size2 = boost::filesystem::file_size(log_path);
+    // verify
+    boost::uintmax_t size2 = dir_size(log_path);
     ASSERT_EQ(size1 != size2, true);
 
     // clean up test
     ASSERT_EQ(Status::OK, leave(s));
-    fin();
+    fin(false);
 }
 
-TEST_F(limestone_integration_test, DISABLED_check_recovery) { // NOLINT
+TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     // start
     init(false, "/tmp/shirakami"); // NOLINT
 
@@ -130,11 +134,6 @@ TEST_F(limestone_integration_test, DISABLED_check_recovery) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));             // NOLINT
     // want durable epoch
     auto want_de{epoch::get_global_epoch()};
-    wait_change_epoch();
-    // trigger of flushing (*1)
-    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT, (*1) log is flushed.
-    ASSERT_EQ(Status::OK, leave(s));
 
     // wait durable for limestone
     for (;;) {
