@@ -72,7 +72,7 @@ std::size_t dir_size(boost::filesystem::path path) {
     return total_file_size;
 }
 
-TEST_F(limestone_unit_test, DISABLED_logging_and_recover) {
+TEST_F(limestone_unit_test, logging_and_recover) {
     // decide test dir name
     int tid = syscall(SYS_gettid);
     std::uint64_t tsc = rdtsc();
@@ -171,9 +171,9 @@ TEST_F(limestone_unit_test, DISABLED_logging_and_recover) {
     // start datastore
     datastore = std::make_unique<limestone::api::datastore>(
             limestone::api::configuration({data_location}, metadata_path));
+    datastore->recover();
+    datastore->ready();
     d_ptr = datastore.get();
-    d_ptr->recover();
-    d_ptr->ready();
 
     limestone::api::snapshot* ss{d_ptr->get_snapshot()};
     ASSERT_TRUE(ss->get_cursor().next()); // point first
