@@ -5,7 +5,7 @@
 
 #include "shirakami/tuple.h"
 
-#include "wp/include/tuple_local.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 namespace shirakami {
 

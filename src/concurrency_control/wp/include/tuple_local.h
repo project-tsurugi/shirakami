@@ -1,5 +1,5 @@
 /**
- * @file src/concurrency_control/include/tuple_local.h
+ * @file src/concurrency_control/wp/include/tuple_local.h
  * @brief header about Tuple::Impl
  */
 

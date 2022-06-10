@@ -4,7 +4,6 @@ file(GLOB SOURCES
 
 # about cc
 file(GLOB CC_SOURCES 
-"concurrency_control/*.cpp"
 "concurrency_control/wp/*.cpp"
 "concurrency_control/wp/interface/*.cpp"
 "concurrency_control/wp/interface/long_tx/*.cpp"
