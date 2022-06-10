@@ -90,15 +90,19 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     lpwal::fin(); // stop damon
     if (!force_shut_down_logging) {
         // flush remaining log
-        lpwal::flush_remaining_log();
-
-        // wait durable above flushing
-        auto ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (epoch::get_durable_epoch() >= ce) { break; }
-            _mm_pause();
-            LOG(INFO) << epoch::get_durable_epoch() << " " << ce;
-            sleep(1);
+        bool was_nothing{false};
+        [[maybe_unused]] epoch::epoch_t ce{};
+        {
+            std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+            ce = epoch::get_global_epoch();
+            lpwal::flush_remaining_log(was_nothing);
+        }
+        if (!was_nothing) {
+            // wait durable above flushing
+            for (;;) {
+                if (epoch::get_durable_epoch() >= ce) { break; }
+                _mm_pause();
+            }
         }
     }
     datastore::get_datastore()->shutdown();

@@ -61,7 +61,7 @@ std::size_t dir_size(boost::filesystem::path path) {
 }
 
 TEST_F(limestone_integration_test,
-       check_wal_file_existence_and_extention) { // NOLINT
+       DISABLED_check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init(false, "/tmp/shirakami"); // NOLINT
     Storage st{};
@@ -69,7 +69,6 @@ TEST_F(limestone_integration_test,
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
-    LOG(INFO) << epoch::get_durable_epoch();
     // prepare data
     std::string k{"k"};
     epoch::epoch_t target_epoch{};
@@ -80,7 +79,6 @@ TEST_F(limestone_integration_test,
         target_epoch = epoch::get_global_epoch();
     }
 
-    LOG(INFO) << epoch::get_durable_epoch();
     // wait durable (*1) log
     for (;;) {
         if (epoch::get_durable_epoch() >= target_epoch) { break; }
@@ -94,7 +92,6 @@ TEST_F(limestone_integration_test,
     boost::uintmax_t size1 = dir_size(log_path);
     ASSERT_EQ(size1 != 0, true);
 
-    LOG(INFO) << epoch::get_durable_epoch();
     epoch::epoch_t target_epoch2{};
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
@@ -103,7 +100,6 @@ TEST_F(limestone_integration_test,
         target_epoch2 = epoch::get_global_epoch();
     }
 
-    LOG(INFO) << epoch::get_durable_epoch();
     // wait durable (*2) log
     for (;;) {
         if (epoch::get_durable_epoch() >= target_epoch2) { break; }
@@ -130,17 +126,12 @@ TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
-    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
-    // want durable epoch
-    auto want_de{epoch::get_global_epoch()};
+    ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
+    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
 
-    // wait durable for limestone
-    for (;;) {
-        if (want_de < epoch::get_durable_epoch()) { _mm_pause(); }
-        break;
-    }
-    fin();
+    LOG(INFO);
+    fin(false);
+    LOG(INFO);
 
     // start
     init(true, "/tmp/shirakami"); // NOLINT
@@ -149,7 +140,7 @@ TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
-    ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
+    ASSERT_EQ(Status::OK, search_key(s, st, "k", vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 

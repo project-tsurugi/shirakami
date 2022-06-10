@@ -13,7 +13,7 @@ namespace shirakami::lpwal {
 /**
   * @brief It executes log_channel_.add_entry for entire logs_.
   */
-void add_entry_from_logs([[maybe_unused]] handler& handle) {
+void add_entry_from_logs(handler& handle) {
     for (auto&& log_elem : handle.get_logs()) {
         if (log_elem.get_is_delete()) {
             // this is delete
@@ -100,11 +100,15 @@ void flush_log(handler& handle) {
     }
 }
 
-void flush_remaining_log() {
+void flush_remaining_log(bool& was_nothing) {
+    was_nothing = true;
     for (auto&& es : session_table::get_session_table()) {
-        es.get_lpwal_handle().get_log_channel_ptr()->begin_session();
-        add_entry_from_logs(es.get_lpwal_handle());
-        es.get_lpwal_handle().get_log_channel_ptr()->end_session();
+        if (!es.get_lpwal_handle().get_logs().empty()) {
+            was_nothing = false;
+            es.get_lpwal_handle().get_log_channel_ptr()->begin_session();
+            add_entry_from_logs(es.get_lpwal_handle());
+            es.get_lpwal_handle().get_log_channel_ptr()->end_session();
+        }
     }
 }
 
