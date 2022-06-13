@@ -366,4 +366,10 @@ Status try_deleted_to_inserted(Record* const rec_ptr,
     return Status::WARN_ALREADY_EXISTS;
 }
 
+#ifndef PWAL
+void* get_datastore() {
+    return nullptr;
+}
+#endif
+
 } // namespace shirakami
