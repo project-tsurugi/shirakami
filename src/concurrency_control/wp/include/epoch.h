@@ -8,6 +8,8 @@
 #include <mutex>
 #include <thread>
 
+#include "glog/logging.h" // todo remove
+
 namespace shirakami::epoch {
 
 using epoch_t = std::int64_t;
@@ -56,6 +58,7 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 }
 
 [[maybe_unused]] static void set_durable_epoch(epoch_t ep) {
+    LOG(INFO);
     durable_epoch.store(ep, std::memory_order_release);
 }
 

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "clock.h"
 #include "tsc.h"
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -190,6 +191,70 @@ TEST_F(limestone_unit_test, logging_and_recover) {
     ss->get_cursor().value(buf);
     ASSERT_EQ(buf, "v2");
     ASSERT_FALSE(ss->get_cursor().next()); // point none
+}
+
+TEST_F(limestone_unit_test, persistent_callback) {
+    // decide test dir name
+    int tid = syscall(SYS_gettid);
+    std::uint64_t tsc = rdtsc();
+    std::string data_dir =
+            "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
+    std::string metadata_dir = data_dir + "m";
+    boost::filesystem::path data_location(data_dir);
+    boost::filesystem::path metadata_path(metadata_dir);
+
+    // prepare durable epoch
+    std::atomic<size_t> limestone_durable_epoch{0};
+    auto set_limestone_durable_epoch =
+            [&limestone_durable_epoch](std::size_t n) {
+                limestone_durable_epoch.store(n, std::memory_order_release);
+            };
+    auto get_limestone_durable_epoch = [&limestone_durable_epoch]() {
+        return limestone_durable_epoch.load(std::memory_order_acquire);
+    };
+
+    // prepare data / metadata directory
+    if (boost::filesystem::exists(data_location)) {
+        boost::filesystem::remove_all(data_location);
+    }
+    ASSERT_TRUE(boost::filesystem::create_directory(data_location));
+    if (boost::filesystem::exists(metadata_dir)) {
+        boost::filesystem::remove_all(metadata_dir);
+    }
+    ASSERT_TRUE(boost::filesystem::create_directory(metadata_dir));
+
+    // allocate datastore
+    std::unique_ptr<limestone::api::datastore> datastore;
+    datastore = std::make_unique<limestone::api::datastore>(
+            limestone::api::configuration({data_location}, metadata_path));
+    set_data_log_dir(data_dir);
+    set_metadata_log_dir(metadata_dir);
+    limestone::api::datastore* d_ptr{datastore.get()};
+    d_ptr->add_persistent_callback(set_limestone_durable_epoch);
+
+    auto epoch_thread_work = [&limestone_durable_epoch, d_ptr]() {
+        std::size_t epoch = 0;
+        for (;;) {
+            sleepMs(40);
+            epoch++;
+            d_ptr->switch_epoch(epoch);
+            if (limestone_durable_epoch.load() > 20) { break; }
+        }
+    };
+
+    std::thread epoch_thread = std::thread(epoch_thread_work);
+
+
+    // start datastore
+    d_ptr->ready();
+
+    for (;;) {
+        sleep(1);
+        if (get_limestone_durable_epoch() > 20) { break; }
+    }
+
+    epoch_thread.join();
+    d_ptr->shutdown();
 }
 
 } // namespace shirakami::testing

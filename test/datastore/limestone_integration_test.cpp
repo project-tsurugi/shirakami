@@ -79,12 +79,17 @@ TEST_F(limestone_integration_test,
         target_epoch = epoch::get_global_epoch();
     }
 
+    LOG(INFO);
     // wait durable (*1) log
     for (;;) {
         if (epoch::get_durable_epoch() >= target_epoch) { break; }
         _mm_pause();
+        LOG(INFO) << epoch::get_durable_epoch() << ", " << target_epoch << ", "
+                  << epoch::get_global_epoch();
+        sleep(1);
     }
 
+    LOG(INFO);
     // check wal file existence
     std::string log_dir_str{lpwal::get_log_dir()};
     boost::filesystem::path log_path{log_dir_str};
@@ -106,13 +111,16 @@ TEST_F(limestone_integration_test,
         _mm_pause();
     }
 
+    LOG(INFO);
     // verify
     boost::uintmax_t size2 = dir_size(log_path);
     ASSERT_EQ(size1 != size2, true);
 
     // clean up test
     ASSERT_EQ(Status::OK, leave(s));
+    LOG(INFO);
     fin(false);
+    LOG(INFO);
 }
 
 TEST_F(limestone_integration_test, check_recovery) { // NOLINT

@@ -263,7 +263,7 @@ private:
     std::string ld{get_log_dir()};
     const boost::filesystem::path path(ld);
     try {
-        boost::filesystem::remove(path);
+        boost::filesystem::remove_all(path);
     } catch (boost::filesystem::filesystem_error& ex) {
         LOG(ERROR) << "file system error: " << ex.what() << " : " << path;
     }

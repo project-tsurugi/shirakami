@@ -140,24 +140,44 @@ init([[maybe_unused]] bool enable_recovery,
     storage::init();
 
 #if defined(PWAL)
+    // check args
     std::string log_dir(log_directory_path);
     if (log_dir == "") {
+        if (enable_recovery) { return Status::WARN_INVALID_ARGS; }
         int tid = syscall(SYS_gettid);
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami/" + std::to_string(tid) + "-" +
                   std::to_string(tsc);
         lpwal::set_log_dir_pointed(false);
+        lpwal::set_log_dir(log_dir);
     } else {
+        lpwal::set_log_dir(log_dir);
         lpwal::set_log_dir_pointed(true);
+        // check exist
+        boost::filesystem::path ldp{std::string(log_directory_path)};
+        boost::system::error_code error;
+        const bool result = boost::filesystem::exists(ldp, error);
+        if (!result || error) {
+            LOG(ERROR) << "error about init args. enable_recovery: "
+                       << enable_recovery
+                       << ", log_directory_path: " << log_directory_path;
+            return Status::WARN_INVALID_ARGS;
+        }
+        // exists
+        if (!enable_recovery) {
+            // there are some data not expected.
+            lpwal::set_log_dir(log_dir);
+            lpwal::remove_under_log_dir();
+        }
     }
-    lpwal::set_log_dir(log_dir);
 
     // start datastore
     std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
     std::vector<boost::filesystem::path> data_locations;
     data_locations.emplace_back(data_location);
-    boost::filesystem::path metadata_path("/tmp/shirakami");
+    std::string metadata_dir{log_dir + "m"};
+    boost::filesystem::path metadata_path(metadata_dir);
     datastore::start_datastore(
             limestone::api::configuration(data_locations, metadata_path));
     if (enable_recovery) {
