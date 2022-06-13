@@ -61,7 +61,7 @@ std::size_t dir_size(boost::filesystem::path path) {
 }
 
 TEST_F(limestone_integration_test,
-       DISABLED_check_wal_file_existence_and_extention) { // NOLINT
+       check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init(false, "/tmp/shirakami"); // NOLINT
     Storage st{};
@@ -126,12 +126,25 @@ TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
-    ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
+#if 1
+    // todo remove block. For avoiding some problem.
+    epoch::epoch_t target_epoch{};
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+#endif
+        ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
+        ASSERT_EQ(Status::OK, commit(s));               // NOLINT
+#if 1
+        // todo remove block. For avoiding some problem.
+        target_epoch = epoch::get_global_epoch();
+    }
+    for (;;) {
+        if (epoch::get_durable_epoch() >= target_epoch) { break; }
+        _mm_pause();
+    }
+#endif
 
-    LOG(INFO);
     fin(false);
-    LOG(INFO);
 
     // start
     init(true, "/tmp/shirakami"); // NOLINT

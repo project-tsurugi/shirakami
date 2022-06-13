@@ -12,32 +12,24 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class c_helper : public ::testing::Test { // NOLINT
+class shutdown_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-common-helper-c_helper_test");
+                "shirakami-test-shut_down-shutdown_test_test");
         FLAGS_stderrthreshold = 0;
     }
 
-    void SetUp() override {
-        std::call_once(init_google, call_once_f);
-        init(); // NOLINT
-    }
+    void SetUp() override { std::call_once(init_google, call_once_f); }
 
-    void TearDown() override { fin(); }
+    void TearDown() override {}
 
 private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(c_helper, init) { // NOLINT
-    ASSERT_EQ(init(), Status::WARN_ALREADY_INIT);
-    fin();
+TEST_F(shutdown_test, fin) { // NOLINT
     ASSERT_EQ(init(), Status::OK);
-}
-
-TEST_F(c_helper, fin) { // NOLINT
     // meaningless fin
     fin();
     fin();

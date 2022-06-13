@@ -102,6 +102,8 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
             for (;;) {
                 if (epoch::get_durable_epoch() >= ce) { break; }
                 _mm_pause();
+                LOG(INFO);
+                sleep(1);
             }
         }
     }
@@ -113,7 +115,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     lpwal::clean_up_metadata();
 #endif
 
-    // about engine
+    // about tx engine
     garbage::fin();
     epoch::fin();
     delete_all_records(); // This should be before wp::fin();
@@ -228,7 +230,7 @@ Status tx_begin(Token const token, TX_TYPE const tx_type,
     ti->process_before_start_step();
     if (!ti->get_tx_began()) {
         if (!write_preserve.empty()) {
-            if (tx_type == TX_TYPE::READ_ONLY || tx_type == TX_TYPE::SHORT) {
+            if (tx_type != TX_TYPE::LONG) {
                 return Status::WARN_ILLEGAL_OPERATION;
             }
         }
@@ -239,8 +241,15 @@ Status tx_begin(Token const token, TX_TYPE const tx_type,
                 return rc;
             }
             ti->get_write_set().set_for_batch(true);
-        } else {
+        } else if (tx_type == TX_TYPE::SHORT) {
             ti->get_write_set().set_for_batch(false);
+        } else if (tx_type == TX_TYPE::READ_ONLY) {
+            // todo impl
+            // get SS epoch
+            // exclude coming / going Long
+        } else {
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
         }
         ti->set_tx_type(tx_type);
         ti->set_tx_began(true);

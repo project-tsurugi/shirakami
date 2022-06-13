@@ -61,6 +61,8 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx_or_hybrid/wp_basic/*.cpp"
         "concurrency_control/hybrid/search_wp/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
+        "start/*.cpp"
+        "shutdown/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 

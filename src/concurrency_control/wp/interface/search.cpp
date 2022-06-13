@@ -50,8 +50,10 @@ Status search_key(Token const token, Storage const storage,
         rc = long_tx::search_key(ti, storage, key, value);
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
+    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+        return Status::ERR_NOT_IMPLEMENTED;
     } else {
-        LOG(FATAL) << "unreachable";
+        LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();
