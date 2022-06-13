@@ -21,15 +21,6 @@ void add_entry_from_logs(handler& handle) {
         } else {
             // this is write
             // now no source
-            LOG(INFO) << epoch::get_global_epoch();
-            LOG(INFO) << log_elem.get_key() << ", " << log_elem.get_val()
-                      << ", "
-                      << static_cast<limestone::api::epoch_t>(
-                                 log_elem.get_wv().get_major_write_version())
-                      << ", "
-                      << static_cast<std::uint64_t>(
-                                 log_elem.get_wv().get_minor_write_version());
-
             handle.get_log_channel_ptr()->add_entry(
                     static_cast<limestone::api::storage_id_type>(
                             log_elem.get_st()),

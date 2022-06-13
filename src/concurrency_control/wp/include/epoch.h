@@ -57,14 +57,9 @@ static constexpr epoch_t max_epoch{INT64_MAX};
     global_epoch.store(epo, std::memory_order_release);
 }
 
-#if 0
 [[maybe_unused]] static void set_durable_epoch(epoch_t ep) {
-    LOG(INFO);
     durable_epoch.store(ep, std::memory_order_release);
 }
-#else
-extern void set_durable_epoch(epoch_t ep);
-#endif
 
 // For DEBUG and TEST
 //==========

@@ -65,8 +65,6 @@ TEST_F(limestone_integration_test, check_persistent_call_back) { // NOLINT
     init();
     for (;;) {
         sleepMs(PARAM_EPOCH_TIME);
-        LOG(INFO) << epoch::get_global_epoch() << ", "
-                  << epoch::get_durable_epoch();
         if (epoch::get_durable_epoch() > 20) { break; }
     }
     fin();
@@ -101,7 +99,6 @@ TEST_F(limestone_integration_test,
         sleep(1);
     }
 
-    LOG(INFO);
     // check wal file existence
     std::string log_dir_str{lpwal::get_log_dir()};
     boost::filesystem::path log_path{log_dir_str};

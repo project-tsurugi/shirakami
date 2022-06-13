@@ -181,11 +181,6 @@ init([[maybe_unused]] bool enable_recovery,
     datastore::start_datastore(
             limestone::api::configuration(data_locations, metadata_path));
     if (enable_recovery) {
-        /**
-         * 初動では永続化できたものを全てリカバリする。
-         * epoch 指定のリカバリでは init に epoch を受け取らないといけないので、
-         * すぐには世代管理に対応できない。
-         */
         datastore::get_datastore()->recover(); // should execute before ready()
     }
     datastore::get_datastore()->add_persistent_callback(
