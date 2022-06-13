@@ -211,15 +211,14 @@ init([[maybe_unused]] bool enable_recovery,
     // about epoch
     epoch::init();
     garbage::init();
+
 #ifdef PWAL
     lpwal::init(); // start damon
 
-    if (enable_recovery) {
-        datastore::recovery_from_datastore();
-    }
+    if (enable_recovery) { datastore::recovery_from_datastore(); }
 #endif
 
-    set_initialized(true);
+    set_initialized(true); // about init command
     return Status::OK;
 }
 

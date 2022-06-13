@@ -57,7 +57,6 @@ void recovery_from_datastore() {
         LOG(ERROR) << "programming error";
     }
     std::vector<Storage> st_list{};
-    LOG(INFO);
     while (ss->get_cursor().next()) { // the next body is none.
         Storage st{ss->get_cursor().storage()};
         std::string key{};
@@ -65,7 +64,8 @@ void recovery_from_datastore() {
         ss->get_cursor().key(key);
         ss->get_cursor().value(val);
         // check storage exist
-        storage::create_storage(st);
+        LOG(INFO);
+        shirakami::storage::create_storage(st);
         st_list.emplace_back(st);
         // create kvs entry from these info.
         if (yakushima::status::OK != put<Record>(tk, st, key, val)) {

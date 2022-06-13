@@ -109,7 +109,7 @@ TEST_F(limestone_integration_test,
     fin(false);
 }
 
-TEST_F(limestone_integration_test, check_recovery) { // NOLINT
+void recovery_test() {
     // start
     init(false, "/tmp/shirakami"); // NOLINT
 
@@ -136,6 +136,27 @@ TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, st, "k", vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
+
+}
+
+TEST_F(limestone_integration_test, check_recovery) { // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test());
+    fin();
+}
+
+
+TEST_F(limestone_integration_test,               // NOLINT
+       check_storage_operation_after_recovery) { // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test());
+
+    // register_storage
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, delete_storage(st));
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(1, st_list.size()); // 1 is due to recovery
 
     fin();
 }
