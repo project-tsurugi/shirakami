@@ -80,4 +80,9 @@ void invoke_epoch_thread() {
     epoch_thread = std::thread(epoch_thread_work);
 }
 
+void set_durable_epoch(epoch_t ep) {
+    LOG(INFO);
+    durable_epoch.store(ep, std::memory_order_release);
+}
+
 } // namespace shirakami::epoch
