@@ -81,55 +81,32 @@ TEST_F(limestone_integration_test,
 
     // prepare data
     std::string k{"k"};
-    epoch::epoch_t target_epoch{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
-        target_epoch = epoch::get_global_epoch();
-    }
+    ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
 
-    LOG(INFO);
     // wait durable (*1) log
-    for (;;) {
-        if (epoch::get_durable_epoch() >= target_epoch) { break; }
-        _mm_pause();
-        LOG(INFO) << epoch::get_durable_epoch() << ", " << target_epoch << ", "
-                  << epoch::get_global_epoch();
-        sleep(1);
-    }
+    sleep(1); // not strictly
 
     // check wal file existence
     std::string log_dir_str{lpwal::get_log_dir()};
     boost::filesystem::path log_path{log_dir_str};
     // verify
     boost::uintmax_t size1 = dir_size(log_path);
-    ASSERT_EQ(size1 != 0, true);
+    EXPECT_EQ(size1 != 0, true);
 
-    epoch::epoch_t target_epoch2{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
-        target_epoch2 = epoch::get_global_epoch();
-    }
+    ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
 
     // wait durable (*2) log
-    for (;;) {
-        if (epoch::get_durable_epoch() >= target_epoch2) { break; }
-        _mm_pause();
-    }
+    sleep(1); // not strictly
 
-    LOG(INFO);
     // verify
     boost::uintmax_t size2 = dir_size(log_path);
-    ASSERT_EQ(size1 != size2, true);
+    EXPECT_EQ(size1 != size2, true);
 
     // clean up test
     ASSERT_EQ(Status::OK, leave(s));
-    LOG(INFO);
     fin(false);
-    LOG(INFO);
 }
 
 TEST_F(limestone_integration_test, check_recovery) { // NOLINT
@@ -143,23 +120,9 @@ TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
-#if 1
-    // todo remove block. For avoiding some problem.
-    epoch::epoch_t target_epoch{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-#endif
-        ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
-        ASSERT_EQ(Status::OK, commit(s));               // NOLINT
-#if 1
-        // todo remove block. For avoiding some problem.
-        target_epoch = epoch::get_global_epoch();
-    }
-    for (;;) {
-        if (epoch::get_durable_epoch() >= target_epoch) { break; }
-        _mm_pause();
-    }
-#endif
+    ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
+    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
+    sleep(1);
 
     fin(false);
 

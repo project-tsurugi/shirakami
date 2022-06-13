@@ -57,6 +57,7 @@ void recovery_from_datastore() {
         LOG(ERROR) << "programming error";
     }
     std::vector<Storage> st_list{};
+    LOG(INFO);
     while (ss->get_cursor().next()) { // the next body is none.
         Storage st{ss->get_cursor().storage()};
         std::string key{};

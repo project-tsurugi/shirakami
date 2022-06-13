@@ -57,7 +57,6 @@ void daemon_work() {
             auto oldest_log_epoch{es.get_lpwal_handle().get_min_log_epoch()};
             if (oldest_log_epoch != 0 &&
                 oldest_log_epoch != epoch::get_global_epoch()) {
-                LOG(INFO);
                 flush_log(es.get_lpwal_handle());
             }
         }
