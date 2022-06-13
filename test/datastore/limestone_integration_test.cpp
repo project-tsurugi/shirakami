@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "clock.h"
 #include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -58,6 +59,17 @@ std::size_t dir_size(boost::filesystem::path path) {
     }
 
     return total_file_size;
+}
+
+TEST_F(limestone_integration_test, check_persistent_call_back) { // NOLINT
+    init();
+    for (;;) {
+        sleepMs(PARAM_EPOCH_TIME);
+        LOG(INFO) << epoch::get_global_epoch() << ", "
+                  << epoch::get_durable_epoch();
+        if (epoch::get_durable_epoch() > 20) { break; }
+    }
+    fin();
 }
 
 TEST_F(limestone_integration_test,
