@@ -64,7 +64,6 @@ void recovery_from_datastore() {
         ss->get_cursor().key(key);
         ss->get_cursor().value(val);
         // check storage exist
-        LOG(INFO);
         shirakami::storage::create_storage(st);
         st_list.emplace_back(st);
         // create kvs entry from these info.

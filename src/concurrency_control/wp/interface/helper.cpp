@@ -146,7 +146,7 @@ init([[maybe_unused]] bool enable_recovery,
         if (enable_recovery) { return Status::WARN_INVALID_ARGS; }
         int tid = syscall(SYS_gettid);
         std::uint64_t tsc = rdtsc();
-        log_dir = "/tmp/shirakami/" + std::to_string(tid) + "-" +
+        log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
                   std::to_string(tsc);
         lpwal::set_log_dir_pointed(false);
         lpwal::set_log_dir(log_dir);
@@ -158,16 +158,12 @@ init([[maybe_unused]] bool enable_recovery,
         boost::system::error_code error;
         const bool result = boost::filesystem::exists(ldp, error);
         if (!result || error) {
-            LOG(ERROR) << "error about init args. enable_recovery: "
-                       << enable_recovery
-                       << ", log_directory_path: " << log_directory_path;
-            return Status::WARN_INVALID_ARGS;
-        }
-        // exists
-        if (!enable_recovery) {
-            // there are some data not expected.
-            lpwal::set_log_dir(log_dir);
-            lpwal::remove_under_log_dir();
+            // exists
+            if (!enable_recovery) {
+                // there are some data not expected.
+                lpwal::set_log_dir(log_dir);
+                lpwal::remove_under_log_dir();
+            }
         }
     }
 

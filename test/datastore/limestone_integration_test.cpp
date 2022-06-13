@@ -11,6 +11,7 @@
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "test_tool.h"
+#include "tsc.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/lpwal.h"
@@ -111,7 +112,12 @@ TEST_F(limestone_integration_test,
 
 void recovery_test() {
     // start
-    init(false, "/tmp/shirakami"); // NOLINT
+    std::string log_dir{};
+    int tid = syscall(SYS_gettid);
+    std::uint64_t tsc = rdtsc();
+    log_dir =
+            "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
+    init(false, log_dir); // NOLINT
 
     // storage creation
     Storage st{};
@@ -127,7 +133,7 @@ void recovery_test() {
     fin(false);
 
     // start
-    init(true, "/tmp/shirakami"); // NOLINT
+    init(true, log_dir); // NOLINT
 
     // test: log exist
     std::string vb{};
@@ -136,7 +142,6 @@ void recovery_test() {
     ASSERT_EQ(Status::OK, search_key(s, st, "k", vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
-
 }
 
 TEST_F(limestone_integration_test, check_recovery) { // NOLINT
