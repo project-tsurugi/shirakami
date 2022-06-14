@@ -34,8 +34,8 @@ TEST_F(start_test, double_start) { // NOLINT
 }
 
 TEST_F(start_test, valid_recovery_invalid_log_directory) { // NOLINT
-    // todo
-    ASSERT_TRUE(true);
+    ASSERT_EQ(init(true, ""), Status::OK);
+    fin();
 }
 
 } // namespace shirakami::testing
