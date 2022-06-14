@@ -187,11 +187,13 @@ extern Status exist_key(Token token, Storage storage, std::string_view key);
 extern void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
- * @brief initialize shirakami environment
+ * @brief It initializes shirakami's environment.
  * @details When it starts to use this system, in other words, it starts to
  * build database, it must be executed first.
  * @param[in] enable_recovery whether it is enable recovery from existing log.
  * @param[in] log_directory_path of WAL directory.
+ * @note If you use enable_recovery=true && log_directory_path="", it is treated
+ *  enable_recovery=false because there is no log for recovery.
  * @return Status::OK
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
  * not done anything in this call.

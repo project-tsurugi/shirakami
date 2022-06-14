@@ -142,8 +142,9 @@ init([[maybe_unused]] bool enable_recovery,
 #if defined(PWAL)
     // check args
     std::string log_dir(log_directory_path);
+    bool enable_true_log_nothing{false};
     if (log_dir == "") {
-        if (enable_recovery) { return Status::WARN_INVALID_ARGS; }
+        if (enable_recovery) { enable_true_log_nothing = true; }
         int tid = syscall(SYS_gettid);
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
@@ -176,7 +177,7 @@ init([[maybe_unused]] bool enable_recovery,
     boost::filesystem::path metadata_path(metadata_dir);
     datastore::start_datastore(
             limestone::api::configuration(data_locations, metadata_path));
-    if (enable_recovery) {
+    if (enable_recovery && !enable_true_log_nothing) {
         datastore::get_datastore()->recover(); // should execute before ready()
     }
     datastore::get_datastore()->add_persistent_callback(
@@ -211,7 +212,9 @@ init([[maybe_unused]] bool enable_recovery,
 #ifdef PWAL
     lpwal::init(); // start damon
 
-    if (enable_recovery) { datastore::recovery_from_datastore(); }
+    if (enable_recovery && !enable_true_log_nothing) {
+        datastore::recovery_from_datastore();
+    }
 #endif
 
     set_initialized(true); // about init command
@@ -367,9 +370,7 @@ Status try_deleted_to_inserted(Record* const rec_ptr,
 }
 
 #ifndef PWAL
-void* get_datastore() {
-    return nullptr;
-}
+void* get_datastore() { return nullptr; }
 #endif
 
 } // namespace shirakami
