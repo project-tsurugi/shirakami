@@ -52,11 +52,13 @@ void work_manager() {
             }
         }
         if (min_step_epoch != epoch::max_epoch) {
+            if (min_step_epoch < 1) { LOG(ERROR) << "programming error"; }
             set_min_step_epoch(min_step_epoch);
         } else {
             set_min_step_epoch(ce);
         }
         if (min_batch_epoch != epoch::max_epoch) {
+            if (min_batch_epoch_ < 1) { LOG(ERROR) << "programming error"; }
             set_min_batch_epoch(min_batch_epoch);
         } else {
             set_min_batch_epoch(ce + 1);
@@ -196,11 +198,18 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(rec_ptr, pre_ver)};
-    if (ver == nullptr) { return; }
+    if (ver == nullptr) {
+        // no version from long tx view.
+        return;
+    }
     // Some occ maybe reads the payload of version.
     for (;;) {
         if (ver == nullptr ||
-            ver->get_tid().get_epoch() <= get_min_step_epoch()) {
+            (ver->get_tid().get_epoch() <= get_min_step_epoch() &&
+             ver->get_tid().get_epoch() <= get_min_batch_epoch())) {
+            // ver can be watched yet
+            pre_ver = ver;
+            ver = ver->get_next();
             break;
         }
         pre_ver = ver;

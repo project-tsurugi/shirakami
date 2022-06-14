@@ -139,10 +139,13 @@ Status search_key(session* ti, Storage const storage,
          * else: fail to do optimistic read latest version. retry version 
          * function
          */
+        ver = rec_ptr->get_latest();
         version_function_without_optimistic_check(ti->get_valid_epoch(), ver);
+        if (ver == nullptr) { return Status::WARN_NOT_FOUND; }
     }
 
     // read non-latest version after version function
+    if (ver == nullptr) { LOG(ERROR) << "programming error"; }
     if (read_value) { ver->get_value(value); }
     // check max epoch of read version
     auto read_epoch{ver->get_tid().get_epoch()};

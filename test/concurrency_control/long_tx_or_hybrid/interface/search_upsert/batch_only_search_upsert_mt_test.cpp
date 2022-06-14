@@ -92,7 +92,6 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
     }
     // ==============================
     // end: initialize table
-    LOG(INFO) << "end initialize table";
 
     ASSERT_EQ(leave(s), Status::OK);
 
@@ -115,7 +114,9 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 for (;;) {
                     auto rc{search_key(s, st, elem, vb)};
                     if (rc == Status::OK) { break; }
-                    if (rc == Status::ERR_FAIL_WP) {
+                    if (rc == Status::ERR_FAIL_WP ||
+                        rc == Status::WARN_NOT_FOUND) {
+                        abort(s);
                         goto TX_BEGIN; // NOLINT
                     } else {
                         LOG(FATAL);

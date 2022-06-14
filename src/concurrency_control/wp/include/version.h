@@ -19,7 +19,10 @@ namespace shirakami {
 class alignas(CACHE_LINE_SIZE) version { // NOLINT
 public:
     // for newly insert
-    explicit version(std::string_view value) { set_value(value); }
+    explicit version(std::string_view value) {
+        set_value(value);
+        set_next(nullptr);
+    }
 
     // for insert version to version list at latest
     explicit version(std::string_view const value, version* const next) {
@@ -40,6 +43,7 @@ public:
     }
 
     void get_value(std::string& out) {
+        std::shared_lock<std::shared_mutex> lk{mtx_value_};
         out = value_;
     }
 
@@ -50,6 +54,7 @@ public:
      * @pre This is also for initialization of version.
      */
     void set_value(std::string_view const value) {
+        std::lock_guard<std::shared_mutex> lk{mtx_value_};
         value_ = value;
     }
 
@@ -63,9 +68,14 @@ private:
     tid_word tid_{};
 
     /**
-     * @brief value.
+     * @brief Value data.
      */
     std::string value_;
+
+    /**
+     * @brief Mutex for value.
+     */
+    std::shared_mutex mtx_value_{};
 
     /**
      * @brief pointer to next version.
