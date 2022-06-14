@@ -55,7 +55,7 @@ Available options:
 
 * Logging method (You can select at most one method.)
   + `-DBUILD_PWAL=ON`
-    * Enable parallel write-ahead-logging using limestone (default: `OFF`)
+    * Enable parallel write-ahead-logging using limestone (default: `ON`)
 
 * Parameter setting
   + Concurrency Control

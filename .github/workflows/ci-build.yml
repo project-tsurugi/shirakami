@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_PWAL=OFF ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CMake_Build_with_PWAL
