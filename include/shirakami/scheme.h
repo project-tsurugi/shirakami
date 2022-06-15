@@ -94,8 +94,10 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
 /**
  * @brief the status which is after some function.
  * OK is success return code.
- * WARN_... is no problem for extra progressing due to work but last command was canceled.
- * ERR_... is problem for extra progressing so it was executed abort command internally.
+ * WARN_... is no problem for extra progressing due to work but last command
+ * was canceled.
+ * ERR_... is problem for extra progressing so it was executed abort command 
+ * internally.
  * INTERNAL_BEGIN is a boundary between public status and internal status.
  * INTERNAL_WARN .. is return code for internal implements.
  * INTERNAL_ERR... is also return code for internal implements.
@@ -103,7 +105,8 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
 enum class Status : std::int32_t {
     /**
      * @brief warning.
-     * @details When it uses multiple tx_begin without termination command, this is returned.
+     * @details When it uses multiple tx_begin without termination command, 
+     * this is returned.
      */
     WARN_ALREADY_BEGIN,
     /**
@@ -262,7 +265,6 @@ enum class Status : std::int32_t {
      * abort process internally.
      */
     ERR_CONFLICT_ON_WRITE_PRESERVE,
-    ERR_CPR_ORDER_VIOLATION,
     /**
      * @brief error
      * @details This means that wp failed.
@@ -366,8 +368,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "OK"sv; // NOLINT
         case Status::ERR_CONFLICT_ON_WRITE_PRESERVE:
             return "ERR_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
-        case Status::ERR_CPR_ORDER_VIOLATION:
-            return "ERR_CPR_ORDER_VIOLATION"sv; // NOLINT
         case Status::ERR_FAIL_WP:
             return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_FATAL:
