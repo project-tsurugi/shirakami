@@ -14,6 +14,9 @@
 
 
 file(GLOB WP_TEST_SOURCES
+        "concurrency_control/*.cpp"
+        "concurrency_control/anomaly/write_crown/*.cpp"
+        "concurrency_control/anomaly/write_skew/*.cpp"
         "concurrency_control/short_tx/*.cpp"
         "concurrency_control/short_tx/delete/*.cpp"
         "concurrency_control/short_tx/delete_insert/*.cpp"
@@ -40,10 +43,11 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/storage/*.cpp"
         "concurrency_control/short_tx/termination/*.cpp"
         "concurrency_control/long_tx/*.cpp"
+        "concurrency_control/long_tx/interface/delete/*.cpp"
+        "concurrency_control/long_tx/interface/delete_insert/*.cpp"
         "concurrency_control/long_tx/interface/search/*.cpp"
+        "concurrency_control/long_tx/wp_basic/*.cpp"
         "concurrency_control/long_tx_or_hybrid/*.cpp"
-        "concurrency_control/long_tx_or_hybrid/anomaly/write_crown/*.cpp"
-        "concurrency_control/long_tx_or_hybrid/anomaly/write_skew/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/delete/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/delete_insert/*.cpp"
@@ -58,7 +62,6 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx_or_hybrid/interface/tx_state/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/update/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
-        "concurrency_control/long_tx_or_hybrid/wp_basic/*.cpp"
         "concurrency_control/hybrid/search_wp/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
         "start/*.cpp"

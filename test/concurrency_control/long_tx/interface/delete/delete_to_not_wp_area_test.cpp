@@ -59,7 +59,7 @@ TEST_F(delete_to_not_wp_area_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st_2, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    // upsert with no wp
+    // delete_record with no wp
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
     auto wait_change_epoch = []() {
         auto ce{epoch::get_global_epoch()};
@@ -72,7 +72,7 @@ TEST_F(delete_to_not_wp_area_test, simple) { // NOLINT
     ASSERT_EQ(delete_record(s, st_1, k), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    // upsert with invalid wp
+    // delete_record with invalid wp
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st_1}));
     wait_change_epoch();
     ASSERT_EQ(delete_record(s, st_2, k), Status::WARN_WRITE_WITHOUT_WP);

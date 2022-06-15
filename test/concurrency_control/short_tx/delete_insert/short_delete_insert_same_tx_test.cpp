@@ -16,12 +16,13 @@
 
 namespace shirakami::testing {
 
-class delete_insert : public ::testing::Test { // NOLINT
+class short_delete_insert_same_tx_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "delete_insert-delete_insert_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_insert/short_delete_insert_same_tx_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -38,7 +39,7 @@ private:
     static inline Storage storage_;            // NOLINT
 };
 
-TEST_F(delete_insert, delete_insert) { // NOLINT
+TEST_F(short_delete_insert_same_tx_test, delete_insert) { // NOLINT
     register_storage(get_storage());
     std::string k("testing"); // NOLINT
     std::string v("bbb");     // NOLINT
@@ -52,7 +53,7 @@ TEST_F(delete_insert, delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(delete_insert, delete_insert_delete) { // NOLINT
+TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
     register_storage(get_storage());
     std::string k("testing"); // NOLINT
     std::string v("v");       // NOLINT

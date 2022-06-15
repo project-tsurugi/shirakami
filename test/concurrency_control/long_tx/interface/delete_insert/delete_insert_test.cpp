@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
@@ -47,42 +48,6 @@ public:
 private:
     static inline std::once_flag init_google; // NOLINT
 };
-
-void wait_epoch_update() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
-TEST_F(delete_insert_test, short_insert_execute_read) { // NOLINT
-    Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
-    Token s1{};
-    Token s2{};
-    ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(Status::OK, enter(s2));
-
-    // data preparation
-    ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s1));
-    // end preparation
-
-    // test
-    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
-    ASSERT_EQ(delete_record(s2, st, ""), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s2));
-
-    /**
-     * s1 failed insert and depends on existing the records.
-     * Internally, s1 executed tx read operation for the records.
-     */
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s1));
-
-    ASSERT_EQ(Status::OK, leave(s2));
-    ASSERT_EQ(Status::OK, leave(s1));
-}
 
 TEST_F(delete_insert_test, long_insert_execute_read) { // NOLINT
     Storage st{};
