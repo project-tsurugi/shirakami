@@ -12,11 +12,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class helper : public ::testing::Test { // NOLINT
+class long_tx_begin_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-wp_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "helper-long_tx_begin_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,23 +31,22 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(helper, tx_begin_wp) { // NOLINT
+TEST_F(long_tx_begin_test, tx_begin_wp) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<Storage> wp{1, 2, 3};
     // wp for non-existing storage
     ASSERT_EQ(Status::ERR_FAIL_WP, tx_begin(s, TX_TYPE::LONG, wp));
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(helper, tx_begin_read_only_and_wp) { // NOLINT
+TEST_F(long_tx_begin_test, tx_begin_read_only_and_wp) { // NOLINT
     Token s{};
     Storage st{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, tx_begin(s, TX_TYPE::READ_ONLY, {st}));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
+              tx_begin(s, TX_TYPE::READ_ONLY, {st}));
     ASSERT_EQ(Status::OK, leave(s));
 }
 

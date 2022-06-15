@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
@@ -29,11 +30,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class insert_long_long_tx_test : public ::testing::Test { // NOLINT
+class long_insert_tx_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-upsert_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "insert-long_insert_tx_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,18 +49,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
-
-TEST_F(insert_long_long_tx_test,               // NOLINT
+TEST_F(long_insert_tx_test,                    // NOLINT
        different_key_same_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -92,7 +82,7 @@ TEST_F(insert_long_long_tx_test,               // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,               // NOLINT
+TEST_F(long_insert_tx_test,                    // NOLINT
        different_key_same_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.
@@ -126,7 +116,7 @@ TEST_F(insert_long_long_tx_test,               // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,                    // NOLINT
+TEST_F(long_insert_tx_test,                         // NOLINT
        different_key_different_epoch_co_high_low) { // NOLINT
     /**
      * There are two long tx.
@@ -157,7 +147,7 @@ TEST_F(insert_long_long_tx_test,                    // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(insert_long_long_tx_test,                    // NOLINT
+TEST_F(long_insert_tx_test,                         // NOLINT
        different_key_different_epoch_co_low_high) { // NOLINT
     /**
      * There are two long tx.
