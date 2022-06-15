@@ -16,12 +16,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class open_scan_test : public ::testing::Test { // NOLINT
+class long_open_scan_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
-                                  "scan-c_open_scan_test");
+                                  "scan-c_long_open_scan_test");
         FLAGS_stderrthreshold = 0;                      // output more than INFO
     }
 
@@ -44,7 +44,7 @@ void wait_change_epoch() {
     }
 }
 
-TEST_F(open_scan_test,            // NOLINT
+TEST_F(long_open_scan_test,            // NOLINT
        avoid_premature_by_wait) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);

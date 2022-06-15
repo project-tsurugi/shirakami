@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class termination_test : public ::testing::Test { // NOLINT
+class long_commit_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-termination_test");
+                "shirakami-test-concurrency_control-wp-long_commit_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,7 +48,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(termination_test, commit_long_long_low_high) { // NOLINT
+TEST_F(long_commit_test, commit_long_long_low_high) { // NOLINT
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -70,7 +70,7 @@ TEST_F(termination_test, commit_long_long_low_high) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(termination_test, commit_long_long_high_low) { // NOLINT
+TEST_F(long_commit_test, commit_long_long_high_low) { // NOLINT
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
