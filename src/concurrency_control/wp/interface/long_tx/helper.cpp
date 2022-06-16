@@ -42,9 +42,8 @@ Status tx_begin(session* const ti,
     wp::long_tx::set_counter(long_tx_id + 1);
 
     ti->set_long_tx_id(long_tx_id);
-    ongoing_tx::push({valid_epoch, long_tx_id});
-    ti->set_tx_type(TX_TYPE::LONG);
     ti->set_valid_epoch(valid_epoch);
+    ongoing_tx::push({valid_epoch, long_tx_id});
 
     return Status::OK;
     // dtor : release wp_mutex

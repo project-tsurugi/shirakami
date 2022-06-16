@@ -131,10 +131,10 @@ public:
                 ++it;
             }
         }
-        if (!tx_info_.empty()) {
-            set_lowest_epoch(lep);
-        } else {
+        if (tx_info_.empty()) {
             set_lowest_epoch(0);
+        } else {
+            set_lowest_epoch(lep);
         }
         if (!erased) { LOG(ERROR) << "programming error."; }
     }

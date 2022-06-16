@@ -2,6 +2,7 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/wp/interface/read_only_tx/include/read_only_tx.h"
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"
 
 #include "shirakami/interface.h"
@@ -20,10 +21,15 @@ Status abort(Token token) { // NOLINT
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
-        rc = long_tx::abort(ti);
-    } else {
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
         rc = short_tx::abort(ti);
+    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+        rc = long_tx::abort(ti);
+    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+        rc = read_only_tx::abort(ti);
+    } else {
+        LOG(ERROR) << "programming error";
+        return rc;
     }
     ti->process_before_finish_step();
     return rc;
@@ -39,10 +45,15 @@ Status commit([[maybe_unused]] Token token, // NOLINT
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
-        rc = long_tx::commit(ti, cp);
-    } else {
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
         rc = short_tx::commit(ti, cp);
+    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+        rc = long_tx::commit(ti, cp);
+    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+        rc = read_only_tx::commit(ti);
+    } else {
+        LOG(ERROR) << "programming error";
+        return rc;
     }
     ti->process_before_finish_step();
     return rc;

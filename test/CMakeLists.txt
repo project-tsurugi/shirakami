@@ -17,6 +17,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/*.cpp"
         "concurrency_control/anomaly/write_crown/*.cpp"
         "concurrency_control/anomaly/write_skew/*.cpp"
+        "concurrency_control/read_only_tx/*.cpp"
         "concurrency_control/short_tx/*.cpp"
         "concurrency_control/short_tx/delete/*.cpp"
         "concurrency_control/short_tx/delete_insert/*.cpp"

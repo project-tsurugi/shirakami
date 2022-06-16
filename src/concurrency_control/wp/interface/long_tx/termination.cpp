@@ -14,51 +14,9 @@
 
 namespace shirakami::long_tx {
 
-void register_wp_result_and_remove_wps(session* ti) {
-    for (auto&& elem : ti->get_wp_set()) {
-        Storage storage = elem.first;
-        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        std::string_view page_set_meta_storage_view = {
-                reinterpret_cast<char*>( // NOLINT
-                        &page_set_meta_storage),
-                sizeof(page_set_meta_storage)};
-        std::string_view storage_view = {
-                reinterpret_cast<char*>(&storage), // NOLINT
-                sizeof(storage)};
-        std::pair<wp::page_set_meta**, std::size_t> out{};
-        auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
-                                                   storage_view, out)};
-        if (rc != yakushima::status::OK) {
-            LOG(ERROR) << "programing error: " << rc;
-            return;
-        }
-        if (Status::OK !=
-            (*out.first)
-                    ->get_wp_meta_ptr()
-                    ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
-                                                       ti->get_long_tx_id())) {
-            LOG(FATAL);
-        }
-    }
-}
-
-void cleanup_process(session* const ti) {
-    // global effect
-    register_wp_result_and_remove_wps(ti);
-    ongoing_tx::remove_id(ti->get_long_tx_id());
-
-    // local effect
-    ti->clean_up();
-    /**
-     * When you execute leave (session), perform self-abort processing for 
-     * cleanup. In OCC mode, the effect is idempotent. If it is in BATCH 
-     * mode, it is not idempotent, so a bug will occur.
-     * 
-     */
-    ti->set_tx_type(TX_TYPE::SHORT);
-}
-
-void cancel_flag_inserted_records(session* const ti) {
+// ==============================
+// static inline functions for this source
+static inline void cancel_flag_inserted_records(session* const ti) {
     auto process = [](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT) {
@@ -75,26 +33,14 @@ void cancel_flag_inserted_records(session* const ti) {
     }
 }
 
-Status abort(session* const ti) { // NOLINT
-    cancel_flag_inserted_records(ti);
-
-    // about tx state
-    // this should before clean up
-    ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
-
-    // clean up
-    cleanup_process(ti);
-    return Status::OK;
-}
-
-void compute_tid(session* ti, tid_word& ctid) {
+static inline void compute_tid(session* ti, tid_word& ctid) {
     ctid.set_epoch(ti->get_valid_epoch());
     ctid.set_lock(false);
     ctid.set_absent(false);
     ctid.set_latest(true);
 }
 
-void expose_local_write(session* ti) {
+static inline void expose_local_write(session* ti) {
     tid_word ctid{};
     compute_tid(ti, ctid);
 
@@ -199,6 +145,59 @@ void expose_local_write(session* ti) {
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         process(wso, ctid);
     }
+}
+
+static inline void register_wp_result_and_remove_wps(session* ti) {
+    for (auto&& elem : ti->get_wp_set()) {
+        Storage storage = elem.first;
+        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
+        std::string_view page_set_meta_storage_view = {
+                reinterpret_cast<char*>( // NOLINT
+                        &page_set_meta_storage),
+                sizeof(page_set_meta_storage)};
+        std::string_view storage_view = {
+                reinterpret_cast<char*>(&storage), // NOLINT
+                sizeof(storage)};
+        std::pair<wp::page_set_meta**, std::size_t> out{};
+        auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
+                                                   storage_view, out)};
+        if (rc != yakushima::status::OK) {
+            LOG(ERROR) << "programing error: " << rc;
+            return;
+        }
+        if (Status::OK !=
+            (*out.first)
+                    ->get_wp_meta_ptr()
+                    ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
+                                                       ti->get_long_tx_id())) {
+            LOG(FATAL);
+        }
+    }
+}
+
+static inline void cleanup_process(session* const ti) {
+    // global effect
+    register_wp_result_and_remove_wps(ti);
+    ongoing_tx::remove_id(ti->get_long_tx_id());
+
+    // local effect
+    ti->clean_up();
+}
+
+// ==============================
+
+// ==============================
+// functions declared at header
+Status abort(session* const ti) { // NOLINT
+    cancel_flag_inserted_records(ti);
+
+    // about tx state
+    // this should before clean up
+    ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
+
+    // clean up
+    cleanup_process(ti);
+    return Status::OK;
 }
 
 void register_read_by(session* const ti) {
@@ -369,6 +368,7 @@ extern Status commit(session* const ti, // NOLINT
 
     // about transaction state
     // this should before clean up
+    // todo fix
     ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
 
     // clean up
@@ -376,5 +376,7 @@ extern Status commit(session* const ti, // NOLINT
 
     return Status::OK;
 }
+
+// ==============================
 
 } // namespace shirakami::long_tx

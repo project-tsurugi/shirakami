@@ -13,6 +13,7 @@
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/wp/interface/read_only_tx/include/read_only_tx.h"
 
 #ifdef PWAL
 
@@ -226,7 +227,7 @@ Status leave(Token const token) { // NOLINT
         if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
                 // there may be halfway txs.
-                abort(token);
+                shirakami::abort(token);
 
                 yakushima::leave(
                         static_cast<session*>(token)->get_yakushima_token());
@@ -260,9 +261,12 @@ Status tx_begin(Token const token, TX_TYPE const tx_type,
         } else if (tx_type == TX_TYPE::SHORT) {
             ti->get_write_set().set_for_batch(false);
         } else if (tx_type == TX_TYPE::READ_ONLY) {
-            // todo impl
-            // get SS epoch
-            // exclude coming / going Long
+            auto rc{read_only_tx::tx_begin(ti)};
+            if (rc != Status::OK) {
+                LOG(ERROR) << rc;
+                ti->process_before_finish_step();
+                return rc;
+            }
         } else {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
