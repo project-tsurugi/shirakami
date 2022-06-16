@@ -22,6 +22,57 @@
 
 namespace shirakami::long_tx {
 
+extern Status version_traverse_and_read(session* const ti,
+                                        Record* const rec_ptr,
+                                        std::string& value,
+                                        bool const read_value) {
+    // version function
+    version* ver{};
+    bool is_latest{false};
+    tid_word f_check{};
+    auto rc = version_function_with_optimistic_check(
+            rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check);
+
+    if (rc == Status::WARN_NOT_FOUND) { return rc; }
+    if (rc != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
+
+    // read latest version after version function
+    if (is_latest) {
+        if (read_value) { ver->get_value(value); }
+        if (ver == rec_ptr->get_latest() &&
+            loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
+                    f_check.get_obj()) {
+            // success optimistic read latest version
+            // check max epoch of read version
+            auto read_epoch{f_check.get_epoch()};
+            if (read_epoch > ti->get_read_version_max_epoch()) {
+                ti->set_read_version_max_epoch(read_epoch);
+            }
+            return Status::OK;
+        }
+        /**
+         * else: fail to do optimistic read latest version. retry version 
+         * function
+         */
+        ver = rec_ptr->get_latest();
+        version_function_without_optimistic_check(ti->get_valid_epoch(), ver);
+        if (ver == nullptr) { return Status::WARN_NOT_FOUND; }
+    }
+
+    // read non-latest version after version function
+    if (ver == nullptr) { LOG(ERROR) << "programming error"; }
+    if (read_value) { ver->get_value(value); }
+    // check max epoch of read version
+    auto read_epoch{ver->get_tid().get_epoch()};
+    if (read_epoch > ti->get_read_version_max_epoch()) {
+        ti->set_read_version_max_epoch(read_epoch);
+    }
+    return Status::OK;
+}
+
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
@@ -108,51 +159,7 @@ Status search_key(session* ti, Storage const storage,
         return Status::ERR_FATAL;
     }
 
-    // version function
-    version* ver{};
-    bool is_latest{false};
-    tid_word f_check{};
-    rc = version_function_with_optimistic_check(rec_ptr, ti->get_valid_epoch(),
-                                                ver, is_latest, f_check);
-
-    if (rc == Status::WARN_NOT_FOUND) { return rc; }
-    if (rc != Status::OK) {
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
-    }
-
-    // read latest version after version function
-    if (is_latest) {
-        if (read_value) { ver->get_value(value); }
-        if (ver == rec_ptr->get_latest() &&
-            loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
-                    f_check.get_obj()) {
-            // success optimistic read latest version
-            // check max epoch of read version
-            auto read_epoch{f_check.get_epoch()};
-            if (read_epoch > ti->get_read_version_max_epoch()) {
-                ti->set_read_version_max_epoch(read_epoch);
-            }
-            return Status::OK;
-        }
-        /**
-         * else: fail to do optimistic read latest version. retry version 
-         * function
-         */
-        ver = rec_ptr->get_latest();
-        version_function_without_optimistic_check(ti->get_valid_epoch(), ver);
-        if (ver == nullptr) { return Status::WARN_NOT_FOUND; }
-    }
-
-    // read non-latest version after version function
-    if (ver == nullptr) { LOG(ERROR) << "programming error"; }
-    if (read_value) { ver->get_value(value); }
-    // check max epoch of read version
-    auto read_epoch{ver->get_tid().get_epoch()};
-    if (read_epoch > ti->get_read_version_max_epoch()) {
-        ti->set_read_version_max_epoch(read_epoch);
-    }
-    return Status::OK;
+    return version_traverse_and_read(ti, rec_ptr, value, read_value);
 }
 
 } // namespace shirakami::long_tx

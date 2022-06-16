@@ -52,4 +52,7 @@ extern Status version_function_with_optimistic_check(Record* rec,
 extern Status version_function_without_optimistic_check(epoch::epoch_t ep,
                                                         version*& ver);
 
+extern Status version_traverse_and_read(session* ti, Record* rec_ptr,
+                                        std::string& value, bool read_value);
+
 } // namespace shirakami::long_tx
