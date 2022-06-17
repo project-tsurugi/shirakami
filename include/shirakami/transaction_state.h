@@ -52,7 +52,7 @@ public:
           * @brief This status means the transaction was begun and is waited 
           * for commit api call or must wait for a 
           * while because it can not execute this validation due to other 
-          * preceding transactions.
+          * preceding long transactions.
           */
         WAITING_CC_COMMIT,
         /**

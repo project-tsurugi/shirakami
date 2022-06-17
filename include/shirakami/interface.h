@@ -15,17 +15,18 @@ namespace shirakami {
 
 /**
  * @brief Create one table and return its handler.
- * @param[out] storage output parameter to pass the storage handle, that is used for 
- * the subsequent calls related with the storage.
- * Until delete_storage is called for the first time, multiple register_storage calls 
- * assign Storage value monotonically.
- * That is, Storage value assigned by register_storage is larger than the one assigned 
- * by previous call as long as no delete_storage is called.
+ * @param[out] storage output parameter to pass the storage handle, that is 
+ * used for the subsequent calls related with the storage.
+ * Until delete_storage is called for the first time, multiple register_storage 
+ * calls assign Storage value monotonically.
+ * That is, Storage value assigned by register_storage is larger than the one 
+ * assigned by previous call as long as no delete_storage is called.
  * Once delete_storage is called, Storage value can be recycled and there is no 
  * guarantee on the monotonicity.
  * @return Status::OK if successful.
- * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum value 
- * of the handler.
+ * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum 
+ * value of the handler.
+ * @return Status::ERR_FATAL Some programming error.
  */
 extern Status register_storage(Storage& storage);
 
@@ -41,7 +42,9 @@ extern Status exist_storage(Storage storage);
  * @brief delete existing storage and records under the storage.
  * @param[in] storage the storage handle retrieved with register_storage().
  * @return Status::OK if successful.
- * @return Status::WARN_INVALID_HANDLE if the storage is not registered with the given name.
+ * @return Status::WARN_INVALID_HANDLE if the storage is not registered with 
+ * the given name.
+ * @return Status::ERR_FATAL Some programming error.
  */
 extern Status delete_storage(Storage storage);
 
@@ -58,8 +61,8 @@ extern Status list_storage(std::vector<Storage>& out);
  * @brief transactional termination command about abort.
  * @details It is user abort, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
- * @pre it did enter -> ... -> (tx_begin ->) some transactional operations (update / insert / 
- * upsert / search / delete) or no operation.
+ * @pre it did enter -> ... -> (tx_begin ->) some transactional operations 
+ * (update / insert / upsert / search / delete) or no operation.
  * @return Status::OK success.
  */
 extern Status abort(Token token); // NOLINT

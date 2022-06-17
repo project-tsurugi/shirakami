@@ -57,8 +57,15 @@ Status storage::create_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view, &page_set_meta_ptr,
                 sizeof(page_set_meta_ptr)); // NOLINT
-        if (yakushima::status::OK != rc) { LOG(FATAL) << rc; }
-        yakushima::leave(ytoken);
+        if (yakushima::status::OK != rc) {
+            LOG(ERROR) << rc;
+            return Status::ERR_FATAL;
+        }
+        rc = yakushima::leave(ytoken);
+        if (yakushima::status::OK != rc) {
+            LOG(ERROR) << rc;
+            return Status::ERR_FATAL;
+        }
     }
 
     return Status::OK;
@@ -144,26 +151,31 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
-            LOG(FATAL) << "missing error" << std::endl
+            LOG(ERROR) << "missing error" << std::endl
                        << " " << page_set_meta_storage << " " << storage
                        << std::endl;
+            return Status::ERR_FATAL;
         }
         delete *out.first; // NOLINT
-        if (yakushima::status::OK !=
-            yakushima::remove(
-                    ytoken,
-                    {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
-                     sizeof(page_set_meta_storage)},
-                    storage_view)) {
-            LOG(FATAL) << "missing error";
+        rc = yakushima::remove(
+                ytoken,
+                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                 sizeof(page_set_meta_storage)},
+                storage_view);
+        if (yakushima::status::OK != rc) {
+            LOG(ERROR) << rc;
+            return Status::ERR_FATAL;
         }
-        if (yakushima::status::OK != yakushima::leave(ytoken)) {
-            LOG(FATAL) << "missing error";
+        rc = yakushima::leave(ytoken);
+        if (yakushima::status::OK != rc) {
+            LOG(ERROR) << rc;
+            return Status::ERR_FATAL;
         }
     }
-    if (yakushima::status::OK !=
-        yakushima::delete_storage(storage_view)) { // NOLINT
-        LOG(FATAL) << "missing error";
+    auto rc = yakushima::delete_storage(storage_view);
+    if (yakushima::status::OK != rc) { // NOLINT
+        LOG(ERROR) << rc;
+        return Status::ERR_FATAL;
     }
 
     storage::register_reuse_num(storage);
