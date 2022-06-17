@@ -7,6 +7,7 @@
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/wp/interface/read_only_tx/include/read_only_tx.h"
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"
 
 #include "shirakami/interface.h"
@@ -51,7 +52,7 @@ Status search_key(Token const token, Storage const storage,
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
     } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
-        return Status::ERR_NOT_IMPLEMENTED;
+        rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;

@@ -29,7 +29,7 @@ void session::clear_local_set() {
 void session::clear_tx_property() { set_tx_began(false); }
 
 Status session::find_high_priority_short() const {
-    if (get_tx_type() != TX_TYPE::LONG) {
+    if (get_tx_type() == TX_TYPE::SHORT) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
