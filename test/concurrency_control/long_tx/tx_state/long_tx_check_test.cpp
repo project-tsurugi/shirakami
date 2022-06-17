@@ -1,4 +1,6 @@
 
+#include "test_tool.h"
+
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 
@@ -12,11 +14,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class tx_check_test : public ::testing::Test { // NOLINT
+class long_tx_check_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "interface-tx_state-tx_check_test");
+                                  "interface-tx_state-long_tx_check_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,54 +33,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(tx_check_test, tx_check_not_begin) { // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    TxStateHandle hd{};
-    TxState buf{};
-    ASSERT_EQ(Status::WARN_INVALID_HANDLE, tx_check(hd, buf));
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
-TEST_F(tx_check_test, short_tx_road_to_abort) { // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    TxStateHandle hd{};
-    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-    TxState buf{};
-    ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    ASSERT_EQ(Status::OK, abort(s));
-    ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::ABORTED);
-    ASSERT_EQ(Status::OK, release_tx_state_handle(hd));
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
-TEST_F(tx_check_test, short_tx_road_to_commit) { // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    TxStateHandle hd{};
-    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-    ASSERT_EQ(Status::OK, commit(s));
-    TxState buf{};
-    ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
-    ASSERT_EQ(Status::OK, release_tx_state_handle(hd));
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
-void wait_change_epoch() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
-TEST_F(tx_check_test, long_tx_road_to_abort) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_road_to_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
@@ -90,13 +45,13 @@ TEST_F(tx_check_test, long_tx_road_to_abort) { // NOLINT
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
     }
-    wait_change_epoch();
+    wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    // second should change
+    // second should not change
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::COMMITTABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::ABORTED);
@@ -104,7 +59,7 @@ TEST_F(tx_check_test, long_tx_road_to_abort) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(tx_check_test, long_tx_road_to_commit) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
@@ -116,18 +71,63 @@ TEST_F(tx_check_test, long_tx_road_to_commit) { // NOLINT
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
     }
-    wait_change_epoch();
+    wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    // second should change
+    // second should not change without commit api
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::COMMITTABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
     ASSERT_EQ(Status::OK, release_tx_state_handle(hd));
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_check_test, long_tx_started_to_waiting_durable) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    TxStateHandle hd{};
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
+    wait_epoch_update();
+    TxState buf{};
+    ASSERT_EQ(Status::OK, tx_check(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_check(hd, buf));
+    // todo fix after impl about durable notation
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
+}
+
+TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
+    // ==============================
+    // prepare
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
+    TxStateHandle hd{};
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s2, hd));
+    wait_epoch_update();
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
+    TxState buf{};
+    ASSERT_EQ(Status::OK, tx_check(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_CC_COMMIT);
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_check(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::COMMITTABLE);
+    // ==============================
+
+    // ==============================
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+    // ==============================
 }
 
 } // namespace shirakami::testing

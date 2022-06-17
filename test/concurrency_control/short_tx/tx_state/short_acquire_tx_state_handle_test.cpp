@@ -12,11 +12,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class acquire_tx_state_handle_test : public ::testing::Test { // NOLINT
+class short_acquire_tx_state_handle_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "acquire_tx_state_handle_test");
+                                  "short_acquire_tx_state_handle_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,7 +31,8 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(acquire_tx_state_handle_test, before_after_commit_abort) { // NOLINT
+TEST_F(short_acquire_tx_state_handle_test, // NOLINT
+       before_after_commit_abort) {        // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
@@ -39,7 +40,8 @@ TEST_F(acquire_tx_state_handle_test, before_after_commit_abort) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(acquire_tx_state_handle_test, twice_call_in_the_same_tx) { // NOLINT
+TEST_F(short_acquire_tx_state_handle_test, // NOLINT
+       twice_call_in_the_same_tx) {        // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin(s));

@@ -338,7 +338,10 @@ extern Status commit(session* const ti, // NOLINT
      */
     prepare_commit(ti);
     auto rc = check_wait_for_preceding_bt(ti);
-    if (rc != Status::OK) { return Status::WARN_WAITING_FOR_OTHER_TX; }
+    if (rc != Status::OK) {
+        ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
+        return Status::WARN_WAITING_FOR_OTHER_TX;
+    }
 
     // verify read by
     rc = verify_read_by(ti);

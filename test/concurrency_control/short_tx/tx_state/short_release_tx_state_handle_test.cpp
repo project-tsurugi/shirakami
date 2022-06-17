@@ -12,11 +12,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class release_tx_state_handle_test : public ::testing::Test { // NOLINT
+class short_release_tx_state_handle_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "release_tx_state_handle_test");
+                                  "short_release_tx_state_handle_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,7 +31,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(release_tx_state_handle_test, call_twice) { // NOLINT
+TEST_F(short_release_tx_state_handle_test, call_twice) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin(s));

@@ -43,6 +43,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/search_upsert/multi_thread/*.cpp"
         "concurrency_control/short_tx/storage/*.cpp"
         "concurrency_control/short_tx/termination/*.cpp"
+        "concurrency_control/short_tx/tx_state/*.cpp"
         "concurrency_control/long_tx/*.cpp"
         "concurrency_control/long_tx/delete/*.cpp"
         "concurrency_control/long_tx/delete_insert/*.cpp"
@@ -58,6 +59,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx/update/*.cpp"
         "concurrency_control/long_tx/upsert/*.cpp"
         "concurrency_control/long_tx/termination/*.cpp"
+        "concurrency_control/long_tx/tx_state/*.cpp"
         "concurrency_control/long_tx/wp_basic/*.cpp"
         "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
@@ -66,7 +68,6 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/hybrid/scan_wp/*.cpp"
         "concurrency_control/hybrid/scan_upsert/*.cpp"
         "concurrency_control/hybrid/search_upsert/*.cpp"
-        "concurrency_control/tx_state/*.cpp"
         "start/*.cpp"
         "shutdown/*.cpp"
         )

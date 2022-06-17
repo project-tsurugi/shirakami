@@ -79,14 +79,14 @@ Status tx_check(TxStateHandle handle, TxState& out) {
         if (ts.state_kind() == TxState::StateKind::WAITING_START) {
             ts.set_kind(TxState::StateKind::STARTED);  // for internal
             out.set_kind(TxState::StateKind::STARTED); // for external
-        } else if (ts.state_kind() == TxState::StateKind::STARTED) {
+        } else if (ts.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) {
             auto* ti = static_cast<session*>(ts.get_token());
             if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id())) {
-                ts.set_kind(
-                        TxState::StateKind::WAITING_CC_COMMIT); // for internal
+                // not change
                 out.set_kind(
                         TxState::StateKind::WAITING_CC_COMMIT); // for external
             } else {
+                // change
                 ts.set_kind(TxState::StateKind::COMMITTABLE);  // for internal
                 out.set_kind(TxState::StateKind::COMMITTABLE); // for external
             }

@@ -12,11 +12,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class tx_state_metadata_test : public ::testing::Test { // NOLINT
+class short_tx_state_metadata_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "tx_state_metadata_test");
+                                  "short_tx_state_metadata_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -31,12 +31,13 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(tx_state_metadata_test, after_init) { // NOLINT
+TEST_F(short_tx_state_metadata_test, after_init) { // NOLINT
     // after init
     ASSERT_EQ(TxState::handle_initial_value, TxState::get_handle_ctr());
 }
 
-TEST_F(tx_state_metadata_test, before_after_commit_abort) { // NOLINT
+TEST_F(short_tx_state_metadata_test,      // NOLINT
+       short_before_after_commit_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin(s));
