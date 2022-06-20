@@ -552,8 +552,11 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
         return Status::OK;
     }
+    if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+        return Status::ERR_NOT_IMPLEMENTED;
+    }
     LOG(ERROR) << "programming error";
-    return Status::ERR_NOT_IMPLEMENTED;
+    return Status::ERR_FATAL;
 }
 
 Status read_key_from_scan(Token const token, ScanHandle const handle,

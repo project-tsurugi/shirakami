@@ -87,9 +87,8 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * obeyed to commit_param.commit_property.
  * @pre you executed enter command, you didn't execute leave command.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
- * about write preserve.
- * @return Status::ERR_FAIL_WP This means validation failure by others write 
- * preserve.
+ * about write preserve by the transaction which is long tx mode.
+ * @return Status::ERR_FATAL Some programming error.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
  * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
@@ -97,19 +96,23 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * validation phase.
  * @return Status::ERR_VALIDATION This means read validation failed.
  * @return Status::OK success.
+ * @return Status::WARN_PREMATURE The long transaction must wait until the 
+ * changing epoch to query some operation.
  * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
- * for finishing commit by other tx.
+ * for finishing commit by other high priority tx.
  */
 extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
 
 /**
- * @brief It checks whether the transaction allocated commit_id at commit function 
- * was durable.
+ * @brief NOT IMPLEMENTED NOW: It checks whether the transaction allocated 
+ * commit_id at commit function was durable.
  * @param[in] token This should be the token which was used for commit function.
- * @param[in] commit_id This should be the commit_id which was received at commit 
- * function with @b token.
- * @return  true This transaction was committed from the point of view of recovery.
- * @return  false This transaction was not committed from the point of view of recovery.
+ * @param[in] commit_id This should be the commit_id which was received at 
+ * commit function with @b token.
+ * @return  true This transaction was committed from the point of view of 
+ * recovery.
+ * @return  false This transaction was not committed from the point of view of 
+ * recovery.
  */
 extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
 
@@ -131,18 +134,22 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @param[in] key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::WARN_ALREADY_DELETE You already executed delete operation. So this operation 
- * was canceled and it will execute single delete_record eventually.
- * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely canceled an previous 
- * insert.
- * @return Status::WARN_CANCEL_PREVIOUS_UPDATE This delete operation merely canceled an previous
- * update.
+ * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely 
+ * canceled an previous insert.
+ * @return Status::WARN_CANCEL_PREVIOUS_UPDATE This delete operation merely 
+ * canceled an previous update.
+ * @return Status::WARN_CONFLICT_ON_WRITE_PRESERVE This function can't execute 
+ * because this tx is short tx and found write preserve of long tx.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
  * read only mode.
- * @return Status::WARN_NOT_FOUND No corresponding record in db. If you have problem 
- * by this, you should do abort.
+ * @return Status::WARN_NOT_FOUND The target page is not found or deleted.
+ * @return Status::WARN_PREMATURE The long transaction must wait until the 
+ * changing epoch to query some operation.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
+ * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
+ * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::OK success.
  */
 extern Status delete_record(Token token, Storage storage, // NOLINT
@@ -164,19 +171,30 @@ extern Status enter(Token& token); // NOLINT
  * @param[in] token the token retrieved by enter()
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
- * @return Status::OK if existence.
- * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
- * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
- * inserted.
- * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
- * updated.
- * @return Status::WARN_NOT_FOUND The target page was not found.
+ * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
+ * operation of this transaction.
+ * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
+ * other's insert.
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
+ * by other updater, and it could not complete search.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
+ * have problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_PREMATURE In long tx mode, it have to wait for no 
+ * transactions to be located in an order older than the order in which this 
+ * transaction is located.
+ * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's 
+ * preceding write (insert/update/upsert) operation in the same tx.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
+ * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
+ * tx's wp and executed abort command internally.
+ * @return Status::ERR_FATAL programming error.
  */
 extern Status exist_key(Token token, Storage storage, std::string_view key);
 
 /**
- * @brief do delete operations for all records, join core threads and delete the
- * remaining garbage (heap) objects.
+ * @brief do delete operations for all records, join core threads, delete the
+ * remaining garbage (heap) objects, and do remaining work.
  * @pre It already did init() and invoked core threads.
  * @param[in] force_shut_down_logging If true, interrupt logging and shut down. 
  * Otherwise wait for the end of logging.
@@ -184,7 +202,8 @@ extern Status exist_key(Token token, Storage storage, std::string_view key);
  * threads detached. 
  * So it should join those threads.
  * This function serves that joining after doing those delete operations.
- * Then, it delete the remaining garbage (heap) object by using private interface.
+ * Then, it delete the remaining garbage (heap) object by using private 
+ * interface.
  * @return void
  */
 extern void fin(bool force_shut_down_logging = true); // NOLINT
@@ -200,8 +219,6 @@ extern void fin(bool force_shut_down_logging = true); // NOLINT
  * @return Status::OK
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
  * not done anything in this call.
- * @return Status::WARN_INVALID_ARGS The args as a log directory path is invalid.
- * Some files which has the same path exist.
  */
 extern Status init(bool enable_recovery = false,              // NOLINT
                    std::string_view log_directory_path = ""); // NOLINT
@@ -212,20 +229,19 @@ extern Status init(bool enable_recovery = false,              // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
- * @return Status::OK success
+ * @return Status::OK success. If this tx executed delete operation, this insert
+ * change the operation into update operation which updates using @a val.
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
  * exists in db, so this function returned immediately. And it is treated that 
  * the read operation for the record was executed by this operation to depend on
  *  existing the record.
- * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
- * mode. So this operation was canceled.
- * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
- * is not found.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE it already executed delete.
- * So it translated delete - insert into update.
- * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) which 
- * was inserted by this function was also read by previous scan operations, and it 
- * detects phantom problem by other transaction's write. It did abort().
+ * @return Status::WARN_CONCURRENT_INSERT This operation is canceled due to 
+ * concurrent insert by other tx.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
+ * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) 
+ * which was inserted by this function was also read by previous scan 
+ * operations, and it detects phantom problem by other transaction's write. 
+ * It did abort().
  */
 extern Status insert(Token token, Storage storage,
                      std::string_view key, // NOLINT
@@ -246,20 +262,23 @@ extern Status leave(Token token); // NOLINT
  * @brief This function preserve the specified range of masstree
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the handle of storage.
- * @param[in] l_key
- * @param[in] l_end
- * @param[in] r_key
- * @param[in] r_end
+ * @param[in] l_key the left end key of range.
+ * @param[in] l_end whether including the left end key for this range.
+ * @param[in] r_key the right end key of range.
+ * @param[in] r_end whether including the right end key for this range.
  * @param[out] handle the handle to identify scanned result. This handle will be
- * deleted at abort function.
+ * deleted at abort function or close_scan command.
  * @param[in] max_size Default is 0. If this argument is 0, it will not use 
  * this argument. This argument limits the number of results.
- * @attention This scan limits range which is specified by @b l_key, @b l_end, @b r_key, 
- * and @b r_end.
+ * @attention This scan limits range which is specified by @b l_key, @b l_end, 
+ * @b r_key, and @b r_end.
+ * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
+ * @return Status::WARN_PREMATURE In long tx mode, it have to wait for some 
+ * high priority transactions.
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key,
@@ -272,7 +291,9 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * open_scan. It skips deleted record.
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
+ * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
+ * @return Status::WARN_INVALID_HANDLE @a handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
@@ -285,6 +306,7 @@ extern Status next(Token token, ScanHandle handle);
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] key the result of this function.
+ * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -294,6 +316,8 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
+ * @return Status::ERR_FAIL_WP Conflict on write preserve of high priority long
+ * transaction. It executed abort command.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
@@ -301,6 +325,7 @@ extern Status next(Token token, ScanHandle handle);
  * executed write operation for the same page. So this function read from the 
  * write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  */
 extern Status read_key_from_scan(Token token, ScanHandle handle,
                                  std::string& key);
@@ -311,6 +336,7 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] value  the result of this function.
+ * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -320,12 +346,16 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
+ * @return Status::ERR_FAIL_WP Conflict on write preserve of high priority long
+ * transaction. It executed abort command.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
  * @return Status::WARN_READ_FROM_OWN_OPERATION This transaction already 
- * executed write operation for the same page. So this function read from the write.
+ * executed write operation for the same page. So this function read from the 
+ * write.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  */
 extern Status read_value_from_scan(Token token, ScanHandle handle,
                                    std::string& value);
@@ -351,6 +381,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] storage the handle of storage.
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
+ * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
  * operation of this transaction.
@@ -365,6 +396,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * transaction is located.
  * @return Status::WARN_READ_FROM_OWN_OPERATION It read the records from it's 
  * preceding write (insert/update/upsert) operation in the same tx.
+ * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
  * tx's wp and executed abort command internally.
  */
@@ -374,23 +406,27 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
 /**
  * @brief Transaction begins.
  * @attention This function basically does not have to be called. 
- * Because it is called automatically internally using the @b read_only (false) argument.
- * @details To determine the GC-capable epoch, determine the epoch at the start of 
- * the transaction. Specify true for read_only to execute a fast read only transaction 
- * that just reads snapshots.
+ * Because it is called automatically internally using the @b read_only (false) 
+ * argument.
+ * @details To determine the GC-capable epoch, determine the epoch at the start 
+ * of the transaction. Specify true for read_only to execute a fast read only 
+ * transaction that just reads snapshots.
  * @param[in] token
  * @param[in] tx_type It shows a transaction type of this transaction. TX_TYPE::
  * SHORT or TX_TYPE::LONG or TX_TYPE::READ_ONLY.
- * @param[in] write_preserve Notice of writing required for special protocols for long 
- * transactions. A write that does not give this notice cannot be executed.
- * If the user mistakenly sets a duplicate element in write_preserve, it will be 
- * treated as unique internally.
- * @attention If you specify read_only is true, you can not execute transactional 
- * write operation in this transaction.
- * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without termination 
- * command, this is returned.
- * @return Status::OK success.
+ * @param[in] write_preserve Notice of writing required for special protocols 
+ * for long transactions. A write that does not give this notice cannot be 
+ * executed. If the user mistakenly sets a duplicate element in write_preserve, 
+ * it will be treated as unique internally.
+ * @attention If you specify read_only is true, you can not execute 
+ * transactional write operation in this transaction.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
+ * @return Status::ERR_FATAL programming error.
+ * @return Status::OK Success.
+ * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
+ * termination command, this is returned.
+ * @return Status::WARN_ILLEGAL_OPERATION You executed this command using @a 
+ * write_preserve and not using long tx mode.
  */
 extern Status tx_begin(Token token, TX_TYPE tx_type = TX_TYPE::SHORT, // NOLINT
                        std::vector<Storage> write_preserve = {});     // NOLINT
@@ -401,12 +437,11 @@ extern Status tx_begin(Token token, TX_TYPE tx_type = TX_TYPE::SHORT, // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
- * @return Status::OK if successful
+ * @return Status::OK Success.
  * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you have 
- * problem by WARN_NOT_FOUND, you should do abort.
+ * @return Status::WARN_NOT_FOUND The record is not found.
  * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, 
  * so it update the value which is going to be updated.
  */
@@ -423,7 +458,7 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) 
  * which was inserted by this function was also read by previous scan operations, 
  * and it detects phantom problem by other transaction's write. It did abort().
- * @return Status::OK success
+ * @return Status::OK Success
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 

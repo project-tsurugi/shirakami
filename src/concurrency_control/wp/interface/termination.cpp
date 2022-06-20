@@ -53,7 +53,7 @@ Status commit([[maybe_unused]] Token token, // NOLINT
         rc = read_only_tx::commit(ti);
     } else {
         LOG(ERROR) << "programming error";
-        return rc;
+        return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();
     return rc;
