@@ -41,7 +41,7 @@ Status storage::create_storage(Storage storage) {
             sizeof(storage)};
     if (yakushima::create_storage(std::string_view(storage_view)) !=
         yakushima::status::OK) { // NOLINT
-        return Status::WARN_INVARIANT;
+        return Status::ERR_FATAL_INDEX;
     }
 
     if (wp::get_initialized()) {

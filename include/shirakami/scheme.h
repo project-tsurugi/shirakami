@@ -104,144 +104,125 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
  */
 enum class Status : std::int32_t {
     /**
-     * @brief warning.
+     * @brief Warning.
      * @details When it uses multiple tx_begin without termination command, 
      * this is returned.
      */
     WARN_ALREADY_BEGIN,
     /**
-     * @brief warning.
-     * @details
-     * @a delete_all_records : There are no records. @n
-     * @a read_from_scan : The read targets was deleted by delete operation of own transaction. @n
-     * @a scan_key : The read targets was deleted by delete operation of own transaction. @n
-     * @a search_key : The read targets was deleted by delete operation of own transaction. @n
+     * @brief Warning.
+     * @details The transaction executed some operation for the page which it 
+     * already executed delete operation for the page.
      */
     WARN_ALREADY_DELETE,
     /**
-     * @brief warning.
-     * @details
-     * @a insert : The records whose key is the same as @a key exists in MTDB, so this function returned immediately. @n
+     * @brief Warning.
+     * @details The transaction tried to insert, but failed due to concurrent 
+     * insert.
      */
     WARN_ALREADY_EXISTS,
     /**
-     * @brief warning.
-     * @details When init function is called twice without fin, this status code is returned.
-     * This is for blocking invalid multiple initialization.
+     * @brief Warning.
+     * @details When init function is called more than twice without fin, this 
+     * status code is returned. This is for blocking invalid multiple 
+     * initialization.
      */
     WARN_ALREADY_INIT,
-    WARN_CANCEL_PREVIOUS_INSERT,
     /**
-     * @brief warning.
-     * @details
-     * @a delete_record : it canceled an update/insert operation before this function and did delete operation. @n
+     * @brief Warning.
+     * @details The transaction executed delete operation for the page which
+     * it executed insert operation for the page.
      */
-    WARN_CANCEL_PREVIOUS_OPERATION,
+    WARN_CANCEL_PREVIOUS_INSERT,
     WARN_CANCEL_PREVIOUS_UPDATE,
     /**
-     * @brief warning.
-     * @details
-     * @a read_record : The expected operation could not be performed because a record being inserted in
-     * parallel was detected. @n
-     * @a read_from_scan : The expected operation could not be performed because a record being inserted in
-     * parallel was detected. @n
+     * @brief Warning.
+     * @details The transaction failed operation due to concurrent insert 
+     * operation.
      */
     WARN_CONCURRENT_INSERT,
     /**
-     * @brief warning
+     * @brief Warning.
+     * @details The transaction failed operation due to concurrent update 
+     * operation.
      */
     WARN_CONCURRENT_UPDATE,
     /**
-     * @brief warning
+     * @brief Warning.
      * @details This means conflict between short tx and long tx's wp.
      */
     WARN_CONFLICT_ON_WRITE_PRESERVE,
     /**
-     * @brief warning
-     * @details This means that you executed an illegal operation.
+     * @brief Warning.
+     * @details This means that you executed an illegal operation. For example, 
+     * invalid combinations about arguments.
      */
     WARN_ILLEGAL_OPERATION,
     /**
-     * @brief warning.
-     * @details The process could not be executed because the invariant was violated if the process was being executed. 
-     * But it's not a fatal problem. It's just a warning.
-     */
-    WARN_INVARIANT,
-    /**
-     * @brief warning
-     * @details
-     * @a init : The args as a log directory path is invalid. @n
+     * @brief Warning.
+     * @details The arguments of api is invalid.
      */
     WARN_INVALID_ARGS,
     /**
-     * @brief warning.
-     * @details
-     * @a close_scan : The handle is invalid. @n
-     * @a read_from_scan : The handle is invalid. @n
+     * @brief Warning.
+     * @details The handle of arguments for api is invalid.
      */
     WARN_INVALID_HANDLE,
     /**
-     * @brief warning
-     * @details The status that the user calls api which needs tx_begin and some operations.
+     * @brief Warning
+     * @details The status that the user calls api which needs tx_begin and 
+     * some operations.
      */
     WARN_NOT_BEGIN,
     /**
-     * @brief warning
-     * @details
-     * @a delete_record : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
-     * @a open_scan : The scan couldn't find any records. @n
-     * @a search_key : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
-     * @a update : No corresponding record in masstree. If you have problem by WARN_NOT_FOUND, you should do abort. @n
+     * @brief Warning
+     * @details The target is not found.
      */
     WARN_NOT_FOUND,
     /**
-     * @brief warning
-     * @details
+     * @brief Warning
+     * @details 
      * @a leave : If the session is already ended. @n
      */
     WARN_NOT_IN_A_SESSION,
     /**
-     * @brief warning
+     * @brief Warning
      * @details If it calls fin function without init, 
      * this status is returned.
      */
     WARN_NOT_INIT,
     /**
-     * @brief warning
-     * @details When a batch mode transaction tries to start 
+     * @brief Warning
+     * @details When a long tx mode's transaction tries to start 
      * an operation, the status is returned if it is not yet 
      * time to start.
      */
     WARN_PREMATURE,
     /**
      * @brief waring
-     * @details
-     * @a read_from_scan : It read the records from own 
-     * preceding write. @n
-     * @a insert : operation in the same tx. @n
-     * @a update : operation in the same tx. @n
-     * @a upsert : operation in the same tx. @n
+     * @details It read the records from own preceding write. @n
      */
     WARN_READ_FROM_OWN_OPERATION,
     /**
-     * @brief warning
+     * @brief Warning
      * @details
-     * @a open_scan : The scan could find some records but could not preserve result due to capacity limitation. @n
+     * @a open_scan : The scan could find some records but could not preserve 
+     * result due to capacity limitation. @n
      * @a read_from_scan : It have read all records in range of open_scan. @n
      */
     WARN_SCAN_LIMIT,
     /**
-     * @brief warning
+     * @brief Warning
      * @details The target storage of operation is not found.
      */
     WARN_STORAGE_NOT_FOUND,
     /**
-     * @brief warning
+     * @brief Warning
      * @details Wait for some tx to commit.
      */
     WARN_WAITING_FOR_OTHER_TX,
     /**
-     * @brief warning
+     * @brief Warning
      * @details
      * @a update : It already executed update/insert, so it up date the value 
      * which is going to be updated. @n
@@ -250,7 +231,7 @@ enum class Status : std::int32_t {
      */
     WARN_WRITE_TO_LOCAL_WRITE,
     /**
-     * @brief warning
+     * @brief Warning
      * @details If the long mode transaction tries to write to some area 
      * without wp, this code will be returned.
      */
@@ -260,47 +241,58 @@ enum class Status : std::int32_t {
      */
     OK,
     /**
-     * @brief error
+     * @brief Error
      * @details This means conflicts on write preserve and tx was executed 
      * abort process internally.
      */
     ERR_CONFLICT_ON_WRITE_PRESERVE,
     /**
-     * @brief error
+     * @brief Error
      * @details This means that wp failed.
      */
     ERR_FAIL_WP,
+    /**
+     * @brief Error
+     * @details Some fatal error. For example, programming error.
+     */
     ERR_FATAL,
     /**
-     * @brief error
+     * @brief Error
+     * @details The unknown fatal error about index.
+     */
+    ERR_FATAL_INDEX,
+    /**
+     * @brief Error
      * @details This means that it is not implemented.
      */
     ERR_NOT_IMPLEMENTED,
     /**
-     * @brief error
+     * @brief Error
      * @details
      * @a read_from_scan : It is the error due to phantom problems. @n
      * @a scan_key : It is the error due to phantom problems. @n
      */
     ERR_PHANTOM,
     /**
-     * @brief error
+     * @brief Error
      * @details
      * @a enter : There are no capacity of session. @n
      */
     ERR_SESSION_LIMIT,
     /**
-     * @brief error
+     * @brief Error
      * @details
-     * @a commit : This means read validation failure and it already executed abort(). After this, do tx_begin to start
-     * next transaction or leave to leave the session. @n
+     * @a commit : This means read validation failure and it already executed 
+     * abort(). After this, do tx_begin to start next transaction or leave to 
+     * leave the session. @n
      */
     ERR_VALIDATION,
     /**
-     * @brief error
+     * @brief Error
      * @details
-     * @a commit : This transaction including update operations was interrupted by some delete transaction between
-     * read phase and validation phase. So it called abort. @n
+     * @a commit : This transaction including update operations was interrupted 
+     * by some delete transaction between read phase and validation phase. 
+     * So it called abort. @n
      */
     ERR_WRITE_TO_DELETED_RECORD,
     INTERNAL_BEGIN = 100000,
@@ -324,8 +316,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_ALREADY_INIT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_INSERT:
             return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
-        case Status::WARN_CANCEL_PREVIOUS_OPERATION:
-            return "WARN_CANCEL_PREVIOUS_OPERATION"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_UPDATE:
             return "WARN_CANCEL_PREVIOUS_UPDATE"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:
@@ -336,8 +326,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
         case Status::WARN_ILLEGAL_OPERATION:
             return "WARN_ILLEGAL_OPERATION"sv; // NOLINT
-        case Status::WARN_INVARIANT:
-            return "WARN_INVARIANT"sv; // NOLINT
         case Status::WARN_INVALID_ARGS:
             return "WARN_INVALID_ARGS"sv; // NOLINT
         case Status::WARN_INVALID_HANDLE:
@@ -372,6 +360,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_FATAL:
             return "ERR_FATAL"sv; // NOLINT
+        case Status::ERR_FATAL_INDEX:
+            return "ERR_FATAL_INDEX"sv; // NOLINT
         case Status::ERR_NOT_IMPLEMENTED:
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
