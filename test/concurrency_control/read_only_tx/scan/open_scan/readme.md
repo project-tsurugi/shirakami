@@ -1,5 +1,5 @@
 # naming convention
-* slos
-  + single long open scan
+* sros
+  + single read only open scan
 * hdr
   + head deleted records

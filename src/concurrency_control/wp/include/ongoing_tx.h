@@ -110,6 +110,11 @@ public:
         tx_info_.emplace_back(ti);
     }
 
+    static void push_bringing_lock(tx_info_elem_type ti) {
+        if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
+        tx_info_.emplace_back(ti);
+    }
+
     static void remove_id(std::size_t id) {
         std::lock_guard<std::shared_mutex> lk{mtx_};
         epoch::epoch_t lep{0};

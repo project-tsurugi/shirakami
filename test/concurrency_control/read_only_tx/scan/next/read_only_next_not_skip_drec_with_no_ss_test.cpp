@@ -16,14 +16,14 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class long_next_not_skip_drec_with_no_ss_test
+class read_only_next_not_skip_drec_with_no_ss_test
     : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-long_tx-"
-                "scan-next-long_next_not_skip_drec_with_no_ss_test");
+                "shirakami-test-concurrency_control-read_only_tx-"
+                "scan-next-read_only_next_not_skip_drec_with_no_ss_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -38,8 +38,8 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
-       next_not_skip_1_drec) {                  // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
+       next_not_skip_1_drec) {                       // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -64,7 +64,7 @@ TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
         wait_epoch_update();
 
         ScanHandle hd{};
@@ -87,8 +87,8 @@ TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
-       next_not_skip_2_drec) {                  // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
+       next_not_skip_2_drec) {                       // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -116,7 +116,7 @@ TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
         wait_epoch_update();
 
         ScanHandle hd{};
@@ -139,8 +139,8 @@ TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
-       next_not_skip_3_drec) {                  // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
+       next_not_skip_3_drec) {                       // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -171,7 +171,7 @@ TEST_F(long_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
         wait_epoch_update();
 
         ScanHandle hd{};

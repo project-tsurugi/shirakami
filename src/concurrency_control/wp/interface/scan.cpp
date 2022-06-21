@@ -53,7 +53,8 @@ Status check_not_found(
         if (!tid.get_absent()) {
             // inserted page.
             if (ti->get_tx_type() == TX_TYPE::SHORT) { return Status::OK; }
-            if (ti->get_tx_type() == TX_TYPE::LONG) {
+            if (ti->get_tx_type() == TX_TYPE::LONG ||
+                ti->get_tx_type() == TX_TYPE::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) {
                     // latest version check
                     return Status::OK;
@@ -80,7 +81,8 @@ Status check_not_found(
             }
         } else {
             // absent && not latest == deleted
-            if (ti->get_tx_type() == TX_TYPE::LONG) {
+            if (ti->get_tx_type() == TX_TYPE::LONG ||
+                ti->get_tx_type() == TX_TYPE::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
                     version* ver = rec_ptr->get_latest();
@@ -110,7 +112,8 @@ Status open_scan(Token const token, Storage storage,
     }
     ti->process_before_start_step();
 
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
+    if (ti->get_tx_type() == TX_TYPE::LONG ||
+        ti->get_tx_type() == TX_TYPE::READ_ONLY) {
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }
@@ -147,6 +150,7 @@ Status open_scan(Token const token, Storage storage,
         return rc;
     }
 
+    // check read information
     if (ti->get_tx_type() == TX_TYPE::LONG) {
         wp::page_set_meta* psm{};
         rc = wp::find_page_set_meta(storage, psm);
@@ -167,9 +171,7 @@ Status open_scan(Token const token, Storage storage,
                 std::make_tuple(rrbp, l_key, l_end, r_key, r_end));
         // include false positive
         ti->get_point_read_by_long_set().emplace_back(prbp);
-    }
-
-    else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
         if (rc == Status::WARN_NOT_FOUND) {
@@ -178,7 +180,7 @@ Status open_scan(Token const token, Storage storage,
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
         ti->get_range_read_by_short_set().emplace_back(rrbs);
-    } else {
+    } else if (ti->get_tx_type() != TX_TYPE::READ_ONLY) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
@@ -275,7 +277,8 @@ Status next(Token const token, ScanHandle const handle) {
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             if (ti->get_tx_type() == TX_TYPE::SHORT) { break; }
-            if (ti->get_tx_type() == TX_TYPE::LONG) {
+            if (ti->get_tx_type() == TX_TYPE::LONG ||
+                ti->get_tx_type() == TX_TYPE::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) { break; }
                 version* ver = rec_ptr->get_latest();
                 for (;;) {
@@ -303,7 +306,8 @@ Status next(Token const token, ScanHandle const handle) {
             if (ti->get_tx_type() == TX_TYPE::SHORT) { break; }
         } else {
             // absent && not latest == deleted
-            if (ti->get_tx_type() == TX_TYPE::LONG) {
+            if (ti->get_tx_type() == TX_TYPE::LONG ||
+                ti->get_tx_type() == TX_TYPE::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
                     version* ver = rec_ptr->get_latest();
@@ -446,7 +450,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             }
             break;
         }
-    } else {
+    } else if (ti->get_tx_type() != TX_TYPE::READ_ONLY) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
@@ -499,7 +503,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->process_before_finish_step();
         return Status::OK;
     }
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
+    if (ti->get_tx_type() == TX_TYPE::LONG ||
+        ti->get_tx_type() == TX_TYPE::READ_ONLY) {
         version* ver{};
         bool is_latest{false};
         tid_word f_check{};

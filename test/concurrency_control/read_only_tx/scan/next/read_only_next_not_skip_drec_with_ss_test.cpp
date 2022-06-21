@@ -16,7 +16,8 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class next_test : public ::testing::Test { // NOLINT
+class read_only_next_not_skip_drec_with_ss_test
+    : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
@@ -36,7 +37,8 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(next_test, next_not_skip_1_drec) { // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
+       next_not_skip_1_drec) {                    // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -54,7 +56,7 @@ TEST_F(next_test, next_not_skip_1_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -82,7 +84,8 @@ TEST_F(next_test, next_not_skip_1_drec) { // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(next_test, next_not_skip_2_drec) { // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
+       next_not_skip_2_drec) {                    // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -102,7 +105,7 @@ TEST_F(next_test, next_not_skip_2_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -134,7 +137,8 @@ TEST_F(next_test, next_not_skip_2_drec) { // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(next_test, next_not_skip_3_drec) { // NOLINT
+TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
+       next_not_skip_3_drec) {                    // NOLINT
     Storage st{};
     register_storage(st);
     Token s{};
@@ -156,7 +160,7 @@ TEST_F(next_test, next_not_skip_3_drec) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {}));
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY, {}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));

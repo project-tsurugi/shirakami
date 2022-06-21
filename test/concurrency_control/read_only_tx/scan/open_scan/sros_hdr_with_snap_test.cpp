@@ -20,9 +20,10 @@ class open_scan_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
-                                  "scan-c_open_scan_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only_tx-"
+                "scan-open_scan-sros_hdr_with_snap_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -64,7 +65,7 @@ TEST_F(open_scan_test,           // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::READ_ONLY));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -109,7 +110,7 @@ TEST_F(open_scan_test,           // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::READ_ONLY));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -160,7 +161,7 @@ TEST_F(open_scan_test,             // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_change_epoch();
 
-        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(ls, TX_TYPE::READ_ONLY));
         wait_change_epoch();
 
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));

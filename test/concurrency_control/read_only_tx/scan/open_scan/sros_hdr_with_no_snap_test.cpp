@@ -20,8 +20,9 @@ class open_scan_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
-                                  "scan-c_open_scan_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only-"
+                "scan-open_scan-sros_hdr_with_no_snap_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -69,7 +70,7 @@ TEST_F(open_scan_test,                   // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -110,7 +111,7 @@ TEST_F(open_scan_test,                   // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -154,7 +155,7 @@ TEST_F(open_scan_test,                     // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",

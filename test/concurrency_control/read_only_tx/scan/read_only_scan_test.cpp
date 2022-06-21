@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
@@ -26,11 +27,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class single_long_scan_test : public ::testing::Test { // NOLINT
+class read_only_scan_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "single_long_scan_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only_tx-"
+                "scan-read_only_scan_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -45,39 +47,56 @@ private:
     static inline std::once_flag init_google;
 };
 
-void wait_change_epoch() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
-TEST_F(single_long_scan_test, start_before_epoch) { // NOLINT
+TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
         ScanHandle hd{};
         ASSERT_EQ(Status::WARN_PREMATURE,
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
-    } // start epoch
-    wait_change_epoch();
-    ASSERT_EQ(Status::OK, commit(s));
+    }
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_scan_test, no_page_before_long_tx_begin) { // NOLINT
+TEST_F(read_only_scan_test, start_before_epoch_long_tx_exist) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ScanHandle hd{};
+    {
+        std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
+        ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+        ASSERT_EQ(Status::WARN_PREMATURE,
+                  open_scan(s, st, "", scan_endpoint::INF, "",
+                            scan_endpoint::INF, hd));
+    } // start epoch
+    wait_epoch_update();
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(read_only_scan_test, no_page_before_read_only_tx_begin) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
-    wait_change_epoch();
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+    wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));
@@ -85,7 +104,8 @@ TEST_F(single_long_scan_test, no_page_before_long_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
+TEST_F(read_only_scan_test,
+       write_one_page_before_read_only_tx_begin) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
@@ -95,8 +115,8 @@ TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
     std::string v{"v"};
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
-    wait_change_epoch();
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+    wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -110,12 +130,12 @@ TEST_F(single_long_scan_test, write_one_page_before_long_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_scan_test,                              // NOLINT
-       write_one_page_between_long_begin_and_long_start) { // NOLINT
+TEST_F(read_only_scan_test,                                      // NOLINT
+       write_one_page_between_read_only_begin_and_valid_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token ss{}; // short
-    Token sl{}; // long
+    Token sl{}; // read_only
     ASSERT_EQ(Status::OK, enter(ss));
     ASSERT_EQ(Status::OK, enter(sl));
     // prepare data
@@ -123,11 +143,11 @@ TEST_F(single_long_scan_test,                              // NOLINT
     std::string v{"v"};
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {st}));
+        ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY));
         ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
         ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     }
-    wait_change_epoch();
+    wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(sl, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -137,30 +157,28 @@ TEST_F(single_long_scan_test,                              // NOLINT
     ASSERT_EQ(Status::OK, read_value_from_scan(sl, hd, sb));
     ASSERT_EQ(sb, v);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(sl, hd));
-    ASSERT_EQ(Status::OK, commit(sl));
     ASSERT_EQ(Status::OK, leave(ss));
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-TEST_F(single_long_scan_test,                       // NOLINT
-       write_one_page_between_long_start_and_inf) { // NOLINT
+TEST_F(read_only_scan_test,                // NOLINT
+       write_one_page_after_valid_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token ss{}; // short
-    Token sl{}; // long
+    Token sl{}; // read_only
     ASSERT_EQ(Status::OK, enter(ss));
     ASSERT_EQ(Status::OK, enter(sl));
     // prepare data
     std::string k{"k"};
     std::string v{"v"};
-    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::LONG, {st}));
-    wait_change_epoch();
+    ASSERT_EQ(Status::OK, tx_begin(sl, TX_TYPE::READ_ONLY));
+    wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(sl, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));
-    ASSERT_EQ(Status::OK, commit(sl));
     ASSERT_EQ(Status::OK, leave(ss));
     ASSERT_EQ(Status::OK, leave(sl));
 }

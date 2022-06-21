@@ -21,7 +21,7 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
 
 Status tx_begin(session* const ti,
                 std::vector<Storage> write_preserve) { // NOLINT
-    // get wp mutex
+    // get wp mutex, exclude long tx's coming and epoch update
     auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
 
     // get long tx id
