@@ -167,8 +167,8 @@ Status open_scan(Token const token, Storage storage,
           * read_from_scan, and the range is fixed and registered at the end of 
           * the transaction.
           */
-        ti->get_range_read_by_long_set().emplace_back(
-                std::make_tuple(rrbp, l_key, l_end, r_key, r_end));
+        ti->get_range_read_by_long_set().insert(std::make_tuple(
+                rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
         // include false positive
         ti->get_point_read_by_long_set().insert(prbp);
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {

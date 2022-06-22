@@ -114,6 +114,7 @@ Status init() {
 Status write_preserve(Token token, std::vector<Storage> storage,
                       std::size_t long_tx_id, epoch::epoch_t valid_epoch) {
     // decide storage form
+    // reduce redundant
     auto* ti = static_cast<session*>(token);
     std::sort(storage.begin(), storage.end());
     storage.erase(std::unique(storage.begin(), storage.end()), storage.end());

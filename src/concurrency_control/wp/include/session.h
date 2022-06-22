@@ -38,8 +38,8 @@ public:
                                                 yakushima::node_version64*>>;
     using point_read_by_long_set_type = std::set<point_read_by_long*>;
     using range_read_by_long_set_type =
-            std::vector<std::tuple<range_read_by_long*, std::string,
-                                   scan_endpoint, std::string, scan_endpoint>>;
+            std::set<std::tuple<range_read_by_long*, std::string, scan_endpoint,
+                                std::string, scan_endpoint>>;
     using point_read_by_short_set_type = std::set<point_read_by_short*>;
     using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
@@ -450,7 +450,7 @@ private:
     /**
      * @brief local wp set.
      * @details If this session processes long transaction in a long tx mode and 
-     * executes transactional write operations, it is for cheking whether the 
+     * executes transactional write operations, it is for checking whether the 
      * target of the operation was write preserved properly by use this 
      * infomation.
      */
