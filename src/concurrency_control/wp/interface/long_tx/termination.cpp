@@ -214,14 +214,6 @@ void register_read_by(session* const ti) {
     }
 }
 
-void prepare_commit(session* const ti) {
-    // optimizations
-    // shrink read_by_set
-    auto& rbset = ti->get_point_read_by_long_set();
-    std::sort(rbset.begin(), rbset.end());
-    rbset.erase(std::unique(rbset.begin(), rbset.end()), rbset.end());
-}
-
 Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
     auto this_id = ti->get_long_tx_id();
@@ -336,7 +328,6 @@ extern Status commit(session* const ti, // NOLINT
      * WP2: If it is possible to prepend the order, it waits for a transaction 
      * with a higher priority than itself to finish the operation.
      */
-    prepare_commit(ti);
     auto rc = check_wait_for_preceding_bt(ti);
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);

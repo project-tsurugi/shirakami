@@ -20,8 +20,8 @@
 #endif
 
 #include "concurrency_control/wp/include/read_by.h"
-#include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/scan.h"
+#include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/scheme.h"
@@ -36,7 +36,7 @@ class alignas(CACHE_LINE_SIZE) session {
 public:
     using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
                                                 yakushima::node_version64*>>;
-    using point_read_by_long_set_type = std::vector<point_read_by_long*>;
+    using point_read_by_long_set_type = std::set<point_read_by_long*>;
     using range_read_by_long_set_type =
             std::vector<std::tuple<range_read_by_long*, std::string,
                                    scan_endpoint, std::string, scan_endpoint>>;
@@ -265,7 +265,9 @@ public:
 
     void set_tx_state_if_valid(TxState::StateKind st) const {
         if (get_has_current_tx_state_handle()) {
-            get_current_tx_state_ptr()->set_kind(st);
+            if (get_current_tx_state_ptr()->state_kind() != st) {
+                get_current_tx_state_ptr()->set_kind(st);
+            }
         }
     }
 

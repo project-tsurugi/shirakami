@@ -170,7 +170,7 @@ Status open_scan(Token const token, Storage storage,
         ti->get_range_read_by_long_set().emplace_back(
                 std::make_tuple(rrbp, l_key, l_end, r_key, r_end));
         // include false positive
-        ti->get_point_read_by_long_set().emplace_back(prbp);
+        ti->get_point_read_by_long_set().insert(prbp);
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
