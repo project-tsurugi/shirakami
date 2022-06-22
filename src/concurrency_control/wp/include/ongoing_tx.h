@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -74,10 +75,14 @@ public:
         return false;
     }
 
-    static bool exist_preceding_id(std::size_t id) {
+    static bool exist_preceding_id(std::size_t id,
+                                   std::set<std::size_t> const& wait_for) {
         std::shared_lock<std::shared_mutex> lk{mtx_};
         for (auto&& elem : tx_info_) {
-            if (elem.second < id) { return true; }
+            if (wait_for.find(elem.second) != wait_for.end()) {
+                // wait_for hit.
+                if (elem.second < id) { return true; }
+            }
         }
         return false;
     }

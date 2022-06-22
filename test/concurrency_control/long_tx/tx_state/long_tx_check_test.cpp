@@ -107,13 +107,28 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     // prepare
     Token s1{};
     Token s2{};
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG, {st}));
     ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s2, hd));
     wait_epoch_update();
+    // ==============================
+
+    // ==============================
+    // test
+    // occur forwarding
+    std::string sbuf{};
+    ASSERT_EQ(Status::OK, search_key(s2, st, "", sbuf));
+    // must wait high priori ltx due to forwarding
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, tx_check(hd, buf));

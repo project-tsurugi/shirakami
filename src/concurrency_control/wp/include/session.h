@@ -95,6 +95,13 @@ public:
     void clear_tx_property();
 
     /**
+     * @brief extract wait_for from overtaken_ltx_set_.
+     * 
+     * @return std::set<std::size_t> 
+     */
+    std::set<std::size_t> extract_wait_for();
+
+    /**
      * @brief long tx find high priority short.
      * @pre This is called by long tx.
      * @return Status::OK success

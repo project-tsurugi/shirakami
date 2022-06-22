@@ -311,7 +311,8 @@ Status verify_read_by(session* const ti) {
 }
 
 Status check_wait_for_preceding_bt(session* const ti) {
-    if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id())) {
+    if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id(),
+                                       ti->extract_wait_for())) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
     return Status::OK;

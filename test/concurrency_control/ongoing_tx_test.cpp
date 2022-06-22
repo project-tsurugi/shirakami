@@ -34,9 +34,9 @@ private:
 
 TEST_F(ongoing_tx_test, exist_preceding_id_test) { // NOLINT
     ongoing_tx::push({1, 1});
-    ASSERT_EQ(ongoing_tx::exist_preceding_id(2), true);
+    ASSERT_EQ(ongoing_tx::exist_preceding_id(2, {1}), true);
     ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::exist_preceding_id(2), false);
+    ASSERT_EQ(ongoing_tx::exist_preceding_id(2, {1}), false);
 }
 
 TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT

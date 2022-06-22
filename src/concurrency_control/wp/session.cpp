@@ -28,6 +28,15 @@ void session::clear_local_set() {
 
 void session::clear_tx_property() { set_tx_began(false); }
 
+std::set<std::size_t> session::extract_wait_for() {
+    // extract wait for
+    std::set<std::size_t> wait_for;
+    for (auto&& each_pair : get_overtaken_ltx_set()) {
+        for (auto&& each_id : each_pair.second) { wait_for.insert(each_id); }
+    }
+    return wait_for;
+}
+
 Status session::find_high_priority_short() const {
     if (get_tx_type() == TX_TYPE::SHORT) {
         LOG(ERROR) << "programming error";

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
@@ -32,8 +33,8 @@ using namespace shirakami;
 class long_commit_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-long_commit_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "termination-long_commit_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -55,17 +56,9 @@ TEST_F(long_commit_test, commit_long_long_low_high) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
     ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
-    auto wait_next_epoch = []() {
-        auto ep{epoch::get_global_epoch()};
-        for (;;) {
-            if (ep != epoch::get_global_epoch()) { break; }
-            _mm_pause();
-        }
-    };
-    wait_next_epoch();
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
-    ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -77,16 +70,9 @@ TEST_F(long_commit_test, commit_long_long_high_low) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
     ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
-    auto wait_next_epoch = []() {
-        auto ep{epoch::get_global_epoch()};
-        for (;;) {
-            if (ep != epoch::get_global_epoch()) { break; }
-            _mm_pause();
-        }
-    };
-    wait_next_epoch();
-    ASSERT_EQ(Status::OK, commit(s1));                        // NOLINT
-    ASSERT_EQ(Status::OK, commit(s2));                        // NOLINT
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
