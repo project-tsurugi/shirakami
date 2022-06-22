@@ -9,17 +9,17 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/record.h"
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
 
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
+
+#include "yakushima/include/kvs.h"
 
 #include "gtest/gtest.h"
 
@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class upsert_test : public ::testing::Test { // NOLINT
+class single_long_upsert_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-upsert_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
+                                  "single_long_upsert_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -45,33 +45,23 @@ public:
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_google; // NOLINT
+    static inline std::once_flag init_google;
 };
 
-TEST_F(upsert_test, occ_simple) { // NOLINT
+TEST_F(single_long_upsert_test, start_before_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    std::string k{"k"};
-    std::string v{"v"};
-    ASSERT_EQ(upsert(s, st, k, v), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s));
-
-    // verify result
-    Record* rec{};
-    ASSERT_EQ(Status::OK, get<Record>(st, k, rec));
-    ASSERT_NE(rec, nullptr);
-    std::string vb{};
-    rec->get_latest()->get_value(vb);
-    ASSERT_EQ(vb, v);
-    std::string kb{};
-    rec->get_key(kb);
-    ASSERT_EQ(kb, k);
-
+    {
+        std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
+        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+        ASSERT_EQ(Status::WARN_PREMATURE, upsert(s, st, "", ""));
+    } // start epoch
     ASSERT_EQ(Status::OK, leave(s));
 }
-TEST_F(upsert_test, bt_simple) { // NOLINT
+
+TEST_F(single_long_upsert_test, long_simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
     Token s{};
@@ -80,16 +70,6 @@ TEST_F(upsert_test, bt_simple) { // NOLINT
     std::string v{"v"};
     ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
 
-    auto wait_epoch_update = []() {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce == epoch::get_global_epoch()) {
-                _mm_pause();
-            } else {
-                break;
-            }
-        }
-    };
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
 

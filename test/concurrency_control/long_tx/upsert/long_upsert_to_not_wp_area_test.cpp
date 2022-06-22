@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
@@ -56,20 +57,13 @@ TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
     std::string v{"v"};
     // upsert with no wp
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
-    auto wait_change_epoch = []() {
-        auto ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce != epoch::get_global_epoch()) { break; }
-            _mm_pause();
-        }
-    };
-    wait_change_epoch();
+    wait_epoch_update();
     ASSERT_EQ(upsert(s, st_1, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // upsert with invalid wp
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st_1}));
-    wait_change_epoch();
+    wait_epoch_update();
     ASSERT_EQ(upsert(s, st_2, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
