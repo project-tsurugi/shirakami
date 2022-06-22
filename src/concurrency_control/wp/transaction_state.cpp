@@ -2,6 +2,7 @@
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
 
 #include "shirakami/interface.h"
 
@@ -82,8 +83,7 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             out.set_kind(TxState::StateKind::STARTED); // for external
         } else if (ts.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) {
             auto* ti = static_cast<session*>(ts.get_token());
-            if (ongoing_tx::exist_preceding_id(ti->get_long_tx_id(),
-                                               ti->extract_wait_for())) {
+            if (long_tx::check_wait_for_preceding_bt(ti) != Status::OK) {
                 // not change
                 out.set_kind(
                         TxState::StateKind::WAITING_CC_COMMIT); // for external

@@ -18,7 +18,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
                                   "ongoing_tx_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -32,11 +32,11 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(ongoing_tx_test, exist_preceding_id_test) { // NOLINT
+TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     ongoing_tx::push({1, 1});
-    ASSERT_EQ(ongoing_tx::exist_preceding_id(2, {1}), true);
+    ASSERT_EQ(ongoing_tx::exist_wait_for(2, 2, false, {1}), true);
     ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::exist_preceding_id(2, {1}), false);
+    ASSERT_EQ(ongoing_tx::exist_wait_for(2, 2, false, {1}), false);
 }
 
 TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT

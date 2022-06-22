@@ -116,8 +116,9 @@ TEST_F(shirakami_test,                         // NOLINT
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
 
-    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

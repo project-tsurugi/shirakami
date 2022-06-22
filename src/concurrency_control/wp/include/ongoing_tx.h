@@ -75,13 +75,31 @@ public:
         return false;
     }
 
-    static bool exist_preceding_id(std::size_t id,
-                                   std::set<std::size_t> const& wait_for) {
+    /**
+     * @brief 
+     * 
+     * @param id This tx's id.
+     * @param ep This tx's serialization epoch.
+     * @param has_wp Whether this tx has wp.
+     * @param wait_for Overwrites of this tx's read.
+     * @return true It exists transactions to wait.
+     * @return false It doesn't exist transactions to wait.
+     */
+    static bool exist_wait_for(std::size_t id, epoch::epoch_t ep,
+                               bool has_wp,
+                               std::set<std::size_t> const& wait_for) {
         std::shared_lock<std::shared_mutex> lk{mtx_};
         for (auto&& elem : tx_info_) {
+            // check overwrites
             if (wait_for.find(elem.second) != wait_for.end()) {
                 // wait_for hit.
                 if (elem.second < id) { return true; }
+            }
+            if (has_wp) {
+                // check potential read-anti
+                if (elem.second < id) {
+                    if (ep <= elem.first) { return true; }
+                }
             }
         }
         return false;
