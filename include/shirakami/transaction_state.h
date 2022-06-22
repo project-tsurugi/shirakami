@@ -141,8 +141,15 @@ public:
         return Status::WARN_INVALID_HANDLE;
     }
 
+    /**
+     * @brief Initialization needed at shirakami initialization.
+     */    
     static void init() {
+        // initialize counter
         handle_ctr_.store(handle_initial_value, std::memory_order_release);
+
+        // initialize reuse system for number of counter
+        reuse_ctr_container_.clear();
     }
 
     static void insert_tx_state(TxStateHandle hd) {

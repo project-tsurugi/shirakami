@@ -2,6 +2,8 @@
 #include "include/session.h"
 #include "include/tuple_local.h"
 
+#include "shirakami/interface.h"
+
 namespace shirakami {
 
 Status session_table::decide_token(Token& token) { // NOLINT
@@ -35,7 +37,17 @@ void session_table::fin_session_table() {
     std::vector<std::thread> th_vc;
     th_vc.reserve(get_session_table().size());
     for (auto&& itr : get_session_table()) {
-        auto process = [&itr]() { itr.clear_local_set(); };
+        auto process = [&itr]() {
+            // about local set
+            itr.clear_local_set();
+
+            // about tx state
+            if (itr.get_has_current_tx_state_handle()) {
+                // If user forget to cleanup about tx state, shirakami do
+                // automatically.
+                release_tx_state_handle(itr.get_current_tx_state_handle());
+            }
+        };
         th_vc.emplace_back(process);
     }
 
