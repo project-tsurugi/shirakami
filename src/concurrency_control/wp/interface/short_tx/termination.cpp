@@ -245,17 +245,9 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
 void register_point_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
-    std::vector<Record*> recs{};
-    for (auto&& itr : ti->get_read_set()) {
-        recs.emplace_back(itr.get_rec_ptr());
-    }
+    std::set<Record*> recs{};
+    for (auto&& itr : ti->get_read_set()) { recs.insert(itr.get_rec_ptr()); }
 
-    /**
-     * Since the registration of read_by involves an exclusive lock, the 
-     * redundancy is deleted. 
-     */
-    std::sort(recs.begin(), recs.end());
-    recs.erase(std::unique(recs.begin(), recs.end()), recs.end());
     for (auto&& itr : recs) {
         auto& ro{itr->get_read_by()};
         ro.push(ce);
@@ -265,10 +257,7 @@ void register_point_read_by_short(session* const ti) {
 void register_range_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
-    auto& cont = ti->get_range_read_by_short_set();
-    std::sort(cont.begin(), cont.end());
-    cont.erase(std::unique(cont.begin(), cont.end()), cont.end());
-    for (auto&& itr : cont) { itr->push(ce); }
+    for (auto&& itr : ti->get_range_read_by_short_set()) { itr->push(ce); }
 }
 
 extern Status commit(session* ti, // NOLINT

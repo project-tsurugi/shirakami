@@ -179,7 +179,7 @@ Status open_scan(Token const token, Storage storage,
             return Status::ERR_FATAL;
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
-        ti->get_range_read_by_short_set().emplace_back(rrbs);
+        ti->get_range_read_by_short_set().insert(rrbs);
     } else if (ti->get_tx_type() != TX_TYPE::READ_ONLY) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;

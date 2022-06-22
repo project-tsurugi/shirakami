@@ -40,8 +40,8 @@ public:
     using range_read_by_long_set_type =
             std::vector<std::tuple<range_read_by_long*, std::string,
                                    scan_endpoint, std::string, scan_endpoint>>;
-    using point_read_by_short_set_type = std::vector<point_read_by_short*>;
-    using range_read_by_short_set_type = std::vector<range_read_by_short*>;
+    using point_read_by_short_set_type = std::set<point_read_by_short*>;
+    using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     using overtaken_ltx_set_type =
