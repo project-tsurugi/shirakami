@@ -94,10 +94,12 @@ Status insert(Token const token, Storage const storage,
                         ti->get_point_read_by_long_set().insert(rbp);
                     } else {
                         LOG(ERROR) << "programming error";
+                        ti->process_before_finish_step();
                         return Status::ERR_FATAL;
                     }
                 } else {
                     LOG(ERROR) << "programming error";
+                    ti->process_before_finish_step();
                     return Status::ERR_FATAL;
                 }
             }

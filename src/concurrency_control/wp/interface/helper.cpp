@@ -41,7 +41,15 @@ Status check_before_write_ops(session* const ti, Storage const st,
         return Status::WARN_ILLEGAL_OPERATION;
     }
 
-    // batch check
+    // check storage and wp data
+    wp::wp_meta* wm{};
+    auto rc{wp::find_wp_meta(st, wm)};
+    if (rc == Status::WARN_NOT_FOUND) {
+        // no storage.
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+
+    // long check
     if (ti->get_tx_type() == TX_TYPE::LONG) {
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             // not in valid epoch.
@@ -53,12 +61,6 @@ Status check_before_write_ops(session* const ti, Storage const st,
         }
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         // check wp
-        wp::wp_meta* wm{};
-        auto rc{wp::find_wp_meta(st, wm)};
-        if (rc == Status::WARN_NOT_FOUND) {
-            // no storage.
-            return Status::WARN_STORAGE_NOT_FOUND;
-        }
         auto wps{wm->get_wped()};
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {

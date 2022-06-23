@@ -88,10 +88,22 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_delete_test, delete_at_non_existing_storage) { // NOLINT
+TEST_F(long_delete_test, delete_at_non_existing_storage_without_wp) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
+    wait_change_epoch();
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_delete_test, delete_at_existing_storage_without_wp) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {}));
     wait_change_epoch();
     ASSERT_EQ(Status::WARN_WRITE_WITHOUT_WP, delete_record(s, st, ""));
