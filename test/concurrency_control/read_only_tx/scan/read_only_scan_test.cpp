@@ -104,7 +104,7 @@ TEST_F(read_only_scan_test, no_page_before_read_only_tx_begin) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(read_only_scan_test,
+TEST_F(read_only_scan_test,                        // NOLINT
        write_one_page_before_read_only_tx_begin) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);

@@ -15,7 +15,7 @@ extern Status abort(session* ti);
 
 extern Status change_wp_epoch(session* ti, epoch::epoch_t target);
 
-extern Status check_wait_for_preceding_bt(session* const ti);
+extern Status check_wait_for_preceding_bt(session* ti);
 
 extern Status commit(session* ti, commit_param* cp);
 
