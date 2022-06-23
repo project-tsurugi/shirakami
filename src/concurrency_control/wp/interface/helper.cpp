@@ -63,6 +63,8 @@ Status check_before_write_ops(session* const ti, Storage const st,
         if (op != OP_TYPE::UPSERT) {
             // insert and delete with read
             // may need forwarding
+            rc = long_tx::wp_verify_and_forwarding(ti, wm);
+            if (rc != Status::OK) { return rc; }
         }
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         // check wp

@@ -170,10 +170,11 @@ TEST_F(long_insert_tx_test,                         // NOLINT
     std::string pk1{"pk1"};
     std::string pk2{"pk2"};
     ASSERT_EQ(insert(s1, st, pk1, ""), Status::OK);
-    ASSERT_EQ(insert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(insert(s2, st, pk2, ""), Status::OK);
 
-    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
