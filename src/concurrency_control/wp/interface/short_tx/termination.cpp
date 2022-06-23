@@ -65,15 +65,13 @@ Status read_verify(session* ti, tid_word read_tid, tid_word check,
     return Status::OK;
 }
 
-Status wp_verify(Storage const st, epoch::epoch_t const read_epoch,
-                 epoch::epoch_t const commit_epoch) {
+Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) { LOG(FATAL); }
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-    if (find_min_ep != 0 &&
-        (find_min_ep <= read_epoch || find_min_ep <= commit_epoch)) {
+    if (find_min_ep != 0 && find_min_ep <= commit_epoch) {
         return Status::ERR_VALIDATION;
     }
     return Status::OK;
@@ -82,6 +80,8 @@ Status wp_verify(Storage const st, epoch::epoch_t const read_epoch,
 Status read_wp_verify(session* const ti, epoch::epoch_t ce,
                       tid_word& commit_tid) {
     tid_word check{};
+    std::vector<Storage> accessed_st{};
+    // read verify
     for (auto&& itr : ti->get_read_set()) {
         auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
@@ -93,16 +93,22 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
             short_tx::abort(ti);
             return Status::ERR_VALIDATION;
         }
+        // ==============================
 
-        if (wp_verify(itr.get_storage(), itr.get_tid().get_epoch(), ce) !=
-            Status::OK) {
+        // log accessed storage
+        accessed_st.emplace_back(itr.get_storage());
+
+        // compute timestamp
+        commit_tid = std::max(check, commit_tid);
+    }
+
+    // wp verify
+    for (auto&& each_st : accessed_st) {
+        if (wp_verify(each_st, ce) != Status::OK) {
             unlock_write_set(ti);
             short_tx::abort(ti);
             return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
         }
-        // ==============================
-
-        commit_tid = std::max(check, commit_tid);
     }
 
     return Status::OK;
