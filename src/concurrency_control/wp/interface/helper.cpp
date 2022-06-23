@@ -9,6 +9,7 @@
 #include "include/helper.h"
 
 #include "concurrency_control/wp/include/epoch_internal.h"
+#include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
@@ -58,6 +59,10 @@ Status check_before_write_ops(session* const ti, Storage const st,
         if (!ti->check_exist_wp_set(st)) {
             // can't write without wp.
             return Status::WARN_WRITE_WITHOUT_WP;
+        }
+        if (op != OP_TYPE::UPSERT) {
+            // insert and delete with read
+            // may need forwarding
         }
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         // check wp

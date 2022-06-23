@@ -57,4 +57,15 @@ extern Status version_function_without_optimistic_check(epoch::epoch_t ep,
 extern Status version_traverse_and_read(session* ti, Record* rec_ptr,
                                         std::string& value, bool read_value);
 
+/**
+ * @brief 
+ * 
+ * @param ti 
+ * @param wp_meta_ptr
+ * @return Status Status::ERR_FAIL_WP Fail due to effective wp.
+ * @return Status Status::OK No effective wp or no wp.
+ */
+[[maybe_unused]] extern Status
+wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr);
+
 } // namespace shirakami::long_tx

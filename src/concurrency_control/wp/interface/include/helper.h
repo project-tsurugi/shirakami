@@ -6,6 +6,7 @@
 
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tid.h"
+#include "concurrency_control/wp/include/wp.h"
 
 namespace shirakami {
 
