@@ -70,6 +70,40 @@ TEST_F(long_upsert_test, long_simple) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(long_upsert_test,                              // NOLINT
+       same_key_same_epoch_io_low_high_co_high_low) { // NOLINT
+    /**
+     * There are two long tx.
+     * They are same epoch.
+     * They insert same key to the same storage.
+     * insert order low to high.
+     * Commit order is 1. high priority tx, 2. low priority tx.
+     */
+
+    Storage st{};
+    ASSERT_EQ(register_storage(st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    }
+    wait_epoch_update();
+
+    std::string pk1{"pk1"};
+    std::string pk2{"pk2"};
+    ASSERT_EQ(upsert(s2, st, pk1, ""), Status::OK);
+    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 TEST_F(long_upsert_test,                       // NOLINT
        different_key_same_epoch_co_high_low) { // NOLINT
     /**
@@ -95,7 +129,7 @@ TEST_F(long_upsert_test,                       // NOLINT
     std::string pk1{"pk1"};
     std::string pk2{"pk2"};
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, pk2, ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
@@ -128,7 +162,7 @@ TEST_F(long_upsert_test,                       // NOLINT
     std::string pk1{"pk1"};
     std::string pk2{"pk2"};
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, pk2, ""), Status::OK);
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
@@ -160,7 +194,7 @@ TEST_F(long_upsert_test,                            // NOLINT
     std::string pk1{"pk1"};
     std::string pk2{"pk2"};
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, pk2, ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
@@ -191,7 +225,7 @@ TEST_F(long_upsert_test,                            // NOLINT
     std::string pk1{"pk1"};
     std::string pk2{"pk2"};
     ASSERT_EQ(upsert(s1, st, pk1, ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, pk2, ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
