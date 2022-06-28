@@ -74,4 +74,34 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
     ASSERT_EQ(val, v);
 }
 
+TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
+    register_storage(storage);
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // verify
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k, vb));
+
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
+    register_storage(storage);
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+}
+
 } // namespace shirakami::testing
