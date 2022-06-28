@@ -57,14 +57,19 @@ private:
 
 class write_set_obj { // NOLINT
 public:
+    // for update / upsert / insert
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr, std::string_view const val)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {}
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {
+        if (op == OP_TYPE::DELETE) { LOG(ERROR) << "programming error"; }
+    }
 
     // for delete
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr) {}
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr) {
+        if (op != OP_TYPE::DELETE) { LOG(ERROR) << "programming error"; }
+    }
 
     write_set_obj(const write_set_obj& right) = delete;
     write_set_obj(write_set_obj&& right) = default;
@@ -90,19 +95,13 @@ public:
     [[nodiscard]] Storage get_storage() const { return storage_; }
 
     void get_value(std::string& out) const {
-        if (get_op() == OP_TYPE::INSERT) {
-            get_rec_ptr()->get_latest()->get_value(out);
-            return;
-        }
-        if (get_op() == OP_TYPE::UPSERT || get_op() == OP_TYPE::UPDATE) {
+        if (get_op() == OP_TYPE::INSERT || get_op() == OP_TYPE::UPSERT ||
+            get_op() == OP_TYPE::UPDATE) {
             out = val_;
             return;
         }
-        if (get_op() == OP_TYPE::DELETE) {
-            return;
-        }
-        LOG(FATAL) << "programming error";
-        std::abort();
+        if (get_op() == OP_TYPE::DELETE) { return; }
+        LOG(ERROR) << "programming error";
     }
 
     void set_op(OP_TYPE op) { op_ = op; }

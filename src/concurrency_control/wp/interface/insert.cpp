@@ -30,7 +30,7 @@ inline Status insert_process(session* const ti, Storage st,
             abort(ti);
             return Status::ERR_PHANTOM;
         }
-        ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr});
+        ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr, val});
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -77,7 +77,8 @@ Status insert(Token const token, Storage const storage,
             tid_word found_tid{};
             rc = try_deleted_to_inserted(rec_ptr, val, found_tid);
             if (rc == Status::OK) {
-                ti->get_write_set().push({storage, OP_TYPE::INSERT, rec_ptr});
+                ti->get_write_set().push(
+                        {storage, OP_TYPE::INSERT, rec_ptr, val});
                 ti->process_before_finish_step();
                 return Status::OK;
             }
