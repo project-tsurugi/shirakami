@@ -12,6 +12,13 @@ Record::~Record() {
     }
 }
 
+Record::Record(std::string_view const key) : key_(key) {
+    latest_.store(new version(), std::memory_order_release); // NOLINT
+    tidw_.set_lock(false);
+    tidw_.set_latest(true);
+    tidw_.set_absent(true);
+}
+
 Record::Record(std::string_view const key, std::string_view const val)
     : key_(key) {
     latest_.store(new version(val), std::memory_order_release); // NOLINT

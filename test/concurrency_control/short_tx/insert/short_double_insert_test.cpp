@@ -45,33 +45,25 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
     std::string v("v");
     Token s{};
     {
-#ifdef WP
         std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-#endif
         ASSERT_EQ(Status::OK, enter(s));
         ASSERT_EQ(Status::OK, insert(s, st, k, v));
         /**
           * this epoch is a.
           */
         ASSERT_EQ(Status::OK, abort(s));
-#ifdef WP
         // wp impl can convert deleted to insert.
         Record* rec_ptr{};
         ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
         tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         ASSERT_EQ(tid.get_absent(), true);
         ASSERT_EQ(tid.get_latest(), false);
-#else
-        // wait unhook by background thread
-        sleep(1);
-#endif
         ASSERT_EQ(Status::OK, insert(s, st, k, v));
     }
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-#ifdef WP
 TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
     Storage st{};
     register_storage(st);
@@ -92,6 +84,26 @@ TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
-#endif
 
+TEST_F(double_insert, insert_insert_conflict) { // NOLINT
+                                                // prepare
+    Storage st{};
+    register_storage(st);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
+
+    // test
+    // first inserter win
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    // second inserter lose
+    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
 } // namespace shirakami::testing

@@ -18,6 +18,8 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) version { // NOLINT
 public:
+    explicit version() { set_next(nullptr); }
+
     // for newly insert
     explicit version(std::string_view value) {
         set_value(value);

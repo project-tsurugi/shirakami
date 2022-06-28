@@ -350,26 +350,29 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     return Status::OK;
 }
 
-Status try_deleted_to_inserting(Record* const rec_ptr,
+Status try_deleted_to_inserting(TX_TYPE tp, Record* const rec_ptr,
                                 tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     // record found_tid
     found_tid = check;
 
-    // point 1
+    // point 1: pre-check
     if (check.get_latest() && check.get_absent()) {
         return Status::WARN_CONCURRENT_INSERT;
     }
     if (!check.get_absent()) { return Status::WARN_ALREADY_EXISTS; }
     // The page was deleted at point 1.
 
+    // lock
     rec_ptr->get_tidw_ref().lock();
-    // point 2
+
+    // point 2: main check with lock
     tid_word tid{rec_ptr->get_tidw_ref()};
     if (tid.get_absent()) {
         // success
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
+        if (tp == TX_TYPE::SHORT) { rec_ptr->get_tidw_ref().unlock(); }
         return Status::OK;
     }
     /**

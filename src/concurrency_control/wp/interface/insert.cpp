@@ -16,7 +16,13 @@ namespace shirakami {
 inline Status insert_process(session* const ti, Storage st,
                              const std::string_view key,
                              const std::string_view val) {
-    Record* rec_ptr = new Record(key, val); // NOLINT
+    Record* rec_ptr{};
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        rec_ptr = new Record(key); // NOLINT
+    } else {
+        rec_ptr = new Record(key, val); // NOLINT
+    }
+
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
         put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
@@ -75,7 +81,8 @@ Status insert(Token const token, Storage const storage,
             }
 
             tid_word found_tid{};
-            rc = try_deleted_to_inserting(rec_ptr, found_tid);
+            rc = try_deleted_to_inserting(ti->get_tx_type(), rec_ptr,
+                                          found_tid);
             if (rc == Status::OK) {
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
@@ -102,6 +109,13 @@ Status insert(Token const token, Storage const storage,
                     LOG(ERROR) << "programming error";
                     ti->process_before_finish_step();
                     return Status::ERR_FATAL;
+                }
+            } else if (rc == Status::WARN_CONCURRENT_INSERT) {
+                if (ti->get_tx_type() == TX_TYPE::SHORT) {
+                    ti->get_write_set().push(
+                            {storage, OP_TYPE::INSERT, rec_ptr, val});
+                    ti->process_before_finish_step();
+                    return Status::OK;
                 }
             }
             ti->process_before_finish_step();

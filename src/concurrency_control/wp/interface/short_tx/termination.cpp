@@ -118,18 +118,30 @@ Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t not_insert_locked_num{0};
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto* wso_ptr = &(elem);
-        if (wso_ptr->get_op() != OP_TYPE::INSERT) {
-            auto* rec_ptr{wso_ptr->get_rec_ptr()};
+        auto* rec_ptr{wso_ptr->get_rec_ptr()};
+        auto abort_process = [ti, wso_ptr, rec_ptr, &not_insert_locked_num]() {
+            if (not_insert_locked_num > 0) {
+                unlock_not_insert_records(ti, not_insert_locked_num);
+            }
+            short_tx::abort(ti);
+        };
+        if (wso_ptr->get_op() == OP_TYPE::INSERT) {
+            rec_ptr->get_tidw_ref().lock();
+            tid_word tid{rec_ptr->get_tidw_ref()};
+            if (!(tid.get_latest() && tid.get_absent())) {
+                // someone interrupt
+                rec_ptr->get_tidw_ref().unlock();
+                abort_process();
+                return Status::ERR_FAIL_INSERT;
+            }
+        } else {
             rec_ptr->get_tidw_ref().lock();
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++not_insert_locked_num;
             if ((wso_ptr->get_op() == OP_TYPE::UPDATE ||
                  wso_ptr->get_op() == OP_TYPE::DELETE) &&
                 rec_ptr->get_tidw_ref().get_absent()) {
-                if (not_insert_locked_num > 0) {
-                    unlock_not_insert_records(ti, not_insert_locked_num);
-                }
-                short_tx::abort(ti);
+                abort_process();
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
         }

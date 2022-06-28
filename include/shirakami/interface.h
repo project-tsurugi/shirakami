@@ -88,6 +88,8 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @pre you executed enter command, you didn't execute leave command.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
  * about write preserve by the transaction which is long tx mode.
+ * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
+ * operation of the transaction.
  * @return Status::ERR_FATAL Some programming error.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
  * problem.
