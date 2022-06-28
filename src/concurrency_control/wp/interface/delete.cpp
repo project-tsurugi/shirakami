@@ -32,7 +32,7 @@ inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
     tid_word delete_tid{};
     delete_tid.set_epoch(e);
     delete_tid.set_absent(true);
-    delete_tid.set_latest(true);
+    delete_tid.set_latest(false);
     delete_tid.set_lock(false);
     storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
 }
@@ -40,6 +40,7 @@ inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
+        ti->get_write_set().erase(wso);
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
