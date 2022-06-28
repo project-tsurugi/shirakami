@@ -143,7 +143,13 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
         tid_word update_tid{ti->get_mrc_tid()};
         switch (wso_ptr->get_op()) {
             case OP_TYPE::INSERT: {
+                // set timestamp
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
+
+                // set value
+                std::string vb{};
+                wso_ptr->get_value(vb);
+                wso_ptr->get_rec_ptr()->set_value(vb);
                 break;
             }
             case OP_TYPE::DELETE: {
@@ -175,11 +181,11 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    std::string vb{};
                     if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                        std::string vb{};
                         wso_ptr->get_value(vb);
+                        wso_ptr->get_rec_ptr()->set_value(vb);
                     }
-                    wso_ptr->get_rec_ptr()->set_value(vb);
                 }
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
                 break;

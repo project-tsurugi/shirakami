@@ -351,7 +351,6 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 }
 
 Status try_deleted_to_inserting(Record* const rec_ptr,
-                                std::string_view const val,
                                 tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     // record found_tid
@@ -371,7 +370,6 @@ Status try_deleted_to_inserting(Record* const rec_ptr,
         // success
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
-        rec_ptr->set_value(val);
         return Status::OK;
     }
     /**

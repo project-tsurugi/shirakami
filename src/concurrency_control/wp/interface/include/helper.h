@@ -33,7 +33,6 @@ inline std::atomic<bool> initialized_{false};
 }
 
 [[maybe_unused]] extern Status try_deleted_to_inserting(Record* rec_ptr,
-                                                        std::string_view val,
                                                         tid_word& found_tid);
 
 } // namespace shirakami
