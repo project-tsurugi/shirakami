@@ -75,13 +75,15 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
 }
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
+    Storage storage{};
     register_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+              delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
@@ -93,13 +95,15 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
 }
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
+    Storage storage{};
     register_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+              delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

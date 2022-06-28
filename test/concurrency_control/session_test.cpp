@@ -76,7 +76,7 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
     ASSERT_EQ(ti->get_operating(), false);
-    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     ASSERT_EQ(ti->get_operating(), false);
     std::size_t sz{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, sz));
@@ -133,7 +133,7 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
     wait_change_step_epoch();
     ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
     wait_change_step_epoch();
-    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     wait_change_step_epoch();
     std::size_t sz{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, sz));
