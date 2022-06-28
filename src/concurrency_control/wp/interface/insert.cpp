@@ -75,7 +75,7 @@ Status insert(Token const token, Storage const storage,
             }
 
             tid_word found_tid{};
-            rc = try_deleted_to_inserted(rec_ptr, val, found_tid);
+            rc = try_deleted_to_inserting(rec_ptr, val, found_tid);
             if (rc == Status::OK) {
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});

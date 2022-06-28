@@ -32,8 +32,8 @@ inline std::atomic<bool> initialized_{false};
     initialized_.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] extern Status try_deleted_to_inserted(Record* rec_ptr,
-                                                       std::string_view val,
-                                                       tid_word& found_tid);
+[[maybe_unused]] extern Status try_deleted_to_inserting(Record* rec_ptr,
+                                                        std::string_view val,
+                                                        tid_word& found_tid);
 
 } // namespace shirakami
