@@ -130,7 +130,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto* wso_ptr = &(elem);
         auto* rec_ptr{wso_ptr->get_rec_ptr()};
-        auto abort_process = [ti, wso_ptr, rec_ptr, &not_insert_locked_num]() {
+        auto abort_process = [ti, &not_insert_locked_num]() {
             if (not_insert_locked_num > 0) {
                 unlock_not_insert_records(ti, not_insert_locked_num);
             }

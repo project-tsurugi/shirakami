@@ -49,9 +49,9 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-std::size_t dir_size(boost::filesystem::path path) {
+std::size_t dir_size(boost::filesystem::path& path) {
     std::size_t total_file_size{0};
-    BOOST_FOREACH (const boost::filesystem::path& p,
+    BOOST_FOREACH (const boost::filesystem::path& p, // NOLINT
                    std::make_pair(boost::filesystem::directory_iterator(path),
                                   boost::filesystem::directory_iterator())) {
         if (!boost::filesystem::is_directory(p)) {
@@ -66,12 +66,12 @@ TEST_F(limestone_integration_test, check_persistent_call_back) { // NOLINT
     init();
     for (;;) {
         sleepMs(PARAM_EPOCH_TIME);
-        if (epoch::get_durable_epoch() > 20) { break; }
+        if (epoch::get_durable_epoch() > 20) { break; } // NOLINT
     }
     fin();
 }
 
-TEST_F(limestone_integration_test,
+TEST_F(limestone_integration_test,               // NOLINT
        check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init(false, "/tmp/shirakami"); // NOLINT
@@ -113,7 +113,7 @@ TEST_F(limestone_integration_test,
 void recovery_test() {
     // start
     std::string log_dir{};
-    int tid = syscall(SYS_gettid);
+    int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
     log_dir =
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
@@ -145,14 +145,14 @@ void recovery_test() {
 }
 
 TEST_F(limestone_integration_test, check_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());
+    ASSERT_NO_FATAL_FAILURE(recovery_test());        // NOLINT
     fin();
 }
 
 
 TEST_F(limestone_integration_test,               // NOLINT
        check_storage_operation_after_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());
+    ASSERT_NO_FATAL_FAILURE(recovery_test());    // NOLINT
 
     // register_storage
     Storage st{};

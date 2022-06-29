@@ -153,9 +153,9 @@ init([[maybe_unused]] bool enable_recovery,
     // check args
     std::string log_dir(log_directory_path);
     bool enable_true_log_nothing{false};
-    if (log_dir == "") {
+    if (log_dir.empty()) {
         if (enable_recovery) { enable_true_log_nothing = true; }
-        int tid = syscall(SYS_gettid);
+        int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
                   std::to_string(tsc);

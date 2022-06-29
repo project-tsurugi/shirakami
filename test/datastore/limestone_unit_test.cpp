@@ -46,13 +46,15 @@ public:
 
     void TearDown() override {}
 
-    std::string_view get_data_log_dir() { return data_log_dir_; }
+    static std::string_view get_data_log_dir() { return data_log_dir_; }
 
-    std::string_view get_metadata_log_dir() { return metadata_log_dir_; }
+    static std::string_view get_metadata_log_dir() { return metadata_log_dir_; }
 
-    void set_data_log_dir(std::string_view ld) { data_log_dir_ = ld; }
+    static void set_data_log_dir(std::string_view ld) { data_log_dir_ = ld; }
 
-    void set_metadata_log_dir(std::string_view ld) { metadata_log_dir_ = ld; }
+    static void set_metadata_log_dir(std::string_view ld) {
+        metadata_log_dir_ = ld;
+    }
 
 private:
     static inline std::once_flag init_google;    // NOLINT
@@ -60,9 +62,9 @@ private:
     static inline std::string metadata_log_dir_; // NOLINT
 };
 
-std::size_t dir_size(boost::filesystem::path path) {
+std::size_t dir_size(boost::filesystem::path& path) {
     std::size_t total_file_size{0};
-    BOOST_FOREACH (const boost::filesystem::path& p,
+    BOOST_FOREACH (const boost::filesystem::path& p, // NOLINT
                    std::make_pair(boost::filesystem::directory_iterator(path),
                                   boost::filesystem::directory_iterator())) {
         if (!boost::filesystem::is_directory(p)) {
@@ -73,9 +75,9 @@ std::size_t dir_size(boost::filesystem::path path) {
     return total_file_size;
 }
 
-TEST_F(limestone_unit_test, logging_and_recover) {
+TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     // decide test dir name
-    int tid = syscall(SYS_gettid);
+    int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
     std::string data_dir =
             "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
@@ -193,9 +195,9 @@ TEST_F(limestone_unit_test, logging_and_recover) {
     ASSERT_FALSE(ss->get_cursor().next()); // point none
 }
 
-TEST_F(limestone_unit_test, persistent_callback) {
+TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
     // decide test dir name
-    int tid = syscall(SYS_gettid);
+    int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
     std::string data_dir =
             "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
@@ -235,10 +237,10 @@ TEST_F(limestone_unit_test, persistent_callback) {
     auto epoch_thread_work = [&limestone_durable_epoch, d_ptr]() {
         std::size_t epoch = 0;
         for (;;) {
-            sleepMs(40);
+            sleepMs(40); // NOLINT
             epoch++;
             d_ptr->switch_epoch(epoch);
-            if (limestone_durable_epoch.load() > 20) { break; }
+            if (limestone_durable_epoch.load() > 20) { break; } // NOLINT
         }
     };
 
@@ -250,7 +252,7 @@ TEST_F(limestone_unit_test, persistent_callback) {
 
     for (;;) {
         sleep(1);
-        if (get_limestone_durable_epoch() > 20) { break; }
+        if (get_limestone_durable_epoch() > 20) { break; } // NOLINT
     }
 
     epoch_thread.join();

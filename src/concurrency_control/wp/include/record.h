@@ -33,7 +33,7 @@ public:
      */
     Record(std::string_view key, std::string_view val);
 
-    Record(std::string_view key);
+    explicit Record(std::string_view key);
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
