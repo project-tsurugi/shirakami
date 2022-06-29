@@ -106,6 +106,8 @@ public:
 
     void set_op(OP_TYPE op) { op_ = op; }
 
+    void set_rec_ptr(Record* rec_ptr) { rec_ptr_ = rec_ptr; }
+
     /**
      * @brief set value
      * @details It is for twice update in the same transaction.

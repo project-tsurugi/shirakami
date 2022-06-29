@@ -19,7 +19,12 @@ namespace shirakami {
 inline Status insert_process(session* const ti, Storage st,
                              const std::string_view key,
                              const std::string_view val) {
-    Record* rec_ptr = new Record(key, val); // NOLINT
+    Record* rec_ptr{};
+    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+        rec_ptr = new Record(key); // NOLINT
+    } else {
+        rec_ptr = new Record(key, val); // NOLINT
+    }
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
         put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
@@ -33,8 +38,13 @@ inline Status insert_process(session* const ti, Storage st,
             abort(ti);
             return Status::ERR_PHANTOM;
         }
-        ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr});
+        ti->get_write_set().push({st, OP_TYPE::UPSERT, rec_ptr, val});
         return Status::OK;
+    } else {
+        if (ti->get_tx_type() == TX_TYPE::SHORT) {
+            ti->get_write_set().push({st, OP_TYPE::UPSERT, rec_ptr, val});
+            return Status::OK;
+        }
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so retry from index access
@@ -83,13 +93,6 @@ Status upsert(Token token, Storage storage, const std::string_view key,
             ti->process_before_finish_step();
             return Status::OK;
         }
-
-        // check exist storage.
-        auto rc{exist_storage(storage)};
-        if (rc == Status::WARN_NOT_FOUND) {
-            ti->process_before_finish_step();
-            return Status::WARN_STORAGE_NOT_FOUND;
-        } // exist
 
         rc = insert_process(ti, storage, key, val);
         if (rc != Status::WARN_CONCURRENT_INSERT) {

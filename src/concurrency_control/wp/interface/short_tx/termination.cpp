@@ -8,6 +8,8 @@
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::short_tx {
@@ -125,6 +127,95 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     return Status::OK;
 }
 
+Status upsert_process_at_write_lock(session* ti, write_set_obj* wso,
+                                    std::size_t& not_inserted_lock) {
+    // check key exists yet
+    std::string key{};
+    wso->get_rec_ptr()->get_key(key);
+RETRY: // NOLINT
+    Record* rec_ptr{};
+    auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
+    if (rc == Status::OK) {
+        // point (*1)
+        // hooked yet
+        if (wso->get_rec_ptr() != rec_ptr) {
+            // changed from read phase
+            wso->set_rec_ptr(rec_ptr);
+        }
+        // check ts
+        tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+        rec_ptr->get_tidw_ref().lock();
+        check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+        if ((check.get_latest() && check.get_absent())) {
+            // inserting state
+            return Status::OK;
+        } else if (!check.get_absent()) {
+            // normal state
+            ++not_inserted_lock;
+            return Status::OK;
+        }
+        // it is deleted state
+        // change it to inserting state.
+        check.set_latest(true);
+        rec_ptr->set_tid(check);
+        // check it is hooked yet
+        auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
+        auto cleanup_old_process = [wso](tid_word check) {
+            check.set_latest(false);
+            check.set_absent(true);
+            check.set_lock(false);
+            wso->get_rec_ptr()->set_tid(check);
+        };
+        if (rc == Status::OK) {
+            // some key hit
+            if (wso->get_rec_ptr() == rec_ptr) {
+                // success converting deleted to inserted
+                return Status::OK;
+            } else {
+                // converting record is unhooked by gc
+                cleanup_old_process(check);
+                goto RETRY; // NOLINT
+            }
+        } else {
+            // no key hit
+            // point (*2)
+            // gced in range from point (*1) to point (*2)
+            cleanup_old_process(check);
+            goto RETRY; // NOLINT
+        }
+    } else {
+        // no key hit
+        rec_ptr = new Record(key);
+        tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+        tid.set_latest(true);
+        tid.set_absent(true);
+        tid.set_lock(true);
+        rec_ptr->set_tid(tid);
+        yakushima::node_version64* nvp{};
+        if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
+                                                 wso->get_storage(), key,
+                                                 rec_ptr, nvp)) {
+            Status check_node_set_res{ti->update_node_set(nvp)};
+            if (check_node_set_res == Status::ERR_PHANTOM) {
+                /**
+                  * This This transaction is confirmed to be aborted 
+                  * because the previous scan was destroyed by an insert
+                  * by another transaction.
+                  */
+                return Status::ERR_PHANTOM;
+            }
+            // success inserting
+            return Status::OK;
+        }
+        // else insert_result == Status::WARN_ALREADY_EXISTS
+        // so retry from index access
+        delete rec_ptr; // NOLINT
+        goto RETRY;     // NOLINT
+    }
+
+    return Status::OK; // todo
+}
+
 Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t not_insert_locked_num{0};
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
@@ -144,6 +235,16 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 rec_ptr->get_tidw_ref().unlock();
                 abort_process();
                 return Status::ERR_FAIL_INSERT;
+            }
+        } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
+            auto rc = upsert_process_at_write_lock(ti, wso_ptr,
+                                                   not_insert_locked_num);
+            if (rc == Status::OK) {
+                // may change op type, so should do continue explicitly.
+                continue;
+            } else if (rc == Status::ERR_PHANTOM) {
+                abort_process();
+                return Status::ERR_PHANTOM;
             }
         } else {
             rec_ptr->get_tidw_ref().lock();
@@ -180,8 +281,8 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 update_tid.set_latest(false);
                 [[fallthrough]];
             }
-            case OP_TYPE::UPDATE:
-            case OP_TYPE::UPSERT: {
+            case OP_TYPE::UPSERT:
+            case OP_TYPE::UPDATE: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (ce > old_tid.get_epoch()) {
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
