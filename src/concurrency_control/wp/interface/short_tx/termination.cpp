@@ -33,13 +33,24 @@ void unlock_not_insert_records(session* const ti,
 void unlock_inserted_records(session* const ti) {
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto* wso_ptr = &(elem);
+        Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT) {
-            tid_word tid{};
-            tid.set_absent(true);
-            tid.set_latest(false);
-            tid.set_lock(false);
-            tid.set_epoch(ti->get_step_epoch());
-            wso_ptr->get_rec_ptr()->set_tid(tid);
+            tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+            // pre-check
+            if (check.get_latest() && check.get_absent()) {
+                rec_ptr->get_tidw_ref().lock();
+                check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+                // main-check
+                if (check.get_latest() && check.get_absent()) {
+                    tid_word tid{};
+                    tid.set_absent(true);
+                    tid.set_latest(false);
+                    tid.set_lock(false);
+                    tid.set_epoch(ti->get_step_epoch());
+                    rec_ptr->set_tid(tid);
+                }
+                rec_ptr->get_tidw_ref().unlock();
+            }
         }
     }
 }

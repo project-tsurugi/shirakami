@@ -101,6 +101,9 @@ TEST_F(double_insert, insert_insert_conflict) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     // second inserter lose
     ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2)); // NOLINT
+    // warn already exist
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
