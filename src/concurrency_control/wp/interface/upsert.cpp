@@ -20,12 +20,9 @@ inline Status insert_process(session* const ti, Storage st,
                              const std::string_view key,
                              const std::string_view val) {
     Record* rec_ptr{};
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        rec_ptr = new Record(key); // NOLINT
-    } else {
-        rec_ptr = new Record(key, val); // NOLINT
-    }
+    rec_ptr = new Record(key); // NOLINT
     yakushima::node_version64* nvp{};
+    // create tombstone
     if (yakushima::status::OK ==
         put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
         Status check_node_set_res{ti->update_node_set(nvp)};
@@ -40,21 +37,14 @@ inline Status insert_process(session* const ti, Storage st,
         }
         ti->get_write_set().push({st, OP_TYPE::UPSERT, rec_ptr, val});
         return Status::OK;
-    } else {
-        if (ti->get_tx_type() == TX_TYPE::SHORT) {
-            ti->get_write_set().push({st, OP_TYPE::UPSERT, rec_ptr, val});
-            return Status::OK;
-        }
     }
-    // else insert_result == Status::WARN_ALREADY_EXISTS
-    // so retry from index access
+    // fail insert rec_ptr
     delete rec_ptr; // NOLINT
     return Status::WARN_CONCURRENT_INSERT;
 }
 
 Status upsert(Token token, Storage storage, const std::string_view key,
               const std::string_view val) {
-    // todo update か insert を決めるのは validation phase まで遅延させる。
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
