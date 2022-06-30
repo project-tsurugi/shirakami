@@ -350,8 +350,8 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     return Status::OK;
 }
 
-Status try_deleted_to_inserting(TX_TYPE tp, Record* const rec_ptr,
-                                tid_word& found_tid) {
+Status try_deleted_to_inserting([[maybe_unused]] TX_TYPE tp, // todo remove
+                                Record* const rec_ptr, tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     // record found_tid
     found_tid = check;
@@ -372,7 +372,7 @@ Status try_deleted_to_inserting(TX_TYPE tp, Record* const rec_ptr,
         // success
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
-        if (tp == TX_TYPE::SHORT) { rec_ptr->get_tidw_ref().unlock(); }
+        rec_ptr->get_tidw_ref().unlock();
         return Status::OK;
     }
     /**

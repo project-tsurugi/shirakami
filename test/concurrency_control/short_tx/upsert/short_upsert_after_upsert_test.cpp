@@ -42,7 +42,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(upsert_after_upsert, double_upsert) { // NOLINT
+TEST_F(upsert_after_upsert, double_upsert_same_tx) { // NOLINT
+    // double upsert by the same tx
     std::string k("aaa");                    // NOLINT
     std::string v("bbb");                    // NOLINT
     std::string v2("ccc");                   // NOLINT
@@ -55,9 +56,31 @@ TEST_F(upsert_after_upsert, double_upsert) { // NOLINT
     ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v3));
     std::string vb{};
     ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION, search_key(s, st, k, vb));
-    ASSERT_EQ(memcmp(vb.data(), v3.data(), v3.size()), 0);
+    ASSERT_EQ(vb, v3);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(upsert_after_upsert, double_upsert_diff_tx) { // NOLINT
+    // double upsert by different tx
+
+    // prepare 
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", "1"));
+    ASSERT_EQ(Status::OK, upsert(s2, st, "", "2"));
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
+    ASSERT_EQ(buf, "2");
+    ASSERT_EQ(Status::OK, commit(s1));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
 }
 
 TEST_F(upsert_after_upsert, multi_upsert) { // NOLINT
