@@ -49,9 +49,10 @@ void unlock_inserted_records(session* const ti) {
                     tid.set_latest(false);
                     tid.set_lock(false);
                     tid.set_epoch(ti->get_step_epoch());
-                    rec_ptr->set_tid(tid);
+                    rec_ptr->set_tid(tid); // and unlock
+                } else {
+                    rec_ptr->get_tidw_ref().unlock();
                 }
-                rec_ptr->get_tidw_ref().unlock();
             }
         }
     }

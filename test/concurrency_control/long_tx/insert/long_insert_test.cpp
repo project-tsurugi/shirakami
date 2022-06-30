@@ -74,10 +74,10 @@ TEST_F(long_insert_tx_test,                           // NOLINT
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
-    ASSERT_EQ(insert(s1, st, "", ""), Status::WARN_CONCURRENT_INSERT);
+    ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

@@ -17,11 +17,7 @@ inline Status insert_process(session* const ti, Storage st,
                              const std::string_view key,
                              const std::string_view val) {
     Record* rec_ptr{};
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
-        rec_ptr = new Record(key); // NOLINT
-    } else {
-        rec_ptr = new Record(key, val); // NOLINT
-    }
+    rec_ptr = new Record(key); // NOLINT
 
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
@@ -90,7 +86,8 @@ Status insert(Token const token, Storage const storage,
                 return Status::OK;
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
-                // make read set
+                // ==========
+                // start: make read set
                 if (ti->get_tx_type() == TX_TYPE::SHORT) {
                     ti->get_read_set().emplace_back(storage, rec_ptr,
                                                     found_tid);
@@ -110,13 +107,13 @@ Status insert(Token const token, Storage const storage,
                     ti->process_before_finish_step();
                     return Status::ERR_FATAL;
                 }
+                // end: make read set
+                // ==========
             } else if (rc == Status::WARN_CONCURRENT_INSERT) {
-                if (ti->get_tx_type() == TX_TYPE::SHORT) {
-                    ti->get_write_set().push(
-                            {storage, OP_TYPE::INSERT, rec_ptr, val});
-                    ti->process_before_finish_step();
-                    return Status::OK;
-                }
+                ti->get_write_set().push(
+                        {storage, OP_TYPE::INSERT, rec_ptr, val});
+                ti->process_before_finish_step();
+                return Status::OK;
             }
             ti->process_before_finish_step();
             return rc;

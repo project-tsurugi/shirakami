@@ -3,6 +3,8 @@
 #include <string_view>
 #include <vector>
 
+#include "atomic_wrapper.h"
+
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
@@ -17,14 +19,27 @@ namespace shirakami::long_tx {
 // ==============================
 // static inline functions for this source
 static inline void cancel_flag_inserted_records(session* const ti) {
-    auto process = [](std::pair<Record* const, write_set_obj>& wse) {
+    auto process = [ti](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT) {
             auto* rec_ptr = std::get<0>(wse);
-            tid_word tid{0};
-            tid.set_latest(true);
-            tid.set_absent(true);
-            rec_ptr->set_tid(tid);
+            tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+            // pre-check
+            if (check.get_latest() && check.get_absent()) {
+                rec_ptr->get_tidw_ref().lock();
+                check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+                // main-check
+                if (check.get_latest() && check.get_absent()) {
+                    tid_word tid{};
+                    tid.set_absent(true);
+                    tid.set_latest(false);
+                    tid.set_lock(false);
+                    tid.set_epoch(ti->get_valid_epoch());
+                    rec_ptr->set_tid(tid); // and unlock
+                } else {
+                    rec_ptr->get_tidw_ref().unlock();
+                }
+            }
         }
     };
 
@@ -51,6 +66,10 @@ static inline void expose_local_write(session* ti) {
         [[maybe_unused]] bool should_log{true};
         switch (wso.get_op()) {
             case OP_TYPE::INSERT: {
+                // update value
+                std::string vb{};
+                wso.get_value(vb);
+                rec_ptr->get_latest()->set_value(vb);
                 // unlock and set ctid
                 rec_ptr->set_tid(ctid);
                 break;
@@ -319,6 +338,26 @@ Status check_wait_for_preceding_bt(session* const ti) {
     return Status::OK;
 }
 
+Status verify_insert(session* const ti) {
+    for (auto&& wse : ti->get_write_set().get_ref_cont_for_bt()) {
+        auto&& wso = std::get<1>(wse);
+        if (wso.get_op() == OP_TYPE::INSERT) {
+            // verify insert
+            Record* rec_ptr{wso.get_rec_ptr()};
+            tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+            /**
+             * It doesn't need lock. Because tx ordered before this is nothing 
+             * in this timing.
+             */
+            if (!(tid.get_latest() && tid.get_absent())) {
+                // someone interrupt tombstone
+                return Status::ERR_FAIL_INSERT;
+            }
+        }
+    }
+    return Status::OK;
+}
+
 extern Status commit(session* const ti, // NOLINT
                      [[maybe_unused]] commit_param* const cp) {
     // check premature
@@ -336,12 +375,25 @@ extern Status commit(session* const ti, // NOLINT
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
 
+    // ==========
+    // verify : start
     // verify read by
     rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
         return Status::ERR_VALIDATION;
     }
+
+    // verify insert
+    rc = verify_insert(ti);
+    if (rc == Status::ERR_FAIL_INSERT) {
+        abort(ti);
+        return Status::ERR_FAIL_INSERT;
+    }
+    // verify : end
+    // ==========
+
+    // This tx must success.
 
     register_read_by(ti);
 
