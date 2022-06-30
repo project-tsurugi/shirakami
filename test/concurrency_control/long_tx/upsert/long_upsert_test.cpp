@@ -93,13 +93,17 @@ TEST_F(long_upsert_test,                              // NOLINT
     }
     wait_epoch_update();
 
-    std::string pk1{"pk1"};
-    std::string pk2{"pk2"};
-    ASSERT_EQ(upsert(s2, st, pk1, ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, pk2, ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "v1"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "v2"), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
+
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
+    ASSERT_EQ(buf, "v2");
+
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

@@ -13,7 +13,7 @@
 
 namespace shirakami {
 
-inline Status insert_process(session* const ti, Storage st,
+static inline Status insert_process(session* const ti, Storage st,
                              const std::string_view key,
                              const std::string_view val) {
     Record* rec_ptr{};

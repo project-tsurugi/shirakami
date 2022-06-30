@@ -47,6 +47,7 @@ private:
     static inline std::once_flag init_google;
 };
 
+#if 0
 TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
     Storage st{};
     ASSERT_EQ(register_storage(st), Status::OK);
@@ -161,6 +162,7 @@ TEST_F(read_only_scan_test,                                      // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
+#endif
 TEST_F(read_only_scan_test,                // NOLINT
        write_one_page_after_valid_epoch) { // NOLINT
     Storage st{};

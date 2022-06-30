@@ -134,7 +134,18 @@ enum class Status : std::int32_t {
      * it executed insert operation for the page.
      */
     WARN_CANCEL_PREVIOUS_INSERT,
+    /**
+     * @brief Warning.
+     * @details The transaction executed delete operation for the page which
+     * it executed update operation for the page.
+     */
     WARN_CANCEL_PREVIOUS_UPDATE,
+    /**
+     * @brief Warning.
+     * @details The transaction executed delete operation for the page which
+     * it executed upsert operation for the page.
+     */
+    WARN_CANCEL_PREVIOUS_UPSERT,
     /**
      * @brief Warning.
      * @details The transaction failed operation due to concurrent insert 
@@ -323,6 +334,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_UPDATE:
             return "WARN_CANCEL_PREVIOUS_UPDATE"sv; // NOLINT
+        case Status::WARN_CANCEL_PREVIOUS_UPSERT:
+            return "WARN_CANCEL_PREVIOUS_UPSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:
             return "WARN_CONCURRENT_INSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_UPDATE:

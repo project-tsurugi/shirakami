@@ -267,22 +267,29 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
         switch (wso_ptr->get_op()) {
+            case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
-                // set timestamp
-                wso_ptr->get_rec_ptr()->set_tid(update_tid);
+                tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
+                if (old_tid.get_latest() && old_tid.get_absent()) {
+                    // set value
+                    std::string vb{};
+                    wso_ptr->get_value(vb);
+                    wso_ptr->get_rec_ptr()->set_value(vb);
 
-                // set value
-                std::string vb{};
-                wso_ptr->get_value(vb);
-                wso_ptr->get_rec_ptr()->set_value(vb);
-                break;
+                    // set timestamp
+                    wso_ptr->get_rec_ptr()->set_tid(update_tid);
+                    break;
+                }
+                [[fallthrough]];
+                // upsert is update
             }
             case OP_TYPE::DELETE: {
-                update_tid.set_absent(true);
-                update_tid.set_latest(false);
+                if (wso_ptr->get_op() == OP_TYPE::DELETE) {
+                    update_tid.set_absent(true);
+                    update_tid.set_latest(false);
+                }
                 [[fallthrough]];
             }
-            case OP_TYPE::UPSERT:
             case OP_TYPE::UPDATE: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (ce > old_tid.get_epoch()) {

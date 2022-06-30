@@ -140,6 +140,8 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * canceled an previous insert.
  * @return Status::WARN_CANCEL_PREVIOUS_UPDATE This delete operation merely 
  * canceled an previous update.
+ * @return Status::WARN_CANCEL_PREVIOUS_UPSERT This delete operation merely 
+ * canceled an previous upsert.
  * @return Status::WARN_CONFLICT_ON_WRITE_PRESERVE This function can't execute 
  * because this tx is short tx and found write preserve of long tx.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 

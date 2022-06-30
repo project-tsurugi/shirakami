@@ -123,6 +123,7 @@ RETRY: // NOLINT
                                                  wso.get_storage(), key,
                                                  rec_ptr, nvp)) {
             // success inserting
+            wso.set_rec_ptr(rec_ptr);
             return;
         }
         // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -142,20 +143,24 @@ static inline void expose_local_write(session* ti) {
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
         switch (wso.get_op()) {
-            case OP_TYPE::INSERT: {
-                // update value
-                std::string vb{};
-                wso.get_value(vb);
-                rec_ptr->get_latest()->set_value(vb);
-                // unlock and set ctid
-                rec_ptr->set_tid(ctid);
-                break;
-            }
             case OP_TYPE::UPSERT: {
                 // not accept fallthrough!
                 // create tombstone if need.
                 create_tombstone_if_need(ti, wso);
                 [[fallthrough]];
+            }
+            case OP_TYPE::INSERT: {
+                tid_word tid{rec_ptr->get_tidw_ref().get_obj()};
+                if (tid.get_latest() && tid.get_absent()) {
+                    // update value
+                    std::string vb{};
+                    wso.get_value(vb);
+                    rec_ptr->get_latest()->set_value(vb);
+                    // unlock and set ctid
+                    rec_ptr->set_tid(ctid);
+                    break;
+                }
+                [[fallthrough]]; // upsert is update
             }
             case OP_TYPE::DELETE: {
                 if (wso.get_op() == OP_TYPE::DELETE) { // for fallthrough
@@ -471,6 +476,7 @@ extern Status commit(session* const ti, // NOLINT
     // verify insert
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
+        LOG(INFO);
         abort(ti);
         return Status::ERR_FAIL_INSERT;
     }

@@ -53,7 +53,7 @@ TEST_F(delete_after_write, delete_after_upsert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT,
               delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));

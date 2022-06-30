@@ -81,6 +81,7 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_epoch();
     wait_change_epoch();
+    wait_change_epoch();
     // verify key existence
     Record* rec_ptr{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, "", rec_ptr));
