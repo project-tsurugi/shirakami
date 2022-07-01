@@ -476,7 +476,6 @@ extern Status commit(session* const ti, // NOLINT
     // verify insert
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
-        LOG(INFO);
         abort(ti);
         return Status::ERR_FAIL_INSERT;
     }

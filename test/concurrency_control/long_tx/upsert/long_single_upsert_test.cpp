@@ -80,6 +80,7 @@ TEST_F(single_long_upsert_test, long_simple) { // NOLINT
         ASSERT_NE(rec, nullptr);
     };
 
+    
     check_internal_record_exist(st);
     ASSERT_EQ(abort(s), Status::OK);
     // after abort, exist with deleted state.

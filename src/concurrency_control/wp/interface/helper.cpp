@@ -60,12 +60,10 @@ Status check_before_write_ops(session* const ti, Storage const st,
             // can't write without wp.
             return Status::WARN_WRITE_WITHOUT_WP;
         }
-        if (op != OP_TYPE::UPSERT) {
-            // insert and delete with read
-            // may need forwarding
-            rc = long_tx::wp_verify_and_forwarding(ti, wm);
-            if (rc != Status::OK) { return rc; }
-        }
+        // insert and delete with read
+        // may need forwarding
+        rc = long_tx::wp_verify_and_forwarding(ti, wm);
+        if (rc != Status::OK) { return rc; }
     } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
         // check wp
         auto wps{wm->get_wped()};
