@@ -109,6 +109,22 @@ TEST_F(limestone_integration_test,               // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     fin(false);
 }
+void register_storage_and_upsert_one_record() {
+    // prepare
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+
+    ASSERT_EQ(Status::OK, enter(s));
+    // data creation
+    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
+    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
 
 void recovery_test() {
     // start
@@ -120,14 +136,7 @@ void recovery_test() {
     init(false, log_dir); // NOLINT
 
     // storage creation
-    Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
-
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    // data creation
-    ASSERT_EQ(Status::OK, upsert(s, st, "k", "v")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
+    register_storage_and_upsert_one_record();
     sleep(1);
 
     fin(false);
@@ -136,34 +145,22 @@ void recovery_test() {
     init(true, log_dir); // NOLINT
 
     // test: log exist
-    std::string vb{};
+    Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
-    ASSERT_EQ(Status::OK, search_key(s, st, "k", vb));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    std::string vb{};
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    for (auto&& st : st_list) {
+        ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    }
     ASSERT_EQ(Status::OK, leave(s));
+    fin();
 }
 
 TEST_F(limestone_integration_test, check_recovery) { // NOLINT
     ASSERT_NO_FATAL_FAILURE(recovery_test());        // NOLINT
-    fin();
-}
-
-
-TEST_F(limestone_integration_test,               // NOLINT
-       check_storage_operation_after_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());    // NOLINT
-
-    // register_storage
-    Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
-    ASSERT_EQ(Status::OK, exist_storage(st));
-    ASSERT_EQ(Status::OK, delete_storage(st));
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(1, st_list.size()); // 1 is due to recovery
-
-    fin();
 }
 
 } // namespace shirakami::testing
