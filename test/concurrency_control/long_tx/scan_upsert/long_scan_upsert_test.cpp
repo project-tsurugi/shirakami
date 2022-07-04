@@ -29,7 +29,8 @@ class long_scan_upsert_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "long_scan_upsert_test-long_tx_only_long_scan_upsert_test_test");
+                                  "long_scan_upsert_test-long_tx_only_long_"
+                                  "scan_upsert_test_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -177,6 +178,29 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(leave(s), Status::OK);
     }
+}
+
+TEST_F(long_scan_upsert_test, scan_read_own_upsert) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+    wait_epoch_update();
+
+    // test
+    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
+              read_value_from_scan(s, hd, buf));
+    ASSERT_EQ(Status::OK, commit(s));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 } // namespace shirakami::testing

@@ -64,4 +64,25 @@ TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(short_insert_scan_test, scan_read_own_insert) { // NOLINT
+    // prepare
+    Storage st{};
+    register_storage(st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test
+    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
+              read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing

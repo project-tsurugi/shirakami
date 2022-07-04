@@ -31,12 +31,11 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(scan_upsert, range_read_insert) { // NOLINT
+TEST_F(scan_upsert, range_read_upsert_diff_tx) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, register_storage(st));
-    std::string k("k");   // NOLINT
-    std::string k2("k2"); // NOLINT
-    std::string v("v");   // NOLINT
+    std::string k("k"); // NOLINT
+    std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
@@ -46,8 +45,28 @@ TEST_F(scan_upsert, range_read_insert) { // NOLINT
                                     scan_endpoint::INF, handle));
     std::string sb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
-    ASSERT_EQ(insert(s, st, k2, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+}
+
+TEST_F(scan_upsert, range_read_upsert_same_tx) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, register_storage(st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test
+    ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
+    ScanHandle handle{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, handle));
+    std::string sb{};
+    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
+              read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 } // namespace shirakami::testing

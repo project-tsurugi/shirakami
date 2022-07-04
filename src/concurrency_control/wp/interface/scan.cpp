@@ -72,12 +72,14 @@ Status check_not_found(
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
-            if (ti->get_tx_type() == TX_TYPE::SHORT) { once_not_skip = true; }
             // inserting page.
             // check read own write
             write_set_obj* inws = ti->get_write_set().search(rec_ptr);
             if (inws != nullptr) {
-                if (inws->get_op() == OP_TYPE::INSERT) { return Status::OK; }
+                if (inws->get_op() == OP_TYPE::INSERT ||
+                    inws->get_op() == OP_TYPE::UPSERT) {
+                    return Status::OK;
+                }
             }
         } else {
             // absent && not latest == deleted

@@ -27,6 +27,8 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx/delete/*.cpp"
         "concurrency_control/long_tx/delete_insert/*.cpp"
         "concurrency_control/long_tx/insert/*.cpp"
+        "concurrency_control/long_tx/insert_search/*.cpp"
+        "concurrency_control/long_tx/insert_scan/*.cpp"
         "concurrency_control/long_tx/helper/*.cpp"
         "concurrency_control/long_tx/search/*.cpp"
         "concurrency_control/long_tx/scan/*.cpp"
