@@ -50,7 +50,7 @@ Status search_key(session* ti, Storage const storage,
             return Status::WARN_ALREADY_DELETE;
         }
         if (read_value) { in_ws->get_value(value); }
-        return Status::WARN_READ_FROM_OWN_OPERATION;
+        return Status::OK;
     }
 
     tid_word read_tid{};

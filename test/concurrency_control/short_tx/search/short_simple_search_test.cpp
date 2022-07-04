@@ -59,8 +59,7 @@ TEST_F(simple_search, search_local_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     std::string vb{};
-    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-              search_key(s, storage, k, vb));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -79,8 +78,7 @@ TEST_F(simple_search, search_upsert_search) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v2));
-    ASSERT_EQ(Status::WARN_READ_FROM_OWN_OPERATION,
-              search_key(s, storage, k, vb));
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

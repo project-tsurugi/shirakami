@@ -140,7 +140,6 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     }
                     if (rc == Status::WARN_NOT_FOUND) { LOG(FATAL); }
                     if (rc == Status::OK ||
-                        rc == Status::WARN_READ_FROM_OWN_OPERATION ||
                         rc == Status::ERR_VALIDATION) {
                         break;
                     }

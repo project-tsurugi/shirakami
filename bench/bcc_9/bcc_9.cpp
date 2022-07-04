@@ -48,7 +48,7 @@
  * general option.
  */
 DEFINE_uint64(d, 1, "Duration of benchmark in seconds."); // NOLINT
-DEFINE_uint64(th, 112, "# worker threads."); // NOLINT
+DEFINE_uint64(th, 112, "# worker threads.");              // NOLINT
 
 using namespace shirakami;
 
@@ -92,10 +92,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 std::string vb{};
                 auto rc{search_key(token, get_st(), itr.get_key(), vb)};
                 for (;;) {
-                    if (rc == Status::OK ||
-                        rc == Status::WARN_READ_FROM_OWN_OPERATION) {
-                        break;
-                    }
+                    if (rc == Status::OK) { break; }
                     if (rc == Status::WARN_CONCURRENT_UPDATE) {
                         rc = search_key(token, get_st(), itr.get_key(), vb);
                     } else {

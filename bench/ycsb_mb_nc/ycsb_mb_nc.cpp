@@ -49,25 +49,26 @@ using namespace shirakami;
 /**
  * general option.
  */
-DEFINE_uint64(                                                           // NOLINT
-        cpumhz, 2100,                                                    // NOLINT
+DEFINE_uint64(        // NOLINT
+        cpumhz, 2100, // NOLINT
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
-        "time.");                                                        // NOLINT
-DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");         // NOLINT
-DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8.");   // NOLINT
-DEFINE_uint64(ops, 1, "# operations per a transaction.");                // NOLINT
-DEFINE_uint64(record, 10, "# database records(tuples).");                // NOLINT
-DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");           // NOLINT
-DEFINE_double(skew, 0.0, "access skew of transaction.");                 // NOLINT
-DEFINE_uint64(thread, 1, "# worker threads.");                           // NOLINT
-DEFINE_uint64(val_length, 4, "# length of value(payload).");             // NOLINT
+        "time.");                                                      // NOLINT
+DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
+DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
+DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
+DEFINE_uint64(record, 10, "# database records(tuples).");              // NOLINT
+DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");         // NOLINT
+DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
+DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
+DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
 
 static void invoke_leader();
 
-static void worker(size_t thid, char& ready, const bool& start, const bool& quit, std::vector<Result>& res);
+static void worker(size_t thid, char& ready, const bool& start,
+                   const bool& quit, std::vector<Result>& res);
 
 static void invoke_leader() {
     alignas(CACHE_LINE_SIZE) bool start = false;
@@ -77,7 +78,8 @@ static void invoke_leader() {
     std::vector<char> readys(FLAGS_thread); // NOLINT
     std::vector<std::thread> thv;
     for (std::size_t i = 0; i < FLAGS_thread; ++i) {
-        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), std::ref(res));
+        thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
+                         std::ref(quit), std::ref(res));
     }
     waitForReady(readys);
     printf("start ycsb exp.\n"); // NOLINT
@@ -87,9 +89,7 @@ static void invoke_leader() {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(FLAGS_duration) != 0) {
-        LOG(FATAL) << "sleep error.";
-    }
+    if (sleep(FLAGS_duration) != 0) { LOG(FATAL) << "sleep error."; }
 #endif
     storeRelease(quit, true);
     printf("stop ycsb exp.\n"); // NOLINT
@@ -100,7 +100,8 @@ static void invoke_leader() {
     }
     res[0].displayAllResult(FLAGS_cpumhz, FLAGS_duration, FLAGS_thread);
 #if defined(CPR)
-    printf("cpr_global_version:\t%zu\n", cpr::global_phase_version::get_gpv().get_version()); // NOLINT
+    printf("cpr_global_version:\t%zu\n",
+           cpr::global_phase_version::get_gpv().get_version()); // NOLINT
 #endif
     std::cout << "end experiments, start cleanup." << std::endl;
 }
@@ -110,7 +111,8 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
+        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring "
+                      "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
@@ -123,23 +125,27 @@ static void load_flags() {
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        LOG(FATAL) << "Number of operations in a transaction must be larger than 0.";
+        LOG(FATAL) << "Number of operations in a transaction must be larger "
+                      "than 0.";
     }
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        LOG(FATAL) << "Number of database records(tuples) must be large than 0.";
+        LOG(FATAL)
+                << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 to 100.";
+        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 "
+                      "to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        LOG(FATAL) << "Access skew of transaction must be in the range 0 to 0.999... .";
+        LOG(FATAL) << "Access skew of transaction must be in the range 0 to "
+                      "0.999... .";
     }
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
@@ -174,9 +180,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     fin();
 
     return 0;
-} catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-}
+} catch (std::exception& e) { std::cerr << e.what() << std::endl; }
 
 bool isReady(const std::vector<char>& readys) { // NOLINT
     for (const char& b : readys) {              // NOLINT
@@ -186,9 +190,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) {
-        _mm_pause();
-    }
+    while (!isReady(readys)) { _mm_pause(); }
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
@@ -210,18 +212,22 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
     while (likely(!loadAcquire(quit))) {
         opr_set.reserve(FLAGS_ops);
-        gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops, FLAGS_rratio, rnd, zipf);
+        gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops,
+                  FLAGS_rratio, rnd, zipf);
         tx_begin(token, TX_TYPE::LONG);
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 uint64_t ctr{0};
                 for (;;) {
                     std::string vb{};
-                    auto ret = search_key(token, get_separate_storage()[thid], itr.get_key(), vb);
-                    if (ret == Status::OK || ret == Status::WARN_READ_FROM_OWN_OPERATION) break;
+                    auto ret = search_key(token, get_separate_storage()[thid],
+                                          itr.get_key(), vb);
+                    if (ret == Status::OK) break;
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                auto ret = update(token, get_separate_storage()[thid], itr.get_key(), std::string(FLAGS_val_length, '0'));
+                auto ret = update(token, get_separate_storage()[thid],
+                                  itr.get_key(),
+                                  std::string(FLAGS_val_length, '0'));
             } else {
                 LOG(FATAL) << "error.";
             }

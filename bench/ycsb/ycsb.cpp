@@ -265,10 +265,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 for (;;) {
                     std::string vb{};
                     auto ret = search_key(token, storage, itr.get_key(), vb);
-                    if (ret == Status::OK ||
-                        ret == Status::WARN_READ_FROM_OWN_OPERATION) {
-                        break;
-                    }
+                    if (ret == Status::OK) { break; }
 #ifndef NDEBUG
                     assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
 #endif

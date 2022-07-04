@@ -389,7 +389,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             inws->get_value(buf);
         }
         ti->process_before_finish_step();
-        return Status::WARN_READ_FROM_OWN_OPERATION;
+        return Status::OK;
     }
     // ==========
 

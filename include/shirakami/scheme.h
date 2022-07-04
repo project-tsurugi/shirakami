@@ -210,11 +210,6 @@ enum class Status : std::int32_t {
      */
     WARN_PREMATURE,
     /**
-     * @brief waring
-     * @details It read the records from own preceding write. @n
-     */
-    WARN_READ_FROM_OWN_OPERATION,
-    /**
      * @brief Warning
      * @details
      * @a open_scan : The scan could find some records but could not preserve 
@@ -358,8 +353,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_NOT_INIT"sv; // NOLINT
         case Status::WARN_PREMATURE:
             return "WARN_PREMATURE"sv; // NOLINT
-        case Status::WARN_READ_FROM_OWN_OPERATION:
-            return "WARN_READ_FROM_OWN_OPERATION"sv; // NOLINT
         case Status::WARN_SCAN_LIMIT:
             return "WARN_SCAN_LIMIT"sv; // NOLINT
         case Status::WARN_STORAGE_NOT_FOUND:
