@@ -33,11 +33,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_test : public ::testing::Test { // NOLINT
+class limestone_integration_logging_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_test");
+                                  "limestone_integration_logging_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -62,16 +62,7 @@ std::size_t dir_size(boost::filesystem::path& path) {
     return total_file_size;
 }
 
-TEST_F(limestone_integration_test, check_persistent_call_back) { // NOLINT
-    init();
-    for (;;) {
-        sleepMs(PARAM_EPOCH_TIME);
-        if (epoch::get_durable_epoch() > 20) { break; } // NOLINT
-    }
-    fin();
-}
-
-TEST_F(limestone_integration_test,               // NOLINT
+TEST_F(limestone_integration_logging_test,               // NOLINT
        check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init(false, "/tmp/shirakami"); // NOLINT
@@ -108,59 +99,6 @@ TEST_F(limestone_integration_test,               // NOLINT
     // clean up test
     ASSERT_EQ(Status::OK, leave(s));
     fin(false);
-}
-void register_storage_and_upsert_one_record() {
-    // prepare
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
-
-    ASSERT_EQ(Status::OK, enter(s));
-    // data creation
-    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
-
-    // cleanup
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
-void recovery_test() {
-    // start
-    std::string log_dir{};
-    int tid = syscall(SYS_gettid); // NOLINT
-    std::uint64_t tsc = rdtsc();
-    log_dir =
-            "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
-    init(false, log_dir); // NOLINT
-
-    // storage creation
-    register_storage_and_upsert_one_record();
-    sleep(1);
-
-    fin(false);
-
-    // start
-    init(true, log_dir); // NOLINT
-
-    // test: log exist
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    // test: check recovery
-    std::string vb{};
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    for (auto&& st : st_list) {
-        ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
-    ASSERT_EQ(Status::OK, leave(s));
-    fin();
-}
-
-TEST_F(limestone_integration_test, check_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());        // NOLINT
 }
 
 } // namespace shirakami::testing
