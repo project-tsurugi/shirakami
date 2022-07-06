@@ -17,8 +17,11 @@
 namespace shirakami {
 
 [[maybe_unused]] Status delete_all_records() { // NOLINT
+    //check list of all storage
     std::vector<Storage> storage_list;
     list_storage(storage_list);
+
+    // delete for above.
     for (auto&& elem : storage_list) {
         if (elem != wp::get_page_set_meta_storage()) {
             storage::delete_storage(elem);

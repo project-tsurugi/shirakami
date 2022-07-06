@@ -99,23 +99,17 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!force_shut_down_logging) {
         // flush remaining log
         bool was_nothing{false};
-        [[maybe_unused]] epoch::epoch_t ce{};
-        {
-            std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-            ce = epoch::get_global_epoch();
-            lpwal::flush_remaining_log(was_nothing);
-        }
+        lpwal::flush_remaining_log(was_nothing); // (*1)
+        epoch::epoch_t ce{epoch::get_global_epoch()};
+        // (*1)'s log must be before ce timing.
         if (!was_nothing) {
             // wait durable above flushing
             for (;;) {
                 if (epoch::get_durable_epoch() >= ce) { break; }
                 _mm_pause();
-                LOG(INFO);
-                sleep(1);
             }
         }
     }
-    datastore::get_datastore()->shutdown();
     if (!lpwal::get_log_dir_pointed()) {
         // log dir was not pointed. So remove log dir
         lpwal::remove_under_log_dir();
@@ -126,6 +120,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     // about tx engine
     garbage::fin();
     epoch::fin();
+    datastore::get_datastore()->shutdown(); // this should after epoch::fin();
     delete_all_records(); // This should be before wp::fin();
     wp::fin();            // note: this use yakushima.
 
@@ -213,16 +208,19 @@ init([[maybe_unused]] bool enable_recovery,
     auto ret = wp::init();
     if (ret != Status::OK) { return ret; }
 
+#ifdef PWAL
+    // recover shirakami from datastore recovered.
+    if (enable_recovery && !enable_true_log_nothing) {
+        datastore::recovery_from_datastore();
+        // logging the shirakami state after recovery
+        datastore::scan_all_and_logging(); // todo remove?
+    }
+
     // about epoch
     epoch::init();
     garbage::init();
 
-#ifdef PWAL
     lpwal::init(); // start damon
-
-    if (enable_recovery && !enable_true_log_nothing) {
-        datastore::recovery_from_datastore();
-    }
 #endif
 
     set_initialized(true); // about init command

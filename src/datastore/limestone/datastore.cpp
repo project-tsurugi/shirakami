@@ -80,6 +80,34 @@ void recovery_from_datastore() {
     }
 }
 
+void scan_all_and_logging() {
+    // check all storage list
+    std::vector<Storage> st_list{};
+    list_storage(st_list);
+
+    // logging for all storage
+    for (auto&& each_st : st_list) {
+        // scan for index
+        std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+        std::vector<std::pair<yakushima::node_version64_body,
+                              yakushima::node_version64*>>
+                nvec;
+        auto rc = scan(each_st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                       0, scan_res, &nvec);
+        if (rc == Status::OK) {
+            // It found some records
+            for (auto&& each_rec : scan_res) {
+                Record* rec_ptr{*std::get<1>(each_rec)};
+                // get key val info.
+                std::string key{};
+                rec_ptr->get_key(key);
+                std::string val{};
+                rec_ptr->get_value(val);
+            }
+        }
+    }
+}
+
 #endif
 
 } // namespace shirakami::datastore

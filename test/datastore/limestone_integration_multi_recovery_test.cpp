@@ -33,12 +33,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_test
+class limestone_integration_multi_recovery_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_test");
+                                  "limestone_integration_multi_recovery_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -67,7 +67,7 @@ void register_storage_and_upsert_one_record() {
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-void recovery_test() {
+void recovery_test(std::size_t recovery_num) {
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -76,22 +76,25 @@ void recovery_test() {
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init(false, log_dir); // NOLINT
 
-    // storage creation
-    register_storage_and_upsert_one_record();
+    std::vector<Storage> st_list{};
+    for (std::size_t i = 0; i < recovery_num; ++i) {
+        register_storage_and_upsert_one_record();
+        fin(false);
+        // recovery
+        init(true, log_dir); // NOLINT
 
-    fin(false);
+        // verify
+        ASSERT_EQ(Status::OK, list_storage(st_list));
+        ASSERT_EQ(i + 1, st_list.size());
+    }
 
-    // start
-    init(true, log_dir); // NOLINT
-
-    // test: log exist
+    // test
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
     std::string vb{};
-    std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // because single recovery
+    ASSERT_EQ(recovery_num, st_list.size());
     for (auto&& st : st_list) {
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -100,8 +103,9 @@ void recovery_test() {
     fin();
 }
 
-TEST_F(limestone_integration_single_recovery_test, check_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());                        // NOLINT
+TEST_F(limestone_integration_multi_recovery_test,
+       DISABLED_two_recovery_test) {                    // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test(2)); // NOLINT
 }
 
 } // namespace shirakami::testing
