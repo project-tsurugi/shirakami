@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "database_options.h"
 #include "scheme.h"
 #include "transaction_state.h"
 #include "tuple.h"
@@ -214,16 +215,12 @@ extern void fin(bool force_shut_down_logging = true); // NOLINT
  * @brief It initializes shirakami's environment.
  * @details When it starts to use this system, in other words, it starts to
  * build database, it must be executed first.
- * @param[in] enable_recovery whether it is enable recovery from existing log.
- * @param[in] log_directory_path of WAL directory.
- * @note If you use enable_recovery=true && log_directory_path="", it is treated
- *  enable_recovery=false because there is no log for recovery.
+ * @param[in] options Options about open mode and logging.
  * @return Status::OK
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
  * not done anything in this call.
  */
-extern Status init(bool enable_recovery = false,              // NOLINT
-                   std::string_view log_directory_path = ""); // NOLINT
+extern Status init(database_options options = {}); // NOLINT
 
 /**
  * @brief insert the record with given key/value

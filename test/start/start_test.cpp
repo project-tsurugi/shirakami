@@ -34,7 +34,7 @@ TEST_F(start_test, double_start) { // NOLINT
 }
 
 TEST_F(start_test, valid_recovery_invalid_log_directory) { // NOLINT
-    ASSERT_EQ(init(true, ""), Status::OK);
+    ASSERT_EQ(init({database_options::open_mode::RESTORE, ""}), Status::OK);
     fin();
 }
 

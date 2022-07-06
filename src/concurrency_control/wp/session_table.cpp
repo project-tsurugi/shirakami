@@ -24,7 +24,7 @@ Status session_table::decide_token(Token& token) { // NOLINT
     return Status::OK;
 }
 
-void session_table::init_session_table([[maybe_unused]] bool enable_recovery) {
+void session_table::init_session_table() {
     for (auto&& itr : get_session_table()) {
         // for external
         itr.set_visible(false);

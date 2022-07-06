@@ -120,7 +120,9 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     // about tx engine
     garbage::fin();
     epoch::fin();
+#ifdef PWAL
     datastore::get_datastore()->shutdown(); // this should after epoch::fin();
+#endif
     delete_all_records(); // This should be before wp::fin();
     wp::fin();            // note: this use yakushima.
 
@@ -130,13 +132,11 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     // clear flag
     set_initialized(false);
 } catch (std::exception& e) {
-    LOG(FATAL);
+    LOG(FATAL) << e.what();
     std::abort();
 }
 
-Status
-init([[maybe_unused]] bool enable_recovery,
-     [[maybe_unused]] const std::string_view log_directory_path) { // NOLINT
+Status init([[maybe_unused]] database_options options) { // NOLINT
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
     // about storage
@@ -144,10 +144,13 @@ init([[maybe_unused]] bool enable_recovery,
 
 #if defined(PWAL)
     // check args
-    std::string log_dir(log_directory_path);
+    std::string log_dir(options.get_log_directory_path());
     bool enable_true_log_nothing{false};
     if (log_dir.empty()) {
-        if (enable_recovery) { enable_true_log_nothing = true; }
+        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
+            // order to recover, but log_dir is nothing
+            enable_true_log_nothing = true;
+        }
         int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
@@ -158,12 +161,14 @@ init([[maybe_unused]] bool enable_recovery,
         lpwal::set_log_dir(log_dir);
         lpwal::set_log_dir_pointed(true);
         // check exist
-        boost::filesystem::path ldp{std::string(log_directory_path)};
+        boost::filesystem::path ldp{
+                std::string(options.get_log_directory_path())};
         boost::system::error_code error;
         const bool result = boost::filesystem::exists(ldp, error);
         if (!result || error) {
             // exists
-            if (!enable_recovery) {
+            if (options.get_open_mode() ==
+                database_options::open_mode::CREATE) {
                 // there are some data not expected.
                 lpwal::set_log_dir(log_dir);
                 lpwal::remove_under_log_dir();
@@ -180,7 +185,8 @@ init([[maybe_unused]] bool enable_recovery,
     boost::filesystem::path metadata_path(metadata_dir);
     datastore::start_datastore(
             limestone::api::configuration(data_locations, metadata_path));
-    if (enable_recovery && !enable_true_log_nothing) {
+    if (options.get_open_mode() != database_options::open_mode::CREATE &&
+        !enable_true_log_nothing) {
         datastore::get_datastore()->recover(); // should execute before ready()
     }
     datastore::get_datastore()->add_persistent_callback(
@@ -197,7 +203,7 @@ init([[maybe_unused]] bool enable_recovery,
     TxState::init();
 
     // about cc
-    session_table::init_session_table(enable_recovery);
+    session_table::init_session_table();
     //epoch::invoke_epoch_thread();
 
     // about index
@@ -210,16 +216,19 @@ init([[maybe_unused]] bool enable_recovery,
 
 #ifdef PWAL
     // recover shirakami from datastore recovered.
-    if (enable_recovery && !enable_true_log_nothing) {
+    if (options.get_open_mode() != database_options::open_mode::CREATE &&
+        !enable_true_log_nothing) {
         datastore::recovery_from_datastore();
         // logging the shirakami state after recovery
         datastore::scan_all_and_logging(); // todo remove?
     }
+#endif
 
     // about epoch
     epoch::init();
     garbage::init();
 
+#ifdef PWAL
     lpwal::init(); // start damon
 #endif
 

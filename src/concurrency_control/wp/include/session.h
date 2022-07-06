@@ -511,7 +511,7 @@ public:
     /**
      * @brief Initialization about session_table_
      */
-    static void init_session_table(bool enable_recovery);
+    static void init_session_table();
 
 private:
     /**
