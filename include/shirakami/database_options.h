@@ -53,4 +53,29 @@ private:
     std::size_t logger_thread_num_{0};
 };
 
+inline constexpr std::string_view
+to_string_view(database_options::open_mode value) {
+    switch (value) {
+        case database_options::open_mode::CREATE:
+            return "CREATE";
+        case database_options::open_mode::CREATE_OR_RESTORE:
+            return "CREATE_OR_RESTORE";
+        case database_options::open_mode::RESTORE:
+            return "RESTORE";
+        default:
+            abort();
+    }
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+                                database_options::open_mode value) {
+    return out << to_string_view(value);
+}
+
+inline std::ostream& operator<<(std::ostream& out, database_options options) {
+    return out << "open_mode:" << options.get_open_mode()
+               << ", log_directory_path:" << options.get_log_directory_path()
+               << ", logger_thread_num:" << options.get_logger_thread_num();
+}
+
 } // namespace shirakami
