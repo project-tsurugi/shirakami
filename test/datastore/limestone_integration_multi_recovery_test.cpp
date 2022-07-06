@@ -74,14 +74,14 @@ void recovery_test(std::size_t recovery_num) {
     std::uint64_t tsc = rdtsc();
     log_dir =
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
-    init(false, log_dir); // NOLINT
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     std::vector<Storage> st_list{};
     for (std::size_t i = 0; i < recovery_num; ++i) {
         register_storage_and_upsert_one_record();
         fin(false);
         // recovery
-        init(true, log_dir); // NOLINT
+        init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
         // verify
         ASSERT_EQ(Status::OK, list_storage(st_list));
@@ -103,9 +103,10 @@ void recovery_test(std::size_t recovery_num) {
     fin();
 }
 
-TEST_F(limestone_integration_multi_recovery_test,
-       DISABLED_two_recovery_test) {                    // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test(2)); // NOLINT
+TEST_F(limestone_integration_multi_recovery_test, // NOLINT
+       two_recovery_test) {                       // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test(2));    // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test(3));    // NOLINT
 }
 
 } // namespace shirakami::testing

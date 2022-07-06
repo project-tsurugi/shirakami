@@ -14,6 +14,8 @@ public:
 
     database_options() = default;
 
+    database_options(open_mode om) : open_mode_(om) {}
+
     database_options(open_mode om, std::filesystem::path log_directory_path)
         : open_mode_(om), log_directory_path_(log_directory_path) {}
 

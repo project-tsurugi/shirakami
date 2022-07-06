@@ -75,7 +75,7 @@ void storage_operation_test(std::size_t storage_num) {
     std::uint64_t tsc = rdtsc();
     log_dir =
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
-    init(false, log_dir); // NOLINT
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     for (std::size_t i = 0; i < storage_num; ++i) {
         register_storage_and_upsert_one_record();
@@ -85,7 +85,7 @@ void storage_operation_test(std::size_t storage_num) {
     fin(false);
 
     // re-start
-    init(true, log_dir); // NOLINT
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(storage_num, st_list.size()); // 1 is due to recovery

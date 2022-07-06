@@ -74,7 +74,7 @@ void recovery_test() {
     std::uint64_t tsc = rdtsc();
     log_dir =
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
-    init(false, log_dir); // NOLINT
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     // storage creation
     register_storage_and_upsert_one_record();
@@ -82,7 +82,7 @@ void recovery_test() {
     fin(false);
 
     // start
-    init(true, log_dir); // NOLINT
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
     // test: log exist
     Token s{};
