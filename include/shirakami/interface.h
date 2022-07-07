@@ -9,6 +9,7 @@
 
 #include "database_options.h"
 #include "scheme.h"
+#include "transaction_options.h"
 #include "transaction_state.h"
 #include "tuple.h"
 
