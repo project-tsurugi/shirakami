@@ -178,7 +178,6 @@ Status storage::delete_storage(Storage storage) {
         return Status::ERR_FATAL;
     }
 
-    storage::register_reuse_num(storage);
     return Status::OK;
 }
 
@@ -200,20 +199,9 @@ Status storage::list_storage(std::vector<Storage>& out) {
 }
 
 void storage::get_new_storage_num(Storage& storage) {
-    std::unique_lock lock{storage::get_mt_reuse_num()};
-
-    auto& storage_reuse = storage::get_reuse_num();
-    if (!storage_reuse.empty()) {
-        storage = storage_reuse.back();
-        storage_reuse.pop_back();
-    } else {
-        storage = strg_ctr_.fetch_add(1);
-    }
+    storage = strg_ctr_.fetch_add(1);
 }
 
-void storage::init() {
-    storage::get_reuse_num() = {};
-    storage::set_strg_ctr(storage::initial_strg_ctr);
-}
+void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
 
 } // namespace shirakami

@@ -76,6 +76,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/tx_state/*.cpp"
         "start/*.cpp"
         "shutdown/*.cpp"
+        "storage/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 

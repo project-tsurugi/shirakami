@@ -48,16 +48,7 @@ public:
         return strg_ctr_.load(std::memory_order_acquire);
     }
 
-    static std::mutex& get_mt_reuse_num() { return mt_reuse_num_; }
-
-    static std::vector<Storage>& get_reuse_num() { return reuse_num_; }
-
     static Status list_storage(std::vector<Storage>& out);
-
-    static void register_reuse_num(Storage st) {
-        std::unique_lock lk {mt_reuse_num_};
-        reuse_num_.emplace_back(st);
-    }
 
     static void set_strg_ctr(Storage st) {
         strg_ctr_.store(st, std::memory_order_release);
@@ -70,10 +61,6 @@ private:
      * @attention The number of storages above UINT64_MAX is undefined behavior.
      */
     static inline std::atomic<Storage> strg_ctr_{initial_strg_ctr};
-
-    static inline std::vector<Storage> reuse_num_; // NOLINT
-
-    static inline std::mutex mt_reuse_num_;
 };
 
 } // namespace shirakami
