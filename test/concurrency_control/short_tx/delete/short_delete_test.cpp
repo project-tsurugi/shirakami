@@ -26,7 +26,7 @@ public:
 };
 
 TEST_F(delete_test, delete_) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT
     std::string v2("bbb"); // NOLINT

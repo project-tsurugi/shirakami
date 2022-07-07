@@ -33,7 +33,7 @@ private:
 
 TEST_F(update_after_delete, independent_tx) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
@@ -49,7 +49,7 @@ TEST_F(update_after_delete, independent_tx) { // NOLINT
 
 TEST_F(update_after_delete, same_tx) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT

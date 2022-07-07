@@ -47,7 +47,7 @@ private:
 
 TEST_F(wp_test, wp_meta_basic) { // NOLINT
     Storage storage{};
-    ASSERT_EQ(Status::OK, register_storage(storage));
+    ASSERT_EQ(Status::OK, create_storage(storage));
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
@@ -79,7 +79,7 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
 TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     std::array<Token, 3> ss{};
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     ASSERT_EQ(enter(ss.at(0)), Status::OK);
     ASSERT_EQ(enter(ss.at(1)), Status::OK);
     ASSERT_EQ(enter(ss.at(2)), Status::OK);

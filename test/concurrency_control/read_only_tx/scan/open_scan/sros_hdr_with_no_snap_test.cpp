@@ -48,7 +48,7 @@ void wait_change_epoch() {
 TEST_F(open_scan_test,                   // NOLINT
        open_scan_skip_one_hdr_no_snap) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -86,7 +86,7 @@ TEST_F(open_scan_test,                   // NOLINT
 TEST_F(open_scan_test,                   // NOLINT
        open_scan_skip_two_hdr_no_snap) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -127,7 +127,7 @@ TEST_F(open_scan_test,                   // NOLINT
 TEST_F(open_scan_test,                     // NOLINT
        open_scan_skip_three_hdr_no_snap) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

@@ -46,7 +46,7 @@ TEST_F(open_scan_test, scan_at_non_existing_storage) { // NOLINT
 
 TEST_F(open_scan_test, open_scan_find_no_index) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -64,7 +64,7 @@ TEST_F(open_scan_test, open_scan_find_no_index) { // NOLINT
 TEST_F(open_scan_test,                                               // NOLINT
        open_scan_find_some_index_nothing_to_read_due_to_inserting) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -89,7 +89,7 @@ TEST_F(open_scan_test,                                               // NOLINT
 TEST_F(open_scan_test,                                             // NOLINT
        open_scan_find_some_index_nothing_to_read_due_to_deleted) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
@@ -113,7 +113,7 @@ TEST_F(open_scan_test,                                             // NOLINT
 
 TEST_F(open_scan_test, open_scan_read_own_insert_one) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
@@ -131,7 +131,7 @@ TEST_F(open_scan_test, open_scan_read_own_insert_one) { // NOLINT
 
 TEST_F(open_scan_test, open_scan_test) { // NOLINT
     Storage storage{};
-    register_storage(storage);
+    create_storage(storage);
     std::string k1{"sa"};   // NOLINT
     std::string k2{"sa/"};  // NOLINT
     std::string k3{"sa/c"}; // NOLINT

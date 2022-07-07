@@ -41,7 +41,7 @@ private:
 
 TEST_F(short_delete_insert_different_tx_test, delete_insert) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -69,7 +69,7 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert) { // NOLINT
 
 TEST_F(short_delete_insert_different_tx_test, delete_insert_delete) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s1{};
     Token s2{};
     Token s3{};

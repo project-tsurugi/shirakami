@@ -42,7 +42,7 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     // prepare data
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -89,7 +89,7 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     // prepare data
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

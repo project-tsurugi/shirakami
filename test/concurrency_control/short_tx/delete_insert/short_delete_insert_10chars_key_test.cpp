@@ -28,7 +28,7 @@ public:
 Storage st;
 
 TEST_F(delete_insert_10chars_key, delete_insert_with_10chars) { // NOLINT
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     std::string k("testing_a0"); // NOLINT
     std::string v("bbb");        // NOLINT
     Token s{};

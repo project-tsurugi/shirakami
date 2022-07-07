@@ -55,7 +55,7 @@ inline void wait_epoch_update() {
 TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
     // prepare test
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
 
@@ -103,7 +103,7 @@ TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
 TEST_F(search_session, read_version_epoch_descending_order) { // NOLINT
     // prepare test
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
 

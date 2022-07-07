@@ -38,7 +38,7 @@ private:
 
 TEST_F(missing_close_scan_test, read_first) { // NOLINT
     Storage storage0{};
-    register_storage(storage0);
+    create_storage(storage0);
     Token s{};
     {
         ASSERT_EQ(Status::OK, enter(s));
@@ -68,7 +68,7 @@ TEST_F(missing_close_scan_test, read_first) { // NOLINT
 
 TEST_F(missing_close_scan_test, read_second) { // NOLINT
     Storage storage0{};
-    register_storage(storage0);
+    create_storage(storage0);
     Token s{};
     {
         ASSERT_EQ(Status::OK, enter(s));

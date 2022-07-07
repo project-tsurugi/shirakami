@@ -40,7 +40,7 @@ private:
 };
 
 TEST_F(short_delete_insert_same_tx_test, delete_insert) { // NOLINT
-    register_storage(get_storage());
+    create_storage(get_storage());
     std::string k("testing"); // NOLINT
     std::string v("bbb");     // NOLINT
     Token s{};
@@ -54,7 +54,7 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert) { // NOLINT
 }
 
 TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
-    register_storage(get_storage());
+    create_storage(get_storage());
     std::string k("testing"); // NOLINT
     std::string v("v");       // NOLINT
     std::string iv("iv");     // NOLINT
@@ -76,7 +76,7 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
     Storage storage{};
-    register_storage(storage);
+    create_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
@@ -96,7 +96,7 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
     Storage storage{};
-    register_storage(storage);
+    create_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};

@@ -34,7 +34,7 @@ private:
 
 TEST_F(simple_scan, scannable_total_index_size_with_not_begin) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::size_t sz{};

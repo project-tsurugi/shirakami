@@ -85,8 +85,8 @@ void build_storage(Storage const st, std::size_t const rec) {
 void create_db() {
     // ddl phase
     Storage st{};
-    auto ret{register_storage(st)};
-    if (ret != Status::OK) { LOG(FATAL) << "fail register_storage."; }
+    auto ret{create_storage(st)};
+    if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
     set_st(st);
 
     // dml phase

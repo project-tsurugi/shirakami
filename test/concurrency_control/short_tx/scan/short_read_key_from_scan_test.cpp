@@ -35,7 +35,7 @@ private:
 
 TEST_F(simple_scan, read_key_from_scan_with_not_begin) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string sb{};
@@ -45,7 +45,7 @@ TEST_F(simple_scan, read_key_from_scan_with_not_begin) { // NOLINT
 
 TEST_F(simple_scan, test_after_delete_api) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {

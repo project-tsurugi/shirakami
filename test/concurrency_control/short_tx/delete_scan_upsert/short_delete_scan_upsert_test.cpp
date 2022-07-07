@@ -33,7 +33,7 @@ private:
 
 TEST_F(delete_scan_upsert, range_read_delete) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     std::string k("k");   // NOLINT
     std::string k2("k2"); // NOLINT
     std::string v("v");   // NOLINT

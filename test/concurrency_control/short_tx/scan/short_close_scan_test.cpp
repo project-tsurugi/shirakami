@@ -24,7 +24,7 @@ public:
 
 TEST_F(simple_scan, close_scan_with_not_begin) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_BEGIN, close_scan(s, {}));
@@ -33,7 +33,7 @@ TEST_F(simple_scan, close_scan_with_not_begin) { // NOLINT
 
 TEST_F(simple_scan, close_scan) { // NOLINT
     Storage storage{};
-    register_storage(storage);
+    create_storage(storage);
     std::string k1("a"); // NOLINT
     std::string v1("0"); // NOLINT
     Token s{};

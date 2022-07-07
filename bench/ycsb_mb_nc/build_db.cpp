@@ -78,7 +78,7 @@ void build_db(const std::size_t record, const std::size_t key_length, const std:
     if (get_use_separate_storage()) {
         get_separate_storage().reserve(threads);
         for (std::size_t i = 0; i < threads; ++i) {
-            register_storage(storage);
+            create_storage(storage);
             get_separate_storage().emplace_back(storage);
 
             std::vector<std::thread> thv;
@@ -92,7 +92,7 @@ void build_db(const std::size_t record, const std::size_t key_length, const std:
             for (auto& th : thv) th.join();
         }
     } else {
-        register_storage(storage);
+        create_storage(storage);
 
         std::vector<std::thread> thv;
 

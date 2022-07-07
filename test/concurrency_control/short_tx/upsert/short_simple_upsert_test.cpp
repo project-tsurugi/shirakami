@@ -31,7 +31,7 @@ public:
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
         init(); // NOLINT
-        register_storage(st);
+        create_storage(st);
     }
 
     void TearDown() override { fin(); }

@@ -48,7 +48,7 @@ TEST_F(search_wp, short_search_find_wp) { // NOLINT
     Token short_s{};
     Token long_s{};
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, enter(short_s));
     ASSERT_EQ(Status::OK, enter(long_s));
     ASSERT_EQ(Status::OK, tx_begin(long_s, TX_TYPE::LONG, {st}));

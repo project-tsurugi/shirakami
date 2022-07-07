@@ -61,7 +61,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -92,7 +92,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

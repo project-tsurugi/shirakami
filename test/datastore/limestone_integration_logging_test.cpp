@@ -67,7 +67,7 @@ TEST_F(limestone_integration_logging_test,       // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

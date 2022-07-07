@@ -52,7 +52,7 @@ TEST_F(long_search_upsert_wait_test, wait_for_overwrite) { // NOLINT
     Token s1{};
     Token s2{};
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
@@ -91,7 +91,7 @@ TEST_F(long_search_upsert_wait_test, wait_for_preceding_lg_later_bd) { // NOLINT
     Token s2{};
     Token s3{};
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, enter(s3));
@@ -137,7 +137,7 @@ TEST_F(long_search_upsert_wait_test,
     Token s1{};
     Token s2{};
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));

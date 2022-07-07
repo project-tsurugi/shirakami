@@ -62,7 +62,7 @@ TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
      * (causing WARN_PREMATURE)
      */
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s0{}; // short
     Token s1{}; // long
     Token s2{}; // long
@@ -97,7 +97,7 @@ TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
 
 TEST_F(long_scan_upsert_test, reading_lower_priority_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     {
         // prepare data
         Token s{};
@@ -126,7 +126,7 @@ TEST_F(long_scan_upsert_test, reading_lower_priority_wp) { // NOLINT
 
 TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     std::string init_val{"i"};
     {
         // prepare data
@@ -183,7 +183,7 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
 TEST_F(long_scan_upsert_test, scan_read_own_upsert) { // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));

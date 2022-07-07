@@ -49,7 +49,7 @@ private:
 TEST_F(short_upsert_mv_test, new_epoch_new_version) { // NOLINT
     Token s{};
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"K"};
     std::string first_v{"v"};

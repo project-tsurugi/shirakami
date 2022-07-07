@@ -36,7 +36,7 @@ private:
 
 TEST_F(short_delete_short_search, search_delete) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
@@ -51,7 +51,7 @@ TEST_F(short_delete_short_search, search_delete) { // NOLINT
 
 TEST_F(short_delete_short_search, delete_search) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);

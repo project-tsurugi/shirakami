@@ -41,7 +41,7 @@ private:
 TEST_F(read_only_open_scan_test,  // NOLINT
        avoid_premature_by_wait) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin(s, TX_TYPE::READ_ONLY), Status::OK);

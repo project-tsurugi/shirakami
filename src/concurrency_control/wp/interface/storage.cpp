@@ -19,8 +19,8 @@
 
 namespace shirakami {
 
-Status register_storage(Storage& storage) {
-    return storage::register_storage(storage);
+Status create_storage(Storage& storage) {
+    return storage::create_storage(storage);
 }
 
 Status exist_storage(Storage storage) {
@@ -35,7 +35,7 @@ Status list_storage(std::vector<Storage>& out) {
     return storage::list_storage(out);
 }
 
-Status storage::create_storage(Storage storage) {
+Status storage::register_storage(Storage storage) {
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
@@ -71,9 +71,9 @@ Status storage::create_storage(Storage storage) {
     return Status::OK;
 }
 
-Status storage::register_storage(Storage& storage) {
+Status storage::create_storage(Storage& storage) {
     get_new_storage_num(storage);
-    return create_storage(storage);
+    return register_storage(storage);
 }
 
 Status storage::exist_storage(Storage storage) {

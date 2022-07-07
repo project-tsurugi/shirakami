@@ -54,7 +54,7 @@ TEST_F(single_insert, insert_at_non_existing_storage) { // NOLINT
 }
 
 TEST_F(single_insert, long_value_insert) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("CUSTOMER"); // NOLINT
     std::string v(             // NOLINT
             "b23456789012345678901234567890123456789012345678901234567890123456"
@@ -102,7 +102,7 @@ TEST_F(single_insert, long_value_insert) { // NOLINT
 }
 
 TEST_F(single_insert, long_key_insert) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k(56, '0'); // NOLINT
     k += "a";
     std::string v("v");

@@ -22,7 +22,7 @@ public:
 Storage storage;
 
 TEST_F(delete_upsert_test, delete_upsert) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("testing"); // NOLINT
     std::string v("bbb");     // NOLINT
     Token s{};

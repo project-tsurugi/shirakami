@@ -50,13 +50,13 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void register_storage_and_upsert_one_record() {
+void create_storage_and_upsert_one_record() {
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
 
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
@@ -77,7 +77,7 @@ void recovery_test() {
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     // storage creation
-    register_storage_and_upsert_one_record();
+    create_storage_and_upsert_one_record();
 
     fin(false);
 

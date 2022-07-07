@@ -50,7 +50,7 @@ private:
 
 TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     std::string k{"k"};
     std::string v{"v"};
     Token s1{};
@@ -83,7 +83,7 @@ TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
 
 TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     std::string k{"k"};
     std::string v{"v"};
     Token s1{};

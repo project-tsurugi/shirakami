@@ -108,7 +108,7 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     Token s1{};
     Token s2{};
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));

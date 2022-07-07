@@ -48,9 +48,9 @@ private:
 
 TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
     Storage st_1{};
-    ASSERT_EQ(register_storage(st_1), Status::OK);
+    ASSERT_EQ(create_storage(st_1), Status::OK);
     Storage st_2{};
-    ASSERT_EQ(register_storage(st_2), Status::OK);
+    ASSERT_EQ(create_storage(st_2), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"k"};

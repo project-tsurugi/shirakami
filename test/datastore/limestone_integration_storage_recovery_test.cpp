@@ -61,7 +61,7 @@ void recovery_test() {
 
     // storage creation
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
 
     fin(false);
 

@@ -36,7 +36,7 @@ private:
 TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
     // prepare
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -67,7 +67,7 @@ TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
 TEST_F(short_insert_scan_test, scan_read_own_insert) { // NOLINT
     // prepare
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

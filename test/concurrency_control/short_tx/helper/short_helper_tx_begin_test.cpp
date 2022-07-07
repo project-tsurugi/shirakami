@@ -113,7 +113,7 @@ TEST_F(c_helper_tx_begin, check_param_tx_type_after_tx_begin) { // NOLINT
 
 TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     Storage storage{};
-    register_storage(storage);
+    create_storage(storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};

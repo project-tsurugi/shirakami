@@ -40,7 +40,7 @@ private:
 
 TEST_F(double_insert, insert_after_user_abort) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     std::string k("k");
     std::string v("v");
     Token s{};
@@ -66,7 +66,7 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
 
 TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     std::string k("k");
     std::string v("v");
     Token s{};
@@ -88,7 +88,7 @@ TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
 TEST_F(double_insert, insert_insert_conflict) { // NOLINT
                                                 // prepare
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

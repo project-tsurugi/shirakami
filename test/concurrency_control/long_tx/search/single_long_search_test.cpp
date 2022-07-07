@@ -55,7 +55,7 @@ void wait_epoch_update() {
 
 TEST_F(single_long_search_test, start_before_epoch) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
@@ -69,7 +69,7 @@ TEST_F(single_long_search_test, start_before_epoch) { // NOLINT
 
 TEST_F(single_long_search_test, avoid_premature_by_wait) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);

@@ -40,7 +40,7 @@ private:
 TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
        next_not_skip_1_drec) {                    // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     Token sl{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -87,7 +87,7 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
 TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
        next_not_skip_2_drec) {                    // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     Token sl{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -140,7 +140,7 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
 TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
        next_not_skip_3_drec) {                    // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     Token s{};
     Token sl{};
     ASSERT_EQ(Status::OK, enter(s));

@@ -34,7 +34,7 @@ private:
 TEST_F(short_search_upsert, simple) { // NOLINT
     Token s{};
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     ASSERT_EQ(enter(s), Status::OK);
     std::string k{"k"};
     std::string v{"v"};
@@ -52,7 +52,7 @@ TEST_F(short_search_upsert, simple) { // NOLINT
 
 TEST_F(short_search_upsert, search_concurrent_upsert) { // NOLINT
     Storage st{};
-    register_storage(st);
+    create_storage(st);
     std::string k("k"); // NOLINT
     std::string v("k"); // NOLINT
     std::array<Token, 2> token_ar{};

@@ -50,7 +50,7 @@ private:
 TEST_F(short_read_from_scan_conflict_wp_test, short_find_wp) { // NOLINT
     // prepare test
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
 
     Token s{}; // for short
     ASSERT_EQ(Status::OK, enter(s));

@@ -35,7 +35,7 @@ private:
 };
 
 TEST_F(simple_search, search_search) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
@@ -52,7 +52,7 @@ TEST_F(simple_search, search_search) { // NOLINT
 }
 
 TEST_F(simple_search, search_local_upsert) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
@@ -66,7 +66,7 @@ TEST_F(simple_search, search_local_upsert) { // NOLINT
 }
 
 TEST_F(simple_search, search_upsert_search) { // NOLINT
-    register_storage(storage);
+    create_storage(storage);
     std::string k("aaa");  // NOLINT
     std::string v("bbb");  // NOLINT
     std::string v2("ccc"); // NOLINT

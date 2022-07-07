@@ -43,7 +43,7 @@ private:
 
 TEST_F(search_update, pointReadUpdate) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT
@@ -60,7 +60,7 @@ TEST_F(search_update, pointReadUpdate) { // NOLINT
 TEST_F(search_update, // NOLINT
        repeatableReadUpdateDiffPayloadSizeByMt) {
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     std::string k("k");       // NOLINT
     std::string v1(8, 'v');   // NOLINT
     std::string v2(100, 'v'); // NOLINT

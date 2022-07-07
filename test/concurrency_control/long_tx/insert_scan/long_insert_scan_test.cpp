@@ -54,7 +54,7 @@ TEST_F(long_insert_scan_test,  // NOLINT
        scan_read_own_insert) { // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));

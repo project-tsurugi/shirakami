@@ -44,7 +44,7 @@ private:
 TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
     std::string k("k");                                          // NOLINT
     std::string v("v");                                          // NOLINT
-    register_storage(st);
+    create_storage(st);
     {
         Token s{};
         {
@@ -105,7 +105,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
     std::string k("k1");                                         // NOLINT
     std::string k2("k2");                                        // NOLINT
     std::string v("v");                                          // NOLINT
-    register_storage(st);
+    create_storage(st);
     {
         Token s{};
         {

@@ -18,9 +18,9 @@ namespace shirakami {
  * @brief Create one table and return its handler.
  * @param[out] storage output parameter to pass the storage handle, that is 
  * used for the subsequent calls related with the storage.
- * Until delete_storage is called for the first time, multiple register_storage 
+ * Until delete_storage is called for the first time, multiple create_storage 
  * calls assign Storage value monotonically.
- * That is, Storage value assigned by register_storage is larger than the one 
+ * That is, Storage value assigned by create_storage is larger than the one 
  * assigned by previous call as long as no delete_storage is called.
  * Once delete_storage is called, Storage value can be recycled and there is no 
  * guarantee on the monotonicity.
@@ -29,7 +29,7 @@ namespace shirakami {
  * value of the handler.
  * @return Status::ERR_FATAL Some programming error.
  */
-extern Status register_storage(Storage& storage);
+extern Status create_storage(Storage& storage);
 
 /**
  * @brief Confirm existence of the storage.
@@ -41,7 +41,7 @@ extern Status exist_storage(Storage storage);
 
 /**
  * @brief delete existing storage and records under the storage.
- * @param[in] storage the storage handle retrieved with register_storage().
+ * @param[in] storage the storage handle retrieved with create_storage().
  * @return Status::OK if successful.
  * @return Status::WARN_INVALID_HANDLE if the storage is not registered with 
  * the given name.

@@ -34,8 +34,8 @@ private:
 TEST_F(storage, multiple_storages) { // NOLINT
     Storage storage0{};
     Storage storage1{};
-    ASSERT_EQ(Status::OK, register_storage(storage0));
-    ASSERT_EQ(Status::OK, register_storage(storage1));
+    ASSERT_EQ(Status::OK, create_storage(storage0));
+    ASSERT_EQ(Status::OK, create_storage(storage1));
     std::string k("k");   // NOLINT
     std::string v0("v0"); // NOLINT
     std::string v1("v1"); // NOLINT

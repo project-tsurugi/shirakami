@@ -51,7 +51,7 @@ private:
 
 TEST_F(delete_insert_test, long_insert_execute_read) { // NOLINT
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

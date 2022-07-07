@@ -102,7 +102,7 @@ wp_meta::wped_type find_wp(Storage const storage) {
 Status init() {
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
-    if (auto rc{storage::create_storage(storage::wp_meta_storage)};
+    if (auto rc{storage::register_storage(storage::wp_meta_storage)};
         rc != Status::OK) {
         LOG(FATAL) << rc;
     }

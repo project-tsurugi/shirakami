@@ -57,7 +57,7 @@ inline void wait_epoch_update() {
 TEST_F(search, DISABLED_read_only_mode_single_long_search_success) { // NOLINT
     // prepare test
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
 
@@ -81,7 +81,7 @@ TEST_F(search, DISABLED_read_only_mode_single_long_search_success) { // NOLINT
 TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
     // prepare test
     Storage st{};
-    ASSERT_EQ(register_storage(st), Status::OK);
+    ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
 

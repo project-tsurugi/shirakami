@@ -27,14 +27,14 @@ public:
      * @param[in] storage 
      * @return Status::OK success.
      */
-    static Status create_storage(Storage storage);
+    static Status register_storage(Storage storage);
 
     /**
      * @brief Create a storage object
      * @param[out] storage 
      * @return Status::OK success.
      */
-    static Status register_storage(Storage& storage);
+    static Status create_storage(Storage& storage);
 
     static Status exist_storage(Storage storage);
 

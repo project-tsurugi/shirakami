@@ -33,7 +33,7 @@ private:
 
 TEST_F(short_delete_after_short_update, delete_after_update) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, register_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
 
     // prepare data
