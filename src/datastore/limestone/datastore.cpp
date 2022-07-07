@@ -1,3 +1,4 @@
+#include <algorithm>
 
 #include "boost/filesystem/path.hpp"
 
@@ -29,20 +30,7 @@ void init_about_session_table(std::string_view log_dir_path) {
 }
 
 void recovery_storage_meta(std::vector<Storage>& st_list) {
-    std::sort(st_list.begin(), st_list.end());
-    st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
-    for (Storage st_itr = storage::initial_strg_ctr; st_itr != st_list.back();
-         ++st_itr) {
-        // find
-        bool found{false};
-        for (auto&& elem : st_list) {
-            if (st_itr == elem) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) { storage::get_reuse_num().emplace_back(st_itr); }
-    }
+    std::max(st_list.begin(), st_list.end());
     storage::set_strg_ctr(st_list.back() + 1);
 }
 

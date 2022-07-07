@@ -10,6 +10,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
 
@@ -93,10 +94,14 @@ void storage_operation_test(std::size_t storage_num) {
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
+    std::sort(st_list.begin(), st_list.end());
+    std::size_t itr_num{0};
     for (auto&& st : st_list) {
+        ASSERT_EQ(st, storage::initial_strg_ctr + itr_num);
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        ++itr_num;
     }
 
     // cleanup
@@ -111,8 +116,8 @@ TEST_F(limestone_integration_single_recovery_storage_test, // NOLINT
     ASSERT_NO_FATAL_FAILURE(storage_operation_test(3));    // NOLINT
 }
 
-TEST_F(limestone_integration_single_recovery_storage_test, // NOLINT
-       DISABLED_check_storage_no_operation_after_recovery) {        // NOLINT
+TEST_F(limestone_integration_single_recovery_storage_test,   // NOLINT
+       DISABLED_check_storage_no_operation_after_recovery) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
