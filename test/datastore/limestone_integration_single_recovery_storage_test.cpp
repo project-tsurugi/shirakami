@@ -111,4 +111,39 @@ TEST_F(limestone_integration_single_recovery_storage_test, // NOLINT
     ASSERT_NO_FATAL_FAILURE(storage_operation_test(3));    // NOLINT
 }
 
+TEST_F(limestone_integration_single_recovery_storage_test, // NOLINT
+       DISABLED_check_storage_no_operation_after_recovery) {        // NOLINT
+    // start
+    std::string log_dir{};
+    int tid = syscall(SYS_gettid); // NOLINT
+    std::uint64_t tsc = rdtsc();
+    log_dir =
+            "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+
+    // storage creation
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st));
+
+    fin(false);
+
+    // start
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+
+    // test: log exist
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    // test: check recovery
+    std::string vb{};
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    EXPECT_EQ(st_list.size(), 1);
+
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK, leave(s));
+    fin();
+}
+
 } // namespace shirakami::testing
