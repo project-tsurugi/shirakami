@@ -37,7 +37,8 @@ namespace shirakami {
 Status check_before_write_ops(session* const ti, Storage const st,
                               OP_TYPE const op) {
     // check whether it is read only mode.
-    if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    if (ti->get_tx_type() ==
+        transaction_options::transaction_type::READ_ONLY) {
         // can't write in read only mode.
         return Status::WARN_ILLEGAL_OPERATION;
     }
@@ -51,7 +52,8 @@ Status check_before_write_ops(session* const ti, Storage const st,
     }
 
     // long check
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
+    if (ti->get_tx_type() ==
+        transaction_options::transaction_type::LONG) {
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             // not in valid epoch.
             return Status::WARN_PREMATURE;
@@ -64,7 +66,8 @@ Status check_before_write_ops(session* const ti, Storage const st,
         // may need forwarding
         rc = long_tx::wp_verify_and_forwarding(ti, wm);
         if (rc != Status::OK) { return rc; }
-    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::SHORT) {
         // check wp
         auto wps{wm->get_wped()};
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
@@ -255,26 +258,32 @@ Status leave(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-Status tx_begin(Token const token, TX_TYPE const tx_type,
-                std::vector<Storage> write_preserve) { // NOLINT
+Status tx_begin(transaction_options options) { // NOLINT
+    Token token = options.get_token();
+    transaction_options::transaction_type tx_type =
+            options.get_transaction_type();
+    transaction_options::write_preserve_type write_preserve =
+            options.get_write_preserve();
+
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     if (!ti->get_tx_began()) {
         if (!write_preserve.empty()) {
-            if (tx_type != TX_TYPE::LONG) {
+            if (tx_type != transaction_options::transaction_type::LONG) {
                 return Status::WARN_ILLEGAL_OPERATION;
             }
         }
-        if (tx_type == TX_TYPE::LONG) {
-            auto rc{long_tx::tx_begin(ti, std::move(write_preserve))};
+        if (tx_type == transaction_options::transaction_type::LONG) {
+            auto rc{long_tx::tx_begin(ti, write_preserve)};
             if (rc != Status::OK) {
                 ti->process_before_finish_step();
                 return rc;
             }
             ti->get_write_set().set_for_batch(true);
-        } else if (tx_type == TX_TYPE::SHORT) {
+        } else if (tx_type == transaction_options::transaction_type::SHORT) {
             ti->get_write_set().set_for_batch(false);
-        } else if (tx_type == TX_TYPE::READ_ONLY) {
+        } else if (tx_type ==
+                   transaction_options::transaction_type::READ_ONLY) {
             auto rc{read_only_tx::tx_begin(ti)};
             if (rc != Status::OK) {
                 LOG(ERROR) << rc;
@@ -355,8 +364,10 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     return Status::OK;
 }
 
-Status try_deleted_to_inserting([[maybe_unused]] TX_TYPE tp, // todo remove
-                                Record* const rec_ptr, tid_word& found_tid) {
+Status
+try_deleted_to_inserting([[maybe_unused]] transaction_options::transaction_type
+                                 tp, // todo remove
+                         Record* const rec_ptr, tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     // record found_tid
     found_tid = check;

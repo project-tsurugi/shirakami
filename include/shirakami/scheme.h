@@ -449,28 +449,4 @@ inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
     return out << to_string_view(op);
 }
 
-enum class TX_TYPE : std::int32_t {
-    LONG,
-    SHORT,
-    READ_ONLY,
-};
-
-inline constexpr std::string_view to_string_view( // NOLINT
-        const TX_TYPE tp) noexcept {
-    using namespace std::string_view_literals;
-    switch (tp) {
-        case TX_TYPE::LONG:
-            return "LONG"sv; // NOLINT
-        case TX_TYPE::SHORT:
-            return "SHORT"sv; // NOLINT
-        case TX_TYPE::READ_ONLY:
-            return "READ_ONLY"sv; // NOLINT
-    }
-    std::abort();
-}
-
-inline std::ostream& operator<<(std::ostream& out, const TX_TYPE op) { // NOLINT
-    return out << to_string_view(op);
-}
-
 } // namespace shirakami

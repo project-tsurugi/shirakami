@@ -67,9 +67,9 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
@@ -97,9 +97,9 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
@@ -127,9 +127,9 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
@@ -158,9 +158,9 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);

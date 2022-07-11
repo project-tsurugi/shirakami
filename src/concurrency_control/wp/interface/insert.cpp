@@ -47,7 +47,7 @@ Status insert(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
 
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 
@@ -88,10 +88,10 @@ Status insert(Token const token, Storage const storage,
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // ==========
                 // start: make read set
-                if (ti->get_tx_type() == TX_TYPE::SHORT) {
+                if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
                     ti->get_read_set().emplace_back(storage, rec_ptr,
                                                     found_tid);
-                } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+                } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
                     // register read_by_set
                     point_read_by_long* rbp{};
                     auto rc = wp::find_read_by(storage, rbp);

@@ -106,7 +106,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
         TX_BEGIN: // NOLINT
-            ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
+            ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}), Status::OK);
             wait_epoch_update();
 
             for (auto&& elem : keys) {
@@ -128,7 +128,7 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
-                ASSERT_EQ(shirakami::tx_begin(s, TX_TYPE::LONG, {st}),
+                ASSERT_EQ(shirakami::tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
                           Status::WARN_ALREADY_BEGIN);
                 ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
             }

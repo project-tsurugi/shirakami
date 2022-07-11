@@ -57,12 +57,12 @@ TEST_F(long_insert_search_test, // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     std::string test_string{"test"};
     ASSERT_EQ(Status::OK, insert(s, st, "", test_string));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));

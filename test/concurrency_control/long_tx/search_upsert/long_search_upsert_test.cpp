@@ -61,9 +61,9 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
 
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {}}), Status::OK);
     wait_epoch_update();
     session* ti1{static_cast<session*>(s1)};
     session* ti2{static_cast<session*>(s2)};
@@ -94,8 +94,8 @@ TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
     Token s2{}; // long
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {}), Status::OK);
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {}}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
@@ -125,8 +125,8 @@ TEST_F(search_upsert, read_modify_write) { // NOLINT
         Token s2{}; // long
         ASSERT_EQ(enter(s1), Status::OK);
         ASSERT_EQ(enter(s2), Status::OK);
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
         wait_epoch_update();
         std::string vb{};
         ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);

@@ -115,7 +115,9 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_ops : FLAGS_bt_ops,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
-        if (!is_ol) { tx_begin(token, TX_TYPE::LONG, {get_bt_storages()[thid]}); }
+        if (!is_ol) {
+            tx_begin({token, transaction_options::transaction_type::LONG, {get_bt_storages()[thid]}});
+        }
 
     RETRY: // for wp premature // NOLINT
         bool need_verify = true;
@@ -129,8 +131,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                         goto RETRY; // NOLINT
                     }
                     if (rc == Status::WARN_NOT_FOUND) { LOG(FATAL); }
-                    if (rc == Status::OK ||
-                        rc == Status::ERR_VALIDATION) {
+                    if (rc == Status::OK || rc == Status::ERR_VALIDATION) {
                         break;
                     }
                 }

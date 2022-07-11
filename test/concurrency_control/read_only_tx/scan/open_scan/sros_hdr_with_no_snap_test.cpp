@@ -70,7 +70,7 @@ TEST_F(open_scan_test,                   // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -111,7 +111,7 @@ TEST_F(open_scan_test,                   // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -155,7 +155,7 @@ TEST_F(open_scan_test,                     // NOLINT
         }
 
         // test
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",

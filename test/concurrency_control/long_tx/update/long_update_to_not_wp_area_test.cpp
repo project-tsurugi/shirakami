@@ -60,7 +60,7 @@ TEST_F(update_to_not_wp_area_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // upsert with no wp
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
     auto wait_change_epoch = []() {
         auto ce{epoch::get_global_epoch()};
         for (;;) {
@@ -73,7 +73,7 @@ TEST_F(update_to_not_wp_area_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // upsert with invalid wp
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st_1}));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st_1}}));
     wait_change_epoch();
     ASSERT_EQ(update(s, st_2, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

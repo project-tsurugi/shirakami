@@ -53,7 +53,7 @@ TEST_F(epoch_no_stop_test, check_no_or_one_change_epoch) { // NOLINT
     epoch::epoch_t second = epoch::get_global_epoch();
     ASSERT_NE(first, second);
     LOG(INFO) << "first epoch " << first << ", second epoch " << second;
-    tx_begin(token); // load latest epoch
+    tx_begin({token}); // load latest epoch
     first = epoch::get_global_epoch();
     sleepMs(PARAM_EPOCH_TIME * 2);
     /**

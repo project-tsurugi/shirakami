@@ -54,7 +54,7 @@ TEST_F(long_insert_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
 
         // test
         ASSERT_EQ(Status::WARN_PREMATURE, insert(s, st, "", ""));
@@ -70,7 +70,7 @@ TEST_F(long_insert_test, start_after_epoch) { // NOLINT
     ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
 
     // test

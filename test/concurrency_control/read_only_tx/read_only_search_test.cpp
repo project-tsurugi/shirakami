@@ -53,15 +53,15 @@ TEST_F(read_only_search_test, search_SS_version) { // NOLINT
 
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v2"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v3"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin(s3, TX_TYPE::READ_ONLY));
+    ASSERT_EQ(Status::OK, tx_begin({s3, transaction_options::transaction_type::READ_ONLY}));
     wait_epoch_update();
     // =================================
 

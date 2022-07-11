@@ -49,7 +49,7 @@ TEST_F(session_test, member_operating) { // NOLINT
     // test
     auto* ti{static_cast<session*>(s)};
     ASSERT_EQ(ti->get_operating(), false);
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(ti->get_operating(), false);
@@ -106,7 +106,7 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
             _mm_pause();
         }
     };
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     wait_change_step_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_change_step_epoch();

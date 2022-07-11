@@ -51,7 +51,7 @@ void brock_insert(Storage st, size_t start, size_t end) {
         _mm_pause(); // full session now.
     }
 
-    tx_begin(token); // NOLINT
+    tx_begin({token}); // NOLINT
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {

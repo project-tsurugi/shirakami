@@ -42,7 +42,7 @@ TEST_F(sequence_test, basic) { // NOLINT
     while (enter(token) != Status::OK) {
         ;
     }
-    tx_begin(token);
+    tx_begin({token});
     // update_sequence depends on transaction semantics.
     ASSERT_EQ(update_sequence(token, id, ver + 1, val + 2), Status::OK);
     commit(token);

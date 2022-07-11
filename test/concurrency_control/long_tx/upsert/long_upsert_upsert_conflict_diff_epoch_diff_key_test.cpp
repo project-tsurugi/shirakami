@@ -67,9 +67,9 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_diff_key_test,    // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     std::string pk1{"pk1"};
@@ -99,9 +99,9 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_diff_key_test,    // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     std::string pk1{"pk1"};
@@ -131,9 +131,9 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_diff_key_test,    // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     std::string pk1{"pk1"};
@@ -164,9 +164,9 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_diff_key_test,    // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
 
     std::string pk1{"pk1"};

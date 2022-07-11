@@ -33,6 +33,6 @@ inline std::atomic<bool> initialized_{false};
 }
 
 [[maybe_unused]] extern Status
-try_deleted_to_inserting(TX_TYPE tp, Record* rec_ptr, tid_word& found_tid);
+try_deleted_to_inserting(transaction_options::transaction_type tp, Record* rec_ptr, tid_word& found_tid);
 
 } // namespace shirakami

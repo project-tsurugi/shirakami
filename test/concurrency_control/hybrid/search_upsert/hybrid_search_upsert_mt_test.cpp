@@ -90,7 +90,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
 
         for (;;) {
             if (bt) {
-                ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {storage}), Status::OK);
+                ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {storage}}), Status::OK);
             }
             for (auto&& elem : keys) {
                 for (;;) {

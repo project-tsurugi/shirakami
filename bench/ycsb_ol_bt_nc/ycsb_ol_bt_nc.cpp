@@ -115,7 +115,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_ops : FLAGS_bt_ops,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
-        if (!is_ol) { tx_begin(token, TX_TYPE::LONG); }
+        if (!is_ol) { tx_begin({token, transaction_options::transaction_type::LONG}); }
 
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {

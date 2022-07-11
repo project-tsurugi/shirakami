@@ -55,7 +55,7 @@ TEST_F(single_long_upsert_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
         ASSERT_EQ(Status::WARN_PREMATURE, upsert(s, st, "", ""));
     } // start epoch
     ASSERT_EQ(Status::OK, leave(s));
@@ -68,7 +68,7 @@ TEST_F(single_long_upsert_test, long_simple) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"k"};
     std::string v{"v"};
-    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}), Status::OK);
 
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
@@ -86,7 +86,7 @@ TEST_F(single_long_upsert_test, long_simple) { // NOLINT
     // after abort, exist with deleted state.
     check_internal_record_exist(st);
 
-    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s));

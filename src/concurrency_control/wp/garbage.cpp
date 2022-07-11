@@ -45,7 +45,7 @@ void work_manager() {
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_step_epoch());
-                if (se.get_tx_type() != TX_TYPE::SHORT) {
+                if (se.get_tx_type() != transaction_options::transaction_type::SHORT) {
                     min_batch_epoch =
                             std::min(min_batch_epoch, se.get_valid_epoch());
                 }

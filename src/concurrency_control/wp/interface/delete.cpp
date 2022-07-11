@@ -72,7 +72,7 @@ Status delete_record(Token token, Storage storage,
 
     // check whether it already began.
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 

@@ -35,7 +35,7 @@ TEST_F(long_acquire_tx_state_handle_test, // NOLINT
        long_twice_call_in_the_same_tx) {  // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxStateHandle hd2{};

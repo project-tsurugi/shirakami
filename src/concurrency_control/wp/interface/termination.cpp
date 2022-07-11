@@ -16,16 +16,16 @@ Status abort(Token token) { // NOLINT
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::abort(ti);
-    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::abort(ti);
-    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::abort(ti);
     } else {
         LOG(ERROR) << "programming error";
@@ -40,16 +40,16 @@ Status commit([[maybe_unused]] Token token, // NOLINT
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::commit(ti, cp);
-    } else if (ti->get_tx_type() == TX_TYPE::LONG) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::commit(ti, cp);
-    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::commit(ti);
     } else {
         LOG(ERROR) << "programming error";

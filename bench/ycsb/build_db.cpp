@@ -43,7 +43,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end, const std
     Token token{};
     enter(token);
 
-    tx_begin(token); // NOLINT
+    tx_begin({token}); // NOLINT
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {

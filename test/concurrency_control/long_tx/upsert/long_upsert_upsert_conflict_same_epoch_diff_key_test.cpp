@@ -69,8 +69,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     }
     wait_epoch_update();
 
@@ -103,8 +103,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     }
     wait_epoch_update();
 
@@ -137,8 +137,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     }
     wait_epoch_update();
 
@@ -172,8 +172,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     }
     wait_epoch_update();
 

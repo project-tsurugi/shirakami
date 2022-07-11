@@ -45,7 +45,7 @@ TEST_F(short_tx_check_test, tx_check_not_begin) { // NOLINT
 TEST_F(short_tx_check_test, short_tx_road_to_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxState buf{};
@@ -61,7 +61,7 @@ TEST_F(short_tx_check_test, short_tx_road_to_abort) { // NOLINT
 TEST_F(short_tx_check_test, short_tx_road_to_commit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     ASSERT_EQ(Status::OK, commit(s));

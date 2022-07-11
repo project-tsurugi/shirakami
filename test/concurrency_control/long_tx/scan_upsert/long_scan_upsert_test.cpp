@@ -74,9 +74,9 @@ TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
 
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {}}), Status::OK);
     wait_epoch_update();
     session* ti1{static_cast<session*>(s1)};
     session* ti2{static_cast<session*>(s2)};
@@ -110,9 +110,9 @@ TEST_F(long_scan_upsert_test, reading_lower_priority_wp) { // NOLINT
     Token s2{}; // long
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
-    ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {}}), Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ScanHandle hd{};
@@ -145,8 +145,8 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         Token s2{}; // long
         ASSERT_EQ(enter(s1), Status::OK);
         ASSERT_EQ(enter(s2), Status::OK);
-        ASSERT_EQ(tx_begin(s1, TX_TYPE::LONG, {st}), Status::OK);
-        ASSERT_EQ(tx_begin(s2, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+        ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
         wait_epoch_update();
         std::string vb{};
         ScanHandle hd{};
@@ -186,7 +186,7 @@ TEST_F(long_scan_upsert_test, scan_read_own_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG, {st}));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
 
     // test

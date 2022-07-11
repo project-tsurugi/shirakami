@@ -66,8 +66,8 @@ TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
     // prepare data
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
-    ASSERT_EQ(tx_begin(ss), Status::OK);
-    ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
+    ASSERT_EQ(tx_begin({ss}), Status::OK);
+    ASSERT_EQ(tx_begin({sb, transaction_options::transaction_type::LONG, {st}}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
@@ -91,8 +91,8 @@ TEST_F(search_upsert, short_search_finish_before_valid_wp) { // NOLINT
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(ss), Status::OK);
-        ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({ss}), Status::OK);
+        ASSERT_EQ(tx_begin({sb, transaction_options::transaction_type::LONG, {st}}), Status::OK);
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
         ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
@@ -118,8 +118,8 @@ TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
     // start test
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin(ss), Status::OK);
-        ASSERT_EQ(tx_begin(sb, TX_TYPE::LONG, {st}), Status::OK);
+        ASSERT_EQ(tx_begin({ss}), Status::OK);
+        ASSERT_EQ(tx_begin({sb, transaction_options::transaction_type::LONG, {st}}), Status::OK);
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
     }
@@ -161,7 +161,7 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         epoch::get_ep_mtx().lock();
         Token ltx1{};
         ASSERT_EQ(enter(ltx1), Status::OK);
-        ASSERT_EQ(Status::OK, tx_begin(ltx1, TX_TYPE::LONG, {st_x}));
+        ASSERT_EQ(Status::OK, tx_begin({ltx1, transaction_options::transaction_type::LONG, {st_x}}));
         epoch::set_perm_to_proc(1);
         epoch::get_ep_mtx().unlock();
         wait_epoch_update();
@@ -181,7 +181,7 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         // about ltx2
         Token ltx2{};
         ASSERT_EQ(enter(ltx2), Status::OK);
-        ASSERT_EQ(Status::OK, tx_begin(ltx2, TX_TYPE::LONG, {st_y}));
+        ASSERT_EQ(Status::OK, tx_begin({ltx2, transaction_options::transaction_type::LONG, {st_y}}));
         wait_epoch_update();
         ASSERT_EQ(Status::OK, search_key(ltx2, st_x, x, buf));
         ASSERT_EQ(Status::OK, upsert(ltx2, st_y, y, ""));

@@ -38,13 +38,14 @@ std::set<std::size_t> session::extract_wait_for() {
 }
 
 Status session::find_high_priority_short() const {
-    if (get_tx_type() == TX_TYPE::SHORT) {
+    if (get_tx_type() == transaction_options::transaction_type::SHORT) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
 
     for (auto&& itr : session_table::get_session_table()) {
-        if (itr.get_visible() && itr.get_tx_type() == TX_TYPE::SHORT &&
+        if (itr.get_visible() &&
+            itr.get_tx_type() == transaction_options::transaction_type::SHORT &&
             itr.get_operating() && itr.get_step_epoch() < get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }

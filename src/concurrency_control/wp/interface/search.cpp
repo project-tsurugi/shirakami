@@ -20,17 +20,17 @@ Status exist_key(Token const token, Storage const storage,
                  std::string_view const key) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 
     std::string dummy{};
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::search_key(ti, storage, key, dummy, false);
-    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, dummy, false);
-    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, dummy, false);
     } else {
         LOG(FATAL) << "programming error";
@@ -44,16 +44,16 @@ Status search_key(Token const token, Storage const storage,
                   std::string_view const key, std::string& value) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
-        tx_begin(token); // NOLINT
+        tx_begin({token}); // NOLINT
     }
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == TX_TYPE::LONG) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
         LOG(ERROR) << "programming error";

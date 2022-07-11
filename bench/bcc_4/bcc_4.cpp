@@ -117,7 +117,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 st_list_unique.end());
 
         // wp
-        if (tx_begin(token, TX_TYPE::LONG, st_list_unique) != Status::OK) {
+        if (tx_begin({token, transaction_options::transaction_type::LONG, st_list_unique}) != Status::OK) {
             LOG(FATAL);
         }
 

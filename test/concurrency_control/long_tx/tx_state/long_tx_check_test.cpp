@@ -40,7 +40,7 @@ TEST_F(long_tx_check_test, long_tx_road_to_abort) { // NOLINT
     TxState buf{};
     {
         std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
         ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
@@ -66,7 +66,7 @@ TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     TxState buf{};
     {
         std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
         ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
         ASSERT_EQ(Status::OK, tx_check(hd, buf));
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
@@ -89,7 +89,7 @@ TEST_F(long_tx_check_test, long_tx_started_to_waiting_durable) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, leave(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     wait_epoch_update();
@@ -116,8 +116,8 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, tx_begin(s1, TX_TYPE::LONG, {st}));
-    ASSERT_EQ(Status::OK, tx_begin(s2, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s2, hd));
     wait_epoch_update();

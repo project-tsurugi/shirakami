@@ -48,7 +48,7 @@ TEST_F(c_next, next_with_invalid_handle) { // NOLINT
     create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(Status::WARN_INVALID_HANDLE, next(s, {}));
     ASSERT_EQ(Status::OK, leave(s));
 }

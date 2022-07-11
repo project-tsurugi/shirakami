@@ -49,14 +49,14 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
         Token s{};
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             ASSERT_EQ(Status::OK, insert(s, st, k, v));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             std::string vb{};
             ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -65,17 +65,14 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
         }
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             ASSERT_EQ(Status::OK, delete_record(s, st, k));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
-#ifndef WP
-        std::this_thread::sleep_for(std::chrono::milliseconds{80}); // NOLINT
-#endif
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             EXPECT_EQ(Status::OK, insert(s, st, k, v));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
@@ -91,7 +88,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
         }
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             std::string vb{};
             ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
             ASSERT_EQ(v, vb);
@@ -110,14 +107,14 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
         Token s{};
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             ASSERT_EQ(Status::OK, insert(s, st, k, v));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             std::string vb{};
             std::string vb2{};
             ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
@@ -128,7 +125,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
         std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             EXPECT_EQ(Status::OK, insert(s, st, k2, v));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
@@ -136,7 +133,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
         std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
-            ASSERT_EQ(Status::OK, tx_begin(s));
+            ASSERT_EQ(Status::OK, tx_begin({s}));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
             ASSERT_EQ(true, rc == Status::WARN_NOT_FOUND);

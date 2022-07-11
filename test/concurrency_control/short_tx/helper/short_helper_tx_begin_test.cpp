@@ -41,47 +41,60 @@ TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti = static_cast<session*>(s);
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     // expected
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin({s}));
     // must not change
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     // expected
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     // must not change
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     // expected
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin({s}));
     // must not change
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     // expected
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     // must not change
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
     // expected
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin(s, TX_TYPE::READ_ONLY));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     // must not change
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
@@ -93,20 +106,26 @@ TEST_F(c_helper_tx_begin, check_param_tx_type_after_tx_begin) { // NOLINT
     auto* ti = static_cast<session*>(s);
     ASSERT_EQ(Status::OK, leave(s));
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(Status::OK, tx_begin({s}));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::READ_ONLY));
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::READ_ONLY);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::READ_ONLY);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s));
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::SHORT);
+    ASSERT_EQ(Status::OK, tx_begin({s}));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::SHORT);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
-    ASSERT_EQ(ti->get_tx_type(), TX_TYPE::LONG);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(ti->get_tx_type(),
+              transaction_options::transaction_type::LONG);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }

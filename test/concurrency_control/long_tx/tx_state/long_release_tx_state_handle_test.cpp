@@ -34,7 +34,7 @@ private:
 TEST_F(long_release_tx_state_handle_test, long_call_twice) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin(s, TX_TYPE::LONG));
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
     TxStateHandle hd{};
     LOG(INFO);
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));

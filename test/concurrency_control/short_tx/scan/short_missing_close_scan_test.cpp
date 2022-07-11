@@ -42,14 +42,14 @@ TEST_F(missing_close_scan_test, read_first) { // NOLINT
     Token s{};
     {
         ASSERT_EQ(Status::OK, enter(s));
-        ASSERT_EQ(Status::OK, tx_begin(s));
+        ASSERT_EQ(Status::OK, tx_begin({s}));
         ASSERT_EQ(Status::OK, insert(s, storage0, "a", ""));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     }
     {
         ASSERT_EQ(Status::OK, enter(s));
-        ASSERT_EQ(Status::OK, tx_begin(s));
+        ASSERT_EQ(Status::OK, tx_begin({s}));
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
@@ -72,14 +72,14 @@ TEST_F(missing_close_scan_test, read_second) { // NOLINT
     Token s{};
     {
         ASSERT_EQ(Status::OK, enter(s));
-        ASSERT_EQ(Status::OK, tx_begin(s));
+        ASSERT_EQ(Status::OK, tx_begin({s}));
         ASSERT_EQ(Status::OK, insert(s, storage0, "a", "A"));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     }
     {
         ASSERT_EQ(Status::OK, enter(s));
-        ASSERT_EQ(Status::OK, tx_begin(s));
+        ASSERT_EQ(Status::OK, tx_begin({s}));
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));

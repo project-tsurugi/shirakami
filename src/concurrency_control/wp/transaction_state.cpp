@@ -27,11 +27,11 @@ Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
     TxState& ts{TxState::get_tx_state(hd)};
     ti->set_current_tx_state_ptr(&ts);
     ts.set_token(token);
-    if (ti->get_tx_type() == TX_TYPE::SHORT) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         ts.set_serial_epoch(0);
         ts.set_kind(TxState::StateKind::STARTED);
-    } else if (ti->get_tx_type() == TX_TYPE::LONG ||
-               ti->get_tx_type() == TX_TYPE::READ_ONLY) {
+    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
+               ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         ts.set_serial_epoch(static_cast<std::uint64_t>(ti->get_valid_epoch()));
         if (ti->get_valid_epoch() > epoch::get_global_epoch()) {
             ts.set_kind(TxState::StateKind::WAITING_START);

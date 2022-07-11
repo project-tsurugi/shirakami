@@ -36,7 +36,7 @@ TEST_F(long_tx_begin_test, tx_begin_wp) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<Storage> wp{1, 2, 3};
     // wp for non-existing storage
-    ASSERT_EQ(Status::ERR_FAIL_WP, tx_begin(s, TX_TYPE::LONG, wp));
+    ASSERT_EQ(Status::ERR_FAIL_WP, tx_begin({s, transaction_options::transaction_type::LONG, wp}));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

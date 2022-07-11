@@ -68,7 +68,7 @@ TEST_F(search, DISABLED_read_only_mode_single_long_search_success) { // NOLINT
 
     // test
     // read only mode and long tx mode, single search
-    ASSERT_EQ(tx_begin(s, TX_TYPE::READ_ONLY), Status::OK);
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::READ_ONLY}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
@@ -92,7 +92,7 @@ TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
 
     // test
     // read only mode and long tx mode, single search
-    ASSERT_EQ(tx_begin(s, TX_TYPE::LONG), Status::OK);
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}), Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(search_key(s, st, "", vb), Status::OK);

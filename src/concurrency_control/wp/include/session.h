@@ -25,6 +25,7 @@
 #include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/scheme.h"
+#include "shirakami/transaction_options.h"
 #include "shirakami/transaction_state.h"
 #include "shirakami/tuple.h"
 
@@ -176,7 +177,9 @@ public:
     /**
      * @brief getter of @a mode_.
      */
-    [[nodiscard]] TX_TYPE get_tx_type() const { return tx_type_; }
+    [[nodiscard]] transaction_options::transaction_type get_tx_type() const {
+        return tx_type_;
+    }
 
     scan_handler& get_scan_handle() { return scan_handle_; }
 
@@ -290,7 +293,9 @@ public:
         tx_began_.store(tf, std::memory_order_release);
     }
 
-    void set_tx_type(TX_TYPE tp) { tx_type_ = tp; }
+    void set_tx_type(transaction_options::transaction_type const tp) {
+        tx_type_ = tp;
+    }
 
     void set_step_epoch(epoch::epoch_t e) {
         step_epoch_.store(e, std::memory_order_release);
@@ -345,7 +350,8 @@ private:
      * @attention For internal. Don't clear at tx termination. This is used for
      * lock-free coordination for multi-threads.
      */
-    TX_TYPE tx_type_{TX_TYPE::SHORT};
+    transaction_options::transaction_type tx_type_{
+            transaction_options::transaction_type::SHORT};
 
     /**
      * @brief most recently chosen tid for calculate new tid of occ.

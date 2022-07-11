@@ -214,7 +214,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         opr_set.reserve(FLAGS_ops);
         gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops,
                   FLAGS_rratio, rnd, zipf);
-        tx_begin(token, TX_TYPE::LONG);
+        tx_begin({token, transaction_options::transaction_type::LONG});
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 uint64_t ctr{0};

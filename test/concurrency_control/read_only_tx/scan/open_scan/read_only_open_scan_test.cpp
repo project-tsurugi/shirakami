@@ -44,7 +44,7 @@ TEST_F(read_only_open_scan_test,  // NOLINT
     ASSERT_EQ(create_storage(st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    ASSERT_EQ(tx_begin(s, TX_TYPE::READ_ONLY), Status::OK);
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::READ_ONLY}), Status::OK);
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
