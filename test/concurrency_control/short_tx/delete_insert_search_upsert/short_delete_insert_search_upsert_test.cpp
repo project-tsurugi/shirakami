@@ -20,11 +20,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class short_delete_insert_search_upsert_test : public ::testing::Test { // NOLINT
+class short_delete_insert_search_upsert_test
+    : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "delete_insert_search_upsert_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_insert_search_upsert-delete_insert_search_upsert_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
@@ -38,7 +40,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(short_delete_insert_search_upsert_test, insert_after_delete_upsert) { // NOLINT
+TEST_F(short_delete_insert_search_upsert_test,
+       insert_after_delete_upsert) { // NOLINT
     Storage st{};
     create_storage(st);
     std::string k1("k1");

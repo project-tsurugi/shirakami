@@ -14,8 +14,8 @@
 namespace shirakami {
 
 static inline Status insert_process(session* const ti, Storage st,
-                             const std::string_view key,
-                             const std::string_view val) {
+                                    const std::string_view key,
+                                    const std::string_view val) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
 
@@ -64,7 +64,9 @@ Status insert(Token const token, Storage const storage,
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)};
             if (in_ws != nullptr) {
-                if (in_ws->get_op() == OP_TYPE::INSERT) {
+                if (in_ws->get_op() == OP_TYPE::INSERT ||
+                    in_ws->get_op() == OP_TYPE::UPDATE ||
+                    in_ws->get_op() == OP_TYPE::UPSERT) {
                     ti->process_before_finish_step();
                     return Status::WARN_ALREADY_EXISTS;
                 }
@@ -88,10 +90,12 @@ Status insert(Token const token, Storage const storage,
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // ==========
                 // start: make read set
-                if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+                if (ti->get_tx_type() ==
+                    transaction_options::transaction_type::SHORT) {
                     ti->get_read_set().emplace_back(storage, rec_ptr,
                                                     found_tid);
-                } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+                } else if (ti->get_tx_type() ==
+                           transaction_options::transaction_type::LONG) {
                     // register read_by_set
                     point_read_by_long* rbp{};
                     auto rc = wp::find_read_by(storage, rbp);
