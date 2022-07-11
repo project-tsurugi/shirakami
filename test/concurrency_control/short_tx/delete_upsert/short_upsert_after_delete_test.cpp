@@ -77,7 +77,7 @@ TEST_F(upsert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v2));
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));

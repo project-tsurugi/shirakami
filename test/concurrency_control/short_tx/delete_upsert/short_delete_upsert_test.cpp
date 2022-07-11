@@ -30,7 +30,7 @@ TEST_F(delete_upsert_test, delete_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

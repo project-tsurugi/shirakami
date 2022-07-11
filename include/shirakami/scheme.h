@@ -229,15 +229,6 @@ enum class Status : std::int32_t {
     WARN_WAITING_FOR_OTHER_TX,
     /**
      * @brief Warning
-     * @details
-     * @a update : It already executed update/insert, so it up date the value 
-     * which is going to be updated. @n
-     * @a upsert : It already did insert/update/upsert, so it overwrite its 
-     * local write set. @n
-     */
-    WARN_WRITE_TO_LOCAL_WRITE,
-    /**
-     * @brief Warning
      * @details If the long mode transaction tries to write to some area 
      * without wp, this code will be returned.
      */
@@ -359,8 +350,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_STORAGE_NOT_FOUND"sv; // NOLINT
         case Status::WARN_WAITING_FOR_OTHER_TX:
             return "WARN_WAITING_FOR_OTHER_TX"sv; // NOLINT
-        case Status::WARN_WRITE_TO_LOCAL_WRITE:
-            return "WARN_WRITE_TO_LOCAL_WRITE"sv; // NOLINT
         case Status::WARN_WRITE_WITHOUT_WP:
             return "WARN_WRITE_WITHOUT_WP"sv; // NOLINT
         case Status::OK:

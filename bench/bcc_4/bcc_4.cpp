@@ -117,7 +117,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 st_list_unique.end());
 
         // wp
-        if (tx_begin({token, transaction_options::transaction_type::LONG, st_list_unique}) != Status::OK) {
+        if (tx_begin({token, transaction_options::transaction_type::LONG,
+                      st_list_unique}) != Status::OK) {
             LOG(FATAL);
         }
 
@@ -134,8 +135,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 } else {
                     ++st_ct;
                 }
-                if (rc != Status::OK &&
-                    rc != Status::WARN_WRITE_TO_LOCAL_WRITE) {
+                if (rc != Status::OK) {
                     LOG(FATAL) << "ec: " << rc << std::endl;
                 }
             } else {
@@ -157,7 +157,7 @@ void invoke_leader() {
     LOG(INFO) << "start invoke leader.";
     alignas(CACHE_LINE_SIZE) bool start = false;
     alignas(CACHE_LINE_SIZE) bool quit = false;
-    std::size_t bt_th{112}; // NOLINT
+    std::size_t bt_th{112};                                            // NOLINT
     alignas(CACHE_LINE_SIZE) std::vector<simple_result> res_bt(bt_th); // NOLINT
 
     std::vector<char> readys(bt_th); // NOLINT

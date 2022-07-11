@@ -274,11 +274,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 auto ret = update(token, storage, itr.get_key(),
                                   std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK || // NOLINT
-                       ret == Status::WARN_WRITE_TO_LOCAL_WRITE);
+                assert(ret == Status::OK);
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
-                tx_begin({token, transaction_options::transaction_type::READ_ONLY});
+                tx_begin({token,
+                          transaction_options::transaction_type::READ_ONLY});
                 // todo scan to open_scan and read_from_scan
             }
         }

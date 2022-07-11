@@ -103,10 +103,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 auto rc{update(token, get_st(), itr.get_key(),
                                std::string(val_size, '0'))};
 
-                if (rc != Status::OK &&
-                    rc != Status::WARN_WRITE_TO_LOCAL_WRITE) {
-                    LOG(FATAL) << rc;
-                }
+                if (rc != Status::OK) { LOG(FATAL) << rc; }
             } else {
                 LOG(FATAL) << "unkown operation";
             }

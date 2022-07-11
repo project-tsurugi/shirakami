@@ -47,7 +47,7 @@ Status update(Token token, Storage storage,
                 in_ws->set_val(val);
             }
             ti->process_before_finish_step();
-            return Status::WARN_WRITE_TO_LOCAL_WRITE;
+            return Status::OK;
         }
 
         // check absent

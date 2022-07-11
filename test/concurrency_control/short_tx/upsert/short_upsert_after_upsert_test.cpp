@@ -51,7 +51,7 @@ TEST_F(upsert_after_upsert, double_upsert_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v3));
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v3));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(vb, v3);

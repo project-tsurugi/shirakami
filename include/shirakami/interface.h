@@ -429,8 +429,6 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_NOT_FOUND The record is not found.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already executed update/insert, 
- * so it update the value which is going to be updated.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
                      std::string_view val); // NOLINT
@@ -452,8 +450,6 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * wp in batch mode.
  * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
  * is not found.
- * @return Status::WARN_WRITE_TO_LOCAL_WRITE It already did insert/update/upsert, 
- * so it overwrite its local write set.
  */
 extern Status upsert(Token token, Storage storage, std::string_view key,
                      std::string_view val); // NOLINT

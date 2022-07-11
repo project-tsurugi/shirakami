@@ -115,7 +115,9 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_ops : FLAGS_bt_ops,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
-        if (!is_ol) { tx_begin({token, transaction_options::transaction_type::LONG}); }
+        if (!is_ol) {
+            tx_begin({token, transaction_options::transaction_type::LONG});
+        }
 
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
@@ -132,8 +134,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 auto ret = update(token, storage, itr.get_key(),
                                   std::string(FLAGS_val_len, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK ||
-                       ret == Status::WARN_WRITE_TO_LOCAL_WRITE); // NOLINT
+                assert(ret == Status::OK); // NOLINT
 #endif
             }
         }

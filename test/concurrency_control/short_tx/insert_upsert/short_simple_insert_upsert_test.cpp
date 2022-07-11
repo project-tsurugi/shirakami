@@ -48,7 +48,7 @@ TEST_F(simple_insert_upsert, upsert_after_insert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, k, v));
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }

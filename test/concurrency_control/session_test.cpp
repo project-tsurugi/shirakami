@@ -57,9 +57,9 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
     ASSERT_EQ(ti->get_operating(), false);
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, update(s, st, "k", ""));
+    ASSERT_EQ(Status::OK, update(s, st, "k", ""));
     ASSERT_EQ(ti->get_operating(), false);
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, "k", ""));
+    ASSERT_EQ(Status::OK, upsert(s, st, "k", ""));
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, "k"));
     ASSERT_EQ(ti->get_operating(), false);
@@ -114,9 +114,9 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
     wait_change_step_epoch();
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
     wait_change_step_epoch();
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, update(s, st, "k", ""));
+    ASSERT_EQ(Status::OK, update(s, st, "k", ""));
     wait_change_step_epoch();
-    ASSERT_EQ(Status::WARN_WRITE_TO_LOCAL_WRITE, upsert(s, st, "k", ""));
+    ASSERT_EQ(Status::OK, upsert(s, st, "k", ""));
     wait_change_step_epoch();
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, "k"));
     wait_change_step_epoch();
