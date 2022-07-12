@@ -75,9 +75,11 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/storage/*.cpp"
         "concurrency_control/short_tx/termination/*.cpp"
         "concurrency_control/short_tx/tx_state/*.cpp"
+        "database_options/*.cpp"
         "start/*.cpp"
         "shutdown/*.cpp"
         "storage/*.cpp"
+        "transaction_options/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 

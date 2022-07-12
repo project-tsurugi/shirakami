@@ -30,17 +30,17 @@ public:
         : token_(token), transaction_type_(tt), write_preserve_(std::move(wp)) {
     }
 
-    Token get_token() { return token_; }
+    Token get_token() const { return token_; }
 
-    transaction_type get_transaction_type() { return transaction_type_; }
+    transaction_type get_transaction_type() const { return transaction_type_; }
 
-    write_preserve_type& get_write_preserve() { return write_preserve_; }
+    write_preserve_type get_write_preserve() const { return write_preserve_; }
 
     void set_token(Token token) { token_ = token; }
 
     void set_transaction_type(transaction_type tt) { transaction_type_ = tt; }
 
-    void set_write_preserve(write_preserve_type& wp) { write_preserve_ = wp; }
+    void set_write_preserve(write_preserve_type wp) { write_preserve_ = wp; }
 
 private:
     /**
@@ -90,6 +90,27 @@ inline std::ostream&
 operator<<(std::ostream& out,
            const transaction_options::transaction_type tp) { // NOLINT
     return out << to_string_view(tp);
+}
+
+inline std::string
+to_string(const std::vector<Storage> write_preserve) noexcept {
+    std::string buf{""};
+    bool at_least_once{false};
+    for (auto&& elem : write_preserve) {
+        buf += std::to_string(elem);
+        buf += " ";
+        at_least_once = true;
+    }
+    if (at_least_once) { buf.pop_back(); }
+    return buf;
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+                                const transaction_options to) { // NOLINT
+    return out << "Token: " << to.get_token()
+               << ", transaction_type: " << to.get_transaction_type()
+               << ", write_preserve: "
+               << to_string(to.get_write_preserve());
 }
 
 } // namespace shirakami
