@@ -214,8 +214,12 @@ extern void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
  * @brief It initializes shirakami's environment.
- * @details When it starts to use this system, in other words, it starts to
- * build database, it must be executed first.
+ * @details When it starts or restarts this system, in other words, database, 
+ * it must be executed first or after fin command.
+ * If you don't be explicit log directory path by @a options, shirakami makes 
+ * and uses temporally directory whose the directory name was named by using 
+ * phrases: shirakami, process id, and value of timestamp counter. For example, 
+ * shirakami-111-222.
  * @param[in] options Options about open mode and logging.
  * @return Status::OK
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
