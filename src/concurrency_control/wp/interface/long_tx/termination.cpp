@@ -99,20 +99,19 @@ RETRY: // NOLINT
                 // success converting deleted to inserted
                 rec_ptr->get_tidw_ref().unlock();
                 return;
-            } else {
-                // converting record was unhooked by gc
-                cleanup_old_process(check);
-                goto RETRY;
             }
+            // converting record was unhooked by gc
+            cleanup_old_process(check);
+            goto RETRY; // NOLINT
         } else {
             // no key hit
             // gc interrupted
             cleanup_old_process(check);
-            goto RETRY;
+            goto RETRY; // NOLINT
         }
     } else {
         // no key hit
-        rec_ptr = new Record(key);
+        rec_ptr = new Record(key); // NOLINT
         tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
         tid.set_latest(true);
         tid.set_absent(true);

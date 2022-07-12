@@ -62,20 +62,20 @@ DEFINE_uint64(val_len, 16, "# length of value(payload).");          // NOLINT
  */
 DEFINE_uint64(ol_ops, 1, "# operations per a online tx.");      // NOLINT
 DEFINE_uint64(ol_rratio, 100, "rate of reads in a online tx."); // NOLINT
-DEFINE_uint64(ol_rec, 10,
-              "# database records for each online worker."); // NOLINT
-DEFINE_double(ol_skew, 0.0, "access skew of online tx.");    // NOLINT
-DEFINE_uint64(ol_thread, 2, "# online worker threads.");     // NOLINT
+DEFINE_uint64(ol_rec, 10,                                       // NOLINT
+              "# database records for each online worker.");    // NOLINT
+DEFINE_double(ol_skew, 0.0, "access skew of online tx.");       // NOLINT
+DEFINE_uint64(ol_thread, 2, "# online worker threads.");        // NOLINT
 
 /**
  * about batch tx
  */
 DEFINE_uint64(bt_ops, 1, "# operations per a batch tx.");      // NOLINT
 DEFINE_uint64(bt_rratio, 100, "rate of reads in a batch tx."); // NOLINT
-DEFINE_uint64(bt_rec, 10,
-              "# database records for each batch worker."); // NOLINT
-DEFINE_double(bt_skew, 0.0, "access skew of batch tx.");    // NOLINT
-DEFINE_uint64(bt_thread, 2, "# batch worker threads.");     // NOLINT
+DEFINE_uint64(bt_rec, 10,                                      // NOLINT
+              "# database records for each batch worker.");    // NOLINT
+DEFINE_double(bt_skew, 0.0, "access skew of batch tx.");       // NOLINT
+DEFINE_uint64(bt_thread, 2, "# batch worker threads.");        // NOLINT
 
 bool isReady(const std::vector<char>& readys) { // NOLINT
     for (const char& b : readys) {              // NOLINT
@@ -116,7 +116,8 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
         if (!is_ol) {
-            tx_begin({token, transaction_options::transaction_type::LONG});
+            tx_begin({token, // NOLINT
+                      transaction_options::transaction_type::LONG});
         }
 
         for (auto&& itr : opr_set) {

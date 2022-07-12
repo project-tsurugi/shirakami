@@ -51,7 +51,7 @@ void brock_insert(Storage st, size_t start, size_t end) {
         _mm_pause(); // full session now.
     }
 
-    auto rc{tx_begin({token})};
+    auto rc{tx_begin({token})}; // NOLINT
     if (rc != Status::OK) { LOG(FATAL) << rc; } // NOLINT
 
     std::size_t ctr{0};

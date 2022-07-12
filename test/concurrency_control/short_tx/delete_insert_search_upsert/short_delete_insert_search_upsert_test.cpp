@@ -40,8 +40,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(short_delete_insert_search_upsert_test,
-       insert_after_delete_upsert) { // NOLINT
+TEST_F(short_delete_insert_search_upsert_test, // NOLINT
+       insert_after_delete_upsert) {           // NOLINT
     Storage st{};
     create_storage(st);
     std::string k1("k1");

@@ -114,7 +114,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                   is_ol ? FLAGS_ol_rratio : FLAGS_bt_rratio, rnd, zipf);
 
         if (!is_ol) {
-            tx_begin({token,
+            tx_begin({token, // NOLINT
                       transaction_options::transaction_type::LONG,
                       {get_bt_storages().at(0)}});
         }

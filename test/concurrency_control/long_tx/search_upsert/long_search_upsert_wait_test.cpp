@@ -60,9 +60,12 @@ TEST_F(long_search_upsert_wait_test, wait_for_overwrite) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     std::string sb{};
     // occur forwarding
@@ -100,11 +103,16 @@ TEST_F(long_search_upsert_wait_test, wait_for_preceding_lg_later_bd) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s3, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s3, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     std::string sb{};
     ASSERT_EQ(Status::OK, search_key(s3, st, "", sb));
@@ -128,7 +136,7 @@ TEST_F(long_search_upsert_wait_test, wait_for_preceding_lg_later_bd) { // NOLINT
     // ==============================
 }
 
-TEST_F(long_search_upsert_wait_test,
+TEST_F(long_search_upsert_wait_test,        // NOLINT
        no_wait_for_preceding_lg_older_bd) { // NOLINT
     // test: no wait for preceding long tx having older boundary
 
@@ -145,9 +153,12 @@ TEST_F(long_search_upsert_wait_test,
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     // boundary order: s1 < s2
     // ==============================

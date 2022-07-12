@@ -18,16 +18,17 @@ public:
         READ_ONLY,
     };
 
-    transaction_options() = default;
+    transaction_options() = default; // NOLINT
 
-    transaction_options(Token token) : token_(token) {}
+    transaction_options(Token token) : token_(token) {} // NOLINT
 
     transaction_options(Token token, transaction_type tt)
         : token_(token), transaction_type_(tt) {}
 
     transaction_options(Token token, transaction_type tt,
                         write_preserve_type wp)
-        : token_(token), transaction_type_(tt), write_preserve_(wp) {}
+        : token_(token), transaction_type_(tt), write_preserve_(std::move(wp)) {
+    }
 
     Token get_token() { return token_; }
 

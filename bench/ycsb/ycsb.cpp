@@ -248,7 +248,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             if (FLAGS_include_long_tx) {
                 gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record,
                           FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
-                tx_begin({token, transaction_options::transaction_type::LONG});
+                tx_begin({token, // NOLINT
+                          transaction_options::transaction_type::LONG});
             } else if (FLAGS_include_scan_tx) {
                 gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record,
                             FLAGS_scan_elem_num, rnd, zipf);
@@ -274,10 +275,10 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 auto ret = update(token, storage, itr.get_key(),
                                   std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
-                assert(ret == Status::OK);
+                assert(ret == Status::OK); // NOLINT
 #endif
             } else if (itr.get_type() == OP_TYPE::SCAN) {
-                tx_begin({token,
+                tx_begin({token, // NOLINT
                           transaction_options::transaction_type::READ_ONLY});
                 // todo scan to open_scan and read_from_scan
             }

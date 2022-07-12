@@ -12,14 +12,14 @@ public:
         CREATE_OR_RESTORE = 0x003,
     };
 
-    database_options() = default;
+    database_options() = default; // NOLINT
 
-    database_options(open_mode om) : open_mode_(om) {}
+    database_options(open_mode om) : open_mode_(om) {} // NOLINT
 
-    database_options(open_mode om, std::filesystem::path log_directory_path)
+    database_options(open_mode om, std::filesystem::path&& log_directory_path)
         : open_mode_(om), log_directory_path_(log_directory_path) {}
 
-    database_options(open_mode om, std::filesystem::path log_directory_path,
+    database_options(open_mode om, std::filesystem::path&& log_directory_path,
                      std::size_t logger_thread_num)
         : open_mode_(om), log_directory_path_(log_directory_path),
           logger_thread_num_(logger_thread_num) {}
@@ -30,11 +30,13 @@ public:
         return log_directory_path_;
     }
 
-    std::size_t get_logger_thread_num() { return logger_thread_num_; }
+    [[nodiscard]] std::size_t get_logger_thread_num() const {
+        return logger_thread_num_;
+    }
 
     void set_open_mode(open_mode om) { open_mode_ = om; }
 
-    void set_log_directory_path(std::filesystem::path pt) {
+    void set_log_directory_path(std::filesystem::path& pt) {
         log_directory_path_ = pt;
     }
 

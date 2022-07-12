@@ -127,9 +127,8 @@ Status insert(Token const token, Storage const storage,
         if (rc == Status::OK) {
             ti->process_before_finish_step();
             return rc;
-        } else if (rc == Status::ERR_PHANTOM) {
-            return rc;
         }
+        if (rc == Status::ERR_PHANTOM) { return rc; }
     }
 }
 

@@ -150,7 +150,8 @@ RETRY: // NOLINT
         if ((check.get_latest() && check.get_absent())) {
             // inserting state
             return Status::OK;
-        } else if (!check.get_absent()) {
+        }
+        if (!check.get_absent()) {
             // normal state
             ++not_inserted_lock;
             return Status::OK;
@@ -172,11 +173,10 @@ RETRY: // NOLINT
             if (wso->get_rec_ptr() == rec_ptr) {
                 // success converting deleted to inserted
                 return Status::OK;
-            } else {
-                // converting record is unhooked by gc
-                cleanup_old_process(check);
-                goto RETRY; // NOLINT
             }
+            // converting record is unhooked by gc
+            cleanup_old_process(check);
+            goto RETRY; // NOLINT
         } else {
             // no key hit
             // point (*2)
@@ -186,7 +186,7 @@ RETRY: // NOLINT
         }
     } else {
         // no key hit
-        rec_ptr = new Record(key);
+        rec_ptr = new Record(key); // NOLINT
         tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
         tid.set_latest(true);
         tid.set_absent(true);
@@ -243,7 +243,8 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
                 continue;
-            } else if (rc == Status::ERR_PHANTOM) {
+            }
+            if (rc == Status::ERR_PHANTOM) {
                 abort_process();
                 return Status::ERR_PHANTOM;
             }
