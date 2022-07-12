@@ -15,13 +15,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-Storage storage;
 class insert_update_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "insert_update-insert_update_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
@@ -35,16 +34,48 @@ private:
 };
 
 TEST_F(insert_update_test, insert_update) { // NOLINT
-    create_storage(storage);
-    std::string k("k"); // NOLINT
-    std::string v("v"); // NOLINT
+    // prepare
+    Storage st{};
+    create_storage(st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+
+    // test
+    ASSERT_EQ(Status::OK, insert(s, st, "", "v"));
+    ASSERT_EQ(Status::OK, update(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, update(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, storage, k, v));
+    
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(buf, "v1");
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(insert_update_test, update_insert) { // NOLINT
+    // prepare
+    Storage st{};
+    create_storage(st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(Status::OK, update(s, st, "", "v"));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, "", "v1"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(buf, "v");
+
+    // cleanup
     ASSERT_EQ(Status::OK, leave(s));
 }
 

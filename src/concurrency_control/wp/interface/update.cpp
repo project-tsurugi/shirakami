@@ -40,12 +40,7 @@ Status update(Token token, Storage storage,
                 ti->process_before_finish_step();
                 return Status::WARN_ALREADY_DELETE;
             }
-            if (in_ws->get_op() == OP_TYPE::INSERT) {
-                in_ws->get_rec_ptr()->get_latest()->set_value(val);
-            } else {
-                in_ws->set_op(OP_TYPE::UPSERT);
-                in_ws->set_val(val);
-            }
+            in_ws->set_val(val);
             ti->process_before_finish_step();
             return Status::OK;
         }

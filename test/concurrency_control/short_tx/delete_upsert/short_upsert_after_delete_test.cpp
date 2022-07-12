@@ -39,7 +39,7 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(upsert_after_delete, upsert) { // NOLINT
+TEST_F(upsert_after_delete, diff_tx) { // NOLINT
     create_storage(st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
@@ -49,20 +49,7 @@ TEST_F(upsert_after_delete, upsert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    epoch::epoch_t before_upsert{epoch::get_global_epoch()};
-    //std::size_t ctr{0};
-    while (Status::OK != upsert(s, st, k, v)) {
-        //LOG_EVERY_N(INFO, 20) << "fail insert"; // NOLINT
-        // ^^ NOLINT does not work on Ubuntu18.04. It works in 20.04.
-        //if (ctr % 30 == 0) { // NOLINT
-        //    LOG(INFO) << "fail insert";
-        //}
-        //++ctr;
-        _mm_pause();
-    }
-    epoch::epoch_t after_upsert{epoch::get_global_epoch()};
-    LOG(INFO) << "before_upsert " << before_upsert;
-    LOG(INFO) << "after_upsert " << after_upsert;
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
