@@ -52,7 +52,7 @@ void recovery_from_datastore() {
         ss->get_cursor().key(key);
         ss->get_cursor().value(val);
         // check storage exist
-        shirakami::storage::create_storage(st);
+        shirakami::storage::register_storage(st);
         st_list.emplace_back(st);
         // create kvs entry from these info.
         if (yakushima::status::OK != put<Record>(tk, st, key, val)) {

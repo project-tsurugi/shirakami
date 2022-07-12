@@ -8,6 +8,8 @@
 
 #include "limestone/api/write_version_type.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::lpwal {
 
 /**

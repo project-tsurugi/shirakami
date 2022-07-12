@@ -103,12 +103,61 @@ void recovery_test() {
     fin();
 }
 
-TEST_F(limestone_integration_single_recovery_test, check_recovery) { // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test());                        // NOLINT
+TEST_F(limestone_integration_single_recovery_test,
+       check_recovery) {             // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test()); // NOLINT
+}
+
+void print_out_st_list() {
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    for (auto&& st : st_list) { LOG(INFO) << st; }
 }
 
 TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       two_page_write_two_storage) {               // NOLINT
+       one_page_write_one_storage) {               // NOLINT
+    // prepare
+    std::string log_dir{};
+    log_dir = create_log_dir_name();
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
+    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+
+    print_out_st_list();
+    fin(false);
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+    print_out_st_list();
+
+    // test: storage num
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(st_list.size(), 1); // because single recovery
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test: contents
+    for (auto&& each_st : st_list) {
+        std::string vb{};
+        ASSERT_EQ(Status::OK, search_key(s, each_st, "a", vb));
+        ASSERT_EQ(vb, "A");
+        ASSERT_EQ(Status::OK, search_key(s, each_st, "b", vb));
+        ASSERT_EQ(vb, "B");
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    }
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+    fin(false);
+}
+
+TEST_F(limestone_integration_single_recovery_test, // NOLINT
+       two_page_write_two_storage) {      // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
@@ -159,6 +208,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
+    fin(false);
 }
 
 } // namespace shirakami::testing
