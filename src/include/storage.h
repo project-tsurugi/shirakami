@@ -31,10 +31,11 @@ public:
 
     /**
      * @brief Create a storage object
-     * @param[out] storage 
+     * @param[in,out] storage The storage id specified by shirakami.
+     * @param[in] storage_id The storage id specified by caller.
      * @return Status::OK success.
      */
-    static Status create_storage(Storage& storage);
+    static Status create_storage(Storage& storage, Storage storage_id);
 
     static Status exist_storage(Storage storage);
 

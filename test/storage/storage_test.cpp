@@ -1,4 +1,6 @@
 
+#include <math.h>
+
 #include <mutex>
 
 #include "concurrency_control/wp/include/ongoing_tx.h"
@@ -36,15 +38,29 @@ private:
 TEST_F(storage_test, create_storage_test) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, storage::initial_strg_ctr);
+    ASSERT_EQ(st, storage::initial_strg_ctr << 32);
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, storage::initial_strg_ctr + 1);
+    ASSERT_EQ(st, (storage::initial_strg_ctr + 1) << 32);
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, storage::initial_strg_ctr + 2);
+    ASSERT_EQ(st, (storage::initial_strg_ctr + 2) << 32);
     ASSERT_EQ(Status::OK, delete_storage(st)); // interrupt delete_storage
     ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(st,
-              storage::initial_strg_ctr + 3); // number trend is not changed.
+              (storage::initial_strg_ctr + 3)
+                      << 32); // number trend is not changed.
+}
+
+TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st, 1));
+    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, exist_storage(1));
+    ASSERT_EQ(Status::OK, create_storage(st, 2));
+    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, exist_storage(2));
+    ASSERT_EQ(Status::ERR_FATAL_INDEX, create_storage(st, 2));
+    ASSERT_EQ(Status::WARN_STORAGE_ID_DEPLETION,
+              create_storage(st, (pow(2, 33))));
 }
 
 TEST_F(storage_test, exist_storage_test) { // NOLINT

@@ -19,16 +19,16 @@ namespace shirakami {
  * @brief Create one table and return its handler.
  * @param[out] storage output parameter to pass the storage handle, that is 
  * used for the subsequent calls related with the storage.
- * Until delete_storage is called for the first time, multiple create_storage 
- * calls assign Storage value monotonically.
+ * Multiple create_storage calls assign storage value monotonically.
  * That is, Storage value assigned by create_storage is larger than the one 
- * assigned by previous call as long as no delete_storage is called.
- * Once delete_storage is called, Storage value can be recycled and there is no 
- * guarantee on the monotonicity.
+ * assigned by previous call.
+ * @param[in] storage_id If you don't use this argument, @a storage is specified
+ * by shirakami, otherwise, is specified by user.
+ * @return Status::ERR_FATAL_INDEX You may use the same @a storage_id more than 
+ * once, or some programming error.
  * @return Status::OK if successful.
- * @return Status::WARN_INVARIANT if the number of storages exceeds the maximum 
- * value of the handler.
- * @return Status::ERR_FATAL Some programming error.
+ * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a storage_id larger 
+ * than 2^32, or shirakami create storage more than 2^32.
  */
 extern Status create_storage(Storage& storage,
                              Storage storage_id = storage_id_undefined);

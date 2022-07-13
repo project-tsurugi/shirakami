@@ -19,8 +19,8 @@
 
 namespace shirakami {
 
-Status create_storage(Storage& storage, [[maybe_unused]] Storage storage_id) {
-    return storage::create_storage(storage);
+Status create_storage(Storage& storage, Storage storage_id) {
+    return storage::create_storage(storage, storage_id);
 }
 
 Status exist_storage(Storage storage) {
@@ -59,20 +59,43 @@ Status storage::register_storage(Storage storage) {
                 sizeof(page_set_meta_ptr)); // NOLINT
         if (yakushima::status::OK != rc) {
             LOG(ERROR) << rc;
-            return Status::ERR_FATAL;
+            return Status::ERR_FATAL_INDEX;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
             LOG(ERROR) << rc;
-            return Status::ERR_FATAL;
+            return Status::ERR_FATAL_INDEX;
         }
     }
 
     return Status::OK;
 }
 
-Status storage::create_storage(Storage& storage) {
-    get_new_storage_num(storage);
+Status storage::create_storage(Storage& storage, Storage storage_id) {
+    // compute storage id.
+    if (storage_id == storage_id_undefined) {
+        // storage id is not specified by shirakami-user.
+        get_new_storage_num(storage);
+        // check depletion
+        if ((storage >> 32) > 0) {
+            LOG(ERROR) << "system defined storage id depletion. you should "
+                          "implement re-using storage id.";
+            return Status::WARN_STORAGE_ID_DEPLETION;
+        }
+        // higher bit is used for system defined.
+        storage <<= 32;
+    } else {
+        // storage id is specified by shirakami-user.
+        storage = storage_id;
+        // check depletion
+        if ((storage >> 32) > 0) {
+            LOG(ERROR) << "user defined storage id depletion. you should "
+                          "implement re-using storage id.";
+            return Status::WARN_STORAGE_ID_DEPLETION;
+        }
+    }
+
+    // create storage using id computed.
     return register_storage(storage);
 }
 

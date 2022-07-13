@@ -97,7 +97,7 @@ void storage_operation_test(std::size_t storage_num) {
     std::sort(st_list.begin(), st_list.end());
     std::size_t itr_num{0};
     for (auto&& st : st_list) {
-        ASSERT_EQ(st, storage::initial_strg_ctr + itr_num);
+        ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32);
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
