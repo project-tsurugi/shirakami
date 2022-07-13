@@ -14,7 +14,7 @@ namespace shirakami {
 class storage {
 public:
     static constexpr Storage initial_strg_ctr{0};
-    static constexpr Storage wp_meta_storage{UINT64_MAX};
+    static constexpr Storage wp_meta_storage{UINT64_MAX - 1};
 
     /**
      * @brief initialization.

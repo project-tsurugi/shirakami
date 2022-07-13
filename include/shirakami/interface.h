@@ -30,7 +30,8 @@ namespace shirakami {
  * value of the handler.
  * @return Status::ERR_FATAL Some programming error.
  */
-extern Status create_storage(Storage& storage);
+extern Status create_storage(Storage& storage,
+                             Storage storage_id = storage_id_undefined);
 
 /**
  * @brief Confirm existence of the storage.

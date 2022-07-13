@@ -67,6 +67,7 @@ using ScanHandle = std::size_t;
  * @brief Storage Handle
  */
 using Storage = std::uint64_t;
+constexpr Storage storage_id_undefined{UINT64_MAX};
 
 enum class scan_endpoint : char {
     EXCLUSIVE,
