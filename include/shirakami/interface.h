@@ -24,9 +24,9 @@ namespace shirakami {
  * assigned by previous call.
  * @param[in] storage_id If you don't use this argument, @a storage is specified
  * by shirakami, otherwise, is specified by user.
- * @return Status::ERR_FATAL_INDEX You may use the same @a storage_id more than 
- * once, or some programming error.
+ * @return Status::ERR_FATAL_INDEX Some programming error.
  * @return Status::OK if successful.
+ * @return Status::WARN_ALREADY_EXISTS You may use @a storage_id more than once.
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a storage_id larger 
  * than 2^32, or shirakami create storage more than 2^32.
  */

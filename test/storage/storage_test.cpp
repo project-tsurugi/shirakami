@@ -58,7 +58,7 @@ TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st, 2));
     ASSERT_EQ(Status::OK, exist_storage(st));
     ASSERT_EQ(Status::OK, exist_storage(2));
-    ASSERT_EQ(Status::ERR_FATAL_INDEX, create_storage(st, 2));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, create_storage(st, 2));
     ASSERT_EQ(Status::WARN_STORAGE_ID_DEPLETION,
               create_storage(st, (pow(2, 33))));
 }

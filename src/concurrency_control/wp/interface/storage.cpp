@@ -39,10 +39,12 @@ Status storage::register_storage(Storage storage) {
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
-    if (yakushima::create_storage(std::string_view(storage_view)) !=
-        yakushima::status::OK) { // NOLINT
-        return Status::ERR_FATAL_INDEX;
+    auto rc = yakushima::create_storage(std::string_view(storage_view));
+    // create storage must return WARN_UNIQUE_RESTRICTION or OK
+    if (rc == yakushima::status::WARN_UNIQUE_RESTRICTION) { // NOLINT
+        return Status::WARN_ALREADY_EXISTS;
     }
+    if (rc != yakushima::status::OK) { LOG(ERROR) << "programming error."; }
 
     if (wp::get_initialized()) {
         yakushima::Token ytoken{};
