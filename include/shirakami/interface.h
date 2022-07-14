@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "database_options.h"
+#include "log_record.h"
 #include "scheme.h"
 #include "transaction_options.h"
 #include "transaction_state.h"
@@ -591,6 +592,28 @@ Status release_tx_state_handle(TxStateHandle handle);
  * handle @a handle, this call returns this status.
  */
 Status tx_check(TxStateHandle handle, TxState& out);
+
+/**
+ * @brief log event callback function type.
+ * @details callback invoked on logging event on cc engine or datastore. The callback arguments are
+ *   - the log worker number (0-origin index)
+ *   - the log record begin pointer to iterate all the logged records
+ *   - the log record end pointer to detect end position of the logged records
+ */
+using log_event_callback =
+        std::function<void(std::size_t, log_record*, log_record*)>;
+
+/**
+ * @brief set logging event callback
+ * @details register the callback invoked on the logging event (cc engine or 
+ * datastore defines event timing)
+ * @param handle the database handle
+ * @param callback the callback to be invoked whose arguments are log worker 
+ * number and iterator for log records
+ * @return Status::OK if the call is successful
+ * @return Status::WARN_INVALID_ARGS @a callback is not executable.
+ */
+Status database_set_logging_callback(log_event_callback callback);
 
 //==========
 /**

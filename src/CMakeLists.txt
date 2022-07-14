@@ -20,6 +20,12 @@ if (BUILD_PWAL)
   set(SOURCES ${SOURCES} ${LOGGING_SOURCES})
 endif()
 
+# about database
+file (GLOB DATABASE_SOURCES
+"database/*.cpp"
+)
+set(SOURCES ${SOURCES} ${DATABASE_SOURCES})
+
 add_library(shirakami
         ${SOURCES}
         )

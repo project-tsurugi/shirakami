@@ -6,6 +6,10 @@
 #include <ostream>
 #include <string_view>
 
+#include "scheme.h"
+
+#include "glog/logging.h"
+
 namespace shirakami {
 
 /**
