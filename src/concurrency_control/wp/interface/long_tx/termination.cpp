@@ -235,8 +235,31 @@ static inline void expose_local_write(session* ti) {
             wso.get_rec_ptr()->get_key(key);
             std::string val{};
             wso.get_value(val);
+            log_operation lo{};
+            switch (wso.get_op()) {
+                case OP_TYPE::INSERT: {
+                    lo = log_operation::INSERT;
+                    break;
+                }
+                case OP_TYPE::UPDATE: {
+                    lo = log_operation::UPDATE;
+                    break;
+                }
+                case OP_TYPE::UPSERT: {
+                    lo = log_operation::UPSERT;
+                    break;
+                }
+                case OP_TYPE::DELETE: {
+                    lo = log_operation::DELETE;
+                    break;
+                }
+                default: {
+                    LOG(ERROR) << "programming error";
+                    return Status::ERR_FATAL;
+                }
+            }
             ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
-                    wso.get_op() == OP_TYPE::DELETE,
+                    lo,
                     lpwal::write_version_type(
                             ti->get_valid_epoch(),
                             lpwal::write_version_type::gen_minor_write_version(
@@ -244,6 +267,7 @@ static inline void expose_local_write(session* ti) {
                     wso.get_storage(), key, val));
         }
 #endif
+        return Status::OK;
     };
 
 #ifdef PWAL

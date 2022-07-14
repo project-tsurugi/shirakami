@@ -25,11 +25,18 @@ Status session_table::decide_token(Token& token) { // NOLINT
 }
 
 void session_table::init_session_table() {
+#ifdef PWAL
+    std::size_t worker_number = 0;
+#endif
     for (auto&& itr : get_session_table()) {
         // for external
         itr.set_visible(false);
         // for internal
         itr.clean_up();
+#ifdef PWAL
+        itr.get_lpwal_handle().set_worker_number(worker_number);
+        ++worker_number;
+#endif
     }
 }
 

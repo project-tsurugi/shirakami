@@ -20,6 +20,7 @@ enum class log_operation : std::uint32_t {
     UNKNOWN = 0U,
     INSERT,
     UPDATE,
+    UPSERT,
     DELETE,
 };
 
@@ -36,6 +37,8 @@ inline constexpr std::string_view to_string_view(log_operation value) {
             return "INSERT";
         case log_operation::UPDATE:
             return "UPDATE";
+        case log_operation::UPSERT:
+            return "UPSERT";
         case log_operation::DELETE:
             return "DELETE";
     }
@@ -59,6 +62,25 @@ struct log_record {
      */
     using storage_id_type = Storage;
 
+    log_record(log_operation operation, std::string_view key,
+               std::string_view value, std::uint64_t major_version,
+               std::uint64_t minor_version, storage_id_type storage_id)
+        : operation_(operation), key_(key), value_(value),
+          major_version_(major_version), minor_version_(minor_version),
+          storage_id_(storage_id) {}
+
+    log_operation get_operation() const { return operation_; }
+
+    std::string_view get_key() const { return key_; }
+
+    std::string_view get_value() const { return value_; }
+
+    std::uint64_t get_major_version() const { return major_version_; }
+
+    std::uint64_t get_minor_version() const { return minor_version_; }
+
+    storage_id_type get_storage_id() const { return storage_id_; }
+
     /**
      * @brief operation type for log record entry.
      * 
@@ -68,7 +90,7 @@ struct log_record {
     /**
      * @brief key part of the log record
      */
-    std::string_view key{};
+    std::string_view key_{};
 
     /**
      * @brief value part of the log record

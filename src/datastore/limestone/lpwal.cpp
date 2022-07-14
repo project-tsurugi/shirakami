@@ -6,6 +6,10 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h" // for size
 
+#include "database/include/database.h"
+
+#include "shirakami/log_record.h"
+
 #include "limestone/api/write_version_type.h"
 
 #include "glog/logging.h"
@@ -16,8 +20,16 @@ namespace shirakami::lpwal {
   * @brief It executes log_channel_.add_entry for entire logs_.
   */
 void add_entry_from_logs(handler& handle) {
+    // send logs to set callback
+    bool enable_callback{get_log_event_callback()};
+    std::vector<shirakami::log_record> logs_for_callback; // NOLINT
+    if (enable_callback) {
+        logs_for_callback.reserve(handle.get_logs().size());
+    }
+
+    // send logs to limestone
     for (auto&& log_elem : handle.get_logs()) {
-        if (log_elem.get_is_delete()) {
+        if (log_elem.get_operation() == log_operation::DELETE) {
             // this is delete
             // todo for delete, wait for limestone impl
         } else {
@@ -36,9 +48,22 @@ void add_entry_from_logs(handler& handle) {
                                             .get_minor_write_version()))
 
             );
-            // todo: last args fix for full write version
-            // convert log_elem.get_wv() to limestone::api::write_version_type
+            if (enable_callback) {
+                logs_for_callback.emplace_back(
+                        log_elem.get_operation(), log_elem.get_key(),
+                        log_elem.get_val(),
+                        log_elem.get_wv().get_major_write_version(),
+                        log_elem.get_wv().get_minor_write_version(),
+                        log_elem.get_st());
+            }
         }
+    }
+
+    // logging callback
+    if (enable_callback) {
+        get_log_event_callback()(handle.get_worker_number(),
+                                 &(*logs_for_callback.begin()),
+                                 &(*(logs_for_callback.end() - 1)));
     }
 
     handle.get_logs().clear();

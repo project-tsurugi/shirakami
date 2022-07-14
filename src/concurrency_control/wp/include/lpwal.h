@@ -20,6 +20,7 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 
+#include "shirakami/log_record.h"
 #include "shirakami/scheme.h"
 
 #include "limestone/api/log_channel.h"
@@ -97,11 +98,11 @@ private:
 
 class log_record {
 public:
-    log_record(bool is_delete, write_version_type wv, Storage st,
+    log_record(log_operation operation, write_version_type wv, Storage st,
                std::string_view key, std::string_view val)
-        : is_delete_(is_delete), wv_(wv), st_(st), key_(key), val_(val) {}
+        : operation_(operation), wv_(wv), st_(st), key_(key), val_(val) {}
 
-    [[nodiscard]] bool get_is_delete() const { return is_delete_; }
+    [[nodiscard]] log_operation get_operation() const { return operation_; }
 
     [[nodiscard]] std::string_view get_key() const { return key_; }
 
@@ -111,7 +112,7 @@ public:
 
     [[nodiscard]] write_version_type get_wv() const { return wv_; }
 
-    void set_is_delete(bool tf) { is_delete_ = tf; }
+    void set_operation(log_operation operation) { operation_ = operation; }
 
     void set_key(std::string_view v) { key_ = v; }
 
@@ -126,7 +127,7 @@ private:
      * @brief About write operation. If this is true, this is a delete operation.
      * If this is false, this is write operation.
      */
-    bool is_delete_{};
+    log_operation operation_{};
 
     /**
       * @brief timestamp
@@ -168,6 +169,8 @@ public:
         return log_channel_ptr_;
     }
 
+    std::size_t get_worker_number() { return worker_number_; }
+
     void push_log(log_record const& log) {
         if (logs_.empty()) {
             set_min_log_epoch(log.get_wv().get_major_write_version());
@@ -187,7 +190,14 @@ public:
         min_log_epoch_.store(e, std::memory_order_release);
     }
 
+    void set_worker_number(std::size_t wn) { worker_number_ = wn; }
+
 private:
+    /**
+     * @brief worker thread number used for logging callback.
+     */
+    std::size_t worker_number_{};
+
     /**
      * @brief max epoch of flushed log. It is used for computing durable epoch.
      * 
