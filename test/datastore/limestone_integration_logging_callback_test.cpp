@@ -59,12 +59,12 @@ TEST_F(limestone_integration_logging_callback_test, // NOLINT
             [](std::size_t n, log_record* begin, log_record* end) {
                 log_record* lrptr = begin;
                 for (;;) {
+                    if (lrptr == end) { break; }
                     LOG(INFO) << n << " " << lrptr->get_operation() << " "
                               << lrptr->get_key() << " " << lrptr->get_value()
                               << " " << lrptr->get_major_version() << " "
                               << lrptr->get_minor_version() << " "
                               << lrptr->get_storage_id();
-                    if (lrptr == end) { break; }
                     ++lrptr;
                 }
             });

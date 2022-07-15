@@ -66,8 +66,8 @@ void add_entry_from_logs(handler& handle) {
     // logging callback
     if (enable_callback && !logs_for_callback.empty()) {
         get_log_event_callback()(handle.get_worker_number(),
-                                 &(*logs_for_callback.begin()),
-                                 &(*(logs_for_callback.end() - 1)));
+                                 &*logs_for_callback.begin(),
+                                 &*logs_for_callback.begin()+logs_for_callback.size());
     }
 
     handle.get_logs().clear();
