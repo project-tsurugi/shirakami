@@ -5,7 +5,8 @@
 #pragma once
 
 #include <atomic>
-#include <mutex>
+#include <shared_mutex>
+#include <unordered_map>
 
 #include "shirakami/scheme.h"
 
@@ -62,6 +63,18 @@ private:
      * @attention The number of storages above UINT64_MAX is undefined behavior.
      */
     static inline std::atomic<Storage> strg_ctr_{initial_strg_ctr};
+
+    /**
+     * @brief key handle map
+     * @details key is storage's key given by outside. value is storage id 
+     * given by internally.
+     */
+    static inline std::unordered_map<std::string, Storage> key_handle_map_;
+
+    /**
+     * @brief Mutex for key handle map.
+     */
+    static inline std::shared_mutex mtx_key_handle_map_;
 };
 
 } // namespace shirakami

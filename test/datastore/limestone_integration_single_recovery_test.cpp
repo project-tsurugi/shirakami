@@ -103,7 +103,6 @@ void recovery_test() {
     fin();
 }
 
-#if 1
 TEST_F(limestone_integration_single_recovery_test,
        check_recovery) {                      // NOLINT
     ASSERT_NO_FATAL_FAILURE(recovery_test()); // NOLINT
@@ -212,8 +211,6 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     fin(false);
 }
 
-#else
-
 TEST_F(limestone_integration_single_recovery_test, // NOLINT
        complicated_test) {                         // NOLINT
     std::string log_dir{};
@@ -223,40 +220,65 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
           0}); // NOLINT
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 0); // because single recovery
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(st_list.size(), 0);
+    Storage st1{};
+    ASSERT_EQ(Status::OK, create_storage(st1));
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // because single recovery
+    ASSERT_EQ(st_list.size(), 1);
 
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
     std::string buf{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "\x00CHAR_TAB", buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st1, "\x00CHAR_TAB", buf));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "\x00CHAR_TAB", buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st1, "\x00CHAR_TAB", buf));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "\x00CHAR_TAB", buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st1, "\x00CHAR_TAB", buf));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
 
-    ASSERT_EQ(Status::OK, create_storage(st));
+    Storage st2{};
+    ASSERT_EQ(Status::OK, create_storage(st2));
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 2); // because single recovery
+    ASSERT_EQ(st_list.size(), 2);
+
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
+    ASSERT_EQ(Status::OK, upsert(s, st1, "\x00CHAR_TAB",
+                                 "\x00\x00\x00\x00\x01\x00\x00\x00"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
+    ASSERT_EQ(Status::OK, search_key(s, st1, "\x00CHAR_TAB", buf));
+    ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::OK, leave(s));
+
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT, {}}));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st1, "\x00CUSTOMER", buf));
 
     fin(false);
-}
 
-#endif
+    init({database_options::open_mode::CREATE_OR_RESTORE, log_dir,
+          0}); // NOLINT
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(st_list.size(), 1); // TODO 2 after logging metadata.
+
+    fin(false);
+
+}
 
 } // namespace shirakami::testing
