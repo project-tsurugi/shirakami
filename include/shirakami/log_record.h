@@ -20,7 +20,9 @@ enum class log_operation : std::uint32_t {
     UNKNOWN = 0U,
     INSERT,
     UPDATE,
-    UPSERT,
+#if 0
+    UPSERT, // TODO ADD
+#endif
     DELETE,
 };
 
@@ -37,8 +39,10 @@ inline constexpr std::string_view to_string_view(log_operation value) {
             return "INSERT";
         case log_operation::UPDATE:
             return "UPDATE";
-        case log_operation::UPSERT:
+#if 0 
+        case log_operation::UPSERT:// TODO ADD
             return "UPSERT";
+#endif
         case log_operation::DELETE:
             return "DELETE";
     }

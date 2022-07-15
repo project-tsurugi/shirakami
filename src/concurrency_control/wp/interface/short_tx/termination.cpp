@@ -345,7 +345,11 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             case OP_TYPE::UPSERT: {
+#if 0
                 lo = log_operation::UPSERT;
+#else
+                lo = log_operation::UPDATE; // TODO REMOVE
+#endif
                 break;
             }
             case OP_TYPE::DELETE: {
