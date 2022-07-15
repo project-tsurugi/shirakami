@@ -1,4 +1,6 @@
 
+#include <math.h>
+
 #include <array>
 #include <mutex>
 
@@ -47,7 +49,7 @@ TEST_F(wp_storage_test, simple) { // NOLINT
     // check result of list_storage remove about wp meta storage.
     ASSERT_EQ(1, rt.size());
     // check st num starts from 0
-    ASSERT_EQ(0, rt.at(0));
+    ASSERT_EQ(pow(2, 32), rt.at(0));
     std::vector<std::pair<std::string, yakushima::tree_instance*>> rec;
     yakushima::list_storages(rec);
     // check result of list_storages from point of view of yakushima includes 2
