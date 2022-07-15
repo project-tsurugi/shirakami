@@ -1,4 +1,6 @@
 
+#include <math.h>
+
 #include "clock.h"
 
 #include "concurrency_control/wp/include/epoch.h"
@@ -49,18 +51,20 @@ void add_entry_from_logs(handler& handle) {
 
             );
             if (enable_callback) {
+                if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE
                 logs_for_callback.emplace_back(
                         log_elem.get_operation(), log_elem.get_key(),
                         log_elem.get_val(),
                         log_elem.get_wv().get_major_write_version(),
                         log_elem.get_wv().get_minor_write_version(),
                         log_elem.get_st());
+                }
             }
         }
     }
 
     // logging callback
-    if (enable_callback) {
+    if (enable_callback && !logs_for_callback.empty()) {
         get_log_event_callback()(handle.get_worker_number(),
                                  &(*logs_for_callback.begin()),
                                  &(*(logs_for_callback.end() - 1)));
