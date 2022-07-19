@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 /**
  * @brief for tx workers.

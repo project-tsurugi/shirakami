@@ -21,6 +21,7 @@
 #include "concurrency_control/wp/include/lpwal.h"
 
 #include "datastore/limestone/include/datastore.h"
+#include "datastore/limestone/include/limestone_api_helper.h"
 
 #include "limestone/api/datastore.h"
 
@@ -116,14 +117,9 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
         lpwal::remove_under_log_dir();
     } else {
         // create snapshot for next start.
-        datastore::get_datastore()->recover(
-                true); // should execute before ready()
+        recover(datastore::get_datastore(), true);
     }
     lpwal::clean_up_metadata();
-
-    // backup
-    // create snapshot
-    // wait for snapshot
 #endif
 
     // about tx engine
@@ -196,8 +192,7 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
             limestone::api::configuration(data_locations, metadata_path));
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
-        datastore::get_datastore()->recover(
-                false); // should execute before ready()
+        recover(datastore::get_datastore(), false);
     }
     datastore::get_datastore()->add_persistent_callback(
             epoch::set_durable_epoch); // should execute before ready()
@@ -205,7 +200,7 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
      * This executes create_channel and pass it to shirakami's executor.
      */
     datastore::init_about_session_table(log_dir);
-    datastore::get_datastore()->ready();
+    ready(datastore::get_datastore());
 
 #endif
 

@@ -9,6 +9,7 @@
 #include "concurrency_control/wp/include/tuple_local.h" // for size
 
 #include "database/include/database.h"
+#include "datastore/limestone/include/limestone_api_helper.h"
 
 #include "shirakami/log_record.h"
 #include "shirakami/logging.h"
@@ -38,29 +39,14 @@ void add_entry_from_logs(handler& handle) {
         } else {
             // this is write
             // now no source
-            DVLOG(log_trace) << "--> add_entry()";
-            handle.get_log_channel_ptr()->add_entry(
-                    static_cast<limestone::api::storage_id_type>(
-                            log_elem.get_st()),
-                    log_elem.get_key(), log_elem.get_val(),
-                    limestone::api::write_version_type(
-                            static_cast<limestone::api::epoch_t>(
-                                    log_elem.get_wv()
-                                            .get_major_write_version()),
-                            static_cast<std::uint64_t>(
-                                    log_elem.get_wv()
-                                            .get_minor_write_version())));
-            DVLOG(log_trace)
-                    << "<-- add_entry() : "
-                    << static_cast<limestone::api::storage_id_type>(
-                               log_elem.get_st())
-                    << ", " << log_elem.get_key() << ", " << log_elem.get_val()
-                    << ", "
-                    << static_cast<limestone::api::epoch_t>(
-                               log_elem.get_wv().get_major_write_version())
-                    << ", "
-                    << static_cast<std::uint64_t>(
-                               log_elem.get_wv().get_minor_write_version());
+            add_entry(handle.get_log_channel_ptr(),
+                      static_cast<limestone::api::storage_id_type>(
+                              log_elem.get_st()),
+                      log_elem.get_key(), log_elem.get_val(),
+                      static_cast<limestone::api::epoch_t>(
+                              log_elem.get_wv().get_major_write_version()),
+                      static_cast<std::uint64_t>(
+                              log_elem.get_wv().get_minor_write_version()));
             if (enable_callback) {
                 if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE
                     logs_for_callback.emplace_back(
@@ -130,9 +116,9 @@ void flush_log(handler& handle) {
         auto ce{epoch::get_global_epoch()};
 
         if (!handle.get_logs().empty()) {
-            handle.get_log_channel_ptr()->begin_session();
+            begin_session(handle.get_log_channel_ptr());
             add_entry_from_logs(handle);
-            handle.get_log_channel_ptr()->end_session();
+            end_session(handle.get_log_channel_ptr());
         }
 
         // register last flushed epoch
@@ -147,9 +133,9 @@ void flush_remaining_log(bool& was_nothing) {
     for (auto&& es : session_table::get_session_table()) {
         if (!es.get_lpwal_handle().get_logs().empty()) {
             was_nothing = false;
-            es.get_lpwal_handle().get_log_channel_ptr()->begin_session();
+            begin_session(es.get_lpwal_handle().get_log_channel_ptr());
             add_entry_from_logs(es.get_lpwal_handle());
-            es.get_lpwal_handle().get_log_channel_ptr()->end_session();
+            end_session(es.get_lpwal_handle().get_log_channel_ptr());
         }
     }
 }

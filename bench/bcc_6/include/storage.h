@@ -4,7 +4,9 @@
 
 #pragma once
 
-#include "shirakami/scheme.h"
+#include <vector>
+
+#include "shirakami/storage_options.h"
 
 using storages_type = std::vector<shirakami::Storage>;
 

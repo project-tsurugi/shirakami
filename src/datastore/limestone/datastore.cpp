@@ -14,6 +14,7 @@
 #include "shirakami/scheme.h"
 
 #include "datastore/limestone/include/datastore.h"
+#include "datastore/limestone/include/limestone_api_helper.h"
 
 #include "glog/logging.h"
 
@@ -25,7 +26,7 @@ void init_about_session_table(std::string_view log_dir_path) {
     boost::filesystem::path log_dir{std::string(log_dir_path)};
     for (auto&& elem : session_table::get_session_table()) {
         elem.get_lpwal_handle().set_log_channel_ptr(
-                &get_datastore()->create_channel(log_dir));
+                create_channel(get_datastore(), log_dir));
     }
 }
 
@@ -35,7 +36,7 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
 }
 
 void recovery_from_datastore() {
-    limestone::api::snapshot* ss(get_datastore()->get_snapshot());
+    limestone::api::snapshot* ss(get_snapshot(get_datastore()));
 
     /**
      * The cursor point the first entry at calling first next(). 

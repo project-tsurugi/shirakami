@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "scheme.h"
+#include "storage_options.h"
 
 #include "glog/logging.h"
 

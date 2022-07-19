@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 namespace shirakami {
 
