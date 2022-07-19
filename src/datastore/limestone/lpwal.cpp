@@ -11,6 +11,7 @@
 #include "database/include/database.h"
 
 #include "shirakami/log_record.h"
+#include "shirakami/logging.h"
 
 #include "limestone/api/write_version_type.h"
 
@@ -37,6 +38,7 @@ void add_entry_from_logs(handler& handle) {
         } else {
             // this is write
             // now no source
+            DVLOG(log_trace) << "--> add_entry()";
             handle.get_log_channel_ptr()->add_entry(
                     static_cast<limestone::api::storage_id_type>(
                             log_elem.get_st()),
@@ -47,17 +49,26 @@ void add_entry_from_logs(handler& handle) {
                                             .get_major_write_version()),
                             static_cast<std::uint64_t>(
                                     log_elem.get_wv()
-                                            .get_minor_write_version()))
-
-            );
+                                            .get_minor_write_version())));
+            DVLOG(log_trace)
+                    << "<-- add_entry() : "
+                    << static_cast<limestone::api::storage_id_type>(
+                               log_elem.get_st())
+                    << ", " << log_elem.get_key() << ", " << log_elem.get_val()
+                    << ", "
+                    << static_cast<limestone::api::epoch_t>(
+                               log_elem.get_wv().get_major_write_version())
+                    << ", "
+                    << static_cast<std::uint64_t>(
+                               log_elem.get_wv().get_minor_write_version());
             if (enable_callback) {
                 if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE
-                logs_for_callback.emplace_back(
-                        log_elem.get_operation(), log_elem.get_key(),
-                        log_elem.get_val(),
-                        log_elem.get_wv().get_major_write_version(),
-                        log_elem.get_wv().get_minor_write_version(),
-                        log_elem.get_st());
+                    logs_for_callback.emplace_back(
+                            log_elem.get_operation(), log_elem.get_key(),
+                            log_elem.get_val(),
+                            log_elem.get_wv().get_major_write_version(),
+                            log_elem.get_wv().get_minor_write_version(),
+                            log_elem.get_st());
                 }
             }
         }

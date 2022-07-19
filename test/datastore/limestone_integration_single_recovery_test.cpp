@@ -216,8 +216,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     std::string log_dir{};
     log_dir = create_log_dir_name();
 
-    init({database_options::open_mode::CREATE_OR_RESTORE, log_dir,
-          0}); // NOLINT
+    init({database_options::open_mode::CREATE_OR_RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 0);
@@ -272,13 +271,11 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
 
     fin(false);
 
-    init({database_options::open_mode::CREATE_OR_RESTORE, log_dir,
-          0}); // NOLINT
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 1); // TODO 2 after logging metadata.
 
     fin(false);
-
 }
 
 } // namespace shirakami::testing
