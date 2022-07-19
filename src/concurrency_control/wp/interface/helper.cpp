@@ -37,8 +37,7 @@ namespace shirakami {
 Status check_before_write_ops(session* const ti, Storage const st,
                               OP_TYPE const op) {
     // check whether it is read only mode.
-    if (ti->get_tx_type() ==
-        transaction_options::transaction_type::READ_ONLY) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         // can't write in read only mode.
         return Status::WARN_ILLEGAL_OPERATION;
     }
@@ -52,8 +51,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
     }
 
     // long check
-    if (ti->get_tx_type() ==
-        transaction_options::transaction_type::LONG) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             // not in valid epoch.
             return Status::WARN_PREMATURE;
@@ -116,8 +114,16 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!lpwal::get_log_dir_pointed()) {
         // log dir was not pointed. So remove log dir
         lpwal::remove_under_log_dir();
+    } else {
+        // create snapshot for next start.
+        datastore::get_datastore()->recover(
+                true); // should execute before ready()
     }
     lpwal::clean_up_metadata();
+
+    // backup
+    // create snapshot
+    // wait for snapshot
 #endif
 
     // about tx engine
@@ -190,7 +196,8 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
             limestone::api::configuration(data_locations, metadata_path));
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
-        datastore::get_datastore()->recover(); // should execute before ready()
+        datastore::get_datastore()->recover(
+                false); // should execute before ready()
     }
     datastore::get_datastore()->add_persistent_callback(
             epoch::set_durable_epoch); // should execute before ready()
