@@ -12,7 +12,7 @@
 
 #include "yakushima/include/kvs.h"
 
-#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 #include "glog/logging.h"
 

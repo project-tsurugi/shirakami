@@ -1,19 +1,11 @@
 
 #include <string_view>
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/record.h"
-
-#else
-
-#include "concurrency_control/silo/include/record.h"
-
-#endif
 
 #include "index/yakushima/include/scheme.h"
 
-#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -87,7 +79,7 @@ yakushima::status put(Storage st, std::string_view key, std::string_view val) {
  * @return Status::WARN_NOT_FOUND It found no records.
  * @return Status::WARN_STORAGE_NOT_FOUND It didn't find the @a st.
  */
-static inline Status
+[[maybe_unused]] static inline Status
 scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
      std::string_view const r_key, scan_endpoint const r_end,
      std::size_t const max_size,

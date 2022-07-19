@@ -18,7 +18,7 @@
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/read_by.h"
 
-#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 #include "glog/logging.h"
 

@@ -17,10 +17,11 @@
 #pragma once
 
 #include <utility>
+#include <vector>
 
 #include "cpu.h"
 
-#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 namespace shirakami {
 
@@ -41,7 +42,8 @@ inline bool use_separate_storage{false};
  * @details If this is true, All worker threads access separate storage. 
  * Therefore, there is no conflict.
  */
-alignas(CACHE_LINE_SIZE) inline std::vector<Storage> separate_storage{}; // NOLINT
+alignas(CACHE_LINE_SIZE) inline std::vector<
+        Storage> separate_storage{}; // NOLINT
 
 /**
  * global variables getter / setter
@@ -57,14 +59,16 @@ inline void set_use_separate_storage(bool tf) { use_separate_storage = tf; }
  * Other functions.
  */
 
-void build_db(std::size_t record, std::size_t key_length, std::size_t value_length, std::size_t threads);
+void build_db(std::size_t record, std::size_t key_length,
+              std::size_t value_length, std::size_t threads);
 
 /**
  * @brief Determine the number of parallels to use for the build.
  */
 size_t decideParallelBuildNumber(std::size_t record); // NOLINT
 
-void parallel_build_db(
-        std::size_t start, std::size_t end, std::size_t key_length, std::size_t value_length, std::size_t pbd_storage);
+void parallel_build_db(std::size_t start, std::size_t end,
+                       std::size_t key_length, std::size_t value_length,
+                       std::size_t pbd_storage);
 
 } // namespace shirakami
