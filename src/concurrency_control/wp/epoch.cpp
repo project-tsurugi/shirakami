@@ -10,6 +10,7 @@
 #ifdef PWAL
 
 #include "datastore/limestone/include/datastore.h"
+#include "datastore/limestone/include/limestone_api_helper.h"
 
 #endif
 
@@ -57,7 +58,7 @@ void epoch_thread_work() {
             set_global_epoch(new_epoch);
 #ifdef PWAL
             // change also datastore's epoch
-            shirakami::datastore::get_datastore()->switch_epoch(new_epoch);
+            switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
 #endif
             // dtor : release wp_mutex
         }
