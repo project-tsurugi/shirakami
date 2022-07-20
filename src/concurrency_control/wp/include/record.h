@@ -43,6 +43,8 @@ public:
 
     [[nodiscard]] std::string* get_key_ptr() { return &key_; }
 
+    std::string_view get_key_view() { return key_; }
+
     [[nodiscard]] version* get_latest() const {
         return latest_.load(std::memory_order_acquire);
     }

@@ -10,6 +10,8 @@
 
 #include "index/yakushima/include/interface.h"
 
+#include "shirakami/logging.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::short_tx {
@@ -267,7 +269,9 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
-        [[maybe_unused]] bool should_log{true};
+        VLOG(log_trace) << "write. op type: " << wso_ptr->get_op()
+                        << ", key: " << wso_ptr->get_rec_ptr()->get_key_view()
+                        << ", value: " << wso_ptr->get_value_view();
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -315,7 +319,6 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    should_log = false;
                     if (wso_ptr->get_op() != OP_TYPE::DELETE) {
                         std::string vb{};
                         wso_ptr->get_value(vb);
@@ -331,49 +334,46 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
 #ifdef PWAL
-        if (should_log) {
-            // add log records to local wal buffer
-            std::string key{};
-            wso_ptr->get_rec_ptr()->get_key(key);
-            std::string val{};
-            wso_ptr->get_value(val);
-            log_operation lo{};
-            switch (wso_ptr->get_op()) {
-                case OP_TYPE::INSERT: {
-                    lo = log_operation::INSERT;
-                    break;
-                }
-                case OP_TYPE::UPDATE: {
-                    lo = log_operation::UPDATE;
-                    break;
-                }
-                case OP_TYPE::UPSERT: {
+        // add log records to local wal buffer
+        std::string key{};
+        wso_ptr->get_rec_ptr()->get_key(key);
+        std::string val{};
+        wso_ptr->get_value(val);
+        log_operation lo{};
+        switch (wso_ptr->get_op()) {
+            case OP_TYPE::INSERT: {
+                lo = log_operation::INSERT;
+                break;
+            }
+            case OP_TYPE::UPDATE: {
+                lo = log_operation::UPDATE;
+                break;
+            }
+            case OP_TYPE::UPSERT: {
 #if 0
                 lo = log_operation::UPSERT;
 #else
-                    lo = log_operation::UPDATE; // TODO REMOVE
+                lo = log_operation::UPDATE; // TODO REMOVE
 #endif
-                    break;
-                }
-                case OP_TYPE::DELETE: {
-                    lo = log_operation::DELETE;
-                    break;
-                }
-                default: {
-                    LOG(ERROR) << "programming error";
-                    return Status::ERR_FATAL;
-                }
+                break;
             }
-            lpwal::write_version_type::minor_write_version_type minor_version =
-                    1;
-            minor_version <<= 63;
-            minor_version |= update_tid.get_tid();
-            ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
-                    lo,
-                    lpwal::write_version_type(update_tid.get_epoch(),
-                                              minor_version),
-                    wso_ptr->get_storage(), key, val));
+            case OP_TYPE::DELETE: {
+                lo = log_operation::DELETE;
+                break;
+            }
+            default: {
+                LOG(ERROR) << "programming error";
+                return Status::ERR_FATAL;
+            }
         }
+        lpwal::write_version_type::minor_write_version_type minor_version = 1;
+        minor_version <<= 63;
+        minor_version |= update_tid.get_tid();
+        ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
+                lo,
+                lpwal::write_version_type(update_tid.get_epoch(),
+                                          minor_version),
+                wso_ptr->get_storage(), key, val));
 #endif
         return Status::OK;
     };

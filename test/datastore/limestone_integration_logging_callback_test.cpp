@@ -52,7 +52,7 @@ private:
 };
 
 TEST_F(limestone_integration_logging_callback_test, // NOLINT
-       check_logging_callback) {                    // NOLINT
+       simple_check_logging_callback) {             // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT
     database_set_logging_callback(
@@ -87,6 +87,103 @@ TEST_F(limestone_integration_logging_callback_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
 
     fin(false);
+}
+
+TEST_F(limestone_integration_logging_callback_test,               // NOLINT
+       short_tx_two_page_insert_update_delete_logging_callback) { // NOLINT
+    // prepare test
+    init({database_options::open_mode::CREATE}); // NOLINT
+    std::atomic<std::uint64_t> count{0};
+    database_set_logging_callback(
+            [&count](std::size_t n, log_record* begin, log_record* end) {
+                log_record* lrptr = begin;
+                for (;;) {
+                    if (lrptr == end) { break; }
+                    LOG(INFO) << n << " " << lrptr->get_operation() << " "
+                              << lrptr->get_key() << " " << lrptr->get_value()
+                              << " " << lrptr->get_major_version() << " "
+                              << lrptr->get_minor_version() << " "
+                              << lrptr->get_storage_id();
+                    ++count;
+                    ++lrptr;
+                }
+            });
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st, 2));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // insert two page
+    ASSERT_EQ(Status::OK, insert(s, st, "A", "B"));
+    ASSERT_EQ(Status::OK, insert(s, st, "a", "b"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // update two page
+    ASSERT_EQ(Status::OK, update(s, st, "A", "C"));
+    ASSERT_EQ(Status::OK, update(s, st, "a", "c"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // delete two page
+    ASSERT_EQ(Status::OK, delete_record(s, st, "A"));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    fin(false);
+
+    ASSERT_EQ(count, 4);
+}
+
+TEST_F(limestone_integration_logging_callback_test,              // NOLINT
+       long_tx_two_page_insert_update_delete_logging_callback) { // NOLINT
+    // prepare test
+    init({database_options::open_mode::CREATE}); // NOLINT
+    std::atomic<std::uint64_t> count{0};
+    database_set_logging_callback(
+            [&count](std::size_t n, log_record* begin, log_record* end) {
+                log_record* lrptr = begin;
+                for (;;) {
+                    if (lrptr == end) { break; }
+                    LOG(INFO) << n << " " << lrptr->get_operation() << " "
+                              << lrptr->get_key() << " " << lrptr->get_value()
+                              << " " << lrptr->get_major_version() << " "
+                              << lrptr->get_minor_version() << " "
+                              << lrptr->get_storage_id();
+                    ++count;
+                    ++lrptr;
+                }
+            });
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st, 2));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // insert two page
+    transaction_options to{s,
+                           transaction_options::transaction_type::LONG,
+                           {st}};
+    ASSERT_EQ(Status::OK, tx_begin(to));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, insert(s, st, "A", "B"));
+    ASSERT_EQ(Status::OK, insert(s, st, "a", "b"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // update two page
+    ASSERT_EQ(Status::OK, tx_begin(to));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, update(s, st, "A", "C"));
+    ASSERT_EQ(Status::OK, update(s, st, "a", "c"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // delete two page
+    ASSERT_EQ(Status::OK, tx_begin(to));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, delete_record(s, st, "A"));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    fin(false);
+
+    ASSERT_EQ(count, 4);
 }
 
 } // namespace shirakami::testing

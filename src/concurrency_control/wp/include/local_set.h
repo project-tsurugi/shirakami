@@ -104,6 +104,8 @@ public:
         LOG(ERROR) << "programming error";
     }
 
+    std::string_view get_value_view() { return val_; }
+
     void set_op(OP_TYPE op) { op_ = op; }
 
     void set_rec_ptr(Record* rec_ptr) { rec_ptr_ = rec_ptr; }
