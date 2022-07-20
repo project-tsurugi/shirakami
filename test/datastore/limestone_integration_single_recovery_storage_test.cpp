@@ -59,7 +59,6 @@ void create_storage_and_upsert_one_record() {
 
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(st));
-
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
     ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
@@ -96,13 +95,18 @@ void storage_operation_test(std::size_t storage_num) {
     // test: check recovery
     std::sort(st_list.begin(), st_list.end());
     std::size_t itr_num{0};
+    Storage max_st{0};
     for (auto&& st : st_list) {
         ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32);
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         ++itr_num;
+        if (st > max_st) { max_st = st; }
     }
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(st >> 32, (max_st >> 32) + 1);
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
@@ -112,8 +116,8 @@ void storage_operation_test(std::size_t storage_num) {
 TEST_F(limestone_integration_single_recovery_storage_test, // NOLINT
        check_storage_operation_after_recovery) {           // NOLINT
     ASSERT_NO_FATAL_FAILURE(storage_operation_test(1));    // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(2));    // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(3));    // NOLINT
+    ASSERT_NO_FATAL_FAILURE(storage_operation_test(2)); // NOLINT
+    ASSERT_NO_FATAL_FAILURE(storage_operation_test(3)); // NOLINT
 }
 
 TEST_F(limestone_integration_single_recovery_storage_test,   // NOLINT

@@ -32,7 +32,11 @@ void init_about_session_table(std::string_view log_dir_path) {
 
 void recovery_storage_meta(std::vector<Storage>& st_list) {
     std::sort(st_list.begin(), st_list.end());
-    storage::set_strg_ctr((st_list.back() >> 32) + 1);
+    if (st_list.back() >= (storage::initial_strg_ctr << 32)) {
+        storage::set_strg_ctr((st_list.back() >> 32) + 1);
+    } else {
+        storage::set_strg_ctr(storage::initial_strg_ctr);
+    }
 }
 
 void recovery_from_datastore() {
