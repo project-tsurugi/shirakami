@@ -60,12 +60,6 @@ public:
     write_version_type(major_write_version_type ma, minor_write_version_type mi)
         : major_write_version_(ma), minor_write_version_(mi) {}
 
-    static minor_write_version_type gen_minor_write_version(bool is_long,
-                                                            std::uint64_t ts) {
-        if (is_long) { return (ts << 63) | 1; } // NOLINT
-        return (ts << 63);                      // NOLINT
-    }
-
     [[nodiscard]] major_write_version_type get_major_write_version() const {
         return major_write_version_;
     }

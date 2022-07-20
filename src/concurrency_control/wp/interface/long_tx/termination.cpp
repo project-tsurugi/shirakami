@@ -264,10 +264,8 @@ static inline void expose_local_write(session* ti) {
             }
             ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
                     lo,
-                    lpwal::write_version_type(
-                            ti->get_valid_epoch(),
-                            lpwal::write_version_type::gen_minor_write_version(
-                                    true, ti->get_long_tx_id())),
+                    lpwal::write_version_type(ti->get_valid_epoch(),
+                                              ti->get_long_tx_id()),
                     wso.get_storage(), key, val));
         }
 #endif

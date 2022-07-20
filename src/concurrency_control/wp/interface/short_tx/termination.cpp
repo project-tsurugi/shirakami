@@ -267,6 +267,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
+        [[maybe_unused]] bool should_log{true};
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -314,6 +315,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
+                    should_log = false;
                     if (wso_ptr->get_op() != OP_TYPE::DELETE) {
                         std::string vb{};
                         wso_ptr->get_value(vb);
@@ -329,45 +331,49 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
 #ifdef PWAL
-        // add log records to local wal buffer
-        std::string key{};
-        wso_ptr->get_rec_ptr()->get_key(key);
-        std::string val{};
-        wso_ptr->get_value(val);
-        log_operation lo{};
-        switch (wso_ptr->get_op()) {
-            case OP_TYPE::INSERT: {
-                lo = log_operation::INSERT;
-                break;
-            }
-            case OP_TYPE::UPDATE: {
-                lo = log_operation::UPDATE;
-                break;
-            }
-            case OP_TYPE::UPSERT: {
+        if (should_log) {
+            // add log records to local wal buffer
+            std::string key{};
+            wso_ptr->get_rec_ptr()->get_key(key);
+            std::string val{};
+            wso_ptr->get_value(val);
+            log_operation lo{};
+            switch (wso_ptr->get_op()) {
+                case OP_TYPE::INSERT: {
+                    lo = log_operation::INSERT;
+                    break;
+                }
+                case OP_TYPE::UPDATE: {
+                    lo = log_operation::UPDATE;
+                    break;
+                }
+                case OP_TYPE::UPSERT: {
 #if 0
                 lo = log_operation::UPSERT;
 #else
-                lo = log_operation::UPDATE; // TODO REMOVE
+                    lo = log_operation::UPDATE; // TODO REMOVE
 #endif
-                break;
+                    break;
+                }
+                case OP_TYPE::DELETE: {
+                    lo = log_operation::DELETE;
+                    break;
+                }
+                default: {
+                    LOG(ERROR) << "programming error";
+                    return Status::ERR_FATAL;
+                }
             }
-            case OP_TYPE::DELETE: {
-                lo = log_operation::DELETE;
-                break;
-            }
-            default: {
-                LOG(ERROR) << "programming error";
-                return Status::ERR_FATAL;
-            }
+            lpwal::write_version_type::minor_write_version_type minor_version =
+                    1;
+            minor_version <<= 63;
+            minor_version |= update_tid.get_tid();
+            ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
+                    lo,
+                    lpwal::write_version_type(update_tid.get_epoch(),
+                                              minor_version),
+                    wso_ptr->get_storage(), key, val));
         }
-        ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
-                lo,
-                lpwal::write_version_type(
-                        update_tid.get_epoch(),
-                        lpwal::write_version_type::gen_minor_write_version(
-                                false, update_tid.get_tid())),
-                wso_ptr->get_storage(), key, val));
 #endif
         return Status::OK;
     };
@@ -398,12 +404,15 @@ Status node_verify(session* ti) {
 }
 
 void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
+    // about tid
     auto tid_a{commit_tid};
     tid_a.inc_tid();
 
+    // about linearizable for same worker
     auto tid_b{ti->get_mrc_tid()};
     tid_b.inc_tid();
 
+    // about epoch
     tid_word tid_c{};
     tid_c.set_epoch(ce);
 
