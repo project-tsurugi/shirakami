@@ -19,7 +19,8 @@
 
 namespace shirakami {
 
-Status create_storage(Storage& storage, Storage storage_id) {
+Status create_storage(Storage& storage, [[maybe_unused]] storage_option options,
+                      Storage storage_id) {
     return storage::create_storage(storage, storage_id);
 }
 

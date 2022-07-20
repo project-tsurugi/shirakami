@@ -52,15 +52,15 @@ TEST_F(storage_test, create_storage_test) { // NOLINT
 
 TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st, 1));
+    ASSERT_EQ(Status::OK, create_storage(st, {}, 1));
     ASSERT_EQ(Status::OK, exist_storage(st));
     ASSERT_EQ(Status::OK, exist_storage(1));
-    ASSERT_EQ(Status::OK, create_storage(st, 2));
+    ASSERT_EQ(Status::OK, create_storage(st, {}, 2));
     ASSERT_EQ(Status::OK, exist_storage(st));
     ASSERT_EQ(Status::OK, exist_storage(2));
-    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, create_storage(st, 2));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, create_storage(st, {}, 2));
     ASSERT_EQ(Status::WARN_STORAGE_ID_DEPLETION,
-              create_storage(st, (pow(2, 33))));
+              create_storage(st, {}, (pow(2, 33))));
 }
 
 TEST_F(storage_test, exist_storage_test) { // NOLINT

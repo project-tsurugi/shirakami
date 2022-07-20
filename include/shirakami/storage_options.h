@@ -19,6 +19,8 @@ constexpr Storage storage_id_undefined{UINT64_MAX};
 
 class storage_option {
 public:
+    storage_option() = default;
+
     storage_option(std::uint64_t id) : id_(id) {}
 
     std::uint64_t get_id() { return id_; }

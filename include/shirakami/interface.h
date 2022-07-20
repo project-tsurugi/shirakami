@@ -32,7 +32,7 @@ namespace shirakami {
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a storage_id larger 
  * than 2^32, or shirakami create storage more than 2^32.
  */
-extern Status create_storage(Storage& storage,
+extern Status create_storage(Storage& storage, storage_option options = {},
                              Storage storage_id = storage_id_undefined);
 
 /**
