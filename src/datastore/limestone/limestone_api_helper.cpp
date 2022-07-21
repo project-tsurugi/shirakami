@@ -7,8 +7,9 @@ namespace shirakami {
 
 // datastore
 
-limestone::api::log_channel* create_channel(limestone::api::datastore* ds,
-                                            boost::filesystem::path location) {
+limestone::api::log_channel*
+create_channel(limestone::api::datastore* ds,
+               boost::filesystem::path const& location) {
     if (ds == nullptr) {
         LOG(ERROR) << "programming error";
         return nullptr;
@@ -25,7 +26,7 @@ limestone::api::snapshot* get_snapshot(limestone::api::datastore* ds) {
         return nullptr;
     }
     log_entry << "datastore::get_snapshot()";
-    auto ret = ds->get_snapshot();
+    auto* ret = ds->get_snapshot();
     log_exit << "datastore::get_snapshot(): ret: " << ret;
     return ret;
 }

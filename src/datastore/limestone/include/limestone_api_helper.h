@@ -18,8 +18,9 @@ namespace shirakami {
 
 // datastore
 
-limestone::api::log_channel* create_channel(limestone::api::datastore* ds,
-                                            boost::filesystem::path location);
+limestone::api::log_channel*
+create_channel(limestone::api::datastore* ds,
+               boost::filesystem::path const& location);
 
 limestone::api::snapshot* get_snapshot(limestone::api::datastore* ds);
 

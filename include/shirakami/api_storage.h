@@ -23,7 +23,8 @@ namespace shirakami {
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger 
  * than 2^32, or shirakami create storage more than 2^32.
  */
-extern Status create_storage(Storage& storage, storage_option options = {});
+extern Status create_storage(Storage& storage,
+                             storage_option options = {}); // NOLINT
 
 /**
  * @brief Create one table by using key, and return its handler.

@@ -21,9 +21,9 @@ class storage_option {
 public:
     storage_option() = default;
 
-    storage_option(std::uint64_t id) : id_(id) {}
+    storage_option(std::uint64_t id) : id_(id) {} // NOLINT
 
-    std::uint64_t get_id() const { return id_; }
+    [[nodiscard]] std::uint64_t get_id() const { return id_; }
 
     void set_id(std::uint64_t id) { id_ = id; }
 

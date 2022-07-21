@@ -5,7 +5,7 @@
 
 namespace shirakami {
 
-Status database_set_logging_callback(log_event_callback callback) {
+Status database_set_logging_callback(log_event_callback const& callback) {
     if (callback) {
         // callback is executable
         set_log_event_callback(callback);

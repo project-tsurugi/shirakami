@@ -65,7 +65,7 @@ TEST_F(limestone_integration_logging_callback_test, // NOLINT
                               << " " << lrptr->get_major_version() << " "
                               << lrptr->get_minor_version() << " "
                               << lrptr->get_storage_id();
-                    ++lrptr;
+                    ++lrptr; // NOLINT
                 }
             });
     Storage st{};
@@ -105,7 +105,7 @@ TEST_F(limestone_integration_logging_callback_test,               // NOLINT
                               << lrptr->get_minor_version() << " "
                               << lrptr->get_storage_id();
                     ++count;
-                    ++lrptr;
+                    ++lrptr; // NOLINT
                 }
             });
     Storage st{};
@@ -149,7 +149,7 @@ TEST_F(limestone_integration_logging_callback_test,              // NOLINT
                               << lrptr->get_minor_version() << " "
                               << lrptr->get_storage_id();
                     ++count;
-                    ++lrptr;
+                    ++lrptr; // NOLINT
                 }
             });
     Storage st{};

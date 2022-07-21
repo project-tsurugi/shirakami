@@ -363,7 +363,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
         lpwal::write_version_type::minor_write_version_type minor_version = 1;
-        minor_version <<= 63;
+        minor_version <<= 63; // NOLINT
         minor_version |= update_tid.get_tid();
         ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
                 lo,

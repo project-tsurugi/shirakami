@@ -1,5 +1,5 @@
 
-#include <math.h>
+#include <cmath>
 
 #include <mutex>
 
@@ -38,16 +38,16 @@ private:
 TEST_F(storage_test, create_storage_test) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, storage::initial_strg_ctr << 32);
+    ASSERT_EQ(st, storage::initial_strg_ctr << 32); // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, (storage::initial_strg_ctr + 1) << 32);
+    ASSERT_EQ(st, (storage::initial_strg_ctr + 1) << 32); // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st, (storage::initial_strg_ctr + 2) << 32);
+    ASSERT_EQ(st, (storage::initial_strg_ctr + 2) << 32); // NOLINT
     ASSERT_EQ(Status::OK, delete_storage(st)); // interrupt delete_storage
     ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(st,
-              (storage::initial_strg_ctr + 3)
-                      << 32); // number trend is not changed.
+              (storage::initial_strg_ctr + 3) // NOLINT
+                      << 32); // number trend is not changed. // NOLINT
     // using string key
     ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
 }

@@ -570,7 +570,7 @@ using log_event_callback =
  * @return Status::OK if the call is successful
  * @return Status::WARN_INVALID_ARGS @a callback is not executable.
  */
-Status database_set_logging_callback(log_event_callback callback);
+Status database_set_logging_callback(log_event_callback const& callback);
 
 //==========
 /**

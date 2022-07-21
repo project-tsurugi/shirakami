@@ -67,51 +67,55 @@ struct log_record {
           major_version_(major_version), minor_version_(minor_version),
           storage_id_(storage_id) {}
 
-    log_operation get_operation() const { return operation_; }
+    [[nodiscard]] log_operation get_operation() const { return operation_; }
 
-    std::string_view get_key() const { return key_; }
+    [[nodiscard]] std::string_view get_key() const { return key_; }
 
-    std::string_view get_value() const { return value_; }
+    [[nodiscard]] std::string_view get_value() const { return value_; }
 
-    std::uint64_t get_major_version() const { return major_version_; }
+    [[nodiscard]] std::uint64_t get_major_version() const {
+        return major_version_;
+    }
 
-    std::uint64_t get_minor_version() const { return minor_version_; }
+    [[nodiscard]] std::uint64_t get_minor_version() const {
+        return minor_version_;
+    }
 
-    storage_id_type get_storage_id() const { return storage_id_; }
+    [[nodiscard]] storage_id_type get_storage_id() const { return storage_id_; }
 
     /**
      * @brief operation type for log record entry.
      * 
      */
-    log_operation operation_{};
+    log_operation operation_{}; // NOLINT
 
     /**
      * @brief key part of the log record
      */
-    std::string_view key_{};
+    std::string_view key_{}; // NOLINT
 
     /**
      * @brief value part of the log record
      * 
      */
-    std::string_view value_{};
+    std::string_view value_{}; // NOLINT
 
     /**
      * @brief major version of the log record
      * 
      */
-    std::uint64_t major_version_{};
+    std::uint64_t major_version_{}; // NOLINT
 
     /**
      * @brief minor version of the log record
      * 
      */
-    std::uint64_t minor_version_{};
+    std::uint64_t minor_version_{}; // NOLINT
 
     /**
      * @brief storage id where the log record is made
      */
-    storage_id_type storage_id_{};
+    storage_id_type storage_id_{}; // NOLINT
 };
 
 static_assert(std::is_trivially_copyable_v<log_record>);

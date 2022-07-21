@@ -4,7 +4,7 @@
 
 namespace shirakami {
 
-inline log_event_callback log_event_callback_;
+inline log_event_callback log_event_callback_; // NOLINT
 
 [[maybe_unused]] static void clear_log_event_callback() {
     log_event_callback f;
@@ -16,7 +16,7 @@ inline log_event_callback log_event_callback_;
 }
 
 [[maybe_unused]] static void
-set_log_event_callback(log_event_callback callback) {
+set_log_event_callback(log_event_callback const& callback) {
     log_event_callback_ = callback;
 }
 

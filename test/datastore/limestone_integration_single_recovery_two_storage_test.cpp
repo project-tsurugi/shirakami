@@ -97,7 +97,7 @@ void storage_operation_test(std::size_t storage_num) {
     std::size_t itr_num{0};
     Storage max_st{0};
     for (auto&& st : st_list) {
-        ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32);
+        ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32); // NOLINT
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -106,7 +106,7 @@ void storage_operation_test(std::size_t storage_num) {
     }
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(st >> 32, (max_st >> 32) + 1);
+    ASSERT_EQ(st >> 32, (max_st >> 32) + 1); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
@@ -114,8 +114,8 @@ void storage_operation_test(std::size_t storage_num) {
 }
 
 TEST_F(limestone_integration_single_recovery_two_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {           // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(2));    // NOLINT
+       check_storage_operation_after_recovery) {               // NOLINT
+    ASSERT_NO_FATAL_FAILURE(storage_operation_test(2));        // NOLINT
 }
 
 } // namespace shirakami::testing

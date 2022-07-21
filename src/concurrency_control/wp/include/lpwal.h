@@ -163,7 +163,7 @@ public:
         return log_channel_ptr_;
     }
 
-    std::size_t get_worker_number() { return worker_number_; }
+    [[nodiscard]] std::size_t get_worker_number() const { return worker_number_; }
 
     void push_log(log_record const& log) {
         if (logs_.empty()) {

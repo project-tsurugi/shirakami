@@ -110,18 +110,18 @@ Status storage::create_storage(Storage& storage, storage_option const options) {
         // storage id is not specified by shirakami-user.
         get_new_storage_num(storage);
         // check depletion
-        if ((storage >> 32) > 0) {
+        if ((storage >> 32) > 0) { // NOLINT
             LOG(ERROR) << "system defined storage id depletion. you should "
                           "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;
         }
         // higher bit is used for system defined.
-        storage <<= 32;
+        storage <<= 32; // NOLINT
     } else {
         // storage id is specified by shirakami-user.
         storage = storage_id;
         // check depletion
-        if ((storage >> 32) > 0) {
+        if ((storage >> 32) > 0) { // NOLINT
             LOG(ERROR) << "user defined storage id depletion. you should "
                           "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;

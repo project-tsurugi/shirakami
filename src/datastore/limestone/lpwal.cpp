@@ -1,5 +1,5 @@
 
-#include <math.h>
+#include <cmath>
 
 #include "clock.h"
 
@@ -48,7 +48,7 @@ void add_entry_from_logs(handler& handle) {
                       static_cast<std::uint64_t>(
                               log_elem.get_wv().get_minor_write_version()));
             if (enable_callback) {
-                if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE
+                if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE // NOLINT
                     logs_for_callback.emplace_back(
                             log_elem.get_operation(), log_elem.get_key(),
                             log_elem.get_val(),
@@ -63,8 +63,9 @@ void add_entry_from_logs(handler& handle) {
     // logging callback
     if (enable_callback && !logs_for_callback.empty()) {
         get_log_event_callback()(handle.get_worker_number(),
-                                 &*logs_for_callback.begin(),
-                                 &*logs_for_callback.begin()+logs_for_callback.size());
+                                 &*logs_for_callback.begin(),  // NOLINT
+                                 &*logs_for_callback.begin() + // NOLINT
+                                         logs_for_callback.size());
     }
 
     handle.get_logs().clear();
