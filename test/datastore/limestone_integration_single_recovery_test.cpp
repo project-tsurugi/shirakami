@@ -73,47 +73,6 @@ std::string create_log_dir_name() {
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-void recovery_test() {
-    // start
-    std::string log_dir{};
-    log_dir = create_log_dir_name();
-    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
-
-    // storage creation
-    create_storage_and_upsert_one_record();
-
-    fin(false);
-
-    // start
-    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-
-    // test: log exist
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    // test: check recovery
-    std::string vb{};
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // because single recovery
-    for (auto&& st : st_list) {
-        ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
-    ASSERT_EQ(Status::OK, leave(s));
-    fin();
-}
-
-TEST_F(limestone_integration_single_recovery_test,
-       check_recovery) {                      // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test()); // NOLINT
-}
-
-void print_out_st_list() {
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    for (auto&& st : st_list) { LOG(INFO) << st; }
-}
-
 TEST_F(limestone_integration_single_recovery_test, // NOLINT
        one_page_write_one_storage) {               // NOLINT
     // prepare
@@ -130,10 +89,8 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
-    print_out_st_list();
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    print_out_st_list();
 
     // test: storage num
     std::vector<Storage> st_list{};
@@ -149,61 +106,6 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
         ASSERT_EQ(Status::OK, search_key(s, each_st, "b", vb));
         ASSERT_EQ(vb, "B");
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
-
-    // cleanup
-    ASSERT_EQ(Status::OK, leave(s));
-    fin(false);
-}
-
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       two_page_write_two_storage) {               // NOLINT
-    // prepare
-    std::string log_dir{};
-    log_dir = create_log_dir_name();
-    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
-
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
-    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(Status::OK, upsert(s, st, "x", "X"));
-    ASSERT_EQ(Status::OK, upsert(s, st, "y", "Y"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
-    ASSERT_EQ(Status::OK, leave(s));
-    fin(false);
-    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-
-    // test: storage num
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 2); // because single recovery
-    bool first{true};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    // test: contents
-    for (auto&& each_st : st_list) {
-        std::string vb{};
-        if (first) {
-            ASSERT_EQ(Status::OK, search_key(s, each_st, "a", vb));
-            ASSERT_EQ(vb, "A");
-            ASSERT_EQ(Status::OK, search_key(s, each_st, "b", vb));
-            ASSERT_EQ(vb, "B");
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-            first = false;
-        } else {
-            ASSERT_EQ(Status::OK, search_key(s, each_st, "x", vb));
-            ASSERT_EQ(vb, "X");
-            ASSERT_EQ(Status::OK, search_key(s, each_st, "y", vb));
-            ASSERT_EQ(vb, "Y");
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
     }
 
     // cleanup
