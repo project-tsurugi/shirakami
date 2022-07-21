@@ -15,7 +15,7 @@ namespace shirakami {
  * Multiple create_storage calls assign storage value monotonically.
  * That is, Storage value assigned by create_storage is larger than the one 
  * assigned by previous call.
- * @param[in] storage_id If you don't use this argument, @a storage is specified
+ * @param[in] options If you don't use this argument, @a storage is specified
  * by shirakami, otherwise, is specified by user.
  * @return Status::ERR_FATAL_INDEX Some programming error.
  * @return Status::OK if successful.
@@ -23,8 +23,7 @@ namespace shirakami {
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a storage_id larger 
  * than 2^32, or shirakami create storage more than 2^32.
  */
-extern Status create_storage(Storage& storage, storage_option options = {},
-                             Storage storage_id = storage_id_undefined);
+extern Status create_storage(Storage& storage, storage_option options = {});
 
 /**
  * @brief Confirm existence of the storage.

@@ -109,7 +109,7 @@ TEST_F(limestone_integration_logging_callback_test,               // NOLINT
                 }
             });
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st, {}, 2));
+    ASSERT_EQ(Status::OK, create_storage(st, {2}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -153,7 +153,7 @@ TEST_F(limestone_integration_logging_callback_test,              // NOLINT
                 }
             });
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st, {}, 2));
+    ASSERT_EQ(Status::OK, create_storage(st, {2}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

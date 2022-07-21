@@ -19,9 +19,8 @@
 
 namespace shirakami {
 
-Status create_storage(Storage& storage, [[maybe_unused]] storage_option options,
-                      Storage storage_id) {
-    return storage::create_storage(storage, storage_id);
+Status create_storage(Storage& storage, storage_option options) {
+    return storage::create_storage(storage, options);
 }
 
 Status exist_storage(Storage storage) {
@@ -78,8 +77,9 @@ Status storage::register_storage(Storage storage) {
     return Status::OK;
 }
 
-Status storage::create_storage(Storage& storage, Storage storage_id) {
+Status storage::create_storage(Storage& storage, storage_option options) {
     // compute storage id.
+    Storage storage_id = options.get_id();
     if (storage_id == storage_id_undefined) {
         // storage id is not specified by shirakami-user.
         get_new_storage_num(storage);
