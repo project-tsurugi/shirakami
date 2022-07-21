@@ -25,6 +25,36 @@ public:
      */
     static constexpr Storage wp_meta_storage{UINT64_MAX - 2};
 
+    static Status key_handle_map_erase_storage(std::string_view const key) {
+        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        auto ret = key_handle_map_.erase({std::string(key)});
+        if (ret == 1) { return Status::OK; }
+        return Status::WARN_NOT_FOUND;
+    }
+
+    static Status key_handle_map_get_storage(std::string_view const key,
+                                             Storage& out) {
+        std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
+        auto itr = key_handle_map_.find(std::string(key));
+        if (itr != key_handle_map_.end()) {
+            // hit
+            out = itr->second;
+            return Status::OK;
+        }
+        return Status::WARN_NOT_FOUND;
+    }
+
+    static Status key_handle_map_push_storage(std::string_view const key,
+                                              Storage const st) {
+        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        auto ret = key_handle_map_.insert({std::string(key), st});
+        if (ret.second) {
+            // success
+            return Status::OK;
+        }
+        return Status::WARN_ALREADY_EXISTS;
+    }
+
     /**
      * @brief initialization.
      * @pre This should be called before recovery.
