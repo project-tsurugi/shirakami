@@ -9,8 +9,6 @@
 #include "scheme.h"
 #include "storage_options.h"
 
-#include "glog/logging.h"
-
 namespace shirakami {
 
 /**
@@ -21,10 +19,8 @@ enum class log_operation : std::uint32_t {
     UNKNOWN = 0U,
     INSERT,
     UPDATE,
-#if 0
-    UPSERT, // TODO ADD
-#endif
     DELETE,
+    UPSERT,
 };
 
 /**
@@ -40,14 +36,11 @@ inline constexpr std::string_view to_string_view(log_operation value) {
             return "INSERT";
         case log_operation::UPDATE:
             return "UPDATE";
-#if 0 
-        case log_operation::UPSERT:// TODO ADD
-            return "UPSERT";
-#endif
         case log_operation::DELETE:
             return "DELETE";
+        case log_operation::UPSERT:
+            return "UPSERT";
     }
-    LOG(ERROR) << "programming error";
     std::abort();
 }
 
