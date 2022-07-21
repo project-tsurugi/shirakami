@@ -23,9 +23,7 @@ namespace shirakami {
 
     // delete for above.
     for (auto&& elem : storage_list) {
-        if (elem != wp::get_page_set_meta_storage()) {
-            storage::delete_storage(elem);
-        }
+        if (elem != wp::get_page_set_meta_storage()) { delete_storage(elem); }
     }
 
     return Status::OK;

@@ -48,6 +48,8 @@ TEST_F(storage_test, create_storage_test) { // NOLINT
     ASSERT_EQ(st,
               (storage::initial_strg_ctr + 3)
                       << 32); // number trend is not changed.
+    // using string key
+    ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
 }
 
 TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
@@ -70,6 +72,20 @@ TEST_F(storage_test, exist_storage_test) { // NOLINT
     ASSERT_EQ(Status::OK, exist_storage(st));
     ASSERT_EQ(Status::OK, delete_storage(st));
     ASSERT_EQ(Status::WARN_NOT_FOUND, exist_storage(st));
+    // using string key
+    ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
+    ASSERT_EQ(Status::OK, exist_storage(st));
+}
+
+TEST_F(storage_test, get_storage_test) { // NOLINT
+    Storage st{};
+    // using string key
+    ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
+    Storage st2{};
+    ASSERT_EQ(Status::OK, get_storage("NAUTI", st2));
+    ASSERT_EQ(st, st2);
+    ASSERT_EQ(Status::OK, delete_storage(st));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage("NAUTI", st2));
 }
 
 TEST_F(storage_test, delete_storage_test) { // NOLINT
@@ -78,6 +94,10 @@ TEST_F(storage_test, delete_storage_test) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage(st));
     ASSERT_EQ(Status::OK, delete_storage(st));
     ASSERT_EQ(Status::WARN_INVALID_HANDLE, delete_storage(st));
+    // using string key
+    ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
+    // delete storage used storage key
+    ASSERT_EQ(Status::OK, delete_storage(st));
 }
 
 TEST_F(storage_test, list_storage_test) { // NOLINT
