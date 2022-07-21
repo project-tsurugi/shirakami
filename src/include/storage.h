@@ -32,6 +32,22 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
+    /**
+     * @brief 
+     * @pre The caller of this func already got write lock about 
+     * mtx_key_handle_map_.
+     * @param[in] st The target handle
+     */
+    static void key_handle_map_erase_storage_without_lock(Storage st) {
+        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
+             ++itr) {
+            if (itr->second == st) {
+                key_handle_map_.erase(itr);
+                return;
+            }
+        }
+    }
+
     static Status key_handle_map_get_storage(std::string_view const key,
                                              Storage& out) {
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
@@ -76,6 +92,9 @@ public:
      */
     static Status create_storage(Storage& storage, storage_option options);
 
+    static Status create_storage(std::string_view key, Storage& storage,
+                                 storage_option options);
+
     static Status exist_storage(Storage storage);
 
     /**
@@ -83,6 +102,10 @@ public:
      * @param[in] storage
      */
     static Status delete_storage(Storage storage);
+
+    static std::shared_mutex& get_mtx_key_handle_map() {
+        return mtx_key_handle_map_;
+    }
 
     static Storage get_strg_ctr() {
         return strg_ctr_.load(std::memory_order_acquire);

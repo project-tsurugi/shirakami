@@ -19,16 +19,42 @@
 
 namespace shirakami {
 
-Status create_storage(Storage& storage, storage_option options) {
+Status create_storage(Storage& storage, storage_option const options) {
     return storage::create_storage(storage, options);
 }
 
-Status exist_storage(Storage storage) {
+Status create_storage(std::string_view const key, Storage& storage,
+                      storage_option const options) {
+    // check key existence
+    Storage st{};
+    if (storage::key_handle_map_get_storage(key, st) == Status::OK) {
+        return Status::WARN_ALREADY_EXISTS;
+    }
+    // point (*1)
+
+    auto ret = storage::create_storage(storage, options);
+    if (ret != Status::OK) { return ret; }
+    // success create_storage
+    // point (*2)
+    if (storage::key_handle_map_push_storage(key, storage) != Status::OK) {
+        // interrupt between (*1) and (*2)
+        storage::delete_storage(storage);
+        return Status::WARN_ALREADY_EXISTS;
+    }
+    return Status::OK;
+}
+
+Status exist_storage(Storage const storage) {
     return storage::exist_storage(storage);
 }
 
-Status delete_storage(Storage storage) {
-    return storage::delete_storage(storage);
+Status delete_storage(Storage const storage) {
+    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
+    auto ret = storage::delete_storage(storage);
+    if (ret != Status::OK) { return ret; }
+    // delete_storage was succeeded
+    storage::key_handle_map_erase_storage_without_lock(storage);
+    return Status::OK;
 }
 
 Status get_storage(std::string_view const key, Storage& out) {
@@ -77,7 +103,7 @@ Status storage::register_storage(Storage storage) {
     return Status::OK;
 }
 
-Status storage::create_storage(Storage& storage, storage_option options) {
+Status storage::create_storage(Storage& storage, storage_option const options) {
     // compute storage id.
     Storage storage_id = options.get_id();
     if (storage_id == storage_id_undefined) {

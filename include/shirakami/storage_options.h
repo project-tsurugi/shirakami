@@ -23,7 +23,7 @@ public:
 
     storage_option(std::uint64_t id) : id_(id) {}
 
-    std::uint64_t get_id() { return id_; }
+    std::uint64_t get_id() const { return id_; }
 
     void set_id(std::uint64_t id) { id_ = id; }
 
