@@ -52,9 +52,9 @@ TEST_F(wp_storage_test, simple) { // NOLINT
     ASSERT_EQ(pow(2, 32), rt.at(0));
     std::vector<std::pair<std::string, yakushima::tree_instance*>> rec;
     yakushima::list_storages(rec);
-    // check result of list_storages from point of view of yakushima includes 2
-    // storage (st and wp_meta_storage).
-    ASSERT_EQ(rec.size(), 2);
+    // check result of list_storages from point of view of yakushima includes 3
+    // storage (st and wp_meta_storage and meta_storage).
+    ASSERT_EQ(rec.size(), 3);
 }
 
 } // namespace shirakami::testing

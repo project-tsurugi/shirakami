@@ -249,7 +249,9 @@ Status storage::list_storage(std::vector<Storage>& out) {
         //Due to invariants, the type is known by the developer.
         Storage dest{};
         memcpy(&dest, elem.first.data(), sizeof(dest));
-        if (dest != storage::wp_meta_storage) { out.emplace_back(dest); }
+        if (dest != storage::wp_meta_storage && dest != storage::meta_storage) {
+            out.emplace_back(dest);
+        }
     }
     return Status::OK;
 }
@@ -258,6 +260,10 @@ void storage::get_new_storage_num(Storage& storage) {
     storage = strg_ctr_.fetch_add(1);
 }
 
-void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
+void storage::init() {
+    storage::set_strg_ctr(storage::initial_strg_ctr);
+    auto ret = storage::register_storage(storage::meta_storage);
+    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+}
 
 } // namespace shirakami
