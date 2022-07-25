@@ -175,7 +175,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
 
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // TODO 2 after logging metadata.
+    ASSERT_EQ(st_list.size(), 2);
 
     fin(false);
 }

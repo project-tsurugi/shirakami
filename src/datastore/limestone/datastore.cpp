@@ -32,6 +32,7 @@ void init_about_session_table(std::string_view log_dir_path) {
 
 void recovery_storage_meta(std::vector<Storage>& st_list) {
     std::sort(st_list.begin(), st_list.end());
+    st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
     if (st_list.back() >= (storage::initial_strg_ctr << 32)) { // NOLINT
         storage::set_strg_ctr((st_list.back() >> 32) + 1);     // NOLINT
     } else {
@@ -57,11 +58,24 @@ void recovery_from_datastore() {
         ss->get_cursor().key(key);
         ss->get_cursor().value(val);
         // check storage exist
-        shirakami::storage::register_storage(st);
-        st_list.emplace_back(st);
-        // create kvs entry from these info.
-        if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
-            LOG(ERROR) << "not unique. to discuss or programming error.";
+        if (st != storage::meta_storage) {
+            shirakami::storage::register_storage(st);
+            st_list.emplace_back(st);
+            // create kvs entry from these info.
+            if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
+                LOG(ERROR) << "not unique. to discuss or programming error.";
+            }
+        } else {
+            // recovery storage. The storage may have not been operated.
+            Storage st2{};
+            if (val.size() != sizeof(st2)) {
+                LOG(ERROR) << "programming error";
+            }
+            memcpy(&st2, val.data(), sizeof(st2));
+            shirakami::storage::register_storage(st2);
+            // the storage may be already created by log_entry
+            storage::key_handle_map_push_storage(key, st2);
+            st_list.emplace_back(st2);
         }
     }
     if (!st_list.empty()) {

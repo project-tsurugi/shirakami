@@ -25,6 +25,10 @@ public:
      */
     static constexpr Storage wp_meta_storage{UINT64_MAX - 2};
 
+    static void fin();
+
+    static void key_handle_map_clear() { key_handle_map_.clear(); }
+
     static Status key_handle_map_erase_storage(std::string_view const key) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
         auto ret = key_handle_map_.erase({std::string(key)});
@@ -76,6 +80,8 @@ public:
      * @pre This should be called before recovery.
      */
     static void init();
+
+    static void init_meta_storage();
 
     /**
      * @brief Create a storage object

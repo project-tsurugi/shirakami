@@ -130,6 +130,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 #endif
     delete_all_records(); // This should be before wp::fin();
     wp::fin();            // note: this use yakushima.
+    storage::fin();       // note: this use yakushima. delete meta storage.
 
     // about index
     yakushima::fin();
@@ -218,6 +219,9 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
     // about wp
     auto ret = wp::init();
     if (ret != Status::OK) { return ret; }
+
+    // about meta storage
+    storage::init_meta_storage();
 
 #ifdef PWAL
     // recover shirakami from datastore recovered.

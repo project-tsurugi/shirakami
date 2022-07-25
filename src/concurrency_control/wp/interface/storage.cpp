@@ -12,6 +12,7 @@
 #include "concurrency_control/wp/include/wp.h"
 
 #include "shirakami/interface.h"
+#include "shirakami/logging.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -19,8 +20,44 @@
 
 namespace shirakami {
 
+void write_storage_metadata(std::string_view key, Storage st) {
+    Token s{};
+    while (enter(s) != Status::OK) { _mm_pause(); }
+    std::string_view value_view{reinterpret_cast<char*>(&st), // NOLINT
+                                sizeof(st)};
+    for (;;) {
+        auto ret = upsert(s, storage::meta_storage, key, value_view);
+        if (ret != Status::OK) { continue; }
+        if (commit(s) == Status::OK) { break; } // NOLINT
+        _mm_pause();
+    }
+    leave(s);
+}
+
+Status remove_storage_metadata([[maybe_unused]] Storage st,
+                               [[maybe_unused]] storage_option options) {
+    // todo impl
+    return Status::ERR_NOT_IMPLEMENTED;
+}
+
 Status create_storage(Storage& storage, storage_option const options) {
-    return storage::create_storage(storage, options);
+    std::size_t n{0};
+    for (;;) {
+        std::string_view key_view{reinterpret_cast<char*>(&n), sizeof(n)};
+        auto ret = create_storage(key_view, storage, options);
+        if (ret == Status::OK) { return ret; }
+        if (ret == Status::WARN_STORAGE_ID_DEPLETION) { return ret; }
+        if (options.get_id() != storage_id_undefined) {
+            std::vector<Storage> st_list{};
+            list_storage(st_list);
+            for (auto&& elem : st_list) {
+                if (elem == options.get_id()) {
+                    return Status::WARN_ALREADY_EXISTS;
+                }
+            }
+        }
+        ++n;
+    }
 }
 
 Status create_storage(std::string_view const key, Storage& storage,
@@ -41,6 +78,8 @@ Status create_storage(std::string_view const key, Storage& storage,
         storage::delete_storage(storage);
         return Status::WARN_ALREADY_EXISTS;
     }
+
+    write_storage_metadata(key, storage);
     return Status::OK;
 }
 
@@ -111,8 +150,9 @@ Status storage::create_storage(Storage& storage, storage_option const options) {
         get_new_storage_num(storage);
         // check depletion
         if ((storage >> 32) > 0) { // NOLINT
-            LOG(ERROR) << "system defined storage id depletion. you should "
-                          "implement re-using storage id.";
+            VLOG(log_trace)
+                    << "system defined storage id depletion. you should "
+                       "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;
         }
         // higher bit is used for system defined.
@@ -122,8 +162,8 @@ Status storage::create_storage(Storage& storage, storage_option const options) {
         storage = storage_id;
         // check depletion
         if ((storage >> 32) > 0) { // NOLINT
-            LOG(ERROR) << "user defined storage id depletion. you should "
-                          "implement re-using storage id.";
+            VLOG(log_trace) << "user defined storage id depletion. you should "
+                               "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;
         }
     }
@@ -195,7 +235,7 @@ Status storage::delete_storage(Storage storage) {
         for (auto&& th : th_vc) { th.join(); }
     }
 
-    if (!wp::get_finalizing()) {
+    if (!wp::get_finalizing() && storage != storage::meta_storage) {
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         yakushima::Token ytoken{};
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
@@ -260,10 +300,20 @@ void storage::get_new_storage_num(Storage& storage) {
     storage = strg_ctr_.fetch_add(1);
 }
 
-void storage::init() {
-    storage::set_strg_ctr(storage::initial_strg_ctr);
+void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
+
+void storage::init_meta_storage() {
     auto ret = storage::register_storage(storage::meta_storage);
     if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+}
+
+void storage::fin() {
+    // clear meta storage
+    auto ret = storage::delete_storage(storage::meta_storage);
+    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+
+    // clear key storage map
+    storage::key_handle_map_clear();
 }
 
 } // namespace shirakami

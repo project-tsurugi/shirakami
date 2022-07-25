@@ -34,6 +34,7 @@ void session_table::init_session_table() {
         // for internal
         itr.clean_up();
 #ifdef PWAL
+        itr.get_lpwal_handle().init();
         itr.get_lpwal_handle().set_worker_number(worker_number);
         ++worker_number;
 #endif

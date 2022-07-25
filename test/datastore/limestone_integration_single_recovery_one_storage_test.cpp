@@ -119,7 +119,7 @@ TEST_F(limestone_integration_single_recovery_one_storage_test, // NOLINT
 }
 
 TEST_F(limestone_integration_single_recovery_one_storage_test, // NOLINT
-       DISABLED_check_storage_no_operation_after_recovery) {   // NOLINT
+       check_storage_no_operation_after_recovery) {            // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT

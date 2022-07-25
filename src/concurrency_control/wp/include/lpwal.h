@@ -163,13 +163,24 @@ public:
         return log_channel_ptr_;
     }
 
-    [[nodiscard]] std::size_t get_worker_number() const { return worker_number_; }
+    [[nodiscard]] std::size_t get_worker_number() const {
+        return worker_number_;
+    }
 
     void push_log(log_record const& log) {
         if (logs_.empty()) {
             set_min_log_epoch(log.get_wv().get_major_write_version());
         }
         logs_.emplace_back(log);
+    }
+
+    void init() {
+        worker_number_ = 0;
+        last_flushed_epoch_ = 0;
+        min_log_epoch_ = 0;
+        logs_.clear();
+        // this can't due to concurrent programming
+        // log_channel_ptr_ = nullptr;
     }
 
     void set_last_flushed_epoch(epoch::epoch_t e) {
