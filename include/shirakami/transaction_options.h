@@ -18,6 +18,24 @@ public:
         READ_ONLY,
     };
 
+    class read_area {
+    public:
+        using list_type = std::vector<Storage>;
+
+        read_area() = default;
+
+        read_area(list_type plist, list_type nlist)
+            : positive_list_(plist), negative_list_(nlist) {}
+
+        list_type& get_positive_list() { return positive_list_; }
+
+        list_type& get_negative_list() { return negative_list_; }
+
+    private:
+        list_type positive_list_{};
+        list_type negative_list_{};
+    };
+
     transaction_options() = default; // NOLINT
 
     transaction_options(Token token) : token_(token) {} // NOLINT
@@ -30,13 +48,20 @@ public:
         : token_(token), transaction_type_(tt), write_preserve_(std::move(wp)) {
     }
 
+    transaction_options(Token token, transaction_type tt,
+                        write_preserve_type wp, read_area ra)
+        : token_(token), transaction_type_(tt), write_preserve_(std::move(wp)),
+          read_area_(ra) {}
+
     [[nodiscard]] Token get_token() const { return token_; }
 
     [[nodiscard]] transaction_type get_transaction_type() const {
         return transaction_type_;
     }
 
-    [[nodiscard]] write_preserve_type get_write_preserve() const { return write_preserve_; }
+    [[nodiscard]] write_preserve_type get_write_preserve() const {
+        return write_preserve_;
+    }
 
     void set_token(Token token) { token_ = token; }
 
@@ -72,7 +97,15 @@ private:
      * @details If you use transaction_type::LONG, you must use this member.
      * This shows the tables which the long transaction will write.
      */
-    std::vector<Storage> write_preserve_{};
+    write_preserve_type write_preserve_{};
+
+    /**
+     * @brief read area
+     * @details The storage list information that the area which may be read by 
+     * this tx and the list that the area which must not be read by this tx.
+     * This information is used for optimizations.
+     */
+    read_area read_area_{};
 };
 
 inline constexpr std::string_view

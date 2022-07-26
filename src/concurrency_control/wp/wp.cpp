@@ -149,7 +149,8 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             return Status::ERR_FAIL_WP;
         }
         wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
-        if (Status::OK != target_wp_meta->register_wp(valid_epoch, long_tx_id)) {
+        if (Status::OK !=
+            target_wp_meta->register_wp(valid_epoch, long_tx_id)) {
             cleanup_process();
             return Status::ERR_FAIL_WP;
         }
