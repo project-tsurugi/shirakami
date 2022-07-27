@@ -51,12 +51,12 @@ void update_read_area(std::size_t const tx_id,
                       std::set<wp::page_set_meta*> const& plist_meta,
                       std::set<wp::page_set_meta*> const& nlist_meta) {
     // about plist
-    for (auto elem : plist_meta) {
+    for (auto* elem : plist_meta) {
         elem->get_read_plan().update_positive_list(tx_id);
     }
 
     // about nlist
-    for (auto elem : nlist_meta) {
+    for (auto* elem : nlist_meta) {
         elem->get_read_plan().update_negative_list(tx_id);
     }
 }

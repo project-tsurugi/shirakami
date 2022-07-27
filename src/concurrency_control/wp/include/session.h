@@ -168,7 +168,7 @@ public:
         return range_read_by_short_set_;
     }
 
-    transaction_options::read_area const& get_read_area() const {
+    [[nodiscard]] transaction_options::read_area const& get_read_area() const {
         return read_area_;
     }
 
@@ -304,15 +304,15 @@ public:
         operating_.store(tf, std::memory_order_release);
     }
 
-    void set_read_area(transaction_options::read_area const ra) {
+    void set_read_area(transaction_options::read_area const& ra) {
         read_area_ = ra;
     }
 
-    void set_read_positive_list(std::set<wp::page_set_meta*> plist) {
+    void set_read_positive_list(std::set<wp::page_set_meta*> const& plist) {
         read_positive_list_ = plist;
     }
 
-    void set_read_negative_list(std::set<wp::page_set_meta*> nlist) {
+    void set_read_negative_list(std::set<wp::page_set_meta*> const& nlist) {
         read_negative_list_ = nlist;
     }
 

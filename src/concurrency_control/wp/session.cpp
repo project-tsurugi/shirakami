@@ -17,11 +17,11 @@ bool session::check_exist_wp_set(Storage storage) const {
 
 void clear_about_read_area(session* ti) {
     // gc global information
-    for (auto elem : ti->get_read_positive_list()) {
+    for (auto* elem : ti->get_read_positive_list()) {
         elem->get_read_plan().erase_positive_list(ti->get_long_tx_id());
     }
 
-    for (auto elem : ti->get_read_negative_list()) {
+    for (auto* elem : ti->get_read_negative_list()) {
         elem->get_read_plan().erase_negative_list(ti->get_long_tx_id());
     }
 

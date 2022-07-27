@@ -56,7 +56,7 @@ TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
     // check positive list
     read_plan::list_type list = out->get_read_plan().get_positive_list();
     ASSERT_EQ(list.size(), 1);
-    session* ti = static_cast<session*>(s);
+    auto* ti = static_cast<session*>(s);
     ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
     // check negative list
     list = out->get_read_plan().get_negative_list();
@@ -90,7 +90,7 @@ TEST_F(read_area_test, register_and_remove_nega) { // NOLINT
     // check negative list
     read_plan::list_type list = out->get_read_plan().get_negative_list();
     ASSERT_EQ(list.size(), 1);
-    session* ti = static_cast<session*>(s);
+    auto* ti = static_cast<session*>(s);
     ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
     // check positive list
     list = out->get_read_plan().get_positive_list();

@@ -21,8 +21,8 @@ public:
 
     read_plan() = default;
 
-    read_plan(list_type const& pl, list_type const& nl)
-        : positive_list_(pl), negative_list_(nl) {}
+    read_plan(list_type pl, list_type nl)
+        : positive_list_(std::move(pl)), negative_list_(std::move(nl)) {}
 
     void erase_negative_list(std::size_t const tx_id) {
         std::lock_guard<std::shared_mutex> lk{mtx_negative_list_};

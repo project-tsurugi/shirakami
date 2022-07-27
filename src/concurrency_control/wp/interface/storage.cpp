@@ -43,7 +43,8 @@ Status remove_storage_metadata([[maybe_unused]] Storage st,
 Status create_storage(Storage& storage, storage_option const options) {
     std::size_t n{0};
     for (;;) {
-        std::string_view key_view{reinterpret_cast<char*>(&n), sizeof(n)};
+        std::string_view key_view{reinterpret_cast<char*>(&n), // NOLINT
+                                  sizeof(n)};
         auto ret = create_storage(key_view, storage, options);
         if (ret == Status::OK) { return ret; }
         if (ret == Status::WARN_STORAGE_ID_DEPLETION) { return ret; }

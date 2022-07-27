@@ -26,16 +26,21 @@ public:
 
         read_area() = default;
 
-        read_area(list_type const& plist, list_type const& nlist)
-            : positive_list_(plist), negative_list_(nlist) {}
+        read_area(list_type plist, list_type nlist)
+            : positive_list_(std::move(plist)),
+              negative_list_(std::move(nlist)) {}
 
-        list_type& get_positive_list() { return positive_list_; }
+        [[nodiscard]] list_type& get_positive_list() { return positive_list_; }
 
-        list_type const& get_positive_list() const { return positive_list_; }
+        [[nodiscard]] list_type const& get_positive_list() const {
+            return positive_list_;
+        }
 
-        list_type& get_negative_list() { return negative_list_; }
+        [[nodiscard]] list_type& get_negative_list() { return negative_list_; }
 
-        list_type const& get_negative_list() const { return negative_list_; }
+        [[nodiscard]] list_type const& get_negative_list() const {
+            return negative_list_;
+        }
 
     private:
         list_type positive_list_{};
@@ -57,7 +62,7 @@ public:
     transaction_options(Token token, transaction_type tt,
                         write_preserve_type wp, read_area ra)
         : token_(token), transaction_type_(tt), write_preserve_(std::move(wp)),
-          read_area_(ra) {}
+          read_area_(std::move(ra)) {}
 
     [[nodiscard]] Token get_token() const { return token_; }
 
