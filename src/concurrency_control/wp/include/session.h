@@ -81,8 +81,8 @@ public:
     void clear_about_scan() { scan_handle_.clear(); }
 
     void clean_up() {
-        clear_about_long_tx_metadata();
-        clear_local_set();
+        clear_local_set(); // this should before (*1). use long tx id info.
+        clear_about_long_tx_metadata(); // (*1)
         clear_tx_property();
         clear_about_scan();
         clear_about_tx_state();
@@ -170,6 +170,14 @@ public:
 
     transaction_options::read_area const& get_read_area() const {
         return read_area_;
+    }
+
+    std::set<wp::page_set_meta*> get_read_positive_list() {
+        return read_positive_list_;
+    }
+
+    std::set<wp::page_set_meta*> get_read_negative_list() {
+        return read_negative_list_;
     }
 
     read_set_type& get_read_set() { return read_set_; }
@@ -300,6 +308,14 @@ public:
         read_area_ = ra;
     }
 
+    void set_read_positive_list(std::set<wp::page_set_meta*> plist) {
+        read_positive_list_ = plist;
+    }
+
+    void set_read_negative_list(std::set<wp::page_set_meta*> nlist) {
+        read_negative_list_ = nlist;
+    }
+
     void set_tx_began(bool tf) {
         tx_began_.store(tf, std::memory_order_release);
     }
@@ -392,6 +408,16 @@ private:
      * @brief read area information used for long transaction.
      */
     transaction_options::read_area read_area_{};
+
+    /**
+     * @brief cache about computation around read_area_
+     */
+    std::set<wp::page_set_meta*> read_positive_list_{};
+
+    /**
+     * @brief cache about computation around read_area_
+     */
+    std::set<wp::page_set_meta*> read_negative_list_{};
 
     /**
      * @brief local read set.

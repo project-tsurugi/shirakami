@@ -47,12 +47,12 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     ongoing_tx::push({valid_epoch, long_tx_id});
 
     // set read area
-    auto rc = set_read_plans(ti->get_long_tx_id(), ra);
-    ti->set_read_area(ra);
+    auto rc = set_read_plans(ti, ti->get_long_tx_id(), ra);
     if (rc != Status::OK) {
         long_tx::abort(ti);
         return Status::ERR_FAIL_READ_AREA;
     }
+    ti->set_read_area(ra);
 
     return Status::OK;
     // dtor : release wp_mutex

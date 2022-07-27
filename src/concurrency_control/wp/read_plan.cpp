@@ -3,6 +3,8 @@
 #include <set>
 
 #include "concurrency_control/wp/include/read_plan.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 
 #include "glog/logging.h"
@@ -59,8 +61,10 @@ void update_read_area(std::size_t const tx_id,
     }
 }
 
-Status set_read_plans(std::size_t const tx_id,
+Status set_read_plans(Token token, std::size_t const tx_id,
                       transaction_options::read_area const& ra) {
+    auto* ti = static_cast<session*>(token);
+
     // check storage existence and collect metadata info
     std::set<wp::page_set_meta*> plist_meta{};
     std::set<wp::page_set_meta*> nlist_meta{};
@@ -70,6 +74,10 @@ Status set_read_plans(std::size_t const tx_id,
     // success
 
     update_read_area(tx_id, plist_meta, nlist_meta);
+
+    // log plist nlist
+    ti->set_read_positive_list(plist_meta);
+    ti->set_read_negative_list(nlist_meta);
 
     return Status::OK;
 }

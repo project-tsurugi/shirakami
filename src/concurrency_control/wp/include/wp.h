@@ -29,6 +29,7 @@ namespace shirakami {
 
 // forward declaration
 class session;
+class read_plan;
 
 namespace wp {
 

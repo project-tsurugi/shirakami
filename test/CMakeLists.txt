@@ -30,6 +30,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx/insert_search/*.cpp"
         "concurrency_control/long_tx/insert_scan/*.cpp"
         "concurrency_control/long_tx/helper/*.cpp"
+        "concurrency_control/long_tx/read_area/*.cpp"
         "concurrency_control/long_tx/search/*.cpp"
         "concurrency_control/long_tx/scan/*.cpp"
         "concurrency_control/long_tx/scan/open_scan/*.cpp"

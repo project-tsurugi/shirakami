@@ -2,6 +2,7 @@
 #include "include/session.h"
 
 #include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/wp/include/wp.h"
 
 #include "glog/logging.h"
 
@@ -14,6 +15,21 @@ bool session::check_exist_wp_set(Storage storage) const {
     return false;
 }
 
+void clear_about_read_area(session* ti) {
+    // gc global information
+    for (auto elem : ti->get_read_positive_list()) {
+        elem->get_read_plan().erase_positive_list(ti->get_long_tx_id());
+    }
+
+    for (auto elem : ti->get_read_negative_list()) {
+        elem->get_read_plan().erase_negative_list(ti->get_long_tx_id());
+    }
+
+    // clear plist nlist
+    ti->set_read_negative_list({});
+    ti->set_read_positive_list({});
+}
+
 void session::clear_local_set() {
     node_set_.clear();
     point_read_by_long_set_.clear();
@@ -24,7 +40,10 @@ void session::clear_local_set() {
     wp_set_.clear();
     write_set_.clear();
     overtaken_ltx_set_.clear();
-    set_read_area({});
+    if (tx_type_ != transaction_options::transaction_type::SHORT) {
+        clear_about_read_area(this);
+        set_read_area({});
+    }
 }
 
 void session::clear_tx_property() { set_tx_began(false); }

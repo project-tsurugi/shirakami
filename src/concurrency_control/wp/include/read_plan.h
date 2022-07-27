@@ -3,9 +3,12 @@
 #include <shared_mutex>
 #include <vector>
 
+#include "shirakami/scheme.h"
 #include "shirakami/transaction_options.h"
 
 namespace shirakami {
+
+class session;
 
 /**
  * @brief read plan
@@ -21,6 +24,16 @@ public:
     read_plan(list_type const& pl, list_type const& nl)
         : positive_list_(pl), negative_list_(nl) {}
 
+    void erase_negative_list(std::size_t const tx_id) {
+        std::lock_guard<std::shared_mutex> lk{mtx_negative_list_};
+        negative_list_.erase(tx_id);
+    }
+
+    void erase_positive_list(std::size_t const tx_id) {
+        std::lock_guard<std::shared_mutex> lk{mtx_positive_list_};
+        positive_list_.erase(tx_id);
+    }
+
     void update_positive_list(std::size_t const tx_id) {
         std::lock_guard<std::shared_mutex> lk{mtx_positive_list_};
         positive_list_.insert(tx_id);
@@ -29,6 +42,16 @@ public:
     void update_negative_list(std::size_t const tx_id) {
         std::lock_guard<std::shared_mutex> lk{mtx_negative_list_};
         negative_list_.insert(tx_id);
+    }
+
+    list_type get_positive_list() {
+        std::shared_lock<std::shared_mutex> lk{mtx_positive_list_};
+        return positive_list_;
+    }
+
+    list_type get_negative_list() {
+        std::shared_lock<std::shared_mutex> lk{mtx_negative_list_};
+        return negative_list_;
     }
 
 private:
@@ -62,7 +85,7 @@ private:
  * @return Status::OK success
  * @return Status::WARN_STORAGE_NOT_FOUND
  */
-extern Status set_read_plans(std::size_t tx_id,
+extern Status set_read_plans(Token token, std::size_t tx_id,
                              transaction_options::read_area const& ra);
 
 } // namespace shirakami
