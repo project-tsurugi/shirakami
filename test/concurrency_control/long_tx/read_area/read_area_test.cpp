@@ -41,7 +41,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(read_area_test, register_and_remove) { // NOLINT
+TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
     Token s{};
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(st));
@@ -60,6 +60,40 @@ TEST_F(read_area_test, register_and_remove) { // NOLINT
     ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
     // check negative list
     list = out->get_read_plan().get_negative_list();
+    ASSERT_EQ(list.size(), 0);
+
+    // commit erase above info
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // check no existence about read area
+    list = out->get_read_plan().get_positive_list();
+    ASSERT_EQ(list.size(), 0);
+    list = out->get_read_plan().get_negative_list();
+    ASSERT_EQ(list.size(), 0);
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(read_area_test, register_and_remove_nega) { // NOLINT
+    Token s{};
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{}, {st}}}));
+    // check existence about read area
+    wp::page_set_meta* out{};
+    ASSERT_EQ(Status::OK, find_page_set_meta(st, out));
+    // check negative list
+    read_plan::list_type list = out->get_read_plan().get_negative_list();
+    ASSERT_EQ(list.size(), 1);
+    session* ti = static_cast<session*>(s);
+    ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
+    // check positive list
+    list = out->get_read_plan().get_positive_list();
     ASSERT_EQ(list.size(), 0);
 
     // commit erase above info
