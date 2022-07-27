@@ -70,19 +70,22 @@ public:
     }
 
     void clear_about_tx_state() {
-        set_has_current_tx_state_handle(false);
-        set_current_tx_state_handle(undefined_handle);
-        set_current_tx_state_ptr(nullptr);
+        if (get_has_current_tx_state_handle()) {
+            // valid
+            set_has_current_tx_state_handle(false);
+            set_current_tx_state_handle(undefined_handle);
+            set_current_tx_state_ptr(nullptr);
+        }
     }
 
     void clear_about_scan() { scan_handle_.clear(); }
 
     void clean_up() {
+        clear_about_long_tx_metadata();
         clear_local_set();
         clear_tx_property();
         clear_about_scan();
         clear_about_tx_state();
-        clear_about_long_tx_metadata();
     }
 
     /**
@@ -163,6 +166,10 @@ public:
 
     range_read_by_short_set_type& get_range_read_by_short_set() {
         return range_read_by_short_set_;
+    }
+
+    transaction_options::read_area const& get_read_area() const {
+        return read_area_;
     }
 
     read_set_type& get_read_set() { return read_set_; }
@@ -289,6 +296,10 @@ public:
         operating_.store(tf, std::memory_order_release);
     }
 
+    void set_read_area(transaction_options::read_area const ra) {
+        read_area_ = ra;
+    }
+
     void set_tx_began(bool tf) {
         tx_began_.store(tf, std::memory_order_release);
     }
@@ -376,6 +387,11 @@ private:
     point_read_by_short_set_type point_read_by_short_set_{};
 
     range_read_by_short_set_type range_read_by_short_set_{};
+
+    /**
+     * @brief read area information used for long transaction.
+     */
+    transaction_options::read_area read_area_{};
 
     /**
      * @brief local read set.

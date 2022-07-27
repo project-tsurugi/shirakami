@@ -2,6 +2,8 @@
 #include <array>
 #include <mutex>
 
+#include "test_tool.h"
+
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
@@ -38,6 +40,16 @@ TEST_F(long_tx_begin_test, tx_begin_wp) { // NOLINT
     // wp for non-existing storage
     ASSERT_EQ(Status::ERR_FAIL_WP,
               tx_begin({s, transaction_options::transaction_type::LONG, wp}));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, read_area) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s, transaction_options::transaction_type::LONG, {}, {}}));
+    wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

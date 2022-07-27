@@ -1,8 +1,10 @@
 #pragma once
 
+#include <set>
 #include <vector>
 
 #include "scheme.h"
+#include "storage_options.h"
 
 #include "glog/logging.h"
 
@@ -20,16 +22,20 @@ public:
 
     class read_area {
     public:
-        using list_type = std::vector<Storage>;
+        using list_type = std::set<Storage>;
 
         read_area() = default;
 
-        read_area(list_type plist, list_type nlist)
+        read_area(list_type const& plist, list_type const& nlist)
             : positive_list_(plist), negative_list_(nlist) {}
 
         list_type& get_positive_list() { return positive_list_; }
 
+        list_type const& get_positive_list() const { return positive_list_; }
+
         list_type& get_negative_list() { return negative_list_; }
+
+        list_type const& get_negative_list() const { return negative_list_; }
 
     private:
         list_type positive_list_{};
@@ -62,6 +68,8 @@ public:
     [[nodiscard]] write_preserve_type get_write_preserve() const {
         return write_preserve_;
     }
+
+    [[nodiscard]] read_area get_read_area() { return read_area_; }
 
     void set_token(Token token) { token_ = token; }
 

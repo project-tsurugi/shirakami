@@ -1,6 +1,7 @@
 
 #include "concurrency_control/wp/include/long_tx.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/wp/include/read_plan.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
 #include "concurrency_control/wp/interface/long_tx/include/long_tx.h"
@@ -19,8 +20,8 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
     return Status::OK;
 }
 
-Status tx_begin(session* const ti,
-                std::vector<Storage> write_preserve) { // NOLINT
+Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
+                transaction_options::read_area ra) { // NOLINT
     // get wp mutex, exclude long tx's coming and epoch update
     auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
 
@@ -44,6 +45,14 @@ Status tx_begin(session* const ti,
     ti->set_long_tx_id(long_tx_id);
     ti->set_valid_epoch(valid_epoch);
     ongoing_tx::push({valid_epoch, long_tx_id});
+
+    // set read area
+    auto rc = set_read_plans(ti->get_long_tx_id(), ra);
+    ti->set_read_area(ra);
+    if (rc != Status::OK) {
+        long_tx::abort(ti);
+        return Status::ERR_FAIL_READ_AREA;
+    }
 
     return Status::OK;
     // dtor : release wp_mutex
@@ -113,7 +122,7 @@ Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
                   * If this tx try put before, old read operation of this will 
                   * be invalid. 
                   */
-                abort(ti); // or wait
+                long_tx::abort(ti); // or wait
                 return Status::ERR_FAIL_WP;
             }
             // try put before

@@ -24,6 +24,7 @@ void session::clear_local_set() {
     wp_set_.clear();
     write_set_.clear();
     overtaken_ltx_set_.clear();
+    set_read_area({});
 }
 
 void session::clear_tx_property() { set_tx_began(false); }

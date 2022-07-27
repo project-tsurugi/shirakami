@@ -280,7 +280,8 @@ Status tx_begin(transaction_options options) { // NOLINT
             }
         }
         if (tx_type == transaction_options::transaction_type::LONG) {
-            auto rc{long_tx::tx_begin(ti, write_preserve)};
+            auto rc{long_tx::tx_begin(ti, write_preserve,
+                                      options.get_read_area())};
             if (rc != Status::OK) {
                 ti->process_before_finish_step();
                 return rc;

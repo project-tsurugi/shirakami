@@ -17,6 +17,7 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/read_by.h"
+#include "concurrency_control/wp/include/read_plan.h"
 #include "concurrency_control/wp/include/wp_lock.h"
 #include "concurrency_control/wp/include/wp_meta.h"
 
@@ -45,6 +46,8 @@ public:
         return &range_read_by_short_;
     }
 
+    read_plan& get_read_plan() { return read_plan_; }
+
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
 private:
@@ -52,6 +55,7 @@ private:
     range_read_by_long range_read_by_long_;
     range_read_by_short range_read_by_short_;
     wp_meta wp_meta_;
+    read_plan read_plan_;
 };
 
 constexpr Storage initial_page_set_meta_storage{};
