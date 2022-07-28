@@ -20,6 +20,38 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
     return Status::OK;
 }
 
+Status check_read_area(session* ti, Storage st) {
+    // check positive list
+    if (!ti->get_read_area().get_positive_list().empty()) {
+        bool is_found{false};
+        for (auto elem : ti->get_read_area().get_positive_list()) {
+            if (elem == st) {
+                is_found = true;
+                // it can break
+                break;
+            }
+        }
+        if (!is_found) { return Status::ERR_FAIL_READ_AREA; }
+        // success verify about positive list
+    }
+
+    // check negative list
+    if (!ti->get_read_area().get_negative_list().empty()) {
+        bool is_found{false};
+        for (auto elem : ti->get_read_area().get_negative_list()) {
+            if (elem == st) {
+                is_found = true;
+                // it can break
+                break;
+            }
+        }
+        if (is_found) { return Status::ERR_FAIL_READ_AREA; }
+        // success verify about negative list
+    }
+
+    return Status::OK;
+}
+
 Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
                 transaction_options::read_area ra) { // NOLINT
     // get wp mutex, exclude long tx's coming and epoch update

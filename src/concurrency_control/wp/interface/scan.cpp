@@ -52,9 +52,14 @@ Status check_not_found(
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // inserted page.
-            if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) { return Status::OK; }
-            if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                return Status::OK;
+            }
+            if (ti->get_tx_type() ==
+                        transaction_options::transaction_type::LONG ||
+                ti->get_tx_type() ==
+                        transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) {
                     // latest version check
                     return Status::OK;
@@ -83,8 +88,10 @@ Status check_not_found(
             }
         } else {
             // absent && not latest == deleted
-            if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (ti->get_tx_type() ==
+                        transaction_options::transaction_type::LONG ||
+                ti->get_tx_type() ==
+                        transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
                     version* ver = rec_ptr->get_latest();
@@ -109,18 +116,29 @@ Status open_scan(Token const token, Storage storage,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
     auto* ti = static_cast<session*>(token);
+    // tx begin if not
     if (!ti->get_tx_began()) {
         tx_begin({token}); // NOLINT
     }
+    // pre-process
     ti->process_before_start_step();
 
+    // check about long tx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
         ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+        // check start epoch
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }
+        // check high priori tx
         if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
             return Status::WARN_PREMATURE;
+        }
+        // check for read area invalidation
+        auto rs = long_tx::check_read_area(ti, storage);
+        if (rs == Status::ERR_FAIL_READ_AREA) {
+            long_tx::abort(ti);
+            return rs;
         }
     }
 
@@ -173,7 +191,8 @@ Status open_scan(Token const token, Storage storage,
                 rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
         // include false positive
         ti->get_point_read_by_long_set().insert(prbp);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
         if (rc == Status::WARN_NOT_FOUND) {
@@ -182,7 +201,8 @@ Status open_scan(Token const token, Storage storage,
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
         ti->get_range_read_by_short_set().insert(rrbs);
-    } else if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() !=
+               transaction_options::transaction_type::READ_ONLY) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
@@ -278,9 +298,14 @@ Status next(Token const token, ScanHandle const handle) {
 
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
-            if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) { break; }
-            if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                break;
+            }
+            if (ti->get_tx_type() ==
+                        transaction_options::transaction_type::LONG ||
+                ti->get_tx_type() ==
+                        transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) { break; }
                 version* ver = rec_ptr->get_latest();
                 for (;;) {
@@ -305,11 +330,16 @@ Status next(Token const token, ScanHandle const handle) {
                 if (inws->get_op() == OP_TYPE::INSERT) { break; }
             }
 
-            if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) { break; }
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                break;
+            }
         } else {
             // absent && not latest == deleted
-            if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (ti->get_tx_type() ==
+                        transaction_options::transaction_type::LONG ||
+                ti->get_tx_type() ==
+                        transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
                     version* ver = rec_ptr->get_latest();
@@ -404,7 +434,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             abort(ti);
             return Status::ERR_FAIL_WP;
         }
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
         for (;;) {
             wp::wp_meta* wp_meta_ptr{};
             if (wp::find_wp_meta(st, wp_meta_ptr) != Status::OK) {
@@ -452,7 +483,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             }
             break;
         }
-    } else if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() !=
+               transaction_options::transaction_type::READ_ONLY) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }

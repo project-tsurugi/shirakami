@@ -479,6 +479,7 @@ extern Status commit(session* const ti, // NOLINT
      * WP2: If it is possible to prepend the order, it waits for a transaction 
      * with a higher priority than itself to finish the operation.
      */
+    // check wait
     auto rc = check_wait_for_preceding_bt(ti);
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);

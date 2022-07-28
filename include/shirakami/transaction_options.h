@@ -117,6 +117,8 @@ private:
      * @details The storage list information that the area which may be read by 
      * this tx and the list that the area which must not be read by this tx.
      * This information is used for optimizations.
+     * If you begins transaction with this information, empty positive / 
+     * negative list is invalid(i.e. not used).
      */
     read_area read_area_{};
 };

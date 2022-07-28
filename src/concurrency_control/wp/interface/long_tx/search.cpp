@@ -77,12 +77,21 @@ extern Status version_traverse_and_read(session* const ti,
 Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
+    // check start epoch
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }
+    // wait for high priority some tx
     if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
         return Status::WARN_PREMATURE;
     }
+    // check for read area invalidation
+    auto rs = check_read_area(ti, storage);
+    if (rs == Status::ERR_FAIL_READ_AREA) {
+        long_tx::abort(ti);
+        return rs;
+    }
+
 
     // index access
     Record* rec_ptr{};

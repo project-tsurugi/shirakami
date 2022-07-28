@@ -13,6 +13,8 @@ namespace shirakami::long_tx {
 
 extern Status abort(session* ti);
 
+extern Status check_read_area(session* ti, Storage st);
+
 extern Status change_wp_epoch(session* ti, epoch::epoch_t target);
 
 extern Status check_wait_for_preceding_bt(session* ti);

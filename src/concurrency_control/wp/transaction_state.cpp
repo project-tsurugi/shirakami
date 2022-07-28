@@ -83,6 +83,7 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             out.set_kind(TxState::StateKind::STARTED); // for external
         } else if (ts.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) {
             auto* ti = static_cast<session*>(ts.get_token());
+            // check wait
             if (long_tx::check_wait_for_preceding_bt(ti) != Status::OK) {
                 // not change
                 out.set_kind(
