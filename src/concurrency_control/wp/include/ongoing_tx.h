@@ -10,6 +10,8 @@
 #include <shared_mutex>
 
 #include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 #include "shirakami/scheme.h"
 
@@ -37,73 +39,21 @@ public:
      * @return Status::WARN_NOT_FOUND The @a need_id does not exist.
      * @return Status::ERR_FATAL programming error.
      */
-    static Status
-    change_epoch_without_lock(std::size_t const id, epoch::epoch_t const ep,
-                              std::size_t const need_id,
-                              epoch::epoch_t const need_id_epoch) {
-        bool exist_id{false};
-        bool exist_need_id{false};
-        tx_info_elem_type* target{};
-        for (auto&& elem : tx_info_) {
-            if (!exist_id && elem.second == id) {
-                exist_id = true;
-                target = &elem;
-            }
-            if (!exist_need_id && elem.second == need_id) {
-                if (elem.first == need_id_epoch) {
-                    exist_need_id = true;
-                } else {
-                    // fail optimistic change due to concurrent forewarding.
-                    return Status::WARN_NOT_FOUND;
-                }
-            }
-            if (exist_id && exist_need_id) {
-                target->first = ep;
-                return Status::OK;
-            }
-        }
-        if (exist_id && !exist_need_id) { return Status::WARN_NOT_FOUND; }
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
-    }
+    static Status change_epoch_without_lock(std::size_t const id,
+                                            epoch::epoch_t const ep,
+                                            std::size_t const need_id,
+                                            epoch::epoch_t const need_id_epoch);
 
-    static bool exist_id(std::size_t id) {
-        std::shared_lock<std::shared_mutex> lk{mtx_};
-        for (auto&& elem : tx_info_) {
-            if (elem.second == id) { return true; }
-        }
-        return false;
-    }
+    static bool exist_id(std::size_t id);
 
     /**
      * @brief 
      * 
-     * @param id This tx's id.
-     * @param ep This tx's serialization epoch.
-     * @param has_wp Whether this tx has wp.
-     * @param wait_for Overwrites of this tx's read.
+     * @param[in] ti This tx's session information.
      * @return true It exists transactions to wait.
      * @return false It doesn't exist transactions to wait.
      */
-    static bool exist_wait_for(std::size_t id, epoch::epoch_t ep,
-                               bool has_wp,
-                               std::set<std::size_t> const& wait_for) {
-        std::shared_lock<std::shared_mutex> lk{mtx_};
-        for (auto&& elem : tx_info_) {
-            // check overwrites
-            if (wait_for.find(elem.second) != wait_for.end()) {
-                // wait_for hit.
-                if (elem.second < id) { return true; }
-            }
-            if (has_wp) {
-                // check potential read-anti
-                if (elem.second < id) {
-                    if (ep <= elem.first) { return true; }
-                }
-            }
-        }
-        return false;
-    }
+    static bool exist_wait_for(session* ti);
 
     /**
      * @brief Get the lowest epoch
@@ -127,45 +77,11 @@ public:
      */
     static tx_info_type& get_tx_info() { return tx_info_; }
 
-    static void push(tx_info_elem_type ti) {
-        std::lock_guard<std::shared_mutex> lk{mtx_};
-        if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
-        tx_info_.emplace_back(ti);
-    }
+    static void push(tx_info_elem_type ti);
 
-    static void push_bringing_lock(tx_info_elem_type ti) {
-        if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
-        tx_info_.emplace_back(ti);
-    }
+    static void push_bringing_lock(tx_info_elem_type ti);
 
-    static void remove_id(std::size_t id) {
-        std::lock_guard<std::shared_mutex> lk{mtx_};
-        epoch::epoch_t lep{0};
-        bool first{true};
-        bool erased{false};
-        for (auto it = tx_info_.begin(); it != tx_info_.end();) {
-            if (!erased && (*it).second == id) {
-                tx_info_.erase(it);
-                erased = true;
-            } else {
-                // update lowest epoch
-                if (first) {
-                    lep = (*it).first;
-                    first = false;
-                } else {
-                    if ((*it).first < lep) { lep = (*it).first; }
-                }
-
-                ++it;
-            }
-        }
-        if (tx_info_.empty()) {
-            set_lowest_epoch(0);
-        } else {
-            set_lowest_epoch(lep);
-        }
-        if (!erased) { LOG(ERROR) << "programming error."; }
-    }
+    static void remove_id(std::size_t id);
 
     static void set_lowest_epoch(epoch::epoch_t ep) {
         lowest_epoch_.store(ep, std::memory_order_release);

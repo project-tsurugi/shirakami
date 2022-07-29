@@ -2,6 +2,7 @@
 #include <mutex>
 
 #include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/wp/include/session.h"
 
 #include "shirakami/interface.h"
 
@@ -34,9 +35,20 @@ private:
 
 TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     ongoing_tx::push({1, 1});
-    ASSERT_EQ(ongoing_tx::exist_wait_for(2, 2, false, {1}), true);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    auto* ti = static_cast<session*>(s);
+    ti->set_long_tx_id(2);
+    ti->set_valid_epoch(2);
+    Storage st{};
+    wp::wp_meta wp_meta{};
+    ti->get_wp_set().emplace_back(
+            std::make_pair(st, &wp_meta));           // the pair is dummy
+    ti->get_overtaken_ltx_set()[&wp_meta].insert(1); // wp_meta is dummy
+    ASSERT_EQ(ongoing_tx::exist_wait_for(ti), true);
     ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::exist_wait_for(2, 2, false, {1}), false);
+    ASSERT_EQ(ongoing_tx::exist_wait_for(ti), false);
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
