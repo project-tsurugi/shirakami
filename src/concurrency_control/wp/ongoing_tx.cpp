@@ -44,14 +44,15 @@ bool ongoing_tx::exist_id(std::size_t id) {
 bool ongoing_tx::exist_wait_for(session* ti) {
     std::shared_lock<std::shared_mutex> lk{mtx_};
     std::size_t id = ti->get_long_tx_id();
-    epoch::epoch_t ep = ti->get_valid_epoch();
     bool has_wp = !ti->get_wp_set().empty();
     auto wait_for = ti->extract_wait_for();
     // check local write set
     std::set<Storage> st_set{};
+    // create and compaction about storage set
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         st_set.insert(wso.second.get_storage());
     }
+    // check wait
     for (auto&& elem : tx_info_) {
         // check overwrites
         if (wait_for.find(elem.second) != wait_for.end()) {
@@ -61,40 +62,39 @@ bool ongoing_tx::exist_wait_for(session* ti) {
         if (has_wp) {
             // check potential read-anti
             if (elem.second < id) {
-                if (ep <= elem.first) {
-                    // check read area
-                    // check each storage
-                    for (auto st : st_set) {
-                        wp::page_set_meta* out{};
-                        auto rc = find_page_set_meta(st, out);
-                        if (rc == Status::WARN_NOT_FOUND) {
-                            break; // todo error handling
-                        }
-                        if (rc != Status::OK) {
-                            LOG(ERROR) << "programming error";
+                // check read area
+                // check each storage
+                for (auto st : st_set) {
+                    wp::page_set_meta* out{};
+                    auto rc = find_page_set_meta(st, out);
+                    if (rc == Status::WARN_NOT_FOUND) {
+                        break; // todo error handling
+                    }
+                    if (rc != Status::OK) {
+                        LOG(ERROR) << "programming error";
+                        break;
+                    }
+                    // check plist
+                    auto plist = out->get_read_plan().get_positive_list();
+                    for (auto p_id : plist) {
+                        if (p_id == elem.second) { return true; }
+                    }
+                    // check nlist // todo remove after impl compliment
+                    // between p and n.
+                    auto nlist = out->get_read_plan().get_negative_list();
+                    bool n_hit{false};
+                    for (auto n_id : nlist) {
+                        if (n_id == elem.second) {
+                            n_hit = true;
                             break;
                         }
-                        // check plist
-                        auto plist = out->get_read_plan().get_positive_list();
-                        for (auto p_id : plist) {
-                            if (p_id == elem.second) { return true; }
-                        }
-                        // check nlist // todo remove after impl compliment 
-                        // between p and n.
-                        auto nlist = out->get_read_plan().get_negative_list();
-                        bool n_hit{false};
-                        for (auto n_id : nlist) {
-                            if (n_id == elem.second) { 
-                                n_hit = true;
-                                break;
-                            }
-                        }
-                        if (n_hit) {
-                            continue;
-                        }
                     }
-                    // todo finally unreachable.
-                    return true;
+                    if (n_hit) {
+                        continue;
+                    } else {
+                        // empty read positive mean universe.
+                        return true;
+                    }
                 }
             }
         }

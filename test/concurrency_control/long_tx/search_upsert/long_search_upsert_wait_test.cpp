@@ -116,6 +116,7 @@ TEST_F(long_search_upsert_wait_test, wait_for_preceding_lg_later_bd) { // NOLINT
     wait_epoch_update();
     std::string sb{};
     ASSERT_EQ(Status::OK, search_key(s3, st, "", sb));
+    ASSERT_EQ(Status::OK, upsert(s3, st, "", ""));
     // occur forwarding
     // boundary order: s1 = s3 < s2
     ASSERT_EQ(Status::OK, commit(s1));
@@ -133,46 +134,6 @@ TEST_F(long_search_upsert_wait_test, wait_for_preceding_lg_later_bd) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s3));
-    // ==============================
-}
-
-TEST_F(long_search_upsert_wait_test,        // NOLINT
-       no_wait_for_preceding_lg_older_bd) { // NOLINT
-    // test: no wait for preceding long tx having older boundary
-
-    // ==============================
-    // prepare
-    Token s1{};
-    Token s2{};
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s1));
-    wait_epoch_update();
-    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK,
-              tx_begin({s1, transaction_options::transaction_type::LONG}));
-    wait_epoch_update();
-    ASSERT_EQ(
-            Status::OK,
-            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
-    wait_epoch_update();
-    // boundary order: s1 < s2
-    // ==============================
-
-    // ==============================
-    // test
-    // no wait for s1 which has older boundary against s2
-    ASSERT_EQ(Status::OK, commit(s2));
-    // ==============================
-
-    // ==============================
-    // cleanup
-    ASSERT_EQ(Status::OK, leave(s1));
-    ASSERT_EQ(Status::OK, leave(s2));
     // ==============================
 }
 

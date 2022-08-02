@@ -172,11 +172,11 @@ public:
         return read_area_;
     }
 
-    std::set<wp::page_set_meta*> get_read_positive_list() {
+    std::set<wp::page_set_meta*>& get_read_positive_list() {
         return read_positive_list_;
     }
 
-    std::set<wp::page_set_meta*> get_read_negative_list() {
+    std::set<wp::page_set_meta*>& get_read_negative_list() {
         return read_negative_list_;
     }
 
