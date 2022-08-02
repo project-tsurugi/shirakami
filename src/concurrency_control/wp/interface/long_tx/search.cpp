@@ -87,7 +87,7 @@ Status search_key(session* ti, Storage const storage,
     }
     // check for read area invalidation
     auto rs = check_read_area(ti, storage);
-    if (rs == Status::ERR_FAIL_READ_AREA) {
+    if (rs == Status::ERR_READ_AREA_VIOLATION) {
         long_tx::abort(ti);
         return rs;
     }

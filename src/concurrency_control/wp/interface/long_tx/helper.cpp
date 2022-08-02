@@ -31,7 +31,7 @@ Status check_read_area(session* ti, Storage st) {
                 break;
             }
         }
-        if (!is_found) { return Status::ERR_FAIL_READ_AREA; }
+        if (!is_found) { return Status::ERR_READ_AREA_VIOLATION; }
         // success verify about positive list
     }
 
@@ -45,11 +45,17 @@ Status check_read_area(session* ti, Storage st) {
                 break;
             }
         }
-        if (is_found) { return Status::ERR_FAIL_READ_AREA; }
+        if (is_found) { return Status::ERR_READ_AREA_VIOLATION; }
         // success verify about negative list
     }
 
     return Status::OK;
+}
+
+void preprocess_read_area(transaction_options::read_area& ra) {
+    for (auto elem : ra.get_negative_list()) {
+        ra.get_positive_list().erase(elem);
+    }
 }
 
 Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
@@ -78,11 +84,13 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     ti->set_valid_epoch(valid_epoch);
     ongoing_tx::push({valid_epoch, long_tx_id});
 
+    // cut positive list by negative list.
+    preprocess_read_area(ra);
     // set read area
     auto rc = set_read_plans(ti, ti->get_long_tx_id(), ra);
     if (rc != Status::OK) {
         long_tx::abort(ti);
-        return Status::ERR_FAIL_READ_AREA;
+        return Status::WARN_INVALID_ARGS;
     }
     ti->set_read_area(ra);
 

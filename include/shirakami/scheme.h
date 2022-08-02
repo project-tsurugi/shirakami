@@ -266,10 +266,10 @@ enum class Status : std::int32_t {
     ERR_FATAL_INDEX,
     /**
      * @brief Error
-     * @details The error shows the long transaction begin failed due to read
-     * area function.
+     * @details The error shows the long transaction execute read for the 
+     * storage included read negative list.
      */
-    ERR_FAIL_READ_AREA,
+    ERR_READ_AREA_VIOLATION,
     /**
      * @brief Error
      * @details This means that it is not implemented.
@@ -369,8 +369,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FAIL_INSERT"sv; // NOLINT
         case Status::ERR_FAIL_WP:
             return "ERR_FAIL_WP"sv; // NOLINT
-        case Status::ERR_FAIL_READ_AREA:
-            return "ERR_FAIL_READ_AREA"sv; // NOLINT
+        case Status::ERR_READ_AREA_VIOLATION:
+            return "ERR_READ_AREA_VIOLATION"sv; // NOLINT
         case Status::ERR_FATAL:
             return "ERR_FATAL"sv; // NOLINT
         case Status::ERR_FATAL_INDEX:

@@ -16,7 +16,7 @@ Status check_list(std::set<Storage> const& target_list,
     for (auto elem : target_list) {
         wp::page_set_meta* out{};
         auto rc = find_page_set_meta(elem, out);
-        if (rc == Status::WARN_NOT_FOUND) { return Status::ERR_FAIL_READ_AREA; }
+        if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_INVALID_ARGS; }
         // rc must be Status::OK
         if (rc != Status::OK) {
             LOG(ERROR) << "programming error";

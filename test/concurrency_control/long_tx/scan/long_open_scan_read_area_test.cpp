@@ -93,7 +93,7 @@ TEST_F(open_scan_test, read_area_not_empty_positive_not_hit) { // NOLINT
     wait_epoch_update();
     // test
     ScanHandle hd{};
-    ASSERT_EQ(Status::ERR_FAIL_READ_AREA,
+    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
               open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         hd));
 
@@ -134,7 +134,7 @@ TEST_F(open_scan_test, read_area_not_empty_negative_hit) { // NOLINT
     wait_epoch_update();
     // test
     ScanHandle hd{};
-    ASSERT_EQ(Status::ERR_FAIL_READ_AREA,
+    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
               open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         hd));
 
