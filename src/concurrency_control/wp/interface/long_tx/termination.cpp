@@ -346,6 +346,48 @@ void register_read_by(session* const ti) {
 Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
     auto this_id = ti->get_long_tx_id();
+
+    // for overtaken set
+    auto gc_threshold = ongoing_tx::get_lowest_epoch();
+    for (auto&& oe : ti->get_overtaken_ltx_set()) {
+        wp::wp_meta* wp_meta_ptr{oe.first};
+        std::lock_guard<std::shared_mutex> lk{
+                wp_meta_ptr->get_mtx_wp_result_set()};
+        bool is_first_item_before_gc_threshold{true};
+        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
+             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
+            for (auto&& hid : oe.second) {
+                if ((*wp_result_itr).second == hid) {
+                    // the itr show overtaken ltx
+                    if ((*wp_result_itr).first < ti->get_valid_epoch()) {
+                        // this tx should have read the result of the ltx.
+                        return Status::ERR_VALIDATION;
+                    }
+                    // verify success
+                    break;
+                }
+            }
+
+            // not match. check gc
+            if ((*wp_result_itr).first < gc_threshold) {
+                // should gc
+                if (is_first_item_before_gc_threshold) {
+                    // not remove
+                    is_first_item_before_gc_threshold = false;
+                    ++wp_result_itr;
+                } else {
+                    // remove
+                    wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
+                            wp_result_itr);
+                }
+            } else {
+                // else. should not gc
+                ++wp_result_itr;
+            }
+        }
+    }
+    
+    // verify for write set
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         //==========
         // about point read
@@ -391,47 +433,6 @@ Status verify_read_by(session* const ti) {
             } else {
                 LOG(ERROR) << "programming error";
                 return Status::ERR_FATAL;
-            }
-        }
-    }
-
-    // for overtaken set
-
-    auto gc_threshold = ongoing_tx::get_lowest_epoch();
-    for (auto&& oe : ti->get_overtaken_ltx_set()) {
-        wp::wp_meta* wp_meta_ptr{oe.first};
-        std::lock_guard<std::shared_mutex> lk{
-                wp_meta_ptr->get_mtx_wp_result_set()};
-        bool is_first_item_before_gc_threshold{true};
-        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
-             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
-            for (auto&& hid : oe.second) {
-                if ((*wp_result_itr).second == hid) {
-                    // the itr show overtaken ltx
-                    if ((*wp_result_itr).first < ti->get_valid_epoch()) {
-                        // this tx should have read the result of the ltx.
-                        return Status::ERR_VALIDATION;
-                    }
-                    // verify success
-                    break;
-                }
-            }
-
-            // not match. check gc
-            if ((*wp_result_itr).first < gc_threshold) {
-                // should gc
-                if (is_first_item_before_gc_threshold) {
-                    // not remove
-                    is_first_item_before_gc_threshold = false;
-                    ++wp_result_itr;
-                } else {
-                    // remove
-                    wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
-                            wp_result_itr);
-                }
-            } else {
-                // else. should not gc
-                ++wp_result_itr;
             }
         }
     }

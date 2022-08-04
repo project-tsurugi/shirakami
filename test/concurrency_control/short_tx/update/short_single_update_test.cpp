@@ -1,15 +1,7 @@
 
 #include <mutex>
 
-#ifdef WP
-
 #include "concurrency_control/wp/include/record.h"
-
-#else
-
-#include "concurrency_control/silo/include/record.h"
-
-#endif
 
 #include "index/yakushima/include/interface.h"
 

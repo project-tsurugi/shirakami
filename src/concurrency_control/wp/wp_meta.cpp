@@ -16,7 +16,7 @@ bool wp_meta::empty(const wp_meta::wped_type& wped) {
 
 Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
     wp_lock_.lock();
-    for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         if (wped_.at(i).second == id) {
             set_wped(i, {target, id});
             wp_lock_.unlock();
@@ -29,7 +29,7 @@ Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
 }
 
 void wp_meta::display() {
-    for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         if (get_wped_used().test(i)) {
             LOG(INFO) << "epoch:\t" << get_wped().at(i).first << ", id:\t"
                       << get_wped().at(i).second;
@@ -59,7 +59,7 @@ wp_meta::wped_type wp_meta::get_wped() {
 }
 
 Status wp_meta::find_slot(std::size_t& at) {
-    for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         if (!wped_used_.test(i)) {
             at = i;
             return Status::OK;
@@ -145,7 +145,7 @@ wp_meta::register_wp_result_and_remove_wp(epoch::epoch_t const ep,
 }
 
 [[nodiscard]] Status wp_meta::remove_wp_without_lock(std::size_t const id) {
-    for (std::size_t i = 0; i < WP_MAX_OVERLAP; ++i) {
+    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         if (wped_.at(i).second == id) {
             set_wped(i, {0, 0});
             wped_used_.reset(i);

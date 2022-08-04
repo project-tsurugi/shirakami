@@ -110,16 +110,6 @@ else ()
     add_definitions(-DPARAM_SNAPSHOT_EPOCH=${PARAM_SNAPSHOT_EPOCH})
 endif ()
 
-if (BUILD_WP)
-    add_definitions(-DWP)
-
-    if (NOT DEFINED WP_MAX_OVERLAP)
-        add_definitions(-DWP_MAX_OVERLAP=112)
-    else ()
-        add_definitions(-DWP_MAX_OVERLAP=${WP_MAX_OVERLAP})
-    endif ()
-endif ()
-
 # End : about cc
 
 # Begin : about logging

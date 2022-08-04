@@ -22,9 +22,12 @@ namespace shirakami::wp {
  */
 class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
+    /**
+     * @brief First is the epoch of the tx. Second is the id of the tx.
+     */
     using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
-    using wped_type = std::array<wped_elem_type, WP_MAX_OVERLAP>;
-    using wped_used_type = std::bitset<WP_MAX_OVERLAP>;
+    using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
+    using wped_used_type = std::bitset<KVS_MAX_PARALLEL_THREADS>;
     using wp_result_set_type =
             std::vector<std::pair<epoch::epoch_t, std::size_t>>;
 
@@ -48,7 +51,7 @@ public:
 
     /**
      * @brief Get the wped_used_ object
-     * @return std::bitset<WP_MAX_OVERLAP>& 
+     * @return std::bitset<KVS_MAX_PARALLEL_THREADS>& 
      */
     wped_used_type& get_wped_used() { return wped_used_; }
 
@@ -111,7 +114,7 @@ private:
     /**
      * @brief write preserve infomation.
      * @details first of each vector's element is epoch which is the valid 
-     * point of wp. second of those is the batch id. 
+     * point of wp. second of those is the long tx's id. 
      */
     wped_type wped_;
 
