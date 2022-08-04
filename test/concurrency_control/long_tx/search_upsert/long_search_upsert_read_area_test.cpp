@@ -50,7 +50,7 @@ TEST_F(long_search_upsert_read_area_test, explicit_read_positive) { // NOLINT
     // ==============================
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -83,7 +83,7 @@ TEST_F(long_search_upsert_read_area_test, universe_read_positive) { // NOLINT
     // ==============================
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -116,7 +116,7 @@ TEST_F(long_search_upsert_read_area_test, explicit_read_negative) { // NOLINT
     // ==============================
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -149,7 +149,7 @@ TEST_F(long_search_upsert_read_area_test, not_set_read_negative) { // NOLINT
     // ==============================
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

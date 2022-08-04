@@ -58,7 +58,7 @@ inline void wait_epoch_update() {
 
 TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token ss{}; // short
     Token sb{}; // long
     ASSERT_EQ(enter(ss), Status::OK);
@@ -81,7 +81,7 @@ TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
 
 TEST_F(search_upsert, short_search_finish_before_valid_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token ss{}; // short
     Token sb{}; // long
     ASSERT_EQ(enter(ss), Status::OK);
@@ -106,7 +106,7 @@ TEST_F(search_upsert, short_search_finish_before_valid_wp) { // NOLINT
 
 TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token ss{}; // short
     Token sb{}; // long
     ASSERT_EQ(enter(ss), Status::OK);
@@ -142,8 +142,8 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
      */
     Storage st_x{};
     Storage st_y{};
-    ASSERT_EQ(create_storage(st_x), Status::OK);
-    ASSERT_EQ(create_storage(st_y), Status::OK);
+    ASSERT_EQ(create_storage("1", st_x), Status::OK);
+    ASSERT_EQ(create_storage("2", st_y), Status::OK);
     std::string x{"x"};
     std::string y{"y"};
     {

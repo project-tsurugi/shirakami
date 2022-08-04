@@ -71,7 +71,7 @@ void wait_epoch_update() {
 TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
     const int trial_n{2};
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
 
     // begin: initialize table
     // ==============================

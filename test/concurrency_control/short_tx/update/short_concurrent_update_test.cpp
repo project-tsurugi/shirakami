@@ -21,7 +21,7 @@ public:
 
 TEST_F(simple_update, concurrent_updates) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     struct S {
         static void prepare(Storage storage) {
             std::string k("aa"); // NOLINT

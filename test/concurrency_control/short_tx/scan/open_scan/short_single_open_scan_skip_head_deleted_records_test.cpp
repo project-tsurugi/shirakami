@@ -36,7 +36,7 @@ private:
 
 TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -66,7 +66,7 @@ TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
 
 TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -99,7 +99,7 @@ TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
 
 TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

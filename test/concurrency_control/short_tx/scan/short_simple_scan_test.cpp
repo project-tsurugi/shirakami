@@ -35,7 +35,7 @@ private:
 
 TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     std::string k("T6\000\200\000\000\n\200\000\000\001", 11); // NOLINT
     std::string end("T6\001", 3);                              // NOLINT
     std::string v("bbb");                                      // NOLINT
@@ -56,7 +56,7 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
 
 TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     // simulating 1st case in umikongo OperatorTest scan_pushdown_range
     std::string r1("T200\x00\x80\x00\x00\xc7\x80\x00\x01\x91\x80\x00\x01\x2d"
                    "\x80\x00\x00\x01", // NOLINT
@@ -96,7 +96,7 @@ TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
 
 TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     // simulating dump failure with jogasaki-tpcc
     std::string r1(
             "CUSTOMER0\x00\x80\x00\x00\x00\x00\x00\x00\x01\x80\x00\x00\x00\x00"

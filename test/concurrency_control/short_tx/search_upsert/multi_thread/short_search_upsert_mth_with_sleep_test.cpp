@@ -61,7 +61,7 @@ TEST_F(search_upsert_mth_with_sleep, rmw) { // NOLINT
 
     // generate storage
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
 
     // generate single pkey (record) by ""
     Token s{};

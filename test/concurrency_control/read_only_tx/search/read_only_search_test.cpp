@@ -40,7 +40,7 @@ TEST_F(read_only_search_test, search_SS_version) { // NOLINT
     // =================================
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
 
     Token s{};
     Token s1{};

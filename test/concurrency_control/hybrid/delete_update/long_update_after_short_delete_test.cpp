@@ -41,7 +41,7 @@ inline void wait_epoch_update() {
 
 TEST_F(long_update_after_short_delete, independent_tx) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};

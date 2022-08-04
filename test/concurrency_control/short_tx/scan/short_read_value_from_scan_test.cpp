@@ -34,7 +34,7 @@ private:
 
 TEST_F(simple_scan, read_value_from_scan_with_not_begin) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string sb{};

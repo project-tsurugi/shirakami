@@ -47,10 +47,9 @@ private:
     static inline std::once_flag init_google;
 };
 
-#if 0
 TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
@@ -70,7 +69,7 @@ TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
 
 TEST_F(read_only_scan_test, start_before_epoch_long_tx_exist) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -93,7 +92,7 @@ TEST_F(read_only_scan_test, start_before_epoch_long_tx_exist) { // NOLINT
 
 TEST_F(read_only_scan_test, no_page_before_read_only_tx_begin) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
@@ -108,7 +107,7 @@ TEST_F(read_only_scan_test, no_page_before_read_only_tx_begin) { // NOLINT
 TEST_F(read_only_scan_test,                        // NOLINT
        write_one_page_before_read_only_tx_begin) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // prepare data
@@ -134,7 +133,7 @@ TEST_F(read_only_scan_test,                        // NOLINT
 TEST_F(read_only_scan_test,                                      // NOLINT
        write_one_page_between_read_only_begin_and_valid_epoch) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token ss{}; // short
     Token sl{}; // read_only
     ASSERT_EQ(Status::OK, enter(ss));
@@ -162,11 +161,10 @@ TEST_F(read_only_scan_test,                                      // NOLINT
     ASSERT_EQ(Status::OK, leave(sl));
 }
 
-#endif
 TEST_F(read_only_scan_test,                // NOLINT
        write_one_page_after_valid_epoch) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token ss{}; // short
     Token sl{}; // read_only
     ASSERT_EQ(Status::OK, enter(ss));

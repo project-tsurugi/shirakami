@@ -44,7 +44,7 @@ private:
 TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
     Token s{};
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
@@ -78,7 +78,7 @@ TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
 TEST_F(read_area_test, register_and_remove_nega) { // NOLINT
     Token s{};
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,

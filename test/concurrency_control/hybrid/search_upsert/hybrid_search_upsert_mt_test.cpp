@@ -56,7 +56,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
 
     // generate keys and table
     Storage storage{};
-    ASSERT_EQ(create_storage(storage), Status::OK);
+    ASSERT_EQ(create_storage("", storage), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     std::size_t thread_num{3}; // NOLINT

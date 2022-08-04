@@ -71,7 +71,7 @@ void create_db() {
     // ddl phase
     for (std::size_t i = 0; i < FLAGS_th; ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
+        auto ret{create_storage("", st)};
         if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_storages().emplace_back(st);
     }

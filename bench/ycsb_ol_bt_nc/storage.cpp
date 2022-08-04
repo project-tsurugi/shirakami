@@ -16,6 +16,7 @@
 
 #include <xmmintrin.h>
 
+#include <string>
 #include <thread>
 
 // shirakami/bench
@@ -56,23 +57,18 @@ void brock_insert(Storage st, size_t start, size_t end) {
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
         Status ret{};
-        ret = insert(token, st, make_key(FLAGS_key_len, i), std::string(FLAGS_val_len, '0'));
-        if (ret != Status::OK) {
-            LOG(FATAL) << "status is " << ret;
-        }
+        ret = insert(token, st, make_key(FLAGS_key_len, i),
+                     std::string(FLAGS_val_len, '0'));
+        if (ret != Status::OK) { LOG(FATAL) << "status is " << ret; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) {
-                LOG(FATAL);
-            }
+            if (ret != Status::OK) { LOG(FATAL); }
             ctr = 0;
         }
     }
     auto ret = commit(token);
-    if (ret != Status::OK) {
-        LOG(FATAL);
-    }
+    if (ret != Status::OK) { LOG(FATAL); }
     leave(token);
 }
 
@@ -82,7 +78,8 @@ void build_storage(Storage st, std::size_t rec) {
     std::vector<std::thread> ths;
     for (size_t i = 0; i < bl_th_num; ++i) {
         ths.emplace_back(brock_insert, st, i * (rec / bl_th_num),
-                         i != bl_th_num - 1 ? (i + 1) * (rec / bl_th_num) - 1 : rec - 1);
+                         i != bl_th_num - 1 ? (i + 1) * (rec / bl_th_num) - 1
+                                            : rec - 1);
     }
 
     for (auto&& th : ths) th.join();
@@ -93,10 +90,8 @@ void init_db_ol() {
     //ths.reserve(FLAGS_ol_thread);
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
-        if (ret != Status::OK) {
-            LOG(FATAL) << "fail create_storage.";
-        }
+        auto ret{create_storage(std::to_string(i), st)};
+        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_ol_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_ol_rec);
@@ -111,10 +106,8 @@ void init_db_bt() {
     ths.reserve(FLAGS_bt_thread);
     for (std::size_t i = 0; i < FLAGS_bt_thread; ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
-        if (ret != Status::OK) {
-            LOG(FATAL) << "fail create_storage.";
-        }
+        auto ret{create_storage(std::to_string(i + FLAGS_ol_thread), st)};
+        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_bt_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_bt_rec);

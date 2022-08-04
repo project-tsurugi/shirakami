@@ -47,7 +47,7 @@ private:
 
 TEST_F(single_long_update_test, start_before_epoch) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {

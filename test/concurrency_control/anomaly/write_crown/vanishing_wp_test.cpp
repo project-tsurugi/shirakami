@@ -82,7 +82,7 @@ void gen_initial_db(Storage st) {
 TEST_F(vanishing_wp_test, simple) { // NOLINT
                                     // create table
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
 
     // enter
     std::array<Token, 4> s{};

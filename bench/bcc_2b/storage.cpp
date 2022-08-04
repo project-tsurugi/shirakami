@@ -89,7 +89,7 @@ void init_db_ol() {
     //ths.reserve(FLAGS_ol_thread);
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
+        auto ret{create_storage("", st)};
         if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_ol_storages().emplace_back(st);
 
@@ -105,7 +105,7 @@ void init_db_bt() {
     //ths.reserve(FLAGS_bt_thread);
     for (std::size_t i = 0; i < 1; ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
+        auto ret{create_storage("", st)};
         if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_bt_storages().emplace_back(st);
 

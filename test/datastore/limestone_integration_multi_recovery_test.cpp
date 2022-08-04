@@ -4,6 +4,7 @@
 #include <array>
 #include <atomic>
 #include <mutex>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -50,13 +51,13 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storage_and_upsert_one_record() {
+void create_storage_and_upsert_one_record(std::size_t const i) {
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage(std::to_string(i), st));
 
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
@@ -78,7 +79,7 @@ void recovery_test(std::size_t recovery_num) {
 
     std::vector<Storage> st_list{};
     for (std::size_t i = 0; i < recovery_num; ++i) {
-        create_storage_and_upsert_one_record();
+        create_storage_and_upsert_one_record(i);
         fin(false);
         // recovery
         init({database_options::open_mode::RESTORE, log_dir}); // NOLINT

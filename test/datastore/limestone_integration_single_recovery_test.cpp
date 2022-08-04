@@ -50,23 +50,6 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storage_and_upsert_one_record() {
-    // prepare
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-
-    ASSERT_EQ(Status::OK, enter(s));
-    // data creation
-    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
-
-    // cleanup
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 std::string create_log_dir_name() {
     int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
@@ -81,7 +64,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
@@ -123,7 +106,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 0);
     Storage st1{};
-    ASSERT_EQ(Status::OK, create_storage(st1));
+    ASSERT_EQ(Status::OK, create_storage("1", st1));
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 1);
 
@@ -149,7 +132,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
     Storage st2{};
-    ASSERT_EQ(Status::OK, create_storage(st2));
+    ASSERT_EQ(Status::OK, create_storage("2", st2));
     ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 2);
 

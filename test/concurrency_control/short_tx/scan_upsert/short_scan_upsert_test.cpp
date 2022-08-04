@@ -33,7 +33,7 @@ private:
 
 TEST_F(scan_upsert, range_read_upsert_diff_tx) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
@@ -51,7 +51,7 @@ TEST_F(scan_upsert, range_read_upsert_diff_tx) { // NOLINT
 TEST_F(scan_upsert, range_read_upsert_same_tx) { // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

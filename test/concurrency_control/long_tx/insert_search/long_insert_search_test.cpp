@@ -54,7 +54,7 @@ TEST_F(long_insert_search_test, // NOLINT
        same_key_same_tx) {      // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));

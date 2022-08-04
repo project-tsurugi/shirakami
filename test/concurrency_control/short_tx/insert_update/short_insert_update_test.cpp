@@ -36,7 +36,7 @@ private:
 TEST_F(insert_update_test, insert_update) { // NOLINT
     // prepare
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -58,7 +58,7 @@ TEST_F(insert_update_test, insert_update) { // NOLINT
 TEST_F(insert_update_test, update_insert) { // NOLINT
     // prepare
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));

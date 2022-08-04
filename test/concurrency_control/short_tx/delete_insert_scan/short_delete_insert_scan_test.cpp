@@ -34,7 +34,7 @@ private:
 Storage storage;
 
 TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("testing");  // NOLINT
     std::string k2("new_key"); // NOLINT
     std::string v("bbb");      // NOLINT

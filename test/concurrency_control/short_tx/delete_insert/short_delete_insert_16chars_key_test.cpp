@@ -25,7 +25,7 @@ public:
 Storage st;
 
 TEST_F(delete_insert_16chars_key, delete_insert_with_16chars) { // NOLINT
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     std::string k("testing_a0123456"); // NOLINT
     std::string v("bbb");              // NOLINT
     Token s{};

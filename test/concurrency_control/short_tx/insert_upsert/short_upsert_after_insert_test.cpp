@@ -44,7 +44,7 @@ private:
 };
 
 TEST_F(upsert_after_delete, txs) { // NOLINT
-    create_storage(st);
+    create_storage("", st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT

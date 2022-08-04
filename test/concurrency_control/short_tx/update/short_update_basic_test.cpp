@@ -44,7 +44,7 @@ private:
 
 TEST_F(simple_update, update) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT
     std::string v2("bbb"); // NOLINT

@@ -23,7 +23,7 @@ public:
 TEST_F(short_t1_delete_between_t2_delete_upsert_test, delete_upsert) { // NOLINT
     // prepare
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

@@ -43,7 +43,7 @@ TEST_F(wp_storage_test, simple) { // NOLINT
                                   // check the metadata is updated correctly.
     ASSERT_EQ(wp::get_page_set_meta_storage(), storage::wp_meta_storage);
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     std::vector<Storage> rt{};
     ASSERT_EQ(Status::OK, list_storage(rt));
     // check result of list_storage remove about wp meta storage.

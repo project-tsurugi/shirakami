@@ -53,7 +53,7 @@ inline void wait_change_epoch() {
 
 TEST_F(write_skew, simple) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
     Token s2{};
     std::string x{"x"};

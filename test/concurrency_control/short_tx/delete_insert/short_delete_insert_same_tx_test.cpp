@@ -76,7 +76,7 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
@@ -96,7 +96,7 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};

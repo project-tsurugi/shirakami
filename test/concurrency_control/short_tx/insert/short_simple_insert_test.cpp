@@ -38,7 +38,7 @@ private:
 };
 
 TEST_F(simple_insert, insert) { // NOLINT
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};

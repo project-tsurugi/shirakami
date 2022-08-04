@@ -49,7 +49,7 @@ private:
 TEST_F(long_insert_test, start_before_epoch) { // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
@@ -67,7 +67,7 @@ TEST_F(long_insert_test, start_before_epoch) { // NOLINT
 TEST_F(long_insert_test, start_after_epoch) { // NOLINT
     // prepare
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));

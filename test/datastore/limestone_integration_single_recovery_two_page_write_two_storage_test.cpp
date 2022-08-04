@@ -64,14 +64,14 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("1", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("2", st));
     ASSERT_EQ(Status::OK, upsert(s, st, "x", "X"));
     ASSERT_EQ(Status::OK, upsert(s, st, "y", "Y"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

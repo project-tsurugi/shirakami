@@ -56,7 +56,7 @@ inline void wait_epoch_update() {
 TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
     // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s0{}; // short
     Token s1{}; // long
     Token s2{}; // long
@@ -85,7 +85,7 @@ TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
 
 TEST_F(long_scan_long_wp_test, reading_lower_priority_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     {
         // prepare data
         Token s{};

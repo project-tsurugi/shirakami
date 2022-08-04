@@ -36,7 +36,7 @@ private:
 
 TEST_F(c_next, next_skip_one_drec) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -71,7 +71,7 @@ TEST_F(c_next, next_skip_one_drec) { // NOLINT
 
 TEST_F(c_next, next_skip_two_drec) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -109,7 +109,7 @@ TEST_F(c_next, next_skip_two_drec) { // NOLINT
 
 TEST_F(c_next, next_skip_three_drec) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));

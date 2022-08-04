@@ -43,7 +43,7 @@ private:
 TEST_F(short_delete_insert_search_upsert_test, // NOLINT
        insert_after_delete_upsert) {           // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     std::string k1("k1");
     std::string k2("k2");
     std::string v1("v1");

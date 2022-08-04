@@ -19,7 +19,7 @@ private:
 
 TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k1("k");  // NOLINT
     std::string v1("v1"); // NOLINT
     Token s{};
@@ -53,7 +53,7 @@ TEST_F(delete_after_delete, delete_after_delete_between_tx) { // NOLINT
 
 TEST_F(delete_after_delete, delete_after_delete_in_tx) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};

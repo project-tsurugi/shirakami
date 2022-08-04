@@ -76,7 +76,7 @@ void init_db_bt() {
     // ddl phase
     for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
         Storage st{};
-        auto ret{create_storage(st)};
+        auto ret{create_storage("", st)};
         if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
         get_bt_storages().emplace_back(st);
     }

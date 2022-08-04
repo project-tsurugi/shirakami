@@ -40,7 +40,7 @@ private:
 };
 
 TEST_F(upsert_after_delete, diff_tx) { // NOLINT
-    create_storage(st);
+    create_storage("", st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
@@ -55,7 +55,7 @@ TEST_F(upsert_after_delete, diff_tx) { // NOLINT
 }
 
 TEST_F(upsert_after_delete, same_tx) { // NOLINT
-    create_storage(st);
+    create_storage("", st);
     std::string k("k");   // NOLINT
     std::string v("v");   // NOLINT
     std::string v2("v2"); // NOLINT

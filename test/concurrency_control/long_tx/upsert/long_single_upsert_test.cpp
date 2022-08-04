@@ -50,7 +50,7 @@ private:
 
 TEST_F(single_long_upsert_test, start_before_epoch) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
@@ -63,7 +63,7 @@ TEST_F(single_long_upsert_test, start_before_epoch) { // NOLINT
 
 TEST_F(single_long_upsert_test, long_simple) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"k"};

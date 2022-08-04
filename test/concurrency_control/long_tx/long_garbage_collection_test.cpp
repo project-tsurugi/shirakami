@@ -43,7 +43,7 @@ private:
 TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
     // prepare storage
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
 
     // prepare data
     Token s{};

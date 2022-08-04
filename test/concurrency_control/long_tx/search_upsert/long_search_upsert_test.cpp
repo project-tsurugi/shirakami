@@ -48,7 +48,7 @@ private:
 TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     // prepare data and test search on higher priority WP (causing WARN_PREMATURE)
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s0{}; // short
     Token s1{}; // long
     Token s2{}; // long
@@ -81,7 +81,7 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
 
 TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     {
         // prepare data
         Token s{};
@@ -106,7 +106,7 @@ TEST_F(search_upsert, reading_lower_priority_wp) { // NOLINT
 
 TEST_F(search_upsert, read_modify_write) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     std::string init_val{"i"};
     {
         // prepare data

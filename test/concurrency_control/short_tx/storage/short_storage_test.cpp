@@ -33,7 +33,7 @@ private:
 
 TEST_F(storage, storage_not_used_storage_key) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
@@ -54,8 +54,8 @@ TEST_F(storage, storage_used_storage_key) { // NOLINT
 TEST_F(storage, multiple_storages) { // NOLINT
     Storage storage0{};
     Storage storage1{};
-    ASSERT_EQ(Status::OK, create_storage(storage0));
-    ASSERT_EQ(Status::OK, create_storage(storage1));
+    ASSERT_EQ(Status::OK, create_storage("1", storage0));
+    ASSERT_EQ(Status::OK, create_storage("2", storage1));
     std::string k("k");   // NOLINT
     std::string v0("v0"); // NOLINT
     std::string v1("v1"); // NOLINT

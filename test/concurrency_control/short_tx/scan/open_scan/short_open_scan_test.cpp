@@ -36,7 +36,7 @@ private:
 
 TEST_F(open_scan_test, max_size_test) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k1("k1"); // NOLINT
     std::string k2("k2"); // NOLINT
     std::string k3("k3"); // NOLINT
@@ -94,7 +94,7 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
 
 TEST_F(open_scan_test, multi_open) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     std::string k1("a"); // NOLINT
     std::string v1("0"); // NOLINT
     Token s{};
@@ -119,7 +119,7 @@ TEST_F(open_scan_test, multi_open) { // NOLINT
 
 TEST_F(open_scan_test, multi_open_reading_values) { // NOLINT
     Storage storage{};
-    create_storage(storage);
+    create_storage("", storage);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ScanHandle handle{};

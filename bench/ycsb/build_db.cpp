@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+#include <string>
+
 // shirakami/bench
 #include "build_db.h"
 #include "gen_key.h"
 
 // shirakami-impl interface library
 #include "clock.h"
-#include "random.h"
 #include "concurrency_control/wp/include/tuple_local.h"
+#include "random.h"
 
 #include "shirakami/interface.h"
 
@@ -37,8 +39,10 @@ size_t decideParallelBuildNumber(const std::size_t record) { // NOLINT
     return std::thread::hardware_concurrency();
 }
 
-void parallel_build_db(const std::size_t start, const std::size_t end, const std::size_t key_length,
-                       const std::size_t value_length, const Storage pbd_storage = 0) { // NOLINT
+void parallel_build_db(const std::size_t start, const std::size_t end,
+                       const std::size_t key_length,
+                       const std::size_t value_length,
+                       const Storage pbd_storage = 0) { // NOLINT
     Xoroshiro128Plus rnd;
     Token token{};
     enter(token);
@@ -49,56 +53,57 @@ void parallel_build_db(const std::size_t start, const std::size_t end, const std
     for (uint64_t i = start; i <= end; ++i) {
         Status ret{};
         if (get_use_separate_storage()) {
-            ret = insert(token, pbd_storage, make_key(key_length, i), std::string(value_length, '0'));
+            ret = insert(token, pbd_storage, make_key(key_length, i),
+                         std::string(value_length, '0'));
         } else {
-            ret = insert(token, storage, make_key(key_length, i), std::string(value_length, '0'));
+            ret = insert(token, storage, make_key(key_length, i),
+                         std::string(value_length, '0'));
         }
-        if (ret != Status::OK) {
-            LOG(FATAL);
-        }
+        if (ret != Status::OK) { LOG(FATAL); }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) {
-                LOG(FATAL);
-            }
+            if (ret != Status::OK) { LOG(FATAL); }
             ctr = 0;
         }
     }
     auto ret = commit(token);
-    if (ret != Status::OK) {
-        LOG(FATAL);
-    }
+    if (ret != Status::OK) { LOG(FATAL); }
     leave(token);
 }
 
-void build_db(const std::size_t record, const std::size_t key_length, const std::size_t value_length,
+void build_db(const std::size_t record, const std::size_t key_length,
+              const std::size_t value_length,
               const std::size_t threads = 0) { // NOLINT
     if (get_use_separate_storage()) {
         get_separate_storage().reserve(threads);
         for (std::size_t i = 0; i < threads; ++i) {
-            create_storage(storage);
+            create_storage(std::to_string(i), storage);
             get_separate_storage().emplace_back(storage);
 
             std::vector<std::thread> thv;
             size_t max_thread{decideParallelBuildNumber(record)};
             for (size_t i = 0; i < max_thread; ++i) {
                 thv.emplace_back(parallel_build_db, i * (record / max_thread),
-                                 i != max_thread - 1 ? (i + 1) * (record / max_thread) - 1 : record - 1,
+                                 i != max_thread - 1
+                                         ? (i + 1) * (record / max_thread) - 1
+                                         : record - 1,
                                  key_length, value_length, storage);
             }
 
             for (auto& th : thv) th.join();
         }
     } else {
-        create_storage(storage);
+        create_storage("", storage);
 
         std::vector<std::thread> thv;
 
         size_t max_thread{decideParallelBuildNumber(record)};
         for (size_t i = 0; i < max_thread; ++i) {
             thv.emplace_back(parallel_build_db, i * (record / max_thread),
-                             i != max_thread - 1 ? (i + 1) * (record / max_thread) - 1 : record - 1,
+                             i != max_thread - 1
+                                     ? (i + 1) * (record / max_thread) - 1
+                                     : record - 1,
                              key_length, value_length, 0);
         }
 

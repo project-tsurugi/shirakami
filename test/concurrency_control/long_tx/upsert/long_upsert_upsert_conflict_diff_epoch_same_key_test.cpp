@@ -62,7 +62,7 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -92,7 +92,7 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -122,7 +122,7 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -153,7 +153,7 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
      */
 
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));

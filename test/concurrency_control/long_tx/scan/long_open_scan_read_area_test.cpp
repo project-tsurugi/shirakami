@@ -43,7 +43,7 @@ TEST_F(open_scan_test, read_area_empty_positive_not_hit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
@@ -63,7 +63,7 @@ TEST_F(open_scan_test, read_area_not_empty_positive_hit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
@@ -84,8 +84,8 @@ TEST_F(open_scan_test, read_area_not_empty_positive_not_hit) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
     Storage st2{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(Status::OK, create_storage(st2));
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, create_storage("2", st2));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
@@ -106,7 +106,7 @@ TEST_F(open_scan_test, read_area_empty_negative_not_hit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
@@ -126,7 +126,7 @@ TEST_F(open_scan_test, read_area_not_empty_negative_hit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
@@ -148,8 +148,8 @@ TEST_F(open_scan_test, read_area_not_empty_negative_not_hit) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
     Storage st2{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(Status::OK, create_storage(st2));
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, create_storage("2", st2));
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},

@@ -43,7 +43,7 @@ TEST_F(single_search, search_at_non_existing_storage) { // NOLINT
 }
 
 TEST_F(single_search, search) { // NOLINT
-    create_storage(storage);
+    create_storage("", storage);
     std::string k("aaa"); // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};

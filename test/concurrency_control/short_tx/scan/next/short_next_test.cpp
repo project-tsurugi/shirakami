@@ -36,7 +36,7 @@ private:
 
 TEST_F(c_next, next_with_not_begin) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_BEGIN, next(s, {}));
@@ -45,7 +45,7 @@ TEST_F(c_next, next_with_not_begin) { // NOLINT
 
 TEST_F(c_next, next_with_invalid_handle) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s}));
@@ -55,7 +55,7 @@ TEST_F(c_next, next_with_invalid_handle) { // NOLINT
 
 TEST_F(c_next, next_for_two) { // NOLINT
     Storage st{};
-    create_storage(st);
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

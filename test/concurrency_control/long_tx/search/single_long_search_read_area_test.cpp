@@ -48,7 +48,7 @@ private:
 
 TEST_F(single_long_search_read_area_test, read_area_positive_hit) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,
@@ -65,7 +65,7 @@ TEST_F(single_long_search_read_area_test, read_area_positive_hit) { // NOLINT
 TEST_F(single_long_search_read_area_test,
        read_area_empty_positive_not_hit) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,
@@ -83,8 +83,8 @@ TEST_F(single_long_search_read_area_test,
        read_area_not_empty_positive_not_hit) { // NOLINT
     Storage st{};
     Storage st2{};
-    ASSERT_EQ(create_storage(st), Status::OK);
-    ASSERT_EQ(create_storage(st2), Status::OK);
+    ASSERT_EQ(create_storage("1", st), Status::OK);
+    ASSERT_EQ(create_storage("2", st2), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,
@@ -100,7 +100,7 @@ TEST_F(single_long_search_read_area_test,
 
 TEST_F(single_long_search_read_area_test, read_area_negative_hit) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,
@@ -117,7 +117,7 @@ TEST_F(single_long_search_read_area_test, read_area_negative_hit) { // NOLINT
 TEST_F(single_long_search_read_area_test,
        read_area_empty_negative_not_hit) { // NOLINT
     Storage st{};
-    ASSERT_EQ(create_storage(st), Status::OK);
+    ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,
@@ -135,8 +135,8 @@ TEST_F(single_long_search_read_area_test,
        read_area_not_empty_negative_not_hit) { // NOLINT
     Storage st{};
     Storage st2{};
-    ASSERT_EQ(create_storage(st), Status::OK);
-    ASSERT_EQ(create_storage(st2), Status::OK);
+    ASSERT_EQ(create_storage("1", st), Status::OK);
+    ASSERT_EQ(create_storage("2", st2), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(tx_begin({s,

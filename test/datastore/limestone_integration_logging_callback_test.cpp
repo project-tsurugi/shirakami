@@ -71,9 +71,9 @@ TEST_F(limestone_integration_logging_callback_test, // NOLINT
     Storage st{};
     Storage st2{};
     Storage st3{};
-    ASSERT_EQ(Status::OK, create_storage(st));
-    ASSERT_EQ(Status::OK, create_storage(st2));
-    ASSERT_EQ(Status::OK, create_storage(st3, 3));
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, create_storage("2", st2));
+    ASSERT_EQ(Status::OK, create_storage("3", st3, 3));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -109,7 +109,7 @@ TEST_F(limestone_integration_logging_callback_test,               // NOLINT
                 }
             });
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st, {2}));
+    ASSERT_EQ(Status::OK, create_storage("", st, {2}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
@@ -153,7 +153,7 @@ TEST_F(limestone_integration_logging_callback_test,              // NOLINT
                 }
             });
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st, {2}));
+    ASSERT_EQ(Status::OK, create_storage("", st, {2}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 

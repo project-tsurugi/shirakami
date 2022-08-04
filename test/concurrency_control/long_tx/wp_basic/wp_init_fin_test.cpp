@@ -55,7 +55,7 @@ TEST_F(wp_init_fin_test, init_fin) { // NOLINT
 
 TEST_F(wp_init_fin_test, after_init) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::OK, create_storage(st));
+    ASSERT_EQ(Status::OK, create_storage("", st));
     wp::wp_meta* wm{};
     ASSERT_EQ(Status::OK, find_wp_meta(st, wm));
     auto wps{wm->get_wped()};
