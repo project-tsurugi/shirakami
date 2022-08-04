@@ -4,6 +4,17 @@
 
 namespace shirakami {
 
+Status ongoing_tx::change_epoch_without_lock(std::size_t const tx_id,
+                                 epoch::epoch_t const new_ep) {
+    for (auto&& elem : tx_info_) {
+        if (elem.second == tx_id) {
+            elem.first = new_ep;
+            return Status::OK;
+        }
+    }
+    return Status::WARN_NOT_FOUND;
+}
+
 Status ongoing_tx::change_epoch_without_lock(
         std::size_t const id, epoch::epoch_t const ep,
         std::size_t const need_id, epoch::epoch_t const need_id_epoch) {
@@ -19,7 +30,7 @@ Status ongoing_tx::change_epoch_without_lock(
             if (elem.first == need_id_epoch) {
                 exist_need_id = true;
             } else {
-                // fail optimistic change due to concurrent forewarding.
+                // fail optimistic change due to concurrent forwarding.
                 return Status::WARN_NOT_FOUND;
             }
         }

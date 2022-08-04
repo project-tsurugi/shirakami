@@ -347,7 +347,7 @@ Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
     auto this_id = ti->get_long_tx_id();
 
-    // for overtaken set
+    // forwarding verify
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
     for (auto&& oe : ti->get_overtaken_ltx_set()) {
         wp::wp_meta* wp_meta_ptr{oe.first};
@@ -356,12 +356,35 @@ Status verify_read_by(session* const ti) {
         bool is_first_item_before_gc_threshold{true};
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
+            // oe.second is forwarding high priori ltxs
             for (auto&& hid : oe.second) {
                 if ((*wp_result_itr).second == hid) {
                     // the itr show overtaken ltx
                     if ((*wp_result_itr).first < ti->get_valid_epoch()) {
-                        // this tx should have read the result of the ltx.
-                        return Status::ERR_VALIDATION;
+                        // try forwarding
+                        // check read upper bound
+                        if (ti->get_read_version_max_epoch() >
+                            (*wp_result_itr).first) {
+                            // forwarding break own old read
+                            return Status::ERR_VALIDATION;
+                        } // forwarding not break own old read
+                        // lock ongoing tx for forwarding
+                        std::lock_guard<std::shared_mutex> ongo_lk{
+                                ongoing_tx::get_mtx()};
+                        if (Status::OK != ongoing_tx::change_epoch_without_lock(
+                                                  ti->get_long_tx_id(),
+                                                  (*wp_result_itr).first)) {
+                            LOG(ERROR) << "programming error";
+                            return Status::ERR_FATAL;
+                        }
+                        // set own epoch
+                        ti->set_valid_epoch((*wp_result_itr).first);
+                        // change wp epoch
+                        change_wp_epoch(ti, (*wp_result_itr).first);
+                        /**
+                         * not need extract (collect) new forwarding info,
+                         * because at first touch, this tx finished that.
+                         */
                     }
                     // verify success
                     break;
@@ -386,7 +409,7 @@ Status verify_read_by(session* const ti) {
             }
         }
     }
-    
+
     // verify for write set
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         //==========

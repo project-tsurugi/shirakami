@@ -29,6 +29,17 @@ public:
     using tx_info_type = std::vector<tx_info_elem_type>;
 
     /**
+     * @brief Change epoch of @a tx_id for @a new_ep.
+     * @pre The lock of ongoing_tx was acquired outside from this tx.
+     * @param[in] tx_id The target tx id.
+     * @param[in] new_ep The target epoch of the tx.
+     * @return Status::OK success
+     * @return Status::WARN_NOT_FOUND fail for not existing @a tx_id.
+     */
+    static Status change_epoch_without_lock(std::size_t tx_id,
+                                            epoch::epoch_t new_ep);
+
+    /**
      * @brief Find element which has the @a id and change its epoch.
      * @pre The element which has the @a id and @a need_id must exist.
      * @param[in] id Tx to change epoch.
