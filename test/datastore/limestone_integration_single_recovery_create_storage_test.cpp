@@ -4,12 +4,14 @@
 #include <array>
 #include <atomic>
 #include <mutex>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <vector>
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
 
@@ -33,12 +35,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_test
+class limestone_integration_single_recovery_create_storage_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_test");
+        google::InitGoogleLogging(
+                "shirakami-test-data_store-"
+                "limestone_integration_single_recovery_create_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -50,50 +53,39 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-std::string create_log_dir_name() {
+TEST_F(limestone_integration_single_recovery_create_storage_test, // NOLINT
+       check_storage_no_operation_after_recovery) {               // NOLINT
+    // start
+    std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
-    return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
-}
-
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       one_page_write_one_storage) {               // NOLINT
-    // prepare
-    std::string log_dir{};
-    log_dir = create_log_dir_name();
+    log_dir =
+            "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
+    // storage creation
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
-    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
 
     fin(false);
+
+    // start
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
-    // test: storage num
+    // test: log exist
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    // test: check recovery
+    std::string vb{};
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // because single recovery
-    ASSERT_EQ(Status::OK, enter(s));
+    EXPECT_EQ(st_list.size(), 1);
 
-    // test: contents
-    for (auto&& each_st : st_list) {
-        std::string vb{};
-        ASSERT_EQ(Status::OK, search_key(s, each_st, "a", vb));
-        ASSERT_EQ(vb, "A");
-        ASSERT_EQ(Status::OK, search_key(s, each_st, "b", vb));
-        ASSERT_EQ(vb, "B");
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    // cleanup
     ASSERT_EQ(Status::OK, leave(s));
-    fin(false);
+    fin();
 }
 
 } // namespace shirakami::testing

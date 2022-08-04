@@ -107,7 +107,6 @@ void recovery_test(std::size_t recovery_num) {
 TEST_F(limestone_integration_multi_recovery_test, // NOLINT
        two_recovery_test) {                       // NOLINT
     ASSERT_NO_FATAL_FAILURE(recovery_test(2));    // NOLINT
-    ASSERT_NO_FATAL_FAILURE(recovery_test(3));    // NOLINT
 }
 
 } // namespace shirakami::testing

@@ -11,7 +11,6 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
-#include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
 
@@ -35,13 +34,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_one_storage_test
+class limestone_integration_multi_recovery_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "limestone_integration_single_recovery_one_storage_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "limestone_integration_multi_recovery_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -53,13 +51,14 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storage_and_upsert_one_record(std::size_t i) {
+void create_storage_and_upsert_one_record(std::size_t const i) {
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage(std::to_string(i), st));
+
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
     ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
@@ -69,7 +68,7 @@ void create_storage_and_upsert_one_record(std::size_t i) {
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-void storage_operation_test(std::size_t storage_num) {
+void recovery_test(std::size_t recovery_num) {
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -78,45 +77,36 @@ void storage_operation_test(std::size_t storage_num) {
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
-    for (std::size_t i = 0; i < storage_num; ++i) {
-        create_storage_and_upsert_one_record(i);
-    }
-    sleep(1);
-
-    fin(false);
-
-    // re-start
-    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
-    ASSERT_EQ(storage_num, st_list.size()); // 1 is due to recovery
+    for (std::size_t i = 0; i < recovery_num; ++i) {
+        create_storage_and_upsert_one_record(i);
+        fin(false);
+        // recovery
+        init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
+        // verify
+        ASSERT_EQ(Status::OK, list_storage(st_list));
+        ASSERT_EQ(i + 1, st_list.size());
+    }
+
+    // test
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
-    std::sort(st_list.begin(), st_list.end());
-    std::size_t itr_num{0};
-    Storage max_st{0};
+    std::string vb{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(recovery_num, st_list.size());
     for (auto&& st : st_list) {
-        ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32); // NOLINT
-        std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ++itr_num;
-        if (st > max_st) { max_st = st; }
     }
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage("", st));
-    ASSERT_EQ(st >> 32, (max_st >> 32) + 1); // NOLINT
-
-    // cleanup
     ASSERT_EQ(Status::OK, leave(s));
     fin();
 }
 
-TEST_F(limestone_integration_single_recovery_one_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {               // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(1));        // NOLINT
+TEST_F(limestone_integration_multi_recovery_test, // NOLINT
+       two_recovery_test) {                       // NOLINT
+    ASSERT_NO_FATAL_FAILURE(recovery_test(3));    // NOLINT
 }
 
 } // namespace shirakami::testing
