@@ -32,79 +32,75 @@ public:
 
     void TearDown() override { fin(); }
 
-    static Storage& get_storage() { return storage_; }
-
 private:
     static inline std::once_flag init_google_; // NOLINT
-    static inline Storage storage_;            // NOLINT
 };
 
 TEST_F(short_delete_insert_same_tx_test, delete_insert) { // NOLINT
-    create_storage(get_storage());
+    Storage st{};
+    create_storage("", st);
     std::string k("testing"); // NOLINT
     std::string v("bbb");     // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, delete_record(s, get_storage(), k));
-    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
-    create_storage(get_storage());
+    Storage st{};
+    create_storage("", st);
     std::string k("testing"); // NOLINT
     std::string v("v");       // NOLINT
     std::string iv("iv");     // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, delete_record(s, get_storage(), k));
-    ASSERT_EQ(Status::OK, insert(s, get_storage(), k, iv));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE,
-              delete_record(s, get_storage(), k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, iv));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};
-    ASSERT_EQ(Status::OK, get<Record>(get_storage(), k, rec_ptr));
+    ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
     std::string val{};
     rec_ptr->get_value(val);
     ASSERT_EQ(val, v);
 }
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
-    Storage storage{};
-    create_storage("", storage);
+    Storage st{};
+    create_storage("", st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
-              delete_record(s, storage, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
     std::string vb{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k, vb));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, vb));
 
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
-    Storage storage{};
-    create_storage("", storage);
+    Storage st{};
+    create_storage("", st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
-              delete_record(s, storage, k));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

@@ -40,27 +40,6 @@ Status remove_storage_metadata([[maybe_unused]] Storage st,
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
-Status create_storage(Storage& storage, storage_option const options) {
-    std::size_t n{0};
-    for (;;) {
-        std::string_view key_view{reinterpret_cast<char*>(&n), // NOLINT
-                                  sizeof(n)};
-        auto ret = create_storage(key_view, storage, options);
-        if (ret == Status::OK) { return ret; }
-        if (ret == Status::WARN_STORAGE_ID_DEPLETION) { return ret; }
-        if (options.get_id() != storage_id_undefined) {
-            std::vector<Storage> st_list{};
-            list_storage(st_list);
-            for (auto&& elem : st_list) {
-                if (elem == options.get_id()) {
-                    return Status::WARN_ALREADY_EXISTS;
-                }
-            }
-        }
-        ++n;
-    }
-}
-
 Status create_storage(std::string_view const key, Storage& storage,
                       storage_option const options) {
     // check key existence

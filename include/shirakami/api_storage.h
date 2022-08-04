@@ -9,24 +9,6 @@
 namespace shirakami {
 
 /**
- * @brief Create one table by not using key, and return its handler.
- * @param[out] storage output parameter to pass the storage handle, that is 
- * used for the subsequent calls related with the storage.
- * Multiple create_storage calls assign storage value monotonically.
- * That is, Storage value assigned by create_storage is larger than the one 
- * assigned by previous call.
- * @param[in] options If you don't use this argument, @a storage is specified
- * by shirakami, otherwise, is specified by user.
- * @return Status::ERR_FATAL_INDEX Some programming error.
- * @return Status::OK if successful.
- * @return Status::WARN_ALREADY_EXISTS You may use @a options.id_ more than once.
- * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger 
- * than 2^32, or shirakami create storage more than 2^32.
- */
-extern Status create_storage(Storage& storage,
-                             storage_option options = {}); // NOLINT
-
-/**
  * @brief Create one table by using key, and return its handler.
  * @param key The storage's key. It also can be used for get_storage.
  * @param storage The storage handle mapped for @a key.
