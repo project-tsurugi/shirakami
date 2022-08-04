@@ -89,12 +89,9 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                             break;
                         }
                     }
-                    if (n_hit) {
-                        continue;
-                    } else {
-                        // empty read positive mean universe.
-                        return true;
-                    }
+                    if (n_hit) { continue; }
+                    // empty read positive mean universe.
+                    return true;
                 }
             }
         }

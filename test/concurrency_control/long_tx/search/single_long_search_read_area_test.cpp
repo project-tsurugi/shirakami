@@ -62,7 +62,7 @@ TEST_F(single_long_search_read_area_test, read_area_positive_hit) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,
+TEST_F(single_long_search_read_area_test,  // NOLINT
        read_area_empty_positive_not_hit) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -79,7 +79,7 @@ TEST_F(single_long_search_read_area_test,
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,
+TEST_F(single_long_search_read_area_test,      // NOLINT
        read_area_not_empty_positive_not_hit) { // NOLINT
     Storage st{};
     Storage st2{};
@@ -114,7 +114,7 @@ TEST_F(single_long_search_read_area_test, read_area_negative_hit) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,
+TEST_F(single_long_search_read_area_test,  // NOLINT
        read_area_empty_negative_not_hit) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -131,7 +131,7 @@ TEST_F(single_long_search_read_area_test,
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,
+TEST_F(single_long_search_read_area_test,      // NOLINT
        read_area_not_empty_negative_not_hit) { // NOLINT
     Storage st{};
     Storage st2{};

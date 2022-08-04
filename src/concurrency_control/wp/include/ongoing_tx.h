@@ -39,10 +39,9 @@ public:
      * @return Status::WARN_NOT_FOUND The @a need_id does not exist.
      * @return Status::ERR_FATAL programming error.
      */
-    static Status change_epoch_without_lock(std::size_t const id,
-                                            epoch::epoch_t const ep,
-                                            std::size_t const need_id,
-                                            epoch::epoch_t const need_id_epoch);
+    static Status change_epoch_without_lock(std::size_t id, epoch::epoch_t ep,
+                                            std::size_t need_id,
+                                            epoch::epoch_t need_id_epoch);
 
     static bool exist_id(std::size_t id);
 
