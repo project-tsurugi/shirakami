@@ -11,6 +11,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 
@@ -43,14 +44,6 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-inline void wait_change_epoch() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
 TEST_F(write_skew, simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -70,12 +63,14 @@ TEST_F(write_skew, simple) { // NOLINT
     // stop epoch
     // epoch align 2 tx.
     epoch::get_ep_mtx().lock();
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     epoch::get_ep_mtx().unlock();
 
     // wait change epoch
-    wait_change_epoch();
+    wait_epoch_update();
 
     // read phase
     std::string vb1{};
