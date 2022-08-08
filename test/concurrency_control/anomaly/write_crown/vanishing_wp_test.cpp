@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
@@ -45,44 +46,18 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-void generate_test_case(
-        // bool shows it can commit.
-        std::vector<std::tuple<std::array<transaction_options::transaction_type, 4>, std::array<bool, 4>>>&
-                test_case) {
-    auto add_test = [&test_case](transaction_options::transaction_type ib1, transaction_options::transaction_type ib2, transaction_options::transaction_type ib3,
-                                 transaction_options::transaction_type ib4, bool cc1, bool cc2, bool cc3,
-                                 bool cc4) {
-        using t_type = std::array<transaction_options::transaction_type, 4>;
-        using c_type = std::array<bool, 4>;
-        test_case.emplace_back(std::make_tuple(t_type{ib1, ib2, ib3, ib4},
-                                               c_type{cc1, cc2, cc3, cc4}));
-    };
-
-    add_test(transaction_options::transaction_type::SHORT, transaction_options::transaction_type::SHORT, transaction_options::transaction_type::SHORT, // NOLINT
-             transaction_options::transaction_type::SHORT, 1, 0, 1, 0);                    // NOLINT
-    //add_test(0, 0, 0, 1, 1, 0, 1, 1);
-    // Batch mode can only be tested after w-w constraint relaxation.
-}
-
-void gen_initial_db(Storage st) {
-    std::string a{"a"};
-    std::string x{"x"};
-    std::string y{"y"};
-    std::string z{"z"};
-    Token s0{};
-    ASSERT_EQ(enter(s0), Status::OK);
-    ASSERT_EQ(upsert(s0, st, x, ""), Status::OK);
-    ASSERT_EQ(upsert(s0, st, y, ""), Status::OK);
-    ASSERT_EQ(upsert(s0, st, z, ""), Status::OK);
-    ASSERT_EQ(upsert(s0, st, a, ""), Status::OK);
-    ASSERT_EQ(commit(s0), Status::OK);
-    ASSERT_EQ(leave(s0), Status::OK);
-}
-
-TEST_F(vanishing_wp_test, simple) { // NOLINT
-                                    // create table
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
+TEST_F(vanishing_wp_test, all) { // NOLINT
+                                 // create table
+    // ==========
+    // prepare
+    Storage sta{};
+    Storage stx{};
+    Storage sty{};
+    Storage stz{};
+    ASSERT_EQ(create_storage("a", sta), Status::OK);
+    ASSERT_EQ(create_storage("x", stx), Status::OK);
+    ASSERT_EQ(create_storage("y", sty), Status::OK);
+    ASSERT_EQ(create_storage("z", stz), Status::OK);
 
     // enter
     std::array<Token, 4> s{};
@@ -94,62 +69,279 @@ TEST_F(vanishing_wp_test, simple) { // NOLINT
     std::string y{"y"};
     std::string z{"z"};
     std::array<std::string, 4> v{"t1", "t2", "t3", "t4"};
+    auto init_db = [&s, a, x, y, z, sta, stx, sty, stz]() {
+        ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, ""));
+        ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, ""));
+        ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, ""));
+        ASSERT_EQ(Status::OK, upsert(s.at(0), stz, z, ""));
+        ASSERT_EQ(Status::OK, commit(s.at(0)));
+    };
+    init_db();
+    // ==========
 
-    // prepare test case container
-    // tuple.first : std::array: <is_batch, 4>
-    // tuple.second: std::array: <can_commit, 4>
-    std::vector<std::tuple<std::array<transaction_options::transaction_type, 4>, std::array<bool, 4>>>
-            test_case;
+    // ==========
+    // test case 1
+    std::string buf{};
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
 
-    // generate test case
-    generate_test_case(test_case);
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
 
-    for (auto&& tc : test_case) {
-        init(); // NOLINT
-        gen_initial_db(st);
-        ASSERT_EQ(tx_begin({s.at(0), std::get<0>(tc).at(0)}), Status::OK);
-        std::string vb{};
-        ASSERT_EQ(search_key(s.at(0), st, x, vb), Status::OK);
-        ASSERT_EQ(tx_begin({s.at(1), std::get<0>(tc).at(1)}), Status::OK);
-        ASSERT_EQ(search_key(s.at(1), st, y, vb), Status::OK);
-        ASSERT_EQ(upsert(s.at(0), st, y, v.at(0)), Status::OK);
-        if (std::get<1>(tc).at(0)) { ASSERT_EQ(commit(s.at(0)), Status::OK); }
-        ASSERT_EQ(tx_begin({s.at(2), std::get<0>(tc).at(2)}), Status::OK);
-        ASSERT_EQ(search_key(s.at(2), st, z, vb), Status::OK);
-        ASSERT_EQ(upsert(s.at(1), st, z, v.at(1)), Status::OK);
-        if (std::get<1>(tc).at(1)) {
-            ASSERT_EQ(commit(s.at(1)), Status::ERR_VALIDATION);
-        }
-        ASSERT_EQ(tx_begin({s.at(3), std::get<0>(tc).at(3)}), Status::OK);
-        if (std::get<1>(tc).at(3)) {
-            for (;;) {
-                auto rc{search_key(s.at(3), st, a, vb)};
-                if (rc == Status::WARN_PREMATURE) {
-                    _mm_pause();
-                } else {
-                    ASSERT_EQ(rc, Status::OK);
-                }
-            }
-        } else {
-            ASSERT_EQ(search_key(s.at(3), st, a, vb), Status::OK);
-        }
-        ASSERT_EQ(upsert(s.at(2), st, a, v.at(2)), Status::OK);
-        if (std::get<1>(tc).at(2)) { ASSERT_EQ(commit(s.at(2)), Status::OK); }
-        ASSERT_EQ(upsert(s.at(3), st, x, v.at(3)), Status::OK);
-        if (std::get<1>(tc).at(3)) {
-            ASSERT_EQ(commit(s.at(3)), Status::ERR_VALIDATION);
-        }
-        fin();
-        LOG(INFO) << "clear test case " << std::get<0>(tc).at(0) << ", "
-                  << std::get<0>(tc).at(1) << ", " << std::get<0>(tc).at(2)
-                  << ", " << std::get<0>(tc).at(3) << ", "
-                  << std::get<1>(tc).at(0) << ", " << std::get<1>(tc).at(1)
-                  << ", " << std::get<1>(tc).at(2) << ", "
-                  << std::get<1>(tc).at(3);
-    }
+    // cleanup
+    init_db();
 
-    // leave
+    // test case 2
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3),
+                                    transaction_options::transaction_type::LONG,
+                                    {stx}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(3));
+
+    // cleanup
+    init_db();
+
+    // test case 3
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(2),
+                                    transaction_options::transaction_type::LONG,
+                                    {sta}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
+
+    // cleanup
+    init_db();
+
+    // test case 4
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, tx_begin({s.at(1),
+                                    transaction_options::transaction_type::LONG,
+                                    {stz}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
+    ASSERT_EQ(Status::OK, commit(s.at(1)));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, "");
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(3));
+
+    // cleanup
+    init_db();
+
+    // test case 5
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 6
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 7
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 8
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 9
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 10
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 11
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 12
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 13
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 14
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 15
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // test case 16
+
+    // verify
+
+    // cleanup
+    init_db();
+
+    // ==========
+
+    // ==========
+    // cleanup
     for (auto&& elem : s) { ASSERT_EQ(leave(elem), Status::OK); }
+    // ==========
 }
 
 } // namespace shirakami::testing
