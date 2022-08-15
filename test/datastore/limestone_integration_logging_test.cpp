@@ -76,8 +76,9 @@ TEST_F(limestone_integration_logging_test,       // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
 
+    auto ep = epoch::get_global_epoch();
     // wait durable (*1) log
-    sleep(1); // not strictly
+    while (ep > lpwal::get_durable_epoch()) { _mm_pause(); }
 
     // check wal file existence
     std::string log_dir_str{lpwal::get_log_dir()};
@@ -89,8 +90,9 @@ TEST_F(limestone_integration_logging_test,       // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
 
+    ep = epoch::get_global_epoch();
     // wait durable (*2) log
-    sleep(1); // not strictly
+    while (ep > lpwal::get_durable_epoch()) { _mm_pause(); }
 
     // verify
     boost::uintmax_t size2 = dir_size(log_path);

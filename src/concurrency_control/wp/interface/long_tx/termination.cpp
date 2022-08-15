@@ -536,7 +536,7 @@ extern Status commit(session* const ti, // NOLINT
     if (oldest_log_epoch != 0 &&
         oldest_log_epoch != epoch::get_global_epoch()) {
         // should flush
-        shirakami::lpwal::flush_log(ti->get_lpwal_handle());
+        shirakami::lpwal::flush_log(static_cast<void*>(ti));
     }
 #endif
 

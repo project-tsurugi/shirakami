@@ -52,6 +52,11 @@ namespace shirakami::lpwal {
  */
 [[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
 
+/**
+ * @brief Durable epoch of pwal.
+ */
+[[maybe_unused]] inline std::atomic<epoch::epoch_t> durable_epoch_; // NOLINT
+
 class write_version_type {
 public:
     using major_write_version_type = epoch::epoch_t;
@@ -159,6 +164,10 @@ public:
 
     std::mutex& get_mtx_logs() { return mtx_logs_; }
 
+    epoch::epoch_t get_last_flushed_epoch() {
+        return last_flushed_epoch_.load(std::memory_order_acquire);
+    }
+
     limestone::api::log_channel* get_log_channel_ptr() {
         return log_channel_ptr_;
     }
@@ -234,7 +243,7 @@ private:
  * @brief flushing log. 1: begin log_channel, 2: add_entry, 
  * 3: end log_channel
  */
-[[maybe_unused]] extern void flush_log(handler& handle);
+[[maybe_unused]] extern void flush_log(Token token);
 
 /**
  * @brief Set the log dir object
@@ -289,9 +298,17 @@ private:
     return stopping_.load(std::memory_order_acquire);
 }
 
+[[maybe_unused]] static epoch::epoch_t get_durable_epoch() {
+    return durable_epoch_.load(std::memory_order_acquire);
+}
+
 // setter of global variables
 [[maybe_unused]] static void set_stopping(bool tf) {
     stopping_.store(tf, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_durable_epoch(epoch::epoch_t e) {
+    durable_epoch_.store(e, std::memory_order_release);
 }
 
 /**
