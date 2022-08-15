@@ -27,11 +27,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class single_long_search_read_area_test : public ::testing::Test { // NOLINT
+class single_long_search_read_area_2_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
-                                  "search-single_long_search_read_area_test");
+                                  "search-single_long_search_read_area_2_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -46,7 +46,7 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(single_long_search_read_area_test, read_area_positive_hit) { // NOLINT
+TEST_F(single_long_search_read_area_2_test, read_area_negative_hit) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
@@ -54,16 +54,16 @@ TEST_F(single_long_search_read_area_test, read_area_positive_hit) { // NOLINT
     ASSERT_EQ(tx_begin({s,
                         transaction_options::transaction_type::LONG,
                         {},
-                        {{st}, {}}}),
+                        {{}, {st}}}),
               Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(search_key(s, st, "", vb), Status::WARN_NOT_FOUND);
+    ASSERT_EQ(search_key(s, st, "", vb), Status::ERR_READ_AREA_VIOLATION);
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,  // NOLINT
-       read_area_empty_positive_not_hit) { // NOLINT
+TEST_F(single_long_search_read_area_2_test, // NOLINT
+       read_area_empty_negative_not_hit) {  // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
@@ -79,8 +79,8 @@ TEST_F(single_long_search_read_area_test,  // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(single_long_search_read_area_test,      // NOLINT
-       read_area_not_empty_positive_not_hit) { // NOLINT
+TEST_F(single_long_search_read_area_2_test,    // NOLINT
+       read_area_not_empty_negative_not_hit) { // NOLINT
     Storage st{};
     Storage st2{};
     ASSERT_EQ(create_storage("1", st), Status::OK);
@@ -90,11 +90,11 @@ TEST_F(single_long_search_read_area_test,      // NOLINT
     ASSERT_EQ(tx_begin({s,
                         transaction_options::transaction_type::LONG,
                         {},
-                        {{st2}, {}}}),
+                        {{}, {st2}}}),
               Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(search_key(s, st, "", vb), Status::ERR_READ_AREA_VIOLATION);
+    ASSERT_EQ(search_key(s, st, "", vb), Status::WARN_NOT_FOUND);
     ASSERT_EQ(leave(s), Status::OK);
 }
 

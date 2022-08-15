@@ -17,13 +17,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class long_open_scan_read_area_test : public ::testing::Test { // NOLINT
+class long_open_scan_read_area_2_test : public ::testing::Test { // NOLINT
 
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only-"
-                "scan-long_open_scan_read_area_test");
+                "scan-long_open_scan_read_area_2_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -38,8 +38,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(long_open_scan_read_area_test,      // NOLINT
-       read_area_empty_positive_not_hit) { // NOLINT
+TEST_F(long_open_scan_read_area_2_test,      // NOLINT
+       read_area_empty_negative_not_hit) { // NOLINT
                                            // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -59,8 +59,8 @@ TEST_F(long_open_scan_read_area_test,      // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_open_scan_read_area_test,      // NOLINT
-       read_area_not_empty_positive_hit) { // NOLINT
+TEST_F(long_open_scan_read_area_2_test,      // NOLINT
+       read_area_not_empty_negative_hit) { // NOLINT
                                            // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -69,19 +69,20 @@ TEST_F(long_open_scan_read_area_test,      // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
-                                    {{st}, {}}}));
+                                    {{}, {st}}}));
     wait_epoch_update();
     // test
     ScanHandle hd{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
-                                                "", scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
+              open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        hd));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_open_scan_read_area_test,          // NOLINT
-       read_area_not_empty_positive_not_hit) { // NOLINT
+TEST_F(long_open_scan_read_area_2_test,          // NOLINT
+       read_area_not_empty_negative_not_hit) { // NOLINT
                                                // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -92,13 +93,12 @@ TEST_F(long_open_scan_read_area_test,          // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s,
                                     transaction_options::transaction_type::LONG,
                                     {},
-                                    {{st2}, {}}}));
+                                    {{}, {st2}}}));
     wait_epoch_update();
     // test
     ScanHandle hd{};
-    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
-              open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
-                        hd));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
