@@ -1,12 +1,15 @@
 #include "concurrency_control/wp/include/read_by.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/wp/include/session.h"
 
 #include "glog/logging.h"
 
 namespace shirakami {
 
-bool point_read_by_long::is_exist(epoch::epoch_t const epoch,
-                                  std::size_t ltx_id) {
+bool point_read_by_long::is_exist(Token token) {
+    auto* ti = static_cast<session*>(token);
+    const epoch::epoch_t epoch = ti->get_valid_epoch();
+    const std::size_t ltx_id = ti->get_long_tx_id();
     std::shared_lock<std::shared_mutex> lk(mtx_);
     for (auto&& elem : body_) {
         if (elem.second < ltx_id) {

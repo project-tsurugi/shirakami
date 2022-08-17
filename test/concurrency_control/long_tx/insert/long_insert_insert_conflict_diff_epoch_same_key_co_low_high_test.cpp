@@ -30,13 +30,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class long_insert_insert_conflict_diff_epoch_test
+class long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-long_tx-"
-                "insert-long_insert_insert_conflict_diff_epoch_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "insert-long_insert_insert_conflict_diff_"
+                                  "epoch_same_key_co_low_high_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -51,72 +51,8 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
-       same_key_different_epoch_io_low_high_co_high_low) { // NOLINT
-    /**
-     * There are two long tx.
-     * They are different epoch.
-     * They insert same key to the same storage.
-     * Insert order low high.
-     * Commit order is 1. high priority tx, 2. low priority tx.
-     */
-
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s1{};
-    Token s2{};
-    ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
-              Status::OK);
-    wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
-              Status::OK);
-    wait_epoch_update();
-
-    ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
-    ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
-
-    ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2));
-    ASSERT_EQ(Status::OK, leave(s1));
-    ASSERT_EQ(Status::OK, leave(s2));
-}
-
-TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
-       same_key_different_epoch_io_high_low_co_high_low) { // NOLINT
-    /**
-     * There are two long tx.
-     * They are different epoch.
-     * They insert same key to the same storage.
-     * Insert order high low
-     * Commit order is 1. high priority tx, 2. low priority tx.
-     */
-
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s1{};
-    Token s2{};
-    ASSERT_EQ(Status::OK, enter(s1));
-    ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
-              Status::OK);
-    wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
-              Status::OK);
-    wait_epoch_update();
-
-    ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
-    ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
-
-    ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2));
-    ASSERT_EQ(Status::OK, leave(s1));
-    ASSERT_EQ(Status::OK, leave(s2));
-}
-
-TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
-       same_key_different_epoch_io_high_low_co_low_high) { // NOLINT
+TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLINT
+       io_high_low_) { // NOLINT
     /**
      * There are two long tx.
      * They are different epoch.
@@ -148,8 +84,8 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(long_insert_insert_conflict_diff_epoch_test,        // NOLINT
-       same_key_different_epoch_io_low_high_co_low_high) { // NOLINT
+TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLINT
+       io_low_high) { // NOLINT
     /**
      * There are two long tx.
      * They are different epoch.

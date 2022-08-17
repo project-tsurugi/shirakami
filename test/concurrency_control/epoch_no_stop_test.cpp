@@ -39,42 +39,25 @@ private:
 
 TEST_F(epoch_no_stop_test, sleep_to_watch_change_epoch) { // NOLINT
     epoch::epoch_t first = epoch::get_global_epoch();
-    sleepMs(PARAM_EPOCH_TIME * 3);
     epoch::epoch_t second = epoch::get_global_epoch();
-    ASSERT_NE(first, second);
+    while (first == second) {
+        _mm_pause();
+        second = epoch::get_global_epoch();
+    }
     LOG(INFO) << "first epoch " << first << ", second epoch " << second;
 }
 
-TEST_F(epoch_no_stop_test, check_no_or_one_change_epoch) { // NOLINT
-    Token token{};
-    ASSERT_EQ(enter(token), Status::OK);
-    epoch::epoch_t first = epoch::get_global_epoch();
-    sleepMs(PARAM_EPOCH_TIME * 2);
-    epoch::epoch_t second = epoch::get_global_epoch();
-    ASSERT_NE(first, second);
-    LOG(INFO) << "first epoch " << first << ", second epoch " << second;
-    tx_begin({token}); // load latest epoch
-    first = epoch::get_global_epoch();
-    sleepMs(PARAM_EPOCH_TIME * 2);
-    /**
-     * Epoch increment condition is that all worker load latest epoch. 
-     * But token's worker is also sleeping 1 sec.
-     * So global epoch is changed at most 1.
-     */
-    second = epoch::get_global_epoch();
-    ASSERT_NE(first, second);
-    LOG(INFO) << "first epoch " << first << ", second epoch " << second;
-    ASSERT_EQ(leave(token), Status::OK);
-}
-
-TEST_F(epoch_no_stop_test, check_progress_of_step_epoch) { // NOLINT
+TEST_F(epoch_no_stop_test,                          // NOLINT
+       check_progress_of_step_epoch_by_bg_thread) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti{static_cast<session*>(s)};
     auto first_epoch{ti->get_step_epoch()};
-    sleepMs(PARAM_EPOCH_TIME * 2);
     auto second_epoch{ti->get_step_epoch()};
-    ASSERT_NE(first_epoch, second_epoch);
+    while (first_epoch == second_epoch) {
+        _mm_pause();
+        second_epoch = ti->get_step_epoch();
+    }
     LOG(INFO) << first_epoch << " " << second_epoch;
     ASSERT_EQ(Status::OK, leave(s));
 }

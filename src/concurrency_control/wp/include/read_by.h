@@ -29,11 +29,10 @@ public:
 
     /**
      * @brief get equal epoch's read_by
-     * @param[in] epoch 
-     * @param[in] ltx_id 
+     * @param[in] token 
      * @return body_elem_type
      */
-    bool is_exist(epoch::epoch_t epoch, std::size_t ltx_id);
+    bool is_exist(Token token);
 
     void push(body_elem_type elem);
 

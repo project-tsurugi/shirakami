@@ -77,9 +77,10 @@ TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
       */
     ASSERT_EQ(Status::OK, abort(s));
     // wait unhook by background thread
-    sleep(1);
     Record* rec_ptr{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, k, rec_ptr));
+    while (get<Record>(st, k, rec_ptr) != Status::WARN_NOT_FOUND) {
+        _mm_pause();
+    }
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

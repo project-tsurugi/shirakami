@@ -345,7 +345,6 @@ void register_read_by(session* const ti) {
 
 Status verify_read_by(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
-    auto this_id = ti->get_long_tx_id();
 
     // forwarding verify
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
@@ -418,7 +417,7 @@ Status verify_read_by(session* const ti) {
         point_read_by_long* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
-            if (rbp->is_exist(this_epoch, this_id)) {
+            if (rbp->is_exist(ti)) {
                 return Status::ERR_VALIDATION;
             }
         } else {

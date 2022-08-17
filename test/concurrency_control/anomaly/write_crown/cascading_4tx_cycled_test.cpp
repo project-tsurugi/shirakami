@@ -27,11 +27,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class write_crown_test : public ::testing::Test { // NOLINT
+class cascading_4tx_cycled_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-anomaly-"
-                                  "write_crown-write_crown_test");
+                                  "write_crown-cascading_4tx_cycled_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -46,8 +46,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(write_crown_test, all) { // NOLINT
-                                // create table
+TEST_F(cascading_4tx_cycled_test, all) { // NOLINT
+                                         // create table
     // ==========
     // prepare
     Storage sta{};
