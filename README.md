@@ -31,10 +31,12 @@ ninja
 ```
 
 Available options:
+* `-DBUILD_BENCHMARK=OFF`
+   * Never build benchmark programs (default: `ON`)
 * `-DBUILD_TESTS=OFF`
-   * Never build test programs
+   * Never build test programs (default: `ON`)
 * `-DBUILD_DOCUMENTS=OFF`
-   * Never build documents by doxygen
+   * Never build documents by doxygen (default: `ON`)
 * `-DBUILD_SHARED_LIBS=OFF`
    * Create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>`

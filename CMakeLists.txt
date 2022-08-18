@@ -21,6 +21,7 @@ project(shirakami
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+option(BUILD_BENCHMARK "Build benchmark programs" ON)
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_DOCUMENTS "Build documents" ON)
 
@@ -66,10 +67,6 @@ include(CompileOptions)
 include(InstallOptions)
 include(Tests)
 
-if (BUILD_TESTS)
-    enable_testing()
-endif ()
-
 add_library(api INTERFACE)
 
 target_include_directories(api
@@ -111,13 +108,18 @@ install(
 )
 
 add_subdirectory(src)
-add_subdirectory(bench)
 add_subdirectory(third_party)
 add_subdirectory(third_party/hopscotch-map)
 
+if (BUILD_BENCHMARK)
+    add_subdirectory(bench)
+endif ()
+
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif ()
+
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
 endif ()
