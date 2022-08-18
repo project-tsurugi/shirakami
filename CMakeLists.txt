@@ -113,10 +113,10 @@ install(
 add_subdirectory(src)
 add_subdirectory(bench)
 add_subdirectory(third_party)
+add_subdirectory(third_party/hopscotch-map)
 
 if (BUILD_TESTS)
     add_subdirectory(test)
-    add_subdirectory(third_party/hopscotch-map)
 endif ()
 if (BUILD_DOCUMENTS)
     add_subdirectory(doxygen)
