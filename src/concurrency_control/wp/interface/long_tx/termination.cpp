@@ -197,18 +197,30 @@ static inline void expose_local_write(session* ti) {
                     rec_ptr->set_tid(ctid);
                 } else {
                     // case: middle of list
+                    auto version_creation = [&wso, ctid](version* pre_ver,
+                                                         version* ver) {
+                        std::string vb{};
+                        if (wso.get_op() != OP_TYPE::DELETE) {
+                            // load payload if not delete.
+                            wso.get_value(vb);
+                        }
+                        version* new_v{new version(ctid, vb, ver)};
+                        pre_ver->set_next(new_v);
+                    };
                     should_log = false;
                     version* pre_ver{rec_ptr->get_latest()};
                     version* ver{rec_ptr->get_latest()->get_next()};
-                    tid_word tid{ver->get_tid()};
                     for (;;) {
+                        if (ver == nullptr) {
+                            // version creation
+                            version_creation(pre_ver, ver);
+                            break;
+                        }
+                        // checking version exist. check tid.
+                        tid_word tid{ver->get_tid()};
                         if (tid.get_epoch() < ti->get_valid_epoch()) {
-                            std::string vb{};
-                            if (wso.get_op() != OP_TYPE::DELETE) {
-                                wso.get_value(vb);
-                            }
-                            version* new_v{new version(ctid, vb, ver)};
-                            pre_ver->set_next(new_v);
+                            // version creation
+                            version_creation(pre_ver, ver);
                             break;
                         }
                         if (tid.get_epoch() == ti->get_valid_epoch()) {
@@ -217,7 +229,6 @@ static inline void expose_local_write(session* ti) {
                         }
                         pre_ver = ver;
                         ver = ver->get_next();
-                        tid = ver->get_tid();
                     }
                     rec_ptr->get_tidw_ref().unlock();
                 }
@@ -417,9 +428,7 @@ Status verify_read_by(session* const ti) {
         point_read_by_long* rbp{};
         auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
         if (rc == Status::OK) {
-            if (rbp->is_exist(ti)) {
-                return Status::ERR_VALIDATION;
-            }
+            if (rbp->is_exist(ti)) { return Status::ERR_VALIDATION; }
         } else {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
