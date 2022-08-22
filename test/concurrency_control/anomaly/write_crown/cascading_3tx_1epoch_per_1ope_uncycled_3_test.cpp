@@ -77,6 +77,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_3_test, all) { // NOLINT
     auto init_db = [&s, &v, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, v.at(0)));
+        ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stz, z, v.at(0)));
