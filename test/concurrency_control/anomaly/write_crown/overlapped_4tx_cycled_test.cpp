@@ -13,6 +13,8 @@
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/version.h"
 
 #include "shirakami/interface.h"
@@ -85,6 +87,7 @@ TEST_F(overlapped_4tx_cycled_test, all) { // NOLINT
     std::string buf{};
     // ==========
 
+#if 0
     // ==========
     // note: o is occ, l is ltx
     // test case 1
@@ -185,6 +188,258 @@ TEST_F(overlapped_4tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
     ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+
+    // cleanup
+    init_db();
+
+    // test case 3
+    // oolo
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3),
+                                    transaction_options::transaction_type::LONG,
+                                    {sta, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::OK, commit(s.at(1)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(3));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
+    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+
+    // cleanup
+    init_db();
+
+    // test case 4
+    // oloo
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(2),
+                                    transaction_options::transaction_type::LONG,
+                                    {stz, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(4));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
+    ASSERT_EQ(buf, v.at(4));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+
+    // cleanup
+    init_db();
+
+    // test case 5
+    // looo
+    ASSERT_EQ(Status::OK, tx_begin({s.at(1),
+                                    transaction_options::transaction_type::LONG,
+                                    {sty, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::OK, commit(s.at(1)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(3));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(4));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
+    ASSERT_EQ(buf, v.at(3));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+
+    // cleanup
+    init_db();
+
+    // test case 6
+    // ooll
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3),
+                                    transaction_options::transaction_type::LONG,
+                                    {sta, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(4),
+                                    transaction_options::transaction_type::LONG,
+                                    {stx, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(3));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(4));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, commit(s.at(0)));
+
+    // cleanup
+    init_db();
+
+#endif
+    // test case 7
+    // olol
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(2),
+                                    transaction_options::transaction_type::LONG,
+                                    {stz, stb},
+                                    {{}, {stx, stb}}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(4),
+                                    transaction_options::transaction_type::LONG,
+                                    {stx, stb}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+
+    // verify
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
+    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(4));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
+    ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup

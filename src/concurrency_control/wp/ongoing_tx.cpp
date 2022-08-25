@@ -5,7 +5,7 @@
 namespace shirakami {
 
 Status ongoing_tx::change_epoch_without_lock(std::size_t const tx_id,
-                                 epoch::epoch_t const new_ep) {
+                                             epoch::epoch_t const new_ep) {
     for (auto&& elem : tx_info_) {
         if (elem.second == tx_id) {
             elem.first = new_ep;
