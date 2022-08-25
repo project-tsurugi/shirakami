@@ -60,4 +60,23 @@ TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(insert_delete_scan, delete_insert_delete_scan) { // NOLINT
+    Storage st{};
+    create_storage("", st);
+    std::string k("k");   // NOLINT
+    std::string v("v");   // NOLINT
+    std::string v2("v2"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v2));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ScanHandle hd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
+}
+
 } // namespace shirakami::testing

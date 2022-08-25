@@ -142,4 +142,23 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
         }
     }
 }
+
+TEST_F(insert_after_delete, delete_insert_delete_search) { // NOLINT
+    Storage st{};
+    create_storage("", st);
+    std::string k("k");   // NOLINT
+    std::string v("v");   // NOLINT
+    std::string v2("v2"); // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v2));
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, k, vb));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+}
+
 } // namespace shirakami::testing

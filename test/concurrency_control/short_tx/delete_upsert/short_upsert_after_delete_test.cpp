@@ -72,27 +72,4 @@ TEST_F(upsert_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 
-TEST_F(upsert_after_delete, delete_insert_delete) { // NOLINT
-    create_storage("", st);
-    std::string k("k");   // NOLINT
-    std::string v("v");   // NOLINT
-    std::string v2("v2"); // NOLINT
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, st, k, v));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    ASSERT_EQ(Status::OK, insert(s, st, k, v2));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
-    {
-        std::string vb{};
-        ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, k, vb));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
-    {
-        ScanHandle hd{};
-        ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "",
-                scan_endpoint::INF, hd));
-    }
-}
 } // namespace shirakami::testing

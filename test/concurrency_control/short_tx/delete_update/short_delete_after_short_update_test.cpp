@@ -47,14 +47,8 @@ TEST_F(short_delete_after_short_update, delete_after_update) { // NOLINT
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));
 
-    // exist yet
-    std::string vb{};
-    ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
-
     // different tx
-    ASSERT_EQ(Status::OK, update(s, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
 
     ASSERT_EQ(Status::OK, commit(s));

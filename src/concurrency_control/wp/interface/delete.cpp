@@ -50,7 +50,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
-        ti->get_write_set().erase(wso);
+        wso->set_op(OP_TYPE::DELETE);
         return Status::WARN_CANCEL_PREVIOUS_UPDATE;
     }
     if (wso->get_op() == OP_TYPE::DELETE) { return Status::OK; }
