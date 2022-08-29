@@ -250,16 +250,18 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 abort_process();
                 return Status::ERR_PHANTOM;
             }
-        } else {
+        } else if (wso_ptr->get_op() == OP_TYPE::UPDATE ||
+                   wso_ptr->get_op() == OP_TYPE::DELETE) {
             rec_ptr->get_tidw_ref().lock();
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++not_insert_locked_num;
-            if ((wso_ptr->get_op() == OP_TYPE::UPDATE ||
-                 wso_ptr->get_op() == OP_TYPE::DELETE) &&
-                rec_ptr->get_tidw_ref().get_absent()) {
+            if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
+        } else {
+            LOG(ERROR) << "programming error";
+            return Status::ERR_FATAL;
         }
     }
 
