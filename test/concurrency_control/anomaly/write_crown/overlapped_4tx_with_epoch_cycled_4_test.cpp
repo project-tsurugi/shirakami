@@ -29,11 +29,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class overlapped_4tx_cycled_4_test : public ::testing::Test { // NOLINT
+class overlapped_4tx_with_epoch_cycled_4_test
+    : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-anomaly-"
-                                  "write_crown-overlapped_4tx_cycled_4_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-anomaly-"
+                "write_crown-overlapped_4tx_with_epoch_cycled_4_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,8 +50,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(overlapped_4tx_cycled_4_test, all) { // NOLINT
-                                            // create table
+TEST_F(overlapped_4tx_with_epoch_cycled_4_test, all) { // NOLINT
+                                                       // create table
     // ==========
     // prepare
     Storage sta{};
