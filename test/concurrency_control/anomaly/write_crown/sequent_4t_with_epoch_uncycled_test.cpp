@@ -29,11 +29,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class sequent_4t_with_epoch_test : public ::testing::Test { // NOLINT
+class sequent_4t_with_epoch_uncycled_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-anomaly-"
-                                  "write_crown-sequent_4t_with_epoch_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-anomaly-"
+                "write_crown-sequent_4t_with_epoch_uncycled_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,8 +49,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
-                                      // create table
+TEST_F(sequent_4t_with_epoch_uncycled_test, all) { // NOLINT
+                                                   // create table
     // ==========
     // prepare
     Storage sta{};
@@ -98,9 +99,9 @@ TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {stz, sta}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
     ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
@@ -113,24 +114,23 @@ TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
-                                    {stx, sta}}));
+                                    {sta}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
@@ -165,24 +165,23 @@ TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
-                                    {stx, sta}}));
+                                    {sta}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
