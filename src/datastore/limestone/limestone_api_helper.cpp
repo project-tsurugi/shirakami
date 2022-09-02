@@ -20,13 +20,13 @@ create_channel(limestone::api::datastore* ds,
     return &ret;
 }
 
-limestone::api::snapshot* get_snapshot(limestone::api::datastore* ds) {
+std::unique_ptr<limestone::api::snapshot> get_snapshot(limestone::api::datastore* ds) {
     if (ds == nullptr) {
         LOG(ERROR) << "programming error";
         return nullptr;
     }
     //log_entry << "datastore::get_snapshot()";
-    auto* ret = ds->get_snapshot();
+    auto ret = ds->get_snapshot();
     //log_exit << "datastore::get_snapshot(): ret: " << ret;
     return ret;
 }
@@ -41,13 +41,13 @@ void ready(limestone::api::datastore* ds) {
     log_exit << "datastore::ready()";
 }
 
-void recover(limestone::api::datastore* ds, bool overwrite) {
+void recover(limestone::api::datastore* ds) {
     if (ds == nullptr) {
         LOG(ERROR) << "programming error";
         return;
     }
-    log_entry << "datastore::recover(): overwrite: " << overwrite;
-    ds->recover(overwrite);
+    log_entry << "datastore::recover()";
+    ds->recover();
     log_exit << "datastore::recover()";
 }
 

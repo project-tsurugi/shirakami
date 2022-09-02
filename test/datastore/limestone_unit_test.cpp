@@ -178,21 +178,22 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     datastore->ready();
     d_ptr = datastore.get();
 
-    limestone::api::snapshot* ss{d_ptr->get_snapshot()};
-    ASSERT_TRUE(ss->get_cursor().next()); // point first
-    ASSERT_EQ(ss->get_cursor().storage(), st);
+    auto ss = d_ptr->get_snapshot();
+    auto cursor = ss->get_cursor();
+    ASSERT_TRUE(cursor->next()); // point first
+    ASSERT_EQ(cursor->storage(), st);
     std::string buf{};
-    ss->get_cursor().key(buf);
+    cursor->key(buf);
     ASSERT_EQ(buf, "k");
-    ss->get_cursor().value(buf);
+    cursor->value(buf);
     ASSERT_EQ(buf, "v");
-    ASSERT_TRUE(ss->get_cursor().next()); // point second
-    ASSERT_EQ(ss->get_cursor().storage(), st);
-    ss->get_cursor().key(buf);
+    ASSERT_TRUE(cursor->next()); // point second
+    ASSERT_EQ(cursor->storage(), st);
+    cursor->key(buf);
     ASSERT_EQ(buf, "k2");
-    ss->get_cursor().value(buf);
+    cursor->value(buf);
     ASSERT_EQ(buf, "v2");
-    ASSERT_FALSE(ss->get_cursor().next()); // point none
+    ASSERT_FALSE(cursor->next()); // point none
 }
 
 TEST_F(limestone_unit_test, persistent_callback) { // NOLINT

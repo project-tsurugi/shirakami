@@ -22,11 +22,11 @@ limestone::api::log_channel*
 create_channel(limestone::api::datastore* ds,
                boost::filesystem::path const& location);
 
-limestone::api::snapshot* get_snapshot(limestone::api::datastore* ds);
+std::unique_ptr<limestone::api::snapshot> get_snapshot(limestone::api::datastore* ds);
 
 void ready(limestone::api::datastore* ds);
 
-void recover(limestone::api::datastore* ds, bool overwrite);
+void recover(limestone::api::datastore* ds);
 
 void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep);
 

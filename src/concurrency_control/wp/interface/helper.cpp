@@ -119,7 +119,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
         lpwal::remove_under_log_dir();
     } else {
         // create snapshot for next start.
-        recover(datastore::get_datastore(), true);
+        recover(datastore::get_datastore());
     }
     lpwal::clean_up_metadata();
 #endif
@@ -195,7 +195,7 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
             limestone::api::configuration(data_locations, metadata_path));
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
-        recover(datastore::get_datastore(), false);
+        recover(datastore::get_datastore());
     }
     datastore::get_datastore()->add_persistent_callback(
             epoch::set_durable_epoch); // should execute before ready()
