@@ -41,7 +41,7 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
 }
 
 void recovery_from_datastore() {
-    limestone::api::snapshot* ss(get_snapshot(get_datastore()));
+    auto ss = get_snapshot(get_datastore());
 
     /**
      * The cursor point the first entry at calling first next(). 
@@ -51,12 +51,14 @@ void recovery_from_datastore() {
         LOG(ERROR) << "programming error";
     }
     std::vector<Storage> st_list{};
-    while (ss->get_cursor().next()) { // the next body is none.
-        Storage st{ss->get_cursor().storage()};
+
+    auto cursor = ss->get_cursor();
+    while (cursor->next()) { // the next body is none.
+        Storage st{cursor->storage()};
         std::string key{};
         std::string val{};
-        ss->get_cursor().key(key);
-        ss->get_cursor().value(val);
+        cursor->key(key);
+        cursor->value(val);
         // check storage exist
         if (st != storage::meta_storage) {
             shirakami::storage::register_storage(st);
