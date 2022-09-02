@@ -157,7 +157,7 @@ Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
         auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
         if (ep_id.second < ti->get_long_tx_id()) {
             // the wp is higher priority long tx than this.
-            if (ti->get_read_version_max_epoch() > ep_id.first) {
+            if (ti->get_read_version_max_epoch() >= ep_id.first) {
                 /** 
                   * If this tx try put before, old read operation of this will 
                   * be invalid. 
