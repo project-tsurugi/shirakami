@@ -9,6 +9,8 @@
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h" // for size
 
+#include "storage.h"
+
 #include "database/include/database.h"
 #include "datastore/limestone/include/limestone_api_helper.h"
 
@@ -25,7 +27,7 @@ namespace shirakami::lpwal {
   * @brief It executes log_channel_.add_entry for entire logs_.
   */
 void add_entry_from_logs(handler& handle) {
-    // send logs to set callback
+    // send logs to set callback if needed
     bool enable_callback{get_log_event_callback()};
     std::vector<shirakami::log_record> logs_for_callback; // NOLINT
     if (enable_callback) {
@@ -35,11 +37,10 @@ void add_entry_from_logs(handler& handle) {
     // send logs to limestone
     for (auto&& log_elem : handle.get_logs()) {
         if (log_elem.get_operation() == log_operation::DELETE) {
-            // this is delete
+            // delete
             // todo for delete, wait for limestone impl
         } else {
-            // this is write
-            // now no source
+            // update / insert / upsert
             add_entry(handle.get_log_channel_ptr(),
                       static_cast<limestone::api::storage_id_type>(
                               log_elem.get_st()),
@@ -53,16 +54,17 @@ void add_entry_from_logs(handler& handle) {
                 handle.set_last_flushed_epoch(
                         log_elem.get_wv().get_major_write_version());
             }
-            if (enable_callback) {
-                if (log_elem.get_st() < pow(2, 32)) { // TODO REMOVE // NOLINT
-                    logs_for_callback.emplace_back(
-                            log_elem.get_operation(), log_elem.get_key(),
-                            log_elem.get_val(),
-                            log_elem.get_wv().get_major_write_version(),
-                            log_elem.get_wv().get_minor_write_version(),
-                            log_elem.get_st());
-                }
-            }
+        }
+
+        // log for callback
+        if (enable_callback &&
+            log_elem.get_st() != shirakami::storage::meta_storage) {
+            logs_for_callback.emplace_back(
+                    log_elem.get_operation(), log_elem.get_key(),
+                    log_elem.get_val(),
+                    log_elem.get_wv().get_major_write_version(),
+                    log_elem.get_wv().get_minor_write_version(),
+                    log_elem.get_st());
         }
     }
 
@@ -104,20 +106,16 @@ void daemon_work() {
                 }
             }
         }
-        if (min_flush_ep != 0) {
-            // set durable epoch
-            auto lep{epoch::get_durable_epoch()};
-            if (lep >= min_flush_ep) {
-                lpwal::set_durable_epoch(min_flush_ep - 1);
-                can_compute_min_flush_ep = true;
-                min_flush_ep = 0;
-            } else {
-                // stop compute because lep may not overtake min_flush_ep
-                can_compute_min_flush_ep = false;
-            }
-        } else {
+        // set durable epoch
+        auto lep{epoch::get_durable_epoch()};
+        if (lep >= min_flush_ep) {
+            lpwal::set_durable_epoch(min_flush_ep - 1);
+            // reset tool for computing durable epoch
             can_compute_min_flush_ep = true;
             min_flush_ep = 0;
+        } else {
+            // stop compute because lep may not overtake min_flush_ep
+            can_compute_min_flush_ep = false;
         }
     }
 }
@@ -149,43 +147,46 @@ void flush_log(Token token) {
         // register epoch before flush work (*1)
         auto ce{epoch::get_global_epoch()};
 
-        if (handle.get_logs().empty()) {
-            // optimizations
-            if (ti->get_visible()) {
-                // the session is opened
-                if (ti->get_tx_began()) {
-                    if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::SHORT) {
-                        handle.set_last_flushed_epoch(ti->get_step_epoch());
-                    } else if (ti->get_tx_type() ==
-                               transaction_options::transaction_type::LONG) {
-                        auto oep{ongoing_tx::get_lowest_epoch()};
-                        if (oep == 0) {
-                            // the ltx was committed without logging and no logs
-                            handle.set_last_flushed_epoch(ce);
-                        } else {
-                            handle.set_last_flushed_epoch(oep);
-                        }
-                    } else if (ti->get_tx_type() ==
-                               transaction_options::transaction_type::
-                                       READ_ONLY) {
-                        // read only
-                        handle.set_last_flushed_epoch(ce);
-                    } else {
-                        // unreachable path
-                        LOG(ERROR) << "programming error";
-                    }
-                } else {
-                    handle.set_last_flushed_epoch(ce);
-                }
-            } else {
-                // the session is not opened
-                handle.set_last_flushed_epoch(ce);
-            }
-        } else {
+        // flush log if exist
+        if (!handle.get_logs().empty()) {
             begin_session(handle.get_log_channel_ptr());
             add_entry_from_logs(handle);
             end_session(handle.get_log_channel_ptr());
+        }
+
+        // update last flushed epoch
+        if (ti->get_visible()) {
+            // the session is opened
+            // If this block is executed by daemon thread, this is optimization.
+            if (ti->get_tx_began()) {
+                if (ti->get_tx_type() ==
+                    transaction_options::transaction_type::SHORT) {
+                    handle.set_last_flushed_epoch(ti->get_step_epoch());
+                } else if (ti->get_tx_type() ==
+                           transaction_options::transaction_type::LONG) {
+                    auto oep{ongoing_tx::get_lowest_epoch()};
+                    if (oep == 0) {
+                        // the ltx was committed without logging and no logs
+                        handle.set_last_flushed_epoch(ce);
+                    } else {
+                        handle.set_last_flushed_epoch(oep);
+                        // It may set older value than before, but no problem.
+                    }
+                } else if (ti->get_tx_type() ==
+                           transaction_options::transaction_type::READ_ONLY) {
+                    // read only
+                    handle.set_last_flushed_epoch(ce);
+                } else {
+                    // unreachable path
+                    LOG(ERROR) << "programming error";
+                }
+            } else {
+                // if tx not begin. daemon thread uses this code.
+                handle.set_last_flushed_epoch(ce);
+            }
+        } else {
+            // the session is not opened. daemon thread uses this code.
+            handle.set_last_flushed_epoch(ce);
         }
 
         handle.get_mtx_logs().unlock();

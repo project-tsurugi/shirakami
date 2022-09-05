@@ -541,7 +541,8 @@ extern Status commit(session* const ti, // NOLINT
     expose_local_write(ti);
 #if defined(PWAL)
     auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
-    if (oldest_log_epoch != 0 &&
+    // think the wal buffer is empty due to background thread's work
+    if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
         oldest_log_epoch != epoch::get_global_epoch()) {
         // should flush
         shirakami::lpwal::flush_log(static_cast<void*>(ti));

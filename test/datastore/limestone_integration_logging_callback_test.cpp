@@ -130,7 +130,7 @@ TEST_F(limestone_integration_logging_callback_test,               // NOLINT
 
     fin(false);
 
-    ASSERT_EQ(count, 4);
+    ASSERT_EQ(count, 6);
 }
 
 TEST_F(limestone_integration_logging_callback_test,              // NOLINT
@@ -183,7 +183,7 @@ TEST_F(limestone_integration_logging_callback_test,              // NOLINT
 
     fin(false);
 
-    ASSERT_EQ(count, 4);
+    ASSERT_EQ(count, 6);
 }
 
 } // namespace shirakami::testing
