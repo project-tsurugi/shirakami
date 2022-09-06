@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/record.h"
@@ -29,12 +30,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class batch_only_search_upsert_mt_test : public ::testing::Test { // NOLINT
+class long_search_upsert_mt_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-interface-search_upsert-"
-                "batch_only_search_upsert_mt_test");
+                "shirakami-test-concurrency_control-long_tx-search_upsert-"
+                "long_search_upsert_mt_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -60,15 +61,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
     while (!is_ready(readys)) { _mm_pause(); }
 }
 
-void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
-TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
+TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
     const int trial_n{2};
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -106,20 +99,20 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
         TX_BEGIN: // NOLINT
-            ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+            ASSERT_EQ(tx_begin({s,
+                                transaction_options::transaction_type::LONG,
+                                {st}}),
+                      Status::OK);
             wait_epoch_update();
 
             for (auto&& elem : keys) {
                 std::string vb{};
                 for (;;) {
                     auto rc{search_key(s, st, elem, vb)};
-                    if (rc == Status::OK) { break; }
-                    if (rc == Status::ERR_FAIL_WP ||
-                        rc == Status::WARN_NOT_FOUND) {
-                        abort(s);
-                        goto TX_BEGIN; // NOLINT
+                    if (rc == Status::OK) {
+                        break;
                     } else {
-                        LOG(FATAL);
+                        LOG(FATAL) << rc;
                     }
                 }
 
@@ -128,7 +121,10 @@ TEST_F(batch_only_search_upsert_mt_test, batch_rmw) { // NOLINT
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
-                ASSERT_EQ(shirakami::tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+                ASSERT_EQ(shirakami::tx_begin(
+                                  {s,
+                                   transaction_options::transaction_type::LONG,
+                                   {st}}),
                           Status::WARN_ALREADY_BEGIN);
                 ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
             }

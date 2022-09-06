@@ -45,7 +45,8 @@ void work_manager() {
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_step_epoch());
-                if (se.get_tx_type() != transaction_options::transaction_type::SHORT) {
+                if (se.get_tx_type() !=
+                    transaction_options::transaction_type::SHORT) {
                     min_batch_epoch =
                             std::min(min_batch_epoch, se.get_valid_epoch());
                 }
@@ -71,7 +72,10 @@ void work_manager() {
 version* find_latest_invisible_version_from_batch(Record* rec_ptr,
                                                   version*& pre_ver) {
     version* ver{rec_ptr->get_latest()};
-    if (ver == nullptr) { LOG(FATAL); }
+    if (ver == nullptr) {
+        // assert. unreachable path
+        LOG(ERROR) << "programming error";
+    }
     for (;;) {
         ver = ver->get_next();
         if (ver == nullptr) { return nullptr; }
@@ -204,9 +208,7 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
     }
     // Some occ maybe reads the payload of version.
     for (;;) {
-        if (ver == nullptr ||
-            (ver->get_tid().get_epoch() <= get_min_step_epoch() &&
-             ver->get_tid().get_epoch() <= get_min_batch_epoch())) {
+        if ((ver->get_tid().get_epoch() <= get_min_step_epoch())) {
             // ver can be watched yet
             pre_ver = ver;
             ver = ver->get_next();
@@ -214,8 +216,10 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
         }
         pre_ver = ver;
         ver = ver->get_next();
+        if (ver == nullptr) { return; }
     }
     if (ver != nullptr) {
+        // pruning versions
         pre_ver->set_next(nullptr);
         delete_version_list(ver);
     }

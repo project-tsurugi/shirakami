@@ -27,10 +27,11 @@ extern Status version_traverse_and_read(session* const ti,
                                         Record* const rec_ptr,
                                         std::string& value,
                                         bool const read_value) {
+RETRY:
     // version function
-    version* ver{};
-    bool is_latest{false};
-    tid_word f_check{};
+    version* ver = nullptr;
+    bool is_latest = false;
+    tid_word f_check = {};
     auto rc = version_function_with_optimistic_check(
             rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check);
 
@@ -56,11 +57,12 @@ extern Status version_traverse_and_read(session* const ti,
         }
         /**
          * else: fail to do optimistic read latest version. retry version 
-         * function
+         * function.
+         * The latest version may be the version which this tx should read, 
+         * so this tx must wait unlocking because it may read invalid state with
+         * locking.
          */
-        ver = rec_ptr->get_latest();
-        version_function_without_optimistic_check(ti->get_valid_epoch(), ver);
-        if (ver == nullptr) { return Status::WARN_NOT_FOUND; }
+        goto RETRY; // NOLINT
     }
 
     // read non-latest version after version function
