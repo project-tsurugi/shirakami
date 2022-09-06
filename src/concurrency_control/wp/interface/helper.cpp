@@ -114,14 +114,11 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
             }
         }
     }
-    if (!lpwal::get_log_dir_pointed()) {
-        // log dir was not pointed. So remove log dir
-        lpwal::remove_under_log_dir();
-    } else {
+    if (lpwal::get_log_dir_pointed()) {
         // create snapshot for next start.
         recover(datastore::get_datastore());
     }
-    lpwal::clean_up_metadata();
+
 #endif
 
     // about tx engine
@@ -129,6 +126,12 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     epoch::fin();
 #ifdef PWAL
     datastore::get_datastore()->shutdown(); // this should after epoch::fin();
+    // cleanup about limestone
+    if (!lpwal::get_log_dir_pointed()) {
+        // log dir was not pointed. So remove log dir
+        lpwal::remove_under_log_dir();
+    }
+    lpwal::clean_up_metadata();
 #endif
     delete_all_records(); // This should be before wp::fin();
     wp::fin();            // note: this use yakushima.
