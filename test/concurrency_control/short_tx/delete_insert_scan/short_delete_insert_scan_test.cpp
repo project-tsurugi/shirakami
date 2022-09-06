@@ -103,13 +103,10 @@ TEST_F(insert_delete_scan, insert_delete_upsert_scan) { // NOLINT
             scan_endpoint::INF, handle));
     std::string sb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
-    ASSERT_NE(sb, "k"); // NOLINT
-    ASSERT_EQ(Status::OK, next(s, handle));
-    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
-    ASSERT_NE(sb, "k2"); // NOLINT
-    ASSERT_EQ(Status::OK, close_scan(s, handle));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
+    EXPECT_EQ(sb, "k"); // NOLINT
+    EXPECT_EQ(Status::OK, close_scan(s, handle));
+    EXPECT_EQ(Status::OK, commit(s)); // NOLINT
+    EXPECT_EQ(Status::OK, leave(s));
 }
 
 } // namespace shirakami::testing
