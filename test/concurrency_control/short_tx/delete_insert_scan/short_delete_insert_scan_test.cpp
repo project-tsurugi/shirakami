@@ -79,4 +79,34 @@ TEST_F(insert_delete_scan, delete_insert_delete_scan) { // NOLINT
                                                 "", scan_endpoint::INF, hd));
 }
 
+TEST_F(insert_delete_scan, insert_delete_upsert_scan) { // NOLINT
+    create_storage("", storage);
+    std::string k("k");  // NOLINT
+    std::string v("v");      // NOLINT
+    std::string k2("k2");  // NOLINT
+    std::string v2("v2");      // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, storage, k2, v2));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    std::string vb{};      // NOLINT
+    ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
+    ASSERT_EQ(vb, v);
+    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, storage, k));
+    ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
+
+    ScanHandle handle{};
+    ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, "",
+            scan_endpoint::INF, handle));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    EXPECT_EQ(sb, "k"); // NOLINT
+    EXPECT_EQ(Status::OK, close_scan(s, handle));
+    EXPECT_EQ(Status::OK, commit(s)); // NOLINT
+    EXPECT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
