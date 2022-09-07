@@ -17,8 +17,8 @@
 namespace shirakami {
 
 static inline Status insert_process(session* const ti, Storage st,
-                             const std::string_view key,
-                             const std::string_view val) {
+                                    const std::string_view key,
+                                    const std::string_view val) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
     yakushima::node_version64* nvp{};
@@ -76,6 +76,16 @@ Status upsert(Token token, Storage storage, const std::string_view key,
                 ti->process_before_finish_step();
                 return Status::OK;
             }
+
+            /**
+             * If the target record has been deleted, change it to insert. 
+             * The key needs to be present for later read own writes since the 
+             * scan operation is performed on an existing key and may look up 
+             * the local write set with that key.
+             */
+            tid_word dummy_tid{};
+            rc = try_deleted_to_inserting(ti->get_tx_type(), rec_ptr,
+                                          dummy_tid);
 
             // prepare update
             ti->get_write_set().push(

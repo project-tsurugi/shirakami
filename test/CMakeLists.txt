@@ -56,6 +56,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/delete_insert_scan/*.cpp"
         "concurrency_control/short_tx/delete_insert_search/*.cpp"
         "concurrency_control/short_tx/delete_insert_search_upsert/*.cpp"
+        "concurrency_control/short_tx/delete_insert_search_upsert_scan/*.cpp"
         "concurrency_control/short_tx/delete_scan_upsert/*.cpp"
         "concurrency_control/short_tx/delete_search/*.cpp"
         "concurrency_control/short_tx/delete_update/*.cpp"
