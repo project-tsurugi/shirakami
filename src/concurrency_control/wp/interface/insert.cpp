@@ -79,13 +79,16 @@ Status insert(Token const token, Storage const storage,
             }
 
             tid_word found_tid{};
-            rc = try_deleted_to_inserting(ti->get_tx_type(), rec_ptr,
-                                          found_tid);
+            rc = try_deleted_to_inserting(storage, key, rec_ptr, found_tid);
             if (rc == Status::OK) {
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
                 ti->process_before_finish_step();
                 return Status::OK;
+            }
+            if (rc == Status::WARN_NOT_FOUND) {
+                // the rec_ptr is gced;
+                goto INSERT_PROCESS; // NOLINT
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // ==========
@@ -123,6 +126,7 @@ Status insert(Token const token, Storage const storage,
             return rc;
         }
 
+    INSERT_PROCESS:
         auto rc{insert_process(ti, storage, key, val)};
         if (rc == Status::OK) {
             ti->process_before_finish_step();

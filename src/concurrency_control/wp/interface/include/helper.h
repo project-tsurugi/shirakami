@@ -8,6 +8,8 @@
 #include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/wp.h"
 
+#include "shirakami/storage_options.h"
+
 namespace shirakami {
 
 /**
@@ -32,7 +34,9 @@ inline std::atomic<bool> initialized_{false};
     initialized_.store(tf, std::memory_order_release);
 }
 
-[[maybe_unused]] extern Status
-try_deleted_to_inserting(transaction_options::transaction_type tp, Record* rec_ptr, tid_word& found_tid);
+[[maybe_unused]] extern Status try_deleted_to_inserting(Storage st,
+                                                        std::string_view key,
+                                                        Record* rec_ptr,
+                                                        tid_word& found_tid);
 
 } // namespace shirakami

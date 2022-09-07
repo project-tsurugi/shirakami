@@ -27,6 +27,8 @@
 
 #endif
 
+#include "index/yakushima/include/interface.h"
+
 #include "shirakami/interface.h"
 
 #include "boost/filesystem/path.hpp"
@@ -376,28 +378,38 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     return Status::OK;
 }
 
-Status
-try_deleted_to_inserting([[maybe_unused]] transaction_options::transaction_type
-                                 tp, // todo remove
-                         Record* const rec_ptr, tid_word& found_tid) {
+Status try_deleted_to_inserting(Storage st, std::string_view key,
+                                Record* const rec_ptr, tid_word& found_tid) {
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     // record found_tid
     found_tid = check;
 
     // point 1: pre-check
     if (check.get_latest() && check.get_absent()) {
+        // Someone is inserting the record.
         return Status::WARN_CONCURRENT_INSERT;
     }
-    if (!check.get_absent()) { return Status::WARN_ALREADY_EXISTS; }
+    if (!check.get_absent()) {
+        // not inserting, and it exists
+        return Status::WARN_ALREADY_EXISTS;
+    }
     // The page was deleted at point 1.
 
     // lock
     rec_ptr->get_tidw_ref().lock();
 
+    // check: it can reach in index(i.e. not GCed)
+    Record* found_rec_ptr{};
+    if (Status::WARN_NOT_FOUND == get<Record>(st, key, found_rec_ptr) ||
+        rec_ptr != found_rec_ptr) {
+        rec_ptr->get_tidw_ref().unlock();
+        return Status::WARN_NOT_FOUND;
+    }
+
     // point 2: main check with lock
     tid_word tid{rec_ptr->get_tidw_ref()};
-    if (tid.get_absent()) {
-        // success
+    if (tid.get_absent() && !tid.get_latest()) {
+        // success, the record is deleted
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
         rec_ptr->get_tidw_ref().unlock();

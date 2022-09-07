@@ -84,8 +84,11 @@ Status upsert(Token token, Storage storage, const std::string_view key,
              * the local write set with that key.
              */
             tid_word dummy_tid{};
-            rc = try_deleted_to_inserting(ti->get_tx_type(), rec_ptr,
-                                          dummy_tid);
+            rc = try_deleted_to_inserting(storage, key, rec_ptr, dummy_tid);
+            if (rc == Status::WARN_NOT_FOUND) {
+                // the rec_ptr is gced.
+                goto INSERT_PROCESS; // NOLINT
+            }
 
             // prepare update
             ti->get_write_set().push(
@@ -94,6 +97,7 @@ Status upsert(Token token, Storage storage, const std::string_view key,
             return Status::OK;
         }
 
+    INSERT_PROCESS:
         rc = insert_process(ti, storage, key, val);
         if (rc != Status::WARN_CONCURRENT_INSERT) {
             ti->process_before_finish_step();
