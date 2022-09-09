@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class one_readonly_test : public ::testing::Test { // NOLINT
+class one_readonly_2_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-anomaly-"
-                                  "read_crown-one_readonly_test");
+                                  "read_crown-one_readonly_2_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,8 +48,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(one_readonly_test, all) { // NOLINT
-                                 // create table
+TEST_F(one_readonly_2_test, all) { // NOLINT
+                                   // create table
     // ==========
     // prepare
     Storage sta{};
