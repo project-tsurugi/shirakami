@@ -43,19 +43,18 @@ extern Status create_sequence(SequenceId* id, Token token = nullptr); // NOLINT
  * @brief update sequence value and version
  * @details request shirakami to make the sequence value for the specified 
  * version durable together with the associated transaction.
+ * @param[in] token the session token whose current transaction will be 
+ * associated with the sequence value and version
  * @param[in] id the sequence id whose value/version will be updated
  * @param[in] version the version of the sequence value
  * @param[in] value the new sequence value
- * @param[in] token the session token whose current transaction will be 
- * associated with the sequence value and version
  * @return Status::OK if the update operation is successful
  * @return otherwise if any error occurs
  * @warning multiple update_sequence calls to a sequence with same version 
  * number cause undefined behavior.
  */
-extern Status update_sequence(SequenceId id, SequenceVersion version,
-                              SequenceValue value,
-                              Token token = nullptr); // NOLINT
+extern Status update_sequence(Token token, SequenceId id,
+                              SequenceVersion version, SequenceValue value);
 
 /**
  * @brief read sequence value

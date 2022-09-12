@@ -11,10 +11,10 @@ Status create_sequence([[maybe_unused]] SequenceId* id,
     return Status::OK;
 }
 
-Status update_sequence([[maybe_unused]] SequenceId id,
+Status update_sequence([[maybe_unused]] Token token,
+                       [[maybe_unused]] SequenceId id,
                        [[maybe_unused]] SequenceVersion version,
-                       [[maybe_unused]] SequenceValue value,
-                       [[maybe_unused]] Token token) {
+                       [[maybe_unused]] SequenceValue value) {
     return Status::OK;
 }
 
