@@ -2,7 +2,7 @@
 適宜追加していき、草稿として日本語で書き、確定的なものは英語に直していく。
 
 - CC: concurrency control
-- epoch
+- epoch: 一次元時刻印
   - commit epoch
   - serialization epoch
 - gc
