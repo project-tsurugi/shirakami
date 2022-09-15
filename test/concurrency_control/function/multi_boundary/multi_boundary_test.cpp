@@ -48,7 +48,6 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-#if 0
 TEST_F(multi_boundary_test, parallel) { // NOLINT
                                         // create table
     // ==========
@@ -160,10 +159,8 @@ TEST_F(multi_boundary_test, parallel) { // NOLINT
     // ==========
 }
 
-#endif
-
-TEST_F(multi_boundary_test, DISABLED_monotonic_dec) { // NOLINT
-                                                      // create table
+TEST_F(multi_boundary_test, monotonic_dec) { // NOLINT
+                                             // create table
     // ==========
     // prepare
     Storage sta{};
@@ -231,7 +228,7 @@ TEST_F(multi_boundary_test, DISABLED_monotonic_dec) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, var.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -241,7 +238,7 @@ TEST_F(multi_boundary_test, DISABLED_monotonic_dec) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
-    ASSERT_EQ(buf, var.at(1));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
@@ -255,7 +252,6 @@ TEST_F(multi_boundary_test, DISABLED_monotonic_dec) { // NOLINT
     // ==========
 }
 
-#if 0
 TEST_F(multi_boundary_test, monotonic_dec_delayed) { // NOLINT
                                                      // create table
     // ==========
@@ -363,6 +359,5 @@ TEST_F(multi_boundary_test, monotonic_dec_delayed) { // NOLINT
     for (auto&& elem : s) { ASSERT_EQ(leave(elem), Status::OK); }
     // ==========
 }
-#endif
 
 } // namespace shirakami::testing

@@ -38,6 +38,7 @@ void fin() {
 }
 
 void work_manager() {
+    // compute gc timestamp
     while (!get_flag_manager_end()) {
         epoch::epoch_t min_step_epoch{epoch::max_epoch};
         epoch::epoch_t min_batch_epoch{epoch::max_epoch};

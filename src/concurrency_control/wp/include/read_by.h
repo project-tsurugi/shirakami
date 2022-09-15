@@ -36,6 +36,11 @@ public:
 
     void push(body_elem_type elem);
 
+    /**
+     * @brief show contents.
+     */
+    void print();
+
 private:
     std::shared_mutex mtx_;
 

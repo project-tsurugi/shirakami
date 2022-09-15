@@ -56,6 +56,14 @@ void point_read_by_long::push(body_elem_type const elem) {
     body_.emplace_back(elem);
 }
 
+void point_read_by_long::print() {
+    LOG(INFO) << ">> print point_read_by_long";
+    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
+        LOG(INFO) << (*itr).first << ", " << (*itr).second;
+    }
+    LOG(INFO) << "<< print point_read_by_long";
+}
+
 bool range_read_by_long::is_exist(epoch::epoch_t const ep,
                                   std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
