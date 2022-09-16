@@ -287,9 +287,8 @@ static inline void expose_local_write(session* ti) {
     }
 }
 
-static inline void
-register_wp_result_and_remove_wps(session* ti,
-                                  [[maybe_unused]] const bool was_commited) {
+static inline void register_wp_result_and_remove_wps(session* ti,
+                                                     const bool was_committed) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
@@ -311,7 +310,8 @@ register_wp_result_and_remove_wps(session* ti,
             (*out.first)
                     ->get_wp_meta_ptr()
                     ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
-                                                       ti->get_long_tx_id())) {
+                                                       ti->get_long_tx_id(),
+                                                       was_committed)) {
             LOG(FATAL);
         }
     }

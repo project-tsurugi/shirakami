@@ -87,7 +87,8 @@ public:
     Status register_wp(epoch::epoch_t ep, std::size_t id);
 
     [[nodiscard]] Status register_wp_result_and_remove_wp(epoch::epoch_t ep,
-                                                          std::size_t id);
+                                                          std::size_t id,
+                                                          bool was_committed);
 
     [[nodiscard]] Status remove_wp_without_lock(std::size_t id);
 

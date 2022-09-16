@@ -133,9 +133,9 @@ Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
     return Status::OK;
 }
 
-[[nodiscard]] Status
-wp_meta::register_wp_result_and_remove_wp(epoch::epoch_t const ep,
-                                          std::size_t const id) {
+[[nodiscard]] Status wp_meta::register_wp_result_and_remove_wp(
+        epoch::epoch_t const ep, std::size_t const id,
+        [[maybe_unused]] const bool was_committed) {
     {
         std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
         wp_result_set_.emplace_back(std::make_pair(ep, id));
