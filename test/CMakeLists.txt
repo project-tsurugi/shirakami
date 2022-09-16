@@ -83,6 +83,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/short_tx/termination/*.cpp"
         "concurrency_control/short_tx/tx_state/*.cpp"
         "database_options/*.cpp"
+        "result/*.cpp"
         "start/*.cpp"
         "shutdown/*.cpp"
         "storage/*.cpp"
