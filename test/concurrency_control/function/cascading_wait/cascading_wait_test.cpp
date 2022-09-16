@@ -126,8 +126,7 @@ TEST_F(cascading_wait_test, lazy_update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
-    // expected ok if it doesn't propagate aborted tx's boundary.
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // epoch false positive
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

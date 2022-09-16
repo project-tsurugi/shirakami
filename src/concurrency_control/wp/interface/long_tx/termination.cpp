@@ -374,8 +374,12 @@ Status verify_read_by(session* const ti) {
                     wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
             auto wp_result_epoch =
                     wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
+            auto wp_result_was_committed =
+                    wp::wp_meta::wp_result_elem_extract_was_committed(
+                            (*wp_result_itr));
             for (auto&& hid : oe.second) {
-                if (wp_result_id == hid) {
+                if (wp_result_id == hid && wp_result_was_committed) {
+                    // the overtaken ltx was committed.
                     // the itr show overtaken ltx
                     if (wp_result_epoch < ti->get_valid_epoch()) {
                         // try forwarding
