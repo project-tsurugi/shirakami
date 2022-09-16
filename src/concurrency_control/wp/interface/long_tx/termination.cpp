@@ -371,29 +371,30 @@ Status verify_read_by(session* const ti) {
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
             // oe.second is forwarding high priori ltxs
             for (auto&& hid : oe.second) {
-                if ((*wp_result_itr).second == hid) {
+                if (std::get<1>((*wp_result_itr)) == hid) {
                     // the itr show overtaken ltx
-                    if ((*wp_result_itr).first < ti->get_valid_epoch()) {
+                    if (std::get<0>((*wp_result_itr)) < ti->get_valid_epoch()) {
                         // try forwarding
                         // check read upper bound
                         if (ti->get_read_version_max_epoch() >
-                            (*wp_result_itr).first) {
+                            std::get<0>((*wp_result_itr))) {
                             // forwarding break own old read
                             return Status::ERR_VALIDATION;
                         } // forwarding not break own old read
                         // lock ongoing tx for forwarding
                         std::lock_guard<std::shared_mutex> ongo_lk{
                                 ongoing_tx::get_mtx()};
-                        if (Status::OK != ongoing_tx::change_epoch_without_lock(
-                                                  ti->get_long_tx_id(),
-                                                  (*wp_result_itr).first)) {
+                        if (Status::OK !=
+                            ongoing_tx::change_epoch_without_lock(
+                                    ti->get_long_tx_id(),
+                                    std::get<0>((*wp_result_itr)))) {
                             LOG(ERROR) << "programming error";
                             return Status::ERR_FATAL;
                         }
                         // set own epoch
-                        ti->set_valid_epoch((*wp_result_itr).first);
+                        ti->set_valid_epoch(std::get<0>((*wp_result_itr)));
                         // change wp epoch
-                        change_wp_epoch(ti, (*wp_result_itr).first);
+                        change_wp_epoch(ti, std::get<0>((*wp_result_itr)));
                         /**
                          * not need extract (collect) new forwarding info,
                          * because at first touch, this tx finished that.
@@ -405,7 +406,7 @@ Status verify_read_by(session* const ti) {
             }
 
             // not match. check gc
-            if ((*wp_result_itr).first < gc_threshold) {
+            if (std::get<0>((*wp_result_itr)) < gc_threshold) {
                 // should gc
                 if (is_first_item_before_gc_threshold) {
                     // not remove

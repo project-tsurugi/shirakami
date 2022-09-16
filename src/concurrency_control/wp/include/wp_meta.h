@@ -29,7 +29,7 @@ public:
     using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
     using wped_used_type = std::bitset<KVS_MAX_PARALLEL_THREADS>;
     using wp_result_set_type =
-            std::vector<std::pair<epoch::epoch_t, std::size_t>>;
+            std::vector<std::tuple<epoch::epoch_t, std::size_t, bool>>;
 
     wp_meta() { init(); }
 
