@@ -134,15 +134,13 @@ Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
 }
 
 [[nodiscard]] Status
-wp_meta::register_wp_result_and_remove_wp(epoch::epoch_t const ep,
-                                          std::size_t const id,
-                                          const bool was_committed) {
+wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type elem) {
     {
         std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
-        wp_result_set_.emplace_back(std::make_tuple(ep, id, was_committed));
+        wp_result_set_.emplace_back(elem);
     }
     wp_lock_.lock();
-    return remove_wp_without_lock(id);
+    return remove_wp_without_lock(wp_result_elem_extract_id(elem));
 }
 
 [[nodiscard]] Status wp_meta::remove_wp_without_lock(std::size_t const id) {

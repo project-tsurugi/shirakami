@@ -306,12 +306,12 @@ static inline void register_wp_result_and_remove_wps(session* ti,
             LOG(ERROR) << "programing error: " << rc;
             return;
         }
-        if (Status::OK !=
-            (*out.first)
-                    ->get_wp_meta_ptr()
-                    ->register_wp_result_and_remove_wp(ti->get_valid_epoch(),
-                                                       ti->get_long_tx_id(),
-                                                       was_committed)) {
+        if (Status::OK != (*out.first)
+                                  ->get_wp_meta_ptr()
+                                  ->register_wp_result_and_remove_wp(
+                                          std::make_tuple(ti->get_valid_epoch(),
+                                                          ti->get_long_tx_id(),
+                                                          was_committed))) {
             LOG(FATAL);
         }
     }
@@ -370,14 +370,18 @@ Status verify_read_by(session* const ti) {
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
             // oe.second is forwarding high priori ltxs
+            auto wp_result_id =
+                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
+            auto wp_result_epoch =
+                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
             for (auto&& hid : oe.second) {
-                if (std::get<1>((*wp_result_itr)) == hid) {
+                if (wp_result_id == hid) {
                     // the itr show overtaken ltx
-                    if (std::get<0>((*wp_result_itr)) < ti->get_valid_epoch()) {
+                    if (wp_result_epoch < ti->get_valid_epoch()) {
                         // try forwarding
                         // check read upper bound
                         if (ti->get_read_version_max_epoch() >
-                            std::get<0>((*wp_result_itr))) {
+                            wp_result_epoch) {
                             // forwarding break own old read
                             return Status::ERR_VALIDATION;
                         } // forwarding not break own old read
@@ -386,15 +390,14 @@ Status verify_read_by(session* const ti) {
                                 ongoing_tx::get_mtx()};
                         if (Status::OK !=
                             ongoing_tx::change_epoch_without_lock(
-                                    ti->get_long_tx_id(),
-                                    std::get<0>((*wp_result_itr)))) {
+                                    ti->get_long_tx_id(), wp_result_epoch)) {
                             LOG(ERROR) << "programming error";
                             return Status::ERR_FATAL;
                         }
                         // set own epoch
-                        ti->set_valid_epoch(std::get<0>((*wp_result_itr)));
+                        ti->set_valid_epoch(wp_result_epoch);
                         // change wp epoch
-                        change_wp_epoch(ti, std::get<0>((*wp_result_itr)));
+                        change_wp_epoch(ti, wp_result_epoch);
                         /**
                          * not need extract (collect) new forwarding info,
                          * because at first touch, this tx finished that.
@@ -406,7 +409,7 @@ Status verify_read_by(session* const ti) {
             }
 
             // not match. check gc
-            if (std::get<0>((*wp_result_itr)) < gc_threshold) {
+            if (wp_result_epoch < gc_threshold) {
                 // should gc
                 if (is_first_item_before_gc_threshold) {
                     // not remove

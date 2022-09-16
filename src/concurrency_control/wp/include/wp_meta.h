@@ -28,8 +28,11 @@ public:
     using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
     using wped_used_type = std::bitset<KVS_MAX_PARALLEL_THREADS>;
-    using wp_result_set_type =
-            std::vector<std::tuple<epoch::epoch_t, std::size_t, bool>>;
+    /**
+     * @brief first is serialization epoch, second is ltx id, third is was_committed.
+     */
+    using wp_result_elem_type = std::tuple<epoch::epoch_t, std::size_t, bool>;
+    using wp_result_set_type = std::vector<wp_result_elem_type>;
 
     wp_meta() { init(); }
 
@@ -86,9 +89,8 @@ public:
      */
     Status register_wp(epoch::epoch_t ep, std::size_t id);
 
-    [[nodiscard]] Status register_wp_result_and_remove_wp(epoch::epoch_t ep,
-                                                          std::size_t id,
-                                                          bool was_committed);
+    [[nodiscard]] Status
+    register_wp_result_and_remove_wp(wp_result_elem_type elem);
 
     [[nodiscard]] Status remove_wp_without_lock(std::size_t id);
 
@@ -109,6 +111,19 @@ public:
 
     void set_wped_used(std::size_t pos, bool val = true) { // NOLINT
         wped_used_.set(pos, val);
+    }
+
+    static epoch::epoch_t
+    wp_result_elem_extract_epoch(wp_result_elem_type elem) {
+        return std::get<0>(elem);
+    }
+
+    static std::size_t wp_result_elem_extract_id(wp_result_elem_type elem) {
+        return std::get<1>(elem);
+    }
+
+    static bool wp_result_elem_extract_was_committed(wp_result_elem_type elem) {
+        return std::get<2>(elem);
     }
 
 private:
