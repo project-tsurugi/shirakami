@@ -287,7 +287,9 @@ static inline void expose_local_write(session* ti) {
     }
 }
 
-static inline void register_wp_result_and_remove_wps(session* ti) {
+static inline void
+register_wp_result_and_remove_wps(session* ti,
+                                  [[maybe_unused]] const bool was_commited) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
@@ -315,9 +317,10 @@ static inline void register_wp_result_and_remove_wps(session* ti) {
     }
 }
 
-static inline void cleanup_process(session* const ti) {
+static inline void cleanup_process(session* const ti,
+                                   const bool was_committed) {
     // global effect
-    register_wp_result_and_remove_wps(ti);
+    register_wp_result_and_remove_wps(ti, was_committed);
     ongoing_tx::remove_id(ti->get_long_tx_id());
 
     // local effect
@@ -336,7 +339,7 @@ Status abort(session* const ti) { // NOLINT
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
     // clean up
-    cleanup_process(ti);
+    cleanup_process(ti, false);
     return Status::OK;
 }
 
@@ -562,7 +565,7 @@ extern Status commit(session* const ti, // NOLINT
     ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
 
     // clean up
-    cleanup_process(ti);
+    cleanup_process(ti, true);
 
     return Status::OK;
 }
