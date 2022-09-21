@@ -37,6 +37,8 @@ inline std::ostream& operator<<(std::ostream& out, reason_code rc) { // NOLINT
 
 class result_info {
 public:
+    result_info() = default;
+
     result_info(reason_code rc, std::string_view add_info)
         : reason_code_(rc), additional_information_(add_info) {}
 
@@ -55,8 +57,8 @@ public:
     }
 
 private:
-    reason_code reason_code_;
-    std::string additional_information_;
+    reason_code reason_code_{};
+    std::string additional_information_{};
 };
 
 } // namespace shirakami

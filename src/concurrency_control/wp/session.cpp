@@ -83,4 +83,20 @@ Status session::find_wp(Storage st) const {
     return Status::WARN_NOT_FOUND;
 }
 
+// ========== start: result info
+void session::set_result(reason_code rc) {
+    get_result_info().set_reason_code(rc);
+}
+
+void session::set_result(std::string_view str) {
+    get_result_info().set_additional_information(str);
+}
+
+void session::set_result(reason_code rc, std::string_view str) {
+    get_result_info().set_reason_code(rc);
+    get_result_info().set_additional_information(str);
+}
+
+// ========== end: result info
+
 } // namespace shirakami

@@ -24,6 +24,7 @@
 #include "concurrency_control/wp/include/tid.h"
 #include "concurrency_control/wp/include/wp.h"
 
+#include "shirakami/result_info.h"
 #include "shirakami/scheme.h"
 #include "shirakami/transaction_options.h"
 #include "shirakami/transaction_state.h"
@@ -212,7 +213,9 @@ public:
     /**
      * @brief get the value of visible_.
      */
-    bool get_visible() { return visible_.load(std::memory_order_acquire); }
+    [[nodiscard]] bool get_visible() {
+        return visible_.load(std::memory_order_acquire);
+    }
 
     /**
      * @brief get the local write set.
@@ -222,7 +225,9 @@ public:
     /**
      * @brief get the yakushima token used by this session.
      */
-    yakushima::Token get_yakushima_token() { return yakushima_token_; }
+    [[nodiscard]] yakushima::Token get_yakushima_token() {
+        return yakushima_token_;
+    }
 
     // ========== start: long tx
 
@@ -241,6 +246,10 @@ public:
     }
 
     // ========== end: long tx
+
+    // ========== stat: result info
+    result_info& get_result_info() { return result_info_; }
+    // ========== end: result info
 
     // ========== start: logging
 #if defined(PWAL)
@@ -347,6 +356,14 @@ public:
     void set_valid_epoch(epoch::epoch_t ep) {
         valid_epoch_.store(ep, std::memory_order_release);
     }
+
+    // ========== end: long tx
+
+    // ========== start: result info
+    void set_result(reason_code rc);
+    void set_result(std::string_view str);
+    void set_result(reason_code rc, std::string_view str);
+    // ========== end: result info
 
     // ========== end: setter
 
@@ -520,6 +537,10 @@ private:
     epoch::epoch_t read_version_max_epoch_{};
 
     // ========== end: long tx
+
+    // ========== start: result information
+    result_info result_info_{};
+    // ========== end: result information
 
     // ========== start: logging
 #if defined(PWAL)
