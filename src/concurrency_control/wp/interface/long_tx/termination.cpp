@@ -532,6 +532,7 @@ extern Status commit(session* const ti, // NOLINT
     // verify read by
     rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
+        ti->set_result(reason_code::READ_BY);
         abort(ti);
         return Status::ERR_VALIDATION;
     }
@@ -539,6 +540,7 @@ extern Status commit(session* const ti, // NOLINT
     // verify insert
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
+        ti->set_result(reason_code::INSERT);
         abort(ti);
         return Status::ERR_FAIL_INSERT;
     }
@@ -574,6 +576,9 @@ extern Status commit(session* const ti, // NOLINT
 
     // clean up
     cleanup_process(ti, true);
+
+    // set transaction result
+    ti->set_result(reason_code::COMMITTED);
 
     return Status::OK;
 }

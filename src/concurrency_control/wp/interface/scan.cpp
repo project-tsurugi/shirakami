@@ -138,6 +138,7 @@ Status open_scan(Token const token, Storage storage,
         // check for read area invalidation
         auto rs = long_tx::check_read_area(ti, storage);
         if (rs == Status::ERR_READ_AREA_VIOLATION) {
+            ti->set_result(reason_code::READ_AREA);
             long_tx::abort(ti);
             return rs;
         }
@@ -432,6 +433,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto wps = wp::find_wp(st);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
+            ti->set_result(reason_code::WRITE_PRESERVE);
             abort(ti);
             return Status::ERR_FAIL_WP;
         }

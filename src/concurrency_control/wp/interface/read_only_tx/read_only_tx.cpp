@@ -31,6 +31,9 @@ Status commit([[maybe_unused]] session* ti) {
     // todo fix
     ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
 
+    // set transaction result
+    ti->set_result(reason_code::COMMITTED);
+
     // clean up
     cleanup_process(ti);
     return Status::OK;

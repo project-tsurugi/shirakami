@@ -49,7 +49,7 @@ private:
 TEST_F(result_test, reason_code) { // NOLINT
     // check operator<<
     LOG(INFO) << reason_code::COMMITTED_READ_PROTECTION;
-    LOG(INFO) << reason_code::INVALID_READ_UPPER_BOUND;
+    LOG(INFO) << reason_code::READ_UPPER_BOUND;
 }
 
 TEST_F(result_test, result_info) { // NOLINT
@@ -63,8 +63,8 @@ TEST_F(result_test, result_info) { // NOLINT
     ASSERT_EQ(ri.get_additional_information(), "");
 
     // test: set_reason_code
-    ri.set_reason_code(reason_code::INVALID_READ_UPPER_BOUND);
-    ASSERT_EQ(ri.get_reason_code(), reason_code::INVALID_READ_UPPER_BOUND);
+    ri.set_reason_code(reason_code::READ_UPPER_BOUND);
+    ASSERT_EQ(ri.get_reason_code(), reason_code::READ_UPPER_BOUND);
 }
 
 } // namespace shirakami::testing

@@ -86,10 +86,7 @@ Status session::find_wp(Storage st) const {
 // ========== start: result info
 void session::set_result(reason_code rc) {
     get_result_info().set_reason_code(rc);
-}
-
-void session::set_result(std::string_view str) {
-    get_result_info().set_additional_information(str);
+    get_result_info().clear_additional_information();
 }
 
 void session::set_result(reason_code rc, std::string_view str) {

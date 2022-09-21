@@ -361,7 +361,6 @@ public:
 
     // ========== start: result info
     void set_result(reason_code rc);
-    void set_result(std::string_view str);
     void set_result(reason_code rc, std::string_view str);
     // ========== end: result info
 
