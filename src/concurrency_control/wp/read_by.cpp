@@ -15,7 +15,10 @@ bool point_read_by_long::is_exist(Token token) {
         if (elem.second < ltx_id) {
             // elem is high priori than this.
             if (epoch <= elem.first) {
-                // todo: include false positive
+                /**
+                 * reason to include =. The order of ltxs which has same epoch
+                 *  is undefined.
+                 */
                 return true;
             }
         } else if (elem.second == ltx_id) {
