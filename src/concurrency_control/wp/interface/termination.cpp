@@ -20,12 +20,17 @@ Status abort(Token token) { // NOLINT
     }
     ti->process_before_start_step();
 
+    // set result info
+    ti->set_result(reason_code::USER_ABORT);
+
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::abort(ti);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
         rc = long_tx::abort(ti);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::abort(ti);
     } else {
         LOG(ERROR) << "programming error";
@@ -47,9 +52,11 @@ Status commit([[maybe_unused]] Token token, // NOLINT
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::commit(ti, cp);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
         rc = long_tx::commit(ti, cp);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::commit(ti);
     } else {
         LOG(ERROR) << "programming error";
