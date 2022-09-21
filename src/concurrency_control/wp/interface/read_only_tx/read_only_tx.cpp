@@ -32,7 +32,7 @@ Status commit([[maybe_unused]] session* ti) {
     ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
 
     // set transaction result
-    ti->set_result(reason_code::COMMITTED);
+    ti->set_result(reason_code::UNKNOWN);
 
     // clean up
     cleanup_process(ti);

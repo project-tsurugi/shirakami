@@ -48,14 +48,13 @@ private:
 
 TEST_F(result_test, reason_code) { // NOLINT
     // check operator<<
-    LOG(INFO) << reason_code::COMMITTED_READ_PROTECTION;
-    LOG(INFO) << reason_code::READ_UPPER_BOUND;
+    LOG(INFO) << reason_code::FORWARDING_BLOCKED_BY_READ;
 }
 
 TEST_F(result_test, result_info) { // NOLINT
     // test constructor
-    result_info ri{reason_code::COMMITTED_READ_PROTECTION, "test"};
-    ASSERT_EQ(ri.get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    result_info ri{reason_code::FORWARDING_BLOCKED_BY_READ, "test"};
+    ASSERT_EQ(ri.get_reason_code(), reason_code::FORWARDING_BLOCKED_BY_READ);
     ASSERT_EQ(ri.get_additional_information(), "test");
 
     // test: clear_additional_information
@@ -63,8 +62,8 @@ TEST_F(result_test, result_info) { // NOLINT
     ASSERT_EQ(ri.get_additional_information(), "");
 
     // test: set_reason_code
-    ri.set_reason_code(reason_code::READ_UPPER_BOUND);
-    ASSERT_EQ(ri.get_reason_code(), reason_code::READ_UPPER_BOUND);
+    ri.set_reason_code(reason_code::FORWARDING_BLOCKED_BY_READ);
+    ASSERT_EQ(ri.get_reason_code(), reason_code::FORWARDING_BLOCKED_BY_READ);
 }
 
 } // namespace shirakami::testing

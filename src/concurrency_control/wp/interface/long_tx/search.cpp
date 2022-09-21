@@ -90,8 +90,8 @@ Status search_key(session* ti, Storage const storage,
     // check for read area invalidation
     auto rs = check_read_area(ti, storage);
     if (rs == Status::ERR_READ_AREA_VIOLATION) {
-        ti->set_result(reason_code::READ_AREA);
         long_tx::abort(ti);
+        ti->set_result(reason_code::VIOLATE_READ_AREA);
         return rs;
     }
 
@@ -122,7 +122,7 @@ Status search_key(session* ti, Storage const storage,
     auto rc = wp_verify_and_forwarding(ti, wp_meta_ptr);
     if (rc != Status::OK) {
         if (rc == Status::ERR_FAIL_WP) {
-            ti->set_result(reason_code::READ_UPPER_BOUND);
+            ti->set_result(reason_code::FORWARDING_BLOCKED_BY_READ);
         }
         return rc;
     }

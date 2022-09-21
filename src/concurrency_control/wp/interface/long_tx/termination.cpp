@@ -532,16 +532,16 @@ extern Status commit(session* const ti, // NOLINT
     // verify read by
     rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
-        ti->set_result(reason_code::READ_BY);
         abort(ti);
+        ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
         return Status::ERR_VALIDATION;
     }
 
     // verify insert
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
-        ti->set_result(reason_code::INSERT);
         abort(ti);
+        ti->set_result(reason_code::INSERT_EXISTENCE_KEY);
         return Status::ERR_FAIL_INSERT;
     }
     // verify : end
@@ -578,7 +578,7 @@ extern Status commit(session* const ti, // NOLINT
     cleanup_process(ti, true);
 
     // set transaction result
-    ti->set_result(reason_code::COMMITTED);
+    ti->set_result(reason_code::UNKNOWN);
 
     return Status::OK;
 }

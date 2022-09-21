@@ -106,8 +106,8 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         // ==============================
         if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
             unlock_write_set(ti);
-            ti->set_result(reason_code::READ_VALIDATION);
             short_tx::abort(ti);
+            ti->set_result(reason_code::OCC_READ_VALIDATION);
             return Status::ERR_VALIDATION;
         }
         // ==============================
@@ -123,8 +123,8 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     for (auto&& each_st : accessed_st) {
         if (wp_verify(each_st, ce) != Status::OK) {
             unlock_write_set(ti);
-            ti->set_result(reason_code::WRITE_PRESERVE);
             short_tx::abort(ti);
+            ti->set_result(reason_code::OCC_DETECT_WRITE_PRESERVE);
             return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
         }
     }
@@ -202,7 +202,6 @@ RETRY: // NOLINT
                                                  rec_ptr, nvp)) {
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_PHANTOM) {
-                ti->set_result(reason_code::PHANTOM_AVOIDANCE);
                 /**
                   * This This transaction is confirmed to be aborted 
                   * because the previous scan was destroyed by an insert
@@ -240,7 +239,6 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 // someone interrupt
                 rec_ptr->get_tidw_ref().unlock();
                 abort_process();
-                ti->set_result(reason_code::INSERT);
                 return Status::ERR_FAIL_INSERT;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
@@ -251,7 +249,6 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 continue;
             }
             if (rc == Status::ERR_PHANTOM) {
-                ti->set_result(reason_code::PHANTOM_AVOIDANCE);
                 abort_process();
                 return Status::ERR_PHANTOM;
             }
@@ -261,12 +258,14 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++not_insert_locked_num;
             if (rec_ptr->get_tidw_ref().get_absent()) {
-                if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->set_result(reason_code::UPDATE);
-                } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    ti->set_result(reason_code::DELETE);
-                }
                 abort_process();
+                if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
+                    ti->set_result(
+                            reason_code::UPDATE_FOR_NON_EXISTENCE_RECORD);
+                } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
+                    ti->set_result(
+                            reason_code::DELETE_FOR_NON_EXISTENCE_RECORD);
+                }
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
         } else {
@@ -404,7 +403,6 @@ Status node_verify(session* ti) {
     for (auto&& itr : ti->get_node_set()) {
         if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
             unlock_write_set(ti);
-            ti->set_result(reason_code::PHANTOM_AVOIDANCE);
             short_tx::abort(ti);
             return Status::ERR_PHANTOM;
         }
@@ -457,6 +455,11 @@ extern Status commit(session* ti, // NOLINT
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
         short_tx::abort(ti);
+        if (rc == Status::ERR_FAIL_INSERT) {
+            ti->set_result(reason_code::INSERT_EXISTENCE_KEY);
+        } else if (rc == Status::ERR_PHANTOM) {
+            ti->set_result(reason_code::PHANTOM_AVOIDANCE_DETECTED);
+        }
         return rc;
     }
 
@@ -475,6 +478,7 @@ extern Status commit(session* ti, // NOLINT
     if (rc != Status::OK) {
         unlock_write_set(ti);
         short_tx::abort(ti);
+        ti->set_result(reason_code::PHANTOM_AVOIDANCE_DETECTED);
         return rc;
     }
 
@@ -512,7 +516,7 @@ extern Status commit(session* ti, // NOLINT
     ti->clean_up();
 
     // set transaction result
-    ti->set_result(reason_code::COMMITTED);
+    ti->set_result(reason_code::UNKNOWN);
 
     return Status::OK;
 }
