@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class one_epoch_test : public ::testing::Test { // NOLINT
+class boundary_wait_one_epoch_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-function-"
-                                  "boundary_wait-one_epoch_test");
+                                  "boundary_wait-boundary_wait_one_epoch_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,8 +48,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(one_epoch_test, one_epoch) { // NOLINT
-                                    // create table
+TEST_F(boundary_wait_one_epoch_test, one_epoch) { // NOLINT
+                                                  // create table
     // ==========
     // prepare
     Storage sta{};
@@ -134,8 +134,8 @@ TEST_F(one_epoch_test, one_epoch) { // NOLINT
     // ==========
 }
 
-TEST_F(one_epoch_test, one_epoch_with_abort) { // NOLINT
-                                               // create table
+TEST_F(boundary_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
+                                                             // create table
     // ==========
     // prepare
     Storage sta{};

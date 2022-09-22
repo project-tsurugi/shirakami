@@ -29,11 +29,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class three_epoch_test : public ::testing::Test { // NOLINT
+class boundary_wait_two_wait_one_epoch_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-function-"
-                                  "boundary_wait-three_epoch_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-function-"
+                "boundary_wait-boundary_wait_two_wait_one_epoch_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,17 +49,15 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(three_epoch_test, three_epoch) { // NOLINT
-                                        // create table
+TEST_F(boundary_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
+    // create table
     // ==========
     // prepare
     Storage sta{};
-    Storage stb{};
     Storage stx{};
     Storage sty{};
     Storage stz{};
     ASSERT_EQ(create_storage("a", sta), Status::OK);
-    ASSERT_EQ(create_storage("b", stb), Status::OK);
     ASSERT_EQ(create_storage("x", stx), Status::OK);
     ASSERT_EQ(create_storage("y", sty), Status::OK);
     ASSERT_EQ(create_storage("z", stz), Status::OK);
@@ -69,15 +68,13 @@ TEST_F(three_epoch_test, three_epoch) { // NOLINT
 
     // prepare page key value
     std::string a{"a"};
-    std::string b{"b"};
     std::string x{"x"};
     std::string y{"y"};
     std::string z{"z"};
     std::array<std::string, 5> var{"t0", "t1", "t2", "t3", "t4"};
-    auto init_db = [&s, &var, a, b,x, y, z, sta, stb,stx, sty, stz]() {
+    auto init_db = [&s, &var, a, x, y, z, sta, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
-        ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stz, z, var.at(0)));
@@ -92,10 +89,10 @@ TEST_F(three_epoch_test, three_epoch) { // NOLINT
     // 4l
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
-                                    {stb}}));
+                                    {sta}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
-                                    {sta}}));
+                                    {sty}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -111,15 +108,13 @@ TEST_F(three_epoch_test, three_epoch) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(4), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stz, z, var.at(4)));
-    ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sta, a, var.at(1)));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
-    ASSERT_EQ(Status::OK, search_key(s.at(3), stb, b, buf));
-    ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
@@ -129,13 +124,11 @@ TEST_F(three_epoch_test, three_epoch) { // NOLINT
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
-    ASSERT_EQ(buf, var.at(2));
-    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(3));
+    ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -151,17 +144,16 @@ TEST_F(three_epoch_test, three_epoch) { // NOLINT
     // ==========
 }
 
-TEST_F(three_epoch_test, three_epoch_with_abort) { // NOLINT
-                                        // create table
+TEST_F(boundary_wait_two_wait_one_epoch_test, // NOLINT
+       two_wait_one_epoch_with_abort) {       // NOLINT
+                                              // create table
     // ==========
     // prepare
     Storage sta{};
-    Storage stb{};
     Storage stx{};
     Storage sty{};
     Storage stz{};
     ASSERT_EQ(create_storage("a", sta), Status::OK);
-    ASSERT_EQ(create_storage("b", stb), Status::OK);
     ASSERT_EQ(create_storage("x", stx), Status::OK);
     ASSERT_EQ(create_storage("y", sty), Status::OK);
     ASSERT_EQ(create_storage("z", stz), Status::OK);
@@ -172,15 +164,13 @@ TEST_F(three_epoch_test, three_epoch_with_abort) { // NOLINT
 
     // prepare page key value
     std::string a{"a"};
-    std::string b{"b"};
     std::string x{"x"};
     std::string y{"y"};
     std::string z{"z"};
     std::array<std::string, 5> var{"t0", "t1", "t2", "t3", "t4"};
-    auto init_db = [&s, &var, a, b,x, y, z, sta, stb,stx, sty, stz]() {
+    auto init_db = [&s, &var, a, x, y, z, sta, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
-        ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stz, z, var.at(0)));
@@ -195,10 +185,10 @@ TEST_F(three_epoch_test, three_epoch_with_abort) { // NOLINT
     // 4l
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
-                                    {stb}}));
+                                    {sta}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
-                                    {sta}}));
+                                    {sty}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -214,17 +204,15 @@ TEST_F(three_epoch_test, three_epoch_with_abort) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(4), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stz, z, var.at(4)));
-    ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sta, a, var.at(1)));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
-    ASSERT_EQ(Status::OK, search_key(s.at(3), stb, b, buf));
-    ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, abort(s.at(2)));
     ASSERT_EQ(Status::OK, abort(s.at(3)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
     auto tri = transaction_result_info(s.at(4));
@@ -232,8 +220,6 @@ TEST_F(three_epoch_test, three_epoch_with_abort) { // NOLINT
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
-    ASSERT_EQ(buf, var.at(2));
-    ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
