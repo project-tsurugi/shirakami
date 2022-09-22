@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "api_result.h"
 #include "api_storage.h"
 #include "api_sequence.h"
 #include "database_options.h"
