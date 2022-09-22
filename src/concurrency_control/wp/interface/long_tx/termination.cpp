@@ -541,7 +541,7 @@ extern Status commit(session* const ti, // NOLINT
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
         abort(ti);
-        ti->set_result(reason_code::INSERT_EXISTENCE_KEY);
+        ti->set_result(reason_code::INSERT_EXISTING_KEY);
         return Status::ERR_FAIL_INSERT;
     }
     // verify : end

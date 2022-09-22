@@ -261,10 +261,10 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
                     ti->set_result(
-                            reason_code::UPDATE_FOR_NON_EXISTENCE_RECORD);
+                            reason_code::UPDATE_NON_EXISTING_RECORD);
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
                     ti->set_result(
-                            reason_code::DELETE_FOR_NON_EXISTENCE_RECORD);
+                            reason_code::DELETE_NON_EXISTING_RECORD);
                 }
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
@@ -456,7 +456,7 @@ extern Status commit(session* ti, // NOLINT
     if (rc != Status::OK) {
         short_tx::abort(ti);
         if (rc == Status::ERR_FAIL_INSERT) {
-            ti->set_result(reason_code::INSERT_EXISTENCE_KEY);
+            ti->set_result(reason_code::INSERT_EXISTING_KEY);
         } else if (rc == Status::ERR_PHANTOM) {
             ti->set_result(reason_code::PHANTOM_AVOIDANCE_DETECTED);
         }

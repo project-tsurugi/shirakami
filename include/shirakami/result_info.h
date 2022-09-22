@@ -10,43 +10,42 @@ namespace shirakami {
  */
 enum class reason_code : std::int32_t {
     /**
-     * @brief committed. If you get the information against committed 
-     * transaction, you may get this code.
+     * @brief undefined code.
      */
     UNKNOWN,
     /**
-     * @brief read information.
+     * @brief Protecting committed transactional read operation.
      */
     COMMITTED_READ_PROTECTION,
     /**
-     * @brief transactional delete operation for non existence record.
+     * @brief Deleting non-existing record.
      */
-    DELETE_FOR_NON_EXISTENCE_RECORD,
+    DELETE_NON_EXISTING_RECORD,
     /**
-     * @brief transactional insert operation for existence record.
+     * @brief Inserting a key which is same to existing one.
      */
-    INSERT_EXISTENCE_KEY,
+    INSERT_EXISTING_KEY,
     /**
      * @brief The low priority ltx found high priority ltx's write preserve, 
      * and tried forwarding but the forwarding break old own read.
      */
     FORWARDING_BLOCKED_BY_READ,
     /**
-     * @brief write preserve.
+     * @brief Occ tx detected write preserve.
      */
     OCC_DETECT_WRITE_PRESERVE,
     /**
-     * @brief read validation.
+     * @brief Occ tx failed read validation.
      */
     OCC_READ_VALIDATION,
     /**
-     * @brief phantom avoidance.
+     * @brief Abort due to phantom avoidance function.
      */
     PHANTOM_AVOIDANCE_DETECTED,
     /**
-     * @brief transactional update operation.
+     * @brief Updating non-existing record.
      */
-    UPDATE_FOR_NON_EXISTENCE_RECORD,
+    UPDATE_NON_EXISTING_RECORD,
     /**
      * @brief After abort command by user.
      */
@@ -64,10 +63,10 @@ inline constexpr std::string_view to_string_view(reason_code rc) noexcept {
             return "UNKNOWN"sv; // NOLINT
         case reason_code::COMMITTED_READ_PROTECTION:
             return "COMMITTED_READ_PROTECTION"sv; // NOLINT
-        case reason_code::DELETE_FOR_NON_EXISTENCE_RECORD:
-            return "DELETE_FOR_NON_EXISTENCE_RECORD"sv; // NOLINT
-        case reason_code::INSERT_EXISTENCE_KEY:
-            return "INSERT_EXISTENCE_KEY"sv; // NOLINT
+        case reason_code::DELETE_NON_EXISTING_RECORD:
+            return "DELETE_NON_EXISTING_RECORD"sv; // NOLINT
+        case reason_code::INSERT_EXISTING_KEY:
+            return "INSERT_EXISTING_KEY"sv; // NOLINT
         case reason_code::FORWARDING_BLOCKED_BY_READ:
             return "FORWARDING_BLOCKED_BY_READ"sv; // NOLINT
         case reason_code::OCC_DETECT_WRITE_PRESERVE:
@@ -76,8 +75,8 @@ inline constexpr std::string_view to_string_view(reason_code rc) noexcept {
             return "OCC_READ_VALIDATION"sv; // NOLINT
         case reason_code::PHANTOM_AVOIDANCE_DETECTED:
             return "PHANTOM_AVOIDANCE_DETECTED"sv; //NOLINT
-        case reason_code::UPDATE_FOR_NON_EXISTENCE_RECORD:
-            return "UPDATE_FOR_NON_EXISTENCE_RECORD"sv; // NOLINT
+        case reason_code::UPDATE_NON_EXISTING_RECORD:
+            return "UPDATE_NON_EXISTING_RECORD"sv; // NOLINT
         case reason_code::USER_ABORT:
             return "USER_ABORT"sv; // NOLINT
         case reason_code::VIOLATE_READ_AREA:
