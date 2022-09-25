@@ -23,6 +23,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/function/false_positive/*.cpp"
         "concurrency_control/function/multi_boundary/*.cpp"
         "concurrency_control/function/read_wait/*.cpp"
+        "concurrency_control/function/read_and_boundary_wait/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
         "concurrency_control/hybrid/insert/*.cpp"
         "concurrency_control/hybrid/search_wp/*.cpp"
