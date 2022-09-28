@@ -35,9 +35,9 @@ using SequenceVersion = std::size_t;
  * @return Status::OK success.
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running 
- * transactions.
+ * transactions. Typical usage is in DDL to register sequence objects.
  */
-extern Status create_sequence(SequenceId* id, Token token = nullptr); // NOLINT
+extern Status create_sequence(SequenceId* id); // NOLINT
 
 /**
  * @brief update sequence value and version
@@ -71,7 +71,6 @@ extern Status update_sequence(Token token, SequenceId id,
  * only when this function is successful with Status::OK.
  * @param [out] value the sequence value, that is valid only when this function 
  * is successful with Status::OK.
- * @param[in] token
  * @return Status::OK if the retrieval is successful
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running 
@@ -79,8 +78,7 @@ extern Status update_sequence(Token token, SequenceId id,
  * time of database recovery.
  */
 extern Status read_sequence(SequenceId id, SequenceVersion* version,
-                            SequenceValue* value,
-                            Token token = nullptr); // NOLINT
+                            SequenceValue* value); // NOLINT
 
 /**
  * @brief delete the sequence
@@ -91,6 +89,6 @@ extern Status read_sequence(SequenceId id, SequenceVersion* version,
  * @note This function is not intended to be called concurrently with running 
  * transactions. Typical usage is in DDL to unregister sequence objects.
  */
-extern Status delete_sequence(SequenceId id, Token token = nullptr); // NOLINT
+extern Status delete_sequence(SequenceId id); // NOLINT
 
 } // namespace shirakami
