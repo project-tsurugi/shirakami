@@ -4,10 +4,13 @@
 
 * shirakami で利用可能なシーケンス機能に関して、APIとその仕様, 機能実現に際するストレージレイヤーとの連携をまとめる。
 
-## 本プロジェクトにおけるシーケンスの仕様
+## 本プロジェクトにおけるシーケンスの仕様概要
 
 * ある連番を生成するための機構。
-* トランザクショナルではなく、 API 実行時にその操作が完遂される。
+* シーケンスオブジェクトの生成・削除操作は、トランザクション操作とは無関係に実行・永続化がされる。
+更新操作は関数呼び出しに与えられたトランザクションハンドルのトランザクション実行に紐づいて実行され、
+そのトランザクションが成功したときに限って実行・永続化される。
+永続化は epoch-base group commit のロギングフレーム枠に則るため、操作終了から永続化まで一定時間を要する。
 
 ## Type
 
@@ -22,12 +25,9 @@
 
 ## API と仕様
 
-* `Status create_sequence(SequenceId* id, Token token = nullptr)`
+* `Status create_sequence(SequenceId* id)`
   - 新しいシーケンスオブジェクトを生成する。その初期値は SequenceValue, 
   SequenceVersion が 0 となる。
-  - token が nullptr でなかったとき、その token が指す実行情報領域を用いて logging 
-  を行う。nullptr だったときは内部的に enter command を用いて空いている実行情報領域
-  を探索し、それを用いて logging を行う。
 
 * `Status update_sequence(Token token, SequenceId id, SequenceVersion version, SequenceValue value)`
   - id に紐づくシーケンスオブジェクトにおける SequenceVersion, SequenceValue を
@@ -35,17 +35,15 @@
   - SequenceVersion がシーケンスオブジェクト上で単調増加にならない値を指定されたとき、
   エラーを返す。
   - シーケンスオブジェクトに対する操作のロギングにおいて、 token の実行情報領域を用いる。
+  - 本操作は token に対して commit(token) コマンドが実行され、その結果が成功したときに限り実行される。
 
-* `Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* value, Token token = nullptr)`
+* `Status read_sequence(SequenceId id, SequenceVersion* version, SequenceValue* value)`
   - id に紐づくシーケンスオブジェクトにおける永続化が完了した範囲内で最大の 
   SequenceVersion とそれに対応する SequenceValue を返却する。
 
-* `Status delete_sequence(SequenceId id, Token token = nullptr)`
+* `Status delete_sequence(SequenceId id)`
   - id に紐づくシーケンスオブジェクトを削除する。該当オブジェクトが存在しなければ
   エラーを返す。
-  - token が nullptr でなかったとき、その token が指す実行情報領域を用いて logging 
-  を行う。nullptr だったときは内部的に enter command を用いて空いている実行情報領域
-  を探索し、それを用いて logging を行う。
 
 ## シーケンス機構におけるロギングの設計
 シーケンス機構において、シーケンスオブジェクトに対する書き込み操作はロギングを行うことになる。
