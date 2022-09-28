@@ -30,9 +30,9 @@ using SequenceVersion = std::size_t;
 /**
  * @brief create new sequence
  * @param [out] id the newly assigned sequence id, that is valid only 
- * @param[in] token
  * when this function is successful with Status::OK.
- * @return Status::OK if the creation was successful
+ * @param[in] token If this is not nullptr, shirakami uses @a token for logging.
+ * @return Status::OK success.
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running 
  * transactions.
