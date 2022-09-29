@@ -82,8 +82,8 @@ jobs:
           cd build_pwal
           ctest --verbose --timeout 20 -j 100
 
-      - id: Clang-Tidy_wp
-        name: Clang-Tidy_wp
+      - id: Clang-Tidy
+        name: Clang-Tidy
         run: |
           python tools/bin/run-clang-tidy.py -quiet -export-fixes=build_pwal/clang-tidy-fix.yaml -p build_pwal -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | tee build_pwal/clang-tidy.log
         if: matrix.container-tag != 'ubuntu-18.04'
