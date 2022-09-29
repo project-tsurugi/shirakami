@@ -124,6 +124,11 @@ public:
 
     static Status list_storage(std::vector<Storage>& out);
 
+    /**
+     * @brief Get list of storage key
+     * @param[out] out 
+     * @return Status::OK success including out is empty.
+     */
     static Status list_storage(std::vector<std::string>& out) {
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
         out.clear();
@@ -132,7 +137,6 @@ public:
              ++itr) {
             out.emplace_back(itr->first);
         }
-        if (out.empty()) { return Status::WARN_NOT_FOUND; }
         return Status::OK;
     }
 

@@ -71,18 +71,18 @@ TEST_F(storage_test, delete_storage_test) { // NOLINT
 }
 
 TEST_F(storage_test, list_storage_test) { // NOLINT
-    std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    std::vector<std::string> st_list{};
+    ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 0);
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("1", st));
-    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 1);
     ASSERT_EQ(Status::OK, create_storage("2", st));
-    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 2);
     ASSERT_EQ(Status::OK, delete_storage(st)); // interrupt delete_storage
-    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(Status::OK, list_storage(st_list));
     ASSERT_EQ(st_list.size(), 1);
 }
 
