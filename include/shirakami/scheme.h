@@ -266,6 +266,11 @@ enum class Status : std::int32_t {
     ERR_FATAL_INDEX,
     /**
      * @brief Error
+     * @details The configuration at init command is invalid.
+     */
+    ERR_INVALID_CONFIGURATION,
+    /**
+     * @brief Error
      * @details The error shows the long transaction execute read for the 
      * storage included read negative list.
      */
@@ -375,6 +380,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FATAL"sv; // NOLINT
         case Status::ERR_FATAL_INDEX:
             return "ERR_FATAL_INDEX"sv; // NOLINT
+        case Status::ERR_INVALID_CONFIGURATION:
+            return "ERR_INVALID_CONFIGURATION"sv; // NOLINT
         case Status::ERR_NOT_IMPLEMENTED:
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:

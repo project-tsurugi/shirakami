@@ -109,11 +109,8 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
                 std::string vb{};
                 for (;;) {
                     auto rc{search_key(s, st, elem, vb)};
-                    if (rc == Status::OK) {
-                        break;
-                    } else {
-                        LOG(FATAL) << rc;
-                    }
+                    if (rc == Status::OK) { break; }
+                    LOG(FATAL) << rc;
                 }
 
                 std::size_t v{};

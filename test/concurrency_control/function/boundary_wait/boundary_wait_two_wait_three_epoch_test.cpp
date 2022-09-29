@@ -50,9 +50,9 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(boundary_wait_two_wait_three_epoch_test,
-       two_wait_three_epoch) { // NOLINT
-                               // create table
+TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
+       two_wait_three_epoch) {                  // NOLINT
+                                                // create table
     // ==========
     // prepare
     Storage sta{};
@@ -153,10 +153,10 @@ TEST_F(boundary_wait_two_wait_three_epoch_test,
     ASSERT_EQ(Status::OK, commit(s.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(5)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
-    auto tri = transaction_result_info(s.at(6));
+    auto tri = transaction_result_info(s.at(6)); // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(7)));
-    tri = transaction_result_info(s.at(7));
+    tri = transaction_result_info(s.at(7)); // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
 
     // verify
@@ -284,16 +284,16 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, abort(s.at(4)));
-    auto tri = transaction_result_info(s.at(4));
+    auto tri = transaction_result_info(s.at(4)); // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
     ASSERT_EQ(Status::OK, abort(s.at(5)));
-    tri = transaction_result_info(s.at(5));
+    tri = transaction_result_info(s.at(5)); // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6))); // epoch false positive
-    tri = transaction_result_info(s.at(6));
+    tri = transaction_result_info(s.at(6));             // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(7)));
-    tri = transaction_result_info(s.at(7));
+    tri = transaction_result_info(s.at(7)); // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
 
     // verify

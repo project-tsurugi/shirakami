@@ -35,8 +35,8 @@ private:
 };
 
 
-TEST_F(short_delete_insert_search_upsert_scan,
-       insert_delete_upsert_scan) { // NOLINT
+TEST_F(short_delete_insert_search_upsert_scan, // NOLINT
+       insert_delete_upsert_scan) {            // NOLINT
     Storage storage{};
     create_storage("", storage);
     std::string k("k");   // NOLINT
