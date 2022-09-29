@@ -88,8 +88,10 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
     data_locations.emplace_back(data_location);
     std::string metadata_dir{log_dir + "m"};
     boost::filesystem::path metadata_path(metadata_dir);
-    datastore::start_datastore(
-            limestone::api::configuration(data_locations, metadata_path));
+    try {
+        datastore::start_datastore(
+                limestone::api::configuration(data_locations, metadata_path));
+    } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
         recover(datastore::get_datastore());
