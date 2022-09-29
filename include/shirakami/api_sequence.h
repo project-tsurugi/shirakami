@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scheme.h"
+
 namespace shirakami {
 
 /**

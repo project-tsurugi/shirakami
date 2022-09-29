@@ -25,6 +25,11 @@ public:
      */
     static constexpr Storage wp_meta_storage{UINT64_MAX - 2};
 
+    /**
+     * @brief Identifier for sequence storage.
+     */
+    static constexpr Storage sequence_storage{UINT64_MAX - 3};
+
     static void fin();
 
     static void key_handle_map_clear() { key_handle_map_.clear(); }

@@ -10,6 +10,7 @@
 
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/wp/include/sequence.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
@@ -42,6 +43,9 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
 
     // about storage
     storage::init();
+
+    // about sequence
+    sequence::init();
 
 #if defined(PWAL)
     // check args

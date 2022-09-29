@@ -269,7 +269,8 @@ Status storage::list_storage(std::vector<Storage>& out) {
         //Due to invariants, the type is known by the developer.
         Storage dest{};
         memcpy(&dest, elem.first.data(), sizeof(dest));
-        if (dest != storage::wp_meta_storage && dest != storage::meta_storage) {
+        if (dest != storage::wp_meta_storage && dest != storage::meta_storage &&
+            dest != storage::sequence_storage) {
             out.emplace_back(dest);
         }
     }
@@ -285,11 +286,15 @@ void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
 void storage::init_meta_storage() {
     auto ret = storage::register_storage(storage::meta_storage);
     if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    ret = storage::register_storage(storage::sequence_storage);
+    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
 }
 
 void storage::fin() {
     // clear meta storage
     auto ret = storage::delete_storage(storage::meta_storage);
+    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    ret = storage::delete_storage(storage::sequence_storage);
     if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
 
     // clear key storage map
