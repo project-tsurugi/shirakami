@@ -124,6 +124,18 @@ public:
 
     static Status list_storage(std::vector<Storage>& out);
 
+    static Status list_storage(std::vector<std::string>& out) {
+        std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
+        out.clear();
+        out.reserve(key_handle_map_.size());
+        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
+             ++itr) {
+            out.emplace_back(itr->first);
+        }
+        if (out.empty()) { return Status::WARN_NOT_FOUND; }
+        return Status::OK;
+    }
+
     static void set_strg_ctr(Storage st) {
         strg_ctr_.store(st, std::memory_order_release);
     }

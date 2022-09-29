@@ -84,6 +84,10 @@ Status list_storage(std::vector<Storage>& out) {
     return storage::list_storage(out);
 }
 
+Status list_storage(std::vector<std::string>& out) {
+    return storage::list_storage(out);
+}
+
 Status storage::register_storage(Storage storage) {
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
