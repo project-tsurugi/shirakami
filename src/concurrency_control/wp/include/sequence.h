@@ -46,7 +46,7 @@ class sequence_object {
 public:
 private:
     std::shared_mutex smtx_;
-    bool is_hooked_{false}; // NOLINT
+    //bool is_hooked_;
     std::vector<std::tuple<SequenceVersion, SequenceValue, epoch::epoch_t>>
             body_;
 };
