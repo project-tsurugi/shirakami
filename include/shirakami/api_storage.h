@@ -52,15 +52,6 @@ extern Status delete_storage(Storage storage);
 extern Status get_storage(std::string_view key, Storage& out);
 
 /**
- * @brief Get a list of existing storage.
- * @param[out] out the list of existing storage.
- * @return Status::OK if successful.
- * @return Status::WARN_NOT_FOUND if no storage.
- * @return Status::ERR_FATAL A serious error has been detected.
- */
-extern Status list_storage(std::vector<Storage>& out);
-
-/**
  * @brief Get a list of existing storage key.
  * @param[out] out the list of existing storage.
  * @return Status::OK if successful.

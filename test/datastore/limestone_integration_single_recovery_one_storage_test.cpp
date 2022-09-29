@@ -88,7 +88,7 @@ void storage_operation_test(std::size_t storage_num) {
     // re-start
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     ASSERT_EQ(storage_num, st_list.size()); // 1 is due to recovery
 
     Token s{};

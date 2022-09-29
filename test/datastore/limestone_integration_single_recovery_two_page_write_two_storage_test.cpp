@@ -10,6 +10,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
 
@@ -82,7 +83,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
 
     // test: storage num
     std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     ASSERT_EQ(st_list.size(), 2); // because single recovery
     bool first{true};
     ASSERT_EQ(Status::OK, enter(s));

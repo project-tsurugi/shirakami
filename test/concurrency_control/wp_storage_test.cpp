@@ -45,7 +45,7 @@ TEST_F(wp_storage_test, simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::vector<Storage> rt{};
-    ASSERT_EQ(Status::OK, list_storage(rt));
+    ASSERT_EQ(Status::OK, storage::list_storage(rt));
     // check result of list_storage remove about wp meta storage.
     ASSERT_EQ(1, rt.size());
     // check st num starts from 0

@@ -80,10 +80,6 @@ Status get_storage(std::string_view const key, Storage& out) {
     return storage::key_handle_map_get_storage(key, out);
 }
 
-Status list_storage(std::vector<Storage>& out) {
-    return storage::list_storage(out);
-}
-
 Status list_storage(std::vector<std::string>& out) {
     return storage::list_storage(out);
 }

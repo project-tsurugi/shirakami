@@ -11,6 +11,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
 
@@ -85,7 +86,7 @@ void recovery_test(std::size_t recovery_num) {
         init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
         // verify
-        ASSERT_EQ(Status::OK, list_storage(st_list));
+        ASSERT_EQ(Status::OK, storage::list_storage(st_list));
         ASSERT_EQ(i + 1, st_list.size());
     }
 
@@ -94,7 +95,7 @@ void recovery_test(std::size_t recovery_num) {
     ASSERT_EQ(Status::OK, enter(s));
     // test: check recovery
     std::string vb{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     ASSERT_EQ(recovery_num, st_list.size());
     for (auto&& st : st_list) {
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));

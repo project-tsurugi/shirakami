@@ -92,7 +92,7 @@ void recovery_from_datastore() {
 void scan_all_and_logging() {
     // check all storage list
     std::vector<Storage> st_list{};
-    list_storage(st_list);
+    storage::list_storage(st_list);
 
     // logging for all storage
     for (auto&& each_st : st_list) {

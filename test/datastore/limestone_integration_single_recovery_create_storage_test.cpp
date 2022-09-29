@@ -78,7 +78,7 @@ TEST_F(limestone_integration_single_recovery_create_storage_test, // NOLINT
     // test: check recovery
     std::string vb{};
     std::vector<Storage> st_list{};
-    ASSERT_EQ(Status::OK, list_storage(st_list));
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     EXPECT_EQ(st_list.size(), 1);
 
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));

@@ -19,7 +19,7 @@ namespace shirakami {
 [[maybe_unused]] Status delete_all_records() { // NOLINT
     //check list of all storage
     std::vector<Storage> storage_list;
-    list_storage(storage_list);
+    storage::list_storage(storage_list);
 
     // delete for above.
     for (auto&& elem : storage_list) {
