@@ -60,24 +60,34 @@ void recovery_from_datastore() {
         cursor->key(key);
         cursor->value(val);
         // check storage exist
-        if (st != storage::meta_storage) {
-            shirakami::storage::register_storage(st);
-            st_list.emplace_back(st);
-            // create kvs entry from these info.
-            if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
-                LOG(ERROR) << "not unique. to discuss or programming error.";
-            }
-        } else {
+        if (st == storage::meta_storage) {
             // recovery storage. The storage may have not been operated.
             Storage st2{};
-            if (val.size() != sizeof(st2)) {
+            if (val.size() >= (sizeof(st2) + sizeof(storage_option::id_t))) {
+                // val size >= Storage + id_t + payload
                 LOG(ERROR) << "programming error";
             }
             memcpy(&st2, val.data(), sizeof(st2));
-            shirakami::storage::register_storage(st2);
+            storage_option::id_t id;
+            memcpy(&id, val.data() + sizeof(st2), sizeof(id));
+            std::string payload{};
+            if (val.size() > sizeof(st2) + sizeof(id)) {
+                payload.append(val.data() + sizeof(st2) + sizeof(id),
+                               val.size() - sizeof(st2) - sizeof(id));
+            }
+            shirakami::storage::register_storage(st2, {id, payload});
             // the storage may be already created by log_entry
             storage::key_handle_map_push_storage(key, st2);
             st_list.emplace_back(st2);
+        } else if (st == storage::sequence_storage) {
+            LOG(INFO) << "not implemented";
+        } else {
+            shirakami::storage::register_storage(st);
+            st_list.emplace_back(st);
+            // create kvs entry (database record) from these info.
+            if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
+                LOG(ERROR) << "not unique. to discuss or programming error.";
+            }
         }
     }
     if (!st_list.empty()) {

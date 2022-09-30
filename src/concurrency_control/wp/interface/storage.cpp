@@ -20,13 +20,19 @@
 
 namespace shirakami {
 
-void write_storage_metadata(std::string_view key, Storage st) {
+void write_storage_metadata(std::string_view key, Storage st,
+                            storage_option const& options) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
-    std::string_view value_view{reinterpret_cast<char*>(&st), // NOLINT
-                                sizeof(st)};
+    std::string value{};
+    // value = Storage + id + payload
+    value.append(reinterpret_cast<char*>(&st), sizeof(st));
+    storage_option::id_t id = options.id();
+    value.append(reinterpret_cast<char*>(&id), sizeof(id));
+    std::string payload{options.payload()};
+    value.append(payload);
     for (;;) {
-        auto ret = upsert(s, storage::meta_storage, key, value_view);
+        auto ret = upsert(s, storage::meta_storage, key, value);
         if (ret != Status::OK) { continue; }
         if (commit(s) == Status::OK) { break; } // NOLINT
         _mm_pause();
@@ -59,7 +65,7 @@ Status create_storage(std::string_view const key, Storage& storage,
         return Status::WARN_ALREADY_EXISTS;
     }
 
-    write_storage_metadata(key, storage);
+    write_storage_metadata(key, storage, options);
     return Status::OK;
 }
 
