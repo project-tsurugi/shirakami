@@ -58,11 +58,11 @@ TEST_F(storage_test, create_storage_test) { // NOLINT
 TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("1", st, {1}));
-    ASSERT_EQ(Status::OK, exist_storage(st));
-    ASSERT_EQ(Status::OK, exist_storage(1));
+    ASSERT_EQ(Status::OK, storage::exist_storage(st));
+    ASSERT_EQ(Status::OK, storage::exist_storage(1));
     ASSERT_EQ(Status::OK, create_storage("2", st, {2}));
-    ASSERT_EQ(Status::OK, exist_storage(st));
-    ASSERT_EQ(Status::OK, exist_storage(2));
+    ASSERT_EQ(Status::OK, storage::exist_storage(st));
+    ASSERT_EQ(Status::OK, storage::exist_storage(2));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, create_storage("3", st, {2}));
     ASSERT_EQ(
             Status::WARN_STORAGE_ID_DEPLETION,
@@ -71,18 +71,18 @@ TEST_F(storage_test, user_specified_storage_id_test) { // NOLINT
 
 TEST_F(storage_test, exist_storage_test) { // NOLINT
     Storage st{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, exist_storage(st));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, storage::exist_storage(st));
     ASSERT_EQ(Status::OK, create_storage("1", st));
-    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, storage::exist_storage(st));
     ASSERT_EQ(Status::OK, delete_storage(st));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, exist_storage(st));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, storage::exist_storage(st));
     // using string key
     // null key
     ASSERT_EQ(Status::OK, create_storage("", st));
-    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, storage::exist_storage(st));
     // not null key
     ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
-    ASSERT_EQ(Status::OK, exist_storage(st));
+    ASSERT_EQ(Status::OK, storage::exist_storage(st));
 }
 
 } // namespace shirakami::testing

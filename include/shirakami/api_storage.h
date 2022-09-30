@@ -25,14 +25,6 @@ extern Status create_storage(std::string_view key, Storage& storage,
                              storage_option options = {}); // NOLINT
 
 /**
- * @brief Confirm existence of the storage.
- * @param[in] storage input parameter to confirm existence of the storage.
- * @return Status::OK if existence.
- * @return Status::WARN_NOT_FOUND if not existence.
- */
-extern Status exist_storage(Storage storage);
-
-/**
  * @brief delete existing storage and records under the storage.
  * @param[in] storage the storage handle retrieved with create_storage().
  * @return Status::OK if successful.

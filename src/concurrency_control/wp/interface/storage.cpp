@@ -63,10 +63,6 @@ Status create_storage(std::string_view const key, Storage& storage,
     return Status::OK;
 }
 
-Status exist_storage(Storage const storage) {
-    return storage::exist_storage(storage);
-}
-
 Status delete_storage(Storage const storage) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
