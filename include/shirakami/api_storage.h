@@ -22,7 +22,7 @@ namespace shirakami {
  * than 2^32, or shirakami create storage more than 2^32.
  */
 extern Status create_storage(std::string_view key, Storage& storage,
-                             storage_option options = {}); // NOLINT
+                             storage_option const& options = {}); // NOLINT
 
 /**
  * @brief delete existing storage and records under the storage.

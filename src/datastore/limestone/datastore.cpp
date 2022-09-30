@@ -68,11 +68,11 @@ void recovery_from_datastore() {
                 LOG(ERROR) << "programming error";
             }
             memcpy(&st2, val.data(), sizeof(st2));
-            storage_option::id_t id;
-            memcpy(&id, val.data() + sizeof(st2), sizeof(id));
+            storage_option::id_t id{};
+            memcpy(&id, val.data() + sizeof(st2), sizeof(id)); // NOLINT
             std::string payload{};
             if (val.size() > sizeof(st2) + sizeof(id)) {
-                payload.append(val.data() + sizeof(st2) + sizeof(id),
+                payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
             shirakami::storage::register_storage(st2, {id, payload});

@@ -36,7 +36,7 @@ public:
 
     void payload(std::string_view sv) { payload_ = sv; }
 
-    std::string_view payload() const { return payload_; }
+    [[nodiscard]] std::string_view payload() const { return payload_; }
 
 private:
     id_t id_{storage_id_undefined};

@@ -71,10 +71,9 @@ public:
 
     static Status key_handle_map_get_key(Storage storage, std::string& out) {
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
-        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
-             ++itr) {
-            if (itr->second == storage) {
-                out = itr->first;
+        for (auto& itr : key_handle_map_) {
+            if (itr.second == storage) {
+                out = itr.first;
                 return Status::OK;
             }
         }
@@ -107,7 +106,7 @@ public:
      * @return Status::OK success.
      */
     static Status register_storage(Storage storage,
-                                   storage_option options = {});
+                                   storage_option options = {}); // NOLINT
 
     /**
      * @brief Create a storage object
@@ -119,7 +118,7 @@ public:
                                  storage_option const& options);
 
     static Status create_storage(std::string_view key, Storage& storage,
-                                 storage_option options);
+                                 storage_option const& options);
 
     static Status exist_storage(Storage storage);
 
@@ -148,10 +147,7 @@ public:
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
         out.clear();
         out.reserve(key_handle_map_.size());
-        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
-             ++itr) {
-            out.emplace_back(itr->first);
-        }
+        for (auto &itr : key_handle_map_) { out.emplace_back(itr.first); }
         return Status::OK;
     }
 

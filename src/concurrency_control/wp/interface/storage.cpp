@@ -27,9 +27,9 @@ void write_storage_metadata(std::string_view key, Storage st,
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
     // value = Storage + id + payload
-    value.append(reinterpret_cast<char*>(&st), sizeof(st));
+    value.append(reinterpret_cast<char*>(&st), sizeof(st)); // NOLINT
     storage_option::id_t id = options.id();
-    value.append(reinterpret_cast<char*>(&id), sizeof(id));
+    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
     for (;;) {
@@ -42,13 +42,13 @@ void write_storage_metadata(std::string_view key, Storage st,
 }
 
 Status remove_storage_metadata([[maybe_unused]] Storage st,
-                               [[maybe_unused]] storage_option options) {
+                               [[maybe_unused]] storage_option const& options) {
     // todo impl
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
 Status create_storage(std::string_view const key, Storage& storage,
-                      storage_option const options) {
+                      storage_option const& options) {
     // check key existence
     Storage st{};
     if (storage::key_handle_map_get_storage(key, st) == Status::OK) {
@@ -110,13 +110,15 @@ Status storage_get_options(Storage storage, storage_option& options) {
     }
     leave(s);
     // value = Storage + id + payload
-    storage_option::id_t id;
-    memcpy(&id, value.data() + sizeof(Storage), sizeof(storage_option::id_t));
+    storage_option::id_t id{};
+    memcpy(&id, value.data() + sizeof(Storage), // NOLINT
+           sizeof(storage_option::id_t));
     std::string payload{};
     if (value.size() > sizeof(Storage) + sizeof(storage_option::id_t)) {
-        payload.append(
-                value.data() + sizeof(Storage) + sizeof(storage_option::id_t),
-                value.size() - sizeof(Storage) - sizeof(storage_option::id_t));
+        payload.append(value.data() + sizeof(Storage) +      // NOLINT
+                               sizeof(storage_option::id_t), // NOLINT
+                       value.size() - sizeof(Storage) -
+                               sizeof(storage_option::id_t));
     }
     options = {id, payload};
     return Status::OK;
@@ -134,9 +136,9 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
     // value = Storage + id + payload
-    value.append(reinterpret_cast<char*>(&storage), sizeof(storage));
+    value.append(reinterpret_cast<char*>(&storage), sizeof(storage)); // NOLINT
     storage_option::id_t id = options.id();
-    value.append(reinterpret_cast<char*>(&id), sizeof(id));
+    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
     for (;;) {
@@ -167,7 +169,8 @@ Status storage::register_storage(Storage storage, storage_option options) {
             _mm_pause();
         }
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        wp::page_set_meta* page_set_meta_ptr{new wp::page_set_meta(options)};
+        wp::page_set_meta* page_set_meta_ptr{
+                new wp::page_set_meta(std::move(options))};
         auto rc = yakushima::put<wp::page_set_meta*>(
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
