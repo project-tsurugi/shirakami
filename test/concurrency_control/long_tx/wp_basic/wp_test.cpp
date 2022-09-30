@@ -31,7 +31,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-wp-wp_test");
-        FLAGS_stderrthreshold = 0;               // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -55,13 +55,15 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
     std::string_view page_set_meta_storage_view = {
             reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
             sizeof(page_set_meta_storage)};
-    std::pair<wp::wp_meta**, std::size_t> out{};
+    std::pair<wp::page_set_meta**, std::size_t> out{};
     ASSERT_EQ(yakushima::status::OK,
-              yakushima::get<wp::wp_meta*>(page_set_meta_storage_view,
-                                           storage_view, out));
+              yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
+                                                 storage_view, out));
     ASSERT_NE(out.first, nullptr);
-    wp::wp_meta* wp_ptr = *out.first;
+    wp::page_set_meta* psmptr = *out.first;
+    wp::wp_meta* wp_ptr = psmptr->get_wp_meta_ptr();
     ASSERT_NE(wp_ptr, nullptr);
+    wp_ptr->display();
     ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), true);
     wp_ptr->register_wp(1, 1);
     ASSERT_EQ(wp::wp_meta::empty(wp_ptr->get_wped()), false);
@@ -83,9 +85,18 @@ TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     ASSERT_EQ(enter(ss.at(0)), Status::OK);
     ASSERT_EQ(enter(ss.at(1)), Status::OK);
     ASSERT_EQ(enter(ss.at(2)), Status::OK);
-    ASSERT_EQ(tx_begin({ss.at(0), transaction_options::transaction_type::LONG, {st}}), Status::OK);
-    ASSERT_EQ(tx_begin({ss.at(1), transaction_options::transaction_type::LONG, {st}}), Status::OK);
-    ASSERT_EQ(tx_begin({ss.at(2), transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({ss.at(0),
+                        transaction_options::transaction_type::LONG,
+                        {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({ss.at(1),
+                        transaction_options::transaction_type::LONG,
+                        {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({ss.at(2),
+                        transaction_options::transaction_type::LONG,
+                        {st}}),
+              Status::OK);
     auto wps = wp::find_wp(st);
     session* ti{static_cast<session*>(ss.at(2))};
     ASSERT_EQ(ti->get_overtaken_ltx_set().size(), 0);

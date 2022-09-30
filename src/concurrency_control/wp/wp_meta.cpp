@@ -38,7 +38,7 @@ void wp_meta::display() {
 }
 
 void wp_meta::init() {
-    wped_ = {};
+    clear_wped();
     wped_used_.reset();
 }
 

@@ -91,9 +91,11 @@ public:
     /**
      * @brief Create a storage object
      * @param[in] storage 
+     * @param[in] options 
      * @return Status::OK success.
      */
-    static Status register_storage(Storage storage);
+    static Status register_storage(Storage storage,
+                                   storage_option options = {});
 
     /**
      * @brief Create a storage object
@@ -101,7 +103,8 @@ public:
      * @param[in] options The storage options specified by caller.
      * @return Status::OK success.
      */
-    static Status create_storage(Storage& storage, storage_option options);
+    static Status create_storage(Storage& storage,
+                                 storage_option const& options);
 
     static Status create_storage(std::string_view key, Storage& storage,
                                  storage_option options);

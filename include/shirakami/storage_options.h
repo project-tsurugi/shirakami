@@ -19,16 +19,27 @@ constexpr Storage storage_id_undefined{UINT64_MAX};
 
 class storage_option {
 public:
+    // constructor
     storage_option() = default;
 
     storage_option(std::uint64_t id) : id_(id) {} // NOLINT
 
-    [[nodiscard]] std::uint64_t get_id() const { return id_; }
+    storage_option(std::uint64_t id, std::string_view pl)
+        : id_(id), payload_(pl) {} // NOLINT
 
-    void set_id(std::uint64_t id) { id_ = id; }
+    // setter / getter
+    void id(std::uint64_t id) { id_ = id; }
+
+    [[nodiscard]] std::uint64_t id() const { return id_; }
+
+    void payload(std::string_view sv) { payload_ = sv; }
+
+    std::string_view payload() { return payload_; }
 
 private:
     std::uint64_t id_{storage_id_undefined};
+
+    std::string payload_{};
 };
 
 } // namespace shirakami

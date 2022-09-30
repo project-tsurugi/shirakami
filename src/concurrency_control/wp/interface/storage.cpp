@@ -80,7 +80,7 @@ Status list_storage(std::vector<std::string>& out) {
     return storage::list_storage(out);
 }
 
-Status storage::register_storage(Storage storage) {
+Status storage::register_storage(Storage storage, storage_option options) {
     std::string_view storage_view = {
             reinterpret_cast<char*>(&storage), // NOLINT
             sizeof(storage)};
@@ -97,7 +97,7 @@ Status storage::register_storage(Storage storage) {
             _mm_pause();
         }
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        wp::page_set_meta* page_set_meta_ptr{new wp::page_set_meta()};
+        wp::page_set_meta* page_set_meta_ptr{new wp::page_set_meta(options)};
         auto rc = yakushima::put<wp::page_set_meta*>(
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
@@ -118,9 +118,10 @@ Status storage::register_storage(Storage storage) {
     return Status::OK;
 }
 
-Status storage::create_storage(Storage& storage, storage_option const options) {
+Status storage::create_storage(Storage& storage,
+                               storage_option const& options) {
     // compute storage id.
-    Storage storage_id = options.get_id();
+    Storage storage_id = options.id();
     if (storage_id == storage_id_undefined) {
         // storage id is not specified by shirakami-user.
         get_new_storage_num(storage);
@@ -145,7 +146,7 @@ Status storage::create_storage(Storage& storage, storage_option const options) {
     }
 
     // create storage using id computed.
-    return register_storage(storage);
+    return register_storage(storage, options);
 }
 
 Status storage::exist_storage(Storage storage) {
@@ -211,7 +212,8 @@ Status storage::delete_storage(Storage storage) {
         for (auto&& th : th_vc) { th.join(); }
     }
 
-    if (!wp::get_finalizing() && storage != storage::meta_storage) {
+    if (!wp::get_finalizing() && storage != storage::meta_storage &&
+        storage != storage::sequence_storage) {
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         yakushima::Token ytoken{};
         while (yakushima::enter(ytoken) != yakushima::status::OK) {

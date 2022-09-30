@@ -14,6 +14,8 @@
 
 #include "shirakami/scheme.h"
 
+#include "glog/logging.h"
+
 namespace shirakami::wp {
 
 /**
@@ -34,7 +36,9 @@ public:
     using wp_result_elem_type = std::tuple<epoch::epoch_t, std::size_t, bool>;
     using wp_result_set_type = std::vector<wp_result_elem_type>;
 
-    wp_meta() { init(); }
+    wp_meta() {
+        init();
+    }
 
     static bool empty(const wped_type& wped);
 

@@ -35,6 +35,13 @@ namespace wp {
 
 class page_set_meta {
 public:
+    page_set_meta() = default;
+
+    page_set_meta(storage_option options)
+        : storage_option_(options), point_read_by_long_(),
+          range_read_by_long_(), range_read_by_short_(), wp_meta_(),
+          read_plan_() {}
+
     point_read_by_long* get_point_read_by_long_ptr() {
         return &point_read_by_long_;
     }
@@ -52,11 +59,12 @@ public:
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
 private:
-    point_read_by_long point_read_by_long_;
-    range_read_by_long range_read_by_long_;
-    range_read_by_short range_read_by_short_;
-    wp_meta wp_meta_;
-    read_plan read_plan_;
+    storage_option storage_option_{};
+    point_read_by_long point_read_by_long_{};
+    range_read_by_long range_read_by_long_{};
+    range_read_by_short range_read_by_short_{};
+    wp_meta wp_meta_{};
+    read_plan read_plan_{};
 };
 
 constexpr Storage initial_page_set_meta_storage{};
