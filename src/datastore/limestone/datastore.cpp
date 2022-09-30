@@ -63,8 +63,8 @@ void recovery_from_datastore() {
         if (st == storage::meta_storage) {
             // recovery storage. The storage may have not been operated.
             Storage st2{};
-            if (val.size() >= (sizeof(st2) + sizeof(storage_option::id_t))) {
-                // val size >= Storage + id_t + payload
+            if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
+                // val size < Storage + id_t + payload
                 LOG(ERROR) << "programming error";
             }
             memcpy(&st2, val.data(), sizeof(st2));

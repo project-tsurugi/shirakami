@@ -13,6 +13,7 @@
 
 #include "shirakami/interface.h"
 #include "shirakami/logging.h"
+#include "shirakami/storage_options.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -84,6 +85,69 @@ Status get_storage(std::string_view const key, Storage& out) {
 
 Status list_storage(std::vector<std::string>& out) {
     return storage::list_storage(out);
+}
+
+Status storage_get_options(Storage storage, storage_option& options) {
+    // key handle map get key
+    std::string key{};
+    auto ret = storage::key_handle_map_get_key(storage, key);
+    if (ret != Status::OK) {
+        // storage not found
+        return ret;
+    } // storage found
+    Token s{};
+    while (enter(s) != Status::OK) { _mm_pause(); }
+    std::string value{};
+    for (;;) {
+        ret = search_key(s, storage::meta_storage, key, value);
+        if (ret != Status::OK) {
+            // todo timeout break for invalid usage.
+            shirakami::abort(s);
+            continue;
+        }
+        if (commit(s) == Status::OK) { break; } // NOLINT
+        _mm_pause();
+    }
+    leave(s);
+    // value = Storage + id + payload
+    storage_option::id_t id;
+    memcpy(&id, value.data() + sizeof(Storage), sizeof(storage_option::id_t));
+    std::string payload{};
+    if (value.size() > sizeof(Storage) + sizeof(storage_option::id_t)) {
+        payload.append(
+                value.data() + sizeof(Storage) + sizeof(storage_option::id_t),
+                value.size() - sizeof(Storage) - sizeof(storage_option::id_t));
+    }
+    options = {id, payload};
+    return Status::OK;
+}
+
+Status storage_set_options(Storage storage, storage_option const& options) {
+    // key handle map get key
+    std::string key{};
+    auto ret = storage::key_handle_map_get_key(storage, key);
+    if (ret != Status::OK) {
+        // storage not found
+        return ret;
+    } // storage found
+    Token s{};
+    while (enter(s) != Status::OK) { _mm_pause(); }
+    std::string value{};
+    // value = Storage + id + payload
+    value.append(reinterpret_cast<char*>(&storage), sizeof(storage));
+    storage_option::id_t id = options.id();
+    value.append(reinterpret_cast<char*>(&id), sizeof(id));
+    std::string payload{options.payload()};
+    value.append(payload);
+    for (;;) {
+        auto ret = upsert(s, storage::meta_storage, key, value);
+        if (ret != Status::OK) { continue; }
+        if (commit(s) == Status::OK) { break; } // NOLINT
+        _mm_pause();
+        // todo timeout break for invalid usage.
+    }
+    leave(s);
+    return Status::OK;
 }
 
 Status storage::register_storage(Storage storage, storage_option options) {

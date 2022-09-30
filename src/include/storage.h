@@ -69,6 +69,18 @@ public:
         return Status::WARN_NOT_FOUND;
     }
 
+    static Status key_handle_map_get_key(Storage storage, std::string& out) {
+        std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
+        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
+             ++itr) {
+            if (itr->second == storage) {
+                out = itr->first;
+                return Status::OK;
+            }
+        }
+        return Status::WARN_NOT_FOUND;
+    }
+
     static Status key_handle_map_push_storage(std::string_view const key,
                                               Storage const st) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
