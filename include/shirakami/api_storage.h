@@ -55,7 +55,11 @@ extern Status list_storage(std::vector<std::string>& out);
  * @param[in] storage the storage handle. 
  * @param[out] options The target storage options.
  * @return Status::OK success.
+ * @return Status::WARN_ILLEGAL_OPERATION There are many conflict 
+ * about @a storage between this function and @a storage_set_options.
  * @return Status::WARN_NOT_FOUND The storage was not found.
+ * @return Status::ERR_FATAL Error about invalid use. It couldn't find storage
+ * meta information internally.
  */
 extern Status storage_get_options(Storage storage, storage_option& options);
 
@@ -65,6 +69,8 @@ extern Status storage_get_options(Storage storage, storage_option& options);
  * @param[in] options The source of setting.
  * @return Status::OK success.
  * @return Status::WARN_NOT_FOUND The storage was not found.
+ * @return Status::ERR_FATAL Error about invalid use. It couldn't find storage
+ * meta information internally.
  */
 extern Status storage_set_options(Storage storage,
                                   storage_option const& options);

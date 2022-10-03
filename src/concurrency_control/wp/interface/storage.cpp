@@ -98,15 +98,22 @@ Status storage_get_options(Storage storage, storage_option& options) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
+    std::size_t try_num{0};
     for (;;) {
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
-            // todo timeout break for invalid usage.
-            shirakami::abort(s);
-            continue;
+            LOG(ERROR) << "unreachable path";
+            return Status::ERR_FATAL;
         }
         if (commit(s) == Status::OK) { break; } // NOLINT
+        // Someone may executed storage_set_options and it occurs occ error.
         _mm_pause();
+        ++try_num;
+        if (try_num > 100) {
+            LOG(INFO) << "strange statement";
+            leave(s);
+            return Status::WARN_ILLEGAL_OPERATION;
+        }
     }
     leave(s);
     // value = Storage + id + payload
@@ -141,15 +148,17 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
-    for (;;) {
-        auto ret = upsert(s, storage::meta_storage, key, value);
-        if (ret != Status::OK) { continue; }
-        if (commit(s) == Status::OK) { break; } // NOLINT
-        _mm_pause();
-        // todo timeout break for invalid usage.
+    ret = upsert(s, storage::meta_storage, key, value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "invalid use";
+        return Status::ERR_FATAL;
     }
-    leave(s);
-    return Status::OK;
+    if (commit(s) == Status::OK) {
+        leave(s);
+        return Status::OK;
+    } // else
+    LOG(ERROR) << "unreachable path";
+    return Status::ERR_FATAL;
 }
 
 Status storage::register_storage(Storage storage, storage_option options) {
@@ -161,7 +170,10 @@ Status storage::register_storage(Storage storage, storage_option options) {
     if (rc == yakushima::status::WARN_UNIQUE_RESTRICTION) { // NOLINT
         return Status::WARN_ALREADY_EXISTS;
     }
-    if (rc != yakushima::status::OK) { LOG(ERROR) << "programming error."; }
+    if (rc != yakushima::status::OK) {
+        LOG(ERROR) << "programming error.";
+        return Status::ERR_FATAL;
+    }
 
     if (wp::get_initialized()) {
         yakushima::Token ytoken{};

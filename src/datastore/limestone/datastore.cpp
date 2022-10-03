@@ -66,6 +66,7 @@ void recovery_from_datastore() {
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
                 LOG(ERROR) << "programming error";
+                return;
             }
             memcpy(&st2, val.data(), sizeof(st2));
             storage_option::id_t id{};
@@ -75,12 +76,11 @@ void recovery_from_datastore() {
                 payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
-            shirakami::storage::register_storage(st2, {id, payload});
-            // the storage may be already created by log_entry
-            storage::key_handle_map_push_storage(key, st2);
+            shirakami::create_storage(key, st2, {id, payload});
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
             LOG(INFO) << "not implemented";
+            return;
         } else {
             shirakami::storage::register_storage(st);
             st_list.emplace_back(st);
@@ -96,6 +96,7 @@ void recovery_from_datastore() {
     }
     if (yakushima::leave(tk) != yakushima::status::OK) {
         LOG(ERROR) << "programming error";
+        return;
     }
 }
 
