@@ -32,13 +32,17 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
-    for (;;) {
-        auto ret = upsert(s, storage::meta_storage, key, value);
-        if (ret != Status::OK) { continue; }
-        if (commit(s) == Status::OK) { break; } // NOLINT
-        _mm_pause();
+    auto ret = upsert(s, storage::meta_storage, key, value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "reachable path";
+        return;
     }
-    leave(s);
+    if (commit(s) == Status::OK) {
+        leave(s);
+        return;
+    } // else
+    LOG(ERROR) << "reachable path";
+    return;
 }
 
 Status remove_storage_metadata([[maybe_unused]] Storage st,

@@ -193,11 +193,9 @@ void flush_log(Token token) {
     }
 }
 
-void flush_remaining_log(bool& was_nothing) {
-    was_nothing = true;
+void flush_remaining_log() {
     for (auto&& es : session_table::get_session_table()) {
         if (!es.get_lpwal_handle().get_logs().empty()) {
-            was_nothing = false;
             begin_session(es.get_lpwal_handle().get_log_channel_ptr());
             add_entry_from_logs(es.get_lpwal_handle());
             end_session(es.get_lpwal_handle().get_log_channel_ptr());

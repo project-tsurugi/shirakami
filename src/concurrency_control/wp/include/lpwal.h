@@ -326,6 +326,6 @@ extern void fin();
  * @brief flush remaining log.
  * @pre This can not exist DML concurrently
  */
-extern void flush_remaining_log(bool& was_nothing);
+extern void flush_remaining_log();
 
 } // namespace shirakami::lpwal

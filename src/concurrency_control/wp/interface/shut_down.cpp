@@ -45,16 +45,12 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     lpwal::fin(); // stop damon
     if (!force_shut_down_logging) {
         // flush remaining log
-        bool was_nothing{false};
-        lpwal::flush_remaining_log(was_nothing); // (*1)
+        lpwal::flush_remaining_log(); // (*1)
         epoch::epoch_t ce{epoch::get_global_epoch()};
-        // (*1)'s log must be before ce timing.
-        if (!was_nothing) {
-            // wait durable above flushing
-            for (;;) {
-                if (epoch::get_durable_epoch() >= ce) { break; }
-                _mm_pause();
-            }
+        // wait durable above flushing
+        for (;;) {
+            if (epoch::get_durable_epoch() >= ce) { break; }
+            _mm_pause();
         }
     }
     if (lpwal::get_log_dir_pointed()) {

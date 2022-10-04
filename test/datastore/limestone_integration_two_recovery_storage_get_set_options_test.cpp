@@ -77,6 +77,12 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_test, // NO
     // recovery
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
+    // shut down
+    fin(false);
+
+    // recovery
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+
     ASSERT_EQ(Status::OK, get_storage("1", st));
     storage_option options{};
     ASSERT_EQ(Status::OK, storage_get_options(st, options));
@@ -88,20 +94,6 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_test, // NO
     ASSERT_EQ(Status::OK, storage_get_options(st, options));
     ASSERT_EQ(7, options.id());
     ASSERT_EQ("8", options.payload());
-
-    // check operation after recovery for (*1)
-    ASSERT_EQ(Status::OK, get_storage("1", st));
-    ASSERT_EQ(Status::OK, storage_set_options(st, {9, "10"}));
-    ASSERT_EQ(Status::OK, storage_get_options(st, options));
-    ASSERT_EQ(9, options.id());
-    ASSERT_EQ("10", options.payload());
-
-    // check operation after recovery for (*1)
-    ASSERT_EQ(Status::OK, get_storage("4", st));
-    ASSERT_EQ(Status::OK, storage_set_options(st, {11, "12"}));
-    ASSERT_EQ(Status::OK, storage_get_options(st, options));
-    ASSERT_EQ(11, options.id());
-    ASSERT_EQ("12", options.payload());
 
     // cleanup
     fin();
