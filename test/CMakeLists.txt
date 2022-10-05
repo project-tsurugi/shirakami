@@ -98,6 +98,9 @@ file(GLOB WP_TEST_SOURCES
 if (BUILD_PWAL)
   file (GLOB LOGGING_TEST_SOURCES
         "datastore/*.cpp"
+        "datastore/single_recovery/*.cpp"
+        "datastore/two_recovery/*.cpp"
+        "datastore/three_recovery/*.cpp"
         )
   set(TEST_SOURCES ${TEST_SOURCES} ${LOGGING_TEST_SOURCES})
 endif()
