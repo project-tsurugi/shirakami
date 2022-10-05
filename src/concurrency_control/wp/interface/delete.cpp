@@ -21,10 +21,17 @@ namespace shirakami {
     std::vector<Storage> storage_list;
     storage::list_storage(storage_list);
 
-    // delete for above.
+    // delete all storages.
     for (auto&& elem : storage_list) {
-        if (elem != wp::get_page_set_meta_storage()) { delete_storage(elem); }
+        if (elem != wp::get_page_set_meta_storage()) {
+            if (delete_storage(elem) != Status::OK) {
+                LOG(ERROR) << "try delete_storage(" << elem << ")";
+                return Status::ERR_FATAL;
+            }
+        }
     }
+
+    storage::key_handle_map_clear();
 
     return Status::OK;
 }

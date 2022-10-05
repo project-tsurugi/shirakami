@@ -11,6 +11,8 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 class storage {
@@ -34,10 +36,30 @@ public:
 
     static void key_handle_map_clear() { key_handle_map_.clear(); }
 
+    static void key_handle_map_display() {
+        LOG(INFO) << ">> key_handle_map_display";
+        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
+             ++itr) {
+            LOG(INFO) << itr->first << ", " << itr->second;
+        }
+        LOG(INFO) << "<< key_handle_map_display";
+    }
     static Status key_handle_map_erase_storage(std::string_view const key) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
         auto ret = key_handle_map_.erase({std::string(key)});
         if (ret == 1) { return Status::OK; }
+        return Status::WARN_NOT_FOUND;
+    }
+
+    static Status key_handle_map_erase(Storage storage) {
+        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
+             ++itr) {
+            if (itr->second == storage) {
+                key_handle_map_.erase(itr);
+                return Status::OK;
+            }
+        }
         return Status::WARN_NOT_FOUND;
     }
 
@@ -147,7 +169,7 @@ public:
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
         out.clear();
         out.reserve(key_handle_map_.size());
-        for (auto &itr : key_handle_map_) { out.emplace_back(itr.first); }
+        for (auto& itr : key_handle_map_) { out.emplace_back(itr.first); }
         return Status::OK;
     }
 

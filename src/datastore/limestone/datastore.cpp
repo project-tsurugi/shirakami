@@ -76,7 +76,29 @@ void recovery_from_datastore() {
                 payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
-            shirakami::create_storage(key, st2, {id, payload});
+            auto ret = shirakami::create_storage(key, st2, {id, payload});
+            if (ret != Status::OK) {
+                /**
+                 * It already created the storage which has same Storage for 
+                 * DML log record.
+                 */
+                if (storage::key_handle_map_push_storage(key, st2) !=
+                    Status::OK) {
+                    /**
+                     * This execution is done by single thread, so it can 
+                     * execute erase-push
+                     */
+                    if (storage::key_handle_map_erase(st2) != Status::OK) {
+                        LOG(ERROR) << "programming error";
+                        return;
+                    }
+                    if (storage::key_handle_map_push_storage(key, st2) !=
+                        Status::OK) {
+                        LOG(ERROR) << "programming error";
+                        return;
+                    }
+                }
+            }
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
             LOG(INFO) << "not implemented";

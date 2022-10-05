@@ -89,6 +89,7 @@ extern bool check_commit(Token token, std::uint64_t commit_id); // NOLINT
  * @details  It must not call tx_begin(Token token) before this calling. And 
  * it doesn't need to call enter/leave around calling this function.
  * @return Status::OK success
+ * @return Status::ERR_FATAL It failed to delete some storage.
  */
 [[maybe_unused]] extern Status delete_all_records(); // NOLINT
 
