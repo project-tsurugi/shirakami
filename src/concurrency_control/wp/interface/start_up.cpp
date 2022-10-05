@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "atomic_wrapper.h"
+#include "sequence.h"
 #include "storage.h"
 #include "tsc.h"
 
@@ -10,7 +11,6 @@
 
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
-#include "concurrency_control/wp/include/sequence.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"

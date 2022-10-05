@@ -90,6 +90,7 @@ file(GLOB WP_TEST_SOURCES
         "result/*.cpp"
         "start/*.cpp"
         "shutdown/*.cpp"
+        "sequence/*.cpp"
         "storage/*.cpp"
         "transaction_options/*.cpp"
         )

@@ -4,106 +4,90 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <map>
-#include <mutex>
+#include <shared_mutex>
+
+#include "concurrency_control/wp/include/epoch.h"
+
+#include "shirakami/interface.h"
+#include "shirakami/scheme.h"
 
 #include <glog/logging.h>
 
-#include "shirakami/interface.h"
-
-#if defined(CPR)
-
-#include "fault_tolerance/include/cpr.h"
-
-#endif
-
-
 namespace shirakami {
 
-class sequence_map {
+class sequence {
 public:
     /**
-     * @details The first of std::pair<std::pair<SequenceVersion, SequenceValue>, 
-     * std::pair<SequenceVersion, SequenceValue>> is not durable, and the second of that is durable.
+     * @details epoch::epoch_t is durable epoch, std::tuple<SequenceVersion, 
+     * SequenceValue> is the pair information of that.
      */
-#if defined(CPR)
-    using value_type = std::tuple<std::tuple<SequenceVersion, SequenceValue>, std::tuple<SequenceVersion, SequenceValue>, cpr::version_type>;
-    static constexpr std::size_t volatile_pos{0};
-    static constexpr std::size_t durable_pos{1};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{0, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{SIZE_MAX, 0};
-    static constexpr std::size_t cpr_version_pos{2};
-    static constexpr value_type non_exist_map_value{non_exist_value, non_exist_value, 0};
-#else
-    using value_type = std::tuple<SequenceVersion, SequenceValue>;
-    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{0, 0};
-    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{SIZE_MAX, 0};
-#endif
+    using value_type = std::map<epoch::epoch_t,
+                                std::tuple<SequenceVersion, SequenceValue>>;
+    static constexpr std::tuple<SequenceVersion, SequenceValue> initial_value{
+            0, 0};
+    static constexpr std::tuple<SequenceVersion, SequenceValue> non_exist_value{
+            SIZE_MAX, 0};
     static constexpr std::size_t version_pos{0};
     static constexpr std::size_t value_pos{1};
 
+    static void init() {
+        sequence_map().clear();
+        id_generator_ctr().store(0, std::memory_order_release);
+    }
+
     /**
-     * @pre It is called by create_sequence function.
+     * @brief Create a sequence object
+     * @param[out] id 
+     * @return Status 
      */
-    static void create_initial_value(SequenceId id) {
-        std::unique_lock lock{sequence_map::get_sm_mtx()};
-#if defined(CPR)
-        sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value, sequence_map::non_exist_value, 0};
-#else
-        sequence_map::get_sm()[id] = sequence_map::value_type{sequence_map::initial_value};
-#endif
-    }
-
-    static std::map<SequenceId, value_type>& get_sm() {
-        return sm_;
-    }
-
-    static std::mutex& get_sm_mtx() {
-        return sm_mtx_;
-    }
+    static Status create_sequence(SequenceId* id);
 
     /**
-     * @pre It has acquired lock.
+     * @brief It updates sequence object.
+     * @param[in] token 
      * @param[in] id 
-     * @param[out] val
-     * @return Status::OK found.
-     * @return Status::WARN_NOT_FOUND not found.
+     * @param[in] version 
+     * @param[in] value 
+     * @return Status 
      */
-    static Status get_value(SequenceId id, value_type& val) {
-        if (sm_.find(id) == sm_.end()) {
-            return Status::WARN_NOT_FOUND;
-        }
-        val = sm_[id];
-        return Status::OK;
-    }
+    static Status update_sequence(Token token, SequenceId id,
+                                  SequenceVersion version, SequenceValue value);
 
     /**
-     * @pre It has acquired lock.
+     * @brief It reads sequence object.
+     * @param[in] id 
+     * @param[out] version 
+     * @param[out] value 
+     * @return Status 
      */
-    static value_type& get_value_ref(SequenceId id) {
-        return sm_[id];
-    }
+    static Status read_sequence(SequenceId id, SequenceVersion* version,
+                                SequenceValue* value);
 
     /**
-     * @pre It has acquired lock.
+     * @brief It deletes sequence object.
+     * @param[in] id 
+     * @return Status 
      */
-    static void put_value(SequenceId id, value_type new_v) {
-        sm_[id] = new_v;
+    static Status delete_sequence(SequenceId id);
+
+    // getter / setter
+    static std::shared_mutex& sequence_map_smtx() { return sequence_map_smtx_; }
+
+    static std::atomic<SequenceId>& id_generator_ctr() {
+        return id_generator_ctr_;
     }
 
-    static SequenceId fetch_add_created_num() {
-        SequenceId ret{created_num_.fetch_add(1)};
-        if (ret == SIZE_MAX) {
-            LOG(FATAL) << "fatal error"; // todo round-trip
-        }
-        return ret;
+    static std::map<SequenceId, value_type>& sequence_map() {
+        return sequence_map_;
     }
 
 private:
-    static inline std::map<SequenceId, value_type> sm_; // NOLINT
-    static inline std::atomic<SequenceId> created_num_{0};
-    static inline std::mutex sm_mtx_;
+    static inline std::map<SequenceId, value_type> sequence_map_; // NOLINT
+    static inline std::atomic<SequenceId> id_generator_ctr_{0};
+    static inline std::shared_mutex sequence_map_smtx_;
 };
 
 } // namespace shirakami

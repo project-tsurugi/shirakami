@@ -6,13 +6,11 @@
 
 #include "sequence.h"
 
-#if defined(CPR)
-
-#include "fault_tolerance/include/cpr.h"
-
-#endif
-
 #include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
 
 namespace shirakami::testing {
 
@@ -20,44 +18,48 @@ using namespace shirakami;
 
 class sequence_test : public ::testing::Test { // NOLINT
 public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-sequence-sequence_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
+    }
     void SetUp() override {
+        std::call_once(init_, call_once_f);
         init();
     }
     void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_; // NOLINT
 };
 
 TEST_F(sequence_test, basic) { // NOLINT
-    SequenceId id{};
-    SequenceVersion ver{};
-    SequenceValue val{};
-    ASSERT_EQ(read_sequence(id, &ver, &val), Status::WARN_NOT_FOUND);
-    ASSERT_EQ(create_sequence(&id), Status::OK);
-#if defined(CPR)
-    cpr::wait_next_checkpoint(); // wait to be able to read updated value.
-#endif
-    ASSERT_EQ(read_sequence(id, &ver, &val), Status::OK);
-    ASSERT_EQ(ver, std::get<sequence_map::version_pos>(sequence_map::initial_value));
-    ASSERT_EQ(val, std::get<sequence_map::value_pos>(sequence_map::initial_value));
-    Token token{};
-    while (enter(token) != Status::OK) {
-        ;
+    // create sequence
+    {
+        SequenceId id{};
+        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED, create_sequence(&id));
     }
-    tx_begin({token});
-    // update_sequence depends on transaction semantics.
-    ASSERT_EQ(update_sequence(token, id, ver + 1, val + 2), Status::OK);
-    commit(token);
-    leave(token);
-#if defined(CPR)
-    cpr::wait_next_checkpoint(); // wait to be able to read updated value.
-#endif
-    ASSERT_EQ(read_sequence(id, &ver, &val), Status::OK);
-    ASSERT_EQ(ver, std::get<sequence_map::version_pos>(sequence_map::initial_value) + 1);
-    ASSERT_EQ(val, std::get<sequence_map::value_pos>(sequence_map::initial_value) + 2);
-    ASSERT_EQ(delete_sequence(id), Status::OK);
-#if defined(CPR)
-    cpr::wait_next_checkpoint(); // wait to be able to read updated value.
-#endif
-    ASSERT_EQ(read_sequence(id, &ver, &val), Status::WARN_NOT_FOUND);
+    // update sequence
+    {
+        Token token{};
+        SequenceId id{};
+        SequenceVersion version{};
+        SequenceValue value{};
+        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED,
+                  update_sequence(token, id, version, value));
+    }
+    // read sequence
+    {
+        SequenceId id{};
+        SequenceVersion version{};
+        SequenceValue value{};
+        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED,
+                  read_sequence(id, &version, &value));
+    }
+    // delete sequence
+    {
+        SequenceId id{};
+        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED, delete_sequence(id));
+    }
 }
 
 } // namespace shirakami::testing
