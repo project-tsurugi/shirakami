@@ -36,7 +36,7 @@ TEST_F(sequence_test, basic) { // NOLINT
     // create sequence
     {
         SequenceId id{};
-        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED, create_sequence(&id));
+        ASSERT_EQ(Status::OK, create_sequence(&id));
     }
     // update sequence
     {
@@ -44,7 +44,7 @@ TEST_F(sequence_test, basic) { // NOLINT
         SequenceId id{};
         SequenceVersion version{};
         SequenceValue value{};
-        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED,
+        ASSERT_EQ(Status::OK,
                   update_sequence(token, id, version, value));
     }
     // read sequence
@@ -52,13 +52,13 @@ TEST_F(sequence_test, basic) { // NOLINT
         SequenceId id{};
         SequenceVersion version{};
         SequenceValue value{};
-        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED,
+        ASSERT_EQ(Status::OK,
                   read_sequence(id, &version, &value));
     }
     // delete sequence
     {
         SequenceId id{};
-        ASSERT_EQ(Status::ERR_NOT_IMPLEMENTED, delete_sequence(id));
+        ASSERT_EQ(Status::OK, delete_sequence(id));
     }
 }
 

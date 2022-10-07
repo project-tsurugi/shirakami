@@ -10,20 +10,23 @@ namespace shirakami {
 
 // public api
 
-Status create_sequence(SequenceId* id) { return sequence::create_sequence(id); }
+Status create_sequence([[maybe_unused]] SequenceId* id) { return Status::OK; }
 
-Status update_sequence(Token token, SequenceId id, SequenceVersion version,
-                       SequenceValue value) {
-    return sequence::update_sequence(token, id, version, value);
+Status update_sequence([[maybe_unused]] Token token,
+                       [[maybe_unused]] SequenceId id,
+                       [[maybe_unused]] SequenceVersion version,
+                       [[maybe_unused]] SequenceValue value) {
+    return Status::OK;
 }
 
 
-Status read_sequence(SequenceId id, SequenceVersion* version,
-                     SequenceValue* value) {
-    return sequence::read_sequence(id, version, value);
+Status read_sequence([[maybe_unused]] SequenceId id,
+                     [[maybe_unused]] SequenceVersion* version,
+                     [[maybe_unused]] SequenceValue* value) {
+    return Status::OK;
 }
 
-Status delete_sequence(SequenceId id) { return sequence::delete_sequence(id); }
+Status delete_sequence([[maybe_unused]] SequenceId id) { return Status::OK; }
 
 // sequence function body
 
