@@ -76,35 +76,48 @@ void recovery_from_datastore() {
                 payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
-            auto ret = shirakami::create_storage(key, st2, {id, payload});
-            if (ret != Status::OK) {
-                /**
-                 * It already created the storage which has same Storage for 
-                 * DML log record.
-                 */
+            // check st2 existence
+            auto ret = shirakami::storage::exist_storage(st2);
+            if (ret == Status::OK) {
+                // already exist, try update key_handle_map.
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
+                    LOG(ERROR) << "unexpected error";
+                    return;
+                }
+            } else {
+                // not exist, so create.
+                auto ret = shirakami::create_storage(key, st2, {id, payload});
+                if (ret != Status::OK) {
                     /**
-                     * This execution is done by single thread, so it can 
-                     * execute erase-push
-                     */
-                    if (storage::key_handle_map_erase(st2) != Status::OK) {
-                        LOG(ERROR) << "programming error";
-                        return;
-                    }
+                      * It already created the storage which has same Storage for 
+                      * DML log record.
+                      */
                     if (storage::key_handle_map_push_storage(key, st2) !=
                         Status::OK) {
-                        LOG(ERROR) << "programming error";
-                        return;
+                        /**
+                          * This execution is done by single thread, so it can 
+                          * execute erase-push
+                          */
+                        if (storage::key_handle_map_erase(st2) != Status::OK) {
+                            LOG(ERROR) << "programming error";
+                            return;
+                        }
+                        if (storage::key_handle_map_push_storage(key, st2) !=
+                            Status::OK) {
+                            LOG(ERROR) << "programming error";
+                            return;
+                        }
                     }
                 }
             }
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
+            // todo recovery sequence generator counter.
             LOG(INFO) << "not implemented";
             return;
         } else {
-            shirakami::storage::register_storage(st);
+            shirakami::storage::register_storage(st); // maybe already exist
             st_list.emplace_back(st);
             // create kvs entry (database record) from these info.
             if (yakushima::status::OK != put<Record>(tk, st, key, val)) {

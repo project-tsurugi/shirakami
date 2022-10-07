@@ -44,7 +44,10 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
     // about storage
     storage::init();
 
-    // about sequence
+    /**
+     * about sequence. the generator of sequence id is cleared, So if this is 
+     * a start up with recovery, it must also recovery sequence id generator.
+     */
     sequence::init();
 
 #if defined(PWAL)

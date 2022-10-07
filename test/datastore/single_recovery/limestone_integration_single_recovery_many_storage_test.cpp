@@ -86,7 +86,6 @@ TEST_F(limestone_integration_single_recovery_regression_test, // NOLINT
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
     create_storages_and_upsert_one_record();
-    sleep(1);
 
     fin(false);
 
