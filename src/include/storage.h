@@ -38,9 +38,8 @@ public:
 
     static void key_handle_map_display() {
         LOG(INFO) << ">> key_handle_map_display";
-        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
-             ++itr) {
-            LOG(INFO) << itr->first << ", " << itr->second;
+        for (auto&& itr : key_handle_map_) {
+            LOG(INFO) << itr.first << ", " << itr.second;
         }
         LOG(INFO) << "<< key_handle_map_display";
     }
