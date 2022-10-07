@@ -32,12 +32,24 @@ public:
             SIZE_MAX, 0};
     static constexpr std::size_t version_pos{0};
     static constexpr std::size_t value_pos{1};
+    static constexpr std::size_t max_sequence_id{SIZE_MAX};
 
-    static void init() {
-        sequence_map().clear();
-        id_generator_ctr().store(0, std::memory_order_release);
-    }
+    /**
+     * @brief clear sequence_map_ and id_generator_ctr_.
+     */
+    static void init();
 
+    /**
+     * @brief generate sequence id
+     * @param[out] id the new id generated.
+     * @return Status::OK success
+     * @return Status::ERR_FATAL todo. the counter is wrap-round.
+     */
+    static Status generate_sequence_id(SequenceId& id);
+
+    static Status sequence_map_push(SequenceId id);
+
+    // connect public api
     /**
      * @brief Create a sequence object
      * @param[out] id 

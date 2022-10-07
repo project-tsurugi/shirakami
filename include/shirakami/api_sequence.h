@@ -35,6 +35,8 @@ using SequenceVersion = std::size_t;
  * when this function is successful with Status::OK.
  * @param[in] token If this is not nullptr, shirakami uses @a token for logging.
  * @return Status::OK success.
+ * @return Status::ERR_FATAL todo. The sequence id is depletion. It must 
+ * implement reuse system or extending id space.
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running 
  * transactions. Typical usage is in DDL to register sequence objects.
