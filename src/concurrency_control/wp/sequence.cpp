@@ -2,7 +2,10 @@
  * @file sequence.cpp
  */
 
+#include <tuple>
+
 #include "sequence.h"
+#include "storage.h"
 
 #include "concurrency_control/wp/include/garbage.h"
 
@@ -45,7 +48,6 @@ Status sequence::generate_sequence_id(SequenceId& id) {
 }
 
 Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
-#if 0
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
     // gc
     // compute gc epoch
@@ -59,7 +61,7 @@ Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
         std::size_t ctr{0};
         for (auto itr = each_sequence_object.begin();
              itr != each_sequence_object.end();) {
-            if (itr.first < gc_epoch) {
+            if (itr->first < gc_epoch) {
                 ++ctr;
             } else {
                 break;
@@ -78,10 +80,10 @@ Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
     sequence::value_type new_val{};
     auto ret = sequence::sequence_map().insert(std::make_pair(id, new_val));
     if (ret.second) {
-        ret = (*ret.first)
-                      .insert(std::make_pair(epoch::get_global_epoch(),
-                                             sequence::initial_value));
-        if (!ret.second) {
+        // insert success
+        auto ret2 = ret.first->second.insert(std::make_pair(
+                epoch::get_global_epoch(), sequence::initial_value));
+        if (!ret2.second) {
             // This object must be operated by here.
             LOG(ERROR) << "unexpected behavior";
             return Status::ERR_FATAL;
@@ -89,9 +91,6 @@ Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
         return Status::OK;
     }
     return Status::WARN_ALREADY_EXISTS;
-#else
-    return Status::ERR_NOT_IMPLEMENTED;
-#endif
 }
 
 Status sequence::create_sequence(SequenceId* id) {
@@ -106,24 +105,43 @@ Status sequence::create_sequence(SequenceId* id) {
         return Status::ERR_FATAL;
     }
 
-#if 0
     // generate transaction handle
     Token token{};
     while (Status::OK != enter(token)) { _mm_pause(); }
 
     // logging sequence operation
+    // gen key
     std::string key{};
-    key.append(reinterpret_cast<char*>(*id), sizeof(*id));
-    std::tuple<SequenceVersion, SequenceValue> inital_value =
+    key.append(reinterpret_cast<char*>(*id), sizeof(*id)); // NOLINT
+    // gen value
+    std::tuple<SequenceVersion, SequenceValue> initial_pair =
             sequence::initial_value;
-    std::string value{};
-    std::value.append(reinterpret_cast<char*>()) ret =
-            upsert(token, storage::sequence_storage, );
+    SequenceVersion initial_version{std::get<0>(initial_pair)};
+    SequenceValue initial_value{std::get<1>(initial_pair)};
+    std::string value{}; // value is version + value
+    value.append(reinterpret_cast<char*>(&initial_version), // NOLINT
+                 sizeof(initial_version));
+    value.append(reinterpret_cast<char*>(&initial_value), // NOLINT
+                 sizeof(initial_value));
+    ret = upsert(token, storage::sequence_storage, key, value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+    ret = commit(token);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
 
-#endif
     // cleanup transaction handle
-    // copy sequence id to output arguments
-    return Status::ERR_NOT_IMPLEMENTED;
+    ret = leave(token);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+
+    return Status::OK;
 }
 
 Status sequence::update_sequence([[maybe_unused]] Token token,
