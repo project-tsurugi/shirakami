@@ -62,7 +62,7 @@ void create_storages_and_upsert_one_record(int num) {
     std::string name{"T" + std::to_string(num)};
     Storage t0{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage(name, t0));
-    storage_option opt{static_cast<std::size_t>(100 + num), "P"};
+    storage_option opt{static_cast<std::size_t>(100 + num), "P"}; // NOLINT
     ASSERT_EQ(Status::OK, create_storage(name, t0, opt));
     std::cerr << "t0 : " << t0 << std::endl;
 

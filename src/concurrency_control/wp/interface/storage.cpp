@@ -42,7 +42,6 @@ void write_storage_metadata(std::string_view key, Storage st,
         return;
     } // else
     LOG(ERROR) << "reachable path";
-    return;
 }
 
 Status remove_storage_metadata([[maybe_unused]] Storage st,
@@ -115,7 +114,7 @@ Status storage_get_options(Storage storage, storage_option& options) {
         // Someone may executed storage_set_options and it occurs occ error.
         _mm_pause();
         ++try_num;
-        if (try_num > 100) {
+        if (try_num > 100) { // NOLINT
             LOG(INFO) << "strange statement";
             leave(s);
             return Status::WARN_ILLEGAL_OPERATION;
