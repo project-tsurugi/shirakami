@@ -47,7 +47,13 @@ public:
      */
     static Status generate_sequence_id(SequenceId& id);
 
+    static void gc_sequence_map();
+
     static Status sequence_map_push(SequenceId id);
+
+    static Status sequence_map_try_update(SequenceId id,
+                                          SequenceVersion version,
+                                          SequenceValue value);
 
     // connect public api
     /**

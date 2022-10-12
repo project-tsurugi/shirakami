@@ -47,9 +47,7 @@ Status sequence::generate_sequence_id(SequenceId& id) {
     return Status::OK;
 }
 
-Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
-    // gc
+void sequence::gc_sequence_map() {
     // compute gc epoch
     epoch::epoch_t gc_epoch{};
     gc_epoch = garbage::get_min_step_epoch();
@@ -75,6 +73,14 @@ Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
             }
         }
     }
+}
+
+Status sequence::sequence_map_push(SequenceId const id) {
+    // acquire write lock
+    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // gc
+    sequence::gc_sequence_map();
 
     // push
     sequence::value_type new_val{};
@@ -91,6 +97,20 @@ Status sequence::sequence_map_push([[maybe_unused]] SequenceId const id) {
         return Status::OK;
     }
     return Status::WARN_ALREADY_EXISTS;
+}
+
+Status sequence::sequence_map_try_update(
+        [[maybe_unused]] SequenceId const id,
+        [[maybe_unused]] SequenceVersion const version,
+        [[maybe_unused]] SequenceValue const value) {
+    // acquire write lock
+    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // gc
+    sequence::gc_sequence_map();
+
+    // check
+    return Status::ERR_NOT_IMPLEMENTED;
 }
 
 Status sequence::create_sequence(SequenceId* id) {
@@ -144,20 +164,50 @@ Status sequence::create_sequence(SequenceId* id) {
     return Status::OK;
 }
 
-Status sequence::update_sequence([[maybe_unused]] Token token,
-                                 [[maybe_unused]] SequenceId id,
-                                 [[maybe_unused]] SequenceVersion version,
-                                 [[maybe_unused]] SequenceValue value) {
-    return Status::ERR_NOT_IMPLEMENTED;
+Status sequence::update_sequence(Token token, SequenceId id,
+                                 SequenceVersion version, SequenceValue value) {
+    // try update sequence object
+    auto ret = sequence::sequence_map_try_update(id, version, value);
+    if (ret != Status::OK) { return ret; }
+
+    // logging sequence operation
+    // gen key
+    std::string key{};
+    key.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
+    // gen value
+    std::string new_value{}; // value is version + value
+    new_value.append(reinterpret_cast<char*>(&version), // NOLINT
+                     sizeof(version));
+    new_value.append(reinterpret_cast<char*>(&value), // NOLINT
+                     sizeof(value));
+    ret = upsert(token, storage::sequence_storage, key, new_value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+    ret = commit(token);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+
+    return Status::OK;
 }
 
 Status sequence::read_sequence([[maybe_unused]] SequenceId id,
                                [[maybe_unused]] SequenceVersion* version,
                                [[maybe_unused]] SequenceValue* value) {
+    // read sequence object
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
 Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
+    // update sequence object
+    // generate transaction handle
+    // logging sequence operation
+    // gen key
+    // gen value
+    // cleanup transaction handle
     return Status::ERR_NOT_IMPLEMENTED;
 }
 
