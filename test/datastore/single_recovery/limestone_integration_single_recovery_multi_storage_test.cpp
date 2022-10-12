@@ -59,10 +59,10 @@ void create_storages_and_upsert_one_record(int num) {
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
-    std::string name{"T"+std::to_string(num)};
+    std::string name{"T" + std::to_string(num)};
     Storage t0{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage(name, t0));
-    storage_option opt{static_cast<std::size_t>(100+num), "P"};
+    storage_option opt{static_cast<std::size_t>(100 + num), "P"};
     ASSERT_EQ(Status::OK, create_storage(name, t0, opt));
     std::cerr << "t0 : " << t0 << std::endl;
 
@@ -70,12 +70,12 @@ void create_storages_and_upsert_one_record(int num) {
     ASSERT_EQ(Status::OK, tx_begin(s));
     // data creation
     ASSERT_EQ(Status::OK, upsert(s, t0, "a", "a")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(limestone_integration_single_recovery_multi_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {               // NOLINT
+       check_storage_operation_after_recovery) {                 // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -104,7 +104,7 @@ TEST_F(limestone_integration_single_recovery_multi_storage_test, // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, t0, "a", vb));
     ASSERT_EQ("a", vb);
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     fin();
 }

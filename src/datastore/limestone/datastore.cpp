@@ -76,19 +76,45 @@ void recovery_from_datastore() {
                 payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
+            auto upsert_meta_info = [key, id, payload, st2]() {
+                Token token{};
+                // acquire tx handle
+                while (enter(token) != Status::OK) { _mm_pause(); }
+                std::string new_value{};
+                new_value.append(reinterpret_cast<const char*>(&st2), // NOLINT
+                                 sizeof(st2));
+                new_value.append(reinterpret_cast<const char*>(&id), // NOLINT
+                                 sizeof(id));
+                new_value.append(payload);
+                if (Status::OK !=
+                    upsert(token, storage::meta_storage, key, new_value)) {
+                    LOG(ERROR) << "unexpected error";
+                }
+                if (Status::OK != commit(token)) {
+                    LOG(ERROR) << "unexpected error";
+                }
+            };
             // check st2 existence
             auto ret = shirakami::storage::exist_storage(st2);
             if (ret == Status::OK) {
-                // already exist, try update key_handle_map.
+                /**
+                 * There must be normal entry for st2 and it was already 
+                 * processed.
+                 * Try to create in-memory entry about storage info and update 
+                 * key_handle_map.
+                 */
+                upsert_meta_info();
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     LOG(ERROR) << "unexpected error";
                     return;
                 }
+
             } else {
                 // not exist, so create.
                 auto ret = shirakami::create_storage(key, st2, {id, payload});
                 if (ret != Status::OK) {
+                    // todo try to remove this block
                     /**
                       * It already created the storage which has same Storage for 
                       * DML log record.

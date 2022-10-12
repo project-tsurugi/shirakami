@@ -61,9 +61,7 @@ Status create_storage(std::string_view const key, Storage& storage,
     // point (*1)
 
     auto ret = storage::create_storage(storage, options);
-    if (ret != Status::OK) {
-        return ret;
-    }
+    if (ret != Status::OK) { return ret; }
     // success create_storage
     // point (*2)
     if (storage::key_handle_map_push_storage(key, storage) != Status::OK) {
@@ -108,7 +106,9 @@ Status storage_get_options(Storage storage, storage_option& options) {
     for (;;) {
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
-            LOG(ERROR) << "unreachable path";
+            LOG(ERROR) << "unreachable path: " << s << ", "
+                       << storage::meta_storage << ", " << key << ", " << value
+                       << ret;
             return Status::ERR_FATAL;
         }
         if (commit(s) == Status::OK) { break; } // NOLINT
