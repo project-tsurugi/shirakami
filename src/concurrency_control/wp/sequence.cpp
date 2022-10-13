@@ -8,18 +8,21 @@
 #include "storage.h"
 
 #include "concurrency_control/wp/include/garbage.h"
+#include "concurrency_control/wp/include/session.h"
+#include "concurrency_control/wp/include/tuple_local.h"
 
 namespace shirakami {
 
 // public api
 
-Status create_sequence([[maybe_unused]] SequenceId* id) { return Status::OK; }
+Status create_sequence(SequenceId* const id) {
+    return sequence::create_sequence(id);
+}
 
-Status update_sequence([[maybe_unused]] Token token,
-                       [[maybe_unused]] SequenceId id,
-                       [[maybe_unused]] SequenceVersion version,
-                       [[maybe_unused]] SequenceValue value) {
-    return Status::OK;
+Status update_sequence(Token const token, SequenceId const id,
+                       SequenceVersion const version,
+                       SequenceValue const value) {
+    return sequence::update_sequence(token, id, version, value);
 }
 
 
@@ -41,7 +44,7 @@ void sequence::init() {
 Status sequence::generate_sequence_id(SequenceId& id) {
     id = id_generator_ctr().fetch_add(1);
     if (id == sequence::max_sequence_id) {
-        // sequence id depletion.
+        LOG(ERROR) << "sequence id depletion";
         return Status::ERR_FATAL;
     }
     return Status::OK;
@@ -76,9 +79,6 @@ void sequence::gc_sequence_map() {
 }
 
 Status sequence::sequence_map_push(SequenceId const id) {
-    // acquire write lock
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
-
     // gc
     sequence::gc_sequence_map();
 
@@ -99,21 +99,64 @@ Status sequence::sequence_map_push(SequenceId const id) {
     return Status::WARN_ALREADY_EXISTS;
 }
 
-Status sequence::sequence_map_try_update(
-        [[maybe_unused]] SequenceId const id,
-        [[maybe_unused]] SequenceVersion const version,
-        [[maybe_unused]] SequenceValue const value) {
-    // acquire write lock
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+Status sequence::sequence_map_find_and_verify(SequenceId const id,
+                                              SequenceVersion const version) {
+    // check the sequence object whose id is the arguments of this function.
+    auto found_id_itr = sequence::sequence_map().find(id);
+    if (found_id_itr == sequence::sequence_map().end()) {
+        return Status::WARN_NOT_FOUND;
+    } // found
 
+    if (found_id_itr->second.empty()) {
+        // it is empty
+        return Status::OK;
+    } // not empty
+
+    auto last_itr = found_id_itr->second.end();
+    last_itr--;
+    if (std::get<0>(last_itr->second) < version) { return Status::OK; }
+    return Status::WARN_ILLEGAL_OPERATION;
+}
+
+Status sequence::sequence_map_update(SequenceId const id,
+                                     epoch::epoch_t const epoch,
+                                     SequenceVersion const version,
+                                     SequenceValue const value) {
     // gc
     sequence::gc_sequence_map();
 
-    // check
-    return Status::ERR_NOT_IMPLEMENTED;
+    // check the sequence object whose id is the arguments of this function.
+    auto found_id_itr = sequence::sequence_map().find(id);
+    if (found_id_itr == sequence::sequence_map().end()) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    } // found
+
+    // check the object belongs to the same epoch
+    auto found_ob_itr = found_id_itr->second.find(epoch);
+    std::tuple<SequenceVersion, SequenceValue> new_tuple;
+    std::get<0>(new_tuple) = version;
+    std::get<1>(new_tuple) = value;
+    if (found_ob_itr == found_id_itr->second.end()) {
+        // not found
+        found_id_itr->second.insert(std::make_pair(epoch, new_tuple));
+    } else {
+        // found
+        found_ob_itr->second = new_tuple;
+    }
+
+    return Status::OK;
 }
 
 Status sequence::create_sequence(SequenceId* id) {
+    /**
+     * acquire write lock.
+     * Unless the updating and logging of the sequence map are combined into a 
+     * critical section, the timestamp ordering of updates and logging can be 
+     * confused with other concurrent operations.
+     */
+    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
     // generate sequence id
     auto ret = sequence::generate_sequence_id(*id);
     if (ret == Status::ERR_FATAL) { return ret; }
@@ -132,7 +175,7 @@ Status sequence::create_sequence(SequenceId* id) {
     // logging sequence operation
     // gen key
     std::string key{};
-    key.append(reinterpret_cast<char*>(*id), sizeof(*id)); // NOLINT
+    key.append(reinterpret_cast<char*>(id), sizeof(*id)); // NOLINT
     // gen value
     std::tuple<SequenceVersion, SequenceValue> initial_pair =
             sequence::initial_value;
@@ -164,21 +207,37 @@ Status sequence::create_sequence(SequenceId* id) {
     return Status::OK;
 }
 
-Status sequence::update_sequence(Token token, SequenceId id,
-                                 SequenceVersion version, SequenceValue value) {
-    // try update sequence object
-    auto ret = sequence::sequence_map_try_update(id, version, value);
-    if (ret != Status::OK) { return ret; }
+Status sequence::update_sequence(Token const token, SequenceId const id,
+                                 SequenceVersion const version,
+                                 SequenceValue const value) {
+    /**
+     * acquire write lock.
+     * Unless the updating and logging of the sequence map are combined into a 
+     * critical section, the timestamp ordering of updates and logging can be 
+     * confused with other concurrent operations.
+     */
+    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // check update sequence object
+    auto ret = sequence::sequence_map_find_and_verify(id, version);
+    if (ret == Status::WARN_ILLEGAL_OPERATION ||
+        ret == Status::WARN_NOT_FOUND) {
+        // fail
+        return ret;
+    } else if (ret != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
 
     // logging sequence operation
     // gen key
     std::string key{};
-    key.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
+    key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // NOLINT
     // gen value
     std::string new_value{}; // value is version + value
-    new_value.append(reinterpret_cast<char*>(&version), // NOLINT
+    new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
                      sizeof(version));
-    new_value.append(reinterpret_cast<char*>(&value), // NOLINT
+    new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
                      sizeof(value));
     ret = upsert(token, storage::sequence_storage, key, new_value);
     if (ret != Status::OK) {
@@ -188,6 +247,14 @@ Status sequence::update_sequence(Token token, SequenceId id,
     ret = commit(token);
     if (ret != Status::OK) {
         LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+
+    // update sequence object
+    auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
+    ret = sequence::sequence_map_update(id, epoch, version, value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
 

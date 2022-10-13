@@ -35,9 +35,9 @@ using SequenceVersion = std::size_t;
  * when this function is successful with Status::OK.
  * @param[in] token If this is not nullptr, shirakami uses @a token for logging.
  * @return Status::OK success.
- * @return Status::ERR_FATAL todo. The sequence id is depletion. It must 
- * implement reuse system or extending id space.
- * @return otherwise if any error occurs
+ * @return Status::ERR_FATAL Some case. 1: The sequence id is depletion. It 
+ * must implement reuse system or extending id space. 2: Programming error.
+ * 
  * @note This function is not intended to be called concurrently with running 
  * transactions. Typical usage is in DDL to register sequence objects.
  */
@@ -53,6 +53,11 @@ extern Status create_sequence(SequenceId* id); // NOLINT
  * @param[in] version the version of the sequence value
  * @param[in] value the new sequence value
  * @return Status::OK if the update operation is successful
+ * @return Status::WARN_ILLEGAL_OPERATION The @a id is smaller than latest id.
+ * @return Status::WARN_NOT_FOUND The sequence object whose id is @a id was not
+ * found. You may use the @a id without executing create_sequence or have 
+ * executed delete_sequence.
+ * @return Status::ERR_FATAL Programming error.
  * @return otherwise if any error occurs
  * @warning multiple update_sequence calls to a sequence with same version 
  * number cause undefined behavior.

@@ -41,19 +41,29 @@ TEST_F(sequence_test, basic) { // NOLINT
     // update sequence
     {
         Token token{};
+        ASSERT_EQ(enter(token), Status::OK);
         SequenceId id{};
-        SequenceVersion version{};
         SequenceValue value{};
-        ASSERT_EQ(Status::OK,
+        ASSERT_EQ(Status::OK, create_sequence(&id));
+        SequenceVersion version{};
+        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
                   update_sequence(token, id, version, value));
+        // because version is initial (0);
+        version = 1;
+        ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        version = 2;
+        ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
+                  update_sequence(token, id, version, value));
+        // because version is 2 yet.
+        ASSERT_EQ(leave(token), Status::OK);
     }
     // read sequence
     {
         SequenceId id{};
         SequenceVersion version{};
         SequenceValue value{};
-        ASSERT_EQ(Status::OK,
-                  read_sequence(id, &version, &value));
+        ASSERT_EQ(Status::OK, read_sequence(id, &version, &value));
     }
     // delete sequence
     {

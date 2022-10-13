@@ -49,11 +49,14 @@ public:
 
     static void gc_sequence_map();
 
+    static Status sequence_map_find_and_verify(SequenceId id,
+                                               SequenceVersion version);
+
     static Status sequence_map_push(SequenceId id);
 
-    static Status sequence_map_try_update(SequenceId id,
-                                          SequenceVersion version,
-                                          SequenceValue value);
+    static Status sequence_map_update(SequenceId id, epoch::epoch_t epoch,
+                                      SequenceVersion version,
+                                      SequenceValue value);
 
     // connect public api
     /**
