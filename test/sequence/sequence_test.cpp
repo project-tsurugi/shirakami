@@ -6,7 +6,11 @@
 
 #include "sequence.h"
 
+#ifdef PWAL
+
 #include "concurrency_control/wp/include/lpwal.h"
+
+#endif
 
 #include "shirakami/interface.h"
 
@@ -63,12 +67,14 @@ TEST_F(sequence_test, basic) { // NOLINT
     }
     // read sequence
     {
+#ifdef PWAL
         // wait updating result effect
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
             if (lpwal::get_durable_epoch() > ce) { break; }
             _mm_pause();
         }
+#endif
         // verfiy
         SequenceVersion version{};
         SequenceValue value{};

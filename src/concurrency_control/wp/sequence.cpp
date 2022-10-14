@@ -292,8 +292,13 @@ Status sequence::read_sequence(SequenceId const id,
      */
     std::shared_lock<std::shared_mutex> lk{sequence::sequence_map_smtx()};
 
+#ifdef PWAL
     // get durable epoch
     auto epoch = lpwal::get_durable_epoch();
+#else
+    // get global epoch
+    auto epoch = epoch::get_global_epoch();
+#endif
 
     // read sequence object
     std::tuple<SequenceVersion, SequenceValue> out;
