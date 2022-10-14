@@ -60,6 +60,13 @@ void sequence::gc_sequence_map() {
     }
     for (auto&& each_id_sequence_object : sequence::sequence_map()) {
         auto&& each_sequence_object = each_id_sequence_object.second;
+        if (each_sequence_object.rbegin()->first < gc_epoch &&
+            each_sequence_object.rbegin()->second ==
+                    sequence::non_exist_value) {
+            // it was deleted and is able to gced.
+            sequence::sequence_map().erase(each_id_sequence_object.first);
+            continue;
+        }
         std::size_t ctr{0};
         for (auto itr = each_sequence_object.begin();
              itr != each_sequence_object.end();) {
