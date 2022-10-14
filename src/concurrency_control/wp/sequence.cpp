@@ -99,7 +99,7 @@ Status sequence::sequence_map_push(SequenceId const id) {
 }
 
 Status
-sequence::sequence_map_find(SequenceId id, epoch::epoch_t epoch,
+sequence::sequence_map_find(SequenceId const id, epoch::epoch_t const epoch,
                             std::tuple<SequenceVersion, SequenceValue>& out) {
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
@@ -310,12 +310,56 @@ Status sequence::read_sequence(SequenceId const id,
 }
 
 Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
-    // update sequence object
-    // generate transaction handle
+#if 0
+    /**
+     * acquire write lock.
+     * Unless the updating and logging of the sequence map are combined into a 
+     * critical section, the timestamp ordering of updates and logging can be 
+     * confused with other concurrent operations.
+     */
+    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // check update sequence object
+    auto ret = sequence::sequence_map_check_exist(id);
+    if (ret == Status::WARN_NOT_FOUND) {
+        // fail
+        return ret;
+    } else if (ret != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
+
     // logging sequence operation
     // gen key
+    std::string key{};
+    key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // NOLINT
     // gen value
-    // cleanup transaction handle
+    std::string new_value{}; // value is version + value
+    new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
+                     sizeof(version));
+    new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
+                     sizeof(value));
+    ret = upsert(token, storage::sequence_storage, key, new_value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+    ret = commit(token);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+
+    // update sequence object
+    auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
+    ret = sequence::sequence_map_update(id, epoch, version, value);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
+
+    return Status::OK;
+#endif
     return Status::ERR_NOT_IMPLEMENTED;
 }
 

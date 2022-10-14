@@ -81,7 +81,9 @@ extern Status update_sequence(Token token, SequenceId id,
  * @param [out] value the sequence value, that is valid only when this function 
  * is successful with Status::OK.
  * @return Status::OK if the retrieval is successful
- * @return otherwise if any error occurs
+ * @return Status::WARN_NOT_FOUND There is a 2 cases. 1: There isn't a sequence
+ * object whose id is the same to @a id. 2: There is a target sequence object, 
+ * but there isn't durable data.
  * @note This function is not intended to be called concurrently with running 
  * transactions. Typical usage is to retrieve sequence initial value at the 
  * time of database recovery.
