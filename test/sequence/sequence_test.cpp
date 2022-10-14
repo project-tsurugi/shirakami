@@ -2,9 +2,11 @@
  * @file sequence_test.cpp
  */
 
-#include "gtest/gtest.h"
+#include <xmmintrin.h>
 
 #include "sequence.h"
+
+#include "concurrency_control/wp/include/lpwal.h"
 
 #include "shirakami/interface.h"
 
@@ -39,10 +41,10 @@ TEST_F(sequence_test, basic) { // NOLINT
         ASSERT_EQ(Status::OK, create_sequence(&id));
     }
     // update sequence
+    SequenceId id{};
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
-        SequenceId id{};
         SequenceValue value{};
         ASSERT_EQ(Status::OK, create_sequence(&id));
         SequenceVersion version{};
@@ -52,6 +54,7 @@ TEST_F(sequence_test, basic) { // NOLINT
         version = 1;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         version = 2;
+        value = 3;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
                   update_sequence(token, id, version, value));
@@ -60,16 +63,21 @@ TEST_F(sequence_test, basic) { // NOLINT
     }
     // read sequence
     {
-        SequenceId id{};
+        // wait updating result effect
+        auto ce = epoch::get_global_epoch(); // current epoch
+        for (;;) {
+            if (lpwal::get_durable_epoch() > ce) { break; }
+            _mm_pause();
+        }
+        // verfiy
         SequenceVersion version{};
         SequenceValue value{};
         ASSERT_EQ(Status::OK, read_sequence(id, &version, &value));
+        ASSERT_EQ(version, 2);
+        ASSERT_EQ(value, 3);
     }
     // delete sequence
-    {
-        SequenceId id{};
-        ASSERT_EQ(Status::OK, delete_sequence(id));
-    }
+    { ASSERT_EQ(Status::OK, delete_sequence(id)); }
 }
 
 } // namespace shirakami::testing

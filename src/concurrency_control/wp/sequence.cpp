@@ -26,10 +26,9 @@ Status update_sequence(Token const token, SequenceId const id,
 }
 
 
-Status read_sequence([[maybe_unused]] SequenceId id,
-                     [[maybe_unused]] SequenceVersion* version,
-                     [[maybe_unused]] SequenceValue* value) {
-    return Status::OK;
+Status read_sequence(SequenceId const id, SequenceVersion* const version,
+                     SequenceValue* const value) {
+    return sequence::read_sequence(id, version, value);
 }
 
 Status delete_sequence([[maybe_unused]] SequenceId id) { return Status::OK; }
@@ -97,6 +96,30 @@ Status sequence::sequence_map_push(SequenceId const id) {
         return Status::OK;
     }
     return Status::WARN_ALREADY_EXISTS;
+}
+
+Status
+sequence::sequence_map_find(SequenceId id, epoch::epoch_t epoch,
+                            std::tuple<SequenceVersion, SequenceValue>& out) {
+    // check the sequence object whose id is the arguments of this function.
+    auto found_id_itr = sequence::sequence_map().find(id);
+    if (found_id_itr == sequence::sequence_map().end()) {
+        return Status::WARN_NOT_FOUND;
+    } // found
+
+    if (found_id_itr->second.empty()) {
+        // it is empty
+        return Status::WARN_NOT_FOUND;
+    } // not empty
+
+    for (auto ritr = found_id_itr->second.rbegin();
+         ritr != found_id_itr->second.rend(); ++ritr) {
+        if (ritr->first <= epoch) {
+            out = ritr->second;
+            return Status::OK;
+        }
+    }
+    return Status::WARN_NOT_FOUND;
 }
 
 Status sequence::sequence_map_find_and_verify(SequenceId const id,
@@ -261,11 +284,29 @@ Status sequence::update_sequence(Token const token, SequenceId const id,
     return Status::OK;
 }
 
-Status sequence::read_sequence([[maybe_unused]] SequenceId id,
-                               [[maybe_unused]] SequenceVersion* version,
-                               [[maybe_unused]] SequenceValue* value) {
+Status sequence::read_sequence(SequenceId const id,
+                               SequenceVersion* const version,
+                               SequenceValue* const value) {
+    /**
+     * acquire read lock.
+     */
+    std::shared_lock<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // get durable epoch
+    auto epoch = lpwal::get_durable_epoch();
+
     // read sequence object
-    return Status::ERR_NOT_IMPLEMENTED;
+    std::tuple<SequenceVersion, SequenceValue> out;
+    auto ret = sequence::sequence_map_find(id, epoch, out);
+    if (ret == Status::WARN_NOT_FOUND) { return ret; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    }
+
+    *version = std::get<0>(out);
+    *value = std::get<1>(out);
+    return Status::OK;
 }
 
 Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
