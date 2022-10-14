@@ -49,6 +49,8 @@ public:
 
     static void gc_sequence_map();
 
+    static Status sequence_map_check_exist(SequenceId id);
+
     static Status
     sequence_map_find(SequenceId id, epoch::epoch_t epoch,
                       std::tuple<SequenceVersion, SequenceValue>& out);

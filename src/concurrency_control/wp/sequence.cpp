@@ -31,7 +31,9 @@ Status read_sequence(SequenceId const id, SequenceVersion* const version,
     return sequence::read_sequence(id, version, value);
 }
 
-Status delete_sequence([[maybe_unused]] SequenceId id) { return Status::OK; }
+Status delete_sequence(SequenceId const id) {
+    return sequence::delete_sequence(id);
+}
 
 // sequence function body
 
@@ -77,10 +79,27 @@ void sequence::gc_sequence_map() {
     }
 }
 
-Status sequence::sequence_map_push(SequenceId const id) {
-    // gc
-    sequence::gc_sequence_map();
+// for delete_sequence
+Status sequence::sequence_map_check_exist(SequenceId id) {
+    // check the sequence object whose id is the arguments of this function.
+    auto found_id_itr = sequence::sequence_map().find(id);
+    if (found_id_itr == sequence::sequence_map().end()) {
+        return Status::WARN_NOT_FOUND;
+    } // found
 
+    if (found_id_itr->second.empty()) {
+        LOG(ERROR) << "programming error";
+        return Status::ERR_FATAL;
+    } // not empty
+
+    auto ritr = found_id_itr->second.rbegin();
+    if (ritr->second == sequence::non_exist_value) {
+        return Status::WARN_NOT_FOUND;
+    }
+    return Status::OK;
+}
+
+Status sequence::sequence_map_push(SequenceId const id) {
     // push
     sequence::value_type new_val{};
     auto ret = sequence::sequence_map().insert(std::make_pair(id, new_val));
@@ -112,6 +131,12 @@ sequence::sequence_map_find(SequenceId const id, epoch::epoch_t const epoch,
         return Status::WARN_NOT_FOUND;
     } // not empty
 
+    auto last_itr = found_id_itr->second.rbegin();
+    if (last_itr->second == sequence::non_exist_value) {
+        // the sequence object was deleted.
+        return Status::WARN_NOT_FOUND;
+    }
+
     for (auto ritr = found_id_itr->second.rbegin();
          ritr != found_id_itr->second.rend(); ++ritr) {
         if (ritr->first <= epoch) {
@@ -122,6 +147,7 @@ sequence::sequence_map_find(SequenceId const id, epoch::epoch_t const epoch,
     return Status::WARN_NOT_FOUND;
 }
 
+// for update sequence function
 Status sequence::sequence_map_find_and_verify(SequenceId const id,
                                               SequenceVersion const version) {
     // check the sequence object whose id is the arguments of this function.
@@ -135,8 +161,12 @@ Status sequence::sequence_map_find_and_verify(SequenceId const id,
         return Status::OK;
     } // not empty
 
-    auto last_itr = found_id_itr->second.end();
-    last_itr--;
+    auto last_itr = found_id_itr->second.rbegin();
+    if (last_itr->second == sequence::non_exist_value) {
+        // the sequence object was deleted.
+        return Status::WARN_NOT_FOUND;
+    }
+
     if (std::get<0>(last_itr->second) < version) { return Status::OK; }
     return Status::WARN_ILLEGAL_OPERATION;
 }
@@ -145,9 +175,6 @@ Status sequence::sequence_map_update(SequenceId const id,
                                      epoch::epoch_t const epoch,
                                      SequenceVersion const version,
                                      SequenceValue const value) {
-    // gc
-    sequence::gc_sequence_map();
-
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
     if (found_id_itr == sequence::sequence_map().end()) {
@@ -179,6 +206,9 @@ Status sequence::create_sequence(SequenceId* id) {
      * confused with other concurrent operations.
      */
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // gc after write lock
+    sequence::gc_sequence_map();
 
     // generate sequence id
     auto ret = sequence::generate_sequence_id(*id);
@@ -240,6 +270,9 @@ Status sequence::update_sequence(Token const token, SequenceId const id,
      * confused with other concurrent operations.
      */
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // gc after write lock
+    sequence::gc_sequence_map();
 
     // check update sequence object
     auto ret = sequence::sequence_map_find_and_verify(id, version);
@@ -315,7 +348,6 @@ Status sequence::read_sequence(SequenceId const id,
 }
 
 Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
-#if 0
     /**
      * acquire write lock.
      * Unless the updating and logging of the sequence map are combined into a 
@@ -323,6 +355,9 @@ Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
      * confused with other concurrent operations.
      */
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+    // gc after write lock
+    sequence::gc_sequence_map();
 
     // check update sequence object
     auto ret = sequence::sequence_map_check_exist(id);
@@ -334,11 +369,19 @@ Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
         return Status::ERR_FATAL;
     }
 
+    // generate transaction handle
+    Token token{};
+    while (Status::OK != enter(token)) { _mm_pause(); }
+
     // logging sequence operation
     // gen key
     std::string key{};
     key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // NOLINT
     // gen value
+    std::tuple<SequenceVersion, SequenceValue> new_tuple =
+            sequence::non_exist_value;
+    SequenceVersion version = std::get<0>(new_tuple);
+    SequenceValue value = std::get<1>(new_tuple);
     std::string new_value{}; // value is version + value
     new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
                      sizeof(version));
@@ -355,7 +398,7 @@ Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
         return Status::ERR_FATAL;
     }
 
-    // update sequence object
+    // update sequence object to deleted
     auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
     ret = sequence::sequence_map_update(id, epoch, version, value);
     if (ret != Status::OK) {
@@ -363,9 +406,14 @@ Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
         return Status::ERR_FATAL;
     }
 
+    // cleanup transaction handle
+    ret = leave(token);
+    if (ret != Status::OK) {
+        LOG(ERROR) << "unexpected behavior";
+        return Status::ERR_FATAL;
+    }
+
     return Status::OK;
-#endif
-    return Status::ERR_NOT_IMPLEMENTED;
 }
 
 } // namespace shirakami

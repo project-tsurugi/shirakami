@@ -83,7 +83,10 @@ TEST_F(sequence_test, basic) { // NOLINT
         ASSERT_EQ(value, 3);
     }
     // delete sequence
-    { ASSERT_EQ(Status::OK, delete_sequence(id)); }
+    {
+        ASSERT_EQ(Status::OK, delete_sequence(id));
+        ASSERT_EQ(Status::WARN_NOT_FOUND, delete_sequence(id));
+    }
 }
 
 } // namespace shirakami::testing
