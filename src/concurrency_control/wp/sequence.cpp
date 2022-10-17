@@ -7,6 +7,7 @@
 #include "sequence.h"
 #include "storage.h"
 
+#include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/garbage.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
@@ -116,13 +117,21 @@ Status sequence::sequence_map_push(SequenceId const id) {
 Status sequence::sequence_map_push(SequenceId const id,
                                    SequenceVersion const version,
                                    SequenceValue const value) {
+    return sequence::sequence_map_push(id, epoch::get_global_epoch(), version,
+                                       value);
+}
+
+Status sequence::sequence_map_push(SequenceId const id,
+                                   epoch::epoch_t const epoch,
+                                   SequenceVersion const version,
+                                   SequenceValue const value) {
     // push
     sequence::value_type new_val{};
     auto ret = sequence::sequence_map().insert(std::make_pair(id, new_val));
     if (ret.second) {
         // insert success
-        auto ret2 = ret.first->second.insert(std::make_pair(
-                epoch::get_global_epoch(), std::make_tuple(version, value)));
+        auto ret2 = ret.first->second.insert(
+                std::make_pair(epoch, std::make_tuple(version, value)));
         if (!ret2.second) {
             // This object must be operated by here.
             LOG(ERROR) << "unexpected behavior";

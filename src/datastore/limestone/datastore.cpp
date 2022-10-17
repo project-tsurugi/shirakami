@@ -149,7 +149,7 @@ void recovery_from_datastore() {
             memcpy(&version, val.data(), sizeof(version));
             SequenceValue value{};
             memcpy(&value, val.data() + sizeof(version), sizeof(version));
-            auto ret = sequence::sequence_map_push(id, version, value);
+            auto ret = sequence::sequence_map_push(id, 0, version, value);
             if (ret != Status::OK) {
                 LOG(ERROR) << "unexpected error";
                 return;
