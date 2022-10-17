@@ -94,8 +94,10 @@ extern Status read_sequence(SequenceId id, SequenceVersion* version,
 /**
  * @brief delete the sequence
  * @param[in] id the sequence id that will be deleted
- * @param[in] token
  * @return Status::OK if the deletion was successful
+ * @return Status::WARN_NOT_FOUND There isn't a sequence object whose id is 
+ * the same to @a id.
+ * @return Status::ERR_FATAL Programming error.
  * @return otherwise if any error occurs
  * @note This function is not intended to be called concurrently with running 
  * transactions. Typical usage is in DDL to unregister sequence objects.
