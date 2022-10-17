@@ -60,6 +60,9 @@ public:
 
     static Status sequence_map_push(SequenceId id);
 
+    static Status sequence_map_push(SequenceId id, SequenceVersion version,
+                                    SequenceValue value);
+
     static Status sequence_map_update(SequenceId id, epoch::epoch_t epoch,
                                       SequenceVersion version,
                                       SequenceValue value);

@@ -69,7 +69,7 @@ void sequence::gc_sequence_map() {
         }
         std::size_t ctr{0};
         for (auto itr = each_sequence_object.begin();
-             itr != each_sequence_object.end();) {
+             itr != each_sequence_object.end(); ++itr) {
             if (itr->first < gc_epoch) {
                 ++ctr;
             } else {
@@ -107,13 +107,22 @@ Status sequence::sequence_map_check_exist(SequenceId id) {
 }
 
 Status sequence::sequence_map_push(SequenceId const id) {
+    std::tuple<SequenceVersion, SequenceValue> new_tuple{
+            sequence::initial_value};
+    return sequence::sequence_map_push(id, std::get<0>(new_tuple),
+                                       std::get<1>(new_tuple));
+}
+
+Status sequence::sequence_map_push(SequenceId const id,
+                                   SequenceVersion const version,
+                                   SequenceValue const value) {
     // push
     sequence::value_type new_val{};
     auto ret = sequence::sequence_map().insert(std::make_pair(id, new_val));
     if (ret.second) {
         // insert success
         auto ret2 = ret.first->second.insert(std::make_pair(
-                epoch::get_global_epoch(), sequence::initial_value));
+                epoch::get_global_epoch(), std::make_tuple(version, value)));
         if (!ret2.second) {
             // This object must be operated by here.
             LOG(ERROR) << "unexpected behavior";
@@ -354,7 +363,7 @@ Status sequence::read_sequence(SequenceId const id,
     return Status::OK;
 }
 
-Status sequence::delete_sequence([[maybe_unused]] SequenceId id) {
+Status sequence::delete_sequence(SequenceId const id) {
     /**
      * acquire write lock.
      * Unless the updating and logging of the sequence map are combined into a 

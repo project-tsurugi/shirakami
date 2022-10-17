@@ -2,6 +2,7 @@
 
 #include "boost/filesystem/path.hpp"
 
+#include "sequence.h"
 #include "storage.h"
 
 #include "concurrency_control/wp/include/record.h"
@@ -53,6 +54,7 @@ void recovery_from_datastore() {
     std::vector<Storage> st_list{};
 
     auto cursor = ss->get_cursor();
+    SequenceId max_id{0};
     while (cursor->next()) { // the next body is none.
         Storage st{cursor->storage()};
         std::string key{};
@@ -139,9 +141,19 @@ void recovery_from_datastore() {
             }
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
-            // todo recovery sequence generator counter.
-            LOG(INFO) << "not implemented";
-            return;
+            // compute sequence id
+            SequenceId id{};
+            memcpy(&id, key.data(), key.size());
+            if (id > max_id) { max_id = id; }
+            SequenceVersion version{};
+            memcpy(&version, val.data(), sizeof(version));
+            SequenceValue value{};
+            memcpy(&value, val.data() + sizeof(version), sizeof(version));
+            auto ret = sequence::sequence_map_push(id, version, value);
+            if (ret != Status::OK) {
+                LOG(ERROR) << "unexpected error";
+                return;
+            }
         } else {
             shirakami::storage::register_storage(st); // maybe already exist
             st_list.emplace_back(st);
