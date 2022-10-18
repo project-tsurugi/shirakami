@@ -163,6 +163,11 @@ void recovery_from_datastore() {
             }
         }
     }
+    if (max_id > 0) {
+        // recovery sequence id generator
+        sequence::id_generator_ctr().store(max_id + 1,
+                                           std::memory_order_release);
+    }
     if (!st_list.empty()) {
         // recovery storage meta
         recovery_storage_meta(st_list);

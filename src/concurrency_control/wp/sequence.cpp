@@ -237,7 +237,10 @@ Status sequence::create_sequence(SequenceId* id) {
 
     // generate sequence id
     auto ret = sequence::generate_sequence_id(*id);
-    if (ret == Status::ERR_FATAL) { return ret; }
+    if (ret == Status::ERR_FATAL) {
+        LOG(ERROR) << "unexpected error";
+        return ret;
+    }
 
     // generate sequence object
     ret = sequence::sequence_map_push(*id);
