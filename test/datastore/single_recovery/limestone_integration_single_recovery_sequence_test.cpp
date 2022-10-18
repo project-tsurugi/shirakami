@@ -86,6 +86,9 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
+    SequenceId id4{};
+    ASSERT_EQ(Status::OK, create_sequence(&id4));
+
     // test: contents
     // id1
     SequenceVersion check_version{};
