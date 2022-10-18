@@ -45,11 +45,11 @@ TEST_F(sequence_multiple_update_test, basic) { // NOLINT
     {
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
-        SequenceValue value{1};
 
         ASSERT_EQ(Status::OK, create_sequence(&id));
         SequenceVersion version{};
         ++version;
+        SequenceValue value{1};
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token));             // NOLINT
         std::this_thread::sleep_for(200ms);

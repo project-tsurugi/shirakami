@@ -80,8 +80,7 @@ void sequence::gc_sequence_map() {
         if (ctr > 2) {
             // it can erase (ctr - 1) times.
             for (std::size_t i = 0; i < ctr - 1; ++i) {
-                sequence::sequence_map().erase(
-                        sequence::sequence_map().begin());
+                each_sequence_object.erase(each_sequence_object.begin());
             }
         }
     }
