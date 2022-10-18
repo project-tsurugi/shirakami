@@ -94,6 +94,7 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
     ASSERT_EQ(check_version, 0);
     ASSERT_EQ(check_value, 0);
     // id2
+    // read data created before recovery
     ASSERT_EQ(Status::OK, read_sequence(id2, &check_version, &check_value));
     ASSERT_EQ(check_version, 2);
     ASSERT_EQ(check_value, 3);
@@ -102,8 +103,57 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
               read_sequence(id3, &check_version, &check_value));
 
     // test: CRUD after recovery
+    // create
     SequenceId id4{};
     ASSERT_EQ(Status::OK, create_sequence(&id4));
+
+    // wait updating result effect
+    auto wait_update = []() {
+        auto ce = epoch::get_global_epoch(); // current epoch
+        for (;;) {
+            if (lpwal::get_durable_epoch() > ce) { break; }
+            _mm_pause();
+        }
+    };
+
+    wait_update();
+    // read data created after recovery
+    ASSERT_EQ(Status::OK, read_sequence(id4, &check_version, &check_value));
+    ASSERT_EQ(check_version, 0);
+    ASSERT_EQ(check_value, 0);
+
+    ASSERT_EQ(Status::OK, enter(token));
+    // update data created before recovery (*1)
+    version = 4;
+    value = 5;
+    ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
+    // update data created after recovery (*2)
+    version = 6;
+    value = 7;
+    ASSERT_EQ(Status::OK, update_sequence(token, id4, version, value));
+    wait_update();
+    // check (*1)
+    ASSERT_EQ(Status::OK, read_sequence(id2, &check_version, &check_value));
+    ASSERT_EQ(check_version, 4);
+    ASSERT_EQ(check_value, 5);
+    // check (*2)
+    ASSERT_EQ(Status::OK, read_sequence(id4, &check_version, &check_value));
+    ASSERT_EQ(check_version, 6);
+    ASSERT_EQ(check_value, 7);
+    // return transaction handle
+    ASSERT_EQ(Status::OK, leave(token));
+
+    // delete data created before recovery
+    ASSERT_EQ(Status::OK, delete_sequence(id2));
+    // delete data created after recovery
+    ASSERT_EQ(Status::OK, delete_sequence(id4));
+
+    wait_update();
+    // check delete data by read_sequence
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              read_sequence(id2, &check_version, &check_value));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              read_sequence(id4, &check_version, &check_value));
 
     // cleanup
     fin(false);
