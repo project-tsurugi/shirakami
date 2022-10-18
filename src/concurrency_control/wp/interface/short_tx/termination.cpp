@@ -260,11 +260,9 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->set_result(
-                            reason_code::UPDATE_NON_EXISTING_RECORD);
+                    ti->set_result(reason_code::UPDATE_NON_EXISTING_RECORD);
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    ti->set_result(
-                            reason_code::DELETE_NON_EXISTING_RECORD);
+                    ti->set_result(reason_code::DELETE_NON_EXISTING_RECORD);
                 }
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
@@ -448,6 +446,20 @@ void register_range_read_by_short(session* const ti) {
     for (auto&& itr : ti->get_range_read_by_short_set()) { itr->push(ce); }
 }
 
+void process_tx_state(session* ti,
+                      [[maybe_unused]] epoch::epoch_t durable_epoch) {
+    if (ti->get_has_current_tx_state_handle()) {
+// this tx state is checked
+#ifdef PWAL
+        ti->get_current_tx_state_ptr()->set_durable_epoch(durable_epoch);
+        ti->get_current_tx_state_ptr()->set_kind(
+                TxState::StateKind::WAITING_DURABLE);
+#else
+        ti->get_current_tx_state_ptr()->set_kind(TxState::StateKind::DURABLE);
+#endif
+    }
+}
+
 extern Status commit(session* ti, // NOLINT
                      [[maybe_unused]] commit_param* cp) {
     // write lock phase
@@ -508,9 +520,7 @@ extern Status commit(session* ti, // NOLINT
 #endif
 
     // about tx state
-    // this should be before clean_up func
-    // todo think logging
-    ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
+    process_tx_state(ti, ce);
 
     // clean up local set
     ti->clean_up();

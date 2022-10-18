@@ -5,6 +5,7 @@
 
 #include "atomic_wrapper.h"
 
+#include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
 #include "concurrency_control/wp/include/tuple_local.h"
@@ -509,6 +510,20 @@ Status verify_insert(session* const ti) {
     return Status::OK;
 }
 
+void process_tx_state(session* ti,
+                      [[maybe_unused]] epoch::epoch_t durable_epoch) {
+    if (ti->get_has_current_tx_state_handle()) {
+#ifdef PWAL
+        // this tx state is checked
+        ti->get_current_tx_state_ptr()->set_durable_epoch(durable_epoch);
+        ti->get_current_tx_state_ptr()->set_kind(
+                TxState::StateKind::WAITING_DURABLE);
+#else
+        ti->get_current_tx_state_ptr()->set_kind(TxState::StateKind::DURABLE);
+#endif
+    }
+}
+
 extern Status commit(session* const ti, // NOLINT
                      [[maybe_unused]] commit_param* const cp) {
     // check premature
@@ -570,9 +585,7 @@ extern Status commit(session* const ti, // NOLINT
 
 
     // about transaction state
-    // this should before clean up
-    // todo fix
-    ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
+    process_tx_state(ti, ti->get_valid_epoch());
 
     // clean up
     cleanup_process(ti, true);

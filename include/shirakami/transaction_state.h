@@ -27,6 +27,7 @@ constexpr static TxStateHandle undefined_handle = 0;
 class TxState final {
 public:
     using handle_container_type = std::map<TxStateHandle, TxState>;
+    using epoch_t = std::int64_t;
     static constexpr TxStateHandle handle_initial_value = 1;
 
     /**
@@ -143,7 +144,7 @@ public:
 
     /**
      * @brief Initialization needed at shirakami initialization.
-     */    
+     */
     static void init() {
         // initialize counter
         handle_ctr_.store(handle_initial_value, std::memory_order_release);
@@ -175,13 +176,9 @@ public:
         return handle_ctr_.fetch_add(1);
     }
 
-    [[nodiscard]] std::uint64_t get_durable_epoch() const {
-        return durable_epoch_;
-    }
+    [[nodiscard]] epoch_t get_durable_epoch() const { return durable_epoch_; }
 
-    [[nodiscard]] std::uint64_t get_serial_epoch() const {
-        return serial_epoch_;
-    }
+    [[nodiscard]] epoch_t get_serial_epoch() const { return serial_epoch_; }
 
     [[nodiscard]] Token get_token() { return token_; }
 
@@ -200,9 +197,9 @@ public:
 
     void set_kind(StateKind kd) { kind_ = kd; }
 
-    void set_durable_epoch(std::uint64_t epoch) { durable_epoch_ = epoch; }
+    void set_durable_epoch(epoch_t epoch) { durable_epoch_ = epoch; }
 
-    void set_serial_epoch(std::uint64_t epoch) { serial_epoch_ = epoch; }
+    void set_serial_epoch(epoch_t epoch) { serial_epoch_ = epoch; }
 
     void set_token(Token token) { token_ = token; }
 
@@ -213,13 +210,13 @@ private:
      * @details @a serial_epoch_ shows long tx's epoch. It is used for long tx 
      * only.
      */
-    std::uint64_t serial_epoch_{0};
+    epoch_t serial_epoch_{0};
     /**
      * @brief durable epoch info
      * @details @a durable_epoch_ shows short and long tx's durable epoch. It is
      * used for decision whether the tx is durable.
      */
-    std::uint64_t durable_epoch_{0};
+    epoch_t durable_epoch_{0};
     /**
      * @brief session info
      * @details 1: When it releases handle, the tx which has the handle can't find 

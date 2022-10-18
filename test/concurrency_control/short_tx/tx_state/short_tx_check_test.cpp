@@ -65,9 +65,16 @@ TEST_F(short_tx_check_test, short_tx_road_to_commit) { // NOLINT
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     ASSERT_EQ(Status::OK, commit(s));
+#ifdef PWAL
+    // wait durable
+    auto ce = epoch::get_global_epoch();
+    for (;;) {
+        if (lpwal::get_durable_epoch() >= ce) { break; }
+        _mm_pause();
+    }
+#endif
     TxState buf{};
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    // todo fix after impl durable notation
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
     ASSERT_EQ(Status::OK, release_tx_state_handle(hd));
     ASSERT_EQ(Status::OK, leave(s));

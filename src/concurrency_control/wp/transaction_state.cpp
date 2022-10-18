@@ -30,8 +30,10 @@ Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         ts.set_serial_epoch(0);
         ts.set_kind(TxState::StateKind::STARTED);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-               ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() ==
+                       transaction_options::transaction_type::LONG ||
+               ti->get_tx_type() ==
+                       transaction_options::transaction_type::READ_ONLY) {
         ts.set_serial_epoch(static_cast<std::uint64_t>(ti->get_valid_epoch()));
         if (ti->get_valid_epoch() > epoch::get_global_epoch()) {
             ts.set_kind(TxState::StateKind::WAITING_START);
@@ -69,15 +71,22 @@ Status tx_check(TxStateHandle handle, TxState& out) {
     if (out.get_serial_epoch() == 0) {
         // short tx
         if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
-            // todo at loging impl
-            LOG(INFO) << "todo work not to pass";
+#ifdef PWAL
+            if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {
+                ts.set_kind(TxState::StateKind::DURABLE);  // for internal
+                out.set_kind(TxState::StateKind::DURABLE); // for external
+            }
+#else
+            // if no logging, it must not be waiting_durable status
+            LOG(ERROR) << "unexpected path";
+            return Status::ERR_FATAL;
+#endif
         }
         return Status::OK;
     }
 
     // long tx
-    if (out.get_serial_epoch() <=
-        static_cast<std::uint64_t>(epoch::get_global_epoch())) {
+    if (out.get_serial_epoch() <= epoch::get_global_epoch()) {
         if (ts.state_kind() == TxState::StateKind::WAITING_START) {
             ts.set_kind(TxState::StateKind::STARTED);  // for internal
             out.set_kind(TxState::StateKind::STARTED); // for external
@@ -94,8 +103,16 @@ Status tx_check(TxStateHandle handle, TxState& out) {
                 out.set_kind(TxState::StateKind::COMMITTABLE); // for external
             }
         } else if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
-            // todo at logging impl
-            LOG(INFO) << "todo work not to pass";
+#ifdef PWAL
+            if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {
+                ts.set_kind(TxState::StateKind::DURABLE);  // for internal
+                out.set_kind(TxState::StateKind::DURABLE); // for external
+            }
+#else
+            // if no logging, it must not be waiting_durable status
+            LOG(ERROR) << "unexpected path";
+            return Status::ERR_FATAL;
+#endif
         }
     } else {
         ts.set_kind(TxState::StateKind::WAITING_START);  // for internal
