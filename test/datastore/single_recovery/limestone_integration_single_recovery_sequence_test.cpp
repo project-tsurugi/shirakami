@@ -124,12 +124,12 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
 
     ASSERT_EQ(Status::OK, enter(token));
     // update data created before recovery (*1)
-    version = 4;
-    value = 5;
+    version = 4; // NOLINT
+    value = 5;   // NOLINT
     ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
     // update data created after recovery (*2)
-    version = 6;
-    value = 7;
+    version = 6; // NOLINT
+    value = 7;   // NOLINT
     ASSERT_EQ(Status::OK, update_sequence(token, id4, version, value));
     wait_update();
     // check (*1)

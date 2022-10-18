@@ -69,9 +69,8 @@ void sequence::gc_sequence_map() {
             continue;
         }
         std::size_t ctr{0};
-        for (auto itr = each_sequence_object.begin();
-             itr != each_sequence_object.end(); ++itr) {
-            if (itr->first < gc_epoch) {
+        for (auto& itr : each_sequence_object) {
+            if (itr.first < gc_epoch) {
                 ++ctr;
             } else {
                 break;
@@ -307,7 +306,8 @@ Status sequence::update_sequence(Token const token, SequenceId const id,
         ret == Status::WARN_NOT_FOUND) {
         // fail
         return ret;
-    } else if (ret != Status::OK) {
+    }
+    if (ret != Status::OK) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
@@ -391,7 +391,8 @@ Status sequence::delete_sequence(SequenceId const id) {
     if (ret == Status::WARN_NOT_FOUND) {
         // fail
         return ret;
-    } else if (ret != Status::OK) {
+    }
+    if (ret != Status::OK) {
         LOG(ERROR) << "programming error";
         return Status::ERR_FATAL;
     }
