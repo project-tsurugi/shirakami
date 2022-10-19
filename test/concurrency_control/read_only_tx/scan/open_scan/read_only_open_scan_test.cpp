@@ -38,15 +38,25 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(read_only_open_scan_test,  // NOLINT
-       avoid_premature_by_wait) { // NOLINT
+TEST_F(read_only_open_scan_test,             // NOLINT
+       operation_before_after_start_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
-    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::READ_ONLY}), Status::OK);
-    wait_epoch_update();
     ScanHandle hd{};
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(
+                tx_begin({s, transaction_options::transaction_type::READ_ONLY}),
+                Status::OK);
+        // operation before start epoch
+        ASSERT_EQ(open_scan(s, st, "", scan_endpoint::INF, "",
+                            scan_endpoint::INF, hd),
+                  Status::WARN_PREMATURE);
+    }
+    wait_epoch_update();
+    // operation after start epoch
     ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         hd),
               Status::WARN_PREMATURE);

@@ -36,6 +36,27 @@ private:
     static inline std::once_flag init_google;
 };
 
+TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
+
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string buf{};
+    {
+        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s,
+                            transaction_options::transaction_type::READ_ONLY}));
+        // operation before start epoch
+        ASSERT_EQ(Status::WARN_PREMATURE, search_key(s, st, "", buf));
+    }
+    wait_epoch_update();
+    // operation after start epoch
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", buf));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(read_only_search_test, search_SS_version) { // NOLINT
     // =================================
     // prepare
@@ -53,15 +74,18 @@ TEST_F(read_only_search_test, search_SS_version) { // NOLINT
 
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v2"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v3"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s3, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s3, transaction_options::transaction_type::READ_ONLY}));
     wait_epoch_update();
     // =================================
 
