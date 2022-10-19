@@ -17,7 +17,7 @@ static inline void cleanup_process(session* const ti) {
     ti->clean_up();
 }
 
-Status abort([[maybe_unused]] session* ti) {
+Status abort(session* const ti) {
     // about transaction state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
@@ -26,7 +26,7 @@ Status abort([[maybe_unused]] session* ti) {
     return Status::OK;
 }
 
-Status commit([[maybe_unused]] session* ti) {
+Status commit(session* const ti) {
     // about transaction state
     // todo fix
     ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);

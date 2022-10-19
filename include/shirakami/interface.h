@@ -148,9 +148,9 @@ extern Status enter(Token& token); // NOLINT
  * by other updater, and it could not complete search.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
  * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_PREMATURE In long tx mode, it have to wait for no 
- * transactions to be located in an order older than the order in which this 
- * transaction is located.
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
+ * for no transactions to be located in an order older than the order in which 
+ * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
  * tx's wp and executed abort command internally.
@@ -243,8 +243,8 @@ extern Status leave(Token token); // NOLINT
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
- * @return Status::WARN_PREMATURE In long tx mode, it have to wait for some 
- * high priority transactions.
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
+ * for some high priority transactions.
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key,
@@ -351,9 +351,9 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * by other updater, and it could not complete search.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
  * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_PREMATURE In long tx mode, it have to wait for no 
- * transactions to be located in an order older than the order in which this 
- * transaction is located.
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
+ * for no transactions to be located in an order older than the order in which 
+ * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
  * tx's wp and executed abort command internally.
