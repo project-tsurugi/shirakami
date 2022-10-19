@@ -1,0 +1,96 @@
+/**
+ * @file sequence_test.cpp
+ */
+
+#include <xmmintrin.h>
+
+#include "sequence.h"
+
+#ifdef PWAL
+
+#include "concurrency_control/wp/include/lpwal.h"
+
+#endif
+
+#include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
+
+namespace shirakami::testing {
+
+using namespace shirakami;
+
+class sequence_ltx_test : public ::testing::Test { // NOLINT
+public:
+    static void call_once_f() {
+        google::InitGoogleLogging("shirakami-test-sequence-sequence_ltx_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
+    }
+    void SetUp() override {
+        std::call_once(init_, call_once_f);
+        init();
+    }
+    void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_; // NOLINT
+};
+
+TEST_F(sequence_ltx_test, basic) { // NOLINT
+    // create sequence
+    {
+        SequenceId id{};
+        ASSERT_EQ(Status::OK, create_sequence(&id));
+    }
+    // update sequence
+    SequenceId id{};
+    {
+        Token token{};
+        ASSERT_EQ(enter(token), Status::OK);
+        ASSERT_EQ(tx_begin({token, // NOLINT
+                transaction_options::transaction_type::LONG,
+                {}}),
+                Status::OK);
+        SequenceValue value{};
+        ASSERT_EQ(Status::OK, create_sequence(&id));
+        SequenceVersion version{};
+        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
+                  update_sequence(token, id, version, value));
+        // because version is initial (0);
+        version = 1;
+        ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        version = 2;
+        value = 3;
+        ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
+                  update_sequence(token, id, version, value));
+        // because version is 2 yet.
+        ASSERT_EQ(leave(token), Status::OK);
+    }
+    // read sequence
+    {
+#ifdef PWAL
+        // wait updating result effect
+        auto ce = epoch::get_global_epoch(); // current epoch
+        for (;;) {
+            if (lpwal::get_durable_epoch() > ce) { break; }
+            _mm_pause();
+        }
+#endif
+        // verfiy
+        SequenceVersion version{};
+        SequenceValue value{};
+        ASSERT_EQ(Status::OK, read_sequence(id, &version, &value));
+        ASSERT_EQ(version, 2);
+        ASSERT_EQ(value, 3);
+    }
+    // delete sequence
+    {
+        ASSERT_EQ(Status::OK, delete_sequence(id));
+        ASSERT_EQ(Status::WARN_NOT_FOUND, delete_sequence(id));
+    }
+}
+
+} // namespace shirakami::testing
