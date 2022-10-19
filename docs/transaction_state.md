@@ -3,13 +3,14 @@
   read_value_from_scan, close_scan, delete_record, exist_key, insert, search_key,
   update, upsert
   - LTX: long tx (started by tx_begin api).
+  - RTX: read only tx (started by tx_begin api).
   - STX: short tx.
 
 ```mermaid
 stateDiagram-v2
     WAITING_START
     note right of WAITING_START
-        Trigger: LTX is in this state first. 
+        Trigger: LTX and RTX are in this state first. 
         Executable api: tx_check, release_tx_state_handle
         Non allowed: DML
     end note
@@ -17,6 +18,7 @@ stateDiagram-v2
     note left of STARTED
         Trigger, STX: It is in this state first. 
         Trigger, LTX: It becomes an operable epoch.
+        Trigger, RTX: It becomes an operable epoch.
         Executable api: Almost all
     end note
     WAITING_CC_COMMIT
@@ -54,14 +56,18 @@ stateDiagram-v2
 
     [*] --> STARTED: STX
     [*] --> WAITING_START: LTX
+    [*] --> WAITING_START: RTX
     WAITING_START --> STARTED
     STARTED --> WAITING_DURABLE: LTX
     STARTED --> WAITING_CC_COMMIT: LTX
     WAITING_CC_COMMIT --> COMMITTABLE
     COMMITTABLE --> WAITING_DURABLE
     STARTED --> WAITING_DURABLE: STX
+    STARTED --> WAITING_DURABLE: LTX
+    STARTED --> WAITING_DURABLE: RTX
     STARTED --> ABORTED: STX
     STARTED --> ABORTED: LTX
+    STARTED --> ABORTED: RTX
     COMMITTABLE --> ABORTED
     WAITING_DURABLE --> DURABLE
 ```

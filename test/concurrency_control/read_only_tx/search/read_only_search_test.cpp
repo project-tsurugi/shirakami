@@ -36,8 +36,22 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
+TEST_F(read_only_search_test, user_abort) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string buf{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, abort(s));
+    auto tri = transaction_result_info(s);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
+    ASSERT_EQ(Status::OK, leave(s));
+}
 
+TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};

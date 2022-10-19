@@ -21,15 +21,31 @@ Status abort(session* const ti) {
     // about transaction state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
+    // set transaction result
+    ti->set_result(reason_code::USER_ABORT);
+
     // clean up
     cleanup_process(ti);
     return Status::OK;
 }
 
+void process_tx_state(session* const ti,
+                      [[maybe_unused]] epoch::epoch_t const durable_epoch) {
+    if (ti->get_has_current_tx_state_handle()) {
+#ifdef PWAL
+        // this tx state is checked
+        ti->get_current_tx_state_ptr()->set_durable_epoch(durable_epoch);
+        ti->get_current_tx_state_ptr()->set_kind(
+                TxState::StateKind::WAITING_DURABLE);
+#else
+        ti->get_current_tx_state_ptr()->set_kind(TxState::StateKind::DURABLE);
+#endif
+    }
+}
+
 Status commit(session* const ti) {
     // about transaction state
-    // todo fix
-    ti->set_tx_state_if_valid(TxState::StateKind::DURABLE);
+    process_tx_state(ti, ti->get_valid_epoch());
 
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);

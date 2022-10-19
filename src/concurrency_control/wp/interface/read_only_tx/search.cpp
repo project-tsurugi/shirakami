@@ -7,10 +7,9 @@
 
 namespace shirakami::read_only_tx {
 
-Status search_key(session* ti, Storage const storage,
-                  std::string_view const key,
-                  [[maybe_unused]] std::string& value,
-                  [[maybe_unused]] bool const read_value) {
+Status search_key(session* const ti, Storage const storage,
+                  std::string_view const key, std::string& value,
+                  bool const read_value) {
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }

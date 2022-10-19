@@ -57,6 +57,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/read_only_tx/scan/*.cpp"
         "concurrency_control/read_only_tx/scan/open_scan/*.cpp"
         "concurrency_control/read_only_tx/scan/next/*.cpp"
+        "concurrency_control/read_only_tx/tx_state/*.cpp"
         "concurrency_control/short_tx/*.cpp"
         "concurrency_control/short_tx/delete/*.cpp"
         "concurrency_control/short_tx/delete_insert/*.cpp"
