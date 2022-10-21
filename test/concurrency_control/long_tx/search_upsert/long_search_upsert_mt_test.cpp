@@ -62,13 +62,13 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
-    const int trial_n{2};
+    const int trial_n{1};
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
 
     // begin: initialize table
     // ==============================
-    std::size_t th_num{8}; // NOLINT
+    std::size_t th_num{4}; // NOLINT
     //if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
     std::vector<std::string> keys(th_num);
     Token s{};

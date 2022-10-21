@@ -38,7 +38,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(sequence_ltx_test, basic) { // NOLINT
+TEST_F(sequence_ltx_test, DISABLED_basic) { // NOLINT
     // create sequence
     {
         SequenceId id{};
