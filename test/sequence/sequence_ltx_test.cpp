@@ -5,6 +5,7 @@
 #include <xmmintrin.h>
 
 #include "sequence.h"
+#include "test_tool.h"
 
 #ifdef PWAL
 
@@ -38,7 +39,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(sequence_ltx_test, DISABLED_basic) { // NOLINT
+TEST_F(sequence_ltx_test, basic) { // NOLINT
     // create sequence
     {
         SequenceId id{};
@@ -50,22 +51,35 @@ TEST_F(sequence_ltx_test, DISABLED_basic) { // NOLINT
         Token token{};
         ASSERT_EQ(enter(token), Status::OK);
         ASSERT_EQ(tx_begin({token, // NOLINT
-                transaction_options::transaction_type::LONG,
-                {}}),
-                Status::OK);
+                            transaction_options::transaction_type::LONG,
+                            {}}),
+                  Status::OK);
+        wait_epoch_update();
         SequenceValue value{};
         ASSERT_EQ(Status::OK, create_sequence(&id));
         SequenceVersion version{};
-        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
-                  update_sequence(token, id, version, value));
-        // because version is initial (0);
+        ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        ASSERT_EQ(Status::OK, commit(token));
+        // this is invalid because version is initial (0);
+        ASSERT_EQ(tx_begin({token, // NOLINT
+                            transaction_options::transaction_type::LONG,
+                            {}}),
+                  Status::OK);
+        wait_epoch_update();
         version = 1;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
+        ASSERT_EQ(Status::OK, commit(token));
+        ASSERT_EQ(tx_begin({token, // NOLINT
+                            transaction_options::transaction_type::LONG,
+                            {}}),
+                  Status::OK);
+        wait_epoch_update();
         version = 2;
         value = 3;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
-        ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
+        ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
                   update_sequence(token, id, version, value));
+        ASSERT_EQ(Status::OK, commit(token));
         // because version is 2 yet.
         ASSERT_EQ(leave(token), Status::OK);
     }

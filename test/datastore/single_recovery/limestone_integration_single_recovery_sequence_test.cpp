@@ -77,6 +77,7 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
     Token token{};
     ASSERT_EQ(Status::OK, enter(token));
     ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
+    ASSERT_EQ(Status::OK, commit(token));
     ASSERT_EQ(Status::OK, leave(token));
     // id3: create sequence and delete
     SequenceId id3{};
@@ -127,10 +128,12 @@ TEST_F(limestone_integration_single_recovery_sequence_test, // NOLINT
     version = 4; // NOLINT
     value = 5;   // NOLINT
     ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
+    ASSERT_EQ(Status::OK, commit(token));
     // update data created after recovery (*2)
     version = 6; // NOLINT
     value = 7;   // NOLINT
     ASSERT_EQ(Status::OK, update_sequence(token, id4, version, value));
+    ASSERT_EQ(Status::OK, commit(token));
     wait_update();
     // check (*1)
     ASSERT_EQ(Status::OK, read_sequence(id2, &check_version, &check_value));

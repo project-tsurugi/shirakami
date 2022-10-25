@@ -9,6 +9,7 @@
 
 #include "cpu.h"
 #include "record.h"
+#include "sequence.h"
 
 #include "yakushima/include/kvs.h"
 
@@ -208,6 +209,20 @@ private:
      * @brief container for short tx.
      */
     cont_for_occ_type cont_for_occ_;
+};
+
+class local_sequence_set {
+public:
+    using container_type =
+            std::map<SequenceId, std::tuple<SequenceVersion, SequenceValue>>;
+
+    void clear() { set_.clear(); }
+    container_type& set() { return set_; }
+
+    Status push(SequenceId id, SequenceVersion version, SequenceValue value);
+
+private:
+    container_type set_;
 };
 
 } // namespace shirakami

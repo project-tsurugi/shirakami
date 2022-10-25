@@ -114,4 +114,26 @@ void local_write_set::unlock(std::size_t num) {
     }
 }
 
+Status local_sequence_set::push(SequenceId const id,
+                                SequenceVersion const version,
+                                SequenceValue const value) {
+    auto itr = set().find(id);
+    if (itr != set().end()) {
+        // found
+        if (std::get<0>(itr->second) < version) {
+            // new value is larger than old ones
+            itr->second = std::make_tuple(version, value);
+            return Status::OK;
+        } // new value is smaller than old ones
+        return Status::WARN_ALREADY_EXISTS;
+    } // not found
+    auto ret =
+            set().insert(std::make_pair(id, std::make_tuple(version, value)));
+    if (!ret.second) {
+        LOG(ERROR) << "unexpected code path";
+        return Status::ERR_FATAL;
+    }
+    return Status::OK;
+}
+
 } // namespace shirakami

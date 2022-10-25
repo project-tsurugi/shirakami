@@ -508,6 +508,10 @@ extern Status commit(session* ti, // NOLINT
     register_point_read_by_short(ti);
     register_range_read_by_short(ti);
 
+    // sequence process
+    // This must be after cc commit and before log process
+    ti->commit_sequence(ti->get_mrc_tid());
+
     // flush log if need
 #if defined(PWAL)
     auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};

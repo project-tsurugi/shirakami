@@ -44,21 +44,22 @@ using SequenceVersion = std::size_t;
 extern Status create_sequence(SequenceId* id); // NOLINT
 
 /**
- * @brief update sequence value and version
+ * @brief update sequence value and version.
  * @details request shirakami to make the sequence value for the specified 
- * version durable together with the associated transaction.
+ * version durable together with the associated transaction. So If you want to 
+ * reflect this function effect, you must execute commit command and success
+ * the commit because any transaction can't be decided serialize information 
+ * without success termination.
  * @param[in] token the session token whose current transaction will be 
  * associated with the sequence value and version
  * @param[in] id the sequence id whose value/version will be updated
  * @param[in] version the version of the sequence value
  * @param[in] value the new sequence value
- * @return Status::OK if the update operation is successful
- * @return Status::WARN_ILLEGAL_OPERATION The @a id is smaller than latest id.
- * @return Status::WARN_NOT_FOUND The sequence object whose id is @a id was not
- * found. You may use the @a id without executing create_sequence or have 
- * executed delete_sequence.
+ * @return Status::OK if the update sequence is cached for the transaction of 
+ * @a token.
+ * @return Status::WARN_ALREADY_EXIST The @a id is smaller than latest id of 
+ * update_sequence operations of this transaction.
  * @return Status::ERR_FATAL Programming error.
- * @return otherwise if any error occurs
  * @warning multiple update_sequence calls to a sequence with same version 
  * number cause undefined behavior.
  */

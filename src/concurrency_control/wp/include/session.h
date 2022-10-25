@@ -100,6 +100,11 @@ public:
     void clear_tx_property();
 
     /**
+     * @brief commit process for sequence.
+     */
+    void commit_sequence(tid_word ctid);
+
+    /**
      * @brief extract wait_for from overtaken_ltx_set_.
      * 
      * @return std::set<std::size_t> 
@@ -256,6 +261,10 @@ public:
     lpwal::handler& get_lpwal_handle() { return lpwal_handle_; }
 #endif
     // ========== end: logging
+
+    // ========== start: sequence
+    local_sequence_set& sequence_set() { return sequence_set_; }
+    // ========== end: sequence
 
     // ========== end: getter
 
@@ -540,6 +549,10 @@ private:
     // ========== start: result information
     result_info result_info_{};
     // ========== end: result information
+
+    // ========== start: sequence
+    local_sequence_set sequence_set_;
+    // ========== end: sequence
 
     // ========== start: logging
 #if defined(PWAL)

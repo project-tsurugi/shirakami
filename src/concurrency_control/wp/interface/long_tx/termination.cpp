@@ -133,9 +133,10 @@ RETRY: // NOLINT
     }
 }
 
-static inline void expose_local_write(session* ti) {
+static inline void expose_local_write(session* ti, tid_word& committed_id) {
     tid_word ctid{};
     compute_tid(ti, ctid);
+    committed_id = ctid;
 
     auto process = [ti](std::pair<Record* const, write_set_obj>& wse,
                         tid_word ctid) {
@@ -566,7 +567,13 @@ extern Status commit(session* const ti, // NOLINT
 
     register_read_by(ti);
 
-    expose_local_write(ti);
+tid_word ctid{};
+    expose_local_write(ti, ctid);
+
+    // sequence process
+    // This must be after cc commit and before log process
+    ti->commit_sequence(ctid);
+
 #if defined(PWAL)
     auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
     // think the wal buffer is empty due to background thread's work

@@ -289,59 +289,16 @@ Status sequence::create_sequence(SequenceId* id) {
 Status sequence::update_sequence(Token const token, SequenceId const id,
                                  SequenceVersion const version,
                                  SequenceValue const value) {
-    /**
-     * acquire write lock.
-     * Unless the updating and logging of the sequence map are combined into a 
-     * critical section, the timestamp ordering of updates and logging can be 
-     * confused with other concurrent operations.
-     */
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+    auto ti = static_cast<session*>(token);
 
-    // gc after write lock
-    sequence::gc_sequence_map();
+    // check whether it already began.
+    if (!ti->get_tx_began()) {
+        tx_begin({token}); // NOLINT
+    }
+    //ti->process_before_start_step();
 
-    // check update sequence object
-    auto ret = sequence::sequence_map_find_and_verify(id, version);
-    if (ret == Status::WARN_ILLEGAL_OPERATION ||
-        ret == Status::WARN_NOT_FOUND) {
-        // fail
-        return ret;
-    }
-    if (ret != Status::OK) {
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
-    }
-
-    // logging sequence operation
-    // gen key
-    std::string key{};
-    key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // NOLINT
-    // gen value
-    std::string new_value{}; // value is version + value
-    new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
-                     sizeof(version));
-    new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
-                     sizeof(value));
-    ret = upsert(token, storage::sequence_storage, key, new_value);
-    if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
-        return Status::ERR_FATAL;
-    }
-    ret = commit(token);
-    if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
-        return Status::ERR_FATAL;
-    }
-
-    // update sequence object
-    auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
-    ret = sequence::sequence_map_update(id, epoch, version, value);
-    if (ret != Status::OK) {
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
-    }
-
-    return Status::OK;
+    //ti->process_before_finish_step();
+    return ti->sequence_set().push(id, version, value);
 }
 
 Status sequence::read_sequence(SequenceId const id,

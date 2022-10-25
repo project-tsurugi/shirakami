@@ -1,8 +1,13 @@
 
+#include "sequence.h"
+#include "storage.h"
+
 #include "include/session.h"
 
 #include "concurrency_control/wp/include/tuple_local.h"
 #include "concurrency_control/wp/include/wp.h"
+
+#include "shirakami/log_record.h"
 
 #include "glog/logging.h"
 
@@ -47,9 +52,68 @@ void session::clear_local_set() {
         clear_about_read_area(this);
         set_read_area({});
     }
+    sequence_set().clear();
 }
 
 void session::clear_tx_property() { set_tx_began(false); }
+
+void session::commit_sequence(tid_word ctid) {
+    auto& ss = sequence_set().set();
+    // ss is sequence set
+    if (!ss.empty()) {
+
+        std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+
+        // gc after write lock
+        sequence::gc_sequence_map();
+
+        for (auto itr = ss.begin(); itr != ss.end();) {
+            SequenceId id = itr->first;
+            SequenceVersion version = std::get<0>(itr->second);
+            SequenceValue value = std::get<1>(itr->second);
+
+            // check update sequence object
+            auto ret = sequence::sequence_map_find_and_verify(id, version);
+            if (ret == Status::WARN_ILLEGAL_OPERATION ||
+                ret == Status::WARN_NOT_FOUND) {
+                // fail
+                itr = ss.erase(itr);
+                continue;
+            }
+            if (ret != Status::OK) {
+                LOG(ERROR) << "programming error";
+                itr = ss.erase(itr);
+                continue;
+            }
+
+#ifdef PWAL
+            // This entry is valid. it generates log.
+            // gen key
+            std::string key{};
+            key.append(reinterpret_cast<const char*>(&id),
+                       sizeof(id)); // NOLINT
+            // gen value
+            std::string new_value{}; // value is version + value
+            new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
+                             sizeof(version));
+            new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
+                             sizeof(value));
+            log_operation lo{log_operation::UPSERT};
+            get_lpwal_handle().push_log(shirakami::lpwal::log_record(
+                    lo, lpwal::write_version_type(ctid.get_epoch(), version),
+                    storage::sequence_storage, key, new_value));
+#endif
+
+            // update sequence object
+            auto epoch = ctid.get_epoch();
+            ret = sequence::sequence_map_update(id, epoch, version, value);
+            if (ret != Status::OK) {
+                LOG(ERROR) << "programming error";
+                return;
+            }
+        }
+    }
+}
 
 std::set<std::size_t> session::extract_wait_for() {
     // extract wait for
