@@ -40,8 +40,7 @@ Status abort(Token token) { // NOLINT
     return rc;
 }
 
-Status commit([[maybe_unused]] Token token, // NOLINT
-              [[maybe_unused]] commit_param* cp) {
+Status commit(Token const token) {
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) {
@@ -51,10 +50,10 @@ Status commit([[maybe_unused]] Token token, // NOLINT
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-        rc = short_tx::commit(ti, cp);
+        rc = short_tx::commit(ti);
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::LONG) {
-        rc = long_tx::commit(ti, cp);
+        rc = long_tx::commit(ti);
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::commit(ti);

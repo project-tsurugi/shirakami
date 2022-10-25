@@ -46,9 +46,7 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @details If this function return ERR_... status, this called abort function 
  * implicitly. Otherwise, it commits.
  * @param[in] token retrieved by enter().
- * @param[in,out] cp commit parameter to notify commit timestamp and wait 
- * obeyed to commit_param.commit_property.
- * @pre you executed enter command, you didn't execute leave command.
+ * @pre You executed enter command and you didn't execute leave command.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
  * about write preserve by the transaction which is long tx mode.
  * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
@@ -66,7 +64,7 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
  * for finishing commit by other high priority tx.
  */
-extern Status commit(Token token, commit_param* cp = nullptr); // NOLINT
+extern Status commit(Token token); // NOLINT
 
 /**
  * @brief NOT IMPLEMENTED NOW: It checks whether the transaction allocated 

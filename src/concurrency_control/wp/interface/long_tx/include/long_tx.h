@@ -19,7 +19,7 @@ extern Status change_wp_epoch(session* ti, epoch::epoch_t target);
 
 extern Status check_wait_for_preceding_bt(session* ti);
 
-extern Status commit(session* ti, commit_param* cp);
+extern Status commit(session* ti);
 
 extern Status search_key(session* ti, Storage storage, std::string_view key,
                          std::string& value, bool read_value = true); // NOLINT

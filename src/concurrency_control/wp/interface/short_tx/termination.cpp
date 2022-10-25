@@ -460,8 +460,7 @@ void process_tx_state(session* ti,
     }
 }
 
-extern Status commit(session* ti, // NOLINT
-                     [[maybe_unused]] commit_param* cp) {
+extern Status commit(session* const ti) {
     // write lock phase
     tid_word commit_tid{};
     auto rc{write_lock(ti, commit_tid)};

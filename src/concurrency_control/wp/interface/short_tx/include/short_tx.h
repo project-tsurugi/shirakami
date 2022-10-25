@@ -12,7 +12,7 @@ namespace shirakami::short_tx {
 
 extern Status abort(session* ti);
 
-extern Status commit(session* ti, commit_param* cp);
+extern Status commit(session* ti);
 
 extern Status search_key(session* ti, Storage storage, std::string_view key,
                          std::string& value, bool read_value = true); // NOLINT

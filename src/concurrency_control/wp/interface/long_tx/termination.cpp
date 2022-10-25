@@ -525,8 +525,7 @@ void process_tx_state(session* ti,
     }
 }
 
-extern Status commit(session* const ti, // NOLINT
-                     [[maybe_unused]] commit_param* const cp) {
+extern Status commit(session* const ti) {
     // check premature
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
@@ -567,7 +566,7 @@ extern Status commit(session* const ti, // NOLINT
 
     register_read_by(ti);
 
-tid_word ctid{};
+    tid_word ctid{};
     expose_local_write(ti, ctid);
 
     // sequence process
