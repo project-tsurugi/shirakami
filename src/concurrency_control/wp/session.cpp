@@ -90,8 +90,8 @@ void session::commit_sequence(tid_word ctid) {
             // This entry is valid. it generates log.
             // gen key
             std::string key{};
-            key.append(reinterpret_cast<const char*>(&id),
-                       sizeof(id)); // NOLINT
+            key.append(reinterpret_cast<const char*>(&id), // NOLINT
+                       sizeof(id));
             // gen value
             std::string new_value{}; // value is version + value
             new_value.append(reinterpret_cast<const char*>(&version), // NOLINT

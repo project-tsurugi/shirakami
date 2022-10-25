@@ -49,7 +49,8 @@ extern Status create_sequence(SequenceId* id); // NOLINT
  * version durable together with the associated transaction. So If you want to 
  * reflect this function effect, you must execute commit command and success
  * the commit because any transaction can't be decided serialize information 
- * without success termination.
+ * without success termination. If you didn't begin transaction using @a token,
+ * shirakami begin transaction using @a token with occ transaction state.
  * @param[in] token the session token whose current transaction will be 
  * associated with the sequence value and version
  * @param[in] id the sequence id whose value/version will be updated

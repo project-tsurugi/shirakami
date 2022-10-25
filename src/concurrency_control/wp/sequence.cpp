@@ -289,7 +289,7 @@ Status sequence::create_sequence(SequenceId* id) {
 Status sequence::update_sequence(Token const token, SequenceId const id,
                                  SequenceVersion const version,
                                  SequenceValue const value) {
-    auto ti = static_cast<session*>(token);
+    auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
     if (!ti->get_tx_began()) {
