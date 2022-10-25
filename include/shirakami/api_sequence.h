@@ -58,8 +58,8 @@ extern Status create_sequence(SequenceId* id); // NOLINT
  * @param[in] value the new sequence value
  * @return Status::OK if the update sequence is cached for the transaction of 
  * @a token.
- * @return Status::WARN_ALREADY_EXIST The @a id is smaller than latest id of 
- * update_sequence operations of this transaction.
+ * @return Status::WARN_ALREADY_EXIST The @a id is less than or equal to latest 
+ * id of update_sequence operations of this transaction.
  * @return Status::ERR_FATAL Programming error.
  * @warning multiple update_sequence calls to a sequence with same version 
  * number cause undefined behavior.
