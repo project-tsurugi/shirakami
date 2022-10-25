@@ -82,8 +82,8 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     // clear flag
     set_initialized(false);
 } catch (std::exception& e) {
-    LOG(FATAL) << e.what();
-    std::abort();
+    LOG(ERROR) << e.what();
+    return;
 }
 
 } // namespace shirakami

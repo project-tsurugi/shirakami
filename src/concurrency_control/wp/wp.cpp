@@ -38,8 +38,8 @@ Status fin() {
     Storage storage = get_page_set_meta_storage();
     auto rc = delete_storage(storage);
     if (Status::OK != rc) {
-        LOG(FATAL) << rc;
-        std::abort();
+        LOG(ERROR) << rc;
+        return Status::ERR_FATAL;
     }
     set_page_set_meta_storage(initial_page_set_meta_storage);
     set_initialized(false);

@@ -10,24 +10,21 @@
 #include <ctime>
 #include <iostream>
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 [[maybe_unused]] static std::size_t getRusageRUMaxrss() {
     struct rusage r {};
-    if (getrusage(RUSAGE_SELF, &r) != 0) {
-        std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
-                  << std::endl;
-        std::abort();
-    }
+    if (getrusage(RUSAGE_SELF, &r) != 0) { LOG(ERROR); }
     return r.ru_maxrss; // NOLINT
 }
 
 [[maybe_unused]] static void displayRusageRUMaxrss() { // NOLINT
     struct rusage r {};
     if (getrusage(RUSAGE_SELF, &r) != 0) {
-        std::cout << __FILE__ << " : " << __LINE__ << " : fatal error."
-                  << std::endl;
-        std::abort();
+        LOG(ERROR);
+        return;
     }
     std::size_t maxrss{getRusageRUMaxrss()};
     printf("maxrss:\t%ld kB\n", maxrss); // NOLINT
