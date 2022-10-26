@@ -108,6 +108,7 @@ void recovery_from_datastore() {
                 upsert_meta_info();
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
+                    // Does DML create key handle map entry?
                     LOG(ERROR) << "unexpected error";
                     return;
                 }
@@ -116,28 +117,18 @@ void recovery_from_datastore() {
                 // not exist, so create.
                 auto ret = shirakami::create_storage(key, st2, {id, payload});
                 if (ret != Status::OK) {
-                    // todo try to remove this block
                     /**
                       * It already created the storage which has same Storage for 
                       * DML log record.
                       */
                     if (storage::key_handle_map_push_storage(key, st2) !=
                         Status::OK) {
-                        /**
-                          * This execution is done by single thread, so it can 
-                          * execute erase-push
-                          */
-                        if (storage::key_handle_map_erase(st2) != Status::OK) {
-                            LOG(ERROR) << "programming error";
-                            return;
-                        }
-                        if (storage::key_handle_map_push_storage(key, st2) !=
-                            Status::OK) {
-                            LOG(ERROR) << "programming error";
-                            return;
-                        }
+                        // Does DML create key handle map entry?
+                        LOG(ERROR) << "unexpected error";
+                        return;
                     }
                 }
+                upsert_meta_info();
             }
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
