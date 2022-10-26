@@ -34,14 +34,14 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(payload);
     auto ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "reachable path";
+        LOG(ERROR) << "unreachable path";
         return;
     }
     if (commit(s) == Status::OK) {
         leave(s);
         return;
     } // else
-    LOG(ERROR) << "reachable path";
+    LOG(ERROR) << "unreachable path";
 }
 
 Status remove_storage_metadata([[maybe_unused]] Storage st,
@@ -145,6 +145,7 @@ Status storage_set_options(Storage storage, storage_option const& options) {
         return ret;
     } // storage found
     Token s{};
+    // get tx handle
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
     // value = Storage + id + payload
@@ -153,6 +154,7 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
+    // store and log information
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
         LOG(ERROR) << "invalid use";
