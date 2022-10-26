@@ -52,10 +52,10 @@ extern Status create_sequence(SequenceId* id); // NOLINT
  * without success termination. If you didn't begin transaction using @a token,
  * shirakami begin transaction using @a token with occ transaction state.
  * @param[in] token the session token whose current transaction will be 
- * associated with the sequence value and version
- * @param[in] id the sequence id whose value/version will be updated
- * @param[in] version the version of the sequence value
- * @param[in] value the new sequence value
+ * associated with the sequence value and version.
+ * @param[in] id the sequence id whose value / version will be updated.
+ * @param[in] version the version of the sequence value.
+ * @param[in] value the new sequence value.
  * @return Status::OK if the update sequence is cached for the transaction of 
  * @a token.
  * @return Status::WARN_ALREADY_EXIST The @a id is less than or equal to latest 

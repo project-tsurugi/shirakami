@@ -34,6 +34,13 @@ stateDiagram-v2
         Executable api: commit, abort, tx_check, DML, release_tx_state_handle
         Non allowed:
     end note
+    CC_COMMITTED
+    note right of CC_COMMITTED
+        Trigger: After notified WAITING_CC_COMMIT status, shirakami executed 
+        commit process for the transaction and it succeeded.
+        Executable api: tx_begin, DML (will start STX)
+        Non allowed:
+    end note
     ABORTED
     note right of ABORTED
         Trigger: The tx executed abort api or was aborted internally by other tx.
@@ -61,7 +68,10 @@ stateDiagram-v2
     STARTED --> WAITING_DURABLE: LTX
     STARTED --> WAITING_CC_COMMIT: LTX
     WAITING_CC_COMMIT --> COMMITTABLE
+    WAITING_CC_COMMIT --> CC_COMMITTED
+    WAITING_CC_COMMIT --> ABORTED
     COMMITTABLE --> WAITING_DURABLE
+    CC_COMMITTED --> WAITING_DURABLE
     STARTED --> WAITING_DURABLE: STX
     STARTED --> WAITING_DURABLE: LTX
     STARTED --> WAITING_DURABLE: RTX
@@ -73,4 +83,4 @@ stateDiagram-v2
 ```
 
 - Comment about  state diagram
--- 
+--
