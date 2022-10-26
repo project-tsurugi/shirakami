@@ -51,28 +51,34 @@ public:
         STARTED,
         /**
           * @brief This status means the transaction was begun and is waited 
-          * for commit api call or must wait for a 
-          * while because it can not execute this validation due to other 
-          * preceding long transactions.
+          * for commit api call or must wait for a while because it can not 
+          * execute this validation due to other preceding long transactions.
           */
         WAITING_CC_COMMIT,
+        /**
+         * @brief This status means that the transaction was committed as 
+         * concurrency control.
+         */
+        CC_COMMITTED,
         /**
          * @brief This status means that the user can call commit api for the 
          * transaction.
          */
         COMMITTABLE,
         /**
-         * @brief This status means that the transaction was aborted by api call.
+         * @brief This status means that the transaction was aborted by api 
+         * call.
          */
         ABORTED,
         /**
-          * @brief This status means the transaction was committed from viewpoint 
-          * of concurrency control and waits flushing its logs by logging protocol.
+          * @brief This status means the transaction was committed from 
+          * viewpoint of concurrency control and waits flushing its logs by 
+          * logging protocol.
           */
         WAITING_DURABLE,
         /**
-          * @brief This status means the transaction was committed from viewpoint
-          * of concurrency control and logging protocol.
+          * @brief This status means the transaction was committed from 
+          * viewpoint of concurrency control and logging protocol.
           */
         DURABLE
     };
@@ -249,6 +255,8 @@ inline constexpr std::string_view to_string_view(TxState::StateKind value) {
             return "STARTED";
         case StateKind::WAITING_CC_COMMIT:
             return "WAITING_CC_COMMIT";
+        case StateKind::CC_COMMITTED:
+            return "CC_COMMITTED";
         case StateKind::COMMITTABLE:
             return "COMMITTABLE";
         case StateKind::ABORTED:
