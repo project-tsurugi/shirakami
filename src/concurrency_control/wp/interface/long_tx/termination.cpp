@@ -539,6 +539,7 @@ extern Status commit(session* const ti) {
     auto rc = check_wait_for_preceding_bt(ti);
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
+        ti->set_requested_commit(true);
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
 

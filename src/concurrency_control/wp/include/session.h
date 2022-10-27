@@ -236,6 +236,10 @@ public:
 
     // ========== start: long tx
 
+    [[nodiscard]] bool get_requested_commit() const {
+        return requested_commit_.load(std::memory_order_acquire);
+    }
+
     [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
 
     overtaken_ltx_set_type& get_overtaken_ltx_set() {
@@ -355,6 +359,10 @@ public:
     }
 
     // ========== start: long tx
+
+    void set_requested_commit(bool tf) {
+        requested_commit_.store(tf, std::memory_order_release);
+    }
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
@@ -518,6 +526,8 @@ private:
      * @brief long tx's id.
      * 
      */
+    std::atomic<bool> requested_commit_{};
+
     std::size_t long_tx_id_{};
 
     overtaken_ltx_set_type overtaken_ltx_set_;

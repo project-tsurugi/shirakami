@@ -94,6 +94,9 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     }
     ti->set_read_area(ra);
 
+    // update metadata
+    ti->set_requested_commit(false);
+
     return Status::OK;
     // dtor : release wp_mutex
 }
