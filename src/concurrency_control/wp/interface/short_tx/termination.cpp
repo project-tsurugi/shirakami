@@ -1,5 +1,6 @@
 
 #include "atomic_wrapper.h"
+#include "storage.h"
 
 #include "concurrency_control/wp/interface/short_tx/include/short_tx.h"
 
@@ -372,8 +373,18 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
         lpwal::write_version_type::minor_write_version_type minor_version = 1;
-        minor_version <<= 63; // NOLINT
-        minor_version |= update_tid.get_tid();
+        if (wso_ptr->get_storage() == storage::sequence_storage) {
+            SequenceVersion version{};
+            memcpy(&version, val.data(), sizeof(version));
+            minor_version = version;
+        } else {
+            /**
+             * To be larger than LTX.
+             * Ltx's minor version is ltx id.
+             */
+            minor_version <<= 63; // NOLINT
+            minor_version |= update_tid.get_tid();
+        }
         ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(
                 lo,
                 lpwal::write_version_type(update_tid.get_epoch(),
