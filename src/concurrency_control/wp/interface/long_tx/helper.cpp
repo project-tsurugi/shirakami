@@ -80,6 +80,10 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     // after deciding success
     wp::long_tx::set_counter(long_tx_id + 1);
 
+    if (long_tx_id >= pow(2,63)) {
+        LOG(ERROR) << "long tx id depletion. limit of specification.";
+        return Status::ERR_FATAL;
+    }
     ti->set_long_tx_id(long_tx_id);
     ti->set_valid_epoch(valid_epoch);
     ongoing_tx::push({valid_epoch, long_tx_id});
