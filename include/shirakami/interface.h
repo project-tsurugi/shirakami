@@ -373,7 +373,7 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @attention If you specify read_only is true, you can not execute 
  * transactional write operation in this transaction.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
- * @return Status::ERR_FATAL programming error.
+ * @return Status::ERR_FATAL programming error or limit of specification.
  * @return Status::OK Success.
  * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
  * termination command, this is returned.
