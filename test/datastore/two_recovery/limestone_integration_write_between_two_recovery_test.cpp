@@ -59,7 +59,7 @@ static std::string create_log_dir_name() {
 }
 
 TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       DISABLED_write_between_two_recovery) {            // NOLINT
+       write_between_two_recovery) {               // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
