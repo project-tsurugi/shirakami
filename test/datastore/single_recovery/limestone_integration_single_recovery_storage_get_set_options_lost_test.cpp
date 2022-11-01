@@ -71,7 +71,8 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_lost_test, 
     ASSERT_EQ(Status::OK, create_storage("s", st00));
 
     Storage st10{};
-    ASSERT_EQ(Status::OK, create_storage("T", st10, {storage_id_undefined, "abc"}));
+    ASSERT_EQ(Status::OK,
+              create_storage("T", st10, {storage_id_undefined, "abc"}));
 
     // shut down
     fin(false);
@@ -86,16 +87,18 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_lost_test, 
     }
 
     Storage st100{};
-    storage_option options100{};
     ASSERT_EQ(Status::OK, get_storage("s", st100));
+    ASSERT_EQ(st00, st100);
+    storage_option options100{};
     ASSERT_EQ(Status::OK, storage_get_options(st100, options100));
     ASSERT_EQ(storage_id_undefined, options100.id());
     ASSERT_TRUE(options100.payload().empty());
 
     Storage st101{};
-    storage_option options101{};
     ASSERT_EQ(Status::OK, get_storage("T", st101));
-    EXPECT_NE(st101, st100);
+    ASSERT_NE(st100, st101);
+    ASSERT_EQ(st10, st101);
+    storage_option options101{};
     ASSERT_EQ(Status::OK, storage_get_options(st101, options101));
     ASSERT_EQ(storage_id_undefined, options101.id());
     ASSERT_EQ("abc", options101.payload());
