@@ -53,31 +53,6 @@ inline void wait_epoch_update() {
     }
 }
 
-// todo after RO
-TEST_F(search, DISABLED_read_only_mode_single_long_search_success) { // NOLINT
-    // prepare test
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s{};
-    ASSERT_EQ(enter(s), Status::OK);
-
-    // prepare data
-    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s));
-    wait_epoch_update();
-
-    // test
-    // read only mode and long tx mode, single search
-    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::READ_ONLY}), Status::OK);
-    wait_epoch_update();
-    std::string vb{};
-    ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s));
-
-    // clean up test
-    ASSERT_EQ(leave(s), Status::OK);
-}
-
 TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
     // prepare test
     Storage st{};
