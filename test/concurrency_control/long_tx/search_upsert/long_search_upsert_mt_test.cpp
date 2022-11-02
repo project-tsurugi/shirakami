@@ -137,7 +137,7 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
                 }
                 if (rc == Status::OK) { break; }
                 if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
-                LOG(FATAL) << rc;
+                LOG(ERROR) << rc;
             }
         }
     };
