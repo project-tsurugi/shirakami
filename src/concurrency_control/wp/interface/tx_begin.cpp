@@ -49,10 +49,17 @@ Status tx_begin(transaction_options options) { // NOLINT
     if (!ti->get_tx_began()) {
         if (!write_preserve.empty()) {
             if (tx_type != transaction_options::transaction_type::LONG) {
+                // The only ltx can use write preserve.
                 return Status::WARN_ILLEGAL_OPERATION;
             }
         }
         if (tx_type == transaction_options::transaction_type::LONG) {
+            /**
+             * It may be called without check_commit for the ltx.
+             * Clear metadata initialized at check_commit.
+             */
+            ti->set_requested_commit(false);
+
             auto rc{long_tx::tx_begin(ti, write_preserve,
                                       options.get_read_area())};
             if (rc != Status::OK) {

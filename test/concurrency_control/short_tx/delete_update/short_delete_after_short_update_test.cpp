@@ -51,7 +51,6 @@ TEST_F(short_delete_after_short_update, delete_after_update) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
 
-    ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 

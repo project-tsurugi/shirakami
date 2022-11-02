@@ -33,18 +33,16 @@ private:
 TEST_F(c_termination, commit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::WARN_NOT_BEGIN, commit(s)); // NOLINT
+    ASSERT_EQ(Status::WARN_NOT_BEGIN, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(c_termination, abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, abort(s));
-    ASSERT_EQ(Status::OK, abort(s));
-    ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
+    ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 

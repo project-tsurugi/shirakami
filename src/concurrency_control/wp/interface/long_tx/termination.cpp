@@ -5,6 +5,7 @@
 
 #include "atomic_wrapper.h"
 
+#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/wp/include/epoch.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
@@ -540,6 +541,7 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
         ti->set_requested_commit(true);
+        bg_work::bg_commit::register_tx(static_cast<void*>(ti));
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
 
@@ -601,6 +603,20 @@ extern Status commit(session* const ti) {
     ti->set_result(reason_code::UNKNOWN);
 
     return Status::OK;
+}
+
+Status check_commit(Token token) {
+    auto* ti = static_cast<session*>(token);
+
+    // check for requested commit.
+    if (!ti->get_requested_commit()) { return Status::WARN_ILLEGAL_OPERATION; }
+
+    auto rs = ti->get_result_requested_commit();
+    if (rs == Status::WARN_WAITING_FOR_OTHER_TX) { return rs; }
+    // the transaction was finished.
+    // clear metadata about auto commit.
+    ti->set_requested_commit(false);
+    return rs;
 }
 
 // ==============================

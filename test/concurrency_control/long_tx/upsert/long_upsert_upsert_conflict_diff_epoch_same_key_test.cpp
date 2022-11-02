@@ -67,9 +67,11 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(upsert(s1, st, "", ""), Status::OK);
@@ -97,9 +99,11 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(upsert(s2, st, "", ""), Status::OK);
@@ -127,9 +131,11 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(upsert(s1, st, "", ""), Status::OK);
@@ -137,7 +143,12 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, commit(s2));
+    Status rc{};
+    do {
+        rc = check_commit(s2);
+        _mm_pause();
+    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+    ASSERT_EQ(Status::OK, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -158,9 +169,11 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}), Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
     wait_epoch_update();
 
     ASSERT_EQ(upsert(s2, st, "", ""), Status::OK);
@@ -168,7 +181,12 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, commit(s2));
+    Status rc{};
+    do {
+        rc = check_commit(s2);
+        _mm_pause();
+    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+    ASSERT_EQ(Status::OK, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

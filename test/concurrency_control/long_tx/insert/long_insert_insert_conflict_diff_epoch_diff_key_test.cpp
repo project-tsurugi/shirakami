@@ -121,7 +121,11 @@ TEST_F(long_insert_insert_conflict_diff_epoch_test, // NOLINT
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::OK, commit(s2));
+    Status rc{};
+    do {
+        rc = check_commit(s2);
+    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+    ASSERT_EQ(Status::OK, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

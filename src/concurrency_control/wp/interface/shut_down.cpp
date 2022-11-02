@@ -8,6 +8,7 @@
 
 #include "include/helper.h"
 
+#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
@@ -78,6 +79,9 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 
     // about index
     yakushima::fin();
+
+    // about back ground worker about commit
+    bg_work::bg_commit::fin();
 
     // clear flag
     set_initialized(false);

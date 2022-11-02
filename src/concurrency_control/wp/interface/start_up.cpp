@@ -9,6 +9,7 @@
 
 #include "include/helper.h"
 
+#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/wp/include/epoch_internal.h"
 #include "concurrency_control/wp/include/ongoing_tx.h"
 #include "concurrency_control/wp/include/session.h"
@@ -144,6 +145,9 @@ Status init([[maybe_unused]] database_options options) { // NOLINT
 #ifdef PWAL
     lpwal::init(); // start damon
 #endif
+
+    // about back ground worker about commit
+    bg_work::bg_commit::init();
 
     set_initialized(true); // about init command
     return Status::OK;

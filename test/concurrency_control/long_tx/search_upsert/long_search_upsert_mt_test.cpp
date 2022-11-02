@@ -130,8 +130,10 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
             for (;;) {
                 auto rc = commit(s);
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-                    _mm_pause();
-                    continue;
+                    do {
+                        rc = check_commit(s);
+                        _mm_pause();
+                    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
                 }
                 if (rc == Status::OK) { break; }
                 if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
