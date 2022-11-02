@@ -112,21 +112,28 @@ void recovery_from_datastore() {
                     LOG(ERROR) << "unexpected error";
                     return;
                 }
-
             } else {
                 // not exist, so create.
-                auto ret = shirakami::create_storage(key, st2, {id, payload});
+                auto ret = shirakami::storage::register_storage(st2,
+                                                                {id, payload});
                 if (ret != Status::OK) {
                     /**
-                      * It already created the storage which has same Storage for 
-                      * DML log record.
-                      */
-                    if (storage::key_handle_map_push_storage(key, st2) !=
-                        Status::OK) {
-                        // Does DML create key handle map entry?
-                        LOG(ERROR) << "unexpected error";
-                        return;
-                    }
+                     * This process was done because 
+                     * shirakami::storage::exist_storage(st2) said not exist,
+                     * but it can't register_storage.
+                     */
+                    LOG(ERROR) << "unexpected error";
+                    return;
+                }
+                if (storage::key_handle_map_push_storage(key, st2) !=
+                    Status::OK) {
+                    /**
+                     * This process was done because 
+                     * shirakami::register_storage(st2, {id, payload}) was 
+                     * succeeded but it can't create entry of this map.
+                     */
+                    LOG(ERROR) << "unexpected error";
+                    return;
                 }
                 upsert_meta_info();
             }
