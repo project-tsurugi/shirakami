@@ -124,6 +124,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
     Status rc{};
     do {
         rc = check_commit(s2);
+        _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
     ASSERT_EQ(Status::ERR_FAIL_INSERT, rc);
     ASSERT_EQ(Status::OK, leave(s1));

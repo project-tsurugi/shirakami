@@ -41,6 +41,13 @@ namespace shirakami {
 void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
 
+    /**
+     * about back ground worker about commit
+     * background worker about commit may access global data (object), so it 
+     * must execute before cleanup environment.
+     */
+    bg_work::bg_commit::fin();
+
     // about datastore
 #if defined(PWAL)
     lpwal::fin(); // stop damon
@@ -79,9 +86,6 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 
     // about index
     yakushima::fin();
-
-    // about back ground worker about commit
-    bg_work::bg_commit::fin();
 
     // clear flag
     set_initialized(false);

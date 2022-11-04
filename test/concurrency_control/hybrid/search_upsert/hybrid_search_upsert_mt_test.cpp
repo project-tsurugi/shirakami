@@ -24,8 +24,8 @@ using namespace shirakami;
 class search_upsert_mt : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "search_upsert-search_upsert_mt_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-hybrid-"
+                                  "search_upsert-hybrid_search_upsert_mt_test");
         FLAGS_stderrthreshold = 0;
     }
 
