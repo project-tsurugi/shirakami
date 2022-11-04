@@ -10,12 +10,12 @@
 
 #include "atomic_wrapper.h"
 
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/ongoing_tx.h"
-#include "concurrency_control/wp/include/record.h"
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
-#include "concurrency_control/wp/include/version.h"
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/ongoing_tx.h"
+#include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+#include "concurrency_control/include/version.h"
 
 #include "shirakami/interface.h"
 

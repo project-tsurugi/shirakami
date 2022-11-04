@@ -9,7 +9,7 @@
 #include <map>
 #include <shared_mutex>
 
-#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/include/epoch.h"
 
 #include "shirakami/interface.h"
 #include "shirakami/scheme.h"

@@ -12,10 +12,10 @@
 #include "clock.h"
 #include "tsc.h"
 
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/lpwal.h"
-#include "concurrency_control/wp/include/record.h"
-#include "concurrency_control/wp/include/version.h"
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/lpwal.h"
+#include "concurrency_control/include/record.h"
+#include "concurrency_control/include/version.h"
 
 #include "shirakami/interface.h"
 

@@ -1,7 +1,7 @@
 
 #include <mutex>
 
-#include "concurrency_control/wp/include/record.h"
+#include "concurrency_control/include/record.h"
 
 #include "index/yakushima/include/interface.h"
 

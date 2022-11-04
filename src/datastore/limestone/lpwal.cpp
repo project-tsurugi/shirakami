@@ -3,11 +3,11 @@
 
 #include "clock.h"
 
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/lpwal.h"
-#include "concurrency_control/wp/include/ongoing_tx.h"
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h" // for size
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/lpwal.h"
+#include "concurrency_control/include/ongoing_tx.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h" // for size
 
 #include "storage.h"
 

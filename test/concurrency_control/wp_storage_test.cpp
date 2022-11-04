@@ -6,7 +6,7 @@
 
 #include "storage.h"
 
-#include "concurrency_control/wp/include/wp.h"
+#include "concurrency_control/include/wp.h"
 
 #include "shirakami/interface.h"
 

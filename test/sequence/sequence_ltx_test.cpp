@@ -9,7 +9,7 @@
 
 #ifdef PWAL
 
-#include "concurrency_control/wp/include/lpwal.h"
+#include "concurrency_control/include/lpwal.h"
 
 #endif
 

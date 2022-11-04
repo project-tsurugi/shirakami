@@ -8,7 +8,7 @@
 
 #include "memory.h"
 
-#include "concurrency_control/wp/include/garbage.h"
+#include "concurrency_control/include/garbage.h"
 
 #include "glog/logging.h"
 

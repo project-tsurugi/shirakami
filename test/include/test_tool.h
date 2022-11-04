@@ -2,7 +2,7 @@
 
 #include <xmmintrin.h>
 
-#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/include/epoch.h"
 
 namespace shirakami {
 

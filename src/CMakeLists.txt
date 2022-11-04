@@ -5,11 +5,11 @@ file(GLOB SOURCES
 # about cc
 file(GLOB CC_SOURCES 
 "concurrency_control/bg_work/*.cpp"
-"concurrency_control/wp/*.cpp"
-"concurrency_control/wp/interface/*.cpp"
-"concurrency_control/wp/interface/long_tx/*.cpp"
-"concurrency_control/wp/interface/read_only_tx/*.cpp"
-"concurrency_control/wp/interface/short_tx/*.cpp"
+"concurrency_control/*.cpp"
+"concurrency_control/interface/*.cpp"
+"concurrency_control/interface/long_tx/*.cpp"
+"concurrency_control/interface/read_only_tx/*.cpp"
+"concurrency_control/interface/short_tx/*.cpp"
 )
 set(SOURCES ${SOURCES} ${CC_SOURCES})
 

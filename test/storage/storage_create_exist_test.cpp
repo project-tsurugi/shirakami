@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-#include "concurrency_control/wp/include/ongoing_tx.h"
+#include "concurrency_control/include/ongoing_tx.h"
 
 #include "storage.h"
 

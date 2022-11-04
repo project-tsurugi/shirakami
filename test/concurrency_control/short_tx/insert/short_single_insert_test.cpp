@@ -3,8 +3,8 @@
 #include <mutex>
 #include <thread>
 
-#include "concurrency_control/wp/include/record.h"
-#include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/include/record.h"
+#include "concurrency_control/include/tuple_local.h"
 
 #include "index/yakushima/include/interface.h"
 

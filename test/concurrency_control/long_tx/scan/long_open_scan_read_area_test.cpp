@@ -3,9 +3,9 @@
 
 #include "test_tool.h"
 
-#include "concurrency_control/wp/include/garbage.h"
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/include/garbage.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

@@ -36,7 +36,7 @@
 #include "cpu.h"
 
 // shirakami/src/
-#include "concurrency_control/wp/include/epoch.h"
+#include "concurrency_control/include/epoch.h"
 
 #include "shirakami/interface.h"
 

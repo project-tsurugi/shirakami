@@ -12,9 +12,9 @@
 #include "atomic_wrapper.h"
 #include "test_tool.h"
 
-#include "concurrency_control/wp/include/epoch.h"
-#include "concurrency_control/wp/include/session.h"
-#include "concurrency_control/wp/include/tuple_local.h"
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
