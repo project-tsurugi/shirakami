@@ -20,6 +20,7 @@ namespace shirakami {
  * more than once.
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger 
  * than 2^32, or shirakami create storage more than 2^32.
+ * Please review your usage.
  */
 extern Status create_storage(std::string_view key, Storage& storage,
                              storage_option const& options = {}); // NOLINT
