@@ -34,6 +34,10 @@ public:
      */
     bool is_exist(Token token);
 
+    /**
+     * @brief push element and gc.
+     * @param[in] elem 
+     */
     void push(body_elem_type elem);
 
     /**
@@ -71,6 +75,10 @@ public:
 
     bool is_exist(epoch::epoch_t ep, std::string_view key);
 
+    /**
+     * @brief push element and gc.
+     * @param[in] elem 
+     */
     void push(body_elem_type const& elem);
 
 private:

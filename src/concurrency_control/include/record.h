@@ -103,6 +103,18 @@ private:
     point_read_by_short read_by_{};
 
     std::mutex lk_for_gc_{};
+
+    // read information about long transaction
+    /**
+     * @brief read information about point read by long transaction.
+     */
+    point_read_by_long point_read_by_long_{};
+
+    /**
+     * @brief range read information about point read by long transaction.
+     */
+    range_read_by_long range_read_by_long_{};
+    // ==========
 };
 
 } // namespace shirakami
