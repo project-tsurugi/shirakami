@@ -12,6 +12,11 @@
 
 namespace shirakami::bg_work {
 
+void bg_commit::clear_tx() {
+    std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
+    cont_wait_tx().clear();
+}
+
 void bg_commit::init() {
     // send signal
     worker_thread_end(false);
@@ -26,6 +31,13 @@ void bg_commit::fin() {
 
     // wait thread end
     worker_thread().join();
+
+    /**
+     * cleanup container because after next startup, manager thread will 
+     * misunderstand.
+     */
+
+    clear_tx();
 }
 
 void bg_commit::register_tx(Token token) {

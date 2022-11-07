@@ -33,33 +33,14 @@ void session_table::init_session_table() {
         itr.set_visible(false);
         // for internal
         itr.clean_up();
+        // clear metadata about auto commit.
+        itr.set_requested_commit(false);
 #ifdef PWAL
         itr.get_lpwal_handle().init();
         itr.get_lpwal_handle().set_worker_number(worker_number);
         ++worker_number;
 #endif
     }
-}
-
-void session_table::fin_session_table() {
-    std::vector<std::thread> th_vc;
-    th_vc.reserve(get_session_table().size());
-    for (auto&& itr : get_session_table()) {
-        auto process = [&itr]() {
-            // about local set
-            itr.clear_local_set();
-
-            // about tx state
-            if (itr.get_has_current_tx_state_handle()) {
-                // If user forget to cleanup about tx state, shirakami do
-                // automatically.
-                release_tx_state_handle(itr.get_current_tx_state_handle());
-            }
-        };
-        th_vc.emplace_back(process);
-    }
-
-    for (auto&& th : th_vc) th.join();
 }
 
 } // namespace shirakami

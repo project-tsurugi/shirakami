@@ -54,8 +54,22 @@ Status leave(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
         if (&itr == static_cast<session*>(token)) {
             if (itr.get_visible()) {
-                // there may be halfway txs.
-                shirakami::abort(token);
+                if (itr.get_tx_began()) {
+                    // there is a halfway tx.
+                    auto rc = shirakami::abort(token);
+                    if (rc == Status::WARN_ILLEGAL_OPERATION) {
+                        // check truly from ltx
+                        if (itr.get_tx_type() !=
+                            transaction_options::transaction_type::LONG) {
+                            LOG(ERROR) << "unexpected error";
+                        }
+                        // the ltx commit was submitted, wait result.
+                        do {
+                            rc = check_commit(&itr);
+                            _mm_pause();
+                        } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+                    }
+                }
 
                 yakushima::leave(
                         static_cast<session*>(token)->get_yakushima_token());

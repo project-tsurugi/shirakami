@@ -612,11 +612,6 @@ public:
     static Status decide_token(Token& token); // NOLINT
 
     /**
-     * @brief End work about session_table.
-     */
-    static void fin_session_table();
-
-    /**
      * @brief getter of session_table_
      */
     static std::array<session, KVS_MAX_PARALLEL_THREADS>& get_session_table() {

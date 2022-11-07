@@ -33,6 +33,8 @@ public:
     static void worker_thread_end(bool tf) { worker_thread_end_ = tf; }
     // end: setter
 
+    static void clear_tx();
+
     static void init();
 
     static void fin();

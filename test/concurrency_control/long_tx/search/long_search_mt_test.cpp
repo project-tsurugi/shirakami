@@ -99,11 +99,13 @@ TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
         storeRelease(readys.at(th_num), 1);
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
-        TX_BEGIN: // NOLINT
-            ASSERT_EQ(tx_begin({s,
-                                transaction_options::transaction_type::LONG,
-                                {st}}),
-                      Status::OK);
+            [[maybe_unused]] TX_BEGIN
+                : // NOLINT
+                  ASSERT_EQ(
+                          tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {st}}),
+                          Status::OK);
             wait_epoch_update();
 
             for (auto&& elem : keys) {

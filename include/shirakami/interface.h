@@ -27,6 +27,8 @@ namespace shirakami {
  * @pre it did enter -> ... -> (tx_begin ->) some transactional operations 
  * (update / insert / upsert / search / delete) or no operation.
  * @return Status::OK success.
+ * @return Status::WARN_ILLEGAL_OPERATION After submitting commit, you must 
+ * wait the result.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  */
 extern Status abort(Token token); // NOLINT

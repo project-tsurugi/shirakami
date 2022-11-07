@@ -26,6 +26,14 @@ Status abort(Token token) { // NOLINT
         rc = short_tx::abort(ti);
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::LONG) {
+        if (ti->get_requested_commit()) {
+            /**
+             * It was already requested.
+             * So user must use check_commit function to check result.
+             */
+            ti->process_before_finish_step();
+            return Status::WARN_ILLEGAL_OPERATION;
+        }
         rc = long_tx::abort(ti);
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::READ_ONLY) {
