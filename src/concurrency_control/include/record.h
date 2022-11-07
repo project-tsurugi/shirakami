@@ -28,8 +28,7 @@ public:
 
     /**
      * @brief ctor.
-     * @details This is used for insert logic.
-     * todo delete
+     * @details This is used for creating page with value at recovery logic.
      */
     Record(std::string_view key, std::string_view val);
 
