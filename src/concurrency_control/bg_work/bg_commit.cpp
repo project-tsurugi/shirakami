@@ -37,12 +37,14 @@ void bg_commit::register_tx(Token token) {
     }
 
     // lock for container
-    std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
-    auto ret =
-            cont_wait_tx().insert(std::make_tuple(ti->get_long_tx_id(), token));
-    if (!ret.second) {
-        // already exist
-        LOG(ERROR) << "unexpected error";
+    {
+        std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
+        auto ret = cont_wait_tx().insert(
+                std::make_tuple(ti->get_long_tx_id(), token));
+        if (!ret.second) {
+            // already exist
+            LOG(ERROR) << "unexpected error";
+        }
     }
 }
 

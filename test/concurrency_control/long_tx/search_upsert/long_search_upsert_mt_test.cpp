@@ -68,11 +68,12 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
 
     // begin: initialize table
     // ==============================
-    std::size_t th_num{4}; // NOLINT
-    //if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
-    std::vector<std::string> keys(th_num);
+    std::size_t th_num{3}; // NOLINT
+    if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
+    std::vector<std::string> keys(1);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
+    LOG(INFO) << keys.size();
     for (auto&& elem : keys) {
         static char c{0};
         elem = std::string(1, c);
@@ -118,28 +119,34 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
                 ++v;
                 std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                         sizeof(v)};
+                auto* ti = static_cast<session*>(s);
+                ASSERT_EQ(ti->get_tx_type(),
+                          transaction_options::transaction_type::LONG);
                 ASSERT_EQ(shirakami::tx_begin(
                                   {s,
                                    transaction_options::transaction_type::LONG,
                                    {st}}),
                           Status::WARN_ALREADY_BEGIN);
+                ASSERT_EQ(ti->get_tx_type(),
+                          transaction_options::transaction_type::LONG);
                 ASSERT_EQ(upsert(s, st, elem, v_view), Status::OK);
+                ASSERT_EQ(ti->get_tx_type(),
+                          transaction_options::transaction_type::LONG);
             }
 
             // commit phase
-            for (;;) {
-                auto rc = commit(s);
-                if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-                    do {
-                        rc = check_commit(s);
-                        _mm_pause();
-                    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-                }
-                if (rc == Status::OK) { break; }
-                if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
-                LOG(ERROR) << rc;
+            auto rc = commit(s);
+            if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
+                do {
+                    rc = check_commit(s);
+                    _mm_pause();
+                } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
             }
+            if (rc == Status::OK) { continue; }
+            if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
+            LOG(FATAL) << rc;
         }
+        ASSERT_EQ(leave(s), Status::OK);
     };
 
     std::vector<std::thread> thv{};
@@ -149,7 +156,9 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
     wait_for_ready(readys);
     go.store(true, std::memory_order_release);
 
+    LOG(INFO) << "before join";
     for (auto&& th : thv) { th.join(); }
+    LOG(INFO) << "after join";
 
     // verify result
     ASSERT_EQ(enter(s), Status::OK);
