@@ -13,7 +13,7 @@
 namespace shirakami::bg_work {
 
 void bg_commit::clear_tx() {
-    std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
+    std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
     cont_wait_tx().clear();
 }
 
@@ -50,7 +50,7 @@ void bg_commit::register_tx(Token token) {
 
     // lock for container
     {
-        std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
+        std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
         auto ret = cont_wait_tx().insert(
                 std::make_tuple(ti->get_long_tx_id(), token));
         if (!ret.second) {
@@ -65,7 +65,7 @@ void bg_commit::worker() {
         sleepMs(PARAM_EPOCH_TIME);
         {
             // lock for container
-            std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
+            std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
             for (auto itr = cont_wait_tx().begin();
                  itr != cont_wait_tx().end();) {
                 Token token = std::get<1>(*itr);

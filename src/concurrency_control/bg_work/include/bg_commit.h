@@ -3,7 +3,6 @@
 #include <map>
 #include <mutex>
 #include <set>
-#include <shared_mutex>
 #include <thread>
 #include <tuple>
 
@@ -24,7 +23,7 @@ public:
 
     [[nodiscard]] static bool worker_thread_end() { return worker_thread_end_; }
 
-    static std::shared_mutex& mtx_cont_wait_tx() { return mtx_cont_wait_tx_; }
+    static std::mutex& mtx_cont_wait_tx() { return mtx_cont_wait_tx_; }
 
     static cont_type& cont_wait_tx() { return cont_wait_tx_; }
     // end: getter
@@ -56,7 +55,7 @@ private:
      * @brief mutex for cont_wait_tx
      * 
      */
-    static inline std::shared_mutex mtx_cont_wait_tx_; // NOLINT
+    static inline std::mutex mtx_cont_wait_tx_; // NOLINT
 
     /**
      * @brief container of long transactions waiting to commit.

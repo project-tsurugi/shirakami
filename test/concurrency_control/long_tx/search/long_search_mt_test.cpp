@@ -70,7 +70,7 @@ TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
     // ==============================
     std::size_t th_num{3}; // NOLINT
     if (CHAR_MAX < th_num) { th_num = CHAR_MAX; }
-    std::vector<std::string> keys(1);
+    std::vector<std::string> keys(th_num);
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     LOG(INFO) << keys.size();

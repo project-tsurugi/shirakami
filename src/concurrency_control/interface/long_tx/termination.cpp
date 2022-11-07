@@ -540,8 +540,12 @@ extern Status commit(session* const ti) {
     auto rc = check_wait_for_preceding_bt(ti);
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
-        ti->set_requested_commit(true);
-        bg_work::bg_commit::register_tx(static_cast<void*>(ti));
+        if (!ti->get_requested_commit()) {
+            // record requested
+            ti->set_requested_commit(true);
+            // register for background worker
+            bg_work::bg_commit::register_tx(static_cast<void*>(ti));
+        }
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
 
@@ -605,7 +609,7 @@ extern Status commit(session* const ti) {
     return Status::OK;
 }
 
-Status check_commit(Token token) {
+Status check_commit(Token const token) {
     auto* ti = static_cast<session*>(token);
 
     // check for requested commit.
