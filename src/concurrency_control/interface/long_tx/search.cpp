@@ -77,6 +77,7 @@ RETRY:
 }
 
 static void process_before_success(session* const ti, Record* const rec_ptr) {
+    // register read_by_set
     ti->read_set_for_ltx().push(rec_ptr);
 }
 
@@ -144,16 +145,6 @@ Status search_key(session* ti, Storage const storage,
             ti->set_result(reason_code::FORWARDING_BLOCKED_BY_READ);
         }
         return rc;
-    }
-
-    // register read_by_set
-    point_read_by_long* rbp{};
-    rc = wp::find_read_by(storage, rbp);
-    if (rc == Status::OK) {
-        ti->get_point_read_by_long_set().insert(rbp);
-    } else {
-        LOG(ERROR) << "programming error";
-        return Status::ERR_FATAL;
     }
 
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);

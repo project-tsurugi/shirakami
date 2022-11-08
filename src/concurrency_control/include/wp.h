@@ -40,10 +40,6 @@ public:
     explicit page_set_meta(storage_option options)
         : storage_option_(std::move(options)) {} // NOLINT
 
-    point_read_by_long* get_point_read_by_long_ptr() {
-        return &point_read_by_long_;
-    }
-
     range_read_by_long* get_range_read_by_long_ptr() {
         return &range_read_by_long_;
     }
@@ -58,7 +54,6 @@ public:
 
 private:
     storage_option storage_option_{};
-    point_read_by_long point_read_by_long_{};
     range_read_by_long range_read_by_long_{};
     range_read_by_short range_read_by_short_{};
     wp_meta wp_meta_{};
@@ -109,9 +104,6 @@ void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
 
 [[maybe_unused]] extern Status find_read_by(Storage st,
                                             range_read_by_long*& ret);
-
-[[maybe_unused]] extern Status find_read_by(Storage st,
-                                            point_read_by_long*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 
