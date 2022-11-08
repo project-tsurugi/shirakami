@@ -15,7 +15,8 @@ namespace shirakami {
 
 static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
-                                    const std::string_view val) {
+                                    const std::string_view val,
+                                    Record*& out_rec_ptr) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
 
@@ -33,12 +34,19 @@ static inline Status insert_process(session* const ti, Storage st,
             return Status::ERR_PHANTOM;
         }
         ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr, val});
+        out_rec_ptr = rec_ptr;
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so retry from index access
     delete rec_ptr; // NOLINT
     return Status::WARN_CONCURRENT_INSERT;
+}
+
+static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        ti->read_set_for_ltx().push(rec_ptr);
+    }
 }
 
 Status insert(Token const token, Storage const storage,
@@ -74,6 +82,7 @@ Status insert(Token const token, Storage const storage,
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);
                     ti->process_before_finish_step();
+                    register_read_if_ltx(ti, rec_ptr);
                     return Status::OK;
                 }
             }
@@ -84,6 +93,7 @@ Status insert(Token const token, Storage const storage,
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
                 ti->process_before_finish_step();
+                register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
             if (rc == Status::WARN_NOT_FOUND) {
@@ -100,15 +110,7 @@ Status insert(Token const token, Storage const storage,
                 } else if (ti->get_tx_type() ==
                            transaction_options::transaction_type::LONG) {
                     // register read_by_set
-                    point_read_by_long* rbp{};
-                    auto rc = wp::find_read_by(storage, rbp);
-                    if (rc == Status::OK) {
-                        ti->get_point_read_by_long_set().insert(rbp);
-                    } else {
-                        LOG(ERROR) << "programming error";
-                        ti->process_before_finish_step();
-                        return Status::ERR_FATAL;
-                    }
+                    register_read_if_ltx(ti, rec_ptr);
                 } else {
                     LOG(ERROR) << "programming error";
                     ti->process_before_finish_step();
@@ -120,6 +122,7 @@ Status insert(Token const token, Storage const storage,
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
                 ti->process_before_finish_step();
+                register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
             ti->process_before_finish_step();
@@ -127,10 +130,11 @@ Status insert(Token const token, Storage const storage,
         }
 
     INSERT_PROCESS:
-        auto rc{insert_process(ti, storage, key, val)};
+        auto rc{insert_process(ti, storage, key, val, rec_ptr)};
         if (rc == Status::OK) {
             ti->process_before_finish_step();
-            return rc;
+            register_read_if_ltx(ti, rec_ptr);
+            return Status::OK;
         }
         if (rc == Status::ERR_PHANTOM) { return rc; }
     }

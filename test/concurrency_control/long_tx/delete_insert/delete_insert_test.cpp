@@ -63,8 +63,12 @@ TEST_F(delete_insert_test, long_insert_execute_read) { // NOLINT
     // end preparation
 
     // test preparation
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     // preparation
 

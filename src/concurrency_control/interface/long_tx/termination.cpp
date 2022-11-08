@@ -447,13 +447,8 @@ Status verify_read_by(session* const ti) {
         // about point read
         // for ltx
         point_read_by_long* rbp{};
-        auto rc{wp::find_read_by(wso.second.get_storage(), rbp)};
-        if (rc == Status::OK) {
-            if (rbp->is_exist(ti)) { return Status::ERR_VALIDATION; }
-        } else {
-            LOG(ERROR) << "programming error";
-            return Status::ERR_FATAL;
-        }
+        rbp = &wso.first->get_point_read_by_long();
+        if (rbp->is_exist(ti)) { return Status::ERR_VALIDATION; }
 
         // for stx
         auto* rec_ptr{wso.first};
@@ -466,6 +461,8 @@ Status verify_read_by(session* const ti) {
         //==========
         // about range read
         if (wso.second.get_op() == OP_TYPE::INSERT ||
+            wso.second.get_op() ==
+                    OP_TYPE::UPSERT || // upsert may cause phantom
             wso.second.get_op() == OP_TYPE::DELETE) {
             // for long
             wp::page_set_meta* psm{};
@@ -558,13 +555,12 @@ extern Status commit(session* const ti) {
 
     // ==========
     // verify : start
-    // verify read by
-    rc = verify_read_by(ti);
-    if (rc == Status::ERR_VALIDATION) {
-        abort(ti);
-        ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
-        return Status::ERR_VALIDATION;
-    }
+    /**
+     * verify order is insert to read by due to extending abort information.
+     * If the transaction fail insert, the read of insert was also broken at 
+     * verify read by. So If the verify order is read by to insert, information
+     * of failing insert is lost.
+     */
 
     // verify insert
     rc = verify_insert(ti);
@@ -572,6 +568,14 @@ extern Status commit(session* const ti) {
         abort(ti);
         ti->set_result(reason_code::INSERT_EXISTING_KEY);
         return Status::ERR_FAIL_INSERT;
+    }
+
+    // verify read by
+    rc = verify_read_by(ti);
+    if (rc == Status::ERR_VALIDATION) {
+        abort(ti);
+        ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+        return Status::ERR_VALIDATION;
     }
     // verify : end
     // ==========

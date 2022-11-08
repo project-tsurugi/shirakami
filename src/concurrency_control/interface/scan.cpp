@@ -180,7 +180,6 @@ Status open_scan(Token const token, Storage storage,
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
         }
-        point_read_by_long* prbp{psm->get_point_read_by_long_ptr()};
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
         /**
           * register read_by_set
@@ -191,8 +190,6 @@ Status open_scan(Token const token, Storage storage,
           */
         ti->get_range_read_by_long_set().insert(std::make_tuple(
                 rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
-        // include false positive
-        ti->get_point_read_by_long_set().insert(prbp);
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {
         wp::page_set_meta* psm{};
@@ -379,6 +376,14 @@ Status next(Token const token, ScanHandle const handle) {
 Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                       std::string& buf) {
     auto* ti = static_cast<session*>(token);
+
+    // for register point read information.
+    auto read_register_if_ltx = [ti](Record* rec_ptr) {
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            ti->read_set_for_ltx().push(rec_ptr);
+        }
+    };
+
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     ti->process_before_start_step();
 
@@ -413,6 +418,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             ti->process_before_finish_step();
+            read_register_if_ltx(rec_ptr);
             return Status::WARN_ALREADY_DELETE;
         }
         if (key_read) {
@@ -421,6 +427,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             inws->get_value(buf);
         }
         ti->process_before_finish_step();
+        read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
     // ==========
@@ -459,6 +466,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // it already read.
         sh.get_ci(handle).get_key(buf);
         ti->process_before_finish_step();
+        read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
     if (!key_read &&
@@ -466,6 +474,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // it already read.
         sh.get_ci(handle).get_value(buf);
         ti->process_before_finish_step();
+        read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
 
@@ -509,7 +518,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         tid_word f_check{};
         auto rc{long_tx::version_function_with_optimistic_check(
                 rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
-        if (rc == Status::WARN_NOT_FOUND) { return rc; }
+        if (rc == Status::WARN_NOT_FOUND) {
+            read_register_if_ltx(rec_ptr);
+            return rc;
+        }
         if (rc != Status::OK) {
             LOG(ERROR) << "programming error";
             return Status::ERR_FATAL;
@@ -530,6 +542,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
                         f_check.get_obj()) {
                 // success optimistic read latest version
+                read_register_if_ltx(rec_ptr);
                 return Status::OK;
             }
             /**
@@ -554,6 +567,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             sh.get_ci(handle).set_value(buf);
             sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
         }
+        read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
     if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {

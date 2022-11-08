@@ -228,7 +228,7 @@ TEST_F(multi_boundary_test, monotonic_dec) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, var.at(4)));
-    ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
