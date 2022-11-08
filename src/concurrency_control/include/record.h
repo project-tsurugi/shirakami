@@ -38,6 +38,7 @@ public:
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
     }
 
+    // start: getter
     void get_key(std::string& out) { out = key_; }
 
     [[nodiscard]] std::string* get_key_ptr() { return &key_; }
@@ -65,6 +66,9 @@ public:
         get_latest()->get_value(out);
     }
 
+    point_read_by_long& get_point_read_by_long() { return point_read_by_long_; }
+
+    // end: getter
     void lock() { tidw_.lock(); }
 
     void reset_ts() { tidw_.reset(); }
@@ -109,11 +113,6 @@ private:
      * @brief read information about point read by long transaction.
      */
     point_read_by_long point_read_by_long_{};
-
-    /**
-     * @brief range read information about point read by long transaction.
-     */
-    range_read_by_long range_read_by_long_{};
     // ==========
 };
 

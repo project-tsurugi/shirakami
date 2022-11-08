@@ -348,8 +348,15 @@ Status abort(session* const ti) { // NOLINT
 
 void register_read_by(session* const ti) {
     // point read
+    // register to table info
     for (auto&& elem : ti->get_point_read_by_long_set()) {
         elem->push({ti->get_valid_epoch(), ti->get_long_tx_id()});
+    }
+
+    // register to page info
+    for (auto&& elem : ti->read_set_for_ltx().set()) {
+        elem->get_point_read_by_long().push(
+                {ti->get_valid_epoch(), ti->get_long_tx_id()});
     }
 
     // range read
