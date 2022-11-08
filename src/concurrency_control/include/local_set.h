@@ -225,4 +225,23 @@ private:
     container_type set_;
 };
 
+/**
+ * @brief It is used for registering read information.
+ * 
+ */
+class local_read_set_for_ltx {
+public:
+    using cont_type = std::set<Record*>;
+
+    void clear() { set_.clear(); }
+
+    void push(Record* rec) { set_.insert(rec); }
+
+    // getter
+    cont_type& set() { return set_; }
+
+private:
+    cont_type set_;
+};
+
 } // namespace shirakami

@@ -76,9 +76,11 @@ RETRY:
     return Status::OK;
 }
 
-Status search_key(session* ti, Storage const storage,
-                  std::string_view const key, std::string& value,
-                  bool const read_value) {
+static void process_before_success(session* const ti, Record* const rec_ptr) {
+    ti->read_set_for_ltx().push(rec_ptr);
+}
+
+static Status check_before_execution(session* const ti, Storage const storage) {
     // check start epoch
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
@@ -95,6 +97,23 @@ Status search_key(session* ti, Storage const storage,
         return rs;
     }
 
+    return Status::OK;
+}
+
+static Status hit_local_write_set(write_set_obj* const in_ws,
+                                  std::string& value, bool const read_value) {
+    if (in_ws->get_op() == OP_TYPE::DELETE) {
+        return Status::WARN_ALREADY_DELETE;
+    }
+    if (read_value) { in_ws->get_value(value); }
+    return Status::OK;
+}
+
+Status search_key(session* ti, Storage const storage,
+                  std::string_view const key, std::string& value,
+                  bool const read_value) {
+    auto rc = check_before_execution(ti, storage);
+    if (rc != Status::OK) { return rc; }
 
     // index access
     Record* rec_ptr{};
@@ -105,11 +124,11 @@ Status search_key(session* ti, Storage const storage,
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (in_ws != nullptr) {
-        if (in_ws->get_op() == OP_TYPE::DELETE) {
-            return Status::WARN_ALREADY_DELETE;
+        rc = hit_local_write_set(in_ws, value, read_value);
+        if (rc == Status::OK) {
+            process_before_success(ti, rec_ptr);
+            return rc;
         }
-        if (read_value) { in_ws->get_value(value); }
-        return Status::OK;
     }
 
     // check storage existence and extract wp meta info
@@ -119,7 +138,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // wp verify and forwarding
-    auto rc = wp_verify_and_forwarding(ti, wp_meta_ptr);
+    rc = wp_verify_and_forwarding(ti, wp_meta_ptr);
     if (rc != Status::OK) {
         if (rc == Status::ERR_FAIL_WP) {
             ti->set_result(reason_code::FORWARDING_BLOCKED_BY_READ);
@@ -137,7 +156,9 @@ Status search_key(session* ti, Storage const storage,
         return Status::ERR_FATAL;
     }
 
-    return version_traverse_and_read(ti, rec_ptr, value, read_value);
+    rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
+    if (rc == Status::OK) { process_before_success(ti, rec_ptr); }
+    return rc;
 }
 
 } // namespace shirakami::long_tx

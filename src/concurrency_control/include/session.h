@@ -258,6 +258,8 @@ public:
         return read_version_max_epoch_;
     }
 
+    local_read_set_for_ltx& read_set_for_ltx() { return read_set_for_ltx_; }
+
     // ========== end: long tx
 
     // ========== stat: result info
@@ -577,6 +579,8 @@ private:
      * to determine if it is breaking its boundaries.
      */
     epoch::epoch_t read_version_max_epoch_{};
+
+    local_read_set_for_ltx read_set_for_ltx_;
 
     // ========== end: long tx
 
