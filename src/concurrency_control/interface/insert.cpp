@@ -82,7 +82,6 @@ Status insert(Token const token, Storage const storage,
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);
                     ti->process_before_finish_step();
-                    register_read_if_ltx(ti, rec_ptr);
                     return Status::OK;
                 }
             }

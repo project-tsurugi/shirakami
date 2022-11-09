@@ -50,20 +50,32 @@ inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
     rec_ptr->get_tidw_ref().unlock();
 }
 
+static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        ti->read_set_for_ltx().push(rec_ptr);
+    }
+}
+
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
         ti->get_write_set().erase(wso);
+        // insert operation already registered read for ltx
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
         wso->set_op(OP_TYPE::DELETE);
+        // update operation already registered read for ltx
         return Status::WARN_CANCEL_PREVIOUS_UPDATE;
     }
-    if (wso->get_op() == OP_TYPE::DELETE) { return Status::OK; }
+    if (wso->get_op() == OP_TYPE::DELETE) {
+        // delete operation already registered read for ltx
+        return Status::OK;
+    }
     if (wso->get_op() == OP_TYPE::UPSERT) {
         cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
         ti->get_write_set().erase(wso);
+        register_read_if_ltx(ti, wso->get_rec_ptr());
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
     LOG(ERROR) << "unknown code path";
@@ -103,11 +115,13 @@ Status delete_record(Token token, Storage storage,
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
             ti->process_before_finish_step();
+            register_read_if_ltx(ti, rec_ptr);
             return Status::WARN_NOT_FOUND;
         }
 
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+        register_read_if_ltx(ti, rec_ptr);
         ti->process_before_finish_step();
         return Status::OK;
     }
@@ -119,7 +133,7 @@ Status delete_record(Token token, Storage storage,
         ti->process_before_finish_step();
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG(ERROR) << "programming error: " << rc;
+    LOG(ERROR) << "unexpected error: " << rc;
     ti->process_before_finish_step();
     return Status::ERR_FATAL;
 }

@@ -12,6 +12,12 @@
 
 namespace shirakami {
 
+static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        ti->read_set_for_ltx().push(rec_ptr);
+    }
+}
+
 Status update(Token token, Storage storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
@@ -48,6 +54,7 @@ Status update(Token token, Storage storage,
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
+            register_read_if_ltx(ti, rec_ptr);
             ti->process_before_finish_step();
             return Status::WARN_NOT_FOUND;
         }
@@ -55,6 +62,7 @@ Status update(Token token, Storage storage,
         // prepare write
         ti->get_write_set().push(
                 {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
+        register_read_if_ltx(ti, rec_ptr);
         ti->process_before_finish_step();
         return Status::OK;
     }
