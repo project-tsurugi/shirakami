@@ -44,7 +44,7 @@ TEST_F(short_delete_after_short_update, delete_after_update) { // NOLINT
     // start test
     // same tx
     ASSERT_EQ(Status::OK, update(s, st, "", ""));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));
 
     // different tx

@@ -100,12 +100,6 @@ enum class Status : std::int32_t {
     /**
      * @brief Warning.
      * @details The transaction executed delete operation for the page which
-     * it executed update operation for the page.
-     */
-    WARN_CANCEL_PREVIOUS_UPDATE,
-    /**
-     * @brief Warning.
-     * @details The transaction executed delete operation for the page which
      * it executed upsert operation for the page.
      */
     WARN_CANCEL_PREVIOUS_UPSERT,
@@ -297,8 +291,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_ALREADY_INIT"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_INSERT:
             return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
-        case Status::WARN_CANCEL_PREVIOUS_UPDATE:
-            return "WARN_CANCEL_PREVIOUS_UPDATE"sv; // NOLINT
         case Status::WARN_CANCEL_PREVIOUS_UPSERT:
             return "WARN_CANCEL_PREVIOUS_UPSERT"sv; // NOLINT
         case Status::WARN_CONCURRENT_INSERT:

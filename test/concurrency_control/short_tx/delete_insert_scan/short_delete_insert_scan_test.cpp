@@ -72,7 +72,7 @@ TEST_F(insert_delete_scan, delete_insert_delete_scan) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, v2));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,

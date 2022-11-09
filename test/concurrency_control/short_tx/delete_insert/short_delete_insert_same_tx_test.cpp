@@ -63,7 +63,7 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, iv));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPDATE, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};
     ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));

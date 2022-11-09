@@ -66,7 +66,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::UPDATE) {
         wso->set_op(OP_TYPE::DELETE);
         // update operation already registered read for ltx
-        return Status::WARN_CANCEL_PREVIOUS_UPDATE;
+        return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::DELETE) {
         // delete operation already registered read for ltx
