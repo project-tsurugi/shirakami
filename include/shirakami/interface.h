@@ -108,8 +108,8 @@ extern Status check_commit(Token token); // NOLINT
  * @post nothing. This function never do abort.
  * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely 
  * canceled an previous insert.
- * @return Status::WARN_CANCEL_PREVIOUS_UPDATE This delete operation merely 
- * canceled an previous update.
+ * @return Status::WARN_CANCEL_PREVIOUS_UPDATE Warning that this transaction 
+ * executed update operation.
  * @return Status::WARN_CANCEL_PREVIOUS_UPSERT This delete operation merely 
  * canceled an previous upsert.
  * @return Status::WARN_CONFLICT_ON_WRITE_PRESERVE This function can't execute 
