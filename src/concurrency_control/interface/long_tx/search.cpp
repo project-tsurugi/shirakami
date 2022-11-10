@@ -76,7 +76,8 @@ RETRY:
     return Status::OK;
 }
 
-static void process_before_success(session* const ti, Record* const rec_ptr) {
+static void create_read_set_for_read_info(session* const ti,
+                                          Record* const rec_ptr) {
     // register read_by_set
     ti->read_set_for_ltx().push(rec_ptr);
 }
@@ -127,7 +128,10 @@ Status search_key(session* ti, Storage const storage,
     if (in_ws != nullptr) {
         rc = hit_local_write_set(in_ws, value, read_value);
         if (rc == Status::OK) {
-            process_before_success(ti, rec_ptr);
+            if (in_ws->get_op() != OP_TYPE::UPSERT) {
+                // note: read own upsert don't need to log read info.
+                create_read_set_for_read_info(ti, rec_ptr);
+            }
             return rc;
         }
     }
@@ -148,7 +152,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
-    if (rc == Status::OK) { process_before_success(ti, rec_ptr); }
+    if (rc == Status::OK) { create_read_set_for_read_info(ti, rec_ptr); }
     return rc;
 }
 
