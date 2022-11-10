@@ -18,6 +18,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/anomaly/read_crown/*.cpp"
         "concurrency_control/anomaly/write_crown/*.cpp"
         "concurrency_control/anomaly/write_skew/*.cpp"
+        "concurrency_control/complicated/*.cpp"
         "concurrency_control/function/boundary_wait/*.cpp"
         "concurrency_control/function/cascading_wait/*.cpp"
         "concurrency_control/function/false_positive/*.cpp"
