@@ -45,6 +45,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/long_tx/scan/next/*.cpp"
         "concurrency_control/long_tx/scan_upsert/*.cpp"
         "concurrency_control/long_tx/scan_wp/*.cpp"
+        "concurrency_control/long_tx/search_update/*.cpp"
         "concurrency_control/long_tx/search_upsert/*.cpp"
         "concurrency_control/long_tx/update/*.cpp"
         "concurrency_control/long_tx/upsert/*.cpp"
