@@ -5,6 +5,8 @@
 
 #include "clock.h"
 
+#include "test_tool.h"
+
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
@@ -18,11 +20,11 @@ using namespace shirakami;
 
 namespace shirakami::testing {
 
-class comp1_test : public ::testing::Test { // NOLINT
+class comp_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-complicated-comp1_test");
+                "shirakami-test-concurrency_control-complicated-comp_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -37,7 +39,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(comp1_test, test1) { // NOLINT
+TEST_F(comp_test, test1) { // NOLINT
     /**
      * scenario.
      * 1: scan read 14 entry
@@ -108,6 +110,56 @@ TEST_F(comp1_test, test1) { // NOLINT
     ASSERT_EQ(create_storage("test", st_out), Status::OK);
     ASSERT_EQ(get_storage("test", st_out), Status::OK);
 
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(comp_test, test2) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    std::string a{"a"};
+    std::string b{"b"};
+    std::string c{"c"};
+    ASSERT_EQ(Status::OK, insert(s, st, a, a));
+    ASSERT_EQ(Status::OK, insert(s, st, b, b));
+    ASSERT_EQ(Status::OK, insert(s, st, c, c));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, delete_record(s, st, b));
+    ASSERT_EQ(Status::OK, insert(s, st, b, b));
+    ASSERT_EQ(Status::OK, delete_record(s, st, b));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // verify
+    // check by scan
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(buf, a);
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(buf, c);
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    ASSERT_EQ(Status::OK, close_scan(s, hd));
+
+    // check by search
+    ASSERT_EQ(Status::OK, search_key(s, st, a, buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, b, buf));
+    ASSERT_EQ(Status::OK, search_key(s, st, c, buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // cleanup
