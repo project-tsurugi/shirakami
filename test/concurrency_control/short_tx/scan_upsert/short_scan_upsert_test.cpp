@@ -60,7 +60,7 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare
-    for (auto i = 0; i < 14; ++i) {
+    for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string key(1, i);
         std::string value(std::to_string(i));
         ASSERT_EQ(upsert(s, st, key, value), Status::OK);
@@ -72,13 +72,13 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     // read all range
-    for (auto i = 0; i < 14; ++i) {
+    for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string sb{};
         ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
         ASSERT_EQ(sb, std::string(1, i));
         ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
         ASSERT_EQ(sb, std::to_string(i));
-        if (i != 13) {
+        if (i != 13) { // NOLINT
             ASSERT_EQ(next(s, handle), Status::OK);
         } else {
             ASSERT_EQ(next(s, handle), Status::WARN_SCAN_LIMIT);
@@ -86,8 +86,8 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     }
     ASSERT_EQ(close_scan(s, handle), Status::OK);
 
-    std::string key(1, 14);
-    std::string value(std::to_string(14));
+    std::string key(1, 14);                // NOLINT
+    std::string value(std::to_string(14)); // NOLINT
     ASSERT_EQ(upsert(s, st, key, value), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -99,7 +99,7 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
 
 // start: serial two tx
 TEST_F(scan_upsert, range_read_tx_after_upsert_tx) { // NOLINT
-// prepare
+                                                     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::string k("k"); // NOLINT
@@ -126,9 +126,9 @@ TEST_F(scan_upsert, range_read_tx_after_upsert_tx) { // NOLINT
 // end: serial two tx
 
 // start: concurrent two tx
-TEST_F(scan_upsert,
+TEST_F(scan_upsert,                                        // NOLINT
        concurrent_range_read_tx_and_upsert_is_insert_tx) { // NOLINT
-       // prepare
+                                                           // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::string a("a"); // NOLINT
@@ -164,9 +164,9 @@ TEST_F(scan_upsert,
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(scan_upsert,
+TEST_F(scan_upsert,                                        // NOLINT
        concurrent_range_read_tx_and_upsert_is_update_tx) { // NOLINT
-       // prepare
+                                                           // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::string a("a"); // NOLINT

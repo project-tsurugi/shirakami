@@ -54,7 +54,7 @@ TEST_F(comp1_test, test1) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare
-    for (auto i = 0; i < 14; ++i) {
+    for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string key(1, i);
         std::string value(std::to_string(i));
         ASSERT_EQ(upsert(s, st, key, value), Status::OK);
@@ -66,13 +66,13 @@ TEST_F(comp1_test, test1) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     // read all range
-    for (auto i = 0; i < 14; ++i) {
+    for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string sb{};
         ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
         ASSERT_EQ(sb, std::string(1, i));
         ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
         ASSERT_EQ(sb, std::to_string(i));
-        if (i != 13) {
+        if (i != 13) { // NOLINT
             ASSERT_EQ(next(s, handle), Status::OK);
         } else {
             ASSERT_EQ(next(s, handle), Status::WARN_SCAN_LIMIT);
@@ -90,13 +90,13 @@ TEST_F(comp1_test, test1) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, read_sequence(15, &sver, &sval));
 
     // 4
-    for (auto i = 0; i < 14; ++i) {
+    for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string key(1, i);
         std::string value(std::to_string(i));
         ASSERT_EQ(upsert(s, st, key, value), Status::OK);
     }
-    std::string key(1, 14);
-    std::string value(std::to_string(14));
+    std::string key(1, 14);                // NOLINT
+    std::string value(std::to_string(14)); // NOLINT
     ASSERT_EQ(upsert(s, st, key, value), Status::OK);
 
     // 5
