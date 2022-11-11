@@ -81,6 +81,30 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
     return Status::ERR_FATAL;
 }
 
+static void process_before_return_not_found(session* const ti,
+                                            Storage const storage,
+                                            std::string_view const key) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        /**
+             * Normally, read information is stored at page, but the page is not
+             * found. So it stores at table level information as range, 
+             * key <= range <= key.
+             */
+        // get page set meta info
+        wp::page_set_meta* psm{};
+        auto rc = wp::find_page_set_meta(storage, psm);
+        if (rc != Status::OK) {
+            LOG(ERROR) << "unexpected error";
+            return;
+        }
+        // get range read  by info
+        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
+        ti->get_range_read_by_long_set().insert(std::make_tuple(
+                rrbp, std::string(key), scan_endpoint::INCLUSIVE,
+                std::string(key), scan_endpoint::INCLUSIVE));
+    }
+}
+
 Status delete_record(Token token, Storage storage,
                      const std::string_view key) { // NOLINT
     auto* ti = static_cast<session*>(token);
@@ -114,7 +138,7 @@ Status delete_record(Token token, Storage storage,
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
             ti->process_before_finish_step();
-            register_read_if_ltx(ti, rec_ptr);
+            process_before_return_not_found(ti, storage, key);
             return Status::WARN_NOT_FOUND;
         }
 
@@ -125,25 +149,7 @@ Status delete_record(Token token, Storage storage,
         return Status::OK;
     }
     if (rc == Status::WARN_NOT_FOUND) {
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            /**
-             * Normally, read information is stored at page, but the page is not
-             * found. So it stores at table level information as range, 
-             * key <= range <= key.
-             */
-            // get page set meta info
-            wp::page_set_meta* psm{};
-            rc = wp::find_page_set_meta(storage, psm);
-            if (rc != Status::OK) {
-                LOG(ERROR) << "unexpected error";
-                return Status::ERR_FATAL;
-            }
-            // get range read  by info
-            range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-            ti->get_range_read_by_long_set().insert(std::make_tuple(
-                    rrbp, std::string(key), scan_endpoint::INCLUSIVE,
-                    std::string(key), scan_endpoint::INCLUSIVE));
-        }
+        process_before_return_not_found(ti, storage, key);
         ti->process_before_finish_step();
         return Status::WARN_NOT_FOUND;
     }
