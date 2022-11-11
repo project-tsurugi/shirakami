@@ -125,6 +125,25 @@ Status delete_record(Token token, Storage storage,
         return Status::OK;
     }
     if (rc == Status::WARN_NOT_FOUND) {
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            /**
+             * Normally, read information is stored at page, but the page is not
+             * found. So it stores at table level information as range, 
+             * key <= range <= key.
+             */
+            // get page set meta info
+            wp::page_set_meta* psm{};
+            rc = wp::find_page_set_meta(storage, psm);
+            if (rc != Status::OK) {
+                LOG(ERROR) << "unexpected error";
+                return Status::ERR_FATAL;
+            }
+            // get range read  by info
+            range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
+            ti->get_range_read_by_long_set().insert(std::make_tuple(
+                    rrbp, std::string(key), scan_endpoint::INCLUSIVE,
+                    std::string(key), scan_endpoint::INCLUSIVE));
+        }
         ti->process_before_finish_step();
         return Status::WARN_NOT_FOUND;
     }

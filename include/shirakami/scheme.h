@@ -71,7 +71,7 @@ enum class Status : std::int32_t {
      * @details When it uses multiple tx_begin without termination command, 
      * this is returned.
      */
-    WARN_ALREADY_BEGIN,
+    WARN_ALREADY_BEGIN = -1000,
     /**
      * @brief Warning.
      * @details The transaction executed some operation for the page which it 
@@ -198,7 +198,7 @@ enum class Status : std::int32_t {
     /**
      * @brief success status.
      */
-    OK,
+    OK = 0,
     /**
      * @brief Error
      * @details This means conflicts on write preserve and tx was executed 
@@ -270,7 +270,7 @@ enum class Status : std::int32_t {
      * So it called abort. @n
      */
     ERR_WRITE_TO_DELETED_RECORD,
-    INTERNAL_BEGIN = 100000,
+    INTERNAL_BEGIN = 1000,
     INTERNAL_WARN_CONCURRENT_INSERT,
     INTERNAL_WARN_NOT_DELETED,
     INTERNAL_WARN_NOT_FOUND,

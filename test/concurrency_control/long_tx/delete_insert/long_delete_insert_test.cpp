@@ -20,7 +20,7 @@
 
 #include "shirakami/interface.h"
 
-#include "yakushima/include/kvs.h"
+#include "index/yakushima/include/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -49,7 +49,73 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(long_delete_insert_test, long_insert_execute_read) { // NOLINT
+// start: one tx
+
+TEST_F(long_delete_insert_test, same_tx_delete_insert) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // start data preparation
+    ASSERT_EQ(insert(s, st, "", ""), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s));
+    // end data preparation
+
+    // start test preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    // end test preparation
+
+    // test
+    ASSERT_EQ(delete_record(s, st, ""), Status::OK);
+    ASSERT_EQ(insert(s, st, "", "a"), Status::OK);
+    // delete insert is update.
+    ASSERT_EQ(Status::OK, commit(s));
+
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(buf, "a");
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_delete_insert_test, same_tx_insert_delete) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // start test preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    // end test preparation
+
+    // test
+    ASSERT_EQ(insert(s, st, "", ""), Status::OK);
+    ASSERT_EQ(delete_record(s, st, ""), Status::WARN_CANCEL_PREVIOUS_INSERT);
+    // delete insert is update.
+    ASSERT_EQ(Status::OK, commit(s));
+
+    // verify not found
+    for (;;) {
+        Record* rec_ptr{};
+        auto rc = get<Record>(st, "", rec_ptr);
+        if (rc == Status::WARN_NOT_FOUND) { break; }
+        _mm_pause();
+    }
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+// end: one tx
+
+// start: concurrent two tx
+
+TEST_F(long_delete_insert_test, concurrent_insert_tx_delete_tx) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
@@ -80,7 +146,6 @@ TEST_F(long_delete_insert_test, long_insert_execute_read) { // NOLINT
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
     std::string buf{};
     // s2 forward for s1
-    ASSERT_EQ(Status::OK, search_key(s2, st, "", buf));
     ASSERT_EQ(delete_record(s2, st, ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
@@ -93,5 +158,43 @@ TEST_F(long_delete_insert_test, long_insert_execute_read) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));
 }
+
+TEST_F(long_delete_insert_test, concurrent_delete_tx_insert_tx) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+
+    // test preparation
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    // preparation
+
+    // test
+    ASSERT_EQ(delete_record(s1, st, ""), Status::WARN_NOT_FOUND);
+    // executed key read operation
+    ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
+    // s2 forward for s1
+    std::string buf{};
+
+    ASSERT_EQ(Status::OK, commit(s1));
+    /**
+     * s1 is treated that it executed read operation.
+     * Forwarded s2's insert will break s1, so it fails validation.
+     */
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+
+    ASSERT_EQ(Status::OK, leave(s2));
+    ASSERT_EQ(Status::OK, leave(s1));
+}
+
+// end: concurrent two tx
 
 } // namespace shirakami::testing
