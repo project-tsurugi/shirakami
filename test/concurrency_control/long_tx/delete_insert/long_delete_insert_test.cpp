@@ -30,11 +30,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class delete_insert_test : public ::testing::Test { // NOLINT
+class long_delete_insert_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "interface-delete_insert-delete_insert_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "delete_insert-long_delete_insert_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -49,7 +49,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(delete_insert_test, long_insert_execute_read) { // NOLINT
+TEST_F(long_delete_insert_test, long_insert_execute_read) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};

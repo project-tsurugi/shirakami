@@ -10,6 +10,8 @@
 
 #include "atomic_wrapper.h"
 
+#include "test_tool.h"
+
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/version.h"
@@ -47,33 +49,141 @@ private:
     static inline std::once_flag init_google;
 };
 
-void wait_change_epoch() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
+// start: one tx
 
 TEST_F(long_delete_upsert_test, same_tx_upsert_delete) { // NOLINT
+                                                         // prepare
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
-    wait_change_epoch();
+    wait_epoch_update();
+
+    // test
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    wait_change_epoch();
-    wait_change_epoch();
-    wait_change_epoch();
-    // verify key existence
-    Record* rec_ptr{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, "", rec_ptr));
+
+    // verify
+    for (;;) {
+        Record* rec_ptr{};
+        auto rc = get<Record>(st, "", rec_ptr);
+        if (rc == Status::WARN_NOT_FOUND) { break; }
+        _mm_pause();
+    }
 
     ASSERT_EQ(Status::OK, leave(s));
 }
+
+TEST_F(long_delete_upsert_test, same_tx_delete_upsert) { // NOLINT
+                                                         // prepare
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    // test
+    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, upsert(s, st, "", "a"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(buf, "a");
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+// end: one tx
+
+// start: concurrent two tx
+
+TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
+                                                                  // prepare
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    // test
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", "a"));
+    ASSERT_EQ(Status::OK,
+              delete_record(s2, st, "")); // forwarding to same epoch
+    ASSERT_EQ(Status::OK, commit(s1));    // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));    // NOLINT
+    /**
+     * If write delete is at same epoch and delete is new in the order, the 
+     * last state is deleted.
+     */
+
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s1, st, "", buf));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(long_delete_upsert_test, concurrent_delete_tx_upsert_tx) { // NOLINT
+                                                                  // prepare
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    // test
+    ASSERT_EQ(Status::OK, delete_record(s1, st, ""));
+    ASSERT_EQ(Status::OK, upsert(s2, st, "", "")); // forwarding
+    ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2)); // NOLINT
+    /**
+     * due to key-value combined read information.
+     */
+
+    // verify
+    for (;;) {
+        Record* rec_ptr{};
+        auto rc = get<Record>(st, "", rec_ptr);
+        if (rc == Status::WARN_NOT_FOUND) { break; }
+        _mm_pause();
+    }
+
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+// end: concurrent two tx
 
 } // namespace shirakami::testing
