@@ -62,7 +62,10 @@ TEST_F(long_delete_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock stop_epoch{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s,
+                            transaction_options::transaction_type::LONG,
+                            {st}}));
         ASSERT_EQ(Status::WARN_PREMATURE, delete_record(s, st, ""));
     }
     ASSERT_EQ(Status::OK, leave(s));
@@ -75,7 +78,8 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_change_epoch();
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -93,7 +97,8 @@ TEST_F(long_delete_test, delete_at_non_existing_storage_without_wp) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {}}));
     wait_change_epoch();
     ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));
@@ -105,7 +110,8 @@ TEST_F(long_delete_test, delete_at_existing_storage_without_wp) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {}}));
     wait_change_epoch();
     ASSERT_EQ(Status::WARN_WRITE_WITHOUT_WP, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));
@@ -117,7 +123,8 @@ TEST_F(long_delete_test, single_long_upsert_delete) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_change_epoch();
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
