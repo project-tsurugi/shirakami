@@ -51,7 +51,9 @@ stateDiagram-v2
     end note
     DURABLE
     note left of DURABLE
-        Trigger: It is durable.
+        Trigger: It is durable. If you use build option -DPWAL=OFF (no logging
+        mode), committed transaction gets this status without WAITING_DURABLE
+        status.
         Executable api: Almost all api. DML (for next STX).
     end note
 
