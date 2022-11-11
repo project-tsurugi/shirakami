@@ -116,7 +116,7 @@ TEST_F(comp_test, test1) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(comp_test, test2) { // NOLINT
+TEST_F(comp_test, DISABLED_test2) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
@@ -140,7 +140,6 @@ TEST_F(comp_test, test2) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, b));
     ASSERT_EQ(Status::OK, insert(s, st, b, b));
     ASSERT_EQ(Status::OK, delete_record(s, st, b));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
     // check by scan
@@ -148,9 +147,14 @@ TEST_F(comp_test, test2) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string buf{};
+    // a
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
     ASSERT_EQ(buf, a);
     ASSERT_EQ(Status::OK, next(s, hd));
+    // b
+    ASSERT_EQ(Status::WARN_ALREADY_DELETE, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(Status::OK, next(s, hd));
+    // c
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
     ASSERT_EQ(buf, c);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
