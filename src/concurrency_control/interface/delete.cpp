@@ -36,7 +36,7 @@ namespace shirakami {
     return Status::OK;
 }
 
-inline void cancel_insert(Record* rec_ptr, epoch::epoch_t e) {
+inline void cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
@@ -58,7 +58,7 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
-        cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
+        cancel_insert_if_tomb_stone(wso->get_rec_ptr(), ti->get_step_epoch());
         ti->get_write_set().erase(wso);
         // insert operation already registered read for ltx
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
@@ -73,9 +73,8 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
-        cancel_insert(wso->get_rec_ptr(), ti->get_step_epoch());
+        cancel_insert_if_tomb_stone(wso->get_rec_ptr(), ti->get_step_epoch());
         ti->get_write_set().erase(wso);
-        register_read_if_ltx(ti, wso->get_rec_ptr());
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
     LOG(ERROR) << "unknown code path";

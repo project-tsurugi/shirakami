@@ -118,25 +118,4 @@ TEST_F(long_delete_test, delete_at_existing_storage_without_wp) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_delete_test, single_long_upsert_delete) { // NOLINT
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
-    wait_change_epoch();
-    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
-    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    wait_change_epoch();
-    wait_change_epoch();
-    wait_change_epoch();
-    // verify key existence
-    Record* rec_ptr{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, "", rec_ptr));
-
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 } // namespace shirakami::testing
