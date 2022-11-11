@@ -91,17 +91,8 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             ts.set_kind(TxState::StateKind::STARTED);  // for internal
             out.set_kind(TxState::StateKind::STARTED); // for external
         } else if (ts.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) {
-            auto* ti = static_cast<session*>(ts.get_token());
-            // check wait
-            if (long_tx::check_wait_for_preceding_bt(ti) != Status::OK) {
-                // not change
-                out.set_kind(
-                        TxState::StateKind::WAITING_CC_COMMIT); // for external
-            } else {
-                // change
-                ts.set_kind(TxState::StateKind::COMMITTABLE);  // for internal
-                out.set_kind(TxState::StateKind::COMMITTABLE); // for external
-            }
+            // waiting for commit by background worker.
+            out.set_kind(TxState::StateKind::WAITING_CC_COMMIT); // for external
         } else if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
 #ifdef PWAL
             if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {

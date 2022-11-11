@@ -161,8 +161,33 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_CC_COMMIT);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+#ifdef PWAL
+    { // acquire epoch lock
+        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
+        for (;;) {
+            if (check_commit(s2) == Status::OK) { break; }
+            _mm_pause();
+        }
+        ASSERT_EQ(Status::OK, tx_check(hd, buf));
+        /**
+         * If epoch does not change from commit, this status must be 
+         * WAITING_DURABLE
+         */
+        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    }
+    for (;;) {
+        _mm_pause();
+        ASSERT_EQ(Status::OK, tx_check(hd, buf));
+        if (buf.state_kind() == TxState::StateKind::DURABLE) { break; }
+    }
+#else
+    for (;;) {
+        if (check_commit(s2) == Status::OK) { break; }
+        _mm_pause();
+    }
     ASSERT_EQ(Status::OK, tx_check(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::COMMITTABLE);
+#endif
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
     // ==============================
 
     // ==============================

@@ -28,12 +28,6 @@ stateDiagram-v2
         Executable api: abort, tx_check, DML, release_tx_state_handle
         Non allowed: commit
     end note
-    COMMITTABLE
-    note left of COMMITTABLE
-        Trigger: LTX executed tx_check api, and the tx can execute commit api.
-        Executable api: commit, abort, tx_check, DML, release_tx_state_handle
-        Non allowed:
-    end note
     CC_COMMITTED
     note right of CC_COMMITTED
         Trigger: After notified WAITING_CC_COMMIT status, shirakami executed 
@@ -67,10 +61,8 @@ stateDiagram-v2
     WAITING_START --> STARTED
     STARTED --> WAITING_DURABLE: LTX
     STARTED --> WAITING_CC_COMMIT: LTX
-    WAITING_CC_COMMIT --> COMMITTABLE
     WAITING_CC_COMMIT --> CC_COMMITTED
     WAITING_CC_COMMIT --> ABORTED
-    COMMITTABLE --> WAITING_DURABLE
     CC_COMMITTED --> WAITING_DURABLE
     STARTED --> WAITING_DURABLE: STX
     STARTED --> WAITING_DURABLE: LTX
@@ -78,7 +70,6 @@ stateDiagram-v2
     STARTED --> ABORTED: STX
     STARTED --> ABORTED: LTX
     STARTED --> ABORTED: RTX
-    COMMITTABLE --> ABORTED
     WAITING_DURABLE --> DURABLE
 ```
 
