@@ -56,11 +56,6 @@ public:
           */
         WAITING_CC_COMMIT,
         /**
-         * @brief This status means that the transaction was committed as 
-         * concurrency control.
-         */
-        CC_COMMITTED,
-        /**
          * @brief This status means that the transaction was aborted by api 
          * call.
          */
@@ -250,8 +245,6 @@ inline constexpr std::string_view to_string_view(TxState::StateKind value) {
             return "STARTED";
         case StateKind::WAITING_CC_COMMIT:
             return "WAITING_CC_COMMIT";
-        case StateKind::CC_COMMITTED:
-            return "CC_COMMITTED";
         case StateKind::ABORTED:
             return "ABORTED";
         case StateKind::WAITING_DURABLE:
