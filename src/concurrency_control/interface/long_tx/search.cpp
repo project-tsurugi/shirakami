@@ -134,6 +134,7 @@ Status search_key(session* ti, Storage const storage,
             }
             return rc;
         }
+        if (rc == Status::WARN_ALREADY_DELETE) { return rc; }
     }
 
     // check storage existence and extract wp meta info

@@ -288,9 +288,10 @@ Status next(Token const token, ScanHandle const handle) {
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
         if (inws != nullptr) {
             /**
-             * If it exists, read from scan api call should be able to read 
-             * the record.
+             * If it exists and it is not delete operation, read from scan api 
+             * call should be able to read the record.
              */
+            if (inws->get_op() == OP_TYPE::DELETE) { continue; }
             break;
         }
         // not in local write set
@@ -324,7 +325,6 @@ Status next(Token const token, ScanHandle const handle) {
             }
         } else if (tid.get_latest()) {
             // check read own inserting
-            write_set_obj* inws = ti->get_write_set().search(rec_ptr);
             if (inws != nullptr) {
                 if (inws->get_op() == OP_TYPE::INSERT) { break; }
             }
