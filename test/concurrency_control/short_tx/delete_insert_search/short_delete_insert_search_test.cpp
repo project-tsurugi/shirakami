@@ -22,11 +22,12 @@ using namespace shirakami;
 
 Storage st;
 
-class insert_after_delete : public ::testing::Test { // NOLINT
+class short_delete_insert_search : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "insert-insert_after_delete_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_insert_search-short_delete_insert_search_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -41,9 +42,10 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
-    std::string k("k");                                          // NOLINT
-    std::string v("v");                                          // NOLINT
+TEST_F(short_delete_insert_search,          // NOLINT
+       repeat_insert_search_delete_test1) { // NOLINT
+    std::string k("k");                     // NOLINT
+    std::string v("v");                     // NOLINT
     create_storage("", st);
     {
         Token s{};
@@ -98,10 +100,11 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test1) { // NOLINT
     }
 }
 
-TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
-    std::string k("k1");                                         // NOLINT
-    std::string k2("k2");                                        // NOLINT
-    std::string v("v");                                          // NOLINT
+TEST_F(short_delete_insert_search,          // NOLINT
+       repeat_insert_search_delete_test2) { // NOLINT
+    std::string k("k1");                    // NOLINT
+    std::string k2("k2");                   // NOLINT
+    std::string v("v");                     // NOLINT
     create_storage("", st);
     {
         Token s{};
@@ -122,7 +125,6 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
             ASSERT_EQ(Status::OK, tx_begin({s}));
@@ -130,7 +132,6 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{100}); // NOLINT
         {
             ASSERT_EQ(Status::OK, enter(s));
             ASSERT_EQ(Status::OK, tx_begin({s}));
@@ -143,7 +144,7 @@ TEST_F(insert_after_delete, repeat_insert_search_delete_test2) { // NOLINT
     }
 }
 
-TEST_F(insert_after_delete, delete_insert_delete_search) { // NOLINT
+TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     Storage st{};
     create_storage("", st);
     std::string k("k");   // NOLINT
