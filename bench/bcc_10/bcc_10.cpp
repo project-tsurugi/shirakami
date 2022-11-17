@@ -35,6 +35,10 @@
 #include "compiler.h"
 #include "cpu.h"
 
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+
 #include "shirakami/interface.h"
 
 #include "boost/filesystem.hpp"
@@ -95,6 +99,15 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             }
         } else {
             if (tx_begin({token}) != Status::OK) { LOG(FATAL); } // NOLINT
+        }
+
+        // wait if read only tx
+        for (;;) {
+            if (epoch::get_global_epoch() >=
+                static_cast<session*>(token)->get_valid_epoch()) {
+                break;
+            }
+            _mm_pause();
         }
 
         for (auto&& itr : opr_set) {
