@@ -30,6 +30,7 @@ target_include_directories(bcc_10
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/limestone/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
