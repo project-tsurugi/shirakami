@@ -204,6 +204,10 @@ public:
 
     scan_handler& get_scan_handle() { return scan_handle_; }
 
+    [[nodiscard]] epoch::epoch_t get_begin_epoch() const {
+        return begin_epoch_.load(std::memory_order_release);
+    }
+
     [[nodiscard]] epoch::epoch_t get_step_epoch() const {
         return step_epoch_.load(std::memory_order_release);
     }
@@ -352,6 +356,10 @@ public:
         tx_type_ = tp;
     }
 
+    void set_begin_epoch(epoch::epoch_t e) {
+        begin_epoch_.store(e, std::memory_order_release);
+    }
+
     void set_step_epoch(epoch::epoch_t e) {
         step_epoch_.store(e, std::memory_order_release);
     }
@@ -483,10 +491,12 @@ private:
     local_write_set write_set_{};
 
     /**
-     * @brief epoch at latest transactional step.
-     * @details Memorize the epoch in which the latest transitional step was
-     * performed. Examining this information for all workers determines some 
-     * free memory space.
+     * @brief The begin epoch of stx transaction begin used for GC.
+     */
+    std::atomic<epoch::epoch_t> begin_epoch_{epoch::initial_epoch};
+
+    /**
+     * @brief The stx's step epoch used for judge whether a ltx can start.
      * @attention For internal. Don't clear at tx termination. This is used for
      * lock-free coordination for multi-threads.
      */

@@ -236,8 +236,8 @@ Status write_lock(session* ti, tid_word& commit_tid) {
         if (wso_ptr->get_op() == OP_TYPE::INSERT) {
             rec_ptr->get_tidw_ref().lock();
             tid_word tid{rec_ptr->get_tidw_ref()};
-            if (!(tid.get_latest() && tid.get_absent())) {
-                // someone interrupt
+            if (tid.get_latest() && !tid.get_absent()) {
+                // the record is existing record (not inserting, deleted)
                 rec_ptr->get_tidw_ref().unlock();
                 abort_process();
                 return Status::ERR_FAIL_INSERT;

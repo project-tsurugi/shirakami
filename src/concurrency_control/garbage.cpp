@@ -40,12 +40,12 @@ void fin() {
 void work_manager() {
     // compute gc timestamp
     while (!get_flag_manager_end()) {
-        epoch::epoch_t min_step_epoch{epoch::max_epoch};
-        epoch::epoch_t min_batch_epoch{epoch::max_epoch};
+        epoch::epoch_t min_step_epoch{epoch::max_epoch};  // for occ
+        epoch::epoch_t min_batch_epoch{epoch::max_epoch}; // for ltx
         auto ce{epoch::get_global_epoch()};
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
-                min_step_epoch = std::min(min_step_epoch, se.get_step_epoch());
+                min_step_epoch = std::min(min_step_epoch, se.get_begin_epoch());
                 if (se.get_tx_type() !=
                     transaction_options::transaction_type::SHORT) {
                     min_batch_epoch =
@@ -114,11 +114,10 @@ Status check_unhooking_key_state(tid_word check) {
  * view of timestamp.
  */
 inline Status check_unhooking_key_ts(tid_word check) {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
     if (
-            // epoch change enable decide serial order.
-            check.get_epoch() < ce &&
-            // this records snapshot is not needed by current and future long tx.
+            // threshold for stx.
+            check.get_epoch() < garbage::get_min_step_epoch() &&
+            // this records version is not needed by current and future long tx.
             check.get_epoch() < garbage::get_min_batch_epoch()) {
         return Status::OK;
     }

@@ -85,6 +85,7 @@ Status tx_begin(transaction_options options) { // NOLINT
     }
     ti->set_tx_type(tx_type);
     ti->set_tx_began(true);
+    ti->set_begin_epoch(epoch::get_global_epoch());
 
     ti->process_before_finish_step();
     return Status::OK;
