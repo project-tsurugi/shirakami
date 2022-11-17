@@ -98,9 +98,9 @@ public:
 
     void clear_additional_information() { additional_information_.clear(); }
 
-    reason_code get_reason_code() { return reason_code_; }
+    reason_code get_reason_code() const { return reason_code_; }
 
-    std::string_view get_additional_information() {
+    std::string_view get_additional_information() const {
         return additional_information_;
     }
 
