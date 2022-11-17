@@ -54,7 +54,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * about write preserve by the transaction which is long tx mode.
  * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
  * operation of the transaction.
- * @return Status::ERR_FATAL Some programming error.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
  * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
@@ -95,7 +94,6 @@ extern Status check_commit(Token token); // NOLINT
  * @details  It must not call tx_begin(Token token) before this calling. And 
  * it doesn't need to call enter/leave around calling this function.
  * @return Status::OK success
- * @return Status::ERR_FATAL It failed to delete some storage.
  */
 [[maybe_unused]] extern Status delete_all_records(); // NOLINT
 
@@ -158,7 +156,6 @@ extern Status enter(Token& token); // NOLINT
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
  * tx's wp and executed abort command internally.
- * @return Status::ERR_FATAL programming error.
  */
 extern Status exist_key(Token token, Storage storage, std::string_view key);
 
@@ -242,7 +239,6 @@ extern Status leave(Token token); // NOLINT
  * this argument. This argument limits the number of results.
  * @attention This scan limits range which is specified by @b l_key, @b l_end, 
  * @b r_key, and @b r_end.
- * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
@@ -261,7 +257,6 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * open_scan. It skips deleted record.
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
- * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE @a handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
@@ -276,7 +271,6 @@ extern Status next(Token token, ScanHandle handle);
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] key the result of this function.
- * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -303,7 +297,6 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] value  the result of this function.
- * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -345,7 +338,6 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] storage the handle of storage.
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
- * @return Status::ERR_FATAL programming error.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
  * operation of this transaction.
@@ -379,7 +371,6 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @attention If you specify read_only is true, you can not execute 
  * transactional write operation in this transaction.
  * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
- * @return Status::ERR_FATAL programming error or limit of specification.
  * @return Status::OK Success.
  * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
  * termination command, this is returned.
@@ -450,7 +441,6 @@ extern Status upsert(Token token, Storage storage, std::string_view key,
  * it can't acquire state handle.
  * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
  * @a token, this call returns this status.
- * @return Status::ERR_FATAL It occurs some programming error.
  */
 Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
 
