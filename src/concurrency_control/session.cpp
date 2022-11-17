@@ -132,9 +132,20 @@ Status session::find_high_priority_short() const {
     }
 
     for (auto&& itr : session_table::get_session_table()) {
-        if (itr.get_visible() &&
-            itr.get_tx_type() == transaction_options::transaction_type::SHORT &&
-            itr.get_operating() && itr.get_step_epoch() < get_valid_epoch()) {
+        if (
+                // already enter
+                itr.get_visible() &&
+                // short tx
+                itr.get_tx_type() ==
+                        transaction_options::transaction_type::SHORT &&
+                itr.get_operating() &&
+                /**
+                 * If operating false and this ltx can start in the viewpoint
+                 * of epoch, stx after this operation must be serialized after 
+                 * this ltx.
+                 */
+                // transaction order
+                itr.get_step_epoch() < get_valid_epoch()) {
             return Status::WARN_PREMATURE;
         }
     }
