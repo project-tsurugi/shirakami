@@ -88,8 +88,6 @@ extern Status commit(Token token); // NOLINT
  * @return Status::WARN_ILLEGAL_OPERATION The @a token is not long transaction
  * or didn't request commit.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
- * @return Status::WARN_PREMATURE The long transaction must wait until the 
- * changing epoch to query some operation.
  * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
  * for finishing commit by other high priority tx. You must execute check_commit 
  * to check result. If you use other api (ex. data access api), it causes 
