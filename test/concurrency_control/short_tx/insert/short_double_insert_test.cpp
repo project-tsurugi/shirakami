@@ -86,8 +86,8 @@ TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(double_insert, insert_insert_conflict) { // NOLINT
-                                                // prepare
+TEST_F(double_insert, insert_insert_conflict_commit_commit) { // NOLINT
+                                                              // prepare
     Storage st{};
     create_storage("", st);
     Token s1{};
@@ -110,4 +110,31 @@ TEST_F(double_insert, insert_insert_conflict) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
+
+
+TEST_F(double_insert, insert_insert_conflict_abort_commit) { // NOLINT
+                                                             // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
+
+    // test
+    ASSERT_EQ(Status::OK, abort(s1));
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+
+    // verify
+    std::string sb{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, "", sb));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
