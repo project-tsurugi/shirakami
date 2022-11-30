@@ -42,6 +42,15 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
     return Status::WARN_SCAN_LIMIT;
 }
 
+/**
+ * @brief 
+ * 
+ * @param ti 
+ * @param scan_res 
+ * @param head_skip_rec_n 
+ * @return Status::OK
+ * @return Status::WARN_NOT_FOUND
+ */
 Status check_not_found(
         session* ti,
         std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
@@ -159,15 +168,19 @@ Status open_scan(Token const token, Storage storage,
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
-    if (rc != Status::OK) {
-        ti->process_before_finish_step();
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
     // not empty
 
     std::size_t head_skip_rec_n{};
     rc = check_not_found(ti, scan_res, head_skip_rec_n);
     if (rc != Status::OK) {
+        /**
+         * The fact must be guaranteed by isolation. So it can get node version 
+         * and it must check about phantom at commit phase.
+         */
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            for (auto&& elem : nvec) { ti->get_node_set().emplace_back(elem); }
+        }
         ti->process_before_finish_step();
         return rc;
     }

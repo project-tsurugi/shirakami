@@ -254,7 +254,8 @@ extern Status leave(Token token); // NOLINT
  * @return Status::OK success.
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
- * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
+ * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But 
+ * the fact that nothing was read is guaranteed by isolation.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
  * for some high priority transactions.
  */
