@@ -121,6 +121,10 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     }
 
     // wp verify
+    // reduce redundat
+    std::sort(accessed_st.begin(), accessed_st.end());
+    accessed_st.erase(std::unique(accessed_st.begin(), accessed_st.end()),
+                      accessed_st.end());
     for (auto&& each_st : accessed_st) {
         if (wp_verify(each_st, ce) != Status::OK) {
             unlock_write_set(ti);
