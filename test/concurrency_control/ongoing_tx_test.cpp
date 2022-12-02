@@ -43,8 +43,9 @@ TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     Storage st{};
     wp::wp_meta wp_meta{};
     ti->get_wp_set().emplace_back(
-            std::make_pair(st, &wp_meta));           // the pair is dummy
-    ti->get_overtaken_ltx_set()[&wp_meta].insert(1); // wp_meta is dummy
+            std::make_pair(st, &wp_meta)); // the pair is dummy
+    std::get<0>(ti->get_overtaken_ltx_set()[&wp_meta])
+            .insert(1); // wp_meta is dummy
     ASSERT_EQ(ongoing_tx::exist_wait_for(ti), true);
     ongoing_tx::remove_id(1);
     ASSERT_EQ(ongoing_tx::exist_wait_for(ti), false);

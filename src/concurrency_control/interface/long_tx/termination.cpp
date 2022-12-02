@@ -407,7 +407,7 @@ Status verify_read_by(session* const ti) {
             auto wp_result_was_committed =
                     wp::wp_meta::wp_result_elem_extract_was_committed(
                             (*wp_result_itr));
-            for (auto&& hid : oe.second) {
+            for (auto&& hid : std::get<0>(oe.second)) {
                 if (wp_result_id == hid && wp_result_was_committed) {
                     // the overtaken ltx was committed.
                     // the itr show overtaken ltx

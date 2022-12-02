@@ -120,7 +120,9 @@ std::set<std::size_t> session::extract_wait_for() {
     // extract wait for
     std::set<std::size_t> wait_for;
     for (auto&& each_pair : get_overtaken_ltx_set()) {
-        for (auto&& each_id : each_pair.second) { wait_for.insert(each_id); }
+        for (auto&& each_id : std::get<0>(each_pair.second)) {
+            wait_for.insert(each_id);
+        }
     }
     return wait_for;
 }

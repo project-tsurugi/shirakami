@@ -104,13 +104,12 @@ TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     wp::find_wp_meta(st, wp_meta_ptr);
     wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
     auto& ols = ti->get_overtaken_ltx_set();
-    ASSERT_EQ(ols.at(wp_meta_ptr).size(), 2);
-    ASSERT_NE(ols.at(wp_meta_ptr)
-                      .find(static_cast<session*>(ss.at(0))->get_long_tx_id()),
-              ols.at(wp_meta_ptr).end());
-    ASSERT_NE(ols.at(wp_meta_ptr)
-                      .find(static_cast<session*>(ss.at(1))->get_long_tx_id()),
-              ols.at(wp_meta_ptr).end());
+    auto& ltxs = std::get<0>(ols.at(wp_meta_ptr));
+    ASSERT_EQ(ltxs.size(), 2);
+    ASSERT_NE(ltxs.find(static_cast<session*>(ss.at(0))->get_long_tx_id()),
+              ltxs.end());
+    ASSERT_NE(ltxs.find(static_cast<session*>(ss.at(1))->get_long_tx_id()),
+              ltxs.end());
     ASSERT_EQ(leave(ss.at(0)), Status::OK);
     ASSERT_EQ(leave(ss.at(1)), Status::OK);
     ASSERT_EQ(leave(ss.at(2)), Status::OK);

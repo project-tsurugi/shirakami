@@ -25,7 +25,8 @@ void extract_higher_priori_ltx_info(session* const ti,
     for (auto&& wped : wps) {
         if (wped.second != 0) {
             if (wped.second < ti->get_long_tx_id()) {
-                ti->get_overtaken_ltx_set()[wp_meta_ptr].insert(wped.second);
+                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr])
+                        .insert(wped.second);
             }
         }
     }

@@ -46,8 +46,15 @@ public:
     using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
+    /**
+     * map <key, value>: key is table info. value is tuple information: 
+     * overtaken ltxs, read information compressed to range information.
+     */
     using overtaken_ltx_set_type =
-            std::map<wp::wp_meta*, std::set<std::size_t>>;
+            std::map<wp::wp_meta*,
+                     std::tuple<std::set<std::size_t>,
+                                std::tuple<std::string, std::string>>>;
+
 
     /**
      * @brief compare and swap for visible_.
