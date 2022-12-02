@@ -31,14 +31,15 @@ public:
     using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
     using wped_used_type = std::bitset<KVS_MAX_PARALLEL_THREADS>;
     /**
-     * @brief first is serialization epoch, second is ltx id, third is was_committed.
+     * @brief first is serialization epoch, second is ltx id, third is 
+     * was_committed, forth is range of write for truth forwarding.
      */
-    using wp_result_elem_type = std::tuple<epoch::epoch_t, std::size_t, bool>;
+    using wp_result_elem_type =
+            std::tuple<epoch::epoch_t, std::size_t, bool,
+                       std::tuple<bool, std::string, std::string>>;
     using wp_result_set_type = std::vector<wp_result_elem_type>;
 
-    wp_meta() {
-        init();
-    }
+    wp_meta() { init(); }
 
     static bool empty(const wped_type& wped);
 

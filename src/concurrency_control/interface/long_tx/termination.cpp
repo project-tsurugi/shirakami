@@ -134,7 +134,10 @@ RETRY: // NOLINT
     }
 }
 
-static inline void expose_local_write(session* ti, tid_word& committed_id) {
+static inline void expose_local_write(session* ti, tid_word& committed_id,
+                                      bool& write_something,
+                                      std::string& write_range_left,
+                                      std::string& write_range_right) {
     tid_word ctid{};
     compute_tid(ti, ctid);
     committed_id = ctid;
@@ -286,12 +289,28 @@ static inline void expose_local_write(session* ti, tid_word& committed_id) {
     std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
 #endif
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+        std::string_view pkey_view = wso.second.get_rec_ptr()->get_key_view();
+        if (!write_something) {
+            // first write
+            write_something = true;
+            write_range_left = pkey_view;
+            write_range_right = pkey_view;
+        } else {
+            // more than one write
+            if (pkey_view < write_range_left) { write_range_left = pkey_view; }
+            if (pkey_view > write_range_right) {
+                write_range_right = pkey_view;
+            }
+        }
         process(wso, ctid);
     }
 }
 
-static inline void register_wp_result_and_remove_wps(session* ti,
-                                                     const bool was_committed) {
+static inline void
+register_wp_result_and_remove_wps(session* ti, const bool was_committed,
+                                  const bool write_something,
+                                  const std::string_view write_range_left,
+                                  const std::string_view write_range_right) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
@@ -309,21 +328,27 @@ static inline void register_wp_result_and_remove_wps(session* ti,
             LOG(ERROR) << "programing error: " << rc;
             return;
         }
-        if (Status::OK != (*out.first)
-                                  ->get_wp_meta_ptr()
-                                  ->register_wp_result_and_remove_wp(
-                                          std::make_tuple(ti->get_valid_epoch(),
-                                                          ti->get_long_tx_id(),
-                                                          was_committed))) {
+        if (Status::OK !=
+            (*out.first)
+                    ->get_wp_meta_ptr()
+                    ->register_wp_result_and_remove_wp(std::make_tuple(
+                            ti->get_valid_epoch(), ti->get_long_tx_id(),
+                            was_committed,
+                            std::make_tuple(write_something,
+                                            std::string(write_range_left),
+                                            std::string(write_range_right))))) {
             LOG(FATAL);
         }
     }
 }
 
-static inline void cleanup_process(session* const ti,
-                                   const bool was_committed) {
+static inline void cleanup_process(session* const ti, const bool was_committed,
+                                   const bool write_something,
+                                   const std::string_view write_range_left,
+                                   const std::string_view write_range_right) {
     // global effect
-    register_wp_result_and_remove_wps(ti, was_committed);
+    register_wp_result_and_remove_wps(ti, was_committed, write_something,
+                                      write_range_left, write_range_right);
     ongoing_tx::remove_id(ti->get_long_tx_id());
 
     // local effect
@@ -342,7 +367,7 @@ Status abort(session* const ti) { // NOLINT
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
     // clean up
-    cleanup_process(ti, false);
+    cleanup_process(ti, false, false, "", "");
     return Status::OK;
 }
 
@@ -389,7 +414,7 @@ Status verify_read_by(session* const ti) {
                     if (wp_result_epoch < ti->get_valid_epoch()) {
                         // try forwarding
                         // check read upper bound
-                        if (ti->get_read_version_max_epoch() >
+                        if (ti->get_read_version_max_epoch() >=
                             wp_result_epoch) {
                             // forwarding break own old read
                             return Status::ERR_VALIDATION;
@@ -580,7 +605,17 @@ extern Status commit(session* const ti) {
     register_read_by(ti);
 
     tid_word ctid{};
-    expose_local_write(ti, ctid);
+    /**
+     * For registering write preserve result.
+     * Null (string "") may be used for pkey, but the range expressed two string
+     * don't know the endpoint is nothing or null key.
+     * So it needs boolean.
+     */
+    bool write_something{false};
+    std::string write_range_left{};
+    std::string write_range_right{};
+    expose_local_write(ti, ctid, write_something, write_range_left,
+                       write_range_right);
 
     // sequence process
     // This must be after cc commit and before log process
@@ -607,7 +642,8 @@ extern Status commit(session* const ti) {
     process_tx_state(ti, ti->get_valid_epoch());
 
     // clean up
-    cleanup_process(ti, true);
+    cleanup_process(ti, true, write_something, write_range_left,
+                    write_range_right);
 
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);
