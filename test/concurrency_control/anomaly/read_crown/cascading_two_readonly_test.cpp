@@ -125,16 +125,16 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(6), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(6)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), stv, v, buf));
+    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(6), sty, y, buf));
+    ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -188,9 +188,8 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(2));
     //ASSERT_EQ(Status::OK, search_key(s.at(6), stu, u, buf));
     //ASSERT_EQ(buf, var.at(1));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), stv, v, buf));
+    ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
     //ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(6)));
@@ -198,6 +197,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -251,9 +251,8 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(2));
     //ASSERT_EQ(Status::OK, search_key(s.at(6), stu, u, buf));
     //ASSERT_EQ(buf, var.at(1));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), stv, v, buf));
+    ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
     //ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(6)));
@@ -261,6 +260,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -314,16 +314,16 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(6), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(6)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), stv, v, buf));
+    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(6), sty, y, buf));
+    ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -380,13 +380,15 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     //ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
     //ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(6)));
+    ASSERT_EQ(Status::OK, search_key(s.at(6), sty, y, buf));
+    ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    // due to read upper bound violation. forwarding against t3 and the read
+    // version (epoch) is same to t3(t1)
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -443,13 +445,15 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     //ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), stv, v, buf));
     //ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(6), sty, y, buf));
-    //ASSERT_EQ(buf, var.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(6)));
+    ASSERT_EQ(Status::OK, search_key(s.at(6), sty, y, buf));
+    ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    // due to read upper bound violation. forwarding against t3 and the read
+    // version (epoch) is same to t3(t1)
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));

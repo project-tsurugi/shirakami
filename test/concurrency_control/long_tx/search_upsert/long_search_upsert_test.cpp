@@ -72,7 +72,7 @@ TEST_F(search_upsert, reading_higher_priority_wp) { // NOLINT
     ASSERT_NE(ti1->get_valid_epoch(), ti2->get_valid_epoch());
     std::string vb{};
     ASSERT_EQ(search_key(s2, st, "a", vb), Status::OK);
-    ASSERT_EQ(ti1->get_valid_epoch(), ti2->get_valid_epoch());
+    ASSERT_NE(ti1->get_valid_epoch(), ti2->get_valid_epoch());
     ASSERT_EQ(
             *std::get<0>(ti2->get_overtaken_ltx_set().begin()->second).begin(),
             ti1->get_long_tx_id());

@@ -88,7 +88,7 @@ TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
-    ASSERT_EQ(ti1->get_valid_epoch(), ti2->get_valid_epoch());
+    ASSERT_NE(ti1->get_valid_epoch(), ti2->get_valid_epoch());
     ASSERT_EQ(
             *std::get<0>(ti2->get_overtaken_ltx_set().begin()->second).begin(),
             ti1->get_long_tx_id());

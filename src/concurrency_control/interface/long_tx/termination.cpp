@@ -417,6 +417,8 @@ Status verify_read_by(session* const ti) {
                         if (ti->get_read_version_max_epoch() >=
                             wp_result_epoch) {
                             // forwarding break own old read
+                            ti->set_result(
+                                    reason_code::FORWARDING_BLOCKED_BY_READ);
                             return Status::ERR_VALIDATION;
                         } // forwarding not break own old read
                         // lock ongoing tx for forwarding
@@ -468,12 +470,16 @@ Status verify_read_by(session* const ti) {
         // for ltx
         point_read_by_long* rbp{};
         rbp = &wso.first->get_point_read_by_long();
-        if (rbp->is_exist(ti)) { return Status::ERR_VALIDATION; }
+        if (rbp->is_exist(ti)) {
+            ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+            return Status::ERR_VALIDATION;
+        }
 
         // for stx
         auto* rec_ptr{wso.first};
         if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
             // this will break commited stx's read
+            ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
         //==========
@@ -493,10 +499,14 @@ Status verify_read_by(session* const ti) {
                 wso.first->get_key(keyb);
                 auto rb{rrbp->is_exist(this_epoch, keyb)};
 
-                if (rb) { return Status::ERR_VALIDATION; }
+                if (rb) {
+                    ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+                    return Status::ERR_VALIDATION;
+                }
 
                 range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
                 if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
+                    ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
                     return Status::ERR_VALIDATION;
                 }
             } else {
@@ -594,7 +604,6 @@ extern Status commit(session* const ti) {
     rc = verify_read_by(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
-        ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
         return Status::ERR_VALIDATION;
     }
     // verify : end

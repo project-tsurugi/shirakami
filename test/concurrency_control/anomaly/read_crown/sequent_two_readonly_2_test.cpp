@@ -120,10 +120,13 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(5), stu, u, buf));
     ASSERT_EQ(buf, var.at(2));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), sty, y, buf));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), sty, y, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(
+            static_cast<session*>(s.at(5))->get_result_info().get_reason_code(),
+            reason_code::FORWARDING_BLOCKED_BY_READ);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));

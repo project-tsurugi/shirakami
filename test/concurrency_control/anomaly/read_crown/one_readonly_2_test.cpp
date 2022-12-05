@@ -261,11 +261,12 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(4), sta, a, buf));
-    //ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    //ASSERT_EQ(Status::OK, commit(s.at(4))); // wait for final boundary
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // rub invalidation
+    // false positive due to not tracking version order of same epoch
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -308,11 +309,11 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(4), sta, a, buf));
-    //ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    //ASSERT_EQ(Status::OK, commit(s.at(4))); // wait for final boundary
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

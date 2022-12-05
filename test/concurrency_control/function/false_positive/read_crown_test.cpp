@@ -292,13 +292,13 @@ TEST_F(read_crown_test, all) { // NOLINT
               tx_begin({s.at(3), transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(3), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
@@ -373,13 +373,13 @@ TEST_F(read_crown_test, all) { // NOLINT
               tx_begin({s.at(3), transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(3), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));

@@ -124,11 +124,14 @@ TEST_F(one_readonly_with_occ_overlapped_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(5), stx, x, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::ERR_FAIL_WP, search_key(s.at(5), sta, a, buf));
-    //ASSERT_EQ(buf, v.at(0));
-    //ASSERT_EQ(Status::OK, commit(s.at(5)));
+    ASSERT_EQ(Status::OK, search_key(s.at(5), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(
+            static_cast<session*>(s.at(5))->get_result_info().get_reason_code(),
+            reason_code::FORWARDING_BLOCKED_BY_READ);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
