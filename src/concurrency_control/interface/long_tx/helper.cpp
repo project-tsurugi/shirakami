@@ -80,7 +80,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     // after deciding success
     wp::long_tx::set_counter(long_tx_id + 1);
 
-    if (long_tx_id >= pow(2,63)) { // NOLINT
+    if (long_tx_id >= pow(2, 63)) { // NOLINT
         LOG(ERROR) << "long tx id depletion. limit of specification.";
         return Status::ERR_FATAL;
     }
@@ -155,7 +155,8 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
     return version_function_without_optimistic_check(ep, ver);
 }
 
-Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
+Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
+                                const std::string_view read_info) {
     // 1: optimistic early check, 2: pessimistic check.
     // here, 1: optimistic early check
     for (;;) {
@@ -195,7 +196,8 @@ Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
                 ti->set_valid_epoch(ep_id.first);
                 // change wp epoch
                 change_wp_epoch(ti, ep_id.first);
-                wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
+                wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps,
+                                                   read_info);
             }
         }
         break;

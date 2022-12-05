@@ -466,7 +466,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             return Status::WARN_STORAGE_NOT_FOUND;
         }
         // wp verify and forwarding
-        auto rc = long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr);
+        auto rc = long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr,
+                                                    rec_ptr->get_key_view());
         if (rc != Status::OK) { return rc; }
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {

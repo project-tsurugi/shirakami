@@ -38,7 +38,7 @@
 namespace shirakami {
 
 Status check_before_write_ops(session* const ti, Storage const st,
-                              OP_TYPE const op) {
+                              std::string_view const key, OP_TYPE const op) {
     // check whether it is read only mode.
     if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         // can't write in read only mode.
@@ -66,7 +66,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         if (op != OP_TYPE::UPSERT) {
             // insert and delete with read
             // may need forwarding
-            rc = long_tx::wp_verify_and_forwarding(ti, wm);
+            rc = long_tx::wp_verify_and_forwarding(ti, wm, key);
             if (rc != Status::OK) { return rc; }
         }
     } else if (ti->get_tx_type() ==

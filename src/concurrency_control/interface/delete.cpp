@@ -117,7 +117,7 @@ Status delete_record(Token token, Storage storage,
     ti->process_before_start_step();
 
     // check for write
-    auto rc{check_before_write_ops(ti, storage, OP_TYPE::DELETE)};
+    auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::DELETE)};
     if (rc != Status::OK) {
         ti->process_before_finish_step();
         return rc;

@@ -102,7 +102,7 @@ TEST_F(wp_test, extract_higher_priori_ltx_info) { // NOLINT
     ASSERT_EQ(ti->get_overtaken_ltx_set().size(), 0);
     wp::wp_meta* wp_meta_ptr{};
     wp::find_wp_meta(st, wp_meta_ptr);
-    wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
+    wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps, "");
     auto& ols = ti->get_overtaken_ltx_set();
     auto& ltxs = std::get<0>(ols.at(wp_meta_ptr));
     ASSERT_EQ(ltxs.size(), 2);

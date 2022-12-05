@@ -18,6 +18,7 @@ namespace shirakami {
 inline std::atomic<bool> initialized_{false};
 
 [[maybe_unused]] extern Status check_before_write_ops(session* ti, Storage st,
+                                                      std::string_view key,
                                                       OP_TYPE op);
 
 /**

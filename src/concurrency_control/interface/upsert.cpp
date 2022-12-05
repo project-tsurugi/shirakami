@@ -54,7 +54,7 @@ Status upsert(Token token, Storage storage, const std::string_view key,
     ti->process_before_start_step();
 
     // check for write
-    auto rc{check_before_write_ops(ti, storage, OP_TYPE::UPSERT)};
+    auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::UPSERT)};
     if (rc != Status::OK) {
         ti->process_before_finish_step();
         return rc;

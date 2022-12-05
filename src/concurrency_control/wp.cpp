@@ -21,12 +21,34 @@ namespace shirakami::wp {
 
 void extract_higher_priori_ltx_info(session* const ti,
                                     wp_meta* const wp_meta_ptr,
-                                    wp_meta::wped_type const& wps) {
+                                    wp_meta::wped_type const& wps,
+                                    std::string_view const key) {
     for (auto&& wped : wps) {
         if (wped.second != 0) {
             if (wped.second < ti->get_long_tx_id()) {
-                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr])
-                        .insert(wped.second);
+                // this tx decides that wped.second tx is the forwarding target.
+
+                /**
+                 * If this is the first forwarding against this table, 
+                 * initialize read range.
+                 */
+                auto& target_set =
+                        std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+                auto& read_range =
+                        std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+                if (target_set.empty()) {
+                    // initialize read range
+                    std::get<0>(read_range) = key;
+                    std::get<1>(read_range) = key;
+                } else {
+                    // already initialize, update read range
+                    if (key < std::get<0>(read_range)) {
+                        std::get<0>(read_range) = key;
+                    } else if (key > std::get<1>(read_range)) {
+                        std::get<1>(read_range) = key;
+                    }
+                }
+                target_set.insert(wped.second);
             }
         }
     }

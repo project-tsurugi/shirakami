@@ -85,9 +85,11 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  * @param[in] ti The transaction which executes on this session takes information.
  * @param[in] wp_meta_ptr wp information.
  * @param[in] wps wp information.
+ * @param[in] key key information.
  */
 void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
-                                    wp_meta::wped_type const& wps);
+                                    wp_meta::wped_type const& wps,
+                                    std::string_view key);
 
 /**
  * @brief termination process about wp.
