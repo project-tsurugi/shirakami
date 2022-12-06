@@ -31,19 +31,21 @@ enum class reason_code : std::int32_t {
     CC_LTX_READ_AREA_VIOLATION,
     /**
      * @brief The low priority ltx found high priority ltx's write preserve, 
-     * and tried forwarding but the forwarding break old own read.
+     * and tried forwarding at commit phase but the forwarding break old own 
+     * read.
      */
     CC_LTX_READ_UPPER_BOUND_VIOLATION,
     /**
-     * @brief Protecting committed transactional read operation.
+     * @brief Protecting committed transactional read operation from this ltx's
+     *  write operation.
      */
     CC_LTX_WRITE_COMMITTED_READ_PROTECTION,
     /**
-     * @brief Occ tx detected write preserve.
+     * @brief Occ tx detected write preserve of ltx.
      */
     CC_OCC_WP_VERIFY,
     /**
-     * @brief Occ tx failed read validation.
+     * @brief Occ tx failed read validation due to overwrite.
      */
     CC_OCC_READ_VERIFY,
     /**
