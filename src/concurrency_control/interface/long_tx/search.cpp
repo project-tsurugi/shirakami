@@ -95,7 +95,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
     auto rs = check_read_area(ti, storage);
     if (rs == Status::ERR_READ_AREA_VIOLATION) {
         long_tx::abort(ti);
-        ti->set_result(reason_code::VIOLATE_READ_AREA);
+        ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
         return rs;
     }
 
@@ -147,7 +147,7 @@ Status search_key(session* ti, Storage const storage,
     rc = wp_verify_and_forwarding(ti, wp_meta_ptr, key);
     if (rc != Status::OK) {
         if (rc == Status::ERR_FAIL_WP) {
-            ti->set_result(reason_code::FORWARDING_BLOCKED_BY_READ);
+            ti->set_result(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
         }
         return rc;
     }

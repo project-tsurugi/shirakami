@@ -126,7 +126,7 @@ TEST_F(boundary_wait_three_epoch_test, three_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
     auto tri = transaction_result_info(s.at(4));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -229,7 +229,7 @@ TEST_F(boundary_wait_three_epoch_test, three_epoch_with_abort) { // NOLINT
     ASSERT_EQ(Status::OK, abort(s.at(3)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
     auto tri = transaction_result_info(s.at(4));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

@@ -418,7 +418,7 @@ Status verify_read_by(session* const ti) {
                             wp_result_epoch) {
                             // forwarding break own old read
                             ti->set_result(
-                                    reason_code::FORWARDING_BLOCKED_BY_READ);
+                                    reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
                             return Status::ERR_VALIDATION;
                         } // forwarding not break own old read
                         // lock ongoing tx for forwarding
@@ -471,7 +471,7 @@ Status verify_read_by(session* const ti) {
         point_read_by_long* rbp{};
         rbp = &wso.first->get_point_read_by_long();
         if (rbp->is_exist(ti)) {
-            ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+            ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
 
@@ -479,7 +479,7 @@ Status verify_read_by(session* const ti) {
         auto* rec_ptr{wso.first};
         if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
             // this will break commited stx's read
-            ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+            ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
         //==========
@@ -500,13 +500,13 @@ Status verify_read_by(session* const ti) {
                 auto rb{rrbp->is_exist(this_epoch, keyb)};
 
                 if (rb) {
-                    ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+                    ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
                     return Status::ERR_VALIDATION;
                 }
 
                 range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
                 if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
-                    ti->set_result(reason_code::COMMITTED_READ_PROTECTION);
+                    ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
                     return Status::ERR_VALIDATION;
                 }
             } else {
@@ -596,7 +596,7 @@ extern Status commit(session* const ti) {
     rc = verify_insert(ti);
     if (rc == Status::ERR_FAIL_INSERT) {
         abort(ti);
-        ti->set_result(reason_code::INSERT_EXISTING_KEY);
+        ti->set_result(reason_code::KVS_INSERT);
         return Status::ERR_FAIL_INSERT;
     }
 

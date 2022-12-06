@@ -112,7 +112,7 @@ TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
     ASSERT_EQ(
             static_cast<session*>(s.at(3))->get_result_info().get_reason_code(),
-            reason_code::FORWARDING_BLOCKED_BY_READ);
+            reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -237,7 +237,7 @@ TEST_F(out_of_and_inner_boundary_test, inner_boundary) { // NOLINT
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
     ASSERT_EQ(
             static_cast<session*>(s.at(3))->get_result_info().get_reason_code(),
-            reason_code::FORWARDING_BLOCKED_BY_READ);
+            reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

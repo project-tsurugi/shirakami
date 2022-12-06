@@ -148,7 +148,7 @@ Status open_scan(Token const token, Storage storage,
         auto rs = long_tx::check_read_area(ti, storage);
         if (rs == Status::ERR_READ_AREA_VIOLATION) {
             long_tx::abort(ti);
-            ti->set_result(reason_code::VIOLATE_READ_AREA);
+            ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
             return rs;
         }
     }
@@ -454,7 +454,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
             abort(ti);
-            ti->set_result(reason_code::OCC_DETECT_WRITE_PRESERVE);
+            ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_FAIL_WP;
         }
     } else if (ti->get_tx_type() ==

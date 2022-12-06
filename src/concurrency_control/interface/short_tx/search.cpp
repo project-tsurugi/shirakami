@@ -26,7 +26,7 @@ inline Status wp_verify(session* const ti, Storage const st) {
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
         short_tx::abort(ti);
-        ti->set_result(reason_code::OCC_DETECT_WRITE_PRESERVE);
+        ti->set_result(reason_code::CC_OCC_WP_VERIFY);
         return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
     }
     return Status::OK;

@@ -48,22 +48,19 @@ private:
 
 TEST_F(result_test, reason_code) { // NOLINT
     // check operator<<
-    LOG(INFO) << reason_code::FORWARDING_BLOCKED_BY_READ;
+    LOG(INFO) << reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION;
 }
 
 TEST_F(result_test, result_info) { // NOLINT
     // test constructor
-    result_info ri{reason_code::FORWARDING_BLOCKED_BY_READ, "test"};
-    ASSERT_EQ(ri.get_reason_code(), reason_code::FORWARDING_BLOCKED_BY_READ);
-    ASSERT_EQ(ri.get_additional_information(), "test");
-
-    // test: clear_additional_information
-    ri.clear_additional_information();
-    ASSERT_EQ(ri.get_additional_information(), "");
+    result_info ri{reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION};
+    ASSERT_EQ(ri.get_reason_code(),
+              reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // test: set_reason_code
-    ri.set_reason_code(reason_code::FORWARDING_BLOCKED_BY_READ);
-    ASSERT_EQ(ri.get_reason_code(), reason_code::FORWARDING_BLOCKED_BY_READ);
+    ri.set_reason_code(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
+    ASSERT_EQ(ri.get_reason_code(),
+              reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 }
 
 } // namespace shirakami::testing

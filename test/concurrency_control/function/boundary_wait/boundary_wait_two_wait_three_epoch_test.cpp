@@ -154,10 +154,10 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(5)));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
     auto tri = transaction_result_info(s.at(6)); // NOLINT
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(7)));
     tri = transaction_result_info(s.at(7)); // NOLINT
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -291,10 +291,10 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6))); // epoch false positive
     tri = transaction_result_info(s.at(6));             // NOLINT
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(7)));
     tri = transaction_result_info(s.at(7)); // NOLINT
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

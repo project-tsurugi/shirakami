@@ -108,7 +108,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
             unlock_write_set(ti);
             short_tx::abort(ti);
-            ti->set_result(reason_code::OCC_READ_VALIDATION);
+            ti->set_result(reason_code::CC_OCC_READ_VERIFY);
             return Status::ERR_VALIDATION;
         }
         // ==============================
@@ -129,7 +129,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         if (wp_verify(each_st, ce) != Status::OK) {
             unlock_write_set(ti);
             short_tx::abort(ti);
-            ti->set_result(reason_code::OCC_DETECT_WRITE_PRESERVE);
+            ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
         }
     }
@@ -265,9 +265,9 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->set_result(reason_code::UPDATE_NON_EXISTING_RECORD);
+                    ti->set_result(reason_code::KVS_UPDATE);
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    ti->set_result(reason_code::DELETE_NON_EXISTING_RECORD);
+                    ti->set_result(reason_code::KVS_DELETE);
                 }
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
@@ -482,9 +482,9 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         short_tx::abort(ti);
         if (rc == Status::ERR_FAIL_INSERT) {
-            ti->set_result(reason_code::INSERT_EXISTING_KEY);
+            ti->set_result(reason_code::KVS_INSERT);
         } else if (rc == Status::ERR_PHANTOM) {
-            ti->set_result(reason_code::PHANTOM_AVOIDANCE_DETECTED);
+            ti->set_result(reason_code::CC_PHANTOM_AVOIDANCE);
         }
         return rc;
     }
@@ -504,7 +504,7 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         unlock_write_set(ti);
         short_tx::abort(ti);
-        ti->set_result(reason_code::PHANTOM_AVOIDANCE_DETECTED);
+        ti->set_result(reason_code::CC_PHANTOM_AVOIDANCE);
         return rc;
     }
 
