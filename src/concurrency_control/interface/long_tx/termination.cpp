@@ -387,7 +387,7 @@ void register_read_by(session* const ti) {
     }
 }
 
-Status verify_read_by(session* const ti) {
+Status verify(session* const ti) {
     auto this_epoch = ti->get_valid_epoch();
 
     // forwarding verify
@@ -418,7 +418,8 @@ Status verify_read_by(session* const ti) {
                             wp_result_epoch) {
                             // forwarding break own old read
                             ti->set_result(
-                                    reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
+                                    reason_code::
+                                            CC_LTX_READ_UPPER_BOUND_VIOLATION);
                             return Status::ERR_VALIDATION;
                         } // forwarding not break own old read
                         // lock ongoing tx for forwarding
@@ -465,6 +466,29 @@ Status verify_read_by(session* const ti) {
 
     // verify for write set
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+        // check about kvs
+        auto* rec_ptr{wso.first};
+        tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+        if (wso.second.get_op() == OP_TYPE::INSERT) {
+            // expect the record not existing
+            if (!(tid.get_latest() && tid.get_absent())) {
+                // someone interrupt tombstone
+                ti->set_result(reason_code::KVS_INSERT);
+                return Status::ERR_VALIDATION;
+            }
+        } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
+                   wso.second.get_op() == OP_TYPE::DELETE) {
+            // expect the record existing
+            if (!(tid.get_latest() && !tid.get_absent())) {
+                if (wso.second.get_op() == OP_TYPE::UPDATE) {
+                    ti->set_result(reason_code::KVS_UPDATE);
+                } else {
+                    ti->set_result(reason_code::KVS_DELETE);
+                }
+                return Status::ERR_VALIDATION;
+            }
+        }
+
         //==========
         // about point read
         // for ltx
@@ -476,7 +500,6 @@ Status verify_read_by(session* const ti) {
         }
 
         // for stx
-        auto* rec_ptr{wso.first};
         if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
             // this will break commited stx's read
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
@@ -500,13 +523,17 @@ Status verify_read_by(session* const ti) {
                 auto rb{rrbp->is_exist(this_epoch, keyb)};
 
                 if (rb) {
-                    ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+                    ti->set_result(
+                            reason_code::
+                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
                     return Status::ERR_VALIDATION;
                 }
 
                 range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
                 if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
-                    ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+                    ti->set_result(
+                            reason_code::
+                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
                     return Status::ERR_VALIDATION;
                 }
             } else {
@@ -526,7 +553,7 @@ Status check_wait_for_preceding_bt(session* const ti) {
     return Status::OK;
 }
 
-Status verify_insert(session* const ti) {
+Status verify_kvs_error(session* const ti) {
     for (auto&& wse : ti->get_write_set().get_ref_cont_for_bt()) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT) {
@@ -539,6 +566,7 @@ Status verify_insert(session* const ti) {
              */
             if (!(tid.get_latest() && tid.get_absent())) {
                 // someone interrupt tombstone
+                ti->set_result(reason_code::KVS_INSERT);
                 return Status::ERR_FAIL_INSERT;
             }
         }
@@ -585,23 +613,7 @@ extern Status commit(session* const ti) {
 
     // ==========
     // verify : start
-    /**
-     * verify order is insert to read by due to extending abort information.
-     * If the transaction fail insert, the read of insert was also broken at 
-     * verify read by. So If the verify order is read by to insert, information
-     * of failing insert is lost.
-     */
-
-    // verify insert
-    rc = verify_insert(ti);
-    if (rc == Status::ERR_FAIL_INSERT) {
-        abort(ti);
-        ti->set_result(reason_code::KVS_INSERT);
-        return Status::ERR_FAIL_INSERT;
-    }
-
-    // verify read by
-    rc = verify_read_by(ti);
+    rc = verify(ti);
     if (rc == Status::ERR_VALIDATION) {
         abort(ti);
         return Status::ERR_VALIDATION;

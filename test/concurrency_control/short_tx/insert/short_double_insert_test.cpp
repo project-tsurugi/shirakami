@@ -6,6 +6,7 @@
 #include "atomic_wrapper.h"
 
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "index/yakushima/include/interface.h"
@@ -102,6 +103,8 @@ TEST_F(double_insert, insert_insert_conflict_commit_commit) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     // second inserter lose
     ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2)); // NOLINT
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
+              reason_code::KVS_INSERT);
     // warn already exist
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT

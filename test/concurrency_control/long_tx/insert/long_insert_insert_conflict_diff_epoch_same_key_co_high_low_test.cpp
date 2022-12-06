@@ -78,7 +78,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_high_low_test, // NOLI
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -110,7 +110,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_high_low_test, // NOLI
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2));
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
