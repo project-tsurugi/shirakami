@@ -53,7 +53,8 @@ TEST_F(delete_test, delete_at_non_existing_storage) { // NOLINT
 TEST_F(delete_test, read_only_mode_delete_) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, delete_record(s, storage, ""));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
