@@ -8,8 +8,9 @@
 #include <vector>
 
 #include "api_result.h"
-#include "api_storage.h"
 #include "api_sequence.h"
+#include "api_storage.h"
+#include "api_tx_id.h"
 #include "database_options.h"
 #include "log_record.h"
 #include "scheme.h"

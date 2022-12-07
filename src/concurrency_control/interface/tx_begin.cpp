@@ -87,6 +87,14 @@ Status tx_begin(transaction_options options) { // NOLINT
     ti->set_tx_began(true);
     ti->set_begin_epoch(epoch::get_global_epoch());
 
+    // about tx counter
+    if (ti->get_tx_counter() == UINT64_MAX) {
+        ti->set_higher_tx_counter(ti->get_higher_tx_counter() + 1);
+        ti->set_tx_counter(0);
+    } else {
+        ti->set_tx_counter(ti->get_tx_counter() + 1);
+    }
+
     ti->process_before_finish_step();
     return Status::OK;
 }

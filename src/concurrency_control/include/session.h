@@ -136,6 +136,14 @@ public:
     [[nodiscard]] Status find_wp(Storage st) const;
 
     // ========== start: getter
+    [[nodiscard]] std::uint32_t get_session_id() const { return session_id_; }
+
+    [[nodiscard]] std::uint32_t get_higher_tx_counter() const {
+        return higher_tx_counter_;
+    }
+
+    [[nodiscard]] std::uint64_t get_tx_counter() const { return tx_counter_; }
+
     [[nodiscard]] Tuple* get_cache_for_search_ptr() {
         return &cache_for_search_;
     }
@@ -311,6 +319,12 @@ public:
     }
 
     // ========== start: setter
+    void set_session_id(std::uint32_t num) { session_id_ = num; }
+
+    void set_higher_tx_counter(std::uint32_t num) { higher_tx_counter_ = num; }
+
+    void set_tx_counter(std::uint64_t num) { tx_counter_ = num; }
+
     void set_cache_for_search(Tuple tuple) {
         cache_for_search_ = std::move(tuple);
     } // NOLINT
@@ -440,6 +454,21 @@ private:
      */
     transaction_options::transaction_type tx_type_{
             transaction_options::transaction_type::SHORT};
+
+    /**
+     * @brief session id used for computing transaction id.
+     */
+    std::uint32_t session_id_{};
+
+    /**
+     * @brief Counter of circulated tx_counter_;
+     */
+    std::uint32_t higher_tx_counter_{0};
+
+    /**
+     * @brief transaction counter. Session counts executed transactions by this.
+     */
+    std::uint64_t tx_counter_{0};
 
     /**
      * @brief most recently chosen tid for calculate new tid of occ.

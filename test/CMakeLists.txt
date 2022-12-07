@@ -101,6 +101,7 @@ file(GLOB WP_TEST_SOURCES
         "sequence/*.cpp"
         "storage/*.cpp"
         "transaction_options/*.cpp"
+        "tx_id/*.cpp"
         )
         set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
 
