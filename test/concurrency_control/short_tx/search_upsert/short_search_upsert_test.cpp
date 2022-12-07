@@ -2,6 +2,9 @@
 #include <array>
 #include <mutex>
 
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
@@ -50,7 +53,7 @@ TEST_F(short_search_upsert, simple) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(short_search_upsert, search_concurrent_upsert) { // NOLINT
+TEST_F(short_search_upsert, search_cannot_find_concurrent_upsert) { // NOLINT
     Storage st{};
     create_storage("", st);
     std::string k("k"); // NOLINT
@@ -63,6 +66,33 @@ TEST_F(short_search_upsert, search_concurrent_upsert) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
     ASSERT_EQ(Status::OK, commit(token_ar.at(1))); // NOLINT
+    ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
+}
+
+TEST_F(short_search_upsert, search_find_concurrent_upsert_at_commit) { // NOLINT
+    // prepare
+    Storage st{};
+    create_storage("", st);
+    std::string k("k"); // NOLINT
+    std::string v("k"); // NOLINT
+    std::array<Token, 2> token_ar{};
+    ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
+
+    // test
+    ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(token_ar.at(1), st, k, vb));
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0)));             // NOLINT
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(token_ar.at(1))); // NOLINT
+    auto& rinfo = static_cast<session*>(token_ar.at(1))->get_result_info();
+    ASSERT_EQ(rinfo.get_reason_code(), reason_code::CC_OCC_READ_VERIFY);
+    ASSERT_EQ(rinfo.get_key(), k);
+
+    // cleanup
     ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
     ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
 }

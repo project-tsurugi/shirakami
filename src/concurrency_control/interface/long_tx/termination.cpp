@@ -474,6 +474,7 @@ Status verify(session* const ti) {
             if (!(tid.get_latest() && tid.get_absent())) {
                 // someone interrupt tombstone
                 ti->set_result(reason_code::KVS_INSERT);
+                ti->get_result_info().set_key(rec_ptr->get_key_view());
                 return Status::ERR_VALIDATION;
             }
         } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
@@ -481,9 +482,11 @@ Status verify(session* const ti) {
             // expect the record existing
             if (!(tid.get_latest() && !tid.get_absent())) {
                 if (wso.second.get_op() == OP_TYPE::UPDATE) {
+                    ti->get_result_info().set_key(rec_ptr->get_key_view());
                     ti->set_result(reason_code::KVS_UPDATE);
                 } else {
                     ti->set_result(reason_code::KVS_DELETE);
+                    ti->get_result_info().set_key(rec_ptr->get_key_view());
                 }
                 return Status::ERR_VALIDATION;
             }
@@ -495,6 +498,7 @@ Status verify(session* const ti) {
         point_read_by_long* rbp{};
         rbp = &wso.first->get_point_read_by_long();
         if (rbp->is_exist(ti)) {
+            ti->get_result_info().set_key(rec_ptr->get_key_view());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
@@ -502,6 +506,7 @@ Status verify(session* const ti) {
         // for stx
         if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
             // this will break commited stx's read
+            ti->get_result_info().set_key(rec_ptr->get_key_view());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
@@ -513,7 +518,6 @@ Status verify(session* const ti) {
             wso.second.get_op() ==
                     OP_TYPE::UPSERT || // upsert may cause phantom
             wso.second.get_op() == OP_TYPE::DELETE) {
-            // for long
             wp::page_set_meta* psm{};
             if (Status::OK ==
                 wp::find_page_set_meta(wso.second.get_storage(), psm)) {
@@ -522,18 +526,18 @@ Status verify(session* const ti) {
                 wso.first->get_key(keyb);
                 auto rb{rrbp->is_exist(this_epoch, keyb)};
 
+                // for long
                 if (rb) {
-                    ti->set_result(
-                            reason_code::
-                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
                     return Status::ERR_VALIDATION;
                 }
 
+                // for short
                 range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
                 if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
-                    ti->set_result(
-                            reason_code::
-                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
                     return Status::ERR_VALIDATION;
                 }
             } else {
@@ -567,6 +571,7 @@ Status verify_kvs_error(session* const ti) {
             if (!(tid.get_latest() && tid.get_absent())) {
                 // someone interrupt tombstone
                 ti->set_result(reason_code::KVS_INSERT);
+                ti->get_result_info().set_key(rec_ptr->get_key_view());
                 return Status::ERR_FAIL_INSERT;
             }
         }

@@ -26,6 +26,10 @@ enum class reason_code : std::int32_t {
      */
     KVS_UPDATE,
     /**
+     * @brief Abort due to phantom avoidance function in the ltx.
+     */
+    CC_LTX_PHANTOM_AVOIDANCE,
+    /**
      * @brief violation of read area at tx_begin.
      */
     CC_LTX_READ_AREA_VIOLATION,
@@ -49,9 +53,9 @@ enum class reason_code : std::int32_t {
      */
     CC_OCC_READ_VERIFY,
     /**
-     * @brief Abort due to phantom avoidance function.
+     * @brief Abort due to phantom avoidance function in the occ transaction.
      */
-    CC_PHANTOM_AVOIDANCE,
+    CC_OCC_PHANTOM_AVOIDANCE,
     /**
      * @brief After abort command by user.
      */
@@ -69,6 +73,8 @@ inline constexpr std::string_view to_string_view(reason_code rc) noexcept {
             return "KVS_INSERT"sv; // NOLINT
         case reason_code::KVS_UPDATE:
             return "KVS_UPDATE"sv; // NOLINT
+        case reason_code::CC_LTX_PHANTOM_AVOIDANCE:
+            return "CC_LTX_PHANTOM_AVOIDANCE"sv; //NOLINT
         case reason_code::CC_LTX_READ_AREA_VIOLATION:
             return "CC_LTX_READ_AREA_VIOLATION"sv; // NOLINT
         case reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION:
@@ -79,8 +85,8 @@ inline constexpr std::string_view to_string_view(reason_code rc) noexcept {
             return "CC_OCC_READ_VERIFY"sv; // NOLINT
         case reason_code::CC_OCC_WP_VERIFY:
             return "CC_OCC_WP_VERIFY"sv; // NOLINT
-        case reason_code::CC_PHANTOM_AVOIDANCE:
-            return "CC_PHANTOM_AVOIDANCE"sv; //NOLINT
+        case reason_code::CC_OCC_PHANTOM_AVOIDANCE:
+            return "CC_OCC_PHANTOM_AVOIDANCE"sv; //NOLINT
         case reason_code::USER_ABORT:
             return "USER_ABORT"sv; // NOLINT
     }
@@ -97,13 +103,30 @@ public:
 
     result_info(reason_code rc) : reason_code_(rc) {}
 
+    // start: getter / setter
+
     [[nodiscard]] reason_code get_reason_code() const { return reason_code_; }
 
-    void set_reason_code(reason_code rc) { reason_code_ = rc; }
+    void set_reason_code(reason_code rc) {
+        if (rc == reason_code::UNKNOWN) { set_key(""); }
+        reason_code_ = rc;
+    }
 
+    [[nodiscard]] std::string_view get_key() const { return key_; }
 
+    void set_key(std::string_view key) { key_ = key; }
+
+    // end: getter / setter
 private:
     reason_code reason_code_{};
+
+    /**
+     * @brief The reason key. reason_code::KVS_DELETE, KVS_INSERT, KVS_UPDATE, 
+     * CC_LTX_PHANTOM_AVOIDANCE, CC_LTX_WRITE_COMMITTED_READ_PROTECTION, 
+     * CC_OCC_READ_VERIFY log this information.
+     * 
+     */
+    std::string key_{};
 };
 
 } // namespace shirakami

@@ -108,6 +108,7 @@ TEST_F(single_long_update_test,                   // NOLINT
     ASSERT_NE(Status::OK, commit(s2)); // NOLINT
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_UPDATE);
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

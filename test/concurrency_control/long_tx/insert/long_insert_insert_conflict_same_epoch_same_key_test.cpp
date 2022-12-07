@@ -88,6 +88,7 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_INSERT);
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

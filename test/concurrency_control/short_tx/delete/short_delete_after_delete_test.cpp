@@ -88,6 +88,7 @@ TEST_F(delete_after_delete, concurrent_delete) { // NOLINT
     ASSERT_NE(Status::OK, commit(s2));
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_DELETE);
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), k);
 
 
     // cleanup

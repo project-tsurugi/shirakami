@@ -199,7 +199,9 @@ TEST_F(boundary_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
     auto tri = transaction_result_info(s.at(3));
     // false positive
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(),
+              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_key(), z);
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

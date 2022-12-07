@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
@@ -28,9 +29,8 @@ using namespace shirakami;
 class long_scan_upsert_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "long_scan_upsert_test-long_tx_only_long_"
-                                  "scan_upsert_test_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "scan_upsert-long_scan_upsert_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -44,17 +44,6 @@ public:
 private:
     static inline std::once_flag init_; // NOLINT
 };
-
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
 
 TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
     /**
