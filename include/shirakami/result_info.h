@@ -101,7 +101,7 @@ class result_info {
 public:
     result_info() = default;
 
-    result_info(reason_code rc) : reason_code_(rc) {}
+    explicit result_info(reason_code rc) : reason_code_(rc) {}
 
     // start: getter / setter
 

@@ -95,7 +95,7 @@ public:
     Status register_wp(epoch::epoch_t ep, std::size_t id);
 
     [[nodiscard]] Status
-    register_wp_result_and_remove_wp(wp_result_elem_type elem);
+    register_wp_result_and_remove_wp(wp_result_elem_type const& elem);
 
     [[nodiscard]] Status remove_wp_without_lock(std::size_t id);
 

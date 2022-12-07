@@ -134,7 +134,7 @@ Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
 }
 
 [[nodiscard]] Status
-wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type elem) {
+wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
     {
         std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
         wp_result_set_.emplace_back(elem);
