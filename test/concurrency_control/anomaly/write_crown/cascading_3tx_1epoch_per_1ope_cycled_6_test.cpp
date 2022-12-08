@@ -88,6 +88,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_5_test, all) { // NOLINT
     std::string buf{};
     // ==========
 
+#if 0
     // ==========
     // note: o is occ, l is ltx
     // test case 15
@@ -146,7 +147,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_5_test, all) { // NOLINT
 
     // cleanup
     init_db();
-
+#endif
     // test case 16
     // llll
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
@@ -182,9 +183,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_5_test, all) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK,
-              search_key(s.at(4), sta, a, buf));
-    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
@@ -204,7 +203,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_5_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, v.at(3));
+    ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup

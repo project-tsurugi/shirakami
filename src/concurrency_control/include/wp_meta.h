@@ -131,6 +131,11 @@ public:
         return std::get<2>(elem);
     }
 
+    static std::tuple<bool, std::string, std::string>
+    wp_result_elem_extract_write_result(wp_result_elem_type elem) {
+        return std::get<3>(elem);
+    }
+
 private:
     /**
      * @brief write preserve infomation.

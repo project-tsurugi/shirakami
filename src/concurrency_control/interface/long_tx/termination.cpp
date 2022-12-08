@@ -397,6 +397,8 @@ Status verify(session* const ti) {
         std::lock_guard<std::shared_mutex> lk{
                 wp_meta_ptr->get_mtx_wp_result_set()};
         bool is_first_item_before_gc_threshold{true};
+        std::tuple<std::string, std::string> read_range =
+                std::get<1>(oe.second);
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
             // oe.second is forwarding high priori ltxs
@@ -407,12 +409,32 @@ Status verify(session* const ti) {
             auto wp_result_was_committed =
                     wp::wp_meta::wp_result_elem_extract_was_committed(
                             (*wp_result_itr));
+            auto write_result =
+                    wp::wp_meta::wp_result_elem_extract_write_result(
+                            (*wp_result_itr));
             if (wp_result_was_committed) {
                 /**
                  * the target ltx was commited, so it needs to check.
                  */
                 for (auto&& hid : std::get<0>(oe.second)) {
                     if (wp_result_id == hid) {
+                        // check conflict
+                        if (!std::get<0>(write_result)) {
+                            // the ltx didn't write.
+                            break;
+                        }
+                        if (!((std::get<0>(read_range) <=
+                                       std::get<1>(write_result) &&
+                               std::get<1>(write_result) <=
+                                       std::get<1>(read_range)) ||
+                              (std::get<0>(read_range) <=
+                                       std::get<2>(write_result) &&
+                               std::get<2>(write_result) <=
+                                       std::get<1>(read_range)))) {
+                            // can't hit
+                            break;
+                        }
+
                         // the itr show overtaken ltx
                         if (wp_result_epoch < ti->get_valid_epoch()) {
                             // try forwarding
