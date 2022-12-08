@@ -13,9 +13,9 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/record.h"
-#include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/version.h"
+#include "concurrency_control/include/wp.h"
+#include "concurrency_control/include/wp_meta.h"
 
 #include "shirakami/interface.h"
 
@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class single_long_update_test : public ::testing::Test { // NOLINT
+class long_insert_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "single_long_update_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
+                                  "insert-simple_long_insert_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,7 +48,8 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(single_long_update_test, start_before_epoch) { // NOLINT
+TEST_F(long_insert_test, start_before_epoch) { // NOLINT
+    // prepare
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
@@ -59,56 +60,76 @@ TEST_F(single_long_update_test, start_before_epoch) { // NOLINT
                   tx_begin({s,
                             transaction_options::transaction_type::LONG,
                             {st}}));
-        ASSERT_EQ(Status::WARN_PREMATURE, update(s, st, "", ""));
-    } // start epoch
+
+        // test
+        ASSERT_EQ(Status::WARN_PREMATURE, insert(s, st, "", ""));
+
+        // cleanup
+    }
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_update_test,                 // NOLINT
-       update_not_existing_key_at_read_phase) { // NOLINT
-                                                // preapre
+TEST_F(long_insert_test, start_after_epoch) { // NOLINT
+    // prepare
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-
-    // test
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, "", ""));
+
+    // test
+    ASSERT_EQ(Status::OK, insert(s, st, "", "test"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
+    // verify
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(buf, "test");
+
     // cleanup
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(single_long_update_test,                   // NOLINT
-       update_not_existing_key_at_commit_phase) { // NOLINT
-                                                  // preapre
+TEST_F(long_insert_test, insert_two_key_and_check_wp_result) { // NOLINT
+                                                               // prepare
     Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
+    ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
+    ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
-    ASSERT_EQ(
-            Status::OK,
-            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
-    ASSERT_EQ(Status::OK, update(s2, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
-    ASSERT_NE(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
-              reason_code::KVS_UPDATE);
-    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");
+    std::string vb{};
+    // block gc about write presreve result info
+    ASSERT_EQ(Status::OK, search_key(s2, st, "", vb));
+    ASSERT_EQ(Status::OK, insert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, insert(s, st, "2", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // check
+    wp::wp_meta* wp_meta_ptr{};
+    ASSERT_EQ(Status::OK, wp::find_wp_meta(st, wp_meta_ptr));
+    {
+        std::shared_lock<std::shared_mutex> lk{
+                wp_meta_ptr->get_mtx_wp_result_set()};
+        wp::wp_meta::wp_result_elem_type elem =
+                wp_meta_ptr->get_wp_result_set().front();
+        std::tuple<bool, std::string, std::string>& target = std::get<3>(elem);
+        ASSERT_EQ(std::get<0>(target), true);
+        ASSERT_EQ(std::get<1>(target), "1");
+        ASSERT_EQ(std::get<2>(target), "2");
+    }
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
