@@ -1,18 +1,9 @@
 
-#include <xmmintrin.h>
-
-#include <algorithm>
-#include <array>
-#include <atomic>
-#include <climits>
 #include <mutex>
-#include <thread>
-#include <vector>
 
-#include "atomic_wrapper.h"
 #include "test_tool.h"
 
-#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
@@ -20,70 +11,36 @@
 
 #include "shirakami/interface.h"
 
-#include "gtest/gtest.h"
-
 #include "glog/logging.h"
+
+#include "gtest/gtest.h"
 
 namespace shirakami::testing {
 
 using namespace shirakami;
 
-class search : public ::testing::Test { // NOLINT
+class long_scan_test : public ::testing::Test { // NOLINT
+
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
-                                  "search-long_search_test");
-        FLAGS_stderrthreshold = 0;
+                                  "scan-long_scan_test");
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
-        std::call_once(init_, call_once_f);
+        std::call_once(init_google_, call_once_f);
         init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
 
 private:
-    static inline std::once_flag init_; // NOLINT
+    static inline std::once_flag init_google_; // NOLINT
 };
 
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
-
-TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
-    // prepare test
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s{};
-    ASSERT_EQ(enter(s), Status::OK);
-
-    // prepare data
-    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
-    ASSERT_EQ(Status::OK, commit(s));
-    wait_epoch_update();
-
-    // test
-    // read only mode and long tx mode, single search
-    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}),
-              Status::OK);
-    wait_epoch_update();
-    std::string vb{};
-    ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
-    ASSERT_EQ(Status::OK, commit(s));
-
-    // clean up test
-    ASSERT_EQ(leave(s), Status::OK);
-}
-
-TEST_F(search, some_search_key_range_register_if_forwarding) { // NOLINT
+TEST_F(long_scan_test,                                     // NOLINT
+       some_range_read_register_the_range_if_forwarding) { // NOLINT
     // prepare test
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -102,18 +59,26 @@ TEST_F(search, some_search_key_range_register_if_forwarding) { // NOLINT
     ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG}),
               Status::OK);
     wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
     std::string vb{};
-    ASSERT_EQ(Status::OK, search_key(s2, st, "1", vb));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "1");
     auto* ti = static_cast<session*>(s2);
     wp::wp_meta* wp_meta_ptr{};
     ASSERT_EQ(Status::OK, wp::find_wp_meta(st, wp_meta_ptr));
     auto& range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     ASSERT_EQ(std::get<0>(range), "1");
     ASSERT_EQ(std::get<1>(range), "1");
-    ASSERT_EQ(Status::OK, search_key(s2, st, "2", vb));
+    ASSERT_EQ(Status::OK, next(s2, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "2");
     ASSERT_EQ(std::get<0>(range), "1");
     ASSERT_EQ(std::get<1>(range), "2");
-    ASSERT_EQ(Status::OK, search_key(s2, st, "3", vb));
+    ASSERT_EQ(Status::OK, next(s2, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "3");
     ASSERT_EQ(std::get<0>(range), "1");
     ASSERT_EQ(std::get<1>(range), "3");
 
