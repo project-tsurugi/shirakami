@@ -28,22 +28,21 @@ TEST_F(short_t1_delete_between_t2_delete_upsert_test, delete_upsert) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", "1"));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, delete_record(s1, st, ""));
     ASSERT_EQ(Status::OK, delete_record(s2, st, ""));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
-    // check local delete and change it to upsert.
-    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, upsert(s1, st, "", "2"));
+    // checked local delete and change it to update.
+    ASSERT_EQ(Status::ERR_WRITE_TO_DELETED_RECORD, commit(s1)); // NOLINT
 
     // verify
     std::string buf{};
-    ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
-    ASSERT_EQ(buf, "");
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
