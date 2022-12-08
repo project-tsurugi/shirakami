@@ -407,41 +407,46 @@ Status verify(session* const ti) {
             auto wp_result_was_committed =
                     wp::wp_meta::wp_result_elem_extract_was_committed(
                             (*wp_result_itr));
-            for (auto&& hid : std::get<0>(oe.second)) {
-                if (wp_result_id == hid && wp_result_was_committed) {
-                    // the overtaken ltx was committed.
-                    // the itr show overtaken ltx
-                    if (wp_result_epoch < ti->get_valid_epoch()) {
-                        // try forwarding
-                        // check read upper bound
-                        if (ti->get_read_version_max_epoch() >=
-                            wp_result_epoch) {
-                            // forwarding break own old read
-                            ti->set_result(
-                                    reason_code::
-                                            CC_LTX_READ_UPPER_BOUND_VIOLATION);
-                            return Status::ERR_VALIDATION;
-                        } // forwarding not break own old read
-                        // lock ongoing tx for forwarding
-                        std::lock_guard<std::shared_mutex> ongo_lk{
-                                ongoing_tx::get_mtx()};
-                        if (Status::OK !=
-                            ongoing_tx::change_epoch_without_lock(
-                                    ti->get_long_tx_id(), wp_result_epoch)) {
-                            LOG(ERROR) << "programming error";
-                            return Status::ERR_FATAL;
-                        }
-                        // set own epoch
-                        ti->set_valid_epoch(wp_result_epoch);
-                        // change wp epoch
-                        change_wp_epoch(ti, wp_result_epoch);
-                        /**
+            if (wp_result_was_committed) {
+                /**
+                 * the target ltx was commited, so it needs to check.
+                 */
+                for (auto&& hid : std::get<0>(oe.second)) {
+                    if (wp_result_id == hid) {
+                        // the itr show overtaken ltx
+                        if (wp_result_epoch < ti->get_valid_epoch()) {
+                            // try forwarding
+                            // check read upper bound
+                            if (ti->get_read_version_max_epoch() >=
+                                wp_result_epoch) {
+                                // forwarding break own old read
+                                ti->set_result(
+                                        reason_code::
+                                                CC_LTX_READ_UPPER_BOUND_VIOLATION);
+                                return Status::ERR_VALIDATION;
+                            } // forwarding not break own old read
+                            // lock ongoing tx for forwarding
+                            std::lock_guard<std::shared_mutex> ongo_lk{
+                                    ongoing_tx::get_mtx()};
+                            if (Status::OK !=
+                                ongoing_tx::change_epoch_without_lock(
+                                        ti->get_long_tx_id(),
+                                        wp_result_epoch)) {
+                                LOG(ERROR) << "programming error";
+                                return Status::ERR_FATAL;
+                            }
+                            // set own epoch
+                            ti->set_valid_epoch(wp_result_epoch);
+                            // change wp epoch
+                            change_wp_epoch(ti, wp_result_epoch);
+                            /**
                          * not need extract (collect) new forwarding info,
                          * because at first touch, this tx finished that.
                          */
+                        }
+                        // verify success
+                        break;
                     }
-                    // verify success
-                    break;
                 }
             }
 
