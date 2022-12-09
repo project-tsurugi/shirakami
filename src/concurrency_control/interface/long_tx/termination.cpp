@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <map>
 #include <string_view>
 #include <vector>
 
@@ -134,10 +135,9 @@ RETRY: // NOLINT
     }
 }
 
-static inline void expose_local_write(session* ti, tid_word& committed_id,
-                                      bool& write_something,
-                                      std::string& write_range_left,
-                                      std::string& write_range_right) {
+static inline void expose_local_write(
+        session* ti, tid_word& committed_id,
+        std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
     tid_word ctid{};
     compute_tid(ti, ctid);
     committed_id = ctid;
@@ -290,27 +290,30 @@ static inline void expose_local_write(session* ti, tid_word& committed_id,
 #endif
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         std::string_view pkey_view = wso.second.get_rec_ptr()->get_key_view();
-        if (!write_something) {
-            // first write
-            write_something = true;
-            write_range_left = pkey_view;
-            write_range_right = pkey_view;
-        } else {
+        auto wr_itr = write_range.find(wso.second.get_storage());
+        if (wr_itr != write_range.end()) {
+            // found
             // more than one write
-            if (pkey_view < write_range_left) { write_range_left = pkey_view; }
-            if (pkey_view > write_range_right) {
-                write_range_right = pkey_view;
+            if (pkey_view < std::get<0>(wr_itr->second)) {
+                std::get<0>(wr_itr->second) = pkey_view;
             }
+            if (pkey_view > std::get<1>(wr_itr->second)) {
+                std::get<1>(wr_itr->second) = pkey_view;
+            }
+        } else {
+            // not found
+            write_range.insert(
+                    std::make_pair(wso.second.get_storage(),
+                                   std::make_tuple(std::string(pkey_view),
+                                                   std::string(pkey_view))));
         }
         process(wso, ctid);
     }
 }
 
-static inline void
-register_wp_result_and_remove_wps(session* ti, const bool was_committed,
-                                  const bool write_something,
-                                  const std::string_view write_range_left,
-                                  const std::string_view write_range_right) {
+static inline void register_wp_result_and_remove_wps(
+        session* ti, const bool was_committed,
+        std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
@@ -328,6 +331,18 @@ register_wp_result_and_remove_wps(session* ti, const bool was_committed,
             LOG(ERROR) << "programing error: " << rc;
             return;
         }
+
+        // check write range
+        auto wr_itr = write_range.find(storage);
+        bool write_something = (wr_itr != write_range.end());
+        std::string_view write_range_left{};
+        std::string_view write_range_right{};
+        if (write_something) {
+            write_range_left = std::get<0>(wr_itr->second);
+            write_range_right = std::get<1>(wr_itr->second);
+        }
+
+        // register wp result and remove wp
         if (Status::OK !=
             (*out.first)
                     ->get_wp_meta_ptr()
@@ -342,13 +357,11 @@ register_wp_result_and_remove_wps(session* ti, const bool was_committed,
     }
 }
 
-static inline void cleanup_process(session* const ti, const bool was_committed,
-                                   const bool write_something,
-                                   const std::string_view write_range_left,
-                                   const std::string_view write_range_right) {
+static inline void cleanup_process(
+        session* const ti, const bool was_committed,
+        std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
     // global effect
-    register_wp_result_and_remove_wps(ti, was_committed, write_something,
-                                      write_range_left, write_range_right);
+    register_wp_result_and_remove_wps(ti, was_committed, write_range);
     ongoing_tx::remove_id(ti->get_long_tx_id());
 
     // local effect
@@ -367,7 +380,8 @@ Status abort(session* const ti) { // NOLINT
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
     // clean up
-    cleanup_process(ti, false, false, "", "");
+    std::map<Storage, std::tuple<std::string, std::string>> dummy;
+    cleanup_process(ti, false, dummy);
     return Status::OK;
 }
 
@@ -672,11 +686,8 @@ extern Status commit(session* const ti) {
      * don't know the endpoint is nothing or null key.
      * So it needs boolean.
      */
-    bool write_something{false};
-    std::string write_range_left{};
-    std::string write_range_right{};
-    expose_local_write(ti, ctid, write_something, write_range_left,
-                       write_range_right);
+    std::map<Storage, std::tuple<std::string, std::string>> write_range;
+    expose_local_write(ti, ctid, write_range);
 
     // sequence process
     // This must be after cc commit and before log process
@@ -703,8 +714,7 @@ extern Status commit(session* const ti) {
     process_tx_state(ti, ti->get_valid_epoch());
 
     // clean up
-    cleanup_process(ti, true, write_something, write_range_left,
-                    write_range_right);
+    cleanup_process(ti, true, write_range);
 
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);
