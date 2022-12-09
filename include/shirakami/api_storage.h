@@ -36,7 +36,7 @@ extern Status create_storage(std::string_view key, Storage& storage,
 extern Status delete_storage(Storage storage);
 
 /**
- * @brief Get the storage storage handle by using key.
+ * @brief Get the storage handle by using key.
  * @param[in] key The key of the target storage handle.
  * @param[out] out The target storage handle. 
  * @return Status::OK success.

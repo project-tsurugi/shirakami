@@ -501,7 +501,8 @@ Status verify(session* const ti) {
             if (!(tid.get_latest() && tid.get_absent())) {
                 // someone interrupt tombstone
                 ti->set_result(reason_code::KVS_INSERT);
-                ti->get_result_info().set_key(rec_ptr->get_key_view());
+                ti->get_result_info().set_key_storage_name(
+                        rec_ptr->get_key_view(), wso.second.get_storage());
                 return Status::ERR_VALIDATION;
             }
         } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
@@ -509,11 +510,13 @@ Status verify(session* const ti) {
             // expect the record existing
             if (!(tid.get_latest() && !tid.get_absent())) {
                 if (wso.second.get_op() == OP_TYPE::UPDATE) {
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(reason_code::KVS_UPDATE);
                 } else {
                     ti->set_result(reason_code::KVS_DELETE);
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
                 }
                 return Status::ERR_VALIDATION;
             }
@@ -525,7 +528,8 @@ Status verify(session* const ti) {
         point_read_by_long* rbp{};
         rbp = &wso.first->get_point_read_by_long();
         if (rbp->is_exist(ti)) {
-            ti->get_result_info().set_key(rec_ptr->get_key_view());
+            ti->get_result_info().set_key_storage_name(
+                    rec_ptr->get_key_view(), wso.second.get_storage());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
@@ -533,7 +537,8 @@ Status verify(session* const ti) {
         // for stx
         if (ti->get_valid_epoch() <= rec_ptr->get_read_by().get_max_epoch()) {
             // this will break commited stx's read
-            ti->get_result_info().set_key(rec_ptr->get_key_view());
+            ti->get_result_info().set_key_storage_name(
+                    rec_ptr->get_key_view(), wso.second.get_storage());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
             return Status::ERR_VALIDATION;
         }
@@ -555,7 +560,8 @@ Status verify(session* const ti) {
 
                 // for long
                 if (rb) {
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
                     return Status::ERR_VALIDATION;
                 }
@@ -563,7 +569,8 @@ Status verify(session* const ti) {
                 // for short
                 range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
                 if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
                     return Status::ERR_VALIDATION;
                 }
@@ -598,7 +605,8 @@ Status verify_kvs_error(session* const ti) {
             if (!(tid.get_latest() && tid.get_absent())) {
                 // someone interrupt tombstone
                 ti->set_result(reason_code::KVS_INSERT);
-                ti->get_result_info().set_key(rec_ptr->get_key_view());
+                ti->get_result_info().set_key_storage_name(
+                        rec_ptr->get_key_view(), wso.get_storage());
                 return Status::ERR_FAIL_INSERT;
             }
         }

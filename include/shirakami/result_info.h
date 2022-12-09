@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "storage_options.h"
+
 namespace shirakami {
 
 /**
@@ -116,6 +118,14 @@ public:
 
     void set_key(std::string_view key) { key_ = key; }
 
+    [[nodiscard]] std::string_view get_storage_name() const {
+        return storage_name_;
+    }
+
+    void set_storage_name(std::string_view name) { storage_name_ = name; }
+
+    void set_key_storage_name(std::string_view key, Storage storage);
+
     // end: getter / setter
 private:
     reason_code reason_code_{};
@@ -127,6 +137,11 @@ private:
      * 
      */
     std::string key_{};
+
+    /**
+     * @brief The storage name of the key.
+     */
+    std::string storage_name_{};
 };
 
 } // namespace shirakami

@@ -72,12 +72,13 @@ Status abort(session* ti) { // NOLINT
     return Status::OK;
 }
 
-Status read_verify(session* ti, tid_word read_tid, tid_word check,
-                   Record* const rec_ptr) {
+Status read_verify(session* ti, Storage const storage, tid_word read_tid,
+                   tid_word check, Record* const rec_ptr) {
     if (read_tid.get_tid() != check.get_tid() ||
         read_tid.get_epoch() != check.get_epoch() || check.get_absent() ||
         (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
-        ti->get_result_info().set_key(rec_ptr->get_key_view());
+        ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
+                                                   storage);
         return Status::ERR_VALIDATION;
     }
     return Status::OK;
@@ -106,7 +107,8 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
 
         // verify
         // ==============================
-        if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
+        if (read_verify(ti, itr.get_storage(), itr.get_tid(), check, rec_ptr) !=
+            Status::OK) {
             unlock_write_set(ti);
             short_tx::abort(ti);
             ti->set_result(reason_code::CC_OCC_READ_VERIFY);
@@ -245,7 +247,8 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 // the record is existing record (not inserting, deleted)
                 rec_ptr->get_tidw_ref().unlock();
                 abort_process();
-                ti->get_result_info().set_key(rec_ptr->get_key_view());
+                ti->get_result_info().set_key_storage_name(
+                        rec_ptr->get_key_view(), wso_ptr->get_storage());
                 return Status::ERR_FAIL_INSERT;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
@@ -267,11 +270,13 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso_ptr->get_storage());
                     ti->set_result(reason_code::KVS_UPDATE);
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
                     ti->set_result(reason_code::KVS_DELETE);
-                    ti->get_result_info().set_key(rec_ptr->get_key_view());
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso_ptr->get_storage());
                 }
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }

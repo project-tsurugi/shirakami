@@ -84,6 +84,7 @@ TEST_F(long_scan_upsert_phantom_test, simple) { // NOLINT
     auto& rinfo = static_cast<session*>(s2)->get_result_info();
     ASSERT_EQ(rinfo.get_reason_code(), reason_code::CC_LTX_PHANTOM_AVOIDANCE);
     ASSERT_EQ(rinfo.get_key(), "2");
+    ASSERT_EQ(rinfo.get_storage_name(), "");
 
     // cleanup
     ASSERT_EQ(leave(s1), Status::OK);

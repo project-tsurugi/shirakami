@@ -111,6 +111,8 @@ TEST_F(simple_long_update_test,                   // NOLINT
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_UPDATE);
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_storage_name(),
+              "");
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

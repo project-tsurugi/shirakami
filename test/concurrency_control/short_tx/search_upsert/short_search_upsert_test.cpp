@@ -91,6 +91,7 @@ TEST_F(short_search_upsert, search_find_concurrent_upsert_at_commit) { // NOLINT
     auto& rinfo = static_cast<session*>(token_ar.at(1))->get_result_info();
     ASSERT_EQ(rinfo.get_reason_code(), reason_code::CC_OCC_READ_VERIFY);
     ASSERT_EQ(rinfo.get_key(), k);
+    ASSERT_EQ(rinfo.get_storage_name(), "");
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
