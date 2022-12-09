@@ -42,33 +42,25 @@ TEST_F(tx_id_test, simple) { // NOLINT
     // test
     ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(Status::OK, tx_begin({s1}));
-    tx_id out_id{};
+    std::string out_id{};
     ASSERT_EQ(Status::OK, get_tx_id(s, out_id));
-    ASSERT_EQ(out_id.get_higher_info(), 0);
-    ASSERT_EQ(out_id.get_session_id(), 0);
-    ASSERT_EQ(out_id.get_lower_info(), 2); // create_storage use 1.
+    LOG(INFO) << out_id;
     ASSERT_EQ(Status::OK, get_tx_id(s1, out_id));
-    ASSERT_EQ(out_id.get_higher_info(), 0);
     // different token has different session id.
-    ASSERT_EQ(out_id.get_session_id(), 1);
-    ASSERT_EQ(out_id.get_lower_info(), 1);
+    LOG(INFO) << out_id;
     ASSERT_EQ(Status::OK, commit(s));  // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(Status::OK, get_tx_id(s, out_id));
-    ASSERT_EQ(out_id.get_higher_info(), 0);
-    ASSERT_EQ(out_id.get_session_id(), 0);
     // This value is incremented each time a transaction is processed.
-    ASSERT_EQ(out_id.get_lower_info(), 3);
+    LOG(INFO) << out_id;
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, tx_begin({s}));
     ASSERT_EQ(Status::OK, get_tx_id(s, out_id));
-    ASSERT_EQ(out_id.get_higher_info(), 0);
-    ASSERT_EQ(out_id.get_session_id(), 0);
     // This value is incremented each time a transaction is processed.
-    ASSERT_EQ(out_id.get_lower_info(), 4);
+    LOG(INFO) << out_id;
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

@@ -13,6 +13,6 @@ namespace shirakami {
  * @return Status::WARN_NOT_BEGIN The transaction is not begun.
  * @note If the token is invalid, this cause undefined behavior.
  */
-Status get_tx_id(Token token, tx_id& tx_id);
+Status get_tx_id(Token token, std::string& tx_id);
 
 } // namespace shirakami
