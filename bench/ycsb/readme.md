@@ -11,13 +11,13 @@ Please do appropriate build (ex. release-build). If you do benchmarking with
 cd [/path/to/project_root]
 mkdir build-release
 cd build-release
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_PWAL=OFF ..
+ninja
 ```
 
 ## Running example
 ```sh
-cd [/path/to/project_root]
-cd [/path/to/release_build]/bench
+cd [/path/to/release_build]/bench/ycsb
 ./ycsb
 
 ```
