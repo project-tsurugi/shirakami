@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+#include <string>
 #include <string_view>
 
 #include "storage_options.h"
