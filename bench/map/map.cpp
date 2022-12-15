@@ -27,6 +27,8 @@
 #include "random.h"
 #include "tsc.h"
 
+#include "shirakami/logging.h"
+
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
@@ -37,17 +39,20 @@ using namespace shirakami;
 /**
  * general option.
  */
-DEFINE_uint64(                                                              // NOLINT
-        cpumhz, 2100,                                                       // NOLINT
-        "# cpu MHz of execution environment. It is used measuring some "    // NOLINT
-        "time.");                                                           // NOLINT
-DEFINE_uint64(elem_num, 5 * 1000 * 1000, "Insert # elements to some map."); // NOLINT
+DEFINE_uint64(        // NOLINT
+        cpumhz, 2100, // NOLINT
+        "# cpu MHz of execution environment. It is used measuring some " // NOLINT
+        "time."); // NOLINT
+DEFINE_uint64(elem_num, 5 * 1000 * 1000,
+              "Insert # elements to some map."); // NOLINT
 
 static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         LOG(INFO) << "FLAGS_cpumhz : " << FLAGS_cpumhz;
     } else {
-        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring some time. It must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "CPU MHz of execution environment. It is used measuring "
+                      "some time. It must be larger than 0.";
     }
     LOG(INFO) << "Fin load_flags()";
 }
@@ -55,39 +60,37 @@ static void load_flags() {
 void std_map_bench(const std::vector<std::uint64_t>& data) {
     std::map<std::uint64_t, std::uint64_t> std_map;
     std::uint64_t begin{rdtscp()};
-    for (auto&& elem : data) {
-        std_map[elem] = elem;
-    }
+    for (auto&& elem : data) { std_map[elem] = elem; }
     std::uint64_t end{rdtscp()};
-    std::cout << "std_map_throughput[ops/us]:\t" << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000) << std::endl; // NOLINT
+    std::cout << "std_map_throughput[ops/us]:\t"
+              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
+              << std::endl; // NOLINT
 }
 
 void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
     std::unordered_map<std::uint64_t, std::uint64_t> map;
     std::uint64_t begin{rdtscp()};
-    for (auto&& elem : data) {
-        map[elem] = elem;
-    }
+    for (auto&& elem : data) { map[elem] = elem; }
     std::uint64_t end{rdtscp()};
-    std::cout << "std_unordered_map_throughput[ops/us]:\t" << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000) << std::endl; // NOLINT
+    std::cout << "std_unordered_map_throughput[ops/us]:\t"
+              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
+              << std::endl; // NOLINT
 }
 
 void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
     tsl::hopscotch_map<std::uint64_t, std::uint64_t> map;
     std::uint64_t begin{rdtscp()};
-    for (auto&& elem : data) {
-        map[elem] = elem;
-    }
+    for (auto&& elem : data) { map[elem] = elem; }
     std::uint64_t end{rdtscp()};
-    std::cout << "hopscotch_map_throughput[ops/us]:\t" << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000) << std::endl; // NOLINT
+    std::cout << "hopscotch_map_throughput[ops/us]:\t"
+              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
+              << std::endl; // NOLINT
 }
 
 void prepare_data(std::vector<std::uint64_t>& data) {
     data.clear();
     data.reserve(FLAGS_elem_num);
-    for (std::size_t i = 0; i < FLAGS_elem_num; ++i) {
-        data.emplace_back(i);
-    }
+    for (std::size_t i = 0; i < FLAGS_elem_num; ++i) { data.emplace_back(i); }
     std::random_device seed_gen;
     std::mt19937 engine(seed_gen());
     std::shuffle(data.begin(), data.end(), engine);
@@ -95,7 +98,8 @@ void prepare_data(std::vector<std::uint64_t>& data) {
 
 int main(int argc, char* argv[]) { // NOLINT
     google::InitGoogleLogging("shirakami-bench-map");
-    gflags::SetUsageMessage(static_cast<const std::string&>("Map benchmark")); // NOLINT
+    gflags::SetUsageMessage(
+            static_cast<const std::string&>("Map benchmark")); // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     load_flags();
 

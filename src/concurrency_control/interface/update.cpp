@@ -31,7 +31,7 @@ static void process_before_return_not_found(session* const ti,
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << "unexpected error";
+            LOG(ERROR) << log_location_prefix << "unexpected error";
             return;
         }
         // get range read  by info

@@ -107,7 +107,9 @@ static void invoke_leader() {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(FLAGS_duration) != 0) { LOG(FATAL) << "sleep error."; }
+    if (sleep(FLAGS_duration) != 0) {
+        LOG(ERROR) << log_location_prefix << "sleep error.";
+    }
 #endif
     storeRelease(quit, true);
     printf("stop ycsb exp.\n"); // NOLINT
@@ -129,13 +131,15 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(FATAL) << "CPU MHz of execution environment. It is used measuring "
+        LOG(ERROR) << log_location_prefix
+                   << "CPU MHz of execution environment. It is used measuring "
                       "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (FLAGS_key_length > 0) {
         printf("FLAGS_key_length : %zu\n", FLAGS_key_length); // NOLINT
@@ -143,37 +147,42 @@ static void load_flags() {
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        LOG(FATAL) << "Number of operations in a transaction must be larger "
+        LOG(ERROR) << log_location_prefix
+                   << "Number of operations in a transaction must be larger "
                       "than 0.";
     }
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        LOG(FATAL)
+        LOG(ERROR)
                 << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        LOG(FATAL) << "Rate of reads in a transaction must be in the range 0 "
+        LOG(ERROR) << log_location_prefix
+                   << "Rate of reads in a transaction must be in the range 0 "
                       "to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        LOG(FATAL) << "Access skew of transaction must be in the range 0 to "
+        LOG(ERROR) << log_location_prefix
+                   << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        LOG(FATAL) << "Number of threads must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "Number of threads must be larger than 0.";
     }
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        LOG(FATAL) << "Length of val must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "Length of val must be larger than 0.";
     }
 
     std::cout << "batch options" << std::endl;
@@ -254,7 +263,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 gen_tx_scan(opr_set, FLAGS_key_length, FLAGS_record,
                             FLAGS_scan_elem_num, rnd, zipf);
             } else {
-                LOG(FATAL) << "fatal error";
+                LOG(ERROR) << log_location_prefix << "fatal error";
             }
         } else {
             gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops,

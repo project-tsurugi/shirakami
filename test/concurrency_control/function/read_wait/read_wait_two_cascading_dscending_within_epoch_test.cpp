@@ -130,12 +130,14 @@ TEST_F(read_wait_two_cascading_dscending_within_epoch_test, // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
     auto tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(),
+              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
     tri = transaction_result_info(s.at(4));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(),
+              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::OK, commit(s.at(5)));
 
     // verify

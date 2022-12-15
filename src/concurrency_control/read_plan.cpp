@@ -19,7 +19,7 @@ Status check_list(std::set<Storage> const& target_list,
         if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_INVALID_ARGS; }
         // rc must be Status::OK
         if (rc != Status::OK) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return Status::ERR_FATAL;
         }
         out_list.insert(out);

@@ -19,7 +19,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
                                   "scan-c_read_key_from_scan_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {
@@ -55,8 +55,9 @@ TEST_F(simple_scan, test_after_delete_api) { // NOLINT
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
         ASSERT_EQ(Status::OK, commit(s));
         ScanHandle hd{};
-        ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "",
-                                        scan_endpoint::INF, hd));
+        ASSERT_EQ(Status::WARN_NOT_FOUND,
+                  open_scan(s, st, "", scan_endpoint::INF, "",
+                            scan_endpoint::INF, hd));
     }
     ASSERT_EQ(Status::OK, leave(s));
 }

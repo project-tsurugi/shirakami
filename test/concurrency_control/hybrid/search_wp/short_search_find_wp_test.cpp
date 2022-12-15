@@ -51,7 +51,9 @@ TEST_F(search_wp, short_search_find_wp) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("", st));
     ASSERT_EQ(Status::OK, enter(short_s));
     ASSERT_EQ(Status::OK, enter(long_s));
-    ASSERT_EQ(Status::OK, tx_begin({long_s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK, tx_begin({long_s,
+                                    transaction_options::transaction_type::LONG,
+                                    {st}}));
     wait_change_epoch(); // valid ^^ wp.
     std::string vb{};
     ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,

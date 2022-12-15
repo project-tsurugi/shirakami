@@ -5,6 +5,7 @@
 
 #include "index/yakushima/include/scheme.h"
 
+#include "shirakami/logging.h"
 #include "shirakami/storage_options.h"
 
 #include "yakushima/include/kvs.h"
@@ -29,7 +30,7 @@ Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
     if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG(ERROR) << "programming error";
+    LOG(ERROR) << log_location_prefix << "programming error";
     return Status::ERR_FATAL;
 }
 
@@ -98,7 +99,7 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
         return Status::WARN_NOT_FOUND;
     }
     if (rc == yakushima::status::OK) { return Status::OK; }
-    LOG(ERROR) << "programming error: " << rc;
+    LOG(ERROR) << log_location_prefix << "programming error: " << rc;
     return Status::ERR_FATAL;
 }
 

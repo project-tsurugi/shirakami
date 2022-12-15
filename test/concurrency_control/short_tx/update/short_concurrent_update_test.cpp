@@ -48,7 +48,9 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             while (res == Status::WARN_CONCURRENT_UPDATE) {
                 res = search_key(s, storage, k, vb);
             }
-            if (res != Status::OK) { LOG(FATAL) << "fatal error"; }
+            if (res != Status::OK) {
+                LOG(ERROR) << log_location_prefix << "fatal error";
+            }
             ASSERT_NE("", vb);
             v = *reinterpret_cast<std::int64_t*>( // NOLINT
                     const_cast<char*>(vb.data()));

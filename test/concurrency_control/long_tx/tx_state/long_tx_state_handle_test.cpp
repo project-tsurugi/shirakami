@@ -31,10 +31,11 @@ private:
 };
 
 // running two testcases below consecutively caused acquiring same state handle
-TEST_F(long_tx_state_handle_test, preparation) {  // NOLINT
+TEST_F(long_tx_state_handle_test, preparation) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG}));
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxStateHandle hd2{};
@@ -45,13 +46,15 @@ TEST_F(long_tx_state_handle_test, preparation) {  // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_tx_state_handle_test, tx_begin_from_different_session) {  // NOLINT
+TEST_F(long_tx_state_handle_test, tx_begin_from_different_session) { // NOLINT
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     TxStateHandle hd1{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s1, hd1));
     TxStateHandle hd2{};

@@ -11,6 +11,7 @@
 #include "random.h"
 #include "zipf.h"
 
+#include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 
 namespace shirakami {
@@ -111,7 +112,9 @@ static void gen_tx_scan(std::vector<opr_obj>& opr_set,
     opr_set.clear();
     uint64_t key_l_nm = zipf() % (tpnm - scan_elem_n + 1);
     uint64_t key_r_nm = key_l_nm + (scan_elem_n - 1);
-    if (key_r_nm >= tpnm) { LOG(FATAL) << "fatal error"; }
+    if (key_r_nm >= tpnm) {
+        LOG(ERROR) << log_location_prefix << "fatal error";
+    }
     opr_set.emplace_back(OP_TYPE::SCAN, make_key(key_len, key_l_nm),
                          make_key(key_len, key_r_nm));
 }

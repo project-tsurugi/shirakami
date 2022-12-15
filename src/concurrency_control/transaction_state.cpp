@@ -41,7 +41,7 @@ Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
             ts.set_kind(TxState::StateKind::STARTED);
         }
     } else {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
 
@@ -78,7 +78,7 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             }
 #else
             // if no logging, it must not be waiting_durable status
-            LOG(ERROR) << "unexpected path";
+            LOG(ERROR) << log_location_prefix << "unexpected path";
             return Status::ERR_FATAL;
 #endif
         }
@@ -101,7 +101,7 @@ Status tx_check(TxStateHandle handle, TxState& out) {
             }
 #else
             // if no logging, it must not be waiting_durable status
-            LOG(ERROR) << "unexpected path";
+            LOG(ERROR) << log_location_prefix << "unexpected path";
             return Status::ERR_FATAL;
 #endif
         }

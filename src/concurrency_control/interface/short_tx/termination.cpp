@@ -87,7 +87,7 @@ Status read_verify(session* ti, Storage const storage, tid_word read_tid,
 Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
-    if (rc != Status::OK) { LOG(FATAL); }
+    if (rc != Status::OK) { LOG(ERROR); }
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep != 0 && find_min_ep <= commit_epoch) {
@@ -281,7 +281,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_WRITE_TO_DELETED_RECORD;
             }
         } else {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return Status::ERR_FATAL;
         }
     }
@@ -352,7 +352,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             default: {
-                LOG(ERROR) << "impossible code path.";
+                LOG(ERROR) << log_location_prefix << "impossible code path.";
                 return Status::ERR_FATAL;
             }
         }
@@ -381,7 +381,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             default: {
-                LOG(ERROR) << "programming error";
+                LOG(ERROR) << log_location_prefix << "programming error";
                 return Status::ERR_FATAL;
             }
         }
@@ -414,7 +414,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
         auto rc{process(&elem)};
         if (rc == Status::OK) { continue; }
         if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-        LOG(ERROR) << "impossible code path.";
+        LOG(ERROR) << log_location_prefix << "impossible code path.";
         return Status::ERR_FATAL;
     }
 
@@ -523,7 +523,7 @@ extern Status commit(session* const ti) {
     rc = write_phase(ti, ce);
     if (rc != Status::OK) {
         if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-        LOG(ERROR) << "impossible code path.";
+        LOG(ERROR) << log_location_prefix << "impossible code path.";
         return Status::ERR_FATAL;
     }
 

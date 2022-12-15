@@ -452,13 +452,13 @@ TEST_F(cascading_4tx_uncycled_2_test, all) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK,
-              search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+              search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
@@ -503,12 +503,11 @@ TEST_F(cascading_4tx_uncycled_2_test, all) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK,
-              search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
     ASSERT_EQ(buf, v.at(0));
-    ASSERT_EQ(
-            Status::OK,
-            tx_begin({s.at(4), transaction_options::transaction_type::LONG, {stb}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(4),
+                                    transaction_options::transaction_type::LONG,
+                                    {stb}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));

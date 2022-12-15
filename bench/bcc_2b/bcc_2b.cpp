@@ -142,7 +142,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }
-                    if (rc == Status::WARN_NOT_FOUND) { LOG(FATAL); }
+                    if (rc == Status::WARN_NOT_FOUND) { LOG(ERROR); }
                     if (rc == Status::OK || rc == Status::ERR_VALIDATION) {
                         break;
                     }
@@ -155,7 +155,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     goto RETRY; // NOLINT
                 }
             } else {
-                LOG(FATAL) << "unkown operation";
+                LOG(ERROR) << log_location_prefix << "unkown operation";
             }
             if (rc == Status::ERR_VALIDATION) {
                 ++ct_abort;
@@ -207,7 +207,9 @@ void invoke_leader() {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(FLAGS_duration) != 0) { LOG(FATAL) << "sleep error."; }
+    if (sleep(FLAGS_duration) != 0) {
+        LOG(ERROR) << log_location_prefix << "sleep error.";
+    }
 #endif
     storeRelease(quit, true);
     LOG(INFO) << "stop ycsb exp.";

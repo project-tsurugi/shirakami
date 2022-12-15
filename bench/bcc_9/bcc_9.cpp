@@ -96,16 +96,19 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                     if (rc == Status::WARN_CONCURRENT_UPDATE) {
                         rc = search_key(token, get_st(), itr.get_key(), vb);
                     } else {
-                        LOG(FATAL) << "ec: " << rc << std::endl;
+                        LOG(ERROR) << log_location_prefix << "ec: " << rc
+                                   << std::endl;
                     }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 auto rc{update(token, get_st(), itr.get_key(),
                                std::string(val_size, '0'))};
 
-                if (rc != Status::OK) { LOG(FATAL) << rc; }
+                if (rc != Status::OK) {
+                    LOG(ERROR) << log_location_prefix << rc;
+                }
             } else {
-                LOG(FATAL) << "unkown operation";
+                LOG(ERROR) << log_location_prefix << "unkown operation";
             }
         }
 
@@ -138,7 +141,9 @@ void invoke_leader() {
     LOG(INFO) << "start exp.";
     storeRelease(start, true);
 
-    if (sleep(FLAGS_d) != 0) { LOG(FATAL) << "sleep error."; }
+    if (sleep(FLAGS_d) != 0) {
+        LOG(ERROR) << log_location_prefix << "sleep error.";
+    }
 
     storeRelease(quit, true);
     LOG(INFO) << "stop exp.";

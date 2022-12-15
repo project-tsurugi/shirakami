@@ -304,7 +304,7 @@ public:
 
     void process_before_finish_step() {
         if (!get_operating()) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
         } else {
             set_operating(false);
         }

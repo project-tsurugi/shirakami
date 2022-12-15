@@ -90,7 +90,10 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
 
         for (;;) {
             if (bt) {
-                ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {storage}}), Status::OK);
+                ASSERT_EQ(tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {storage}}),
+                          Status::OK);
             }
             for (auto&& elem : keys) {
                 for (;;) {
@@ -107,7 +110,8 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                             ASSERT_EQ(bt, false); // fail only short
                             goto SHORT_TX_RETRY;  // NOLINT
                         } else {
-                            LOG(FATAL) << rc << " " << bt;
+                            LOG(ERROR)
+                                    << log_location_prefix << rc << " " << bt;
                         }
                     }
                     std::size_t v{};

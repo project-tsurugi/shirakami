@@ -120,7 +120,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
         if (tx_begin({token, // NOLINT
                       transaction_options::transaction_type::LONG,
                       st_list_unique}) != Status::OK) {
-            LOG(FATAL);
+            LOG(ERROR);
         }
 
     RETRY: // NOLINT
@@ -137,15 +137,16 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     ++st_ct;
                 }
                 if (rc != Status::OK) {
-                    LOG(FATAL) << "ec: " << rc << std::endl;
+                    LOG(ERROR)
+                            << log_location_prefix << "ec: " << rc << std::endl;
                 }
             } else {
-                LOG(FATAL) << "unkown operation";
+                LOG(ERROR) << log_location_prefix << "unkown operation";
             }
         }
 
         if (commit(token) != Status::OK) { // NOLINT
-            LOG(FATAL) << "unreachable path.";
+            LOG(ERROR) << log_location_prefix << "unreachable path.";
         }
         ++ct_commit;
     }
@@ -173,7 +174,9 @@ void invoke_leader() {
     LOG(INFO) << "start exp.";
     storeRelease(start, true);
 
-    if (sleep(FLAGS_d) != 0) { LOG(FATAL) << "sleep error."; }
+    if (sleep(FLAGS_d) != 0) {
+        LOG(ERROR) << log_location_prefix << "sleep error.";
+    }
 
     storeRelease(quit, true);
     LOG(INFO) << "stop exp.";

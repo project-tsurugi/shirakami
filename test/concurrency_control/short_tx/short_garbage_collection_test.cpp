@@ -61,7 +61,7 @@ TEST_F(c_garbage_collection_test, key_gc_delete_by_short) { // NOLINT
         if (rc == Status::OK) {
             _mm_pause();
         } else {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
         }
     }
 

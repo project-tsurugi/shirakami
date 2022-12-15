@@ -22,7 +22,8 @@ limestone::api::log_channel*
 create_channel(limestone::api::datastore* ds,
                boost::filesystem::path const& location);
 
-std::unique_ptr<limestone::api::snapshot> get_snapshot(limestone::api::datastore* ds);
+std::unique_ptr<limestone::api::snapshot>
+get_snapshot(limestone::api::datastore* ds);
 
 void ready(limestone::api::datastore* ds);
 

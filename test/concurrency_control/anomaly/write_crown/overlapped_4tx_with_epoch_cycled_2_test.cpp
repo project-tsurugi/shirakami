@@ -29,7 +29,8 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class overlapped_4tx_with_epoch_cycled_2_test : public ::testing::Test { // NOLINT
+class overlapped_4tx_with_epoch_cycled_2_test
+    : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
@@ -50,7 +51,7 @@ private:
 };
 
 TEST_F(overlapped_4tx_with_epoch_cycled_2_test, all) { // NOLINT
-                                                     // create table
+                                                       // create table
     // ==========
     // prepare
     Storage sta{};

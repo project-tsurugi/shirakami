@@ -68,7 +68,7 @@ void create_storages_and_upsert_one_record() {
     ASSERT_EQ(Status::OK, tx_begin(s));
     // data creation
     ASSERT_EQ(Status::OK, upsert(s, t0, "a", "a")); // (*1)
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));               // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
     Storage st{};
@@ -77,7 +77,7 @@ void create_storages_and_upsert_one_record() {
 }
 
 TEST_F(limestone_integration_single_recovery_regression_test, // NOLINT
-       check_storage_operation_after_recovery) {               // NOLINT
+       check_storage_operation_after_recovery) {              // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -101,7 +101,7 @@ TEST_F(limestone_integration_single_recovery_regression_test, // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, t0, "a", vb));
     ASSERT_EQ("a", vb);
-    ASSERT_EQ(Status::OK, commit(s));             // NOLINT
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
     fin();
 }

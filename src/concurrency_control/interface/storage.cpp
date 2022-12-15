@@ -34,14 +34,14 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(payload);
     auto ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unreachable path";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     if (commit(s) == Status::OK) {
         leave(s);
         return;
     } // else
-    LOG(ERROR) << "unreachable path";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
 }
 
 Status remove_storage_metadata([[maybe_unused]] Storage st,
@@ -105,9 +105,9 @@ Status storage_get_options(Storage storage, storage_option& options) {
     for (;;) {
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
-            LOG(ERROR) << "unreachable path: " << s << ", "
-                       << storage::meta_storage << ", " << key << ", " << value
-                       << ret;
+            LOG(ERROR) << log_location_prefix << "unreachable path: " << s
+                       << ", " << storage::meta_storage << ", " << key << ", "
+                       << value << ret;
             return Status::ERR_FATAL;
         }
         if (commit(s) == Status::OK) { break; } // NOLINT
@@ -157,14 +157,14 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     // store and log information
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "invalid use";
+        LOG(ERROR) << log_location_prefix << "invalid use";
         return Status::ERR_FATAL;
     }
     if (commit(s) == Status::OK) {
         leave(s);
         return Status::OK;
     } // else
-    LOG(ERROR) << "unreachable path";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
 }
 
@@ -178,7 +178,7 @@ Status storage::register_storage(Storage storage, storage_option options) {
         return Status::WARN_ALREADY_EXISTS;
     }
     if (rc != yakushima::status::OK) {
-        LOG(ERROR) << "programming error.";
+        LOG(ERROR) << log_location_prefix << "programming error.";
         return Status::ERR_FATAL;
     }
 
@@ -197,12 +197,12 @@ Status storage::register_storage(Storage storage, storage_option options) {
                 storage_view, &page_set_meta_ptr,
                 sizeof(page_set_meta_ptr)); // NOLINT
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
             return Status::ERR_FATAL_INDEX;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
             return Status::ERR_FATAL_INDEX;
         }
     }
@@ -317,7 +317,7 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
-            LOG(ERROR) << "missing error" << std::endl
+            LOG(ERROR) << log_location_prefix << "missing error" << std::endl
                        << " " << page_set_meta_storage << " " << storage
                        << std::endl;
             return Status::ERR_FATAL;
@@ -329,18 +329,18 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
             return Status::ERR_FATAL;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
             return Status::ERR_FATAL;
         }
     }
     auto rc = yakushima::delete_storage(storage_view);
     if (yakushima::status::OK != rc) { // NOLINT
-        LOG(ERROR) << rc;
+        LOG(ERROR) << log_location_prefix << rc;
         return Status::ERR_FATAL;
     }
 
@@ -351,7 +351,8 @@ Status storage::list_storage(std::vector<Storage>& out) {
     std::vector<std::pair<std::string, yakushima::tree_instance*>> rec;
     yakushima::list_storages(rec);
     if (rec.empty()) {
-        LOG(ERROR) << "There must be wp meta storage at least.";
+        LOG(ERROR) << log_location_prefix
+                   << "There must be wp meta storage at least.";
         return Status::ERR_FATAL;
     }
     out.clear();
@@ -375,17 +376,25 @@ void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
 
 void storage::init_meta_storage() {
     auto ret = storage::register_storage(storage::meta_storage);
-    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "programming error";
+    }
     ret = storage::register_storage(storage::sequence_storage);
-    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "programming error";
+    }
 }
 
 void storage::fin() {
     // clear meta storage
     auto ret = storage::delete_storage(storage::meta_storage);
-    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "programming error";
+    }
     ret = storage::delete_storage(storage::sequence_storage);
-    if (ret != Status::OK) { LOG(ERROR) << "programming error"; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "programming error";
+    }
 
     // clear key storage map
     storage::key_handle_map_clear();

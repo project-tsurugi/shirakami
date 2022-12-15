@@ -25,7 +25,8 @@ namespace shirakami {
     for (auto&& elem : storage_list) {
         if (elem != wp::get_page_set_meta_storage()) {
             if (delete_storage(elem) != Status::OK) {
-                LOG(ERROR) << "try delete_storage(" << elem << ")";
+                LOG(ERROR) << log_location_prefix << "try delete_storage("
+                           << elem << ")";
                 return Status::ERR_FATAL;
             }
         }
@@ -77,7 +78,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         ti->get_write_set().erase(wso);
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
-    LOG(ERROR) << "unknown code path";
+    LOG(ERROR) << log_location_prefix << "unknown code path";
     return Status::ERR_FATAL;
 }
 
@@ -94,7 +95,7 @@ static void process_before_return_not_found(session* const ti,
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << "unexpected error";
+            LOG(ERROR) << log_location_prefix << "unexpected error";
             return;
         }
         // get range read  by info
@@ -157,7 +158,7 @@ Status delete_record(Token token, Storage storage,
         ti->process_before_finish_step();
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG(ERROR) << "unexpected error: " << rc;
+    LOG(ERROR) << log_location_prefix << "unexpected error: " << rc;
     ti->process_before_finish_step();
     return Status::ERR_FATAL;
 }

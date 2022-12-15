@@ -10,19 +10,24 @@
 
 #include "concurrency_control/include/garbage.h"
 
+#include "shirakami/logging.h"
+
 #include "glog/logging.h"
+
+using namespace shirakami;
 
 void check_flags() {
     std::cout << "general options" << std::endl;
     if (FLAGS_th >= 1) {
         std::cout << "FLAGS_th:\t" << FLAGS_th << std::endl;
     } else {
-        LOG(FATAL) << "error about setting FLAGS_th.";
+        LOG(ERROR) << log_location_prefix << "error about setting FLAGS_th.";
     }
     if (FLAGS_d >= 1) {
         printf("FLAGS_d : %zu\n", FLAGS_d); // NOLINT
     } else {
-        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "Duration of benchmark in seconds must be larger than 0.";
     }
 
     printf("Fin check_flags()\n"); // NOLINT

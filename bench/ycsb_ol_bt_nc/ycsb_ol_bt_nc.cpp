@@ -179,7 +179,9 @@ void invoke_leader() {
         sleepMs(1000);  // NOLINT
     }
 #else
-    if (sleep(FLAGS_duration) != 0) { LOG(FATAL) << "sleep error."; }
+    if (sleep(FLAGS_duration) != 0) {
+        LOG(ERROR) << log_location_prefix << "sleep error.";
+    }
 #endif
     storeRelease(quit, true);
     printf("stop ycsb exp.\n"); // NOLINT

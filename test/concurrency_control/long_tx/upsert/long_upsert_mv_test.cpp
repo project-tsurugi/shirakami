@@ -53,14 +53,16 @@ TEST_F(long_upsert_mv_test, new_epoch_new_version) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"K"};
     std::string first_v{"v"};
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, first_v), Status::OK);
     ASSERT_EQ(commit(s), Status::OK);
     wait_epoch_update();
     std::string second_v{"v2"};
     // Writing after the epoch has changed should be the new version.
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st, k, second_v), Status::OK);
     ASSERT_EQ(commit(s), Status::OK);

@@ -44,7 +44,7 @@ void bg_commit::register_tx(Token token) {
     auto* ti = static_cast<session*>(token);
     // check from long
     if (ti->get_tx_type() != transaction_options::transaction_type::LONG) {
-        LOG(ERROR) << "unexpected error";
+        LOG(ERROR) << log_location_prefix << "unexpected error";
         return;
     }
 
@@ -55,7 +55,7 @@ void bg_commit::register_tx(Token token) {
                 std::make_tuple(ti->get_long_tx_id(), token));
         if (!ret.second) {
             // already exist
-            LOG(ERROR) << "unexpected error";
+            LOG(ERROR) << log_location_prefix << "unexpected error";
         }
     }
 }
@@ -75,7 +75,7 @@ void bg_commit::worker() {
                             transaction_options::transaction_type::LONG ||
                     !ti->get_requested_commit()) {
                     // not long or not requested commit.
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                     return;
                 }
 

@@ -46,7 +46,7 @@ void sequence::init() {
 Status sequence::generate_sequence_id(SequenceId& id) {
     id = id_generator_ctr().fetch_add(1);
     if (id == sequence::max_sequence_id) {
-        LOG(ERROR) << "sequence id depletion";
+        LOG(ERROR) << log_location_prefix << "sequence id depletion";
         return Status::ERR_FATAL;
     }
     return Status::OK;
@@ -94,7 +94,7 @@ Status sequence::sequence_map_check_exist(SequenceId id) {
     } // found
 
     if (found_id_itr->second.empty()) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     } // not empty
 
@@ -132,7 +132,7 @@ Status sequence::sequence_map_push(SequenceId const id,
                 std::make_pair(epoch, std::make_tuple(version, value)));
         if (!ret2.second) {
             // This object must be operated by here.
-            LOG(ERROR) << "unexpected behavior";
+            LOG(ERROR) << log_location_prefix << "unexpected behavior";
             return Status::ERR_FATAL;
         }
         return Status::OK;
@@ -201,7 +201,7 @@ Status sequence::sequence_map_update(SequenceId const id,
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
     if (found_id_itr == sequence::sequence_map().end()) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     } // found
 
@@ -236,14 +236,14 @@ Status sequence::create_sequence(SequenceId* id) {
     // generate sequence id
     auto ret = sequence::generate_sequence_id(*id);
     if (ret == Status::ERR_FATAL) {
-        LOG(ERROR) << "unexpected error";
+        LOG(ERROR) << log_location_prefix << "unexpected error";
         return ret;
     }
 
     // generate sequence object
     ret = sequence::sequence_map_push(*id);
     if (ret == Status::WARN_ALREADY_EXISTS) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
 
@@ -267,19 +267,19 @@ Status sequence::create_sequence(SequenceId* id) {
                  sizeof(initial_value));
     ret = upsert(token, storage::sequence_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
     ret = commit(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
 
     // cleanup transaction handle
     ret = leave(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
 
@@ -322,7 +322,7 @@ Status sequence::read_sequence(SequenceId const id,
     auto ret = sequence::sequence_map_find(id, epoch, out);
     if (ret == Status::WARN_NOT_FOUND) { return ret; }
     if (ret != Status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
 
@@ -350,7 +350,7 @@ Status sequence::delete_sequence(SequenceId const id) {
         return ret;
     }
     if (ret != Status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
 
@@ -374,12 +374,12 @@ Status sequence::delete_sequence(SequenceId const id) {
                      sizeof(value));
     ret = upsert(token, storage::sequence_storage, key, new_value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
     ret = commit(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
 
@@ -387,14 +387,14 @@ Status sequence::delete_sequence(SequenceId const id) {
     auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
     ret = sequence::sequence_map_update(id, epoch, version, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
 
     // cleanup transaction handle
     ret = leave(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior";
         return Status::ERR_FATAL;
     }
 

@@ -14,6 +14,8 @@
 
 #endif
 
+#include "shirakami/logging.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::epoch {
@@ -37,7 +39,8 @@ void epoch_thread_work() {
             for (;;) {
                 auto ptp{epoch::get_perm_to_proc()};
                 if (ptp < -1) {
-                    LOG(ERROR) << "programming error";
+                    LOG(ERROR) << log_location_prefix << log_location_prefix
+                               << "programming error";
                     return;
                 }
                 if (ptp == -1) {

@@ -75,12 +75,12 @@ Status tx_begin(transaction_options options) { // NOLINT
     } else if (tx_type == transaction_options::transaction_type::READ_ONLY) {
         auto rc{read_only_tx::tx_begin(ti)};
         if (rc != Status::OK) {
-            LOG(ERROR) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
             ti->process_before_finish_step();
             return rc;
         }
     } else {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
     ti->set_tx_type(tx_type);

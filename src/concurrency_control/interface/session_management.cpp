@@ -61,7 +61,8 @@ Status leave(Token const token) { // NOLINT
                         // check truly from ltx
                         if (itr.get_tx_type() !=
                             transaction_options::transaction_type::LONG) {
-                            LOG(ERROR) << "unexpected error";
+                            LOG(ERROR) << log_location_prefix
+                                       << "unexpected error";
                         }
                         // the ltx commit was submitted, wait result.
                         do {

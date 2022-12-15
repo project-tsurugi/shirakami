@@ -11,4 +11,4 @@ namespace shirakami::epoch {
 
 [[maybe_unused]] extern void invoke_epoch_thread();
 
-} // namespace shirakami;
+} // namespace shirakami::epoch

@@ -8,14 +8,19 @@
 
 #include "memory.h"
 
+#include "shirakami/logging.h"
+
 #include "glog/logging.h"
+
+using namespace shirakami;
 
 void check_flags() {
     std::cout << "general options" << std::endl;
     if (FLAGS_d >= 1) {
         printf("FLAGS_d :\t%zu\n", FLAGS_d); // NOLINT
     } else {
-        LOG(FATAL) << "Duration of benchmark in seconds must be larger than 0.";
+        LOG(ERROR) << log_location_prefix
+                   << "Duration of benchmark in seconds must be larger than 0.";
     }
     std::cout << "FLAGS_skew:\t" << FLAGS_skew << std::endl;
     std::cout << "FLAGS_tx_size:\t" << FLAGS_tx_size << std::endl;

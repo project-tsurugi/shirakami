@@ -40,7 +40,7 @@ Status ongoing_tx::change_epoch_without_lock(
         }
     }
     if (exist_id && !exist_need_id) { return Status::WARN_NOT_FOUND; }
-    LOG(ERROR) << "programming error";
+    LOG(ERROR) << log_location_prefix << "programming error";
     return Status::ERR_FATAL;
 }
 
@@ -82,7 +82,8 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                         break; // todo error handling
                     }
                     if (rc != Status::OK) {
-                        LOG(ERROR) << "programming error";
+                        LOG(ERROR)
+                                << log_location_prefix << "programming error";
                         break;
                     }
                     // check plist
@@ -147,7 +148,7 @@ void ongoing_tx::remove_id(std::size_t id) {
     } else {
         set_lowest_epoch(lep);
     }
-    if (!erased) { LOG(ERROR) << "programming error."; }
+    if (!erased) { LOG(ERROR) << log_location_prefix << "programming error."; }
 }
 
 } // namespace shirakami

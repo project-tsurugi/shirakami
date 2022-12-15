@@ -41,16 +41,20 @@ TEST_F(read_only_tx_begin_test, tx_begin_read_only_and_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION,
-              tx_begin({s, transaction_options::transaction_type::READ_ONLY, {st}}));
+              tx_begin({s,
+                        transaction_options::transaction_type::READ_ONLY,
+                        {st}}));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(read_only_tx_begin_test, double_tx_begin) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     wait_epoch_update();
-    ASSERT_EQ(Status::WARN_ALREADY_BEGIN, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::WARN_ALREADY_BEGIN,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -62,13 +66,16 @@ TEST_F(read_only_tx_begin_test, tx_begin_SS_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, enter(s3));
 
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
     LOG(INFO) << static_cast<session*>(s1)->get_valid_epoch();
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     LOG(INFO) << static_cast<session*>(s2)->get_valid_epoch();
     wait_epoch_update();
-    ASSERT_EQ(Status::OK, tx_begin({s3, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s3, transaction_options::transaction_type::READ_ONLY}));
     LOG(INFO) << static_cast<session*>(s3)->get_valid_epoch();
 
     ASSERT_NE(static_cast<session*>(s1)->get_valid_epoch(),

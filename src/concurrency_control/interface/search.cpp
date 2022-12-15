@@ -28,12 +28,14 @@ Status exist_key(Token const token, Storage const storage,
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::search_key(ti, storage, key, dummy, false);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, dummy, false);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, dummy, false);
     } else {
-        LOG(FATAL) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();
@@ -51,12 +53,14 @@ Status search_key(Token const token, Storage const storage,
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         rc = long_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();

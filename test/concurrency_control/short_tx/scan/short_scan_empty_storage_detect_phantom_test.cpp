@@ -48,8 +48,8 @@ TEST_F(short_scan_empty_storage_detect_phantom_test, // NOLINT
     // test
     std::vector<const Tuple*> records{};
     ScanHandle hd{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "",
-                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
     // phantom insert
     ASSERT_EQ(Status::OK, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT

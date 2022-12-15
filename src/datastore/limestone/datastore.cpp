@@ -49,7 +49,7 @@ void recovery_from_datastore() {
      */
     yakushima::Token tk{};
     if (yakushima::enter(tk) != yakushima::status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
     }
     std::vector<Storage> st_list{};
 
@@ -67,7 +67,7 @@ void recovery_from_datastore() {
             Storage st2{};
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
-                LOG(ERROR) << "programming error";
+                LOG(ERROR) << log_location_prefix << "programming error";
                 return;
             }
             memcpy(&st2, val.data(), sizeof(st2));
@@ -90,10 +90,10 @@ void recovery_from_datastore() {
                 new_value.append(payload);
                 if (Status::OK !=
                     upsert(token, storage::meta_storage, key, new_value)) {
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                 }
                 if (Status::OK != commit(token)) {
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                 }
             };
             // check st2 existence
@@ -109,7 +109,7 @@ void recovery_from_datastore() {
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     // Does DML create key handle map entry?
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                     return;
                 }
             } else {
@@ -122,7 +122,7 @@ void recovery_from_datastore() {
                      * shirakami::storage::exist_storage(st2) said not exist,
                      * but it can't register_storage.
                      */
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                     return;
                 }
                 if (storage::key_handle_map_push_storage(key, st2) !=
@@ -132,7 +132,7 @@ void recovery_from_datastore() {
                      * shirakami::register_storage(st2, {id, payload}) was 
                      * succeeded but it can't create entry of this map.
                      */
-                    LOG(ERROR) << "unexpected error";
+                    LOG(ERROR) << log_location_prefix << "unexpected error";
                     return;
                 }
                 upsert_meta_info();
@@ -150,7 +150,7 @@ void recovery_from_datastore() {
                    sizeof(version));
             auto ret = sequence::sequence_map_push(id, 0, version, value);
             if (ret != Status::OK) {
-                LOG(ERROR) << "unexpected error";
+                LOG(ERROR) << log_location_prefix << "unexpected error";
                 return;
             }
         } else {
@@ -158,7 +158,8 @@ void recovery_from_datastore() {
             st_list.emplace_back(st);
             // create kvs entry (database record) from these info.
             if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
-                LOG(ERROR) << "not unique. to discuss or programming error.";
+                LOG(ERROR) << log_location_prefix
+                           << "not unique. to discuss or programming error.";
             }
         }
     }
@@ -172,7 +173,7 @@ void recovery_from_datastore() {
         recovery_storage_meta(st_list);
     }
     if (yakushima::leave(tk) != yakushima::status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
         return;
     }
 }

@@ -121,8 +121,8 @@ TEST_F(long_insert_upsert_test, concurrent_upsert_tx_insert_tx) { // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, upsert(s1, st, "", "a"));
-    ASSERT_EQ(Status::OK, insert(s2, st, "", ""));  // forwarding to same epoch
-    ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
+    ASSERT_EQ(Status::OK, insert(s2, st, "", "")); // forwarding to same epoch
+    ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s2)); // NOLINT
     /**
      * If write insert is at same epoch and insert is new in the order, the 

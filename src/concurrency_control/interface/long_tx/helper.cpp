@@ -13,7 +13,7 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
     for (auto&& elem : ti->get_wp_set()) {
         auto rc{elem.second->change_wp_epoch(ti->get_long_tx_id(), target)};
         if (rc != Status::OK) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return rc;
         }
     }
@@ -81,7 +81,8 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     wp::long_tx::set_counter(long_tx_id + 1);
 
     if (long_tx_id >= pow(2, 63)) { // NOLINT
-        LOG(ERROR) << "long tx id depletion. limit of specification.";
+        LOG(ERROR) << log_location_prefix
+                   << "long tx id depletion. limit of specification.";
         return Status::ERR_FATAL;
     }
     ti->set_long_tx_id(long_tx_id);
@@ -114,7 +115,7 @@ Status version_function_without_optimistic_check(epoch::epoch_t ep,
         if (ep > ver->get_tid().get_epoch()) { return Status::OK; }
     }
 
-    LOG(ERROR) << "programming error";
+    LOG(ERROR) << log_location_prefix << "programming error";
     return Status::ERR_FATAL;
 }
 

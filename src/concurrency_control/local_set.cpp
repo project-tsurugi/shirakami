@@ -130,7 +130,7 @@ Status local_sequence_set::push(SequenceId const id,
     auto ret =
             set().insert(std::make_pair(id, std::make_tuple(version, value)));
     if (!ret.second) {
-        LOG(ERROR) << "unexpected code path";
+        LOG(ERROR) << log_location_prefix << "unexpected code path";
         return Status::ERR_FATAL;
     }
     return Status::OK;

@@ -51,23 +51,23 @@ void brock_insert(Storage st, size_t start, size_t end) {
         _mm_pause(); // full session now.
     }
 
-    auto rc{tx_begin({token})}; // NOLINT
-    if (rc != Status::OK) { LOG(FATAL) << rc; } // NOLINT
+    auto rc{tx_begin({token})};                                        // NOLINT
+    if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; } // NOLINT
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
         rc = upsert(token, st, make_key(FLAGS_key_len, i),
-                     std::string(FLAGS_val_len, '0'));
-        if (rc != Status::OK) { LOG(FATAL) << rc; }
+                    std::string(FLAGS_val_len, '0'));
+        if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             rc = commit(token);
-            if (rc != Status::OK) { LOG(FATAL); }
+            if (rc != Status::OK) { LOG(ERROR); }
             ctr = 0;
         }
     }
     rc = commit(token);
-    if (rc != Status::OK) { LOG(FATAL); }
+    if (rc != Status::OK) { LOG(ERROR); }
     leave(token);
 }
 
@@ -90,7 +90,9 @@ void init_db_ol() {
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
         auto ret{create_storage("", st)};
-        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+        }
         get_ol_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_ol_rec);
@@ -106,7 +108,9 @@ void init_db_bt() {
     for (std::size_t i = 0; i < 1; ++i) {
         Storage st{};
         auto ret{create_storage("", st)};
-        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+        }
         get_bt_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_bt_rec);

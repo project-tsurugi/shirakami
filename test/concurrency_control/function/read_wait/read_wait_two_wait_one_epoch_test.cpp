@@ -50,7 +50,7 @@ private:
 };
 
 TEST_F(read_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
-                                                             // create table
+                                                                // create table
     // ==========
     // prepare
     Storage sta{};
@@ -124,10 +124,12 @@ TEST_F(read_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // epoch false positive
     auto tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(),
+              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3))); // epoch false positive
     tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(), reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ((*tri).get_reason_code(),
+              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify

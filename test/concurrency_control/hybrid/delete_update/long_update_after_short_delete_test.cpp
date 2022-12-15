@@ -50,7 +50,8 @@ TEST_F(long_update_after_short_delete, independent_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

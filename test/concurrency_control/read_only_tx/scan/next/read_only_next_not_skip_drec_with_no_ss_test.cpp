@@ -64,7 +64,10 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({sl,
+                            transaction_options::transaction_type::READ_ONLY,
+                            {}}));
         wait_epoch_update();
 
         ScanHandle hd{};
@@ -116,7 +119,10 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({sl,
+                            transaction_options::transaction_type::READ_ONLY,
+                            {}}));
         wait_epoch_update();
 
         ScanHandle hd{};
@@ -171,7 +177,10 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
 
-        ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({sl,
+                            transaction_options::transaction_type::READ_ONLY,
+                            {}}));
         wait_epoch_update();
 
         ScanHandle hd{};

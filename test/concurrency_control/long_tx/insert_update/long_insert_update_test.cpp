@@ -126,7 +126,7 @@ TEST_F(long_insert_update_test,                       // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s1, st, "", "a"));
     ASSERT_EQ(Status::OK, insert(s2, st, "", "b")); // forwarding to same epoch
     ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));  // NOLINT
     // s2 found s1's read info of update
 
     // verify
@@ -159,9 +159,10 @@ TEST_F(long_insert_update_test,                             // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, update(s1, st, "", "a"));
-    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s2, st, "", "b")); // forwarding to same epoch
-    ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
+              insert(s2, st, "", "b")); // forwarding to same epoch
+    ASSERT_EQ(Status::OK, commit(s1));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));  // NOLINT
 
     // verify
     std::string buf{};
@@ -198,8 +199,8 @@ TEST_F(long_insert_update_test,                     // NOLINT
     // test
     ASSERT_EQ(Status::OK, insert(s1, st, "", "a"));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s2, st, "", "b")); // forwarding
-    ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::OK, commit(s2));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));                          // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));                          // NOLINT
     // If these is at same epoch, s2 find read info of s1.
 
     // verify
@@ -233,8 +234,8 @@ TEST_F(long_insert_update_test,                     // NOLINT
     // test
     ASSERT_EQ(Status::OK, insert(s1, st, "", "a"));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s2, st, "", "b")); // forwarding
-    ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::OK, commit(s2));              // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));                          // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));                          // NOLINT
 
     // verify
     std::string buf{};

@@ -60,16 +60,16 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
             ret = insert(token, storage, make_key(key_length, i),
                          std::string(value_length, '0'));
         }
-        if (ret != Status::OK) { LOG(FATAL); }
+        if (ret != Status::OK) { LOG(ERROR); }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) { LOG(FATAL); }
+            if (ret != Status::OK) { LOG(ERROR); }
             ctr = 0;
         }
     }
     auto ret = commit(token);
-    if (ret != Status::OK) { LOG(FATAL); }
+    if (ret != Status::OK) { LOG(ERROR); }
     leave(token);
 }
 

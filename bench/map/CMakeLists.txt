@@ -9,6 +9,7 @@ add_executable(map
 target_include_directories(map
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )

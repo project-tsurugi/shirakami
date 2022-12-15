@@ -12,6 +12,8 @@
 
 #include "index/yakushima/include/interface.h"
 
+#include "shirakami/logging.h"
+
 #include "yakushima/include/kvs.h"
 
 #include "glog/logging.h"
@@ -54,13 +56,19 @@ void work_manager() {
             }
         }
         if (min_step_epoch != epoch::max_epoch) {
-            if (min_step_epoch < 1) { LOG(ERROR) << "programming error"; }
+            if (min_step_epoch < 1) {
+                LOG(ERROR) << log_location_prefix << log_location_prefix
+                           << "programming error";
+            }
             set_min_step_epoch(min_step_epoch);
         } else {
             set_min_step_epoch(ce);
         }
         if (min_batch_epoch != epoch::max_epoch) {
-            if (min_batch_epoch_ < 1) { LOG(ERROR) << "programming error"; }
+            if (min_batch_epoch_ < 1) {
+                LOG(ERROR) << log_location_prefix << log_location_prefix
+                           << "programming error";
+            }
             set_min_batch_epoch(min_batch_epoch);
         } else {
             set_min_batch_epoch(ce + 1);
@@ -75,7 +83,8 @@ version* find_latest_invisible_version_from_batch(Record* rec_ptr,
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << log_location_prefix
+                   << "programming error";
     }
     for (;;) {
         ver = ver->get_next();
@@ -173,7 +182,8 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     rec_ptr->get_key(kb);
     rc = remove(ytk, st, kb);
     if (rc != Status::OK) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << log_location_prefix
+                   << "programming error";
         return Status::ERR_FATAL;
     }
 
@@ -196,7 +206,8 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
         return;
     }
     if (rc == Status::ERR_FATAL) {
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << log_location_prefix
+                   << "programming error";
         return;
     }
 

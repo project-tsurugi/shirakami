@@ -3,6 +3,7 @@
 #include <map>
 #include <tuple>
 
+#include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 
 #include "yakushima/include/kvs.h"
@@ -18,12 +19,6 @@ public:
         value,
     };
 
-    bool check_was_read(cursor_info::op_type op) {
-        if (op == op_type::key) { return was_read_.test(0); }
-        if (op == op_type::value) { return was_read_.test(1); }
-        LOG(FATAL);
-    }
-
     void get_key(std::string& out) { out = key_; }
 
     void get_value(std::string& out) { out = value_; }
@@ -31,7 +26,7 @@ public:
     bool get_was_read(cursor_info::op_type op) {
         if (op == op_type::key) { return was_read_.test(0); }
         if (op == op_type::value) { return was_read_.test(1); }
-        LOG(FATAL);
+        LOG(ERROR);
         return true;
     }
 
@@ -45,7 +40,7 @@ public:
         } else if (op == op_type::value) {
             was_read_.set(1);
         } else {
-            LOG(FATAL);
+            LOG(ERROR);
         }
     }
 

@@ -59,16 +59,18 @@ void brock_insert(Storage st, size_t start, size_t end) {
         Status ret{};
         ret = insert(token, st, make_key(FLAGS_key_len, i),
                      std::string(FLAGS_val_len, '0'));
-        if (ret != Status::OK) { LOG(FATAL) << "status is " << ret; }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "status is " << ret;
+        }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) { LOG(FATAL); }
+            if (ret != Status::OK) { LOG(ERROR); }
             ctr = 0;
         }
     }
     auto ret = commit(token);
-    if (ret != Status::OK) { LOG(FATAL); }
+    if (ret != Status::OK) { LOG(ERROR); }
     leave(token);
 }
 
@@ -91,7 +93,9 @@ void init_db_ol() {
     for (std::size_t i = 0; i < FLAGS_ol_thread; ++i) {
         Storage st{};
         auto ret{create_storage(std::to_string(i), st)};
-        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+        }
         get_ol_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_ol_rec);
@@ -107,7 +111,9 @@ void init_db_bt() {
     for (std::size_t i = 0; i < FLAGS_bt_thread; ++i) {
         Storage st{};
         auto ret{create_storage(std::to_string(i + FLAGS_ol_thread), st)};
-        if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+        }
         get_bt_storages().emplace_back(st);
 
         //ths.emplace_back(build_storage, st, FLAGS_bt_rec);

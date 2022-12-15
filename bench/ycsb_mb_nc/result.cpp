@@ -3,8 +3,8 @@
 #include <iostream>
 
 // shirakami-impl interface library
-#include "result.h"
 #include "memory.h"
+#include "result.h"
 
 namespace shirakami {
 
@@ -32,7 +32,8 @@ void Result::displayTps(size_t extime) const {
     if (total_commit_counts_ == 0) {
         std::cout << "throughput[tps]:\t0" << std::endl;
     } else {
-        long double result{static_cast<long double>(total_commit_counts_) / extime};
+        long double result{static_cast<long double>(total_commit_counts_) /
+                           extime};
         constexpr std::uint64_t ns_sec = 1000000000;
         std::cout << "latency[ns]:\t" << ns_sec / result << std::endl;
         std::cout << "throughput[tps]:\t" << result << std::endl;
@@ -71,8 +72,8 @@ void Result::displayCommitLatencyRate(
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
-        std::cout << std::fixed << std::setprecision(4) << "commit_latency_rate:\t"
-                  << rate << std::endl;
+        std::cout << std::fixed << std::setprecision(4)
+                  << "commit_latency_rate:\t" << rate << std::endl;
     }
 }
 
@@ -85,8 +86,8 @@ void Result::displayBackoffLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
-        std::cout << std::fixed << std::setprecision(4) << "backoff_latency_rate:\t"
-                  << rate << std::endl;
+        std::cout << std::fixed << std::setprecision(4)
+                  << "backoff_latency_rate:\t" << rate << std::endl;
     }
 }
 
@@ -94,7 +95,7 @@ void Result::displayEarlyAbortRate() const {
     if (total_early_aborts_ != 0U) {
         std::cout << std::fixed << std::setprecision(4) << "early_abort_rate:\t"
                   << static_cast<long double>(total_early_aborts_) /
-                     static_cast<long double>(total_abort_counts_)
+                             static_cast<long double>(total_abort_counts_)
                   << std::endl;
     }
 }
@@ -127,8 +128,8 @@ void Result::displayGCLatencyRate(size_t clocks_per_us, size_t extime,
 
 void Result::displayGCTMTElementsCounts() const {
     if (total_gc_TMT_elements_counts_ != 0U) {
-        std::cout << "gc_TMT_elements_counts:\t" << total_gc_TMT_elements_counts_
-                  << std::endl;
+        std::cout << "gc_TMT_elements_counts:\t"
+                  << total_gc_TMT_elements_counts_ << std::endl;
     }
 }
 
@@ -145,10 +146,11 @@ void Result::displayMakeProcedureLatencyRate(size_t clocks_per_us,
     if (total_make_procedure_latency_ != 0U) {
         constexpr std::size_t ten = 10;
         constexpr std::size_t six = 6;
-        long double rate = static_cast<long double>(total_make_procedure_latency_) /
-                           (static_cast<long double>(clocks_per_us) *
-                            powl(ten, six) * static_cast<long double>(extime)) /
-                           thread_num;
+        long double rate =
+                static_cast<long double>(total_make_procedure_latency_) /
+                (static_cast<long double>(clocks_per_us) * powl(ten, six) *
+                 static_cast<long double>(extime)) /
+                thread_num;
         std::cout << std::fixed << std::setprecision(4)
                   << "make_procedure_latency_rate:\t" << rate << std::endl;
     }
@@ -212,8 +214,9 @@ void Result::displayPreemptiveAbortsCounts() const {
 
 void Result::displayRatioOfPreemptiveAbortToTotalAbort() const {
     if (total_preemptive_aborts_counts_ != 0U) {
-        long double rate = static_cast<double>(total_preemptive_aborts_counts_) /
-                           static_cast<double>(total_abort_counts_);
+        long double rate =
+                static_cast<double>(total_preemptive_aborts_counts_) /
+                static_cast<double>(total_abort_counts_);
         std::cout << std::fixed << std::setprecision(4)
                   << "ratio_of_preemptive_abort_to_total_abort:\t" << rate
                   << std::endl;
@@ -229,8 +232,8 @@ void Result::displayReadLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
-        std::cout << std::fixed << std::setprecision(4) << "read_latency_rate:\t"
-                  << rate << std::endl;
+        std::cout << std::fixed << std::setprecision(4)
+                  << "read_latency_rate:\t" << rate << std::endl;
     }
 }
 
@@ -239,8 +242,8 @@ void Result::displayRtsupdRate() const {
         long double rate = static_cast<double>(total_rtsupd_) /
                            (static_cast<double>(total_rtsupd_) +
                             static_cast<double>(total_rtsupd_chances_));
-        std::cout << std::fixed << std::setprecision(4) << "rtsupd_rate:\t" << rate
-                  << std::endl;
+        std::cout << std::fixed << std::setprecision(4) << "rtsupd_rate:\t"
+                  << rate << std::endl;
     }
 }
 
@@ -294,15 +297,16 @@ void Result::displayValiLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
-        std::cout << std::fixed << std::setprecision(4) << "vali_latency_rate:\t"
-                  << rate << std::endl;
+        std::cout << std::fixed << std::setprecision(4)
+                  << "vali_latency_rate:\t" << rate << std::endl;
     }
 }
 
 void Result::displayValidationFailureByTidRate() const {
     if (total_validation_failure_by_tid_ != 0U) {
-        long double rate = static_cast<double>(total_validation_failure_by_tid_) /
-                           static_cast<double>(total_abort_by_validation_);
+        long double rate =
+                static_cast<double>(total_validation_failure_by_tid_) /
+                static_cast<double>(total_abort_by_validation_);
         std::cout << "validation_failure_by_tid:\t"
                   << total_validation_failure_by_tid_ << std::endl;
         std::cout << std::fixed << std::setprecision(4)
@@ -318,7 +322,8 @@ void Result::displayValidationFailureByWritelockRate() const {
         std::cout << "validation_failure_by_writelock:\t"
                   << total_validation_failure_by_writelock_ << std::endl;
         std::cout << std::fixed << std::setprecision(4)
-                  << "validation_failure_by_writelock_rate:\t" << rate << std::endl;
+                  << "validation_failure_by_writelock_rate:\t" << rate
+                  << std::endl;
     }
 }
 
@@ -343,8 +348,8 @@ void Result::displayWriteLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
-        std::cout << std::fixed << std::setprecision(4) << "write_latency_rate:\t"
-                  << rate << std::endl;
+        std::cout << std::fixed << std::setprecision(4)
+                  << "write_latency_rate:\t" << rate << std::endl;
     }
 }
 
@@ -497,7 +502,7 @@ void Result::displayAllResult([[maybe_unused]] size_t clocks_per_us,
     displayTps(extime);
 }
 
-void Result::addLocalAllResult(const Result &other) {
+void Result::addLocalAllResult(const Result& other) {
     addLocalAbortCounts(other.local_abort_counts_);
     addLocalCommitCounts(other.local_commit_counts_);
     addLocalAbortByOperation(other.local_abort_by_operation_);
@@ -533,4 +538,4 @@ void Result::addLocalAllResult(const Result &other) {
     addLocalVersionReuse(other.local_version_reuse_);
 }
 
-}  // namespace shirakami
+} // namespace shirakami

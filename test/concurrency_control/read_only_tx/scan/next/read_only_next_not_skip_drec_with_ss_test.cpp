@@ -56,7 +56,10 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({sl,
+                        transaction_options::transaction_type::READ_ONLY,
+                        {}}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -105,7 +108,10 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({sl,
+                        transaction_options::transaction_type::READ_ONLY,
+                        {}}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
@@ -160,7 +166,10 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();
 
-    ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::READ_ONLY, {}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({sl,
+                        transaction_options::transaction_type::READ_ONLY,
+                        {}}));
     wait_epoch_update();
 
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));

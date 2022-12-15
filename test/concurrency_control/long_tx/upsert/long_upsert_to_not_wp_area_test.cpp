@@ -56,13 +56,16 @@ TEST_F(upsert_to_not_wp_area_test, simple) { // NOLINT
     std::string k{"k"};
     std::string v{"v"};
     // upsert with no wp
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st_1, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // upsert with invalid wp
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st_1}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s, transaction_options::transaction_type::LONG, {st_1}}));
     wait_epoch_update();
     ASSERT_EQ(upsert(s, st_2, k, v), Status::WARN_WRITE_WITHOUT_WP);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

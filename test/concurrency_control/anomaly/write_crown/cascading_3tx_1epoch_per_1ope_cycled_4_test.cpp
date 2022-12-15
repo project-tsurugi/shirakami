@@ -200,9 +200,9 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_4_test, all) { // NOLINT
 
     // test case 12
     // olll
-    ASSERT_EQ(Status::OK, tx_begin({s.at(1),
-                                    transaction_options::transaction_type::SHORT
-}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
     ASSERT_EQ(buf, v.at(0));
     wait_epoch_update();
@@ -217,21 +217,20 @@ TEST_F(cascading_3tx_1epoch_per_1ope_cycled_4_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     wait_epoch_update();
-    ASSERT_EQ(
-            Status::OK,
-            tx_begin({s.at(3), transaction_options::transaction_type::LONG, {sta, stb}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3),
+                                    transaction_options::transaction_type::LONG,
+                                    {sta, stb}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::OK,
-              search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
     ASSERT_EQ(buf, v.at(0));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     wait_epoch_update();
-    ASSERT_EQ(
-            Status::OK,
-            tx_begin({s.at(4), transaction_options::transaction_type::LONG, {stx, stb}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(4),
+                                    transaction_options::transaction_type::LONG,
+                                    {stx, stb}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));

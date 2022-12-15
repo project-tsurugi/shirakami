@@ -178,7 +178,7 @@ void flush_log(Token token) {
                     handle.set_last_flushed_epoch(ce);
                 } else {
                     // unreachable path
-                    LOG(ERROR) << "programming error";
+                    LOG(ERROR) << log_location_prefix << "programming error";
                 }
             } else {
                 // if tx not begin. daemon thread uses this code.

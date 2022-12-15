@@ -38,7 +38,7 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(long_open_scan_read_area_2_test,      // NOLINT
+TEST_F(long_open_scan_read_area_2_test,    // NOLINT
        read_area_empty_negative_not_hit) { // NOLINT
                                            // prepare
     Token s{};
@@ -59,7 +59,7 @@ TEST_F(long_open_scan_read_area_2_test,      // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_open_scan_read_area_2_test,      // NOLINT
+TEST_F(long_open_scan_read_area_2_test,    // NOLINT
        read_area_not_empty_negative_hit) { // NOLINT
                                            // prepare
     Token s{};
@@ -81,7 +81,7 @@ TEST_F(long_open_scan_read_area_2_test,      // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_open_scan_read_area_2_test,          // NOLINT
+TEST_F(long_open_scan_read_area_2_test,        // NOLINT
        read_area_not_empty_negative_not_hit) { // NOLINT
                                                // prepare
     Token s{};

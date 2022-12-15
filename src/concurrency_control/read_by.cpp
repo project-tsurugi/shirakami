@@ -22,7 +22,7 @@ bool point_read_by_long::is_exist(Token token) {
                 return true;
             }
         } else if (elem.second == ltx_id) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return true;
         } else {
             // elem is low priori than this.
@@ -50,7 +50,7 @@ void point_read_by_long::push(body_elem_type const elem) {
             continue;
         }
         if ((*itr).second == elem.second) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return;
         }
         // low priori
@@ -121,7 +121,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
             break;
         }
         if (std::get<range_read_by_long::index_tx_id>(*itr) == tx_id) {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
             return;
         }
         // low priori

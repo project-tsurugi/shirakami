@@ -40,7 +40,8 @@ private:
 TEST_F(single_insert, read_only_mode_insert) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, insert(s, storage, "", ""));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));

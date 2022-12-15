@@ -28,8 +28,9 @@ using namespace shirakami;
 class long_search_update_two_tx_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
-                                  "search_update-long_search_update_two_tx_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-long_tx-"
+                "search_update-long_search_update_two_tx_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -112,7 +113,7 @@ TEST_F(long_search_update_two_tx_test, serial_search_tx_update_tx) { // NOLINT
 // end: serial two tx
 
 // start: concurrent two tx
-TEST_F(long_search_update_two_tx_test,                      // NOLINT
+TEST_F(long_search_update_two_tx_test,               // NOLINT
        concurrent_begin_order_search_tx_update_tx) { // NOLINT
     // prepare test
     Storage st{};
@@ -151,7 +152,7 @@ TEST_F(long_search_update_two_tx_test,                      // NOLINT
 }
 
 // start: concurrent two tx
-TEST_F(long_search_update_two_tx_test,                      // NOLINT
+TEST_F(long_search_update_two_tx_test,               // NOLINT
        concurrent_begin_order_update_tx_search_tx) { // NOLINT
     // prepare test
     Storage st{};

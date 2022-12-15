@@ -1,6 +1,8 @@
 
 #include "concurrency_control/include/wp_meta.h"
 
+#include "shirakami/logging.h"
+
 #include "glog/logging.h"
 
 namespace shirakami::wp {
@@ -23,7 +25,7 @@ Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << "programming error";
+    LOG(ERROR) << log_location_prefix << "programming error";
     wp_lock_.unlock();
     return Status::ERR_FATAL;
 }

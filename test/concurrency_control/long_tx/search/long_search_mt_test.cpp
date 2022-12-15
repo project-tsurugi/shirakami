@@ -123,7 +123,7 @@ TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
             }
             if (rc == Status::OK) { continue; }
             if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
-            LOG(FATAL) << rc;
+            LOG(ERROR) << log_location_prefix << rc;
         }
         ASSERT_EQ(leave(s), Status::OK);
     };

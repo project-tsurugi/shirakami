@@ -62,14 +62,18 @@ public:
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr, std::string_view const val)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {
-        if (op == OP_TYPE::DELETE) { LOG(ERROR) << "programming error"; }
+        if (op == OP_TYPE::DELETE) {
+            LOG(ERROR) << log_location_prefix << "programming error";
+        }
     }
 
     // for delete
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr) {
-        if (op != OP_TYPE::DELETE) { LOG(ERROR) << "programming error"; }
+        if (op != OP_TYPE::DELETE) {
+            LOG(ERROR) << log_location_prefix << "programming error";
+        }
     }
 
     write_set_obj(const write_set_obj& right) = delete;
@@ -102,7 +106,7 @@ public:
             return;
         }
         if (get_op() == OP_TYPE::DELETE) { return; }
-        LOG(ERROR) << "programming error";
+        LOG(ERROR) << log_location_prefix << "programming error";
     }
 
     std::string_view get_value_view() { return val_; }

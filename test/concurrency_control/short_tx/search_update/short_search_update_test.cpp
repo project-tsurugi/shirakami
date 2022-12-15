@@ -89,7 +89,7 @@ TEST_F(search_update, // NOLINT
 
             cond.wait(lk, [&ready] { return ready == 2; });
         }
-        if (ready != 2) { LOG(FATAL); }
+        if (ready != 2) { LOG(ERROR); }
 
         LOG(INFO) << "start work";
 
@@ -101,7 +101,7 @@ TEST_F(search_update, // NOLINT
                 if (rc == Status::WARN_CONCURRENT_UPDATE) {
                     rc = search_key(s, st, k, vb);
                 } else {
-                    LOG(FATAL);
+                    LOG(ERROR);
                 }
             }
             ASSERT_EQ(Status::OK, update(s, st, k, v));

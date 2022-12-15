@@ -26,7 +26,8 @@ using namespace std::chrono_literals;
 class sequence_multiple_update_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-sequence-sequence_multiple_update_test");
+        google::InitGoogleLogging(
+                "shirakami-test-sequence-sequence_multiple_update_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
@@ -51,19 +52,19 @@ TEST_F(sequence_multiple_update_test, basic) { // NOLINT
         ++version;
         SequenceValue value{1};
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
-        ASSERT_EQ(Status::OK, commit(token));             // NOLINT
+        ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
-        ASSERT_EQ(Status::OK, commit(token));             // NOLINT
+        ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
-        ASSERT_EQ(Status::OK, commit(token));             // NOLINT
+        ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
-        ASSERT_EQ(Status::OK, commit(token));             // NOLINT
+        ASSERT_EQ(Status::OK, commit(token)); // NOLINT
 
         ASSERT_EQ(leave(token), Status::OK);
     }

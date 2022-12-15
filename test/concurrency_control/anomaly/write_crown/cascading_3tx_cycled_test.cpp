@@ -876,8 +876,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    ASSERT_EQ(Status::OK,
-              search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));

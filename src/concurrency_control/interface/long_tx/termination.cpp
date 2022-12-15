@@ -241,7 +241,7 @@ static inline void expose_local_write(
                 break;
             }
             default: {
-                LOG(FATAL) << "unknown operation type.";
+                LOG(ERROR) << log_location_prefix << "unknown operation type.";
                 break;
             }
         }
@@ -271,7 +271,7 @@ static inline void expose_local_write(
                     break;
                 }
                 default: {
-                    LOG(ERROR) << "programming error";
+                    LOG(ERROR) << log_location_prefix << "programming error";
                     return Status::ERR_FATAL;
                 }
             }
@@ -328,7 +328,7 @@ static inline void register_wp_result_and_remove_wps(
         auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
                                                    storage_view, out)};
         if (rc != yakushima::status::OK) {
-            LOG(ERROR) << "programing error: " << rc;
+            LOG(ERROR) << log_location_prefix << "programing error: " << rc;
             return;
         }
 
@@ -352,7 +352,7 @@ static inline void register_wp_result_and_remove_wps(
                             std::make_tuple(write_something,
                                             std::string(write_range_left),
                                             std::string(write_range_right))))) {
-            LOG(FATAL);
+            LOG(ERROR);
         }
     }
 }
@@ -468,7 +468,8 @@ Status verify(session* const ti) {
                                 ongoing_tx::change_epoch_without_lock(
                                         ti->get_long_tx_id(),
                                         wp_result_epoch)) {
-                                LOG(ERROR) << "programming error";
+                                LOG(ERROR) << log_location_prefix
+                                           << "programming error";
                                 return Status::ERR_FATAL;
                             }
                             // set own epoch
@@ -589,7 +590,7 @@ Status verify(session* const ti) {
                     return Status::ERR_VALIDATION;
                 }
             } else {
-                LOG(ERROR) << "programming error";
+                LOG(ERROR) << log_location_prefix << "programming error";
                 return Status::ERR_FATAL;
             }
         }

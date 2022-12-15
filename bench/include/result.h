@@ -15,7 +15,7 @@ namespace shirakami {
 
 class Result {
 public:
-    void addLocalAllResult(const Result &other);
+    void addLocalAllResult(const Result& other);
 
     void addLocalAbortCounts(uint64_t count);
 
@@ -88,8 +88,8 @@ public:
     void displayAllResult(size_t clocks_per_us, size_t extime,
                           size_t thread_num) const;
 
-    void displayAbortByOperationRate() const;   // abort by operation rate;
-    void displayAbortByValidationRate() const;  // abort by validation rate;
+    void displayAbortByOperationRate() const;  // abort by operation rate;
+    void displayAbortByValidationRate() const; // abort by validation rate;
     void displayCommitLatencyRate(size_t clocks_per_us, size_t extime,
                                   size_t thread_num) const;
 
@@ -152,11 +152,11 @@ public:
 
     void displayVersionReuse() const;
 
-    [[nodiscard]] std::uint64_t &get_local_commit_counts() {  // NOLINT
+    [[nodiscard]] std::uint64_t& get_local_commit_counts() { // NOLINT
         return local_commit_counts_;
     }
 
-    [[nodiscard]] std::uint64_t &get_local_abort_counts() {  // NOLINT
+    [[nodiscard]] std::uint64_t& get_local_abort_counts() { // NOLINT
         return local_abort_counts_;
     }
 
@@ -223,4 +223,4 @@ private:
     std::uint64_t total_write_latency_ = 0;
 };
 
-}  // namespace shirakami
+} // namespace shirakami

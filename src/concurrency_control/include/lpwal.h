@@ -21,6 +21,7 @@
 #include "concurrency_control/include/epoch.h"
 
 #include "shirakami/log_record.h"
+#include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 
 #include "limestone/api/log_channel.h"
@@ -289,7 +290,8 @@ private:
     try {
         boost::filesystem::remove_all(path);
     } catch (boost::filesystem::filesystem_error& ex) {
-        LOG(ERROR) << "file system error: " << ex.what() << " : " << path;
+        LOG(ERROR) << log_location_prefix << "file system error: " << ex.what()
+                   << " : " << path;
     }
 }
 

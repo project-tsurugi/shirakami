@@ -165,9 +165,9 @@ TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 
-TEST_F(short_delete_insert_search,                              // NOLINT
+TEST_F(short_delete_insert_search,                     // NOLINT
        concurrent_insert_search_tx_insert_delete_tx) { // NOLINT
-                                                                // prepare
+                                                       // prepare
     Storage st{};
     create_storage("", st);
     Token s1{};

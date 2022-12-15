@@ -15,8 +15,8 @@ using namespace shirakami;
 class c_helper_enter : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-common-helper-c_helper_enter_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
+                                  "helper-c_helper_enter_test");
         FLAGS_stderrthreshold = 0;
     }
 

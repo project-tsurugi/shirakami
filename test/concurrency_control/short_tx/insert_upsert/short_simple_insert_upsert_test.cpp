@@ -26,7 +26,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
                                   "upsert-simple_insert_upsert_test");
-        FLAGS_stderrthreshold = 0;        // output more than INFO
+        FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
@@ -34,9 +34,7 @@ public:
         create_storage("", st);
     }
 
-    void TearDown() override {
-        fin();
-    }
+    void TearDown() override { fin(); }
 
 private:
     static inline std::once_flag init_google_; // NOLINT

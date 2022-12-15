@@ -54,8 +54,10 @@ TEST_F(long_commit_test, commit_long_long_low_high) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -68,8 +70,10 @@ TEST_F(long_commit_test, commit_long_long_high_low) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    ASSERT_EQ(Status::OK, tx_begin({s1, transaction_options::transaction_type::LONG}));
-    ASSERT_EQ(Status::OK, tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT

@@ -52,7 +52,8 @@ TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // prepare situation
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -65,7 +66,7 @@ TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
         if (rc == Status::OK) {
             _mm_pause();
         } else {
-            LOG(ERROR) << "programming error";
+            LOG(ERROR) << log_location_prefix << "programming error";
         }
     }
 

@@ -4,6 +4,8 @@
 
 namespace shirakami {
 
+static constexpr std::string_view log_location_prefix = "/:shirakami ";
+
 /**
  * @brief logging level constant for errors
  */

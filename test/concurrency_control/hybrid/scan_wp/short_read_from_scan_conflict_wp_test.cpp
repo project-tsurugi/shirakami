@@ -63,7 +63,9 @@ TEST_F(short_read_from_scan_conflict_wp_test, short_find_wp) { // NOLINT
     // prepare test
     Token sl{}; // for long
     ASSERT_EQ(Status::OK, enter(sl));
-    ASSERT_EQ(Status::OK, tx_begin({sl, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({sl, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
 
     ScanHandle hd{};

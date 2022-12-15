@@ -12,11 +12,11 @@ TEST_F(hopscotch_map_test, basic_operation) { // NOLINT
     tsl::hopscotch_map<std::string, std::string> map;
     ASSERT_EQ(map.size(), 0);
     // prepare data
-    std::array<std::pair<std::string, std::string>, 3> kv{std::make_pair("k1", "v1"), std::make_pair("k2", "v2"), std::make_pair("k3", "v3")};
+    std::array<std::pair<std::string, std::string>, 3> kv{
+            std::make_pair("k1", "v1"), std::make_pair("k2", "v2"),
+            std::make_pair("k3", "v3")};
     // initialize map
-    for (auto&& elem : kv) {
-        map[elem.first] = elem.second;
-    }
+    for (auto&& elem : kv) { map[elem.first] = elem.second; }
     // check map size
     ASSERT_EQ(map.size(), kv.size());
     // check finding and update
@@ -26,13 +26,9 @@ TEST_F(hopscotch_map_test, basic_operation) { // NOLINT
     // check non-exisiting key
     ASSERT_EQ(map.find("kkk"), map.end());
     // check existing key
-    for (auto&& elem : kv) {
-        ASSERT_NE(map.find(elem.first), map.end());
-    }
+    for (auto&& elem : kv) { ASSERT_NE(map.find(elem.first), map.end()); }
     // check removing existing key
-    for (auto&& elem : kv) {
-        ASSERT_EQ(map.erase(elem.first), 1);
-    }
+    for (auto&& elem : kv) { ASSERT_EQ(map.erase(elem.first), 1); }
     // check removing non-exisiting key
     ASSERT_EQ(map.erase(kv.at(0).first), 0);
 }
@@ -40,11 +36,11 @@ TEST_F(hopscotch_map_test, basic_operation) { // NOLINT
 TEST_F(hopscotch_map_test, api_clear) { // NOLINT
     tsl::hopscotch_map<std::string, std::string> map;
     // prepare data
-    std::array<std::pair<std::string, std::string>, 3> kv{std::make_pair("k1", "v1"), std::make_pair("k2", "v2"), std::make_pair("k3", "v3")};
+    std::array<std::pair<std::string, std::string>, 3> kv{
+            std::make_pair("k1", "v1"), std::make_pair("k2", "v2"),
+            std::make_pair("k3", "v3")};
     // initialize map
-    for (auto&& elem : kv) {
-        map[elem.first] = elem.second;
-    }
+    for (auto&& elem : kv) { map[elem.first] = elem.second; }
     // check map size
     ASSERT_EQ(map.size(), kv.size());
     map.clear();
@@ -53,7 +49,9 @@ TEST_F(hopscotch_map_test, api_clear) { // NOLINT
 }
 
 TEST_F(hopscotch_map_test, double_layer) { // NOLINT
-    tsl::hopscotch_map<std::uint64_t, tsl::hopscotch_map<std::string, std::string>> map;
+    tsl::hopscotch_map<std::uint64_t,
+                       tsl::hopscotch_map<std::string, std::string>>
+            map;
     // prepare data
     map[0]["a"] = "va";
     ASSERT_EQ(map[0]["a"], "va");

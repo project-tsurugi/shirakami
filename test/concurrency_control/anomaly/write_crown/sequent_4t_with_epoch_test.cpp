@@ -49,7 +49,7 @@ private:
 };
 
 TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
-                                      // create table
+                                          // create table
     // ==========
     // prepare
     Storage sta{};
@@ -116,7 +116,7 @@ TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
                                     {stx, sta}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
-    // same epoch t1, t2. invisible write t2 
+    // same epoch t1, t2. invisible write t2
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
@@ -169,7 +169,7 @@ TEST_F(sequent_4t_with_epoch_test, all) { // NOLINT
                                     {stx, sta}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
-    // same epoch t1, t2. invisible write t2 
+    // same epoch t1, t2. invisible write t2
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));

@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 
+#include "logging.h"
 #include "scheme.h"
 #include "storage_options.h"
 
@@ -134,7 +135,8 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
         case transaction_options::transaction_type::READ_ONLY:
             return "READ_ONLY"sv; // NOLINT
     }
-    LOG(ERROR) << "unknown transaction type";
+    LOG(ERROR) << log_location_prefix << log_location_prefix
+               << "unknown transaction type";
     return ""sv;
 }
 

@@ -44,7 +44,7 @@ TEST_F(insert_update_test, insert_update) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, st, "", "v"));
     ASSERT_EQ(Status::OK, update(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    
+
     // verify
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
@@ -68,7 +68,7 @@ TEST_F(insert_update_test, update_insert) { // NOLINT
     ASSERT_EQ(Status::OK, update(s, st, "", "v"));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    
+
     // verify
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));

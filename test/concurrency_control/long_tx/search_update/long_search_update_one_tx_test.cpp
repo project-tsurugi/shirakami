@@ -28,8 +28,9 @@ using namespace shirakami;
 class long_search_update_one_tx_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
-                                  "search_update-long_search_update_one_tx_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-long_tx-"
+                "search_update-long_search_update_one_tx_test");
         FLAGS_stderrthreshold = 0;
     }
 

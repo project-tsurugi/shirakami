@@ -26,4 +26,4 @@ private:
     std::atomic<std::uint64_t> obj{0};
 };
 
-} // namespace shirakami
+} // namespace shirakami::wp

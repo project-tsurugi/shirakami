@@ -8,8 +8,7 @@
 
 #include "simple_result.h"
 
- extern void check_flags();
+extern void check_flags();
 
-extern void output_result(
-	std::vector<simple_result> const& res_ol,
-	std::vector<simple_result> const& res_bt);
+extern void output_result(std::vector<simple_result> const& res_ol,
+                          std::vector<simple_result> const& res_bt);

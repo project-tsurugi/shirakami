@@ -44,23 +44,23 @@ void brock_insert(Storage const st, size_t const start, size_t const end) {
         _mm_pause(); // full session now.
     }
 
-    auto rc{tx_begin({token})}; // NOLINT
-    if (rc != Status::OK) { LOG(FATAL) << rc; } // NOLINT
+    auto rc{tx_begin({token})};                                        // NOLINT
+    if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; } // NOLINT
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
         rc = upsert(token, st, make_key(key_len, i),
                     std::string(FLAGS_value_size, '0'));
-        if (rc != Status::OK) { LOG(FATAL) << rc; }
+        if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             rc = commit(token);
-            if (rc != Status::OK) { LOG(FATAL); }
+            if (rc != Status::OK) { LOG(ERROR); }
             ctr = 0;
         }
     }
     rc = commit(token);
-    if (rc != Status::OK) { LOG(FATAL); }
+    if (rc != Status::OK) { LOG(ERROR); }
     leave(token);
 }
 
@@ -87,7 +87,9 @@ void create_db() {
     // ddl phase
     Storage st{};
     auto ret{create_storage("", st)};
-    if (ret != Status::OK) { LOG(FATAL) << "fail create_storage."; }
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "fail create_storage.";
+    }
     set_st(st);
 
     // dml phase
