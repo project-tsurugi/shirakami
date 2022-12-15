@@ -18,15 +18,18 @@ enum class reason_code : std::int32_t {
      */
     UNKNOWN,
     /**
-     * @brief Deleting non-existing record.
+     * @brief You tried to delete a nonexistent record. If the record remains 
+     * non-existent, delete operations on that record will continue to fail.
      */
     KVS_DELETE,
     /**
-     * @brief Inserting a key which is same to existing one.
+     * @brief You tried to insert on a key that already exists. If that key 
+     * continues to exist, your insert operation will continue to fail.
      */
     KVS_INSERT,
     /**
-     * @brief Updating non-existing record.
+     * @brief You tried to update a record with a nonexistent key. If the 
+     * record remains non-existent, your update operation will continue to fail.
      */
     KVS_UPDATE,
     /**
