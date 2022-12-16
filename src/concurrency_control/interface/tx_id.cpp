@@ -23,12 +23,13 @@ Status get_tx_id(Token token, std::string& tx_id) {
     // clear ss
     ss.str("");
     ss.clear(std::stringstream::goodbit);
-    ss << std::setw(8) << std::setfill('0') << std::hex << ti->get_session_id();
+    ss << std::setw(8) << std::setfill('0') << std::hex << // NOLINT
+            ti->get_session_id();
     tx_id += ss.str();
     // clear ss
     ss.str("");
     ss.clear(std::stringstream::goodbit);
-    ss << std::setw(16) << std::setfill('0') << std::hex
+    ss << std::setw(16) << std::setfill('0') << std::hex // NOLINT
        << ti->get_tx_counter();
     tx_id += ss.str();
 

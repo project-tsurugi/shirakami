@@ -44,7 +44,7 @@ void write_storage_metadata(std::string_view key, Storage st,
     LOG(ERROR) << log_location_prefix << "unreachable path";
 }
 
-void remove_storage_metadata(std::string key) {
+void remove_storage_metadata(std::string_view key) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
