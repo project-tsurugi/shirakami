@@ -129,6 +129,9 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     std::string v{"v"};
     Storage st{2};                   // NOLINT
     lc->add_entry(st, k, v, {0, 0}); // (*1)
+    std::string k3{"k3"};
+    std::string v3{"v3"};
+    lc->add_entry(st, k3, v3, {0, 0}); // (*1)
     lc->end_session();
 
     // change new epoch
@@ -151,6 +154,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     std::string k2{"k2"};
     std::string v2{"v2"};
     lc->add_entry(st, k2, v2, {1, 0}); // (*2)
+    lc->remove_entry(st, k3, {1, 0});  // (*2)
     lc->end_session();
 
     // change new epoch

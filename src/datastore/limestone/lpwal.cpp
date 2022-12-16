@@ -38,7 +38,14 @@ void add_entry_from_logs(handler& handle) {
     for (auto&& log_elem : handle.get_logs()) {
         if (log_elem.get_operation() == log_operation::DELETE) {
             // delete
-            // todo for delete, wait for limestone impl
+            remove_entry(handle.get_log_channel_ptr(),
+                         static_cast<limestone::api::storage_id_type>(
+                                 log_elem.get_st()),
+                         log_elem.get_key(),
+                         static_cast<limestone::api::epoch_t>(
+                                 log_elem.get_wv().get_major_write_version()),
+                         static_cast<std::uint64_t>(
+                                 log_elem.get_wv().get_minor_write_version()));
         } else {
             // update / insert / upsert
             add_entry(handle.get_log_channel_ptr(),
@@ -49,11 +56,11 @@ void add_entry_from_logs(handler& handle) {
                               log_elem.get_wv().get_major_write_version()),
                       static_cast<std::uint64_t>(
                               log_elem.get_wv().get_minor_write_version()));
-            if (log_elem.get_wv().get_major_write_version() >
-                handle.get_last_flushed_epoch()) {
-                handle.set_last_flushed_epoch(
-                        log_elem.get_wv().get_major_write_version());
-            }
+        }
+        if (log_elem.get_wv().get_major_write_version() >
+            handle.get_last_flushed_epoch()) {
+            handle.set_last_flushed_epoch(
+                    log_elem.get_wv().get_major_write_version());
         }
 
         // log for callback

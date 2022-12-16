@@ -82,6 +82,24 @@ void add_entry(limestone::api::log_channel* lc,
     log_exit << "log_channel::add_entry()";
 }
 
+void remove_entry(limestone::api::log_channel* const lc,
+                  limestone::api::storage_id_type const storage_id,
+                  std::string_view const key,
+                  limestone::api::epoch_t const major_version,
+                  std::uint64_t const minor_version) {
+    if (lc == nullptr) {
+        LOG(ERROR) << log_location_prefix << "programming error";
+        return;
+    }
+    log_entry << "log_channel::remove_entry(): storage_id: " << storage_id
+              << ", key: " << key << ", major write version: " << major_version
+              << ", minor write version: " << minor_version;
+    lc->remove_entry(
+            storage_id, key,
+            limestone::api::write_version_type(major_version, minor_version));
+    log_exit << "log_channel::remove_entry()";
+}
+
 void begin_session(limestone::api::log_channel* lc) {
     if (lc == nullptr) {
         LOG(ERROR) << log_location_prefix << "programming error";

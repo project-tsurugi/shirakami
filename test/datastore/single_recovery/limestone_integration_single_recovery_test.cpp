@@ -103,4 +103,53 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     LOG(INFO) << "<< second shutdown";
 }
 
+TEST_F(limestone_integration_single_recovery_test, // NOLINT
+       two_page_write_one_delete_one_storage) {    // NOLINT
+    // prepare
+    std::string log_dir{};
+    log_dir = create_log_dir_name();
+    LOG(INFO) << ">> first start up";
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+    LOG(INFO) << "<< first start up";
+
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
+    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
+    ASSERT_EQ(Status::OK, upsert(s, st, "c", "C"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "b"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    LOG(INFO) << ">> first shutdown";
+    fin(false);
+    LOG(INFO) << "<< first shutdown";
+    LOG(INFO) << ">> second start up";
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+    LOG(INFO) << "<< second start up";
+
+    // test: storage num
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(st_list.size(), 1); // because single recovery
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test: contents
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
+    ASSERT_EQ(vb, "A");
+    ASSERT_EQ(Status::OK, search_key(s, st, "c", vb));
+    ASSERT_EQ(vb, "C");
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+    LOG(INFO) << ">> second shutdown";
+    fin(false);
+    LOG(INFO) << "<< second shutdown";
+}
+
 } // namespace shirakami::testing
