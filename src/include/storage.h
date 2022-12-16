@@ -67,20 +67,30 @@ public:
      * @pre The caller of this func already got write lock about 
      * mtx_key_handle_map_.
      * @param[in] st The target handle
+     * @param[out] out The binary string of the target handle
      */
-    static void key_handle_map_erase_storage_without_lock(Storage st) {
+    [[nodiscard]] static Status
+    key_handle_map_erase_storage_without_lock(Storage st, std::string& out) {
         for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
              ++itr) {
             if (itr->second == st) {
+                out = itr->first;
                 key_handle_map_.erase(itr);
-                return;
+                return Status::OK;
             }
         }
+        return Status::WARN_NOT_FOUND;
     }
 
     static Status key_handle_map_get_storage(std::string_view const key,
                                              Storage& out) {
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
+        return key_handle_map_get_storage_without_lock(key, out);
+    }
+
+    static Status
+    key_handle_map_get_storage_without_lock(std::string_view const key,
+                                            Storage& out) {
         auto itr = key_handle_map_.find(std::string(key));
         if (itr != key_handle_map_.end()) {
             // hit
@@ -92,6 +102,11 @@ public:
 
     static Status key_handle_map_get_key(Storage storage, std::string& out) {
         std::shared_lock<std::shared_mutex> lk{mtx_key_handle_map_};
+        return key_handle_map_get_key_without_lock(storage, out);
+    }
+
+    static Status key_handle_map_get_key_without_lock(Storage storage,
+                                                      std::string& out) {
         for (auto& itr : key_handle_map_) {
             if (itr.second == storage) {
                 out = itr.first;
@@ -104,6 +119,12 @@ public:
     static Status key_handle_map_push_storage(std::string_view const key,
                                               Storage const st) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        return key_handle_map_push_storage_without_lock(key, st);
+    }
+
+    static Status
+    key_handle_map_push_storage_without_lock(std::string_view const key,
+                                             Storage const st) {
         auto ret = key_handle_map_.insert({std::string(key), st});
         if (ret.second) {
             // success

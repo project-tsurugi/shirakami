@@ -44,17 +44,29 @@ void write_storage_metadata(std::string_view key, Storage st,
     LOG(ERROR) << log_location_prefix << "unreachable path";
 }
 
-Status remove_storage_metadata([[maybe_unused]] Storage st,
-                               [[maybe_unused]] storage_option const& options) {
-    // todo impl
-    return Status::ERR_NOT_IMPLEMENTED;
+void remove_storage_metadata(std::string key) {
+    Token s{};
+    while (enter(s) != Status::OK) { _mm_pause(); }
+    std::string value{};
+    auto ret = delete_record(s, storage::meta_storage, key);
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unreachable path";
+        return;
+    }
+    if (commit(s) == Status::OK) {
+        leave(s);
+        return;
+    } // else
+    LOG(ERROR) << log_location_prefix << "unreachable path";
 }
 
 Status create_storage(std::string_view const key, Storage& storage,
                       storage_option const& options) {
+    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // check key existence
     Storage st{};
-    if (storage::key_handle_map_get_storage(key, st) == Status::OK) {
+    if (storage::key_handle_map_get_storage_without_lock(key, st) ==
+        Status::OK) {
         return Status::WARN_ALREADY_EXISTS;
     }
     // point (*1)
@@ -63,9 +75,9 @@ Status create_storage(std::string_view const key, Storage& storage,
     if (ret != Status::OK) { return ret; }
     // success create_storage
     // point (*2)
-    if (storage::key_handle_map_push_storage(key, storage) != Status::OK) {
-        // interrupt between (*1) and (*2)
-        storage::delete_storage(storage);
+    if (storage::key_handle_map_push_storage_without_lock(key, storage) !=
+        Status::OK) {
+        LOG(ERROR) << log_location_prefix << "programming error";
         return Status::WARN_ALREADY_EXISTS;
     }
 
@@ -78,7 +90,18 @@ Status delete_storage(Storage const storage) {
     auto ret = storage::delete_storage(storage);
     if (ret != Status::OK) { return ret; }
     // delete_storage was succeeded
-    storage::key_handle_map_erase_storage_without_lock(storage);
+
+    // point (*2)
+    if (storage != shirakami::wp::get_page_set_meta_storage()) {
+        std::string key{};
+        if (storage::key_handle_map_erase_storage_without_lock(storage, key) !=
+            Status::OK) {
+            LOG(ERROR) << log_location_prefix << "programming error";
+            return Status::ERR_FATAL;
+        }
+
+        remove_storage_metadata(key);
+    }
     return Status::OK;
 }
 
@@ -91,9 +114,10 @@ Status list_storage(std::vector<std::string>& out) {
 }
 
 Status storage_get_options(Storage storage, storage_option& options) {
+    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
-    auto ret = storage::key_handle_map_get_key(storage, key);
+    auto ret = storage::key_handle_map_get_key_without_lock(storage, key);
     if (ret != Status::OK) {
         // storage not found
         return ret;
@@ -137,9 +161,10 @@ Status storage_get_options(Storage storage, storage_option& options) {
 }
 
 Status storage_set_options(Storage storage, storage_option const& options) {
+    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
-    auto ret = storage::key_handle_map_get_key(storage, key);
+    auto ret = storage::key_handle_map_get_key_without_lock(storage, key);
     if (ret != Status::OK) {
         // storage not found
         return ret;
