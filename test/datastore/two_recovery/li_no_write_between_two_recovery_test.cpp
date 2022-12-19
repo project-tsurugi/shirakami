@@ -34,13 +34,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_test
+class li_single_recovery_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-data_store-"
-                "limestone_integration_write_between_two_recovery_test");
+                "li_no_write_between_two_recovery_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -58,8 +58,8 @@ static std::string create_log_dir_name() {
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       write_between_two_recovery) {               // NOLINT
+TEST_F(li_single_recovery_test, // NOLINT
+       no_write_between_two_recovery) {            // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
@@ -75,10 +75,6 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
 
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, upsert(s, st, "a", "b"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     // two recovery
@@ -93,7 +89,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, get_storage("1", st));
     ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
-    ASSERT_EQ(vb, "b");
+    ASSERT_EQ(vb, "A");
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // cleanup

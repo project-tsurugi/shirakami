@@ -35,13 +35,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_two_storage_test
+class li_single_recovery_three_storage_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-data_store-"
-                "limestone_integration_single_recovery_two_storage_test");
+                "li_single_recovery_three_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -114,9 +114,9 @@ void storage_operation_test(std::size_t storage_num) {
     fin();
 }
 
-TEST_F(limestone_integration_single_recovery_two_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {               // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(2));        // NOLINT
+TEST_F(li_single_recovery_three_storage_test, // NOLINT
+       check_storage_operation_after_recovery) {                 // NOLINT
+    ASSERT_NO_FATAL_FAILURE(storage_operation_test(3));          // NOLINT
 }
 
 } // namespace shirakami::testing

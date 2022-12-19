@@ -35,14 +35,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-// regression test scenario causing "unreachable path" after recovery
-class limestone_integration_single_recovery_multi_storage_test
-    : public ::testing::Test { // NOLINT
+// regression test scenario causing empty storage after recovery
+class li_single_recovery_regression_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "limestone_integration_single_recovery_multi_storage_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_regression_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -54,16 +52,14 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storages_and_upsert_one_record(int num) {
+void create_storages_and_upsert_one_record() {
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
-    std::string name{"T" + std::to_string(num)};
     Storage t0{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage(name, t0));
-    storage_option opt{static_cast<std::size_t>(100 + num), "P"}; // NOLINT
-    ASSERT_EQ(Status::OK, create_storage(name, t0, opt));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage("T", t0));
+    ASSERT_EQ(Status::OK, create_storage("T", t0));
     std::cerr << "t0 : " << t0 << std::endl;
 
     ASSERT_EQ(Status::OK, enter(s));
@@ -72,10 +68,14 @@ void create_storages_and_upsert_one_record(int num) {
     ASSERT_EQ(Status::OK, upsert(s, t0, "a", "a")); // (*1)
     ASSERT_EQ(Status::OK, commit(s));               // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
+
+    Storage st{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage("S", st));
+    ASSERT_EQ(Status::OK, create_storage("S", st));
 }
 
-TEST_F(limestone_integration_single_recovery_multi_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {                 // NOLINT
+TEST_F(li_single_recovery_regression_test,       // NOLINT
+       check_storage_operation_after_recovery) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -83,8 +83,7 @@ TEST_F(limestone_integration_single_recovery_multi_storage_test, // NOLINT
     log_dir =
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
-    create_storages_and_upsert_one_record(0);
-    create_storages_and_upsert_one_record(1);
+    create_storages_and_upsert_one_record();
 
     fin(false);
 
@@ -92,12 +91,8 @@ TEST_F(limestone_integration_single_recovery_multi_storage_test, // NOLINT
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
     Storage t0{};
-    ASSERT_EQ(Status::OK, get_storage("T0", t0));
+    ASSERT_EQ(Status::OK, get_storage("T", t0));
     std::cerr << "t0 : " << t0 << std::endl;
-    storage_option opt{};
-    ASSERT_EQ(Status::OK, storage_get_options(t0, opt));
-    EXPECT_EQ(opt.id(), 100);
-    EXPECT_EQ(opt.payload(), "P");
 
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));

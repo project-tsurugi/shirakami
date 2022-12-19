@@ -34,13 +34,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_test
+class li_single_recovery_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "limestone_integration_no_write_between_two_recovery_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -52,14 +51,14 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-static std::string create_log_dir_name() {
+std::string create_log_dir_name() {
     int tid = syscall(SYS_gettid); // NOLINT
     std::uint64_t tsc = rdtsc();
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
-       no_write_between_two_recovery) {            // NOLINT
+TEST_F(li_single_recovery_test, // NOLINT
+       two_page_write_two_storage) {               // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
@@ -70,27 +69,43 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
+    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
 
+    ASSERT_EQ(Status::OK, create_storage("2", st));
+    ASSERT_EQ(Status::OK, upsert(s, st, "x", "X"));
+    ASSERT_EQ(Status::OK, upsert(s, st, "y", "Y"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    ASSERT_EQ(Status::OK, leave(s));
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    fin(false);
-    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    // two recovery
 
     // test: storage num
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 1); // because single recovery
+    ASSERT_EQ(st_list.size(), 2); // because single recovery
+    bool first{true};
     ASSERT_EQ(Status::OK, enter(s));
 
     // test: contents
-    std::string vb{};
-    ASSERT_EQ(Status::OK, get_storage("1", st));
-    ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
-    ASSERT_EQ(vb, "A");
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    for (auto&& each_st : st_list) {
+        std::string vb{};
+        if (first) {
+            ASSERT_EQ(Status::OK, search_key(s, each_st, "a", vb));
+            ASSERT_EQ(vb, "A");
+            ASSERT_EQ(Status::OK, search_key(s, each_st, "b", vb));
+            ASSERT_EQ(vb, "B");
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            first = false;
+        } else {
+            ASSERT_EQ(Status::OK, search_key(s, each_st, "x", vb));
+            ASSERT_EQ(vb, "X");
+            ASSERT_EQ(Status::OK, search_key(s, each_st, "y", vb));
+            ASSERT_EQ(vb, "Y");
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        }
+    }
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

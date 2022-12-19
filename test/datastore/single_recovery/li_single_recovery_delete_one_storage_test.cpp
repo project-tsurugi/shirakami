@@ -35,13 +35,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_storage_get_set_options_test
+class li_single_recovery_delete_one_storage_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_"
-                                  "storage_get_set_options_test");
+        google::InitGoogleLogging("shirakami-test-datastore-"
+                                  "li_single_recovery_"
+                                  "delete_one_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -53,8 +53,8 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(limestone_integration_single_recovery_storage_get_set_options_test, // NOLINT
-       check_storage_operation_after_recovery) { // NOLINT
+TEST_F(li_single_recovery_delete_one_storage_test, // NOLINT
+       check_storage_operation_after_recovery) {   // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -63,39 +63,18 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_test, // NO
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
-    // prepare test data
     Storage st{};
-    // not modified data
-    ASSERT_EQ(Status::OK, create_storage("1", st, {2, "3"}));
-    // modified data
-    ASSERT_EQ(Status::OK, create_storage("4", st, {5, "6"}));
-    ASSERT_EQ(Status::OK, storage_set_options(st, {7, "8"}));
+    ASSERT_EQ(Status::OK, create_storage("0", st));
+    ASSERT_EQ(Status::OK, delete_storage(st));
 
-    // shut down
     fin(false);
 
-    // recovery
+    // re-start
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(0, st_list.size()); // 1 is due to recovery
 
-    // shut down
-    fin(false);
-
-    // recovery
-    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-
-    ASSERT_EQ(Status::OK, get_storage("1", st));
-    storage_option options{};
-    ASSERT_EQ(Status::OK, storage_get_options(st, options));
-    // check recovery state about not modified options (*1)
-    ASSERT_EQ(2, options.id());
-    ASSERT_EQ("3", options.payload());
-    // check recovery state about modified options (*2)
-    ASSERT_EQ(Status::OK, get_storage("4", st));
-    ASSERT_EQ(Status::OK, storage_get_options(st, options));
-    ASSERT_EQ(7, options.id());
-    ASSERT_EQ("8", options.payload());
-
-    // cleanup
     fin();
 }
 

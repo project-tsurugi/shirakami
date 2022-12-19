@@ -35,14 +35,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-// regression testcase to verify recover+storage_get_options+insert
-class limestone_integration_single_recovery_storage_get_set_options_insert_test
+class li_single_recovery_create_two_storage_delete_one_storage_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_"
-                                  "storage_get_set_options_insert_test");
+        google::InitGoogleLogging("shirakami-test-datastore-"
+                                  "li_single_recovery_"
+                                  "create_two_storage_delete_one_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -54,8 +53,8 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(limestone_integration_single_recovery_storage_get_set_options_insert_test, // NOLINT
-       check_storage_operation_after_recovery) { // NOLINT
+TEST_F(li_single_recovery_create_two_storage_delete_one_storage_test, // NOLINT
+       check_storage_no_operation_after_recovery) {                   // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -64,31 +63,21 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_insert_test
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
-    // prepare test data
-    Storage st0{};
-    ASSERT_EQ(Status::OK, create_storage("T0", st0));
     Storage st1{};
-    ASSERT_EQ(Status::OK, create_storage("T1", st1));
-    Storage st10{};
-    ASSERT_EQ(Status::OK, create_storage("T10", st10));
+    ASSERT_EQ(Status::OK, create_storage("0", st1));
+    Storage st2{};
+    ASSERT_EQ(Status::OK, create_storage("1", st2));
+    ASSERT_EQ(Status::OK, delete_storage(st1));
 
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, st0, "a", "A"));
-    ASSERT_EQ(Status::OK, insert(s, st1, "a", "A"));
-    ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK, leave(s));
-
-    // shut down
     fin(false);
 
-    // recovery
+    // re-start
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+    std::vector<Storage> st_list{};
+    ASSERT_EQ(Status::OK, storage::list_storage(st_list));
+    ASSERT_EQ(1, st_list.size()); // 1 is due to recovery
 
-    storage_option options{};
-    ASSERT_EQ(Status::OK, get_storage("T0", st0));
-    ASSERT_EQ(Status::OK, storage_get_options(st0, options));
-    // cleanup
+    ASSERT_EQ(st2, *st_list.begin());
     fin();
 }
 

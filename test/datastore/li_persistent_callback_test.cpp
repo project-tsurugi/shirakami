@@ -33,11 +33,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_test : public ::testing::Test { // NOLINT
+class li_persistent_callback_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_test");
+        google::InitGoogleLogging("shirakami-test-datastore-"
+                                  "li_persistent_callback_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -49,7 +49,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(limestone_integration_test, check_persistent_call_back) { // NOLINT
+TEST_F(li_persistent_callback_test, check_persistent_call_back) { // NOLINT
     init();
     for (;;) {
         sleepMs(PARAM_EPOCH_TIME);

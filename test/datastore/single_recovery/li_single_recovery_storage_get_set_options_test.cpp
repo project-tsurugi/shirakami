@@ -35,14 +35,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-// regression testcase to verify recover+storage_get_options+insert
-class limestone_integration_single_recovery_storage_get_set_options_lost_test
+class li_single_recovery_storage_get_set_options_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_"
-                                  "storage_get_set_options_lost_test");
+                                  "li_single_recovery_"
+                                  "storage_get_set_options_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -54,9 +53,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-// regression scenario - storage option was not recovered correctly
-// when storage_id_undefined is specified for storage option
-TEST_F(limestone_integration_single_recovery_storage_get_set_options_lost_test, // NOLINT
+TEST_F(li_single_recovery_storage_get_set_options_test, // NOLINT
        check_storage_operation_after_recovery) { // NOLINT
     // start
     std::string log_dir{};
@@ -67,12 +64,12 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_lost_test, 
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     // prepare test data
-    Storage st00{};
-    ASSERT_EQ(Status::OK, create_storage("s", st00));
-
-    Storage st10{};
-    ASSERT_EQ(Status::OK,
-              create_storage("T", st10, {storage_id_undefined, "abc"}));
+    Storage st{};
+    // not modified data
+    ASSERT_EQ(Status::OK, create_storage("1", st, {2, "3"}));
+    // modified data
+    ASSERT_EQ(Status::OK, create_storage("4", st, {5, "6"}));
+    ASSERT_EQ(Status::OK, storage_set_options(st, {7, "8"}));
 
     // shut down
     fin(false);
@@ -80,28 +77,31 @@ TEST_F(limestone_integration_single_recovery_storage_get_set_options_lost_test, 
     // recovery
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
-    {
-        std::vector<std::string> storages{};
-        ASSERT_EQ(Status::OK, list_storage(storages));
-        ASSERT_EQ(2, storages.size());
-    }
+    ASSERT_EQ(Status::OK, get_storage("1", st));
+    storage_option options{};
+    ASSERT_EQ(Status::OK, storage_get_options(st, options));
+    // check recovery state about not modified options (*1)
+    ASSERT_EQ(2, options.id());
+    ASSERT_EQ("3", options.payload());
+    // check recovery state about modified options (*2)
+    ASSERT_EQ(Status::OK, get_storage("4", st));
+    ASSERT_EQ(Status::OK, storage_get_options(st, options));
+    ASSERT_EQ(7, options.id());
+    ASSERT_EQ("8", options.payload());
 
-    Storage st100{};
-    ASSERT_EQ(Status::OK, get_storage("s", st100));
-    ASSERT_EQ(st00, st100);
-    storage_option options100{};
-    ASSERT_EQ(Status::OK, storage_get_options(st100, options100));
-    ASSERT_EQ(storage_id_undefined, options100.id());
-    ASSERT_TRUE(options100.payload().empty());
+    // check operation after recovery for (*1)
+    ASSERT_EQ(Status::OK, get_storage("1", st));
+    ASSERT_EQ(Status::OK, storage_set_options(st, {9, "10"}));
+    ASSERT_EQ(Status::OK, storage_get_options(st, options));
+    ASSERT_EQ(9, options.id());
+    ASSERT_EQ("10", options.payload());
 
-    Storage st101{};
-    ASSERT_EQ(Status::OK, get_storage("T", st101));
-    ASSERT_NE(st100, st101);
-    ASSERT_EQ(st10, st101);
-    storage_option options101{};
-    ASSERT_EQ(Status::OK, storage_get_options(st101, options101));
-    ASSERT_EQ(storage_id_undefined, options101.id());
-    ASSERT_EQ("abc", options101.payload());
+    // check operation after recovery for (*1)
+    ASSERT_EQ(Status::OK, get_storage("4", st));
+    ASSERT_EQ(Status::OK, storage_set_options(st, {11, "12"}));
+    ASSERT_EQ(Status::OK, storage_get_options(st, options));
+    ASSERT_EQ(11, options.id());
+    ASSERT_EQ("12", options.payload());
 
     // cleanup
     fin();

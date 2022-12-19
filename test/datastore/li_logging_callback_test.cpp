@@ -33,13 +33,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_logging_callback_test
+class li_logging_callback_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-data_store-"
-                "limestone_integration_logging_callback_test");
+                "li_logging_callback_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -51,7 +51,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(limestone_integration_logging_callback_test, // NOLINT
+TEST_F(li_logging_callback_test, // NOLINT
        simple_check_logging_callback) {             // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT
@@ -89,7 +89,7 @@ TEST_F(limestone_integration_logging_callback_test, // NOLINT
     fin(false);
 }
 
-TEST_F(limestone_integration_logging_callback_test,               // NOLINT
+TEST_F(li_logging_callback_test,               // NOLINT
        short_tx_two_page_insert_update_delete_logging_callback) { // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT
@@ -133,7 +133,7 @@ TEST_F(limestone_integration_logging_callback_test,               // NOLINT
     ASSERT_EQ(count, 6);
 }
 
-TEST_F(limestone_integration_logging_callback_test,              // NOLINT
+TEST_F(li_logging_callback_test,              // NOLINT
        long_tx_two_page_insert_update_delete_logging_callback) { // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT

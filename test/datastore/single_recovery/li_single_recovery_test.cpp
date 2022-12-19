@@ -34,12 +34,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_test
+class li_single_recovery_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_single_recovery_test");
+                                  "li_single_recovery_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -57,7 +57,7 @@ std::string create_log_dir_name() {
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
+TEST_F(li_single_recovery_test, // NOLINT
        one_page_write_one_storage) {               // NOLINT
     // prepare
     std::string log_dir{};
@@ -103,7 +103,7 @@ TEST_F(limestone_integration_single_recovery_test, // NOLINT
     LOG(INFO) << "<< second shutdown";
 }
 
-TEST_F(limestone_integration_single_recovery_test, // NOLINT
+TEST_F(li_single_recovery_test, // NOLINT
        two_page_write_one_delete_one_storage) {    // NOLINT
     // prepare
     std::string log_dir{};

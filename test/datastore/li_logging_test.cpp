@@ -33,11 +33,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_logging_test : public ::testing::Test { // NOLINT
+class li_logging_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "limestone_integration_logging_test");
+                                  "li_logging_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -62,7 +62,7 @@ std::size_t dir_size(boost::filesystem::path& path) {
     return total_file_size;
 }
 
-TEST_F(limestone_integration_logging_test,       // NOLINT
+TEST_F(li_logging_test,       // NOLINT
        check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT

@@ -35,13 +35,12 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class limestone_integration_single_recovery_create_storage_test
+class li_single_recovery_create_storage_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "limestone_integration_single_recovery_create_storage_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_create_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -53,8 +52,8 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(limestone_integration_single_recovery_create_storage_test, // NOLINT
-       check_storage_no_operation_after_recovery) {               // NOLINT
+TEST_F(li_single_recovery_create_storage_test,      // NOLINT
+       check_storage_no_operation_after_recovery) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
