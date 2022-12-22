@@ -17,6 +17,8 @@
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/lpwal.h"
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/version.h"
 
 #include "shirakami/interface.h"
@@ -34,12 +36,13 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class li_single_recovery_delete_records_test
+class li_single_recovery_before_delete_records_test
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-data_store-"
-                                  "li_single_recovery_delete_records_test");
+        google::InitGoogleLogging(
+                "shirakami-test-data_store-"
+                "li_single_recovery_before_delete_records_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -57,45 +60,64 @@ std::string create_log_dir_name() {
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-TEST_F(li_single_recovery_delete_records_test, // NOLINT
-       two_page_write_one_delete_one_storage) {    // NOLINT
+TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
+       stx_delete_after_recovery) {                   // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
-    LOG(INFO) << ">> first start up";
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
-    LOG(INFO) << "<< first start up";
 
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
-    ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
-    ASSERT_EQ(Status::OK, upsert(s, st, "c", "C"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
-    LOG(INFO) << ">> first shutdown";
     fin(false);
-    LOG(INFO) << "<< first shutdown";
-    LOG(INFO) << ">> second start up";
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    LOG(INFO) << "<< second start up";
+
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+
+    fin(false);
+}
+
+TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
+       ltx_delete_after_recovery) {                   // NOLINT
+    // prepare
+    std::string log_dir{};
+    log_dir = create_log_dir_name();
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+
+    fin(false);
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
-            tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(Status::OK, search_key(s, st, "b", vb));
-    ASSERT_EQ(Status::OK, delete_record(s, st, "b"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
+    auto rc = commit(s); // NOLINT
+    auto* ti = static_cast<session*>(s);
+    LOG(INFO) << rc << ", " << ti->get_result_info().get_reason_code();
+    ASSERT_EQ(rc, Status::OK);
     ASSERT_EQ(Status::OK, leave(s));
 
-    LOG(INFO) << ">> second shutdown";
     fin(false);
-    LOG(INFO) << "<< second shutdown";
 }
 
 } // namespace shirakami::testing

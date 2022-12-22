@@ -95,6 +95,7 @@ void recovery_from_datastore() {
                 if (Status::OK != commit(token)) {
                     LOG(ERROR) << log_location_prefix << "unexpected error";
                 }
+                leave(token);
             };
             // check st2 existence
             auto ret = shirakami::storage::exist_storage(st2);
@@ -154,13 +155,19 @@ void recovery_from_datastore() {
                 return;
             }
         } else {
+            Token token{};
+            // acquire tx handle
+            while (enter(token) != Status::OK) { _mm_pause(); }
             shirakami::storage::register_storage(st); // maybe already exist
             st_list.emplace_back(st);
-            // create kvs entry (database record) from these info.
-            if (yakushima::status::OK != put<Record>(tk, st, key, val)) {
-                LOG(ERROR) << log_location_prefix
-                           << "not unique. to discuss or programming error.";
+            // upsert by transaction
+            if (Status::OK != upsert(token, st, key, val)) {
+                LOG(ERROR) << log_location_prefix << "unexpected error";
             }
+            if (Status::OK != commit(token)) {
+                LOG(ERROR) << log_location_prefix << "unexpected error";
+            }
+            leave(token);
         }
     }
     if (max_id > 0) {
