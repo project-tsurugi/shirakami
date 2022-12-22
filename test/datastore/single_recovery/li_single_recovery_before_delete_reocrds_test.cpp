@@ -111,10 +111,7 @@ TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
-    auto rc = commit(s); // NOLINT
-    auto* ti = static_cast<session*>(s);
-    LOG(INFO) << rc << ", " << ti->get_result_info().get_reason_code();
-    ASSERT_EQ(rc, Status::OK);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
     fin(false);
