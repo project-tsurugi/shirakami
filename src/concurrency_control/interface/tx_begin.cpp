@@ -46,6 +46,9 @@ Status tx_begin(transaction_options options) { // NOLINT
         ti->process_before_finish_step();
         return Status::WARN_ALREADY_BEGIN;
     }
+    // clear abort reason
+    ti->get_result_info().set_reason_code(reason_code::UNKNOWN);
+
     // this tx is not began.
     transaction_options::transaction_type tx_type =
             options.get_transaction_type();
