@@ -157,7 +157,7 @@ TEST_F(scan_upsert,                                        // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // commit scan tx
-    ASSERT_EQ(Status::ERR_PHANTOM, commit(s)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

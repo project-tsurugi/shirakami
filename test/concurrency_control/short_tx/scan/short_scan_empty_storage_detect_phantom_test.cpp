@@ -54,7 +54,7 @@ TEST_F(short_scan_empty_storage_detect_phantom_test, // NOLINT
     ASSERT_EQ(Status::OK, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // detect phantom
-    ASSERT_EQ(Status::ERR_PHANTOM, commit(s)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

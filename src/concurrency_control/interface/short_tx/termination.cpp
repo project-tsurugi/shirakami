@@ -209,13 +209,15 @@ RETRY: // NOLINT
                                                  wso->get_storage(), key,
                                                  rec_ptr, nvp)) {
             Status check_node_set_res{ti->update_node_set(nvp)};
-            if (check_node_set_res == Status::ERR_PHANTOM) {
+            if (check_node_set_res == Status::ERR_CC) {
                 /**
                   * This This transaction is confirmed to be aborted 
                   * because the previous scan was destroyed by an insert
                   * by another transaction.
                   */
-                return Status::ERR_PHANTOM;
+                ti->get_result_info().set_key_storage_name(key,
+                                                           wso->get_storage());
+                return Status::ERR_CC;
             }
             // success inserting
             return Status::OK;
@@ -258,9 +260,9 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 // may change op type, so should do continue explicitly.
                 continue;
             }
-            if (rc == Status::ERR_PHANTOM) {
+            if (rc == Status::ERR_CC) {
                 abort_process();
-                return Status::ERR_PHANTOM;
+                return Status::ERR_CC;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPDATE ||
                    wso_ptr->get_op() == OP_TYPE::DELETE) {
@@ -426,7 +428,7 @@ Status node_verify(session* ti) {
         if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
             unlock_write_set(ti);
             short_tx::abort(ti);
-            return Status::ERR_PHANTOM;
+            return Status::ERR_CC;
         }
     }
     return Status::OK;
@@ -492,7 +494,7 @@ extern Status commit(session* const ti) {
         short_tx::abort(ti);
         if (rc == Status::ERR_KVS) {
             ti->set_result(reason_code::KVS_INSERT);
-        } else if (rc == Status::ERR_PHANTOM) {
+        } else if (rc == Status::ERR_CC) {
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
         }
         return rc;

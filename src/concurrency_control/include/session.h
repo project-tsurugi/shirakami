@@ -431,7 +431,7 @@ public:
                 yakushima::node_version64_body nvb = nvp->get_stable_version();
                 if (std::get<0>(elem).get_vinsert_delete() + 1 !=
                     nvb.get_vinsert_delete()) {
-                    return Status::ERR_PHANTOM;
+                    return Status::ERR_CC;
                 }
                 std::get<0>(elem) = nvb; // update
                 /**

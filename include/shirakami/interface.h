@@ -53,8 +53,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @pre You executed enter command and you didn't execute leave command.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_KVS Error about key value store.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
- * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
  * operations was interrupted by some delete transaction between read phase and 
  * validation phase.
@@ -75,8 +73,6 @@ extern Status commit(Token token); // NOLINT
  * @param[in] token This should be the token which was used for commit api.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_KVS Error about key value store.
- * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
- * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
  * operations was interrupted by some delete transaction between read phase and 
  * validation phase.
@@ -204,6 +200,7 @@ extern Status init(database_options options = {}); // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success. If this tx executed delete operation, this insert
  * change the operation into update operation which updates using @a val.
  * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
@@ -213,10 +210,6 @@ extern Status init(database_options options = {}); // NOLINT
  * @return Status::WARN_CONCURRENT_INSERT This operation is canceled due to 
  * concurrent insert by other tx.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
- * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) 
- * which was inserted by this function was also read by previous scan 
- * operations, and it detects phantom problem by other transaction's write. 
- * It did abort().
  */
 extern Status insert(Token token, Storage storage,
                      std::string_view key, // NOLINT
@@ -409,9 +402,7 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the upserted record
  * @param[in] val the value of the upserted record
- * @return Status::ERR_PHANTOM The position (of node in in-memory tree indexing) 
- * which was inserted by this function was also read by previous scan operations, 
- * and it detects phantom problem by other transaction's write. It did abort().
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.

@@ -236,13 +236,6 @@ enum class Status : std::int32_t {
     /**
      * @brief Error
      * @details
-     * @a read_from_scan : It is the error due to phantom problems. @n
-     * @a scan_key : It is the error due to phantom problems. @n
-     */
-    ERR_PHANTOM,
-    /**
-     * @brief Error
-     * @details
      * @a enter : There are no capacity of session. @n
      */
     ERR_SESSION_LIMIT,
@@ -335,8 +328,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
-        case Status::ERR_PHANTOM:
-            return "ERR_PHANTOM"sv; // NOLINT
         case Status::ERR_VALIDATION:
             return "ERR_VALIDATION"sv; // NOLINT
         case Status::ERR_WRITE_TO_DELETED_RECORD:

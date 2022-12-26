@@ -23,15 +23,20 @@ static inline Status insert_process(session* const ti, Storage st,
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
         put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
-        Status check_node_set_res{ti->update_node_set(nvp)};
-        if (check_node_set_res == Status::ERR_PHANTOM) {
-            /**
-                         * This This transaction is confirmed to be aborted 
-                         * because the previous scan was destroyed by an insert
-                         * by another transaction.
-                         */
-            abort(ti);
-            return Status::ERR_PHANTOM;
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            Status check_node_set_res{ti->update_node_set(nvp)};
+            if (check_node_set_res == Status::ERR_CC) {
+                /**
+                  * This This transaction is confirmed to be aborted 
+                  * because the previous scan was destroyed by an insert
+                  * by another transaction.
+                  */
+                abort(ti);
+                ti->get_result_info().set_reason_code(
+                        reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                ti->get_result_info().set_key_storage_name(key, st);
+                return Status::ERR_CC;
+            }
         }
         ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr, val});
         out_rec_ptr = rec_ptr;
@@ -135,7 +140,7 @@ Status insert(Token const token, Storage const storage,
             register_read_if_ltx(ti, rec_ptr);
             return Status::OK;
         }
-        if (rc == Status::ERR_PHANTOM) { return rc; }
+        if (rc == Status::ERR_CC) { return rc; }
     }
 }
 

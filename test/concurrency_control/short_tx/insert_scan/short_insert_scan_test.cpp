@@ -56,7 +56,7 @@ TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
     // s2 does insert.
     ASSERT_EQ(Status::OK, insert(s2, st, "k", ""));
     // s3 does insert and find phantom
-    ASSERT_EQ(Status::ERR_PHANTOM, insert(s1, st, "k2", ""));
+    ASSERT_EQ(Status::ERR_CC, insert(s1, st, "k2", ""));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // cleanup

@@ -154,7 +154,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     goto RETRY; // NOLINT
                 }
                 if (rc == Status::WARN_INVALID_ARGS ||
-                    rc == Status::ERR_PHANTOM ||
+                    rc == Status::ERR_CC ||
                     rc == Status::WARN_INVALID_HANDLE ||
                     rc == Status::WARN_CONCURRENT_INSERT) {
                     LOG(ERROR)
