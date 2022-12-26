@@ -361,14 +361,12 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * write_preserve:{}.
  * @attention If you specify read_only is true, you can not execute 
  * transactional write operation in this transaction.
- * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success.
  * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
  * termination command, this is returned.
  * @return Status::WARN_ILLEGAL_OPERATION You executed this command using @a 
  * write_preserve and not using long tx mode.
- * @return Status::WARN_INVALID_ARGS User used storages not existed for read 
- * area.
+ * @return Status::WARN_INVALID_ARGS User used storages not existed.
  */
 extern Status tx_begin(transaction_options options = {}); // NOLINT
 

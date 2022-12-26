@@ -67,6 +67,7 @@ Status wp_meta::find_slot(std::size_t& at) {
             return Status::OK;
         }
     }
+    LOG(ERROR) << log_location_prefix << "unexpected path";
     return Status::WARN_NOT_FOUND;
 }
 

@@ -13,9 +13,8 @@ void result_info::set_storage_name(Storage const storage) {
     if (storage::key_handle_map_get_key(storage, out) == Status::OK) {
         set_storage_name(out);
     } else {
-        LOG(ERROR) << log_location_prefix
-                   << "key handle map error. user may cause "
-                      "undefined behavior";
+        LOG(INFO) << log_location_prefix
+                  << "key handle map. user may use storage not existed ";
     }
 }
 

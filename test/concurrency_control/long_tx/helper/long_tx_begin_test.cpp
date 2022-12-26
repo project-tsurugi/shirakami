@@ -33,22 +33,88 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(long_tx_begin_test, tx_begin_wp) { // NOLINT
+TEST_F(long_tx_begin_test, tx_begin_wp_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    std::vector<Storage> wp{st};
+    // wp for existing storage
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, wp}),
+              Status::OK);
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, tx_begin_wp_not_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::vector<Storage> wp{1, 2, 3};
     // wp for non-existing storage
-    ASSERT_EQ(Status::ERR_CC,
-              tx_begin({s, transaction_options::transaction_type::LONG, wp}));
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, wp}),
+              Status::WARN_INVALID_ARGS);
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_tx_begin_test, read_area) { // NOLINT
+TEST_F(long_tx_begin_test, read_area_default_constructor) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s, transaction_options::transaction_type::LONG, {}, {}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, positive_read_area_not_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::WARN_INVALID_ARGS,
+              tx_begin({s,
+                        transaction_options::transaction_type::LONG,
+                        {},
+                        {{st}, {}}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, negative_read_area_not_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::WARN_INVALID_ARGS,
+              tx_begin({s,
+                        transaction_options::transaction_type::LONG,
+                        {},
+                        {{}, {st}}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, positive_read_area_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{st}, {}}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_tx_begin_test, negative_read_area_existing_storage) { // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{}, {st}}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
