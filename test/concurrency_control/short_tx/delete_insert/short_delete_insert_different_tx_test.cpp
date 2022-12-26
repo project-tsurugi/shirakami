@@ -94,7 +94,7 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert_delete) { // NOLINT
      * Internally, s1 executed tx read operation for the records.
      */
     ASSERT_EQ(Status::ERR_CC, commit(s2));
-    ASSERT_EQ(Status::ERR_WRITE_TO_DELETED_RECORD, commit(s3));
+    ASSERT_EQ(Status::ERR_KVS, commit(s3));
 
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));

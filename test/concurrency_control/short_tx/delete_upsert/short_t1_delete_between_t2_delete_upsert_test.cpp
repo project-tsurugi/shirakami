@@ -37,7 +37,7 @@ TEST_F(short_t1_delete_between_t2_delete_upsert_test, delete_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, upsert(s1, st, "", "2"));
     // checked local delete and change it to update.
-    ASSERT_EQ(Status::ERR_WRITE_TO_DELETED_RECORD, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::ERR_KVS, commit(s1)); // NOLINT
 
     // verify
     std::string buf{};

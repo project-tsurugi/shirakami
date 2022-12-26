@@ -53,9 +53,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @pre You executed enter command and you didn't execute leave command.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_KVS Error about key value store.
- * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
- * operations was interrupted by some delete transaction between read phase and 
- * validation phase.
  * @return Status::OK success.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  * @return Status::WARN_PREMATURE The long transaction must wait until the 
@@ -72,9 +69,6 @@ extern Status commit(Token token); // NOLINT
  * @param[in] token This should be the token which was used for commit api.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_KVS Error about key value store.
- * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
- * operations was interrupted by some delete transaction between read phase and 
- * validation phase.
  * @return Status::OK This transaction was committed.
  * @return Status::WARN_ILLEGAL_OPERATION The @a token is not long transaction
  * or didn't request commit.

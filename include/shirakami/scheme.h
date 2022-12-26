@@ -239,14 +239,6 @@ enum class Status : std::int32_t {
      * @a enter : There are no capacity of session. @n
      */
     ERR_SESSION_LIMIT,
-    /**
-     * @brief Error
-     * @details
-     * @a commit : This transaction including update operations was interrupted 
-     * by some delete transaction between read phase and validation phase. 
-     * So it called abort. @n
-     */
-    ERR_WRITE_TO_DELETED_RECORD,
     INTERNAL_BEGIN = 1000,
     INTERNAL_WARN_CONCURRENT_INSERT,
     INTERNAL_WARN_NOT_DELETED,
@@ -320,8 +312,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
-        case Status::ERR_WRITE_TO_DELETED_RECORD:
-            return "ERR_WRITE_TO_DELETED_RECORD"sv; // NOLINT
         case Status::INTERNAL_BEGIN:
             return "INTERNAL_BEGIN"sv; // NOLINT
         case Status::INTERNAL_WARN_NOT_DELETED:

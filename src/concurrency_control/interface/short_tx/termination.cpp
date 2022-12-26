@@ -215,6 +215,8 @@ RETRY: // NOLINT
                   * because the previous scan was destroyed by an insert
                   * by another transaction.
                   */
+                ti->get_result_info().set_reason_code(
+                        reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                 ti->get_result_info().set_key_storage_name(key,
                                                            wso->get_storage());
                 return Status::ERR_CC;
@@ -249,6 +251,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 // the record is existing record (not inserting, deleted)
                 rec_ptr->get_tidw_ref().unlock();
                 abort_process();
+                ti->get_result_info().set_reason_code(reason_code::KVS_INSERT);
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso_ptr->get_storage());
                 return Status::ERR_KVS;
@@ -272,15 +275,13 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->get_result_info().set_key_storage_name(
-                            rec_ptr->get_key_view(), wso_ptr->get_storage());
                     ti->set_result(reason_code::KVS_UPDATE);
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
                     ti->set_result(reason_code::KVS_DELETE);
-                    ti->get_result_info().set_key_storage_name(
-                            rec_ptr->get_key_view(), wso_ptr->get_storage());
                 }
-                return Status::ERR_WRITE_TO_DELETED_RECORD;
+                ti->get_result_info().set_key_storage_name(
+                        rec_ptr->get_key_view(), wso_ptr->get_storage());
+                return Status::ERR_KVS;
             }
         } else {
             LOG(ERROR) << log_location_prefix << "programming error";
@@ -492,11 +493,6 @@ extern Status commit(session* const ti) {
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
         short_tx::abort(ti);
-        if (rc == Status::ERR_KVS) {
-            ti->set_result(reason_code::KVS_INSERT);
-        } else if (rc == Status::ERR_CC) {
-            ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-        }
         return rc;
     }
 
