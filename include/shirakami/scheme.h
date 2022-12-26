@@ -200,6 +200,10 @@ enum class Status : std::int32_t {
      */
     OK = 0,
     /**
+     * @brief Error about concurrency control.
+     */
+    ERR_CC,
+    /**
      * @brief Error
      * @details This means conflicts on write preserve and tx was executed 
      * abort process internally.
@@ -230,6 +234,10 @@ enum class Status : std::int32_t {
      * @details The configuration at init command is invalid.
      */
     ERR_INVALID_CONFIGURATION,
+    /**
+     * @brief Error about key value store.
+     */
+    ERR_KVS,
     /**
      * @brief Error
      * @details The error shows the long transaction execute read for the 
@@ -329,6 +337,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "OK"sv; // NOLINT
         case Status::ERR_CONFLICT_ON_WRITE_PRESERVE:
             return "ERR_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
+        case Status::ERR_CC:
+            return "ERR_CC"sv; // NOLINT
         case Status::ERR_FAIL_INSERT:
             return "ERR_FAIL_INSERT"sv; // NOLINT
         case Status::ERR_FAIL_WP:
@@ -341,6 +351,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_FATAL_INDEX"sv; // NOLINT
         case Status::ERR_INVALID_CONFIGURATION:
             return "ERR_INVALID_CONFIGURATION"sv; // NOLINT
+        case Status::ERR_KVS:
+            return "ERR_KVS"sv; // NOLINT
         case Status::ERR_NOT_IMPLEMENTED:
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
