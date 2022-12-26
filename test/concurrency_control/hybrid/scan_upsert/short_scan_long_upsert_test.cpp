@@ -140,7 +140,7 @@ TEST_F(short_scan_long_upsert_test,        // NOLINT
         ASSERT_EQ(Status::OK, read_key_from_scan(ss, hd, buf));
     }
     wait_epoch_update();
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE, commit(ss)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(ss)); // NOLINT
     // due to wp
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT

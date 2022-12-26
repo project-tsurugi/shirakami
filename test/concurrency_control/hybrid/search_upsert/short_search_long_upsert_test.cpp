@@ -71,7 +71,7 @@ TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
               Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(ss, st, "", vb));
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
@@ -130,7 +130,7 @@ TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
         ASSERT_EQ(Status::OK, search_key(ss, st, "", vb));
     }
     wait_epoch_update();
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE, commit(ss)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(ss)); // NOLINT
     // due to wp
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT

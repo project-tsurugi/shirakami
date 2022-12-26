@@ -133,7 +133,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
             unlock_write_set(ti);
             short_tx::abort(ti);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
-            return Status::ERR_CONFLICT_ON_WRITE_PRESERVE;
+            return Status::ERR_CC;
         }
     }
 

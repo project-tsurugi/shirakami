@@ -56,7 +56,7 @@ TEST_F(search_wp, short_search_find_wp) { // NOLINT
                                     {st}}));
     wait_change_epoch(); // valid ^^ wp.
     std::string vb{};
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(short_s, st, "", vb));
     ASSERT_EQ(Status::OK, leave(short_s));
     ASSERT_EQ(Status::OK, leave(long_s));

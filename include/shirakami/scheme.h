@@ -205,12 +205,6 @@ enum class Status : std::int32_t {
     ERR_CC,
     /**
      * @brief Error
-     * @details This means conflicts on write preserve and tx was executed 
-     * abort process internally.
-     */
-    ERR_CONFLICT_ON_WRITE_PRESERVE,
-    /**
-     * @brief Error
      * @details This means that insert operation fails due to existence.
      */
     ERR_FAIL_INSERT,
@@ -335,8 +329,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_WRITE_WITHOUT_WP"sv; // NOLINT
         case Status::OK:
             return "OK"sv; // NOLINT
-        case Status::ERR_CONFLICT_ON_WRITE_PRESERVE:
-            return "ERR_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
         case Status::ERR_CC:
             return "ERR_CC"sv; // NOLINT
         case Status::ERR_FAIL_INSERT:

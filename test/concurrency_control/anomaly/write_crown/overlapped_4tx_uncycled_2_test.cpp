@@ -100,7 +100,7 @@ TEST_F(overlapped_4tx_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(2), sty, y, buf));
     ASSERT_EQ(
             Status::OK,
@@ -206,7 +206,7 @@ TEST_F(overlapped_4tx_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(3), stz, z, buf));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
@@ -250,7 +250,7 @@ TEST_F(overlapped_4tx_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(2), sty, y, buf));
     ASSERT_EQ(
             Status::OK,

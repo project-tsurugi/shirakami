@@ -106,7 +106,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                             rc == Status::WARN_CONCURRENT_UPDATE) {
                             _mm_pause();
                         } else if (rc ==
-                                   Status::ERR_CONFLICT_ON_WRITE_PRESERVE) {
+                                   Status::ERR_CC) {
                             ASSERT_EQ(bt, false); // fail only short
                             goto SHORT_TX_RETRY;  // NOLINT
                         } else {

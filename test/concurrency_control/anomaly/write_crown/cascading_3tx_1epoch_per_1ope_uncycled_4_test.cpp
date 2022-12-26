@@ -101,7 +101,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_4_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(2), sty, y, buf));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
@@ -118,7 +118,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_4_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(4), sta, a, buf));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
@@ -164,7 +164,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_4_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CONFLICT_ON_WRITE_PRESERVE,
+    ASSERT_EQ(Status::ERR_CC,
               search_key(s.at(3), stz, z, buf));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));

@@ -51,8 +51,7 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * implicitly. Otherwise, it commits.
  * @param[in] token retrieved by enter().
  * @pre You executed enter command and you didn't execute leave command.
- * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
- * about write preserve by the transaction which is long tx mode.
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
  * operation of the transaction.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
@@ -75,8 +74,7 @@ extern Status commit(Token token); // NOLINT
 /**
  * @brief It checks result of the transaction requested commit.
  * @param[in] token This should be the token which was used for commit api.
- * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE This means validation failure
- * about write preserve by the transaction which is long tx mode.
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
  * operation of the transaction.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
@@ -167,8 +165,7 @@ extern Status enter(Token& token); // NOLINT
  * for no transactions to be located in an order older than the order in which 
  * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
- * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
- * tx's wp and executed abort command internally.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status exist_key(Token token, Storage storage, std::string_view key);
 
@@ -365,8 +362,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * for no transactions to be located in an order older than the order in which 
  * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
- * @return Status::ERR_CONFLICT_ON_WRITE_PRESERVE The short tx's read found long
- * tx's wp and executed abort command internally.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status search_key(Token token, Storage storage, std::string_view key,
                          std::string& value); // NOLINT
