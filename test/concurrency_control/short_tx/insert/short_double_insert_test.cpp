@@ -102,7 +102,7 @@ TEST_F(double_insert, insert_insert_conflict_commit_commit) { // NOLINT
     // first inserter win
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     // second inserter lose
-    ASSERT_EQ(Status::ERR_FAIL_INSERT, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::ERR_KVS, commit(s2)); // NOLINT
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_INSERT);
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");

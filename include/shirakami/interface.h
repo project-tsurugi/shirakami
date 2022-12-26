@@ -52,8 +52,7 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @param[in] token retrieved by enter().
  * @pre You executed enter command and you didn't execute leave command.
  * @return Status::ERR_CC Error about concurrency control.
- * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
- * operation of the transaction.
+ * @return Status::ERR_KVS Error about key value store.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
  * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
@@ -75,8 +74,7 @@ extern Status commit(Token token); // NOLINT
  * @brief It checks result of the transaction requested commit.
  * @param[in] token This should be the token which was used for commit api.
  * @return Status::ERR_CC Error about concurrency control.
- * @return Status::ERR_FAIL_INSERT It fails to commit due to failing insert 
- * operation of the transaction.
+ * @return Status::ERR_KVS Error about key value store.
  * @return Status::ERR_PHANTOM This transaction can not commit due to phantom 
  * problem.
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 

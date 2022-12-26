@@ -622,7 +622,7 @@ Status verify_kvs_error(session* const ti) {
                 ti->set_result(reason_code::KVS_INSERT);
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso.get_storage());
-                return Status::ERR_FAIL_INSERT;
+                return Status::ERR_KVS;
             }
         }
     }

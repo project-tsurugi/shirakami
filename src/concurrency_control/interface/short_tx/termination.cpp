@@ -249,7 +249,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 abort_process();
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso_ptr->get_storage());
-                return Status::ERR_FAIL_INSERT;
+                return Status::ERR_KVS;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
             auto rc = upsert_process_at_write_lock(ti, wso_ptr,
@@ -490,7 +490,7 @@ extern Status commit(session* const ti) {
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
         short_tx::abort(ti);
-        if (rc == Status::ERR_FAIL_INSERT) {
+        if (rc == Status::ERR_KVS) {
             ti->set_result(reason_code::KVS_INSERT);
         } else if (rc == Status::ERR_PHANTOM) {
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);

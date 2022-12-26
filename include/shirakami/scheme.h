@@ -205,11 +205,6 @@ enum class Status : std::int32_t {
     ERR_CC,
     /**
      * @brief Error
-     * @details This means that insert operation fails due to existence.
-     */
-    ERR_FAIL_INSERT,
-    /**
-     * @brief Error
      * @details This means that wp failed.
      */
     ERR_FAIL_WP,
@@ -331,8 +326,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "OK"sv; // NOLINT
         case Status::ERR_CC:
             return "ERR_CC"sv; // NOLINT
-        case Status::ERR_FAIL_INSERT:
-            return "ERR_FAIL_INSERT"sv; // NOLINT
         case Status::ERR_FAIL_WP:
             return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_READ_AREA_VIOLATION:
