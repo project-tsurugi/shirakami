@@ -129,6 +129,8 @@ public:
 
     void set_storage_name(std::string_view name) { storage_name_ = name; }
 
+    void set_storage_name(Storage storage);
+
     void set_key_storage_name(std::string_view key, Storage storage);
 
     // end: getter / setter

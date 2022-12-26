@@ -162,6 +162,8 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         if (rc != yakushima::status::OK) {
             cleanup_process();
             // dtor : release wp_mutex
+            ti->get_result_info().set_reason_code(reason_code::UNKNOWN);
+            ti->get_result_info().set_storage_name(wp_target);
             return Status::ERR_CC;
         }
         wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
