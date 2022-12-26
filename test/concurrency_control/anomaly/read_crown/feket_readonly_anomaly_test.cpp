@@ -103,7 +103,7 @@ TEST_F(feket_readonly_anomaly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));

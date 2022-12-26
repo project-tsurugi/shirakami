@@ -143,7 +143,7 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
                 } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
             }
             if (rc == Status::OK) { continue; }
-            if (rc == Status::ERR_VALIDATION) { goto TX_BEGIN; } // NOLINT
+            if (rc == Status::ERR_CC) { goto TX_BEGIN; } // NOLINT
             LOG(ERROR) << log_location_prefix << rc;
         }
         ASSERT_EQ(leave(s), Status::OK);

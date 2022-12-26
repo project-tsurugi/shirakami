@@ -108,7 +108,7 @@ TEST_F(read_wait_one_epoch_test, within_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, var.at(3)));
     ASSERT_EQ(Status::OK, search_key(s.at(2), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // epoch false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
     auto tri = transaction_result_info(s.at(2));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
@@ -197,7 +197,7 @@ TEST_F(read_wait_one_epoch_test, one_epoch) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(2), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // epoch false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
     auto tri = transaction_result_info(s.at(2));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);

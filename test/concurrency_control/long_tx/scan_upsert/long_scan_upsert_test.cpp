@@ -164,7 +164,7 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s1));
         auto* ti2{static_cast<session*>(s2)};
         ASSERT_EQ(1, ti2->get_overtaken_ltx_set().size());
-        ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+        ASSERT_EQ(Status::ERR_CC, commit(s2));
         ASSERT_EQ(leave(s1), Status::OK);
         ASSERT_EQ(leave(s2), Status::OK);
     }

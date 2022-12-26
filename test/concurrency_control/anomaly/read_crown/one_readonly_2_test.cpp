@@ -206,7 +206,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
@@ -265,7 +265,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // rub invalidation
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // rub invalidation
     // false positive due to not tracking version order of same epoch
 
     // verify
@@ -313,7 +313,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -351,7 +351,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
     ASSERT_EQ(Status::OK,
               tx_begin({s.at(4), transaction_options::transaction_type::LONG}));
     wait_epoch_update();
@@ -398,7 +398,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
@@ -446,7 +446,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
     ASSERT_EQ(Status::OK,
               tx_begin({s.at(4), transaction_options::transaction_type::LONG}));
     wait_epoch_update();

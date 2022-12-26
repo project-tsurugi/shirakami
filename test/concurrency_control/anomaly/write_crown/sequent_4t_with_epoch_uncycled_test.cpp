@@ -121,7 +121,7 @@ TEST_F(sequent_4t_with_epoch_uncycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
     // error read upper bound. this read t1 but forwarding before t1.
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -172,7 +172,7 @@ TEST_F(sequent_4t_with_epoch_uncycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

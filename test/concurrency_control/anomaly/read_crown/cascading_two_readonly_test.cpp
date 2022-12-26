@@ -133,8 +133,8 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -197,7 +197,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -260,7 +260,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -322,8 +322,8 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
@@ -386,7 +386,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
     // due to read upper bound violation. forwarding against t3 and the read
     // version (epoch) is same to t3(t1)
 
@@ -451,7 +451,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stv, v, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
     // due to read upper bound violation. forwarding against t3 and the read
     // version (epoch) is same to t3(t1)
 

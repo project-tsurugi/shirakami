@@ -90,7 +90,7 @@ TEST_F(write_skew, simple) { // NOLINT
 
     // commit phase
     ASSERT_EQ(commit(s1), Status::OK);
-    ASSERT_EQ(commit(s2), Status::ERR_VALIDATION); // s2 will break s1's read
+    ASSERT_EQ(commit(s2), Status::ERR_CC); // s2 will break s1's read
 
 
     ASSERT_EQ(leave(s1), Status::OK);

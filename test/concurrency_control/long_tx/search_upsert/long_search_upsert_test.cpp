@@ -147,7 +147,7 @@ TEST_F(search_upsert, read_modify_write) { // NOLINT
         ASSERT_EQ(vb, init_val);
         ASSERT_EQ(upsert(s2, st, "", s2_val), Status::OK);
         ASSERT_EQ(Status::OK, commit(s1));
-        ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+        ASSERT_EQ(Status::ERR_CC, commit(s2));
         ASSERT_EQ(leave(s1), Status::OK);
         ASSERT_EQ(leave(s2), Status::OK);
     }

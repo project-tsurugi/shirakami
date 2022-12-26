@@ -133,7 +133,7 @@ TEST_F(read_wait_two_cascading_dscending_within_epoch_abort_test, // NOLINT
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // epoch false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // epoch false positive
     tri = transaction_result_info(s.at(4));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);

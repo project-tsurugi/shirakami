@@ -108,7 +108,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
@@ -118,7 +118,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -158,7 +158,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));
@@ -210,7 +210,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
@@ -314,7 +314,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -355,7 +355,7 @@ TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));

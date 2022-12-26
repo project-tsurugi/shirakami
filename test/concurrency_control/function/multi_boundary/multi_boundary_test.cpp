@@ -131,9 +131,9 @@ TEST_F(multi_boundary_test, parallel) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, var.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(5), stx, x, var.at(5)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
     ASSERT_EQ(Status::OK, upsert(s.at(6), stx, x, var.at(6)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(6)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));

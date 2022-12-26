@@ -128,7 +128,7 @@ TEST_F(one_readonly_with_occ_overlapped_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(5)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
     ASSERT_EQ(
             static_cast<session*>(s.at(5))->get_result_info().get_reason_code(),
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);

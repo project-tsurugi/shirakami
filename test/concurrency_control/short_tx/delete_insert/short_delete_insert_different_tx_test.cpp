@@ -61,7 +61,7 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert) { // NOLINT
      * s1 failed insert and depends on existing the records.
      * Internally, s1 executed tx read operation for the records.
      */
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s1));
+    ASSERT_EQ(Status::ERR_CC, commit(s1));
 
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));
@@ -93,7 +93,7 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert_delete) { // NOLINT
      * s1 failed insert and depends on existing the records.
      * Internally, s1 executed tx read operation for the records.
      */
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+    ASSERT_EQ(Status::ERR_CC, commit(s2));
     ASSERT_EQ(Status::ERR_WRITE_TO_DELETED_RECORD, commit(s3));
 
     ASSERT_EQ(Status::OK, leave(s1));

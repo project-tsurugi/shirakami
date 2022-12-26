@@ -153,7 +153,7 @@ TEST_F(long_delete_insert_test, concurrent_insert_tx_delete_tx) { // NOLINT
      * s1 is treated that it executed read operation.
      * Forwarded s2's delete_record will break s1, so it fails validation.
      */
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+    ASSERT_EQ(Status::ERR_CC, commit(s2));
 
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));
@@ -189,7 +189,7 @@ TEST_F(long_delete_insert_test, concurrent_delete_tx_insert_tx) { // NOLINT
      * s1 is treated that it executed read operation.
      * Forwarded s2's insert will break s1, so it fails validation.
      */
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+    ASSERT_EQ(Status::ERR_CC, commit(s2));
 
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));

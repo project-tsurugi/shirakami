@@ -110,7 +110,7 @@ TEST_F(boundary_wait_one_epoch_test, one_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -196,7 +196,7 @@ TEST_F(boundary_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, abort(s.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
     auto tri = transaction_result_info(s.at(3));
     // false positive
     ASSERT_EQ((*tri).get_reason_code(),

@@ -122,7 +122,7 @@ TEST_F(read_and_boundary_wait_read_abort_with_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
     auto tri = transaction_result_info(s.at(4));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);

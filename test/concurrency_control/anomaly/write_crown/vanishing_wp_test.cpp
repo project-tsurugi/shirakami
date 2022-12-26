@@ -100,7 +100,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(1)));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
@@ -109,7 +109,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -143,7 +143,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(1)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -188,7 +188,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(1)));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
@@ -279,7 +279,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -313,7 +313,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(1)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(1)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -582,7 +582,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -762,7 +762,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

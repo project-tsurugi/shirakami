@@ -133,7 +133,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                         goto RETRY; // NOLINT
                     }
                     if (rc == Status::WARN_NOT_FOUND) { LOG(ERROR); }
-                    if (rc == Status::OK || rc == Status::ERR_VALIDATION) {
+                    if (rc == Status::OK || rc == Status::ERR_CC) {
                         break;
                     }
                 }
@@ -163,7 +163,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
             } else {
                 LOG(ERROR) << log_location_prefix << "unkown operation";
             }
-            if (rc == Status::ERR_VALIDATION) {
+            if (rc == Status::ERR_CC) {
                 ++ct_abort;
                 abort(token);
                 need_verify = false;

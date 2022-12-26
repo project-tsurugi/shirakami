@@ -124,9 +124,9 @@ TEST_F(cascading_wait_test, lazy_update) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(1), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // epoch false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // epoch false positive
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
@@ -230,7 +230,7 @@ TEST_F(cascading_wait_test, lazy_update_with_epoch) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
     // epoch false positive due to z between t1, t4
 
     // verify

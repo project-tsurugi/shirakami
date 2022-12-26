@@ -85,7 +85,7 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+    ASSERT_EQ(Status::ERR_CC, commit(s2));
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
               reason_code::KVS_INSERT);
     ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_key(), "");
@@ -128,7 +128,7 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s2));
+    ASSERT_EQ(Status::ERR_CC, commit(s2));
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -172,7 +172,7 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
         rc = check_commit(s2);
         _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::ERR_VALIDATION, rc);
+    ASSERT_EQ(Status::ERR_CC, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -216,7 +216,7 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
         rc = check_commit(s2);
         _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::ERR_VALIDATION, rc);
+    ASSERT_EQ(Status::ERR_CC, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

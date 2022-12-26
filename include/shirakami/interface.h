@@ -56,7 +56,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
  * operations was interrupted by some delete transaction between read phase and 
  * validation phase.
- * @return Status::ERR_VALIDATION This means read validation failed.
  * @return Status::OK success.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  * @return Status::WARN_PREMATURE The long transaction must wait until the 
@@ -76,7 +75,6 @@ extern Status commit(Token token); // NOLINT
  * @return Status::ERR_WRITE_TO_DELETED_RECORD This transaction including update 
  * operations was interrupted by some delete transaction between read phase and 
  * validation phase.
- * @return Status::ERR_VALIDATION This means read validation failed.
  * @return Status::OK This transaction was committed.
  * @return Status::WARN_ILLEGAL_OPERATION The @a token is not long transaction
  * or didn't request commit.

@@ -84,7 +84,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
         rc = check_commit(s2);
         _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::ERR_VALIDATION, rc);
+    ASSERT_EQ(Status::ERR_CC, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -126,7 +126,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
         rc = check_commit(s2);
         _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::ERR_VALIDATION, rc);
+    ASSERT_EQ(Status::ERR_CC, rc);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }

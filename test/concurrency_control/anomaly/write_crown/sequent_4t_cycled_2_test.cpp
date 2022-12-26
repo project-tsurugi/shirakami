@@ -315,7 +315,7 @@ TEST_F(sequent_4t_cycled_2_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // false positive
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -364,7 +364,7 @@ TEST_F(sequent_4t_cycled_2_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // false positive
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -462,7 +462,7 @@ TEST_F(sequent_4t_cycled_2_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sta, a, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

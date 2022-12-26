@@ -242,14 +242,6 @@ enum class Status : std::int32_t {
     /**
      * @brief Error
      * @details
-     * @a commit : This means read validation failure and it already executed 
-     * abort(). After this, do tx_begin to start next transaction or leave to 
-     * leave the session. @n
-     */
-    ERR_VALIDATION,
-    /**
-     * @brief Error
-     * @details
      * @a commit : This transaction including update operations was interrupted 
      * by some delete transaction between read phase and validation phase. 
      * So it called abort. @n
@@ -328,8 +320,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
         case Status::ERR_SESSION_LIMIT:
             return "ERR_SESSION_LIMIT"sv; // NOLINT
-        case Status::ERR_VALIDATION:
-            return "ERR_VALIDATION"sv; // NOLINT
         case Status::ERR_WRITE_TO_DELETED_RECORD:
             return "ERR_WRITE_TO_DELETED_RECORD"sv; // NOLINT
         case Status::INTERNAL_BEGIN:

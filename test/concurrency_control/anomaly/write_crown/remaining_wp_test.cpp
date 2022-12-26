@@ -109,7 +109,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -153,7 +153,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -236,7 +236,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -323,7 +323,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -367,7 +367,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -579,7 +579,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(0)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(0)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -763,7 +763,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(0)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

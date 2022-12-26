@@ -112,13 +112,13 @@ TEST_F(cascading_4tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -167,7 +167,7 @@ TEST_F(cascading_4tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
@@ -217,7 +217,7 @@ TEST_F(cascading_4tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(2)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
@@ -319,7 +319,7 @@ TEST_F(cascading_4tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

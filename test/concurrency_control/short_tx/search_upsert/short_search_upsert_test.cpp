@@ -87,7 +87,7 @@ TEST_F(short_search_upsert, search_find_concurrent_upsert_at_commit) { // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(0)));             // NOLINT
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(token_ar.at(1))); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(token_ar.at(1))); // NOLINT
     auto& rinfo = static_cast<session*>(token_ar.at(1))->get_result_info();
     ASSERT_EQ(rinfo.get_reason_code(), reason_code::CC_OCC_READ_VERIFY);
     ASSERT_EQ(rinfo.get_key(), k);

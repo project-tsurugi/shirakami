@@ -79,7 +79,7 @@ Status read_verify(session* ti, Storage const storage, tid_word read_tid,
         (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
         ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
                                                    storage);
-        return Status::ERR_VALIDATION;
+        return Status::ERR_CC;
     }
     return Status::OK;
 }
@@ -91,7 +91,7 @@ Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep != 0 && find_min_ep <= commit_epoch) {
-        return Status::ERR_VALIDATION;
+        return Status::ERR_CC;
     }
     return Status::OK;
 }
@@ -112,7 +112,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
             unlock_write_set(ti);
             short_tx::abort(ti);
             ti->set_result(reason_code::CC_OCC_READ_VERIFY);
-            return Status::ERR_VALIDATION;
+            return Status::ERR_CC;
         }
         // ==============================
 

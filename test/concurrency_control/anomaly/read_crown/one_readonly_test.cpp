@@ -116,7 +116,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -162,7 +162,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
@@ -353,7 +353,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(4))); // rub invalidation
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4))); // rub invalidation
 
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

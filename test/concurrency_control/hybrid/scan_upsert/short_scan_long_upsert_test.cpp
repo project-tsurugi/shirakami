@@ -220,7 +220,7 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
         ASSERT_EQ(Status::OK, commit(ltx1));
 
         // about ltx2
-        ASSERT_EQ(Status::ERR_VALIDATION, commit(ltx2));
+        ASSERT_EQ(Status::ERR_CC, commit(ltx2));
 
         ASSERT_EQ(leave(stx), Status::OK);
         ASSERT_EQ(leave(ltx1), Status::OK);

@@ -128,7 +128,7 @@ TEST_F(read_wait_two_wait_two_epoch_with_abort_test, // NOLINT
     ASSERT_EQ(Status::OK, abort(s.at(2)));
     auto tri = transaction_result_info(s.at(2));
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
-    ASSERT_EQ(Status::ERR_VALIDATION, commit(s.at(3))); // epoch false positive
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(3))); // epoch false positive
     tri = transaction_result_info(s.at(3));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);

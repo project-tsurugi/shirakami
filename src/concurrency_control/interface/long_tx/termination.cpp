@@ -459,7 +459,7 @@ Status verify(session* const ti) {
                                 ti->set_result(
                                         reason_code::
                                                 CC_LTX_READ_UPPER_BOUND_VIOLATION);
-                                return Status::ERR_VALIDATION;
+                                return Status::ERR_CC;
                             } // forwarding not break own old read
                             // lock ongoing tx for forwarding
                             std::lock_guard<std::shared_mutex> ongo_lk{
@@ -518,7 +518,7 @@ Status verify(session* const ti) {
                 ti->set_result(reason_code::KVS_INSERT);
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso.second.get_storage());
-                return Status::ERR_VALIDATION;
+                return Status::ERR_CC;
             }
         } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
                    wso.second.get_op() == OP_TYPE::DELETE) {
@@ -533,7 +533,7 @@ Status verify(session* const ti) {
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
                 }
-                return Status::ERR_VALIDATION;
+                return Status::ERR_CC;
             }
         }
 
@@ -546,7 +546,7 @@ Status verify(session* const ti) {
             ti->get_result_info().set_key_storage_name(
                     rec_ptr->get_key_view(), wso.second.get_storage());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-            return Status::ERR_VALIDATION;
+            return Status::ERR_CC;
         }
 
         // for stx
@@ -555,7 +555,7 @@ Status verify(session* const ti) {
             ti->get_result_info().set_key_storage_name(
                     rec_ptr->get_key_view(), wso.second.get_storage());
             ti->set_result(reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-            return Status::ERR_VALIDATION;
+            return Status::ERR_CC;
         }
         //==========
 
@@ -578,7 +578,7 @@ Status verify(session* const ti) {
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
-                    return Status::ERR_VALIDATION;
+                    return Status::ERR_CC;
                 }
 
                 // for short
@@ -587,7 +587,7 @@ Status verify(session* const ti) {
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
-                    return Status::ERR_VALIDATION;
+                    return Status::ERR_CC;
                 }
             } else {
                 LOG(ERROR) << log_location_prefix << "programming error";
@@ -669,9 +669,9 @@ extern Status commit(session* const ti) {
     // ==========
     // verify : start
     rc = verify(ti);
-    if (rc == Status::ERR_VALIDATION) {
+    if (rc == Status::ERR_CC) {
         abort(ti);
-        return Status::ERR_VALIDATION;
+        return Status::ERR_CC;
     }
     // verify : end
     // ==========
