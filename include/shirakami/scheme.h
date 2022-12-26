@@ -205,11 +205,6 @@ enum class Status : std::int32_t {
     ERR_CC,
     /**
      * @brief Error
-     * @details This means that wp failed.
-     */
-    ERR_FAIL_WP,
-    /**
-     * @brief Error
      * @details Some fatal error. For example, programming error.
      */
     ERR_FATAL,
@@ -326,8 +321,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "OK"sv; // NOLINT
         case Status::ERR_CC:
             return "ERR_CC"sv; // NOLINT
-        case Status::ERR_FAIL_WP:
-            return "ERR_FAIL_WP"sv; // NOLINT
         case Status::ERR_READ_AREA_VIOLATION:
             return "ERR_READ_AREA_VIOLATION"sv; // NOLINT
         case Status::ERR_FATAL:

@@ -68,7 +68,7 @@ extern Status version_traverse_and_read(session* ti, Record* rec_ptr,
  * @param[in] ti 
  * @param[in] wp_meta_ptr
  * @param[in] read_key read information about key.
- * @return Status Status::ERR_FAIL_WP Fail due to effective wp.
+ * @return Status Status::ERR_CC Fail due to effective wp.
  * @return Status Status::OK No effective wp or no wp.
  */
 [[maybe_unused]] extern Status

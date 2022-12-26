@@ -455,7 +455,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
             abort(ti);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
-            return Status::ERR_FAIL_WP;
+            return Status::ERR_CC;
         }
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::LONG) {

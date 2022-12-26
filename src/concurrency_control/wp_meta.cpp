@@ -128,7 +128,7 @@ std::size_t wp_meta::find_min_id(const wp_meta::wped_type& wped) {
 Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
     wp_lock_.lock();
     std::size_t slot{};
-    if (Status::OK != find_slot(slot)) { return Status::ERR_FAIL_WP; }
+    if (Status::OK != find_slot(slot)) { return Status::ERR_CC; }
     wped_used_.set(slot);
     set_wped(slot, {ep, id});
     wp_lock_.unlock();

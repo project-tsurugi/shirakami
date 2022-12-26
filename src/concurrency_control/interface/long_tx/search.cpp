@@ -148,7 +148,7 @@ Status search_key(session* ti, Storage const storage,
     // wp verify and forwarding
     rc = wp_verify_and_forwarding(ti, wp_meta_ptr, key);
     if (rc != Status::OK) {
-        if (rc == Status::ERR_FAIL_WP) {
+        if (rc == Status::ERR_CC) {
             ti->set_result(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
         }
         return rc;

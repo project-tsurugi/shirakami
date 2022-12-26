@@ -162,13 +162,13 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         if (rc != yakushima::status::OK) {
             cleanup_process();
             // dtor : release wp_mutex
-            return Status::ERR_FAIL_WP;
+            return Status::ERR_CC;
         }
         wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
         if (Status::OK !=
             target_wp_meta->register_wp(valid_epoch, long_tx_id)) {
             cleanup_process();
-            return Status::ERR_FAIL_WP;
+            return Status::ERR_CC;
         }
         ti->get_wp_set().emplace_back(
                 std::make_pair(wp_target, target_wp_meta));

@@ -280,6 +280,7 @@ extern Status next(Token token, ScanHandle handle);
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] key the result of this function.
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -289,8 +290,6 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
- * @return Status::ERR_FAIL_WP Conflict on write preserve of high priority long
- * transaction. It executed abort command.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
@@ -306,6 +305,7 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] value  the result of this function.
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_DELETE This transaction already executed 
  * delete_record for the same page.
@@ -315,8 +315,6 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
- * @return Status::ERR_FAIL_WP Conflict on write preserve of high priority long
- * transaction. It executed abort command.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
@@ -378,7 +376,7 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * write_preserve:{}.
  * @attention If you specify read_only is true, you can not execute 
  * transactional write operation in this transaction.
- * @return Status::ERR_FAIL_WP Wp of this function failed. Retry from tx_begin.
+ * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success.
  * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
  * termination command, this is returned.

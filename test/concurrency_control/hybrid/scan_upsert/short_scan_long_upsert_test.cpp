@@ -74,7 +74,7 @@ TEST_F(short_scan_long_upsert_test, short_scan_find_valid_wp) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string buf{};
-    ASSERT_EQ(Status::ERR_FAIL_WP, read_key_from_scan(ss, hd, buf));
+    ASSERT_EQ(Status::ERR_CC, read_key_from_scan(ss, hd, buf));
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
     ASSERT_EQ(leave(ss), Status::OK);

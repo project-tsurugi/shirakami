@@ -73,7 +73,7 @@ TEST_F(short_read_from_scan_conflict_wp_test, short_find_wp) { // NOLINT
                                     scan_endpoint::INF, hd));
     // test
     std::string sb{};
-    ASSERT_EQ(Status::ERR_FAIL_WP, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(Status::ERR_CC, read_key_from_scan(s, hd, sb));
 
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(sl));
