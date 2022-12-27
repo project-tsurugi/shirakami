@@ -27,8 +27,8 @@ public:
              const std::size_t nr)
         : rnd_(rnd), nr_(nr), alpha_(1.0 / (1.0 - theta)),
           zetan_(zeta(nr, theta)),
-          eta_((1.0 - std::pow(2.0 / static_cast<double>(nr),
-                               1.0 - theta)) / // NOLINT
+          eta_((1.0 - std::pow(2.0 / static_cast<double>(nr), // NOLINT
+                               1.0 - theta)) /                // NOLINT
                (1.0 - zeta(2, theta) / zetan_)),
           threshold_(1.0 + std::pow(0.5, theta)) { // NOLINT
         assert(0.0 <= theta);                      // NOLINT
@@ -40,8 +40,8 @@ public:
     FastZipf(Xoroshiro128Plus* const rnd, const double theta,
              const std::size_t nr, const double zetan)
         : rnd_(rnd), nr_(nr), alpha_(1.0 / (1.0 - theta)), zetan_(zetan),
-          eta_((1.0 - std::pow(2.0 / static_cast<double>(nr),
-                               1.0 - theta)) / // NOLINT
+          eta_((1.0 - std::pow(2.0 / static_cast<double>(nr), // NOLINT
+                               1.0 - theta)) /                // NOLINT
                (1.0 - zeta(2, theta) / zetan_)),
           threshold_(1.0 + std::pow(0.5, theta)) { // NOLINT
         assert(0.0 <= theta);                      // NOLINT

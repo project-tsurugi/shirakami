@@ -16,7 +16,7 @@ Status get_tx_id(Token token, std::string& tx_id) {
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     std::stringstream ss;
-    ss << std::setw(8) << std::setfill('0') << std::hex
+    ss << std::setw(8) << std::setfill('0') << std::hex // NOLINT
        << ti->get_higher_tx_counter();
     tx_id.clear();
     tx_id += ss.str();

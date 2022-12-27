@@ -42,8 +42,8 @@ using namespace shirakami;
 DEFINE_uint64(        // NOLINT
         cpumhz, 2100, // NOLINT
         "# cpu MHz of execution environment. It is used measuring some " // NOLINT
-        "time."); // NOLINT
-DEFINE_uint64(elem_num, 5 * 1000 * 1000,
+        "time.");                                // NOLINT
+DEFINE_uint64(elem_num, 5 * 1000 * 1000,         // NOLINT
               "Insert # elements to some map."); // NOLINT
 
 static void load_flags() {
@@ -63,8 +63,9 @@ void std_map_bench(const std::vector<std::uint64_t>& data) {
     for (auto&& elem : data) { std_map[elem] = elem; }
     std::uint64_t end{rdtscp()};
     std::cout << "std_map_throughput[ops/us]:\t"
-              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
-              << std::endl; // NOLINT
+              << FLAGS_elem_num /
+                         ((end - begin) / FLAGS_cpumhz / 1000) // NOLINT
+              << std::endl;                                    // NOLINT
 }
 
 void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
@@ -73,8 +74,9 @@ void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
     for (auto&& elem : data) { map[elem] = elem; }
     std::uint64_t end{rdtscp()};
     std::cout << "std_unordered_map_throughput[ops/us]:\t"
-              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
-              << std::endl; // NOLINT
+              << FLAGS_elem_num /
+                         ((end - begin) / FLAGS_cpumhz / 1000) // NOLINT
+              << std::endl;                                    // NOLINT
 }
 
 void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
@@ -83,8 +85,9 @@ void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
     for (auto&& elem : data) { map[elem] = elem; }
     std::uint64_t end{rdtscp()};
     std::cout << "hopscotch_map_throughput[ops/us]:\t"
-              << FLAGS_elem_num / ((end - begin) / FLAGS_cpumhz / 1000)
-              << std::endl; // NOLINT
+              << FLAGS_elem_num /
+                         ((end - begin) / FLAGS_cpumhz / 1000) // NOLINT
+              << std::endl;                                    // NOLINT
 }
 
 void prepare_data(std::vector<std::uint64_t>& data) {

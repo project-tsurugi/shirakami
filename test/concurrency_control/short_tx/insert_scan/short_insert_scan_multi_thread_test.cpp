@@ -42,7 +42,7 @@ private:
     static inline std::once_flag init_;
 };
 
-TEST_F(short_insert_scan_multi_thread_test,
+TEST_F(short_insert_scan_multi_thread_test, // NOLINT
        DISABLED_500_insert_and_full_scan) { // NOLINT
     // generate keys and table
     Storage st{};
@@ -72,7 +72,7 @@ TEST_F(short_insert_scan_multi_thread_test,
                 ret = commit(s); // NOLINT
                 if (ret == Status::OK) {
                     ASSERT_EQ(ct % 500, 0);
-                    if (ct == 5000) { break; }
+                    if (ct == 5000) { break; } // NOLINT
                 }
             }
 
@@ -86,10 +86,10 @@ TEST_F(short_insert_scan_multi_thread_test,
             ASSERT_EQ(enter(s), Status::OK);
 
             std::string k{"12345678"};
-            for (std::size_t i = 0; i < 5000; ++i) {
+            for (std::size_t i = 0; i < 5000; ++i) { // NOLINT
                 memcpy(k.data(), &i, sizeof(i));
                 ASSERT_EQ(insert(s, st, k, "v"), Status::OK);
-                if (i % 500 == 0) {
+                if (i % 500 == 0) { // NOLINT
                     // commit each 500
                     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
                 }

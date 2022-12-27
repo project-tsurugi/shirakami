@@ -13,12 +13,12 @@ namespace shirakami {
 
     std::string key_buf{};
     if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) {
-        key_buf = std::string{reinterpret_cast<char*>(&base_num),
-                              sizeof(base_num)}; // NOLINT
+        key_buf = std::string{reinterpret_cast<char*>(&base_num), // NOLINT
+                              sizeof(base_num)};                  // NOLINT
     } else {
         std::uint64_t bs_buf = __builtin_bswap64(base_num);
-        key_buf = std::string{reinterpret_cast<char*>(&bs_buf),
-                              sizeof(bs_buf)}; // NOLINT
+        key_buf = std::string{reinterpret_cast<char*>(&bs_buf), // NOLINT
+                              sizeof(bs_buf)};                  // NOLINT
     }
 
     if (key_size > sizeof(std::uint64_t)) {
