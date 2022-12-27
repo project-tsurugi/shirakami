@@ -167,7 +167,10 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     // main check after lock
     // check after w lock
     rc = check_unhooking_key_ts(check);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        rec_ptr->get_tidw_ref().unlock();
+        return rc;
+    }
 
     rc = check_unhooking_key_state(check);
     if (rc != Status::OK) {
