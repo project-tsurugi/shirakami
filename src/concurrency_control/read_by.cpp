@@ -121,6 +121,10 @@ void range_read_by_long::push(body_elem_type const& elem) {
             // can't gc
             break;
         }
+        /**
+         * Now, there is a case the ltx can commit ahead of high priori ltx.
+         */
+        break;
     }
     body_.emplace_back(elem);
 }

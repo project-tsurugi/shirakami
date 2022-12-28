@@ -76,8 +76,8 @@ TEST_F(long_scan_test,                                             // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
-TEST_F(long_scan_test, // NOLINT
-       DISABLED_scan_same_storage_concurrent_no_wp_commit_order_low_high) { // NOLINT
+TEST_F(long_scan_test,                                             // NOLINT
+       scan_same_storage_concurrent_no_wp_commit_order_low_high) { // NOLINT
     // prepare test
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -106,9 +106,7 @@ TEST_F(long_scan_test, // NOLINT
     ASSERT_EQ(vb, "1");
 
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    LOG(INFO);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    LOG(INFO);
 
     // clean up test
     ASSERT_EQ(leave(s), Status::OK);
@@ -190,9 +188,7 @@ TEST_F(long_scan_test,                                          // NOLINT
             _mm_pause();
             continue;
         }
-        if (ret == Status::OK) {
-            break;
-        } // other status
+        if (ret == Status::OK) { break; } // other status
         ASSERT_EQ(true, false);
     }
 
