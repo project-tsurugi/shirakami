@@ -206,7 +206,7 @@ TEST_F(long_search_test,                                          // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
-TEST_F(long_search_test,                                              // NOLINT
+TEST_F(long_search_test,                                          // NOLINT
        search_same_storage_concurrent_wp_commit_order_low_high) { // NOLINT
     // prepare test
     Storage st{};
