@@ -76,6 +76,9 @@ Status check_before_write_ops(session* const ti, Storage const st,
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
             // exist valid wp
+            //ti->get_result_info().set_reason_code(
+            //        reason_code::CC_OCC_WP_VERIFY);
+            //ti->get_result_info().set_key_storage_name(key, st);
             return Status::WARN_CONFLICT_ON_WRITE_PRESERVE;
         }
     }
