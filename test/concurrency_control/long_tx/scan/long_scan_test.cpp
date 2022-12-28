@@ -39,6 +39,168 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
+TEST_F(long_scan_test,                                             // NOLINT
+       scan_same_storage_concurrent_no_wp_commit_order_high_low) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "1");
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "1");
+
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_scan_test, // NOLINT
+       DISABLED_scan_same_storage_concurrent_no_wp_commit_order_low_high) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "1");
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "1");
+
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    LOG(INFO);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    LOG(INFO);
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_scan_test,                                          // NOLINT
+       scan_same_storage_concurrent_wp_commit_order_high_low) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "1");
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "1");
+
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_scan_test,                                          // NOLINT
+       scan_same_storage_concurrent_wp_commit_order_low_high) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "1");
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
+    ASSERT_EQ(vb, "1");
+
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));                         // NOLINT
+    sleep(1);
+    for (;;) {
+        auto ret = check_commit(s2);
+        if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
+            _mm_pause();
+            continue;
+        }
+        if (ret == Status::OK) {
+            break;
+        } // other status
+        ASSERT_EQ(true, false);
+    }
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
 TEST_F(long_scan_test,                                     // NOLINT
        some_range_read_register_the_range_if_forwarding) { // NOLINT
     // prepare test
