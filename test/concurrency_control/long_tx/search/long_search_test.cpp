@@ -28,7 +28,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class search : public ::testing::Test { // NOLINT
+class long_search_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
@@ -47,18 +47,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
-
-TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
+TEST_F(long_search_test, read_write_mode_single_long_search_success) { // NOLINT
     // prepare test
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -83,7 +72,8 @@ TEST_F(search, read_write_mode_single_long_search_success) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(search, some_search_key_range_register_if_forwarding) { // NOLINT
+TEST_F(long_search_test,                               // NOLINT
+       some_search_key_range_register_if_forwarding) { // NOLINT
     // prepare test
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -117,6 +107,140 @@ TEST_F(search, some_search_key_range_register_if_forwarding) { // NOLINT
     ASSERT_EQ(std::get<0>(range), "1");
     ASSERT_EQ(std::get<1>(range), "3");
 
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_search_test,                                              // NOLINT
+       search_same_storage_concurrent_now_wp_commit_order_high_low) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, search_key(s2, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_search_test,                                              // NOLINT
+       search_same_storage_concurrent_now_wp_commit_order_low_high) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG}),
+              Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, search_key(s2, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_search_test,                                          // NOLINT
+       search_same_storage_concurrent_wp_commit_order_high_low) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, search_key(s2, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
+}
+
+TEST_F(long_search_test,                                              // NOLINT
+       search_same_storage_concurrent_wp_commit_order_low_high) { // NOLINT
+    // prepare test
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    wait_epoch_update();
+    std::string vb{};
+    ASSERT_EQ(Status::OK, search_key(s, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::OK, search_key(s2, st, "1", vb));
+    ASSERT_EQ(vb, "");
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));                         // NOLINT
+    for (;;) {
+        auto ret = check_commit(s2);
+        if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
+            _mm_pause();
+            continue;
+        }
+        if (ret == Status::OK) { break; }
+        LOG(ERROR) << ret;
+        ASSERT_EQ(true, false);
+    }
 
     // clean up test
     ASSERT_EQ(leave(s), Status::OK);
