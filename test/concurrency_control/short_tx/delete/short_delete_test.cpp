@@ -15,8 +15,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-Storage storage;
-class delete_test : public ::testing::Test { // NOLINT
+class short_delete_test : public ::testing::Test { // NOLINT
 public:
     void SetUp() override {
         init(); // NOLINT
@@ -25,37 +24,53 @@ public:
     void TearDown() override { fin(); }
 };
 
-TEST_F(delete_test, delete_) { // NOLINT
-    create_storage("", storage);
+TEST_F(short_delete_test, delete_) { // NOLINT
+    Storage st;
+    create_storage("", st);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT
     std::string v2("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, storage, k));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(yakushima::status::OK, put<Record>(storage, k, ""));
-    ASSERT_EQ(Status::OK, delete_record(s, storage, k));
+    ASSERT_EQ(yakushima::status::OK, put<Record>(st, k, ""));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, storage, k));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(delete_test, delete_at_non_existing_storage) { // NOLINT
+TEST_F(short_delete_test, delete_at_non_existing_storage) { // NOLINT
+    Storage st{};
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, delete_record(s, storage, ""));
+    ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(delete_test, read_only_mode_delete_) { // NOLINT
+TEST_F(short_delete_test, read_only_mode_delete_) { // NOLINT
+    Storage st;
+    create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
-    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, delete_record(s, storage, ""));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(short_delete_test, short_delete_find_wp) { // NOLINT
+    Storage st;
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
