@@ -235,7 +235,10 @@ RETRY: // NOLINT
 
 Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t not_insert_locked_num{0};
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
+    // dead lock avoidance
+    auto& cont_for_occ = ti->get_write_set().get_ref_cont_for_occ();
+    std::sort(cont_for_occ.begin(), cont_for_occ.end());
+    for (auto&& elem : cont_for_occ) {
         auto* wso_ptr = &(elem);
         auto* rec_ptr{wso_ptr->get_rec_ptr()};
         auto abort_process = [ti, &not_insert_locked_num]() {
