@@ -47,7 +47,7 @@ private:
 };
 
 TEST_F(short_upsert_two_thread_test,                    // NOLINT
-       DISABLED_10000_record_conflict_diff_direction) { // NOLINT
+       10000_record_conflict_diff_direction) { // NOLINT
     /**
      * TxA write 0 to 10000
      * TxB write 10000 to 0
