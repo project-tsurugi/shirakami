@@ -41,7 +41,7 @@ yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
             tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,       // NOLINT
             &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
-            &nvp);
+            true, &nvp);
 }
 
 template<class Record>
