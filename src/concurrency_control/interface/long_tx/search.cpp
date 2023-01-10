@@ -7,7 +7,6 @@
 
 #include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/helper.h"
-#include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/version.h"

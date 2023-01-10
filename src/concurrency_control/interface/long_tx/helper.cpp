@@ -158,17 +158,14 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
 
 Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
                                 const std::string_view read_info) {
-    // 1: optimistic early check, 2: pessimistic check.
-    // here, 1: optimistic early check
-    for (;;) {
-        auto wps = wp_meta_ptr->get_wped();
-        if (wp::wp_meta::empty(wps)) { break; }
+    auto wps = wp_meta_ptr->get_wped();
+    if (!wp::wp_meta::empty(wps)) {
+        // exist wp
         auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
         if (ep_id.second < ti->get_long_tx_id()) {
             // the wp is higher priority long tx than this.
             wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps, read_info);
         }
-        break;
     }
 
     return Status::OK;

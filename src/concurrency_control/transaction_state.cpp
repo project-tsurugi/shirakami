@@ -1,5 +1,4 @@
 
-#include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
