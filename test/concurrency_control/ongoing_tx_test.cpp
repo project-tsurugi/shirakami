@@ -109,18 +109,14 @@ TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
     }
 
     // fail case
-    ASSERT_EQ(Status::WARN_NOT_FOUND,
-              ongoing_tx::change_epoch_without_lock(3, 1, 1, 1));
-
-    // success case
-    ASSERT_EQ(Status::OK, ongoing_tx::change_epoch_without_lock(3, 2, 2, 2));
+    ASSERT_EQ(Status::OK, ongoing_tx::change_epoch_without_lock(3, 1));
 
     // verify
     for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
         if (itr->second == 2) {
             ASSERT_EQ(itr->first, 2);
         } else if (itr->second == 3) {
-            ASSERT_EQ(itr->first, 2);
+            ASSERT_EQ(itr->first, 1);
         } else {
             ASSERT_EQ(true, false); // not reachable
         }

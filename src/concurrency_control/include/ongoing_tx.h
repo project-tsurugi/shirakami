@@ -39,21 +39,6 @@ public:
     static Status change_epoch_without_lock(std::size_t tx_id,
                                             epoch::epoch_t new_ep);
 
-    /**
-     * @brief Find element which has the @a id and change its epoch.
-     * @pre The element which has the @a id and @a need_id must exist.
-     * @param[in] id Tx to change epoch.
-     * @param[in] ep Epoch to change.
-     * @param[in] need_id This function assumes that @a need_id exists.
-     * @param[in] need_id_epoch
-     * @return Status::OK success.
-     * @return Status::WARN_NOT_FOUND The @a need_id does not exist.
-     * @return Status::ERR_FATAL programming error.
-     */
-    static Status change_epoch_without_lock(std::size_t id, epoch::epoch_t ep,
-                                            std::size_t need_id,
-                                            epoch::epoch_t need_id_epoch);
-
     static bool exist_id(std::size_t id);
 
     /**

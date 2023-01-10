@@ -15,35 +15,6 @@ Status ongoing_tx::change_epoch_without_lock(std::size_t const tx_id,
     return Status::WARN_NOT_FOUND;
 }
 
-Status ongoing_tx::change_epoch_without_lock(
-        std::size_t const id, epoch::epoch_t const ep,
-        std::size_t const need_id, epoch::epoch_t const need_id_epoch) {
-    bool exist_id{false};
-    bool exist_need_id{false};
-    tx_info_elem_type* target{};
-    for (auto&& elem : tx_info_) {
-        if (!exist_id && elem.second == id) {
-            exist_id = true;
-            target = &elem;
-        }
-        if (!exist_need_id && elem.second == need_id) {
-            if (elem.first == need_id_epoch) {
-                exist_need_id = true;
-            } else {
-                // fail optimistic change due to concurrent forwarding.
-                return Status::WARN_NOT_FOUND;
-            }
-        }
-        if (exist_id && exist_need_id) {
-            target->first = ep;
-            return Status::OK;
-        }
-    }
-    if (exist_id && !exist_need_id) { return Status::WARN_NOT_FOUND; }
-    LOG(ERROR) << log_location_prefix << "programming error";
-    return Status::ERR_FATAL;
-}
-
 bool ongoing_tx::exist_id(std::size_t id) {
     std::shared_lock<std::shared_mutex> lk{mtx_};
     for (auto&& elem : tx_info_) {
