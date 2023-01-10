@@ -7,8 +7,8 @@ namespace shirakami {
 Status ongoing_tx::change_epoch_without_lock(std::size_t const tx_id,
                                              epoch::epoch_t const new_ep) {
     for (auto&& elem : tx_info_) {
-        if (elem.second == tx_id) {
-            elem.first = new_ep;
+        if (std::get<ongoing_tx::index_id>(elem) == tx_id) {
+            std::get<ongoing_tx::index_epoch>(elem) = new_ep;
             return Status::OK;
         }
     }
@@ -18,7 +18,7 @@ Status ongoing_tx::change_epoch_without_lock(std::size_t const tx_id,
 bool ongoing_tx::exist_id(std::size_t id) {
     std::shared_lock<std::shared_mutex> lk{mtx_};
     for (auto&& elem : tx_info_) {
-        if (elem.second == id) { return true; }
+        if (std::get<ongoing_tx::index_id>(elem) == id) { return true; }
     }
     return false;
 }
@@ -37,13 +37,14 @@ bool ongoing_tx::exist_wait_for(session* ti) {
     // check wait
     for (auto&& elem : tx_info_) {
         // check overwrites
-        if (wait_for.find(elem.second) != wait_for.end()) {
+        if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
+            wait_for.end()) {
             // wait_for hit.
-            if (elem.second < id) { return true; }
+            if (std::get<ongoing_tx::index_id>(elem) < id) { return true; }
         }
         if (has_wp) {
             // check potential read-anti
-            if (elem.second < id) {
+            if (std::get<ongoing_tx::index_id>(elem) < id) {
                 // check read area
                 // check each storage
                 for (auto st : st_set) {
@@ -60,14 +61,16 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                     // check plist
                     auto plist = out->get_read_plan().get_positive_list();
                     for (auto p_id : plist) {
-                        if (p_id == elem.second) { return true; }
+                        if (p_id == std::get<ongoing_tx::index_id>(elem)) {
+                            return true;
+                        }
                     }
                     // check nlist // todo remove after impl compliment
                     // between p and n.
                     auto nlist = out->get_read_plan().get_negative_list();
                     bool n_hit{false};
                     for (auto n_id : nlist) {
-                        if (n_id == elem.second) {
+                        if (n_id == std::get<ongoing_tx::index_id>(elem)) {
                             n_hit = true;
                             break;
                         }
@@ -82,33 +85,39 @@ bool ongoing_tx::exist_wait_for(session* ti) {
     return false;
 }
 
-void ongoing_tx::push(tx_info_elem_type ti) {
+void ongoing_tx::push(tx_info_elem_type const ti) {
     std::lock_guard<std::shared_mutex> lk{mtx_};
-    if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
+    if (tx_info_.empty()) {
+        set_lowest_epoch(std::get<ongoing_tx::index_epoch>(ti));
+    }
     tx_info_.emplace_back(ti);
 }
 
-void ongoing_tx::push_bringing_lock(tx_info_elem_type ti) {
-    if (tx_info_.empty()) { set_lowest_epoch(ti.first); }
+void ongoing_tx::push_bringing_lock(tx_info_elem_type const ti) {
+    if (tx_info_.empty()) {
+        set_lowest_epoch(std::get<ongoing_tx::index_epoch>(ti));
+    }
     tx_info_.emplace_back(ti);
 }
 
-void ongoing_tx::remove_id(std::size_t id) {
+void ongoing_tx::remove_id(std::size_t const id) {
     std::lock_guard<std::shared_mutex> lk{mtx_};
     epoch::epoch_t lep{0};
     bool first{true};
     bool erased{false};
     for (auto it = tx_info_.begin(); it != tx_info_.end();) {
-        if (!erased && (*it).second == id) {
+        if (!erased && std::get<ongoing_tx::index_id>(*it) == id) {
             tx_info_.erase(it);
             erased = true;
         } else {
             // update lowest epoch
             if (first) {
-                lep = (*it).first;
+                lep = std::get<ongoing_tx::index_epoch>(*it);
                 first = false;
             } else {
-                if ((*it).first < lep) { lep = (*it).first; }
+                if (std::get<ongoing_tx::index_epoch>(*it) < lep) {
+                    lep = std::get<ongoing_tx::index_epoch>(*it);
+                }
             }
 
             ++it;

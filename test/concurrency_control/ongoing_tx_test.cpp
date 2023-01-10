@@ -99,10 +99,10 @@ TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
 
     auto& cont = ongoing_tx::get_tx_info();
     for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
-        if (itr->second == 2) {
-            ASSERT_EQ(itr->first, 2);
-        } else if (itr->second == 3) {
-            ASSERT_EQ(itr->first, 3);
+        if (std::get<ongoing_tx::index_id>(*itr) == 2) {
+            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(*itr), 2);
+        } else if (std::get<ongoing_tx::index_id>(*itr) == 3) {
+            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(*itr), 3);
         } else {
             ASSERT_EQ(true, false); // not reachable
         }
@@ -113,10 +113,10 @@ TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
 
     // verify
     for (auto itr = cont.begin(); itr != cont.end(); ++itr) {
-        if (itr->second == 2) {
-            ASSERT_EQ(itr->first, 2);
-        } else if (itr->second == 3) {
-            ASSERT_EQ(itr->first, 1);
+        if (std::get<ongoing_tx::index_id>(*itr) == 2) {
+            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(*itr), 2);
+        } else if (std::get<ongoing_tx::index_id>(*itr) == 3) {
+            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(*itr), 1);
         } else {
             ASSERT_EQ(true, false); // not reachable
         }
