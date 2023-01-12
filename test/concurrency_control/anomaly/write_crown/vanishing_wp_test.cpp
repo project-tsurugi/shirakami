@@ -83,7 +83,6 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     // test case 1
     LOG(INFO) << "start 1";
     std::string buf{};
-#if 0
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -553,7 +552,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
 
     // cleanup
     init_db();
-#endif
+
     // test case 12
     LOG(INFO) << "start 12";
     ASSERT_EQ(
@@ -564,7 +563,6 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
-    LOG(INFO);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, "");
@@ -573,7 +571,6 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
-    LOG(INFO);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
@@ -585,16 +582,11 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, "");
-    LOG(INFO);
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
-    LOG(INFO);
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    LOG(INFO);
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
-    LOG(INFO);
     ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
-    LOG(INFO);
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(0));

@@ -58,7 +58,8 @@ inline void compute_and_set_cc_safe_ss_epoch() {
         std::shared_lock<std::shared_mutex> lk{
                 wp_meta_ptr->get_mtx_wp_result_set()};
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
-             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
+             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
+             ++wp_result_itr) {
             // prepare committed information
             auto wp_result_id =
                     wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
@@ -117,7 +118,7 @@ void epoch_thread_work() {
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
-            //compute_and_set_cc_safe_ss_epoch();
+            compute_and_set_cc_safe_ss_epoch();
 #ifdef PWAL
             // change also datastore's epoch
             switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
