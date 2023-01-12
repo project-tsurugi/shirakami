@@ -37,9 +37,10 @@ inline void compute_and_set_cc_safe_ss_epoch() {
     std::shared_lock<std::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
     if (ongoing_tx::get_tx_info().empty()) {
         // set cc safe ss epoch
-        set_cc_safe_ss_epoch(get_global_epoch());
+        set_cc_safe_ss_epoch(get_global_epoch() + 1);
         return;
     }
+    // exist ltx
     auto* ti = std::get<ongoing_tx::index_session>(
             *ongoing_tx::get_tx_info().begin());
     // acquire read lock about overtaken ltx set

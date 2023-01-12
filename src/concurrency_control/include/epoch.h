@@ -28,8 +28,8 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
  */
-[[maybe_unused]] inline std::atomic<epoch_t> cc_safe_ss_epoch{
-        initial_epoch}; // NOLINT
+[[maybe_unused]] inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch +
+                                                              1}; // NOLINT
 
 [[maybe_unused]] inline std::atomic<epoch_t> durable_epoch{0};
 
