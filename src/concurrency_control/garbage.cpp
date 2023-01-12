@@ -52,7 +52,7 @@ void work_manager() {
         if (min_step_epoch != epoch::max_epoch) {
             if (min_step_epoch < 1) {
                 LOG(ERROR) << log_location_prefix << log_location_prefix
-                           << "programming error";
+                           << "epoch error";
             }
             set_min_step_epoch(min_step_epoch);
         } else {
@@ -71,7 +71,7 @@ version* find_latest_invisible_version_from_batch(Record* rec_ptr,
     if (ver == nullptr) {
         // assert. unreachable path
         LOG(ERROR) << log_location_prefix << log_location_prefix
-                   << "programming error";
+                   << "unreachable path";
     }
     for (;;) {
         ver = ver->get_next();
@@ -173,7 +173,7 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     rc = remove(ytk, st, kb);
     if (rc != Status::OK) {
         LOG(ERROR) << log_location_prefix << log_location_prefix
-                   << "programming error";
+                   << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -197,7 +197,7 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
     }
     if (rc == Status::ERR_FATAL) {
         LOG(ERROR) << log_location_prefix << log_location_prefix
-                   << "programming error";
+                   << "unreachable path";
         return;
     }
 

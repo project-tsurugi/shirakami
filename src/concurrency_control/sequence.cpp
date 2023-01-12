@@ -94,7 +94,7 @@ Status sequence::sequence_map_check_exist(SequenceId id) {
     } // found
 
     if (found_id_itr->second.empty()) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     } // not empty
 
@@ -201,7 +201,7 @@ Status sequence::sequence_map_update(SequenceId const id,
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
     if (found_id_itr == sequence::sequence_map().end()) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     } // found
 
@@ -322,7 +322,7 @@ Status sequence::read_sequence(SequenceId const id,
     auto ret = sequence::sequence_map_find(id, epoch, out);
     if (ret == Status::WARN_NOT_FOUND) { return ret; }
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -350,7 +350,7 @@ Status sequence::delete_sequence(SequenceId const id) {
         return ret;
     }
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -387,7 +387,7 @@ Status sequence::delete_sequence(SequenceId const id) {
     auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
     ret = sequence::sequence_map_update(id, epoch, version, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 

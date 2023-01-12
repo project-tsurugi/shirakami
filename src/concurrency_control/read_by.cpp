@@ -22,7 +22,7 @@ bool point_read_by_long::is_exist(Token token) {
                 return true;
             }
         } else if (elem.second == ltx_id) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return true;
         } else {
             // elem is low priori than this.
@@ -50,7 +50,7 @@ void point_read_by_long::push(body_elem_type const elem) {
             continue;
         }
         if ((*itr).second == elem.second) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return;
         }
         // low priori

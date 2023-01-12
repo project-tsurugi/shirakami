@@ -16,14 +16,14 @@ namespace shirakami {
 
 [[maybe_unused]] static std::size_t getRusageRUMaxrss() {
     struct rusage r {};
-    if (getrusage(RUSAGE_SELF, &r) != 0) { LOG(ERROR); }
+    if (getrusage(RUSAGE_SELF, &r) != 0) { LOG(ERROR) << "getrusage error"; }
     return r.ru_maxrss; // NOLINT
 }
 
 [[maybe_unused]] static void displayRusageRUMaxrss() { // NOLINT
     struct rusage r {};
     if (getrusage(RUSAGE_SELF, &r) != 0) {
-        LOG(ERROR);
+        LOG(ERROR) << "getrusage error.";
         return;
     }
     std::size_t maxrss{getRusageRUMaxrss()};

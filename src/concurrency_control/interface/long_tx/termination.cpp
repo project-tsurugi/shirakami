@@ -271,7 +271,8 @@ static inline void expose_local_write(
                     break;
                 }
                 default: {
-                    LOG(ERROR) << log_location_prefix << "programming error";
+                    LOG(ERROR)
+                            << log_location_prefix << "unknown operation type.";
                     return Status::ERR_FATAL;
                 }
             }
@@ -328,7 +329,9 @@ static inline void register_wp_result_and_remove_wps(
         auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
                                                    storage_view, out)};
         if (rc != yakushima::status::OK) {
-            LOG(ERROR) << log_location_prefix << "programing error: " << rc;
+            LOG(ERROR) << log_location_prefix << "Error: " << rc
+                       << ". It strongly suspect that DML and DDL are "
+                          "mixed.";
             return;
         }
 
@@ -352,7 +355,7 @@ static inline void register_wp_result_and_remove_wps(
                             std::make_tuple(write_something,
                                             std::string(write_range_left),
                                             std::string(write_range_right))))) {
-            LOG(ERROR);
+            LOG(ERROR) << "Fail to register wp result and remove wp.";
         }
     }
 }
@@ -579,7 +582,8 @@ Status verify(session* const ti) {
                     return Status::ERR_CC;
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "programming error";
+                LOG(ERROR) << log_location_prefix
+                           << "Fail to find wp page set meta.";
                 return Status::ERR_FATAL;
             }
         }

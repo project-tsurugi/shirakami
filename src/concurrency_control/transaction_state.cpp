@@ -40,7 +40,7 @@ Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
             ts.set_kind(TxState::StateKind::STARTED);
         }
     } else {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 

@@ -36,7 +36,7 @@ RETRY:
 
     if (rc == Status::WARN_NOT_FOUND) { return rc; }
     if (rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -66,7 +66,7 @@ RETRY:
 
     // read non-latest version after version function
     if (ver == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
     if (read_value) { ver->get_value(value); }
     // check max epoch of read version

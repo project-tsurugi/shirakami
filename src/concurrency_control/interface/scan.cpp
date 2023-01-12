@@ -82,7 +82,7 @@ Status check_not_found(
                     }
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "programming error";
+                LOG(ERROR) << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -189,7 +189,7 @@ Status open_scan(Token const token, Storage storage,
         wp::page_set_meta* psm{};
         rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
@@ -207,14 +207,14 @@ Status open_scan(Token const token, Storage storage,
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
         if (rc == Status::WARN_NOT_FOUND) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
         ti->get_range_read_by_short_set().insert(rrbs);
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -332,7 +332,7 @@ Status next(Token const token, ScanHandle const handle) {
                     break;
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "programming error";
+                LOG(ERROR) << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -470,7 +470,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (rc != Status::OK) { return rc; }
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     // ==========
@@ -536,7 +536,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             return rc;
         }
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
 
@@ -586,7 +586,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         return Status::ERR_NOT_IMPLEMENTED;
     }
-    LOG(ERROR) << log_location_prefix << "programming error";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
 }
 

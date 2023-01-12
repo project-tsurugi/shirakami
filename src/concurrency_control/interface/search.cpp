@@ -35,7 +35,7 @@ Status exist_key(Token const token, Storage const storage,
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, dummy, false);
     } else {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();
@@ -60,7 +60,7 @@ Status search_key(Token const token, Storage const storage,
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     ti->process_before_finish_step();

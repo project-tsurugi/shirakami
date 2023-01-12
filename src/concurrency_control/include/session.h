@@ -308,7 +308,7 @@ public:
 
     void process_before_finish_step() {
         if (!get_operating()) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
         } else {
             set_operating(false);
         }

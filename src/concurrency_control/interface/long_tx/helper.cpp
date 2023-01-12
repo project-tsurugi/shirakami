@@ -13,7 +13,7 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
     for (auto&& elem : ti->get_wp_set()) {
         auto rc{elem.second->change_wp_epoch(ti->get_long_tx_id(), target)};
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return rc;
         }
     }
@@ -115,7 +115,7 @@ Status version_function_without_optimistic_check(epoch::epoch_t ep,
         if (ep > ver->get_tid().get_epoch()) { return Status::OK; }
     }
 
-    LOG(ERROR) << log_location_prefix << "programming error";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
 }
 

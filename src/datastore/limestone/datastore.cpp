@@ -49,7 +49,7 @@ void recovery_from_datastore() {
      */
     yakushima::Token tk{};
     if (yakushima::enter(tk) != yakushima::status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "yakushima enter error.";
     }
     std::vector<Storage> st_list{};
 
@@ -67,7 +67,7 @@ void recovery_from_datastore() {
             Storage st2{};
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
-                LOG(ERROR) << log_location_prefix << "programming error";
+                LOG(ERROR) << log_location_prefix << "unreachable path";
                 return;
             }
             memcpy(&st2, val.data(), sizeof(st2));
@@ -180,7 +180,7 @@ void recovery_from_datastore() {
     // recovery epoch info
     // TODO
     if (yakushima::leave(tk) != yakushima::status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
 }

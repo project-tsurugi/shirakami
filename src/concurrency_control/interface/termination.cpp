@@ -39,7 +39,7 @@ Status abort(Token token) { // NOLINT
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::abort(ti);
     } else {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return rc;
     }
     ti->process_before_finish_step();

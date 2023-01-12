@@ -63,7 +63,7 @@ public:
                   Record* const rec_ptr, std::string_view const val)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {
         if (op == OP_TYPE::DELETE) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
         }
     }
 
@@ -72,7 +72,7 @@ public:
                   Record* const rec_ptr)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr) {
         if (op != OP_TYPE::DELETE) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
         }
     }
 
@@ -106,7 +106,7 @@ public:
             return;
         }
         if (get_op() == OP_TYPE::DELETE) { return; }
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
 
     std::string_view get_value_view() { return val_; }

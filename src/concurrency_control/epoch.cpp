@@ -100,7 +100,7 @@ void epoch_thread_work() {
                 auto ptp{epoch::get_perm_to_proc()};
                 if (ptp < -1) {
                     LOG(ERROR) << log_location_prefix << log_location_prefix
-                               << "programming error";
+                               << "unreachable path.";
                     return;
                 }
                 if (ptp == -1) {

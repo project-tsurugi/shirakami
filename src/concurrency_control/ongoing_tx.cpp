@@ -55,8 +55,9 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                         break; // todo error handling
                     }
                     if (rc != Status::OK) {
-                        LOG(ERROR)
-                                << log_location_prefix << "programming error";
+                        LOG(ERROR) << log_location_prefix
+                                   << "It strongly suspect that DML and DDL "
+                                      "are mixed.";
                         break;
                     }
                     // check plist
@@ -130,7 +131,7 @@ void ongoing_tx::remove_id(std::size_t const id) {
     } else {
         set_lowest_epoch(lep);
     }
-    if (!erased) { LOG(ERROR) << log_location_prefix << "programming error."; }
+    if (!erased) { LOG(ERROR) << log_location_prefix << "unreachable path."; }
 }
 
 } // namespace shirakami

@@ -87,7 +87,10 @@ Status read_verify(session* ti, Storage const storage, tid_word read_tid,
 Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
-    if (rc != Status::OK) { LOG(ERROR); }
+    if (rc != Status::OK) {
+        LOG(ERROR) << "unreachable path. It strongly suspect that DML and DDL "
+                      "are mixed.";
+    }
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep != 0 && find_min_ep <= commit_epoch) {
@@ -287,7 +290,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_KVS;
             }
         } else {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
     }
@@ -387,7 +390,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             default: {
-                LOG(ERROR) << log_location_prefix << "programming error";
+                LOG(ERROR) << log_location_prefix << "unknown operation type.";
                 return Status::ERR_FATAL;
             }
         }

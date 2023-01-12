@@ -77,7 +77,7 @@ Status create_storage(std::string_view const key, Storage& storage,
     // point (*2)
     if (storage::key_handle_map_push_storage_without_lock(key, storage) !=
         Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::WARN_ALREADY_EXISTS;
     }
 
@@ -96,7 +96,7 @@ Status delete_storage(Storage const storage) {
         std::string key{};
         if (storage::key_handle_map_erase_storage_without_lock(storage, key) !=
             Status::OK) {
-            LOG(ERROR) << log_location_prefix << "programming error";
+            LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
 
@@ -203,7 +203,7 @@ Status storage::register_storage(Storage storage, storage_option options) {
         return Status::WARN_ALREADY_EXISTS;
     }
     if (rc != yakushima::status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error.";
+        LOG(ERROR) << log_location_prefix << "unreachable path.";
         return Status::ERR_FATAL;
     }
 
@@ -222,12 +222,12 @@ Status storage::register_storage(Storage storage, storage_option options) {
                 storage_view, &page_set_meta_ptr,
                 sizeof(page_set_meta_ptr)); // NOLINT
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << log_location_prefix << rc;
+            LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL_INDEX;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << log_location_prefix << rc;
+            LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL_INDEX;
         }
     }
@@ -354,18 +354,18 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << log_location_prefix << rc;
+            LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG(ERROR) << log_location_prefix << rc;
+            LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL;
         }
     }
     auto rc = yakushima::delete_storage(storage_view);
     if (yakushima::status::OK != rc) { // NOLINT
-        LOG(ERROR) << log_location_prefix << rc;
+        LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -402,11 +402,11 @@ void storage::init() { storage::set_strg_ctr(storage::initial_strg_ctr); }
 void storage::init_meta_storage() {
     auto ret = storage::register_storage(storage::meta_storage);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
     ret = storage::register_storage(storage::sequence_storage);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
 }
 
@@ -414,11 +414,11 @@ void storage::fin() {
     // clear meta storage
     auto ret = storage::delete_storage(storage::meta_storage);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
     ret = storage::delete_storage(storage::sequence_storage);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
     }
 
     // clear key storage map

@@ -25,7 +25,7 @@ Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "programming error";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
     wp_lock_.unlock();
     return Status::ERR_FATAL;
 }
@@ -67,7 +67,7 @@ Status wp_meta::find_slot(std::size_t& at) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "unexpected path";
+    LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::WARN_NOT_FOUND;
 }
 

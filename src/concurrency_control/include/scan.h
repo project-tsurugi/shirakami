@@ -26,7 +26,7 @@ public:
     bool get_was_read(cursor_info::op_type op) {
         if (op == op_type::key) { return was_read_.test(0); }
         if (op == op_type::value) { return was_read_.test(1); }
-        LOG(ERROR);
+        LOG(ERROR) << "unreachable path";
         return true;
     }
 
@@ -40,7 +40,7 @@ public:
         } else if (op == op_type::value) {
             was_read_.set(1);
         } else {
-            LOG(ERROR);
+            LOG(ERROR) << "unreachable path";
         }
     }
 

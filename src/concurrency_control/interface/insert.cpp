@@ -116,7 +116,7 @@ Status insert(Token const token, Storage const storage,
                     // register read_by_set
                     register_read_if_ltx(ti, rec_ptr);
                 } else {
-                    LOG(ERROR) << log_location_prefix << "programming error";
+                    LOG(ERROR) << log_location_prefix << "unexpected path";
                     ti->process_before_finish_step();
                     return Status::ERR_FATAL;
                 }

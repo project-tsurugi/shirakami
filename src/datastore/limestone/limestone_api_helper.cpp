@@ -11,7 +11,7 @@ limestone::api::log_channel*
 create_channel(limestone::api::datastore* ds,
                boost::filesystem::path const& location) {
     if (ds == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return nullptr;
     }
     //log_entry << "datastore::create_channel(): " << location;
@@ -23,7 +23,7 @@ create_channel(limestone::api::datastore* ds,
 std::unique_ptr<limestone::api::snapshot>
 get_snapshot(limestone::api::datastore* ds) {
     if (ds == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return nullptr;
     }
     //log_entry << "datastore::get_snapshot()";
@@ -34,7 +34,7 @@ get_snapshot(limestone::api::datastore* ds) {
 
 void ready(limestone::api::datastore* ds) {
     if (ds == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     log_entry << "datastore::ready()";
@@ -44,7 +44,7 @@ void ready(limestone::api::datastore* ds) {
 
 void recover(limestone::api::datastore* ds) {
     if (ds == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     log_entry << "datastore::recover()";
@@ -54,7 +54,7 @@ void recover(limestone::api::datastore* ds) {
 
 void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
     if (ds == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     //log_entry << "datastore::switch_epoch()";
@@ -69,7 +69,7 @@ void add_entry(limestone::api::log_channel* lc,
                std::string_view val, limestone::api::epoch_t major_version,
                std::uint64_t minor_version) {
     if (lc == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     log_entry << "log_channel::add_entry(): storage_id: " << storage_id
@@ -88,7 +88,7 @@ void remove_entry(limestone::api::log_channel* const lc,
                   limestone::api::epoch_t const major_version,
                   std::uint64_t const minor_version) {
     if (lc == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     log_entry << "log_channel::remove_entry(): storage_id: " << storage_id
@@ -102,7 +102,7 @@ void remove_entry(limestone::api::log_channel* const lc,
 
 void begin_session(limestone::api::log_channel* lc) {
     if (lc == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     //log_entry << "log_channel::begin_session()";
@@ -112,7 +112,7 @@ void begin_session(limestone::api::log_channel* lc) {
 
 void end_session(limestone::api::log_channel* lc) {
     if (lc == nullptr) {
-        LOG(ERROR) << log_location_prefix << "programming error";
+        LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     //log_entry << "log_channel::end_session()";

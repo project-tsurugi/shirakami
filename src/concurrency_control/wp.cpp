@@ -65,7 +65,7 @@ Status fin() {
     Storage storage = get_page_set_meta_storage();
     auto rc = delete_storage(storage);
     if (Status::OK != rc) {
-        LOG(ERROR) << log_location_prefix << rc;
+        LOG(ERROR) << log_location_prefix << rc << "unreachable path.";
         return Status::ERR_FATAL;
     }
     set_page_set_meta_storage(initial_page_set_meta_storage);
@@ -124,7 +124,7 @@ Status init() {
 
     if (auto rc{storage::register_storage(storage::wp_meta_storage)};
         rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << rc;
+        LOG(ERROR) << log_location_prefix << rc << ", unreachable path.";
     }
     set_page_set_meta_storage(storage::wp_meta_storage);
     set_initialized(true);
@@ -157,7 +157,7 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         auto cleanup_process = [ti, long_tx_id]() {
             for (auto&& elem : ti->get_wp_set()) {
                 if (Status::OK != elem.second->remove_wp(long_tx_id)) {
-                    LOG(ERROR) << log_location_prefix << "programming error";
+                    LOG(ERROR) << log_location_prefix << "unreachable path";
                     return;
                 }
             }
