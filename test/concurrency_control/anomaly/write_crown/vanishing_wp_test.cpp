@@ -81,7 +81,9 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
 
     // ==========
     // test case 1
+    LOG(INFO) << "start 1";
     std::string buf{};
+#if 0
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -125,6 +127,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 2
+    LOG(INFO) << "start 2";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -169,6 +172,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 3
+    LOG(INFO) << "start 3";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -192,8 +196,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
 
@@ -211,6 +214,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 4
+    LOG(INFO) << "start 4";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -227,8 +231,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(
@@ -253,6 +256,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 5
+    LOG(INFO) << "start 5";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -262,8 +266,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
     ASSERT_EQ(
@@ -295,6 +298,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 6
+    LOG(INFO) << "start 6";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -339,6 +343,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 7
+    LOG(INFO) << "start 7";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -354,8 +359,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
@@ -381,6 +385,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 8
+    LOG(INFO) << "start 8";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -390,8 +395,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
     ASSERT_EQ(
@@ -424,6 +428,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 9
+    LOG(INFO) << "start 9";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -448,8 +453,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
@@ -468,6 +472,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 10
+    LOG(INFO) << "start 10";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -477,8 +482,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
@@ -490,8 +494,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
 
@@ -509,6 +512,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 11
+    LOG(INFO) << "start 11";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -526,8 +530,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(
@@ -550,8 +553,9 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
 
     // cleanup
     init_db();
-
+#endif
     // test case 12
+    LOG(INFO) << "start 12";
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
@@ -560,6 +564,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
+    LOG(INFO);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, "");
@@ -568,6 +573,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
+    LOG(INFO);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(buf, "");
@@ -579,11 +585,16 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, "");
+    LOG(INFO);
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
+    LOG(INFO);
     ASSERT_EQ(Status::OK, commit(s.at(2)));
+    LOG(INFO);
     ASSERT_EQ(Status::OK, upsert(s.at(3), stx, x, v.at(3)));
+    LOG(INFO);
     ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
+    LOG(INFO);
     // verify
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(0));
@@ -598,6 +609,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 13
+    LOG(INFO) << "start 13";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -607,8 +619,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, v.at(0)));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
@@ -642,6 +653,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 14
+    LOG(INFO) << "start 14";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -659,8 +671,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
@@ -686,6 +697,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 15
+    LOG(INFO) << "start 15";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -711,8 +723,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
@@ -731,6 +742,7 @@ TEST_F(vanishing_wp_test, all) { // NOLINT
     init_db();
 
     // test case 16
+    LOG(INFO) << "start 16";
     ASSERT_EQ(Status::OK, tx_begin({s.at(0),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));

@@ -79,7 +79,7 @@ Status tx_begin(session* const ti) {
         // set metadata
         ti->set_long_tx_id(long_tx_id);
         ti->set_valid_epoch(valid_epoch);
-        ongoing_tx::push_bringing_lock({valid_epoch, long_tx_id});
+        ongoing_tx::push_bringing_lock({valid_epoch, long_tx_id, ti});
     }
     return Status::OK;
     // dtor : release wp_mutex

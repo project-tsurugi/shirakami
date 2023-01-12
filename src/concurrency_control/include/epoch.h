@@ -25,6 +25,12 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 [[maybe_unused]] inline std::atomic<epoch_t> global_epoch{
         initial_epoch}; // NOLINT
 
+/**
+ * @brief safe snapshot epoch in the viewpoint of concurrency control.
+ */
+[[maybe_unused]] inline std::atomic<epoch_t> cc_safe_ss_epoch{
+        initial_epoch}; // NOLINT
+
 [[maybe_unused]] inline std::atomic<epoch_t> durable_epoch{0};
 
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
@@ -47,6 +53,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
     return global_epoch.load(std::memory_order_acquire);
 }
 
+[[maybe_unused]] static epoch_t get_cc_safe_ss_epoch() { // NOLINT
+    return cc_safe_ss_epoch.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static void join_epoch_thread() { epoch_thread.join(); }
 
 [[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
@@ -59,6 +69,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 
 [[maybe_unused]] static void set_durable_epoch(epoch_t ep) {
     durable_epoch.store(ep, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_cc_safe_ss_epoch(const epoch_t ep) {
+    cc_safe_ss_epoch.store(ep, std::memory_order_release);
 }
 
 // For DEBUG and TEST

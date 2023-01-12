@@ -22,19 +22,16 @@ public:
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
-    void SetUp() override {
-        std::call_once(init_, call_once_f);
-        init(); // NOLINT
-    }
+    void SetUp() override { std::call_once(init_, call_once_f); }
 
-    void TearDown() override { fin(); }
+    void TearDown() override {}
 
 private:
     static inline std::once_flag init_; // NOLINT
 };
 
 TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
-    ongoing_tx::push({1, 1});
+    ongoing_tx::push({1, 1, nullptr});
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti = static_cast<session*>(s);
@@ -54,7 +51,7 @@ TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
 
 TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::exist_id(1), false);
-    ongoing_tx::push({1, 1});
+    ongoing_tx::push({1, 1, nullptr});
     ASSERT_EQ(ongoing_tx::exist_id(1), true);
     ongoing_tx::remove_id(1);
     ASSERT_EQ(ongoing_tx::exist_id(1), false);
@@ -63,11 +60,11 @@ TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
 TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
     // register
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
-    ongoing_tx::push({1, 1});
+    ongoing_tx::push({1, 1, nullptr});
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::push({2, 2});
+    ongoing_tx::push({2, 2, nullptr});
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::push({3, 3});
+    ongoing_tx::push({3, 3, nullptr});
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
 
     // delete from old
@@ -79,9 +76,9 @@ TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
 
     // register again
-    ongoing_tx::push({1, 1});
-    ongoing_tx::push({2, 2});
-    ongoing_tx::push({3, 3});
+    ongoing_tx::push({1, 1, nullptr});
+    ongoing_tx::push({2, 2, nullptr});
+    ongoing_tx::push({3, 3, nullptr});
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
 
     // delete from new
@@ -94,8 +91,8 @@ TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
 }
 
 TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
-    ongoing_tx::push({2, 2});
-    ongoing_tx::push({3, 3});
+    ongoing_tx::push({2, 2, nullptr});
+    ongoing_tx::push({3, 3, nullptr});
 
     auto& cont = ongoing_tx::get_tx_info();
     for (auto itr = cont.begin(); itr != cont.end(); ++itr) {

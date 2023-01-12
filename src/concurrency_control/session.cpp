@@ -48,7 +48,11 @@ void session::clear_local_set() {
     read_set_for_ltx().clear();
     wp_set_.clear();
     write_set_.clear();
-    overtaken_ltx_set_.clear();
+    {
+        // get mutex
+        std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
+        overtaken_ltx_set_.clear();
+    }
     if (tx_type_ != transaction_options::transaction_type::SHORT) {
         clear_about_read_area(this);
         set_read_area({});
@@ -119,9 +123,14 @@ void session::commit_sequence(tid_word ctid) {
 std::set<std::size_t> session::extract_wait_for() {
     // extract wait for
     std::set<std::size_t> wait_for;
-    for (auto&& each_pair : get_overtaken_ltx_set()) {
-        for (auto&& each_id : std::get<0>(each_pair.second)) {
-            wait_for.insert(each_id);
+    {
+        // get read lock
+        std::shared_lock<std::shared_mutex> lk{
+                this->get_mtx_overtaken_ltx_set()};
+        for (auto&& each_pair : get_overtaken_ltx_set()) {
+            for (auto&& each_id : std::get<0>(each_pair.second)) {
+                wait_for.insert(each_id);
+            }
         }
     }
     return wait_for;

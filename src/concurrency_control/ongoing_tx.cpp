@@ -28,6 +28,7 @@ bool ongoing_tx::exist_wait_for(session* ti) {
     std::size_t id = ti->get_long_tx_id();
     bool has_wp = !ti->get_wp_set().empty();
     auto wait_for = ti->extract_wait_for();
+    // TODO wait_for empty return false.
     // check local write set
     std::set<Storage> st_set{};
     // create and compaction about storage set
@@ -108,6 +109,7 @@ void ongoing_tx::remove_id(std::size_t const id) {
     for (auto it = tx_info_.begin(); it != tx_info_.end();) {
         if (!erased && std::get<ongoing_tx::index_id>(*it) == id) {
             tx_info_.erase(it);
+            // TODO: it = ?
             erased = true;
         } else {
             // update lowest epoch

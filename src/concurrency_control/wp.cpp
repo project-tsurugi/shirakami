@@ -26,7 +26,11 @@ void extract_higher_priori_ltx_info(session* const ti,
     for (auto&& wped : wps) {
         if (wped.second != 0) {
             if (wped.second < ti->get_long_tx_id()) {
-                // this tx decides that wped.second tx is the forwarding target.
+                // this tx decides that wped.second tx may be the forwarding target.
+
+                // get mutex
+                std::lock_guard<std::shared_mutex> lk{
+                        ti->get_mtx_overtaken_ltx_set()};
 
                 /**
                  * If this is the first forwarding against this table, 

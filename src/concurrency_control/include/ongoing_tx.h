@@ -25,9 +25,10 @@ public:
       * @brief tx_info_elem_type. first is epoch, second is batch id.
       * 
       */
-    using tx_info_elem_type = std::tuple<epoch::epoch_t, std::size_t>;
+    using tx_info_elem_type = std::tuple<epoch::epoch_t, std::size_t, session*>;
     static constexpr std::size_t index_epoch = 0;
     static constexpr std::size_t index_id = 1;
+    static constexpr std::size_t index_session = 2;
     using tx_info_type = std::vector<tx_info_elem_type>;
 
     /**

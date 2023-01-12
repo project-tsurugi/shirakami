@@ -406,105 +406,94 @@ Status verify(session* const ti) {
 
     // forwarding verify
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
-    for (auto&& oe : ti->get_overtaken_ltx_set()) {
-        wp::wp_meta* wp_meta_ptr{oe.first};
-        std::lock_guard<std::shared_mutex> lk{
-                wp_meta_ptr->get_mtx_wp_result_set()};
-        bool is_first_item_before_gc_threshold{true};
-        std::tuple<std::string, std::string> read_range =
-                std::get<1>(oe.second);
-        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
-             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
-            // oe.second is forwarding high priori ltxs
-            auto wp_result_id =
-                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            auto wp_result_epoch =
-                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
-            auto wp_result_was_committed =
-                    wp::wp_meta::wp_result_elem_extract_was_committed(
-                            (*wp_result_itr));
-            auto write_result =
-                    wp::wp_meta::wp_result_elem_extract_write_result(
-                            (*wp_result_itr));
-            if (wp_result_was_committed) {
-                /**
-                 * the target ltx was commited, so it needs to check.
-                 */
-                for (auto&& hid : std::get<0>(oe.second)) {
-                    if (wp_result_id == hid) {
-                        // check conflict
-                        if (!std::get<0>(write_result)) {
-                            // the ltx didn't write.
-                            break;
-                        }
-                        if (!((std::get<0>(read_range) <=
-                                       std::get<1>(write_result) &&
-                               std::get<1>(write_result) <=
-                                       std::get<1>(read_range)) ||
-                              (std::get<0>(read_range) <=
-                                       std::get<2>(write_result) &&
-                               std::get<2>(write_result) <=
-                                       std::get<1>(read_range)))) {
-                            // can't hit
-                            break;
-                        }
-
-                        // the itr show overtaken ltx
-                        if (wp_result_epoch < ti->get_valid_epoch()) {
-                            // try forwarding
-                            // check read upper bound
-                            if (ti->get_read_version_max_epoch() >=
-                                wp_result_epoch) {
-                                // forwarding break own old read
-                                ti->set_result(
-                                        reason_code::
-                                                CC_LTX_READ_UPPER_BOUND_VIOLATION);
-                                return Status::ERR_CC;
-                            } // forwarding not break own old read
-                            // lock ongoing tx for forwarding
-                            std::lock_guard<std::shared_mutex> ongo_lk{
-                                    ongoing_tx::get_mtx()};
-                            if (Status::OK !=
-                                ongoing_tx::change_epoch_without_lock(
-                                        ti->get_long_tx_id(),
-                                        wp_result_epoch)) {
-                                LOG(ERROR) << log_location_prefix
-                                           << "programming error";
-                                return Status::ERR_FATAL;
+    {
+        // get mutex for overtaken ltx set
+        std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        for (auto&& oe : ti->get_overtaken_ltx_set()) {
+            wp::wp_meta* wp_meta_ptr{oe.first};
+            std::shared_lock<std::shared_mutex> lk{
+                    wp_meta_ptr->get_mtx_wp_result_set()};
+            bool is_first_item_before_gc_threshold{true};
+            std::tuple<std::string, std::string> read_range =
+                    std::get<1>(oe.second);
+            for (auto&& wp_result_itr =
+                         wp_meta_ptr->get_wp_result_set().begin();
+                 wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
+                // oe.second is forwarding high priori ltxs
+                auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(
+                        (*wp_result_itr));
+                auto wp_result_epoch =
+                        wp::wp_meta::wp_result_elem_extract_epoch(
+                                (*wp_result_itr));
+                auto wp_result_was_committed =
+                        wp::wp_meta::wp_result_elem_extract_was_committed(
+                                (*wp_result_itr));
+                auto write_result =
+                        wp::wp_meta::wp_result_elem_extract_write_result(
+                                (*wp_result_itr));
+                if (wp_result_was_committed) {
+                    /**
+                      * the target ltx was commited, so it needs to check.
+                      */
+                    for (auto&& hid : std::get<0>(oe.second)) {
+                        if (wp_result_id == hid) {
+                            // check conflict
+                            if (!std::get<0>(write_result)) {
+                                // the ltx didn't write.
+                                break;
                             }
-                            // set own epoch
-                            ti->set_valid_epoch(wp_result_epoch);
-                            // change wp epoch
-                            change_wp_epoch(ti, wp_result_epoch);
-                            /**
-                         * not need extract (collect) new forwarding info,
-                         * because at first touch, this tx finished that.
-                         */
+                            if (!((std::get<0>(read_range) <=
+                                           std::get<1>(write_result) &&
+                                   std::get<1>(write_result) <=
+                                           std::get<1>(read_range)) ||
+                                  (std::get<0>(read_range) <=
+                                           std::get<2>(write_result) &&
+                                   std::get<2>(write_result) <=
+                                           std::get<1>(read_range)))) {
+                                // can't hit
+                                break;
+                            }
+
+                            // the itr show overtaken ltx
+                            if (wp_result_epoch < ti->get_valid_epoch()) {
+                                // try forwarding
+                                // check read upper bound
+                                if (ti->get_read_version_max_epoch() >=
+                                    wp_result_epoch) {
+                                    // forwarding break own old read
+                                    ti->set_result(
+                                            reason_code::
+                                                    CC_LTX_READ_UPPER_BOUND_VIOLATION);
+                                    return Status::ERR_CC;
+                                } // forwarding not break own old read
+                                ti->set_valid_epoch(wp_result_epoch);
+                            }
+                            // verify success
+                            break;
                         }
-                        // verify success
-                        break;
                     }
                 }
-            }
 
-            // not match. check gc
-            if (wp_result_epoch < gc_threshold) {
-                // should gc
-                if (is_first_item_before_gc_threshold) {
-                    // not remove
-                    is_first_item_before_gc_threshold = false;
-                    ++wp_result_itr;
+                // not match. check gc
+                if (wp_result_epoch < gc_threshold) {
+                    // should gc
+                    if (is_first_item_before_gc_threshold) {
+                        // not remove
+                        is_first_item_before_gc_threshold = false;
+                        ++wp_result_itr;
+                    } else {
+                        // remove
+                        wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
+                                wp_result_itr);
+                    }
                 } else {
-                    // remove
-                    wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
-                            wp_result_itr);
+                    // else. should not gc
+                    ++wp_result_itr;
                 }
-            } else {
-                // else. should not gc
-                ++wp_result_itr;
             }
         }
     }
+
 
     // verify for write set
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {

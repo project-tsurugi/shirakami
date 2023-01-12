@@ -269,6 +269,10 @@ public:
         return overtaken_ltx_set_;
     }
 
+    std::shared_mutex& get_mtx_overtaken_ltx_set() {
+        return mtx_overtaken_ltx_set_;
+    }
+
     wp_set_type& get_wp_set() { return wp_set_; }
 
     [[nodiscard]] const wp_set_type& get_wp_set() const { return wp_set_; }
@@ -603,6 +607,11 @@ private:
      * @brief The ltx set which this transaction overtook.
      */
     overtaken_ltx_set_type overtaken_ltx_set_;
+
+    /**
+     * @brief The shared mutex about overtaken_ltx_set_.
+     */
+    std::shared_mutex mtx_overtaken_ltx_set_;
 
     /**
      * @brief read write batch executes write preserve preserve.

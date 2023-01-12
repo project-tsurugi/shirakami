@@ -87,7 +87,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     }
     ti->set_long_tx_id(long_tx_id);
     ti->set_valid_epoch(valid_epoch);
-    ongoing_tx::push({valid_epoch, long_tx_id});
+    ongoing_tx::push({valid_epoch, long_tx_id, ti});
 
     // cut positive list by negative list.
     preprocess_read_area(ra);

@@ -175,10 +175,10 @@ void recovery_from_datastore() {
         sequence::id_generator_ctr().store(max_id + 1,
                                            std::memory_order_release);
     }
-    if (!st_list.empty()) {
-        // recovery storage meta
-        recovery_storage_meta(st_list);
-    }
+    // recovery storage meta
+    if (!st_list.empty()) { recovery_storage_meta(st_list); }
+    // recovery epoch info
+    // TODO
     if (yakushima::leave(tk) != yakushima::status::OK) {
         LOG(ERROR) << log_location_prefix << "programming error";
         return;
