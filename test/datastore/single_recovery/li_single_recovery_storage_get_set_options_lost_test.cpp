@@ -57,7 +57,7 @@ private:
 // regression scenario - storage option was not recovered correctly
 // when storage_id_undefined is specified for storage option
 TEST_F(li_single_recovery_storage_get_set_options_lost_test, // NOLINT
-       check_storage_operation_after_recovery) { // NOLINT
+       check_storage_operation_after_recovery) {             // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT

@@ -187,8 +187,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
@@ -224,8 +223,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
@@ -260,8 +258,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
@@ -353,8 +350,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -392,8 +388,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
@@ -447,8 +442,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
 
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));
@@ -481,8 +475,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
@@ -492,8 +485,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
 
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
@@ -519,8 +511,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
@@ -604,8 +595,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
@@ -656,8 +646,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -707,8 +696,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sta, a, buf));
 
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, v.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, v.at(1)));

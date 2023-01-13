@@ -62,7 +62,7 @@ std::size_t dir_size(boost::filesystem::path& path) {
     return total_file_size;
 }
 
-TEST_F(li_logging_test,       // NOLINT
+TEST_F(li_logging_test,                          // NOLINT
        check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
     init({database_options::open_mode::CREATE}); // NOLINT

@@ -167,7 +167,7 @@ TEST_F(long_delete_upsert_test, concurrent_delete_tx_upsert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s1, st, ""));
     ASSERT_EQ(Status::OK, upsert(s2, st, "", "")); // forwarding
     ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
-    ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2));         // NOLINT
     /**
      * due to key-value combined read information.
      */

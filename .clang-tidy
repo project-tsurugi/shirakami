@@ -5,6 +5,7 @@ boost-*,\
 bugprone-*,\
 cert-*,\
 cppcoreguidelines-*,\
+-cppcoreguidelines-macro-usage,\
 -cppcoreguidelines-pro-type-const-cast,\
 fuchsia-*,\
 -fuchsia-default-arguments,\

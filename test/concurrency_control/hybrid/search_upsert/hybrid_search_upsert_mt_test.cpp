@@ -105,8 +105,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                         if (rc == Status::WARN_PREMATURE ||
                             rc == Status::WARN_CONCURRENT_UPDATE) {
                             _mm_pause();
-                        } else if (rc ==
-                                   Status::ERR_CC) {
+                        } else if (rc == Status::ERR_CC) {
                             ASSERT_EQ(bt, false); // fail only short
                             goto SHORT_TX_RETRY;  // NOLINT
                         } else {

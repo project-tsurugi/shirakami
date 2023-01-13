@@ -180,9 +180,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                         goto RETRY; // NOLINT
                     }
                     if (rc == Status::WARN_NOT_FOUND) { LOG(ERROR); }
-                    if (rc == Status::OK || rc == Status::ERR_CC) {
-                        break;
-                    }
+                    if (rc == Status::OK || rc == Status::ERR_CC) { break; }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 // update function is not implemented yet.

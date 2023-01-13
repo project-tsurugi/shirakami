@@ -205,8 +205,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, v.at(2));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(4), sta, a, buf));
     //ASSERT_EQ(buf, v.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
@@ -235,8 +234,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), stx, x, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(2), stb, b, buf));
     ASSERT_EQ(buf, v.at(0));
@@ -290,8 +288,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sty, y, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
@@ -378,8 +375,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(1), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(1), stx, x, buf));
     //ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(2), stb, b, buf));
     ASSERT_EQ(buf, v.at(0));
@@ -433,8 +429,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sty, y, buf));
     //ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));

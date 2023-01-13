@@ -52,7 +52,7 @@ TEST_F(short_delete_test, delete_at_non_existing_storage) { // NOLINT
 }
 
 TEST_F(short_delete_test, read_only_mode_delete_) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -64,7 +64,7 @@ TEST_F(short_delete_test, read_only_mode_delete_) { // NOLINT
 }
 
 TEST_F(short_delete_test, short_delete_find_wp) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));

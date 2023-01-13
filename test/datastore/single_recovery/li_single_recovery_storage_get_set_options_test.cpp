@@ -54,7 +54,7 @@ private:
 };
 
 TEST_F(li_single_recovery_storage_get_set_options_test, // NOLINT
-       check_storage_operation_after_recovery) { // NOLINT
+       check_storage_operation_after_recovery) {        // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT

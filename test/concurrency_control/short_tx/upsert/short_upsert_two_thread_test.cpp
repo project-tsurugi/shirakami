@@ -46,7 +46,7 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(short_upsert_two_thread_test,                    // NOLINT
+TEST_F(short_upsert_two_thread_test,           // NOLINT
        10000_record_conflict_diff_direction) { // NOLINT
     /**
      * TxA write 0 to 10000
@@ -63,7 +63,7 @@ TEST_F(short_upsert_two_thread_test,                    // NOLINT
             ASSERT_EQ(Status::OK, enter(s));
             std::string k{"12345678"};
             for (std::size_t i = 0; i < ary_size; i++) {
-                std::size_t buf;
+                std::size_t buf{};
                 if (th_id == 0) {
                     buf = i;
                 } else if (th_id == 1) {

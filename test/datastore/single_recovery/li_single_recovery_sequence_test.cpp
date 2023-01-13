@@ -34,13 +34,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class li_single_recovery_sequence_test
-    : public ::testing::Test { // NOLINT
+class li_single_recovery_sequence_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "li_single_recovery_sequence_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_sequence_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -59,7 +57,7 @@ std::string create_log_dir_name() {
 }
 
 TEST_F(li_single_recovery_sequence_test, // NOLINT
-       sequence_api_test) {                                 // NOLINT
+       sequence_api_test) {              // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();

@@ -36,13 +36,11 @@ namespace shirakami::testing {
 using namespace shirakami;
 
 // regression test scenario causing "unreachable path" after recovery
-class li_single_recovery_multi_storage_test
-    : public ::testing::Test { // NOLINT
+class li_single_recovery_multi_storage_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "li_single_recovery_multi_storage_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_multi_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -74,8 +72,8 @@ void create_storages_and_upsert_one_record(int num) {
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(li_single_recovery_multi_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {                 // NOLINT
+TEST_F(li_single_recovery_multi_storage_test,    // NOLINT
+       check_storage_operation_after_recovery) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT

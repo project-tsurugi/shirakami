@@ -71,8 +71,7 @@ TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
               Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(ss, st, "", vb));
+    ASSERT_EQ(Status::ERR_CC, search_key(ss, st, "", vb));
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
     ASSERT_EQ(leave(ss), Status::OK);

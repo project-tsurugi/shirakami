@@ -35,13 +35,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class li_single_recovery_one_storage_test
-    : public ::testing::Test { // NOLINT
+class li_single_recovery_one_storage_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-data_store-"
-                "li_single_recovery_one_storage_test");
+        google::InitGoogleLogging("shirakami-test-data_store-"
+                                  "li_single_recovery_one_storage_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -114,9 +112,9 @@ void storage_operation_test(std::size_t storage_num) {
     fin();
 }
 
-TEST_F(li_single_recovery_one_storage_test, // NOLINT
-       check_storage_operation_after_recovery) {               // NOLINT
-    ASSERT_NO_FATAL_FAILURE(storage_operation_test(1));        // NOLINT
+TEST_F(li_single_recovery_one_storage_test,             // NOLINT
+       check_storage_operation_after_recovery) {        // NOLINT
+    ASSERT_NO_FATAL_FAILURE(storage_operation_test(1)); // NOLINT
 }
 
 } // namespace shirakami::testing

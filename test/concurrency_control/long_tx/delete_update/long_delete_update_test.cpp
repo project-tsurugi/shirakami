@@ -126,8 +126,8 @@ TEST_F(long_delete_update_test, concurrent_update_tx_delete_tx) { // NOLINT
     // test
     ASSERT_EQ(Status::OK, update(s1, st, "", "a"));
     ASSERT_EQ(Status::OK,
-              delete_record(s2, st, ""));          // forwarding to same epoch
-    ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
+              delete_record(s2, st, ""));  // forwarding to same epoch
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
 
     // verify
@@ -162,7 +162,7 @@ TEST_F(long_delete_update_test, concurrent_delete_tx_update_tx) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s1, st, ""));
     ASSERT_EQ(Status::OK, update(s2, st, "", "")); // forwarding
     ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
-    ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2));         // NOLINT
     /**
      * due to key-value combined read information.
      */

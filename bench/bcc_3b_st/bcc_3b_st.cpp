@@ -133,9 +133,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                         goto RETRY; // NOLINT
                     }
                     if (rc == Status::WARN_NOT_FOUND) { LOG(ERROR); }
-                    if (rc == Status::OK || rc == Status::ERR_CC) {
-                        break;
-                    }
+                    if (rc == Status::OK || rc == Status::ERR_CC) { break; }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 Storage target_st{storage};
@@ -153,8 +151,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                 if (!is_ol && rc == Status::WARN_PREMATURE) {
                     goto RETRY; // NOLINT
                 }
-                if (rc == Status::WARN_INVALID_ARGS ||
-                    rc == Status::ERR_CC ||
+                if (rc == Status::WARN_INVALID_ARGS || rc == Status::ERR_CC ||
                     rc == Status::WARN_INVALID_HANDLE ||
                     rc == Status::WARN_CONCURRENT_INSERT) {
                     LOG(ERROR)

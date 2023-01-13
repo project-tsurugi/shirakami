@@ -138,8 +138,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     //ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, var.at(1)));
     ASSERT_EQ(Status::OK, search_key(s.at(3), sty, y, buf));
@@ -222,8 +221,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sty, y, buf));
     //ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
@@ -300,8 +298,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(2), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(2), stz, z, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(2), stz, z, buf));
     //ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, var.at(1)));
     ASSERT_EQ(Status::OK, search_key(s.at(3), sty, y, buf));
@@ -345,8 +342,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(3), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(3), sty, y, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(3), sty, y, buf));
     //ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));

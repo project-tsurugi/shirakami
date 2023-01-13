@@ -106,7 +106,7 @@ TEST_F(long_scan_test,                                             // NOLINT
     ASSERT_EQ(vb, "1");
 
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s));  // NOLINT
 
     // clean up test
     ASSERT_EQ(leave(s), Status::OK);

@@ -126,7 +126,7 @@ TEST_F(long_insert_update_test,                       // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s1, st, "", "a"));
     ASSERT_EQ(Status::OK, insert(s2, st, "", "b")); // forwarding to same epoch
     ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::ERR_CC, commit(s2));  // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2));          // NOLINT
     // s2 found s1's read info of update
 
     // verify

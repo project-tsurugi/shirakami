@@ -236,8 +236,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_test, all) { // NOLINT
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::ERR_CC,
-              search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(Status::ERR_CC, search_key(s.at(4), sta, a, buf));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
