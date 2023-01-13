@@ -67,15 +67,29 @@ Status tx_begin(session* const ti) {
         std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
 
         // set epoch
-        ti->set_valid_epoch(epoch::get_cc_safe_ss_epoch());
+        auto ep = epoch::get_global_epoch() + 1;
+        if (ongoing_tx::get_tx_info().empty()) {
+            /**
+             * No ltx case:
+             * If this set from cc_safe_ss_epoch, next epoch update, epoch
+             * manager may check this tx as oldest ltx and not update 
+             * cc_safe_ss_epoch. If this is chain, cc_safe_ss_epoch will be
+             * updated.
+             * 
+             */
+            ti->set_valid_epoch(ep);
+        } else {
+            // Exist ltx.
+            ep = epoch::get_cc_safe_ss_epoch();
+            ti->set_valid_epoch(ep);
+        }
 
         // inc long tx counter
         wp::long_tx::set_counter(long_tx_id + 1);
 
         // set metadata
         ti->set_long_tx_id(long_tx_id);
-        ongoing_tx::push_bringing_lock(
-                {epoch::get_cc_safe_ss_epoch(), long_tx_id, ti});
+        ongoing_tx::push_bringing_lock({ep, long_tx_id, ti});
     }
     return Status::OK;
     // dtor : release wp_mutex

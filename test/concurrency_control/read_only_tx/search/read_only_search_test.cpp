@@ -71,6 +71,44 @@ TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
+    // =================================
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    ASSERT_EQ(Status::OK, upsert(s, st, "", "v1"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, upsert(s, st, "", "v2"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    wait_epoch_update();
+    std::string buf{};
+    // =================================
+    // test phase
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(buf, "v2");
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    // =================================
+
+    // =================================
+    // verify phase
+    ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
+    ASSERT_EQ(buf, "v2");
+    // =================================
+
+    // =================================
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(read_only_search_test, search_SS_version) { // NOLINT
     // =================================
     // prepare
