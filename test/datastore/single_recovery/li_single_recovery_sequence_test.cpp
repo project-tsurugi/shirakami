@@ -160,4 +160,43 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     fin(false);
 }
 
+TEST_F(li_single_recovery_sequence_test, // NOLINT
+        create_sequence_after_single_sequence_recovery) {              // NOLINT
+    // prepare
+    std::string log_dir{};
+    log_dir = create_log_dir_name();
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+
+    // before shutdown
+    // id1: create sequence only
+    SequenceId id1{};
+    ASSERT_EQ(Status::OK, create_sequence(&id1));
+    // wait updating result effect
+    auto wait_update = []() {
+      auto ce = epoch::get_global_epoch(); // current epoch
+      for (;;) {
+          if (lpwal::get_durable_epoch() > ce) { break; }
+          _mm_pause();
+      }
+    };
+
+    wait_update();
+    SequenceVersion check_version{};
+    SequenceValue check_value{};
+    ASSERT_EQ(Status::OK, read_sequence(id1, &check_version, &check_value));
+
+    fin(false);
+    init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
+
+    // create
+    SequenceId id4{};
+    ASSERT_EQ(Status::OK, create_sequence(&id4));
+
+    wait_update();
+    // read data created after recovery
+    ASSERT_EQ(Status::OK, read_sequence(id4, &check_version, &check_value));
+
+    // cleanup
+    fin(false);
+}
 } // namespace shirakami::testing
