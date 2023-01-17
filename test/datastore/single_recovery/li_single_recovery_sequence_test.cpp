@@ -10,6 +10,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "sequence.h"
 #include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
@@ -160,8 +161,8 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     fin(false);
 }
 
-TEST_F(li_single_recovery_sequence_test, // NOLINT
-        create_sequence_after_single_sequence_recovery) {              // NOLINT
+TEST_F(li_single_recovery_sequence_test,                 // NOLINT
+       create_sequence_after_single_sequence_recovery) { // NOLINT
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();
@@ -173,11 +174,11 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     ASSERT_EQ(Status::OK, create_sequence(&id1));
     // wait updating result effect
     auto wait_update = []() {
-      auto ce = epoch::get_global_epoch(); // current epoch
-      for (;;) {
-          if (lpwal::get_durable_epoch() > ce) { break; }
-          _mm_pause();
-      }
+        auto ce = epoch::get_global_epoch(); // current epoch
+        for (;;) {
+            if (lpwal::get_durable_epoch() > ce) { break; }
+            _mm_pause();
+        }
     };
 
     wait_update();

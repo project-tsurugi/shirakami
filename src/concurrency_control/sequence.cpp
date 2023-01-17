@@ -40,7 +40,7 @@ Status delete_sequence(SequenceId const id) {
 
 void sequence::init() {
     sequence_map().clear();
-    id_generator_ctr().store(0, std::memory_order_release);
+    id_generator_ctr().store(1, std::memory_order_release);
 }
 
 Status sequence::generate_sequence_id(SequenceId& id) {
@@ -243,7 +243,8 @@ Status sequence::create_sequence(SequenceId* id) {
     // generate sequence object
     ret = sequence::sequence_map_push(*id);
     if (ret == Status::WARN_ALREADY_EXISTS) {
-        LOG(ERROR) << log_location_prefix << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix
+                   << "Unexpected behavior. Id is already exist: " << *id;
         return Status::ERR_FATAL;
     }
 
