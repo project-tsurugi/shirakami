@@ -39,7 +39,6 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-#if 0
 TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
     Storage st{};
     for (std::size_t i = 0; i < 30; ++i) {
@@ -101,10 +100,9 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     }
 }
-#endif
 
 // regression testcase - this scenario caused phantom
-TEST_F(tsurugi_issue86, DISABLED_phantom) { // NOLINT
+TEST_F(tsurugi_issue86, phantom) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("system", st));
     for (std::size_t i = 0; i < 30; ++i) {
@@ -134,7 +132,6 @@ TEST_F(tsurugi_issue86, DISABLED_phantom) { // NOLINT
             LOG(FATAL) << ti->get_result_info().get_reason_code();
         }
         ASSERT_EQ(Status::OK, leave(s));
-        LOG(INFO) << "repeat:" << i;
     }
 }
 
