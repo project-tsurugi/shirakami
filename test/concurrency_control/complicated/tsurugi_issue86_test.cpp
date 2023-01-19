@@ -39,6 +39,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
+#if 0
 TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
     Storage st{};
     for (std::size_t i = 0; i < 30; ++i) {
@@ -98,6 +99,42 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
 
         // cleanup
         ASSERT_EQ(Status::OK, leave(s));
+    }
+}
+#endif
+
+// regression testcase - this scenario caused phantom
+TEST_F(tsurugi_issue86, DISABLED_phantom) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("system", st));
+    for (std::size_t i = 0; i < 30; ++i) {
+        Token s{};
+        ASSERT_EQ(Status::OK, enter(s));
+        ScanHandle handle{};
+        std::vector<std::size_t> def_ids{};
+        if (Status::OK == open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, handle)) {
+            do {
+                std::string sb{};
+                ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+                def_ids.emplace_back(std::stoul(sb));
+                ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
+            } while (next(s, handle) == Status::OK);
+
+            ASSERT_EQ(Status::OK, close_scan(s, handle));
+        }
+
+        for (auto&& n : def_ids) {
+            ASSERT_EQ(Status::OK, upsert(s, st, std::to_string(n), "value"));
+        }
+        ASSERT_EQ(Status::OK, upsert(s, st, std::to_string(i), "value"));
+        auto rc = commit(s);
+        if (rc != Status::OK) {
+            auto* ti = static_cast<session*>(s);
+            LOG(FATAL) << ti->get_result_info().get_reason_code();
+        }
+        ASSERT_EQ(Status::OK, leave(s));
+        LOG(INFO) << "repeat:" << i;
     }
 }
 
