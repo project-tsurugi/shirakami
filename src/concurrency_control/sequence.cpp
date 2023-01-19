@@ -59,12 +59,15 @@ void sequence::gc_sequence_map() {
     if (gc_epoch > garbage::get_min_batch_epoch()) {
         gc_epoch = garbage::get_min_batch_epoch();
     }
-    for (auto&& each_id_sequence_object : sequence::sequence_map()) {
+    for (auto it = sequence::sequence_map().begin(); it != sequence::sequence_map().end(); ) {
+        // avoid range based for-loop since erase() updates base map structure
+        auto&& each_id_sequence_object = *it;
         auto&& each_sequence_object = each_id_sequence_object.second;
         if (each_sequence_object.rbegin()->first < gc_epoch &&
             each_sequence_object.rbegin()->second ==
                     sequence::non_exist_value) {
             // it was deleted and is able to gced.
+            ++it;
             sequence::sequence_map().erase(each_id_sequence_object.first);
             continue;
         }
@@ -82,6 +85,7 @@ void sequence::gc_sequence_map() {
                 each_sequence_object.erase(each_sequence_object.begin());
             }
         }
+        ++it;
     }
 }
 
