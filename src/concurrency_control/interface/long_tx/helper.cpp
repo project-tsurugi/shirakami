@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "concurrency_control/include/long_tx.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/read_plan.h"
@@ -53,8 +55,17 @@ Status check_read_area(session* ti, Storage st) {
 }
 
 void preprocess_read_area(transaction_options::read_area& ra) {
+    // It doesn't need to reduce redundant because the set type is set.
+
+    // remove from positive by negative
     for (auto elem : ra.get_negative_list()) {
-        ra.get_positive_list().erase(elem);
+        auto& pset = ra.get_positive_list();
+        for (auto itr = pset.begin(); itr != pset.end(); ++itr) {
+            if (elem == *itr) {
+                ra.get_positive_list().erase(elem);
+                break;
+            }
+        }
     }
 }
 

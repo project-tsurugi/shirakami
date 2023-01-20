@@ -41,6 +41,54 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
+TEST_F(read_area_test, register_same_st) { // NOLINT
+    Token s{};
+    Storage st{};
+    Storage st2{};
+    ASSERT_EQ(Status::OK, create_storage("1", st));
+    ASSERT_EQ(Status::OK, create_storage("2", st2));
+    ASSERT_EQ(Status::OK, enter(s));
+    // register positive twice
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{st, st}, {st2, st2}}}));
+
+    // check global table
+    // st
+    wp::page_set_meta* out{};
+    ASSERT_EQ(Status::OK, find_page_set_meta(st, out));
+    read_plan::list_type list = out->get_read_plan().get_negative_list();
+    ASSERT_EQ(list.size(), 0);
+    list = out->get_read_plan().get_positive_list();
+    ASSERT_EQ(list.size(), 1);
+
+    // st2
+    ASSERT_EQ(Status::OK, find_page_set_meta(st2, out));
+    list = out->get_read_plan().get_negative_list();
+    ASSERT_EQ(list.size(), 1);
+    list = out->get_read_plan().get_positive_list();
+    ASSERT_EQ(list.size(), 0);
+
+    // check local worker info
+    auto* ti = static_cast<session*>(s);
+    // check positive
+    {
+        auto& set = ti->get_read_area().get_positive_list();
+        ASSERT_EQ(1, set.size());
+        ASSERT_EQ(st, *set.begin());
+    }
+    // check negative
+    {
+        auto& set = ti->get_read_area().get_negative_list();
+        ASSERT_EQ(1, set.size());
+        ASSERT_EQ(st2, *set.begin());
+    }
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
     Token s{};
     Storage st{};
