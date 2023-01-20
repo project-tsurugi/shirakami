@@ -262,7 +262,7 @@ void force_release_key_memory() {
 void release_key_memory() {
     auto& cont = garbage::get_container_rec();
     auto ce = epoch::get_global_epoch();
-    for (auto itr = cont.begin(); itr != cont.end();) {
+    for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
         if ((*itr).second < ce) {
             delete (*itr).first; // NOLINT
             itr = cont.erase(itr);

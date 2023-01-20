@@ -52,8 +52,8 @@ public:
 
     static Status key_handle_map_erase(Storage storage) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
-        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
-             ++itr) {
+        for (auto itr = key_handle_map_.begin(); // NOLINT
+             itr != key_handle_map_.end(); ++itr) {
             if (itr->second == storage) {
                 key_handle_map_.erase(itr);
                 return Status::OK;
@@ -71,8 +71,8 @@ public:
      */
     [[nodiscard]] static Status
     key_handle_map_erase_storage_without_lock(Storage st, std::string& out) {
-        for (auto itr = key_handle_map_.begin(); itr != key_handle_map_.end();
-             ++itr) {
+        for (auto itr = key_handle_map_.begin(); // NOLINT
+             itr != key_handle_map_.end(); ++itr) {
             if (itr->second == st) {
                 out = itr->first;
                 key_handle_map_.erase(itr);

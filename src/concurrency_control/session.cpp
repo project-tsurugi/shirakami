@@ -72,7 +72,7 @@ void session::commit_sequence(tid_word ctid) {
         // gc after write lock
         sequence::gc_sequence_map();
 
-        for (auto itr = ss.begin(); itr != ss.end();) {
+        for (auto itr = ss.begin(); itr != ss.end();) { // NOLINT
             SequenceId id = itr->first;
             SequenceVersion version = std::get<0>(itr->second);
             SequenceValue value = std::get<1>(itr->second);

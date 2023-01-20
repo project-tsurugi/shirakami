@@ -66,7 +66,7 @@ void bg_commit::worker() {
         {
             // lock for container
             std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
-            for (auto itr = cont_wait_tx().begin();
+            for (auto itr = cont_wait_tx().begin(); // NOLINT
                  itr != cont_wait_tx().end();) {
                 Token token = std::get<1>(*itr);
                 auto* ti = static_cast<session*>(token);
