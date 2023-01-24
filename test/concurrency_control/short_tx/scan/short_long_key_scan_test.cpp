@@ -34,12 +34,12 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(long_key_scan_test, DISABLED_long_key_scan) { // NOLINT
+TEST_F(long_key_scan_test, long_key_scan) { // NOLINT
     Storage st{};
     create_storage("", st);
-//    std::string k(32768, 'A'); // works fine with 32K
-    std::string k(49152, 'A'); // scan failed with 48K
-    std::string v("a");                                      // NOLINT
+    std::string k(1024 * 35, 'A'); // works fine with 35K
+    //std::string k(1024 * 36, 'A'); // scan failed with 36K
+    std::string v("a");            // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));

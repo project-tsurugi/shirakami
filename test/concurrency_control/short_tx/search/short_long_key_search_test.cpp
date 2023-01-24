@@ -34,7 +34,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(long_key_test, DISABLED_long_key_search) { // NOLINT
+TEST_F(long_key_test, long_key_search) { // NOLINT
     Storage st{};
     create_storage("", st);
     Token s{};
