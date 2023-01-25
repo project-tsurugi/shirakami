@@ -10,6 +10,7 @@
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
+#include "concurrency_control/interface/include/helper.h"
 
 #include "shirakami/interface.h"
 #include "shirakami/logging.h"
@@ -62,6 +63,11 @@ void remove_storage_metadata(std::string_view key) {
 
 Status create_storage(std::string_view const key, Storage& storage,
                       storage_option const& options) {
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) {
+        return ret;
+    }
+
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // check key existence
     Storage st{};
@@ -71,7 +77,7 @@ Status create_storage(std::string_view const key, Storage& storage,
     }
     // point (*1)
 
-    auto ret = storage::create_storage(storage, options);
+    ret = storage::create_storage(storage, options);
     if (ret != Status::OK) { return ret; }
     // success create_storage
     // point (*2)
@@ -106,6 +112,11 @@ Status delete_storage(Storage const storage) {
 }
 
 Status get_storage(std::string_view const key, Storage& out) {
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) {
+        return ret;
+    }
+
     return storage::key_handle_map_get_storage(key, out);
 }
 

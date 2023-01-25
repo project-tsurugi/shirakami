@@ -17,6 +17,15 @@ namespace shirakami {
  */
 inline std::atomic<bool> initialized_{false};
 
+/**
+ * @brief It checks constraint about key length (<35KB).
+ * @param key 
+ * @return Status::OK This key is valid.
+ * @return Status::WARN_INVALID_KEY_LENGTH This key is invalid.
+ */
+[[maybe_unused]] extern Status
+check_constraint_key_length(std::string_view key);
+
 [[maybe_unused]] extern Status check_before_write_ops(session* ti, Storage st,
                                                       std::string_view key,
                                                       OP_TYPE op);

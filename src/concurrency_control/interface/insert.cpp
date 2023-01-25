@@ -57,6 +57,10 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 Status insert(Token const token, Storage const storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
+    // check constraint: key
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) { return ret; }
+
     auto* ti = static_cast<session*>(token);
 
     if (!ti->get_tx_began()) {

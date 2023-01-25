@@ -6,6 +6,7 @@
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
+#include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
@@ -18,6 +19,10 @@ namespace shirakami {
 
 Status exist_key(Token const token, Storage const storage,
                  std::string_view const key) {
+    // check constraint: key
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) { return ret; }
+
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin({token}); // NOLINT
@@ -44,6 +49,10 @@ Status exist_key(Token const token, Storage const storage,
 
 Status search_key(Token const token, Storage const storage,
                   std::string_view const key, std::string& value) {
+    // check constraint: key
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) { return ret; }
+
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) {
         tx_begin({token}); // NOLINT

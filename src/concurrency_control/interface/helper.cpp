@@ -36,6 +36,16 @@
 
 namespace shirakami {
 
+Status check_constraint_key_length(std::string_view const key) {
+    // check constraint: key
+    if (key.size() > 35 * 1024) {
+        // we can't control over 35KB key.
+        return Status::WARN_INVALID_KEY_LENGTH;
+    }
+
+    return Status::OK;
+}
+
 Status check_before_write_ops(session* const ti, Storage const st,
                               std::string_view const key, OP_TYPE const op) {
     // check whether it is read only mode.

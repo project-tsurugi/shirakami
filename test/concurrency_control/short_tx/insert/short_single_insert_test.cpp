@@ -120,4 +120,5 @@ TEST_F(single_insert, long_key_insert) { // NOLINT
     ASSERT_EQ(v, b);
     ASSERT_EQ(Status::OK, leave(s));
 }
+
 } // namespace shirakami::testing

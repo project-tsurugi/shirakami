@@ -247,4 +247,22 @@ TEST_F(long_search_test,                                          // NOLINT
     ASSERT_EQ(leave(s2), Status::OK);
 }
 
+TEST_F(long_search_test, very_long_key) { // NOLINT
+                                          // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string sb{};
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    wait_epoch_update();
+    // test
+    ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,
+              search_key(s, st, std::string(1024 * 36, 'a'), sb));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing

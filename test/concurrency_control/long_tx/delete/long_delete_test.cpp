@@ -157,4 +157,21 @@ TEST_F(long_delete_test, delete_two_key_and_check_wp_result) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(long_delete_test, long_key_test) { // NOLINT
+                                          // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    // test
+    ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,
+              delete_record(s, st, std::string(1024 * 36, 'a')));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
 } // namespace shirakami::testing

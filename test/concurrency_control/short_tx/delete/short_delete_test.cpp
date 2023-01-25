@@ -75,4 +75,14 @@ TEST_F(short_delete_test, short_delete_find_wp) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(short_delete_test, long_key) { // NOLINT
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string long_key(1024 * 36, 'a');
+    ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, delete_record(s, st, long_key));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing

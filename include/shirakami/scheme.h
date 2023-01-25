@@ -137,6 +137,11 @@ enum class Status : std::int32_t {
      */
     WARN_INVALID_HANDLE,
     /**
+     * @brief Warning.
+     * @details The key is too long which we can't control (>35KB).
+     */
+    WARN_INVALID_KEY_LENGTH,
+    /**
      * @brief Warning
      * @details The status that the user calls api which needs tx_begin and 
      * some operations.
@@ -274,6 +279,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_INVALID_ARGS"sv; // NOLINT
         case Status::WARN_INVALID_HANDLE:
             return "WARN_INVALID_HANDLE"sv; // NOLINT
+        case Status::WARN_INVALID_KEY_LENGTH:
+            return "WARN_INVALID_KEY_LENGTH"sv; // NOLINT
         case Status::WARN_NOT_BEGIN:
             return "WARN_NOT_BEGIN"sv; // NOLINT
         case Status::WARN_NOT_FOUND:
