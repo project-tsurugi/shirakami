@@ -15,6 +15,8 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
+#include "database/include/logging.h"
+
 #ifdef PWAL
 
 #include "concurrency_control/include/lpwal.h"
@@ -102,6 +104,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 
     f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
 
+    // try atomic load payload
     for (;;) {
         auto return_some_others_write_status = [&f_check] {
             if (f_check.get_absent() && f_check.get_latest()) {
@@ -128,18 +131,54 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 #endif
 
         while (f_check.get_lock()) {
+            if (logging::get_enable_logging_detail_info()) {
+                // logging detail info
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "start wait for locked record. key is " +
+                                   std::string(rec_ptr->get_key_view());
+            }
 #if PARAM_RETRY_READ == 0
+            if (logging::get_enable_logging_detail_info()) {
+                // logging detail info
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "finish wait for locked record. key is " +
+                                   std::string(rec_ptr->get_key_view());
+            }
             return return_some_others_write_status();
 #else
             if (repeat_num >= PARAM_RETRY_READ) {
+                if (logging::get_enable_logging_detail_info()) {
+                    // logging detail info
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "finish wait for locked record. key is " +
+                                       std::string(rec_ptr->get_key_view());
+                }
                 return return_some_others_write_status();
             }
             _mm_pause();
             f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
             Status s{check_concurrent_others_write()};
-            if (s != Status::OK) return s;
+            if (s != Status::OK) {
+                if (logging::get_enable_logging_detail_info()) {
+                    // logging detail info
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "finish wait for locked record. key is " +
+                                       std::string(rec_ptr->get_key_view());
+                }
+                return s;
+            }
             ++repeat_num;
 #endif
+        }
+        if (logging::get_enable_logging_detail_info()) {
+            // logging detail info
+            DVLOG(log_trace) << logging::log_location_prefix
+                             << "finish wait for locked record. key is " +
+                                        std::string(rec_ptr->get_key_view());
         }
 
         if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }

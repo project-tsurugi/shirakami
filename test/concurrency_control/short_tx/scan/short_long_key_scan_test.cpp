@@ -39,7 +39,7 @@ TEST_F(long_key_scan_test, long_key_scan) { // NOLINT
     create_storage("", st);
     std::string k(1024 * 35, 'A'); // works fine with 35K
     //std::string k(1024 * 36, 'A'); // scan failed with 36K
-    std::string v("a");            // NOLINT
+    std::string v("a"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));

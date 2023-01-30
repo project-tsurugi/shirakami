@@ -5,6 +5,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/interface/include/helper.h"
 
+#include "database/include/logging.h"
+
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
@@ -24,6 +26,13 @@ static inline Status insert_process(session* const ti, Storage st,
     if (yakushima::status::OK ==
         put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "insert locking record, key " + std::string(key);
+            }
+
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**

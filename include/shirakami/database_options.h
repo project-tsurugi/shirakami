@@ -24,6 +24,13 @@ public:
         : open_mode_(om), log_directory_path_(log_directory_path),
           logger_thread_num_(logger_thread_num) {}
 
+    database_options(open_mode om, std::filesystem::path&& log_directory_path,
+                     std::size_t logger_thread_num,
+                     bool enable_logging_detail_info)
+        : open_mode_(om), log_directory_path_(log_directory_path),
+          logger_thread_num_(logger_thread_num),
+          enable_logging_detail_info_(enable_logging_detail_info) {}
+
     open_mode get_open_mode() { return open_mode_; }
 
     std::filesystem::path get_log_directory_path() {
@@ -34,6 +41,10 @@ public:
         return logger_thread_num_;
     }
 
+    [[nodiscard]] bool get_enable_logging_detail_info() const {
+        return enable_logging_detail_info_;
+    }
+
     void set_open_mode(open_mode om) { open_mode_ = om; }
 
     void set_log_directory_path(std::filesystem::path& pt) {
@@ -41,6 +52,10 @@ public:
     }
 
     void set_logger_thread_num(std::size_t num) { logger_thread_num_ = num; }
+
+    void set_enable_logging_detail_info(bool tf) {
+        enable_logging_detail_info_ = tf;
+    }
 
 private:
     // about open mode
@@ -53,6 +68,8 @@ private:
      * @brief todo. now, 1 thread.
      */
     std::size_t logger_thread_num_{0};
+
+    bool enable_logging_detail_info_{false};
 };
 
 inline constexpr std::string_view

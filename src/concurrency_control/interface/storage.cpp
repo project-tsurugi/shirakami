@@ -64,9 +64,7 @@ void remove_storage_metadata(std::string_view key) {
 Status create_storage(std::string_view const key, Storage& storage,
                       storage_option const& options) {
     auto ret = check_constraint_key_length(key);
-    if (ret != Status::OK) {
-        return ret;
-    }
+    if (ret != Status::OK) { return ret; }
 
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // check key existence
@@ -113,9 +111,7 @@ Status delete_storage(Storage const storage) {
 
 Status get_storage(std::string_view const key, Storage& out) {
     auto ret = check_constraint_key_length(key);
-    if (ret != Status::OK) {
-        return ret;
-    }
+    if (ret != Status::OK) { return ret; }
 
     return storage::key_handle_map_get_storage(key, out);
 }

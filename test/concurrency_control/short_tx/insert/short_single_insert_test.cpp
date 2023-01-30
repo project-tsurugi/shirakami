@@ -18,7 +18,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-Storage storage;
+Storage st;
 class single_insert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
@@ -42,7 +42,7 @@ TEST_F(single_insert, read_only_mode_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
-    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, insert(s, storage, "", ""));
+    ASSERT_EQ(Status::WARN_ILLEGAL_OPERATION, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -55,7 +55,7 @@ TEST_F(single_insert, insert_at_non_existing_storage) { // NOLINT
 }
 
 TEST_F(single_insert, long_value_insert) { // NOLINT
-    create_storage("", storage);
+    create_storage("", st);
     std::string k("CUSTOMER"); // NOLINT
     std::string v(             // NOLINT
             "b23456789012345678901234567890123456789012345678901234567890123456"
@@ -97,27 +97,39 @@ TEST_F(single_insert, long_value_insert) { // NOLINT
             "5678901234567890123456789012345678901234567890");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
 TEST_F(single_insert, long_key_insert) { // NOLINT
-    create_storage("", storage);
+    create_storage("", st);
     std::string k(56, '0'); // NOLINT
     k += "a";
     std::string v("v");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, insert(s, storage, k, v));
+    ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};
-    ASSERT_EQ(Status::OK, get<Record>(storage, k, rec_ptr));
+    ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
     std::string b{};
     rec_ptr->get_key(b);
     ASSERT_EQ(k, b);
     rec_ptr->get_value(b);
     ASSERT_EQ(v, b);
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(single_insert, insert_user_abort) { // NOLINT
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    LOG(INFO);
+    ASSERT_EQ(Status::OK, insert(s, st, "k", "v"));
+    LOG(INFO);
+    ASSERT_EQ(Status::OK, abort(s)); // NOLINT
+    LOG(INFO);
     ASSERT_EQ(Status::OK, leave(s));
 }
 

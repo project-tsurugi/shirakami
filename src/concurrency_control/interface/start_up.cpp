@@ -17,6 +17,8 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
+#include "database/include/logging.h"
+
 #ifdef PWAL
 
 #include "concurrency_control/include/lpwal.h"
@@ -38,8 +40,11 @@
 
 namespace shirakami {
 
-Status init([[maybe_unused]] database_options options) { // NOLINT
+Status init(database_options const options) { // NOLINT
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    // about logging detail information
+    logging::init(options.get_enable_logging_detail_info());
 
     // about storage
     storage::init();

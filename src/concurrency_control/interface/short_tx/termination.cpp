@@ -9,6 +9,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
+#include "database/include/logging.h"
+
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/logging.h"
@@ -17,8 +19,18 @@
 
 namespace shirakami::short_tx {
 
+// ==========
+// locking
 void unlock_write_set(session* const ti) {
     for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace)
+                    << logging::log_location_prefix
+                    << "unlock key " +
+                               std::string(itr.get_rec_ptr()->get_key_view());
+        }
+
         itr.get_rec_ptr()->get_tidw_ref().unlock();
     }
 }
@@ -30,6 +42,16 @@ void unlock_not_insert_records(session* const ti,
         if (not_insert_locked_num == 0) { break; }
         auto* wso_ptr = &(elem);
         if (wso_ptr->get_op() == OP_TYPE::INSERT) { continue; }
+
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace)
+                    << logging::log_location_prefix
+                    << "unlock key " +
+                               std::string(
+                                       wso_ptr->get_rec_ptr()->get_key_view());
+        }
+
         wso_ptr->get_rec_ptr()->get_tidw_ref().unlock();
         --not_insert_locked_num;
     }
@@ -54,19 +76,30 @@ void unlock_inserted_records(session* const ti) {
                     tid.set_epoch(ti->get_step_epoch());
                     rec_ptr->set_tid(tid); // and unlock
                 } else {
+                    // detail info
+                    if (logging::get_enable_logging_detail_info()) {
+                        DVLOG(log_trace)
+                                << logging::log_location_prefix
+                                << "unlock key " +
+                                           std::string(rec_ptr->get_key_view());
+                    }
+
                     rec_ptr->get_tidw_ref().unlock();
                 }
             }
         }
     }
 }
+// ==========
 
 Status abort(session* ti) { // NOLINT
     // about tx state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
     // about inserted records
+    LOG(INFO);
     unlock_inserted_records(ti);
+    LOG(INFO);
 
     ti->clean_up();
     return Status::OK;
@@ -225,6 +258,14 @@ RETRY: // NOLINT
                 return Status::ERR_CC;
             }
             // success inserting
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "inserted locking key " +
+                                   std::string(rec_ptr->get_key_view());
+            }
+
             return Status::OK;
         }
         // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -251,11 +292,46 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             short_tx::abort(ti);
         };
         if (wso_ptr->get_op() == OP_TYPE::INSERT) {
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "lock key " + std::string(rec_ptr->get_key_view());
+            }
+
+            // lock the record
             rec_ptr->get_tidw_ref().lock();
+
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "locked key " + std::string(rec_ptr->get_key_view());
+            }
+
             tid_word tid{rec_ptr->get_tidw_ref()};
             if (tid.get_latest() && !tid.get_absent()) {
                 // the record is existing record (not inserting, deleted)
+
+                // detail info
+                if (logging::get_enable_logging_detail_info()) {
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "unlock key " +
+                                       std::string(rec_ptr->get_key_view());
+                }
+
+                // unlock record
                 rec_ptr->get_tidw_ref().unlock();
+
+                // detail info
+                if (logging::get_enable_logging_detail_info()) {
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "unlocked key " +
+                                       std::string(rec_ptr->get_key_view());
+                }
+
                 abort_process();
                 ti->get_result_info().set_reason_code(reason_code::KVS_INSERT);
                 ti->get_result_info().set_key_storage_name(
@@ -275,7 +351,23 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPDATE ||
                    wso_ptr->get_op() == OP_TYPE::DELETE) {
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "lock key " + std::string(rec_ptr->get_key_view());
+            }
+
+            // lock the record
             rec_ptr->get_tidw_ref().lock();
+
+            // detail info
+            if (logging::get_enable_logging_detail_info()) {
+                DVLOG(log_trace)
+                        << logging::log_location_prefix
+                        << "locked key " + std::string(rec_ptr->get_key_view());
+            }
+
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++not_insert_locked_num;
             if (rec_ptr->get_tidw_ref().get_absent()) {
@@ -357,7 +449,27 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                         wso_ptr->get_rec_ptr()->set_value(vb);
                     }
                 }
+                // detail info
+                if (logging::get_enable_logging_detail_info()) {
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "unlock key " +
+                                       std::string(wso_ptr->get_rec_ptr()
+                                                           ->get_key_view());
+                }
+
+                // unlock the record
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
+
+                // detail info
+                if (logging::get_enable_logging_detail_info()) {
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "unlocked key " +
+                                       std::string(wso_ptr->get_rec_ptr()
+                                                           ->get_key_view());
+                }
+
                 break;
             }
             default: {

@@ -110,11 +110,9 @@ Status delete_record(Token token, Storage storage,
                      const std::string_view key) { // NOLINT
     // check constraint: key
     auto ret = check_constraint_key_length(key);
-    if (ret != Status::OK) {
-        return ret;
-    }
+    if (ret != Status::OK) { return ret; }
 
-    // process about worker    
+    // process about worker
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
 
