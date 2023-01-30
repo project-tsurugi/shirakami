@@ -36,12 +36,10 @@ void unlock_write_set(session* const ti) {
 }
 
 
-void unlock_not_insert_records(session* const ti,
-                               std::size_t not_insert_locked_num) {
+void unlock_records(session* const ti, std::size_t num_locked) {
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        if (not_insert_locked_num == 0) { break; }
+        if (num_locked == 0) { break; }
         auto* wso_ptr = &(elem);
-        if (wso_ptr->get_op() == OP_TYPE::INSERT) { continue; }
 
         // detail info
         if (logging::get_enable_logging_detail_info()) {
@@ -53,22 +51,43 @@ void unlock_not_insert_records(session* const ti,
         }
 
         wso_ptr->get_rec_ptr()->get_tidw_ref().unlock();
-        --not_insert_locked_num;
+
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace)
+                    << logging::log_location_prefix
+                    << "unlocked key " +
+                               std::string(
+                                       wso_ptr->get_rec_ptr()->get_key_view());
+        }
+
+        --num_locked;
     }
 }
 
-void unlock_inserted_records(session* const ti) {
+void change_inserting_records_state(session* const ti) {
     for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
         auto* wso_ptr = &(elem);
         Record* rec_ptr = wso_ptr->get_rec_ptr();
-        if (wso_ptr->get_op() == OP_TYPE::INSERT) {
+        if (wso_ptr->get_op() == OP_TYPE::INSERT ||
+            wso_ptr->get_op() == OP_TYPE::UPSERT) {
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
             if (check.get_latest() && check.get_absent()) {
                 rec_ptr->get_tidw_ref().lock();
                 check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+
+                // detail info
+                if (logging::get_enable_logging_detail_info()) {
+                    DVLOG(log_trace)
+                            << logging::log_location_prefix
+                            << "unlock key " +
+                                       std::string(rec_ptr->get_key_view());
+                }
+
                 // main-check
                 if (check.get_latest() && check.get_absent()) {
+                    // inserting yet
                     tid_word tid{};
                     tid.set_absent(true);
                     tid.set_latest(false);
@@ -76,14 +95,7 @@ void unlock_inserted_records(session* const ti) {
                     tid.set_epoch(ti->get_step_epoch());
                     rec_ptr->set_tid(tid); // and unlock
                 } else {
-                    // detail info
-                    if (logging::get_enable_logging_detail_info()) {
-                        DVLOG(log_trace)
-                                << logging::log_location_prefix
-                                << "unlock key " +
-                                           std::string(rec_ptr->get_key_view());
-                    }
-
+                    // some operations interrupt and this is normal state.
                     rec_ptr->get_tidw_ref().unlock();
                 }
             }
@@ -96,10 +108,12 @@ Status abort(session* ti) { // NOLINT
     // about tx state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
-    // about inserted records
-    LOG(INFO);
-    unlock_inserted_records(ti);
-    LOG(INFO);
+    /**
+     * About inserted records.
+     * This is for read phase user abort.
+     * If this is not, the inserting record's inserting state will be not changed.
+     */
+    change_inserting_records_state(ti);
 
     ti->clean_up();
     return Status::OK;
@@ -176,8 +190,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     return Status::OK;
 }
 
-Status upsert_process_at_write_lock(session* ti, write_set_obj* wso,
-                                    std::size_t& not_inserted_lock) {
+Status upsert_process_at_write_lock(session* ti, write_set_obj* wso) {
     // check key exists yet
     std::string key{};
     wso->get_rec_ptr()->get_key(key);
@@ -185,29 +198,45 @@ RETRY: // NOLINT
     Record* rec_ptr{};
     auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
     if (rc == Status::OK) {
+        // the key exists and is hooked.
         // point (*1)
-        // hooked yet
         if (wso->get_rec_ptr() != rec_ptr) {
-            // changed from read phase
-            wso->set_rec_ptr(rec_ptr);
+            LOG(ERROR) << "The record pointer shouldn't be changed from read "
+                          "phase.";
+            return Status::ERR_CC;
         }
         // check ts
         tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-        rec_ptr->get_tidw_ref().lock();
-        check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-        if ((check.get_latest() && check.get_absent())) {
-            // inserting state
-            return Status::OK;
+
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace)
+                    << logging::log_location_prefix
+                    << "lock key " + std::string(rec_ptr->get_key_view());
         }
-        if (!check.get_absent()) {
-            // normal state
-            ++not_inserted_lock;
+
+        // locking
+        rec_ptr->get_tidw_ref().lock();
+
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace)
+                    << logging::log_location_prefix
+                    << "locked key " + std::string(rec_ptr->get_key_view());
+        }
+
+        check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+        if ((check.get_latest() && check.get_absent()) || // inserting state
+            (!check.get_absent())                         // normal state
+        ) {
+            // inserting state
             return Status::OK;
         }
         // it is deleted state
         // change it to inserting state.
         check.set_latest(true);
         rec_ptr->set_tid(check);
+
         // check it is hooked yet
         auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
         auto cleanup_old_process = [wso](tid_word check) {
@@ -239,6 +268,14 @@ RETRY: // NOLINT
         tid.set_latest(true);
         tid.set_absent(true);
         tid.set_lock(true);
+
+        // detail info
+        if (logging::get_enable_logging_detail_info()) {
+            DVLOG(log_trace) << logging::log_location_prefix
+                             << "inserting locked record, key " +
+                                        std::string(rec_ptr->get_key_view());
+        }
+
         rec_ptr->set_tid(tid);
         yakushima::node_version64* nvp{};
         if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
@@ -258,6 +295,7 @@ RETRY: // NOLINT
                 return Status::ERR_CC;
             }
             // success inserting
+
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
@@ -278,17 +316,15 @@ RETRY: // NOLINT
 }
 
 Status write_lock(session* ti, tid_word& commit_tid) {
-    std::size_t not_insert_locked_num{0};
+    std::size_t num_locked{0};
     // dead lock avoidance
     auto& cont_for_occ = ti->get_write_set().get_ref_cont_for_occ();
     std::sort(cont_for_occ.begin(), cont_for_occ.end());
     for (auto&& elem : cont_for_occ) {
         auto* wso_ptr = &(elem);
         auto* rec_ptr{wso_ptr->get_rec_ptr()};
-        auto abort_process = [ti, &not_insert_locked_num]() {
-            if (not_insert_locked_num > 0) {
-                unlock_not_insert_records(ti, not_insert_locked_num);
-            }
+        auto abort_process = [ti, &num_locked]() {
+            if (num_locked > 0) { unlock_records(ti, num_locked); }
             short_tx::abort(ti);
         };
         if (wso_ptr->get_op() == OP_TYPE::INSERT) {
@@ -300,6 +336,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             }
 
             // lock the record
+            ++num_locked;
             rec_ptr->get_tidw_ref().lock();
 
             // detail info
@@ -312,26 +349,6 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             tid_word tid{rec_ptr->get_tidw_ref()};
             if (tid.get_latest() && !tid.get_absent()) {
                 // the record is existing record (not inserting, deleted)
-
-                // detail info
-                if (logging::get_enable_logging_detail_info()) {
-                    DVLOG(log_trace)
-                            << logging::log_location_prefix
-                            << "unlock key " +
-                                       std::string(rec_ptr->get_key_view());
-                }
-
-                // unlock record
-                rec_ptr->get_tidw_ref().unlock();
-
-                // detail info
-                if (logging::get_enable_logging_detail_info()) {
-                    DVLOG(log_trace)
-                            << logging::log_location_prefix
-                            << "unlocked key " +
-                                       std::string(rec_ptr->get_key_view());
-                }
-
                 abort_process();
                 ti->get_result_info().set_reason_code(reason_code::KVS_INSERT);
                 ti->get_result_info().set_key_storage_name(
@@ -339,10 +356,10 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_KVS;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
-            auto rc = upsert_process_at_write_lock(ti, wso_ptr,
-                                                   not_insert_locked_num);
+            auto rc = upsert_process_at_write_lock(ti, wso_ptr);
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
+                ++num_locked;
                 continue;
             }
             if (rc == Status::ERR_CC) {
@@ -369,7 +386,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             }
 
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
-            ++not_insert_locked_num;
+            ++num_locked;
             if (rec_ptr->get_tidw_ref().get_absent()) {
                 abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {

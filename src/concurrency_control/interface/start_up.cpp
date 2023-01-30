@@ -40,7 +40,9 @@
 
 namespace shirakami {
 
-Status init(database_options const options) { // NOLINT
+Status init(database_options options) { // NOLINT
+    // It can't point const options. It cause compile error.
+
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
     // about logging detail information
