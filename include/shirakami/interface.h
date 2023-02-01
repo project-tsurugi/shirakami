@@ -457,7 +457,7 @@ Status release_tx_state_handle(TxStateHandle handle);
  * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid 
  * handle @a handle, this call returns this status.
  */
-Status tx_check(TxStateHandle handle, TxState& out);
+Status check_tx_state(TxStateHandle handle, TxState& out);
 
 /**
  * @brief log event callback function type.

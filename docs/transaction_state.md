@@ -8,7 +8,7 @@ stateDiagram-v2
     WAITING_START
     note right of WAITING_START
         Trigger: LTX and RTX are in this state first. 
-        Executable api for the tx: tx_check, release_tx_state_handle
+        Executable api for the tx: check_tx_state, release_tx_state_handle
     end note
     STARTED
     note left of STARTED
@@ -21,7 +21,7 @@ stateDiagram-v2
     note right of WAITING_CC_COMMIT
         Trigger: LTX executed commit api but it can't execute that due to 
         existing high priority LTXs.
-        Executable api for the tx: check_commit, tx_check, release_tx_state_handle
+        Executable api for the tx: check_commit, check_tx_state, release_tx_state_handle
     end note
     ABORTED
     note right of ABORTED
@@ -32,7 +32,7 @@ stateDiagram-v2
     note right of WAITING_DURABLE
         Trigger: The tx was committed in viewpoint of concurrency control and 
         wait to be durable by logging.
-        Executable api for the tx: tx_check, release_tx_state_handle.
+        Executable api for the tx: check_tx_state, release_tx_state_handle.
     end note
     DURABLE
     note left of DURABLE

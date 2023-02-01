@@ -62,7 +62,7 @@ Status release_tx_state_handle(TxStateHandle handle) {
     return rc;
 }
 
-Status tx_check(TxStateHandle handle, TxState& out) {
+Status check_tx_state(TxStateHandle handle, TxState& out) {
     if (handle == undefined_handle) { return Status::WARN_INVALID_HANDLE; }
     auto rc{TxState::find_and_get_tx_state(handle, out)};
     if (rc == Status::WARN_INVALID_HANDLE) { return rc; }
