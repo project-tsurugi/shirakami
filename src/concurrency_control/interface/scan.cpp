@@ -178,7 +178,14 @@ Status open_scan(Token const token, Storage storage,
          * and it must check about phantom at commit phase.
          */
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            for (auto&& elem : nvec) { ti->get_node_set().emplace_back(elem); }
+            for (auto&& elem : nvec) {
+                // engineering optimization, shrink nvec size.
+                if (!ti->get_node_set().empty() &&       // not empty
+                    ti->get_node_set().back() == elem) { // last elem is same
+                    continue;                            // skip registering.
+                }
+                ti->get_node_set().emplace_back(elem);
+            }
         }
         ti->process_before_finish_step();
         return rc;
