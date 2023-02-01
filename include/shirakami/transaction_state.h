@@ -27,7 +27,7 @@ constexpr static TxStateHandle undefined_handle = 0;
 class TxState final {
 public:
     using handle_container_type = std::map<TxStateHandle, TxState>;
-    using epoch_t = std::int64_t;
+    using epoch_t = std::uint64_t;
     static constexpr TxStateHandle handle_initial_value = 1;
 
     /**

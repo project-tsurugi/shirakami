@@ -12,7 +12,7 @@
 
 namespace shirakami::epoch {
 
-using epoch_t = std::int64_t;
+using epoch_t = std::uint64_t;
 
 static constexpr epoch_t initial_epoch{1};
 
