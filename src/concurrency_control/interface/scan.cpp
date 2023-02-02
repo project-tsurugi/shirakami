@@ -7,6 +7,7 @@
 #include "concurrency_control/include/wp_meta.h"
 
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/interface/include/helper.h"
 
 #include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
@@ -124,6 +125,13 @@ Status open_scan(Token const token, Storage storage,
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
+    // check constraint: key
+    auto ret = check_constraint_key_length(l_key);
+    if (ret != Status::OK) { return ret; }
+    ret = check_constraint_key_length(r_key);
+    if (ret != Status::OK) { return ret; }
+
+    // take thread info
     auto* ti = static_cast<session*>(token);
     // tx begin if not
     if (!ti->get_tx_began()) {

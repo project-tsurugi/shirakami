@@ -70,8 +70,10 @@ Status insert(Token const token, Storage const storage,
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
+    // take thread info
     auto* ti = static_cast<session*>(token);
 
+    // check it already began.
     if (!ti->get_tx_began()) {
         tx_begin({token}); // NOLINT
     }

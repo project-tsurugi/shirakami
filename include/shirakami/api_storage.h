@@ -19,7 +19,7 @@ namespace shirakami {
  * @return Status::WARN_ALREADY_EXISTS You may use @a options.id_ or @a key 
  * more than once.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be under 35KB.
+ * should be equal or less than 35KB.
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger 
  * than 2^32, or shirakami create storage more than 2^32.
  * Please review your usage.
@@ -43,7 +43,7 @@ extern Status delete_storage(Storage storage);
  * @param[out] out The target storage handle. 
  * @return Status::OK success.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be under 35KB.
+ * should be equal or less than 35KB.
  * @return Status::WARN_NOT_FOUND not found.
  */
 extern Status get_storage(std::string_view key, Storage& out);
