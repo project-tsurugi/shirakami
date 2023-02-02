@@ -55,8 +55,22 @@ TEST_F(long_key_test, long_key_search) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_key_test, very_long_key) { // NOLINT
-                                       // prepare
+TEST_F(long_key_test, 35kb_key_search) { // NOLINT
+                                         // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    std::string sb{};
+    // test
+    ASSERT_EQ(Status::OK, search_key(s, st, std::string(1024 * 35, 'a'), sb));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_key_test, 36kb_key_search) { // NOLINT
+                                         // prepare
     Storage st{};
     create_storage("", st);
     Token s{};
