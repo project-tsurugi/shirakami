@@ -40,7 +40,6 @@ TEST_F(long_key_test, long_key_search) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     for (std::size_t i = 1; i < 300; i++) {
-        LOG(INFO) << "try key size " << i;
         std::string k(i, 'A'); // search_key doesn't find with 256
         std::string v("a");    // NOLINT
         ASSERT_EQ(Status::OK, upsert(s, st, k, v));
@@ -63,7 +62,8 @@ TEST_F(long_key_test, 35kb_key_search) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string sb{};
     // test
-    ASSERT_EQ(Status::OK, search_key(s, st, std::string(1024 * 35, 'a'), sb));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              search_key(s, st, std::string(1024 * 35, 'a'), sb));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

@@ -45,6 +45,11 @@ static void process_before_return_not_found(session* const ti,
 Status update(Token token, Storage storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
+    // check constraint: key
+    auto ret = check_constraint_key_length(key);
+    if (ret != Status::OK) { return ret; }
+
+    // take thread info
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.

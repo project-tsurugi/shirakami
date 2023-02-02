@@ -345,6 +345,8 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
  * by other updater, and it could not complete search.
+ * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
+ * should be equal or less than 35KB.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
  * have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
@@ -388,6 +390,8 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
+ * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
+ * should be equal or less than 35KB.
  * @return Status::WARN_NOT_FOUND The record is not found.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
