@@ -8,6 +8,7 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 
+#include "database/include/logging.h"
 
 namespace shirakami::long_tx {
 
@@ -112,6 +113,12 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
 
     // update metadata
     ti->set_requested_commit(false);
+
+    // detail info
+    if (logging::get_enable_logging_detail_info()) {
+        DVLOG(log_trace) << logging::log_location_prefix
+                         << "tx_begin, LTX, tx id: " << long_tx_id;
+    }
 
     return Status::OK;
     // dtor : release wp_mutex

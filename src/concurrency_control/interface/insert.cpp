@@ -30,7 +30,7 @@ static inline Status insert_process(session* const ti, Storage st,
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
                         << logging::log_location_prefix
-                        << "insert locking record, key " + std::string(key);
+                        << "insert record, key " + std::string(key);
             }
 
             Status check_node_set_res{ti->update_node_set(nvp)};

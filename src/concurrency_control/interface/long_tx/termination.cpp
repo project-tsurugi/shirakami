@@ -15,6 +15,8 @@
 
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 
+#include "database/include/logging.h"
+
 #include "index/yakushima/include/interface.h"
 
 #include "glog/logging.h"
@@ -640,6 +642,20 @@ extern Status commit(session* const ti) {
     // check premature
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
+    }
+
+    // detail info
+    if (logging::get_enable_logging_detail_info()) {
+        // extract wait for
+        auto wait_for = ti->extract_wait_for();
+        std::string wait_for_str{""};
+        for (auto elem : wait_for) {
+            wait_for_str.append(std::to_string(elem) + ", ");
+        }
+        DVLOG(log_trace) << logging::log_location_prefix
+                         << "commit process accept, LTX, tx id: "
+                         << ti->get_long_tx_id()
+                         << ", wait for ltx id: " << wait_for_str;
     }
 
     /**
