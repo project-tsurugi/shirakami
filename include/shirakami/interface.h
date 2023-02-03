@@ -410,6 +410,8 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
  * wp in batch mode.
+ * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
+ * should be equal or less than 35KB.
  * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
  * is not found.
  */
