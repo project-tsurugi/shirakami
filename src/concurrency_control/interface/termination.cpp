@@ -21,6 +21,9 @@ Status abort(Token token) { // NOLINT
     // set result info
     ti->set_result(reason_code::USER_ABORT);
 
+    // set about diagnostics
+    ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
+
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::abort(ti);
@@ -55,6 +58,13 @@ Status commit(Token const token) {
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::commit(ti);
+
+        // set about diagnostics
+        if (rc == Status::OK) {
+            ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
+        } else {
+            ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
+        }
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::LONG) {
         if (ti->get_requested_commit()) {
@@ -65,9 +75,23 @@ Status commit(Token const token) {
             return Status::WARN_WAITING_FOR_OTHER_TX;
         }
         rc = long_tx::commit(ti);
+
+        // set about diagnostics
+        if (rc == Status::OK) {
+            // committed
+            ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
+        } else if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
+            // waited
+            ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_CC_COMMIT);
+        } else {
+            // aborted
+            ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
+        }
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::commit(ti);
+        // set about diagnostics. it must commit
+        ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
     } else {
         LOG(ERROR) << log_location_prefix << "unexpected error";
         return Status::ERR_FATAL;

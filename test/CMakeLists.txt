@@ -34,6 +34,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/hybrid/search_upsert/*.cpp"
         "concurrency_control/long_tx/*.cpp"
         "concurrency_control/long_tx/delete/*.cpp"
+        "concurrency_control/long_tx/diagnostic/*.cpp"
         "concurrency_control/long_tx/delete_insert/*.cpp"
         "concurrency_control/long_tx/delete_search/*.cpp"
         "concurrency_control/long_tx/delete_update/*.cpp"

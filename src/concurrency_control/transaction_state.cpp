@@ -67,8 +67,8 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     auto rc{TxState::find_and_get_tx_state(handle, out)};
     if (rc == Status::WARN_INVALID_HANDLE) { return rc; }
     auto& ts{TxState::get_tx_state(handle)};
+    // short tx
     if (out.get_serial_epoch() == 0) {
-        // short tx
         if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
 #ifdef PWAL
             if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {

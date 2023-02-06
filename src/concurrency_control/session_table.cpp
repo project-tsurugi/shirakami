@@ -45,4 +45,33 @@ void session_table::init_session_table() {
     }
 }
 
+void session_table::print_diagnostics(std::ostream& out) {
+    std::size_t num_running_tx{0};
+    for (auto&& itr : get_session_table()) {
+        // print diagnostics
+        // check it was began
+        if (!itr.get_tx_began()) { continue; } // not executing
+        ++num_running_tx;
+
+        // output start with token id
+        out << "==token: " << &(itr) << ", start information" << std::endl;
+
+        // check tx mode
+        out << "tx mode: " << itr.get_tx_type() << std::endl;
+
+        // check this state
+        TxState::StateKind st = itr.get_diag_tx_state_kind();
+        out << "state: " << st << std::endl;
+
+        // ltx information
+        //if (itr.get_tx_type() == transaction_options::transaction_type::LONG) {
+        //    // print overtaken ltx set
+        //}
+
+        // output end with token id
+        out << "==token: " << &(itr) << ", end information" << std::endl;
+    }
+    out << "number of running tx: " << num_running_tx << std::endl;
+}
+
 } // namespace shirakami

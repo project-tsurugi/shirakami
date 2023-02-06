@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "api_diagnostic.h"
 #include "api_result.h"
 #include "api_sequence.h"
 #include "api_storage.h"

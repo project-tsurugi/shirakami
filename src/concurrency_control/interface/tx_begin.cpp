@@ -37,8 +37,10 @@
 namespace shirakami {
 
 Status tx_begin(transaction_options options) { // NOLINT
+                                               // get tx options
     Token token = options.get_token();
 
+    // get thread info
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     if (ti->get_tx_began()) {
@@ -97,6 +99,14 @@ Status tx_begin(transaction_options options) { // NOLINT
         ti->set_tx_counter(ti->get_tx_counter() + 1);
     }
 
+    // success tx begin
+    // process about diagnostics
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        ti->set_diag_tx_state_kind(TxState::StateKind::STARTED);
+    } else {
+        // ltx and rtx
+        ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
+    }
     ti->process_before_finish_step();
     return Status::OK;
 }

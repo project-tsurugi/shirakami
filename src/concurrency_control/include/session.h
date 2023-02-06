@@ -162,6 +162,14 @@ public:
     }
     // ========== end: tx state
 
+    // ========== start: diagnostics
+
+    [[nodiscard]] TxState::StateKind get_diag_tx_state_kind() const {
+        return diag_tx_state_kind_.load(std::memory_order_acquire);
+    }
+
+    // ========== end: diagnostics
+
     node_set_type& get_node_set() { return node_set_; }
 
     /**
@@ -354,6 +362,14 @@ public:
     }
 
     // ========== end: tx state
+
+    // ========== start: diagnostics
+
+    void set_diag_tx_state_kind(TxState::StateKind sk) {
+        diag_tx_state_kind_.store(sk, std::memory_order_release);
+    }
+
+    // ========== end: diagnostics
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
@@ -584,6 +600,15 @@ private:
     TxState* current_tx_state_ptr_{};
     // ========== end: tx state
 
+    // ========== start: diagnostics
+
+    /**
+     * @brief tx_state for diagnostics.
+     */
+    std::atomic<TxState::StateKind> diag_tx_state_kind_{};
+
+    // ========== end: diagnostics
+
     // ========== start: long tx
     /**
      * @brief Whether the long tx was already requested commit.
@@ -682,17 +707,25 @@ public:
      */
     static void init_session_table();
 
+    /**
+     * @brief print diagnostics information.
+     */
+    static void print_diagnostics(std::ostream& out);
+
 private:
     /**
       * @brief The table holding session information.
-      * @details There are situations where you want to check table information and register / 
-      * delete entries in the table exclusively. When using exclusive lock, contention between 
-      * readers is useless. When the reader writer lock is used, the cache is frequently 
-      * polluted by increasing or decreasing the reference count. Therefore, lock-free exclusive 
+      * @details There are situations where you want to check table information 
+      * and register / delete entries in the table exclusively. When using 
+      * exclusive lock, contention between readers is useless. When the reader 
+      * writer lock is used, the cache is frequently polluted by increasing or 
+      * decreasing the reference count. Therefore, lock-free exclusive 
       * arbitration is performed for fixed-length tables.
-      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number of sessions.
+      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number 
+      * of sessions.
       */
     static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
             session_table_;                                     // NOLINT
 };
+
 } // namespace shirakami
