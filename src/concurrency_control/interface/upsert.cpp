@@ -30,9 +30,8 @@ static inline Status insert_process(session* const ti, Storage st,
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
-                DVLOG(log_trace)
-                        << logging::log_location_prefix
-                        << "insert record, key " + std::string(key);
+                DVLOG(log_trace) << logging::log_location_prefix
+                                 << "insert record, key " + std::string(key);
             }
 
             Status check_node_set_res{ti->update_node_set(nvp)};

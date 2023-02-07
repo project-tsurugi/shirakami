@@ -37,7 +37,7 @@ private:
 };
 
 TEST_F(short_upsert_long_key, long_key_upsert) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     std::string k(1024 * 35, '0'); // NOLINT
     Token s{};
@@ -48,7 +48,7 @@ TEST_F(short_upsert_long_key, long_key_upsert) { // NOLINT
 }
 
 TEST_F(short_upsert_long_key, over_35kb_key_upsert) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};

@@ -41,7 +41,7 @@ private:
 
 TEST_F(read_only_open_scan_long_key, 35kb_key_open_scan) { // NOLINT
     // open_scan 35KB key
-    Storage st;
+    Storage st{};
     create_storage("", st);
     std::string k(1024 * 35, '0'); // NOLINT
     Token s{};
@@ -66,7 +66,7 @@ TEST_F(read_only_open_scan_long_key, 35kb_key_open_scan) { // NOLINT
 
 TEST_F(read_only_open_scan_long_key, 36kb_key_open_scan) { // NOLINT
     // open_scan 36KB key
-    Storage st;
+    Storage st{};
     create_storage("", st);
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};

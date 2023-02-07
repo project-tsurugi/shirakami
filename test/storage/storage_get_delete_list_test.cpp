@@ -53,7 +53,7 @@ TEST_F(storage_test, get_storage_test) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage("", st2));
 
     // long key test
-    std::string long_key(1024 * 36, 'a');
+    std::string long_key(1024 * 36, 'a'); // NOLINT
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, get_storage(long_key, st2));
 }
 

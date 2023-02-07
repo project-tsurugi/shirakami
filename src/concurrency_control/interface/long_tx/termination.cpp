@@ -648,7 +648,7 @@ extern Status commit(session* const ti) {
     if (logging::get_enable_logging_detail_info()) {
         // extract wait for
         auto wait_for = ti->extract_wait_for();
-        std::string wait_for_str{""};
+        std::string wait_for_str{};
         for (auto elem : wait_for) {
             wait_for_str.append(std::to_string(elem) + ", ");
         }

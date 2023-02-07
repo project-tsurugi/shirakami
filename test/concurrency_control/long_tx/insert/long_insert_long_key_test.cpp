@@ -39,7 +39,7 @@ private:
 };
 
 TEST_F(long_insert_long_key, long_key_insert) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     // insert 35KB key
     std::string k(1024 * 35, '0'); // NOLINT
@@ -62,7 +62,7 @@ TEST_F(long_insert_long_key, long_key_insert) { // NOLINT
 }
 
 TEST_F(long_insert_long_key, over_35kb_key_insert) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     // insert 36KB key
     std::string k(1024 * 36, '0'); // NOLINT

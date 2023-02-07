@@ -61,7 +61,7 @@ void preprocess_read_area(transaction_options::read_area& ra) {
     // remove from positive by negative
     for (auto elem : ra.get_negative_list()) {
         auto& pset = ra.get_positive_list();
-        for (auto itr = pset.begin(); itr != pset.end(); ++itr) {
+        for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
             if (elem == *itr) {
                 ra.get_positive_list().erase(elem);
                 break;

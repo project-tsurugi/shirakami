@@ -56,7 +56,7 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
-    for (std::size_t i = 0; i < 500; ++i) {
+    for (std::size_t i = 0; i < 500; ++i) { // NOLINT
         // Tx1.
         ScanHandle hd{};
         ASSERT_EQ(Status::WARN_NOT_FOUND,
@@ -65,13 +65,13 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // Tx2.
-        for (std::size_t i = 0; i < 100; ++i) {
+        for (std::size_t i = 0; i < 100; ++i) { // NOLINT
             std::string k(1, i);
             ASSERT_EQ(Status::OK, insert(s, st, k, "v"));
         }
 
         // second
-        for (std::size_t i = 0; i < 100; ++i) {
+        for (std::size_t i = 0; i < 100; ++i) { // NOLINT
             std::string k(1, i);
             ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, k, "v"));
         }

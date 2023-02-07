@@ -74,13 +74,13 @@ TEST_F(read_area_test, register_same_st) { // NOLINT
     auto* ti = static_cast<session*>(s);
     // check positive
     {
-        auto& set = ti->get_read_area().get_positive_list();
+        auto& set = ti->get_read_area().get_positive_list(); // NOLINT
         ASSERT_EQ(1, set.size());
         ASSERT_EQ(st, *set.begin());
     }
     // check negative
     {
-        auto& set = ti->get_read_area().get_negative_list();
+        auto& set = ti->get_read_area().get_negative_list(); // NOLINT
         ASSERT_EQ(1, set.size());
         ASSERT_EQ(st2, *set.begin());
     }
@@ -199,13 +199,13 @@ TEST_F(read_area_test, conflict_positive_negative) { // NOLINT
     auto* ti = static_cast<session*>(s);
     // check positive
     {
-        auto& set = ti->get_read_area().get_positive_list();
+        auto& set = ti->get_read_area().get_positive_list(); // NOLINT
         ASSERT_EQ(1, set.size());
         ASSERT_EQ(st1, *set.begin());
     }
     // check negative
     {
-        auto& set = ti->get_read_area().get_negative_list();
+        auto& set = ti->get_read_area().get_negative_list(); // NOLINT
         ASSERT_EQ(2, set.size());
         auto itr = set.begin();
         ASSERT_EQ(st2, *itr);

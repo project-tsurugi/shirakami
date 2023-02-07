@@ -71,7 +71,7 @@ void recovery_from_datastore() {
                 rec_ptr->set_value(val);
             } else {
                 // create record
-                rec_ptr = new Record(key);
+                rec_ptr = new Record(key); // NOLINT
                 // fix record contents
                 // about value
                 rec_ptr->set_value(val);

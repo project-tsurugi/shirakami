@@ -6,8 +6,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp_meta.h"
 
-#include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/include/helper.h"
+#include "concurrency_control/interface/long_tx/include/long_tx.h"
 
 #include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"

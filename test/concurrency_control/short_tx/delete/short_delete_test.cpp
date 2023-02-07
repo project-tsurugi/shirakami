@@ -25,7 +25,7 @@ public:
 };
 
 TEST_F(short_delete_test, delete_) { // NOLINT
-    Storage st;
+    Storage st{};
     create_storage("", st);
     std::string k("aaa");  // NOLINT
     std::string v("aaa");  // NOLINT
@@ -80,7 +80,7 @@ TEST_F(short_delete_test, long_key) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    std::string long_key(1024 * 36, 'a');
+    std::string long_key(1024 * 36, 'a'); // NOLINT
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, delete_record(s, st, long_key));
     ASSERT_EQ(Status::OK, leave(s));
 }

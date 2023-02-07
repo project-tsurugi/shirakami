@@ -55,7 +55,7 @@ TEST_F(storage_test, create_storage_test) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
 
     // using large key > 35KB
-    std::string large_key(1024 * 36, 'a');
+    std::string large_key(1024 * 36, 'a'); // NOLINT
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, create_storage(large_key, st));
 }
 

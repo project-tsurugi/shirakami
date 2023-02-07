@@ -41,7 +41,7 @@ private:
 
 TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
     Storage st{};
-    for (std::size_t i = 0; i < 30; ++i) {
+    for (std::size_t i = 0; i < 30; ++i) { // NOLINT
         // drop table
         if (i == 0) {
             // no storage
@@ -105,7 +105,7 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
 TEST_F(tsurugi_issue86, phantom) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("system", st));
-    for (std::size_t i = 0; i < 30; ++i) {
+    for (std::size_t i = 0; i < 30; ++i) { // NOLINT
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
         ScanHandle handle{};
