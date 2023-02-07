@@ -51,7 +51,10 @@ void remove_storage_metadata(std::string_view key) {
     std::string value{};
     auto ret = delete_record(s, storage::meta_storage, key);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG(ERROR) << log_location_prefix
+                   << "unreachable path, It can't find the record which must "
+                      "exist.: "
+                   << s << ", " << storage::meta_storage << ", " << key;
         return;
     }
     if (commit(s) == Status::OK) {

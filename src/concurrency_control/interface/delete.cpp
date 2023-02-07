@@ -139,7 +139,6 @@ Status delete_record(Token token, Storage storage,
             ti->process_before_finish_step();
             return process_after_write(ti, in_ws);
         }
-
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
@@ -147,7 +146,6 @@ Status delete_record(Token token, Storage storage,
             process_before_return_not_found(ti, storage, key);
             return Status::WARN_NOT_FOUND;
         }
-
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
         register_read_if_ltx(ti, rec_ptr);

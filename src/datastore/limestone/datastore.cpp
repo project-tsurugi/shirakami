@@ -61,7 +61,45 @@ void recovery_from_datastore() {
         std::string val{};
         cursor->key(key);
         cursor->value(val);
-        // check storage exist
+        // prepare function updating information
+        auto put_data = [](Storage st, std::string_view key,
+                           std::string_view val) {
+            // check record existence
+            Record* rec_ptr{};
+            if (Status::OK == get<Record>(st, key, rec_ptr)) {
+                // record existing, update value
+                rec_ptr->set_value(val);
+            } else {
+                // create record
+                rec_ptr = new Record(key);
+                // fix record contents
+                // about value
+                rec_ptr->set_value(val);
+                // about tid
+                tid_word new_tid{rec_ptr->get_tidw_ref()};
+                new_tid.set_latest(true);
+                new_tid.set_absent(false);
+                new_tid.set_lock(false);
+                // set tid
+                rec_ptr->set_tid(new_tid);
+                // put contents to tree
+                Token token{};
+                // acquire tx handle
+                while (enter(token) != Status::OK) { _mm_pause(); }
+                yakushima::node_version64* dummy{};
+                auto rc = put<Record>(
+                        static_cast<session*>(token)->get_yakushima_token(), st,
+                        key, rec_ptr, dummy);
+                if (yakushima::status::OK != rc) {
+                    // can't put
+                    LOG(ERROR) << log_location_prefix
+                               << "unreachable path: " << rc;
+                }
+                // cleanup
+                leave(token);
+            }
+        };
+        // check storage
         if (st == storage::meta_storage) {
             // recovery storage. The storage may have not been operated.
             Storage st2{};
@@ -78,25 +116,12 @@ void recovery_from_datastore() {
                 payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
-            auto upsert_meta_info = [key, id, payload, st2]() {
-                Token token{};
-                // acquire tx handle
-                while (enter(token) != Status::OK) { _mm_pause(); }
-                std::string new_value{};
-                new_value.append(reinterpret_cast<const char*>(&st2), // NOLINT
-                                 sizeof(st2));
-                new_value.append(reinterpret_cast<const char*>(&id), // NOLINT
-                                 sizeof(id));
-                new_value.append(payload);
-                if (Status::OK !=
-                    upsert(token, storage::meta_storage, key, new_value)) {
-                    LOG(ERROR) << log_location_prefix << "unexpected error";
-                }
-                if (Status::OK != commit(token)) {
-                    LOG(ERROR) << log_location_prefix << "unexpected error";
-                }
-                leave(token);
-            };
+            std::string new_value{};
+            new_value.append(reinterpret_cast<const char*>(&st2), // NOLINT
+                             sizeof(st2));
+            new_value.append(reinterpret_cast<const char*>(&id), // NOLINT
+                             sizeof(id));
+            new_value.append(payload);
             // check st2 existence
             auto ret = shirakami::storage::exist_storage(st2);
             if (ret == Status::OK) {
@@ -106,7 +131,7 @@ void recovery_from_datastore() {
                  * Try to create in-memory entry about storage info and update 
                  * key_handle_map.
                  */
-                upsert_meta_info();
+                put_data(storage::meta_storage, key, new_value);
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     // Does DML create key handle map entry?
@@ -136,7 +161,7 @@ void recovery_from_datastore() {
                     LOG(ERROR) << log_location_prefix << "unexpected error";
                     return;
                 }
-                upsert_meta_info();
+                put_data(storage::meta_storage, key, new_value);
             }
             st_list.emplace_back(st2);
         } else if (st == storage::sequence_storage) {
@@ -155,19 +180,9 @@ void recovery_from_datastore() {
                 return;
             }
         } else {
-            Token token{};
-            // acquire tx handle
-            while (enter(token) != Status::OK) { _mm_pause(); }
             shirakami::storage::register_storage(st); // maybe already exist
             st_list.emplace_back(st);
-            // upsert by transaction
-            if (Status::OK != upsert(token, st, key, val)) {
-                LOG(ERROR) << log_location_prefix << "unexpected error";
-            }
-            if (Status::OK != commit(token)) {
-                LOG(ERROR) << log_location_prefix << "unexpected error";
-            }
-            leave(token);
+            put_data(st, key, val);
         }
     }
     if (max_id > 0) {
