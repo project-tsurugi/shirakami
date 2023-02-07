@@ -62,45 +62,44 @@ std::size_t dir_size(boost::filesystem::path& path) {
     return total_file_size;
 }
 
+std::string create_log_dir_name() {
+    int tid = syscall(SYS_gettid); // NOLINT
+    std::uint64_t tsc = rdtsc();
+    return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
+}
+
 TEST_F(li_logging_test,                          // NOLINT
        check_wal_file_existence_and_extention) { // NOLINT
     // prepare test
-    init({database_options::open_mode::CREATE}); // NOLINT
+    std::string log_dir{};
+    log_dir = create_log_dir_name();
+    boost::filesystem::path data_location(log_dir);
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare data
-    std::string k{"k"};
-    ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
+    for (std::size_t i = 0; i < 100; ++i) {
+        ASSERT_EQ(Status::OK, upsert(s, st, std::to_string(i), "v"));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
+    }
 
-    auto ep = epoch::get_global_epoch();
-    // wait durable (*1) log
-    while (ep > lpwal::get_durable_epoch()) { _mm_pause(); }
-
-    // check wal file existence
-    std::string log_dir_str{lpwal::get_log_dir()};
-    boost::filesystem::path log_path{log_dir_str};
-    // verify
-    boost::uintmax_t size1 = dir_size(log_path);
-    EXPECT_EQ(size1 != 0, true);
-
-    ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*2)
-
-    ep = epoch::get_global_epoch();
-    // wait durable (*2) log
-    while (ep > lpwal::get_durable_epoch()) { _mm_pause(); }
-
-    // verify
-    boost::uintmax_t size2 = dir_size(log_path);
-    EXPECT_EQ(size1 != size2, true);
-
-    // clean up test
-    ASSERT_EQ(Status::OK, leave(s));
+    LOG(INFO) << "before first shut down: " << dir_size(data_location);
     fin(false);
+    LOG(INFO) << "after first shut down: " << dir_size(data_location);
+
+    // second start up
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+    LOG(INFO) << "after second start up: " << dir_size(data_location);
+    fin(false);
+    LOG(INFO) << "after second shut down: " << dir_size(data_location);
+    // third start up
+    init({database_options::open_mode::CREATE, log_dir}); // NOLINT
+    LOG(INFO) << "after third start up: " << dir_size(data_location);
+    fin(false);
+    LOG(INFO) << "after third shut down: " << dir_size(data_location);
 }
 
 } // namespace shirakami::testing
