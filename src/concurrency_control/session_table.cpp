@@ -56,6 +56,11 @@ void session_table::print_diagnostics(std::ostream& out) {
         // output start with token id
         out << "==token: " << &(itr) << ", start information" << std::endl;
 
+        // output txid
+        std::string buf{};
+        get_tx_id(static_cast<Token>(&itr), buf);
+        out << buf << std::endl;
+
         // check tx mode
         out << "tx mode: " << itr.get_tx_type() << std::endl;
 
@@ -63,7 +68,7 @@ void session_table::print_diagnostics(std::ostream& out) {
         TxState::StateKind st = itr.get_diag_tx_state_kind();
         out << "state: " << st << std::endl;
 
-        // ltx information
+        // todo
         //if (itr.get_tx_type() == transaction_options::transaction_type::LONG) {
         //    // print overtaken ltx set
         //}
