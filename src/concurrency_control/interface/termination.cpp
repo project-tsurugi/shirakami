@@ -57,6 +57,7 @@ Status commit(Token const token) {
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        // for short tx
         rc = short_tx::commit(ti);
 
         // set about diagnostics
@@ -67,6 +68,7 @@ Status commit(Token const token) {
         }
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::LONG) {
+        // for long tx
         if (ti->get_requested_commit()) {
             /**
              * It was already requested.
@@ -89,6 +91,7 @@ Status commit(Token const token) {
         }
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::READ_ONLY) {
+        // for read only tx
         rc = read_only_tx::commit(ti);
         // set about diagnostics. it must commit
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);

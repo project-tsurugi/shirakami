@@ -653,7 +653,7 @@ extern Status commit(session* const ti) {
             wait_for_str.append(std::to_string(elem) + ", ");
         }
         DVLOG(log_trace) << logging::log_location_prefix
-                         << "commit process accept, LTX, tx id: "
+                         << "commit request accept, LTX, tx id: "
                          << ti->get_long_tx_id()
                          << ", wait for ltx id: " << wait_for_str;
     }
@@ -679,57 +679,63 @@ extern Status commit(session* const ti) {
     // verify : start
     rc = verify(ti);
     if (rc == Status::ERR_CC) {
+        // verfy fail
         abort(ti);
-        return Status::ERR_CC;
-    }
-    // verify : end
-    // ==========
+    } else if (rc == Status::OK) {
+        // This tx must success.
 
-    // This tx must success.
+        register_read_by(ti);
 
-    register_read_by(ti);
-
-    tid_word ctid{};
-    /**
+        tid_word ctid{};
+        /**
      * For registering write preserve result.
      * Null (string "") may be used for pkey, but the range expressed two string
      * don't know the endpoint is nothing or null key.
      * So it needs boolean.
      */
-    std::map<Storage, std::tuple<std::string, std::string>> write_range;
-    expose_local_write(ti, ctid, write_range);
+        std::map<Storage, std::tuple<std::string, std::string>> write_range;
+        expose_local_write(ti, ctid, write_range);
 
-    // sequence process
-    // This must be after cc commit and before log process
-    ti->commit_sequence(ctid);
+        // sequence process
+        // This must be after cc commit and before log process
+        ti->commit_sequence(ctid);
 
 #if defined(PWAL)
-    auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
-    // think the wal buffer is empty due to background thread's work
-    if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
-        oldest_log_epoch != epoch::get_global_epoch()) {
-        // should flush
-        shirakami::lpwal::flush_log(static_cast<void*>(ti));
-    }
+        auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
+        // think the wal buffer is empty due to background thread's work
+        if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
+            oldest_log_epoch != epoch::get_global_epoch()) {
+            // should flush
+            shirakami::lpwal::flush_log(static_cast<void*>(ti));
+        }
 #endif
 
-    // todo enhancement
-    /**
+        // todo enhancement
+        /**
      * Sort by wp and then globalize the local write set. 
      * Eliminate wp from those that have been globalized in wp units.
      */
 
 
-    // about transaction state
-    process_tx_state(ti, ti->get_valid_epoch());
+        // about transaction state
+        process_tx_state(ti, ti->get_valid_epoch());
 
-    // clean up
-    cleanup_process(ti, true, write_range);
+        // clean up
+        cleanup_process(ti, true, write_range);
 
-    // set transaction result
-    ti->set_result(reason_code::UNKNOWN);
+        // set transaction result
+        ti->set_result(reason_code::UNKNOWN);
+    } else {
+        LOG(ERROR) << "unexpected code path";
+    }
 
-    return Status::OK;
+    // detail info
+    if (logging::get_enable_logging_detail_info()) {
+        DVLOG(log_trace) << logging::log_location_prefix
+                         << "commit request processed, LTX, tx id: "
+                         << ti->get_long_tx_id() << ", return code: " << rc;
+    }
+    return rc;
 }
 
 Status check_commit(Token const token) {
