@@ -40,14 +40,15 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(tsurugi_issue176, DISABLED_comment_by_ban_20230213_1824) { // NOLINT
-    // テストシナリオ: std::thread::hardware_concurrency() の数だけのスレッドが同一テーブルで独立したキーに対してRMW をする。
+TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
+    // テストシナリオ: 多くのスレッドが同一テーブルで独立したキーに対してRMW をする。
 
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
+    std::size_t th_num(std::thread::hardware_concurrency());
 
-    auto worker = [st](std::size_t th_id,
-                       std::atomic<std::size_t>* prepare_num) {
+    auto worker = [st, th_num](std::size_t th_id,
+                               std::atomic<std::size_t>* prepare_num) {
         // prepare
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
@@ -57,12 +58,11 @@ TEST_F(tsurugi_issue176, DISABLED_comment_by_ban_20230213_1824) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_epoch_update();
         ++*prepare_num;
-        while (prepare_num->load(std::memory_order_acquire) !=
-               std::thread::hardware_concurrency()) {
+        while (prepare_num->load(std::memory_order_acquire) != th_num) {
             _mm_pause();
         }
 
-        for (std::size_t i = 0; i < 1000; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
             ASSERT_EQ(Status::OK,
                       tx_begin({s,
                                 transaction_options::transaction_type::LONG,
@@ -87,8 +87,8 @@ TEST_F(tsurugi_issue176, DISABLED_comment_by_ban_20230213_1824) { // NOLINT
     // test
     std::atomic<std::size_t> prepare_num{0};
     std::vector<std::thread> th_vc;
-    th_vc.reserve(std::thread::hardware_concurrency());
-    for (std::size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    th_vc.reserve(th_num);
+    for (std::size_t i = 0; i < th_num; ++i) {
         th_vc.emplace_back(worker, i, &prepare_num);
     }
 

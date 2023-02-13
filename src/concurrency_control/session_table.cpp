@@ -58,8 +58,48 @@ static void check_and_update_diag_state(session* ti) {
     }
 }
 
+static void display_tx_diagnostics_info(std::ostream& out, bool& exist_ltx,
+                                        std::size_t& highest_priori_ltxid,
+                                        session*& highest_priori_ltx_session,
+                                        session* ti) {
+    // output txid
+    std::string buf{};
+    get_tx_id(static_cast<Token>(ti), buf);
+    out << "TID: " << buf << std::endl;
+
+    // check tx mode
+    out << "tx mode: " << ti->get_tx_type() << std::endl;
+
+    // if ltx, ltx id
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        out << "ltx id: " << ti->get_long_tx_id() << std::endl;
+        // analysis for ltx
+        if (exist_ltx) {
+            if (highest_priori_ltxid > ti->get_long_tx_id()) {
+                highest_priori_ltxid = ti->get_long_tx_id();
+                highest_priori_ltx_session = ti;
+            }
+        } else {
+            // initialize
+            exist_ltx = true;
+            highest_priori_ltxid = ti->get_long_tx_id();
+            highest_priori_ltx_session = ti;
+        }
+    }
+
+    // update diag state if need
+    check_and_update_diag_state(ti);
+    // check this state
+    TxState::StateKind st = ti->get_diag_tx_state_kind();
+    out << "state: " << st << std::endl;
+}
+
 void session_table::print_diagnostics(std::ostream& out) {
     std::size_t num_running_tx{0};
+    bool exist_ltx{false};
+    std::size_t highest_priori_ltxid{0};
+    session* highest_priori_ltx_session{nullptr};
+
     for (auto&& itr : get_session_table()) {
         // print diagnostics
         // check it was began
@@ -69,24 +109,22 @@ void session_table::print_diagnostics(std::ostream& out) {
         // output start with token id
         out << "==token: " << &(itr) << ", start information" << std::endl;
 
-        // output txid
-        std::string buf{};
-        get_tx_id(static_cast<Token>(&itr), buf);
-        out << "TID: " << buf << std::endl;
-
-        // check tx mode
-        out << "tx mode: " << itr.get_tx_type() << std::endl;
-
-        // update diag state if need
-        check_and_update_diag_state(&itr);
-        // check this state
-        TxState::StateKind st = itr.get_diag_tx_state_kind();
-        out << "state: " << st << std::endl;
+        // print tx information for diagnostics
+        display_tx_diagnostics_info(out, exist_ltx, highest_priori_ltxid,
+                                    highest_priori_ltx_session, &itr);
 
         // output end with token id
         out << "==token: " << &(itr) << ", end information" << std::endl;
     }
     out << "number of running tx: " << num_running_tx << std::endl;
+    if (exist_ltx) {
+        out << "highest priori LTX id: " << highest_priori_ltxid << std::endl;
+        out << "re-display about the tx's information: start" << std::endl;
+        display_tx_diagnostics_info(out, exist_ltx, highest_priori_ltxid,
+                                    highest_priori_ltx_session,
+                                    highest_priori_ltx_session);
+        out << "re-display about the tx's information: end" << std::endl;
+    }
 }
 
 } // namespace shirakami

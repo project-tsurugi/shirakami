@@ -88,7 +88,6 @@ Status tx_begin(transaction_options options) { // NOLINT
         return Status::ERR_FATAL;
     }
     ti->set_tx_type(tx_type);
-    ti->set_tx_began(true);
     ti->set_begin_epoch(epoch::get_global_epoch());
 
     // about tx counter
@@ -108,6 +107,12 @@ Status tx_begin(transaction_options options) { // NOLINT
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
     }
     ti->process_before_finish_step();
+    
+    /**
+     * This is for concurrent programming. It teaches to other thread that this
+     * tx began at last.
+     */
+    ti->set_tx_began(true);
     return Status::OK;
 }
 

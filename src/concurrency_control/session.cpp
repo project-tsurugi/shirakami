@@ -150,6 +150,7 @@ Status session::find_high_priority_short() const {
                 itr.get_tx_type() ==
                         transaction_options::transaction_type::SHORT &&
                 itr.get_operating() &&
+                itr.get_tx_began() && 
                 /**
                  * If operating false and this ltx can start in the viewpoint
                  * of epoch, stx after this operation must be serialized after 
