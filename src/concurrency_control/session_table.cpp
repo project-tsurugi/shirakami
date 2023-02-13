@@ -45,6 +45,19 @@ void session_table::init_session_table() {
     }
 }
 
+static void check_and_update_diag_state(session* ti) {
+    // long tx may remain waiting start state.
+    if (ti->get_tx_type() != transaction_options::transaction_type::SHORT) {
+        if (ti->get_diag_tx_state_kind() == TxState::StateKind::WAITING_START) {
+            // Maybe started is more correct
+            if (ti->get_valid_epoch() <= epoch::get_global_epoch()) {
+                // started is more correct.
+                ti->set_diag_tx_state_kind(TxState::StateKind::STARTED);
+            }
+        }
+    }
+}
+
 void session_table::print_diagnostics(std::ostream& out) {
     std::size_t num_running_tx{0};
     for (auto&& itr : get_session_table()) {
@@ -59,19 +72,16 @@ void session_table::print_diagnostics(std::ostream& out) {
         // output txid
         std::string buf{};
         get_tx_id(static_cast<Token>(&itr), buf);
-        out << buf << std::endl;
+        out << "TID: " << buf << std::endl;
 
         // check tx mode
         out << "tx mode: " << itr.get_tx_type() << std::endl;
 
+        // update diag state if need
+        check_and_update_diag_state(&itr);
         // check this state
         TxState::StateKind st = itr.get_diag_tx_state_kind();
         out << "state: " << st << std::endl;
-
-        // todo
-        //if (itr.get_tx_type() == transaction_options::transaction_type::LONG) {
-        //    // print overtaken ltx set
-        //}
 
         // output end with token id
         out << "==token: " << &(itr) << ", end information" << std::endl;
