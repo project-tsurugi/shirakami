@@ -118,12 +118,14 @@ void session_table::print_diagnostics(std::ostream& out) {
     }
     out << "number of running tx: " << num_running_tx << std::endl;
     if (exist_ltx) {
-        out << "highest priori LTX id: " << highest_priori_ltxid << std::endl;
-        out << "re-display about the tx's information: start" << std::endl;
+        out << "highest priori LTX id was: " << highest_priori_ltxid
+            << std::endl;
+        out << "re-display about the worker which has the tx: start"
+            << std::endl;
         display_tx_diagnostics_info(out, exist_ltx, highest_priori_ltxid,
                                     highest_priori_ltx_session,
                                     highest_priori_ltx_session);
-        out << "re-display about the tx's information: end" << std::endl;
+        out << "re-display about the worker which has the tx: end" << std::endl;
     }
 }
 

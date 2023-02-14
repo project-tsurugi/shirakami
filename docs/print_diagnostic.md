@@ -43,11 +43,11 @@ void print_diagnostics(std::ostream&)
     - `number of running tx: 1`
 - LTX が存在するならば、最優先度の ltx id
   - 用途：最優先度の ltx id を把握する。一覧情報から最小値を視覚情報として把握するのは難しいため。
-  - 出力例: `Highest priority LTX id: 5`
+  - 出力例: `Highest priority LTX id was: 5`
 - 最優先度の ltx id に関する情報の再出力
   - 用途: 最優先度の ltx id に関して grep し直さなくても分かりやすいように診断情報最下部に再出力する。
-  - 出力例： `re-display about the tx's information: start`, `re-display about the tx's information: end` で囲まれている情報。
-  - 注意事項: 全ワーカースレッドについて情報を出力しつつ、最高優先度のTXを処理していたワーカースレッドに関して情報を再出力する。従って、そのワーカースレッドの処理が詰まっておらず次のTXを処理していた場合は意図していないTxの情報が出力されるが、それはこれにおいて出力される ltx id と `Highest priority LTX id: ` の値が一致しているかどうかで判別できる。
+  - 出力例： `re-display about the worker which has the tx: start`, `re-display about the worker which has the tx: end` で囲まれている情報。
+  - 注意事項: 全ワーカースレッドについて情報を出力しつつ、最高優先度のTXを処理していたワーカースレッドに関して情報を再出力する。従って、そのワーカースレッドの処理が詰まっておらず次のTXを処理していた場合は意図していないTxの情報が出力されるが、それはこれにおいて再出力されるトランザクション情報が依然として LTX か、出力される ltx id と `Highest priority LTX id was: ` の値が一致しているかどうかで判別できる。
   
 ## これから出力するかもしれない情報
   - 各種オペレーティング中 (tx_begin, DML, commit / abort)
