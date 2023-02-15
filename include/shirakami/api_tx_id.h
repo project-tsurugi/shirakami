@@ -8,7 +8,8 @@ namespace shirakami {
 /**
  * @brief Get the tx id object.
  * @param[in] token the transaction handle.
- * @param[out] tx_id output argument. size is 16 bytes
+ * @param[out] tx_id output argument. This string is represented by 32 
+ * hexadecimal digits.
  * @return Status::OK success.
  * @return Status::WARN_NOT_BEGIN The transaction is not begun.
  * @note If the token is invalid, this cause undefined behavior.
