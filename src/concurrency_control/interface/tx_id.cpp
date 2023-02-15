@@ -16,7 +16,6 @@ Status get_tx_id(Token token, std::string& tx_id) {
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     tx_id.clear();
-    tx_id += "TID-";
 
     // prepare string stream for higher tx counter
     std::stringstream ss;
@@ -40,6 +39,46 @@ Status get_tx_id(Token token, std::string& tx_id) {
     ss.clear(std::stringstream::goodbit);
     ss << std::setw(16) << std::setfill('0') << std::hex // NOLINT
        << ti->get_tx_counter();
+    tx_id += ss.str();
+
+    return Status::OK;
+}
+
+Status get_tx_id_for_uid(Token token, std::string& tx_id) {
+    // prepare
+    auto* ti = static_cast<session*>(token);
+
+    // check tx was begun.
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+
+    tx_id.clear();
+    tx_id += "TID-";
+
+    // prepare string stream for higher tx counter
+    std::stringstream ss;
+    ss << std::setw(4) << std::setfill('0') << std::hex // NOLINT
+       << static_cast<std::uint16_t>(ti->get_higher_tx_counter());
+    // use down cast
+    // add to tx id
+    tx_id += ss.str();
+    // clear ss
+    ss.str("");
+
+    // prepare string stream for session id
+    ss.clear(std::stringstream::goodbit);
+    ss << std::setw(4) << std::setfill('0') << std::hex << // NOLINT
+            static_cast<std::uint16_t>(ti->get_session_id());
+    // use down cast
+    // add to tx id
+    tx_id += ss.str();
+    // clear ss
+    ss.str("");
+
+    // prepare string stream for tx counter
+    ss.clear(std::stringstream::goodbit);
+    ss << std::setw(8) << std::setfill('0') << std::hex // NOLINT
+       << static_cast<std::uint32_t>(ti->get_tx_counter());
+    // use down cast
     tx_id += ss.str();
 
     return Status::OK;

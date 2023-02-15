@@ -91,7 +91,7 @@ Status tx_begin(transaction_options options) { // NOLINT
     ti->set_begin_epoch(epoch::get_global_epoch());
 
     // about tx counter
-    if (ti->get_tx_counter() == UINT64_MAX) {
+    if (tx_id::is_max_lower_info(ti->get_tx_counter())) {
         ti->set_higher_tx_counter(ti->get_higher_tx_counter() + 1);
         ti->set_tx_counter(0);
     } else {
@@ -107,7 +107,7 @@ Status tx_begin(transaction_options options) { // NOLINT
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
     }
     ti->process_before_finish_step();
-    
+
     /**
      * This is for concurrent programming. It teaches to other thread that this
      * tx began at last.

@@ -7,36 +7,47 @@ namespace shirakami {
  */
 class tx_id {
 public:
+    using type_higher_info = std::uint32_t;
+    using type_session_id = std::uint32_t;
+    using type_lower_info = std::uint64_t;
+
     // getter
-    [[nodiscard]] std::uint32_t get_higher_info() const { return higher_info_; }
+    [[nodiscard]] type_higher_info get_higher_info() const {
+        return higher_info_;
+    }
 
-    [[nodiscard]] std::uint32_t get_session_id() const { return session_id_; }
+    [[nodiscard]] type_session_id get_session_id() const { return session_id_; }
 
-    [[nodiscard]] std::uint64_t get_lower_info() const { return lower_info_; }
+    [[nodiscard]] type_lower_info get_lower_info() const { return lower_info_; }
 
     // setter
-    void set_higher_info(std::uint32_t num) { higher_info_ = num; }
+    void set_higher_info(type_higher_info num) { higher_info_ = num; }
 
-    void set_session_id(std::uint32_t num) { session_id_ = num; }
+    void set_session_id(type_session_id num) { session_id_ = num; }
 
-    void set_lower_info(std::uint64_t num) { lower_info_ = num; }
+    void set_lower_info(type_lower_info num) { lower_info_ = num; }
+
+    static bool is_max_lower_info(type_lower_info num) {
+        if (num == UINT64_MAX) { return true; }
+        return false;
+    }
 
 private:
     /**
      * @brief The number of times the lower information has circulated.
      */
-    std::uint32_t higher_info_;
+    type_higher_info higher_info_;
 
     /**
      * @brief The session id which executed this transaction.
      */
-    std::uint32_t session_id_;
+    type_session_id session_id_;
 
     /**
      * @brief The lower information made by session id and tx counter of the 
      * session.
      */
-    std::uint64_t lower_info_;
+    type_lower_info lower_info_;
 };
 
 } // namespace shirakami
