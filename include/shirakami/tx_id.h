@@ -28,8 +28,7 @@ public:
     void set_lower_info(type_lower_info num) { lower_info_ = num; }
 
     static bool is_max_lower_info(type_lower_info num) {
-        if (num == UINT64_MAX) { return true; }
-        return false;
+        return num == UINT64_MAX;
     }
 
 private:
