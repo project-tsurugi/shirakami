@@ -64,7 +64,7 @@ static void display_tx_diagnostics_info(std::ostream& out, bool& exist_ltx,
                                         session* ti) {
     // output txid
     std::string buf{};
-    get_tx_id(static_cast<Token>(ti), buf);
+    get_tx_id_for_uid(static_cast<Token>(ti), buf);
     out << "TID: " << buf << std::endl;
 
     // check tx mode

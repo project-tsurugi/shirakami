@@ -21,7 +21,7 @@ void print_diagnostics(std::ostream&)
     - Token : ストール系のほとんどの問題は並行Txによるものであると仮定し、並行するトランザクションを識別するため。print diagnostics によって出力された情報単体ではこれは意味をなさないが、 shirakami 開発者が print diagnostic を用いてテスト・開発を行う際に有用である。なぜなら shirakami の各 api はほとんど Token を含み、関連付けした分析が有用である。
   - 出力例
     - Token: `==token: 0x5641deb08d80, start information`
-    - TID: `TID: TID: 0000000000000000000000000000000c`
+    - TID: `TID: TID-000000000000000c`
 - 各ワーカースレッドが処理しているトランザクションの種別
   - 用途: どのような種別のトランザクションが問題を起こしているか？他のトランザクションを待機させるものは現状どれなのかを調査することに役立てる。
   - そのトランザクションが `SHORT`, `LONG`, `READ_ONLY` のいずれで実行されているかを示す。
