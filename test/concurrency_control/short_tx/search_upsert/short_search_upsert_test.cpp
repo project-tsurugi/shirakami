@@ -53,7 +53,8 @@ TEST_F(short_search_upsert, simple) { // NOLINT
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(short_search_upsert, search_cannot_find_concurrent_upsert) { // NOLINT
+TEST_F(short_search_upsert, // NOLINT
+       search_can_find_concurrent_inserting_by_upsert_commit_fail) { // NOLINT
     Storage st{};
     create_storage("", st);
     std::string k("k"); // NOLINT
@@ -63,9 +64,29 @@ TEST_F(short_search_upsert, search_cannot_find_concurrent_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
     std::string vb{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(token_ar.at(1), st, k, vb));
-    ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
+    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
+              search_key(token_ar.at(1), st, k, vb));
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0)));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(token_ar.at(1))); // NOLINT
+    ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
+}
+
+TEST_F(short_search_upsert, // NOLINT
+       search_can_find_concurrent_inserting_by_upsert_commit_success) { // NOLINT
+    Storage st{};
+    create_storage("", st);
+    std::string k("k"); // NOLINT
+    std::string v("k"); // NOLINT
+    std::array<Token, 2> token_ar{};
+    ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
+    ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
+              search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(1))); // NOLINT
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0)));     // NOLINT
     ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
     ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
 }

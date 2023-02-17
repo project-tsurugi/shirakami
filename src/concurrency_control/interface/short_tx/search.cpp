@@ -58,8 +58,10 @@ Status search_key(session* ti, Storage const storage,
     std::string read_res{};
     // read version
     Status rs{read_record(rec_ptr, read_tid, read_res, read_value)};
-    if (rs == Status::OK) {
-        if (read_value) { value = read_res; }
+    if (rs == Status::OK || rs == Status::WARN_CONCURRENT_INSERT) {
+        if (rc == Status::OK) {
+            if (read_value) { value = read_res; }
+        }
         ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
     }
     return rs;

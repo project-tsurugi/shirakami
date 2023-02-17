@@ -106,10 +106,16 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 
     // try atomic load payload
     for (;;) {
+        /**
+         * It doesn't need to return warn_concurrent_insert ideally. But 
+         * developers prepare to retire waiting lock. If it does, it must return
+         *  correct status as ihat.
+         */
         auto return_some_others_write_status = [&f_check] {
-            if (f_check.get_absent() && f_check.get_latest()) {
-                return Status::WARN_CONCURRENT_INSERT;
-            }
+            // todo delete
+            //if (f_check.get_absent() && f_check.get_latest()) {
+            //    return Status::WARN_CONCURRENT_INSERT;
+            //}
             if (f_check.get_absent() && !f_check.get_latest()) {
                 return Status::WARN_NOT_FOUND;
             }
@@ -118,10 +124,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 
 #if PARAM_RETRY_READ > 0
         auto check_concurrent_others_write = [&f_check] {
-            if (f_check.get_absent()) {
-                if (f_check.get_latest()) {
-                    return Status::WARN_CONCURRENT_INSERT;
-                }
+            if (f_check.get_absent() && !f_check.get_latest()) {
                 return Status::WARN_NOT_FOUND;
             }
             return Status::OK;
@@ -130,7 +133,9 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
         std::size_t repeat_num{0};
 #endif
 
-        while (f_check.get_lock()) {
+        while (f_check.get_lock() &&
+               !(f_check.get_absent() && f_check.get_latest())) {
+            // locked and not inserting
             if (logging::get_enable_logging_detail_info()) {
                 // logging detail info
                 DVLOG(log_trace)
@@ -146,6 +151,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                         << "finish wait for locked record. key is " +
                                    std::string(rec_ptr->get_key_view());
             }
+
             return return_some_others_write_status();
 #else
             if (repeat_num >= PARAM_RETRY_READ) {
@@ -174,6 +180,8 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
             ++repeat_num;
 #endif
         }
+        // finish waiting lock
+
         if (logging::get_enable_logging_detail_info()) {
             // logging detail info
             DVLOG(log_trace) << logging::log_location_prefix
@@ -181,15 +189,32 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                                         std::string(rec_ptr->get_key_view());
         }
 
-        if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
+        // check deleted
+        if (!f_check.get_latest() && f_check.get_absent()) {
+            // deleted record
+            return Status::WARN_NOT_FOUND;
+        }
 
-        if (read_value) { rec_ptr->get_value(val); }
+        // read value if not inserting
+        if (!(f_check.get_absent() && f_check.get_latest())) {
+            if (read_value) { rec_ptr->get_value(val); }
+        }
+
+        // load second tid for optimistic check
         s_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
-        if (f_check == s_check) { break; }
-        f_check = s_check;
+
+        // optimistic check
+        if (f_check == s_check) { break; } // success
+        f_check = s_check;                 // fail
     }
 
     tid = f_check;
+
+    // for reading inserting target
+    if (f_check.get_latest() && f_check.get_absent()) {
+        return Status::WARN_CONCURRENT_INSERT;
+    }
+    // for reading normal target
     return Status::OK;
 }
 

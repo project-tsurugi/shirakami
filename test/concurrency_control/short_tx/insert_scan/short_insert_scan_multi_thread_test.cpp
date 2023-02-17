@@ -43,7 +43,7 @@ private:
 };
 
 TEST_F(short_insert_scan_multi_thread_test, // NOLINT
-       DISABLED_500_insert_and_full_scan) { // NOLINT
+       500_insert_and_full_scan) {          // NOLINT
     // generate keys and table
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
@@ -62,7 +62,7 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                     abort(s);
                     continue;
                 }
-                std::size_t ct{0};
+                std::size_t ct = 0;
                 std::string buf{};
                 do {
                     ret = read_key_from_scan(s, hd, buf);
@@ -72,6 +72,7 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                 ret = commit(s); // NOLINT
                 if (ret == Status::OK) {
                     ASSERT_EQ(ct % 500, 0);
+                    //LOG(INFO) << ct;
                     if (ct == 5000) { break; } // NOLINT
                 }
             }
@@ -85,15 +86,18 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
             Token s{};
             ASSERT_EQ(enter(s), Status::OK);
 
-            std::string k{"12345678"};
-            for (std::size_t i = 0; i < 5000; ++i) { // NOLINT
+            std::string k{"12345678"}; // to allocate 8 bites definitely.
+            for (std::size_t i = 1; i <= 5000; ++i) { // NOLINT
                 memcpy(k.data(), &i, sizeof(i));
                 ASSERT_EQ(insert(s, st, k, "v"), Status::OK);
                 if (i % 500 == 0) { // NOLINT
                     // commit each 500
                     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+                    // if this is enable, you can see commit each 500 record.
+                    // sleep(1);
                 }
             }
+            ASSERT_EQ(Status::WARN_NOT_BEGIN, commit(s)); // NOLINT
 
             // cleanup
             ASSERT_EQ(leave(s), Status::OK);
