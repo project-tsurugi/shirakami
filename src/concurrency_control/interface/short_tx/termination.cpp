@@ -121,16 +121,9 @@ Status abort(session* ti) { // NOLINT
 
 Status read_verify(session* ti, Storage const storage, tid_word read_tid,
                    tid_word check, Record* const rec_ptr) {
-    if (
-            // different tid
-            read_tid.get_tid() != check.get_tid() ||
-            // different epoch
-            read_tid.get_epoch() != check.get_epoch() ||
-            // invalid record state: deleted record
-            (check.get_absent() && !check.get_latest()) ||
-            // locked and it's not own.
-            (check.get_lock() &&
-             ti->get_write_set().search(rec_ptr) == nullptr)) {
+    if (read_tid.get_tid() != check.get_tid() ||
+        read_tid.get_epoch() != check.get_epoch() || check.get_absent() ||
+        (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
         ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
                                                    storage);
         return Status::ERR_CC;

@@ -61,7 +61,7 @@ Status check_not_found(
         Record* rec_ptr{*std::get<1>(elem)};
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
-            // normal page.
+            // inserted page.
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 return Status::OK;
@@ -88,12 +88,6 @@ Status check_not_found(
             }
         } else if (tid.get_latest()) {
             // inserting page.
-            // short tx read inserting page.
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
-                return Status::OK;
-            }
-
             // check read own write
             write_set_obj* inws = ti->get_write_set().search(rec_ptr);
             if (inws != nullptr) {
@@ -166,7 +160,6 @@ Status open_scan(Token const token, Storage storage,
         }
     }
 
-    // find slot to log scan result.
     auto rc = find_open_scan_slot(ti, handle);
     if (rc != Status::OK) {
         ti->process_before_finish_step();
@@ -186,9 +179,6 @@ Status open_scan(Token const token, Storage storage,
     // not empty
 
     std::size_t head_skip_rec_n{};
-    /**
-     * skip leading unreadable records.
-     */
     rc = check_not_found(ti, scan_res, head_skip_rec_n);
     if (rc != Status::OK) {
         /**
@@ -316,7 +306,6 @@ Status next(Token const token, ScanHandle const handle) {
             return Status::WARN_SCAN_LIMIT;
         }
 
-        // check target record
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         auto itr = scan_buf.begin() + scan_index;
@@ -336,7 +325,6 @@ Status next(Token const token, ScanHandle const handle) {
 
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
-            // normal page
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 break;
@@ -363,13 +351,11 @@ Status next(Token const token, ScanHandle const handle) {
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
-            // inserting page
             // check read own inserting
             if (inws != nullptr) {
                 if (inws->get_op() == OP_TYPE::INSERT) { break; }
             }
 
-            // short tx should read inserting page
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 break;
@@ -504,7 +490,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     }
     // ==========
 
-    // check local cache.
     if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
         sh.get_ci(handle).get_key(buf);
@@ -521,7 +506,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::OK;
     }
 
-    // check target record
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         tid_word tidb{};
         std::string valueb{};
@@ -532,7 +516,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         } else {
             rr = read_record(rec_ptr, tidb, buf);
         }
-        if (rr != Status::OK && rr != Status::WARN_CONCURRENT_INSERT) {
+        if (rr != Status::OK) {
             ti->process_before_finish_step();
             return rr;
         }
@@ -553,7 +537,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
 
         ti->process_before_finish_step();
-        return rr;
+        return Status::OK;
     }
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
         ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
