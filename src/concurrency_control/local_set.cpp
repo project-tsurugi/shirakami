@@ -29,12 +29,12 @@ void local_write_set::push(write_set_obj&& elem) {
     if (for_batch_) {
         cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
     } else {
-        cont_for_occ_.emplace_back(std::move(elem));
-        if (cont_for_occ_.size() > 100) {
+        cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
+        if (cont_for_occ_.size() > 100) {            // NOLINT
             // swtich to use cont_for_bt_ for performance
             set_for_batch(true);
             for (auto&& elem_occ : cont_for_occ_) {
-                cont_for_bt_.insert_or_assign(elem.get_rec_ptr(),
+                cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), // NOLINT
                                               std::move(elem_occ));
             }
             // clear occ set

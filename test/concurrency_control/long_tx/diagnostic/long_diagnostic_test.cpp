@@ -51,7 +51,7 @@ TEST_F(long_diagnostic_test, simple) { // NOLINT
     print_diagnostics(std::cout);
 
     // set lower counter higher than 9 to look hex string
-    for (std::size_t i = 0; i < 10; ++i) {
+    for (std::size_t i = 0; i < 10; ++i) { // NOLINT
         ASSERT_EQ(Status::OK, upsert(s, st, "k", "v"));
         ASSERT_EQ(Status::OK, commit(s));
     }
