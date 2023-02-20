@@ -22,25 +22,30 @@ namespace shirakami::short_tx {
 // ==========
 // locking
 void unlock_write_set(session* const ti) {
-    for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+    auto process = [](Record* rec_ptr) {
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
                     << logging::log_location_prefix
-                    << "unlock key " +
-                               std::string(itr.get_rec_ptr()->get_key_view());
+                    << "unlock key " + std::string(rec_ptr->get_key_view());
         }
-
-        itr.get_rec_ptr()->get_tidw_ref().unlock();
+        rec_ptr->get_tidw_ref().unlock();
+    };
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+            process(itr.first);
+        }
+    } else {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+            process(itr.get_rec_ptr());
+        }
     }
 }
 
 
 void unlock_records(session* const ti, std::size_t num_locked) {
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        if (num_locked == 0) { break; }
-        auto* wso_ptr = &(elem);
-
+    auto process = [&num_locked](write_set_obj* wso_ptr) {
+        if (num_locked == 0) { return; }
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
@@ -62,12 +67,22 @@ void unlock_records(session* const ti, std::size_t num_locked) {
         }
 
         --num_locked;
+    };
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+            process(&itr.second);
+            if (num_locked == 0) { break; }
+        }
+    } else {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+            process(&itr);
+            if (num_locked == 0) { break; }
+        }
     }
 }
 
 void change_inserting_records_state(session* const ti) {
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        auto* wso_ptr = &(elem);
+    auto process = [ti](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
@@ -99,6 +114,15 @@ void change_inserting_records_state(session* const ti) {
                     rec_ptr->get_tidw_ref().unlock();
                 }
             }
+        }
+    };
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+            process(&itr.second);
+        }
+    } else {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+            process(&itr);
         }
     }
 }
@@ -317,11 +341,10 @@ RETRY: // NOLINT
 
 Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t num_locked{0};
-    // dead lock avoidance
-    auto& cont_for_occ = ti->get_write_set().get_ref_cont_for_occ();
-    std::sort(cont_for_occ.begin(), cont_for_occ.end());
-    for (auto&& elem : cont_for_occ) {
-        auto* wso_ptr = &(elem);
+    // sorf if occ for deadlock avoidance
+    ti->get_write_set().sort_if_ol();
+
+    auto process = [ti, &commit_tid, &num_locked](write_set_obj* wso_ptr) {
         auto* rec_ptr{wso_ptr->get_rec_ptr()};
         auto abort_process = [ti, &num_locked]() {
             if (num_locked > 0) { unlock_records(ti, num_locked); }
@@ -360,7 +383,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
                 ++num_locked;
-                continue;
+                return Status::OK;
             }
             if (rc == Status::ERR_CC) {
                 abort_process();
@@ -401,6 +424,19 @@ Status write_lock(session* ti, tid_word& commit_tid) {
         } else {
             LOG(ERROR) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
+        }
+
+        return Status::OK;
+    };
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+            auto rc = process(&itr.second);
+            if (rc != Status::OK) { return rc; }
+        }
+    } else {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+            auto rc = process(&itr);
+            if (rc != Status::OK) { return rc; }
         }
     }
 
@@ -548,12 +584,22 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
 #ifdef PWAL
     std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
 #endif
-    for (auto&& elem : ti->get_write_set().get_ref_cont_for_occ()) {
-        auto rc{process(&elem)};
-        if (rc == Status::OK) { continue; }
-        if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-        LOG(ERROR) << log_location_prefix << "impossible code path.";
-        return Status::ERR_FATAL;
+    if (ti->get_write_set().get_for_batch()) {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+            auto rc = process(&itr.second);
+            if (rc == Status::OK) { continue; }
+            if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+            LOG(ERROR) << log_location_prefix << "impossible code path.";
+            return Status::ERR_FATAL;
+        }
+    } else {
+        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+            auto rc = process(&itr);
+            if (rc == Status::OK) { continue; }
+            if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+            LOG(ERROR) << log_location_prefix << "impossible code path.";
+            return Status::ERR_FATAL;
+        }
     }
 
     return Status::OK;
