@@ -7,6 +7,7 @@
 #include "compiler.h"
 #include "memory.h"
 
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
@@ -73,6 +74,24 @@ TEST_F(simple_upsert, upsert) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(simple_upsert, check_many_upsert_using_bt_type_set) { // NOLINT
+    std::string k("12345678");                               // NOLINT
+    std::string v("v");                                      // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    auto* ti = static_cast<session*>(s);
+    for (std::size_t i = 0; i < 200; ++i) {
+        memcpy(k.data(), &i, sizeof(i));
+        ASSERT_EQ(Status::OK, upsert(s, st, k, v));
+        if (i < 100) {
+            ASSERT_FALSE(ti->get_write_set().get_for_batch());
+        } else {
+            ASSERT_TRUE(ti->get_write_set().get_for_batch());
+        }
+    }
     ASSERT_EQ(Status::OK, leave(s));
 }
 

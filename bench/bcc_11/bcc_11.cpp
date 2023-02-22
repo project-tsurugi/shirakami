@@ -69,8 +69,8 @@ void worker(std::atomic<bool>& quit) {
     // loop exp
     while (!quit.load(std::memory_order_acquire)) {
         for (std::size_t i = 0; i < FLAGS_ops; ++i) {
-            std::string_view k{reinterpret_cast<char*>(&i),
-                               sizeof(i)}; // NOLINT
+            std::string_view k{reinterpret_cast<char*>(&i), // NOLINT
+                               sizeof(i)};                  // NOLINT
             auto rc = upsert(token, st, k, "v");
             if (rc != Status::OK) { LOG(FATAL); }
         }
