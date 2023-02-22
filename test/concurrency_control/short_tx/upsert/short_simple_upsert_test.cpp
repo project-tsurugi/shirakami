@@ -83,10 +83,10 @@ TEST_F(simple_upsert, check_many_upsert_using_bt_type_set) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti = static_cast<session*>(s);
-    for (std::size_t i = 0; i < 200; ++i) {
+    for (std::size_t i = 0; i < 200; ++i) { // NOLINT
         memcpy(k.data(), &i, sizeof(i));
         ASSERT_EQ(Status::OK, upsert(s, st, k, v));
-        if (i < 100) {
+        if (i < 100) { // NOLINT
             ASSERT_FALSE(ti->get_write_set().get_for_batch());
         } else {
             ASSERT_TRUE(ti->get_write_set().get_for_batch());
