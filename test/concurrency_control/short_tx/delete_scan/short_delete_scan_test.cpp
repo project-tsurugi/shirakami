@@ -56,6 +56,7 @@ TEST_F(short_delete_scan_test,          // NOLINT
     ASSERT_EQ(vb, "a");
     ASSERT_EQ(Status::OK, delete_record(s2, st, "a"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    //sleep(1);
     ASSERT_EQ(Status::OK, next(s, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
     ASSERT_EQ(vb, "b");
@@ -66,8 +67,8 @@ TEST_F(short_delete_scan_test,          // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(short_delete_scan_test,                  // NOLINT
-       delete_against_open_scan_but_not_read) { // NOLINT
+TEST_F(short_delete_scan_test,                                // NOLINT
+       delete_against_open_scan_but_not_read_scan_not_read) { // NOLINT
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -85,9 +86,39 @@ TEST_F(short_delete_scan_test,                  // NOLINT
                                     scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, delete_record(s2, st, "b"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    //sleep(1);
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
     ASSERT_EQ(vb, "a");
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(short_delete_scan_test,                            // NOLINT
+       delete_against_open_scan_but_not_read_scan_read) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, delete_record(s2, st, "a"));
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    //sleep(1);
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s, hd, vb));
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
