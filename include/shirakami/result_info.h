@@ -140,8 +140,8 @@ private:
     /**
      * @brief The reason key. reason_code::KVS_DELETE, KVS_INSERT, KVS_UPDATE, 
      * CC_LTX_PHANTOM_AVOIDANCE, CC_LTX_WRITE_COMMITTED_READ_PROTECTION, 
-     * CC_OCC_READ_VERIFY log this information.
-     * 
+     * (partial) CC_OCC_PHANTOM_AVOIDANCE, CC_OCC_READ_VERIFY log this 
+     * information.
      */
     std::string key_{};
 
