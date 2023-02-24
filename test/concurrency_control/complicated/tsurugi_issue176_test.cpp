@@ -95,4 +95,11 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
     for (auto&& elem : th_vc) { elem.join(); }
 }
 
+TEST_F(tsurugi_issue176, comment_by_tanabe_20230222_1904) { // NOLINT
+    /**
+     * original workload: thread size 60, trial 15000
+     */
+    ASSERT_TRUE(true); // TODO
+}
+
 } // namespace shirakami::testing
