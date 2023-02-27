@@ -151,4 +151,10 @@ private:
     std::string storage_name_{};
 };
 
+inline std::ostream& operator<<(std::ostream& out, result_info const& info) {
+    return out << "reason_code:" << info.get_reason_code()
+            << ", storage_name:" << info.get_storage_name()
+            << ", key(len=" << info.get_key().size() << "):" << info.get_key();
+}
+
 } // namespace shirakami
