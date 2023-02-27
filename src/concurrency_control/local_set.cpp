@@ -26,7 +26,7 @@ Status local_write_set::erase(write_set_obj* wso) {
 }
 
 void local_write_set::push(write_set_obj&& elem) {
-    if (for_batch_) {
+    if (get_for_batch()) {
         cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
     } else {
         cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
@@ -34,7 +34,7 @@ void local_write_set::push(write_set_obj&& elem) {
             // swtich to use cont_for_bt_ for performance
             set_for_batch(true);
             for (auto&& elem_occ : cont_for_occ_) {
-                cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), // NOLINT
+                cont_for_bt_.insert_or_assign(elem_occ.get_rec_ptr(), // NOLINT
                                               std::move(elem_occ));
             }
             // clear occ set

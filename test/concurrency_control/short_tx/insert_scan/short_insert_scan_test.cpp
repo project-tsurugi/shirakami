@@ -84,4 +84,39 @@ TEST_F(short_insert_scan_test, scan_read_own_insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(short_insert_scan_test, scan_after_insert_committed) { // NOLINT
+    // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test: insert
+    std::string key{"12345678"};
+    for (std::size_t i = 0; i < 105; ++i) {
+        memcpy(key.data(), &i, sizeof(i));
+        ASSERT_EQ(Status::OK, insert(s, st, key, ""));
+    }
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test: scan
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{"12345678"};
+    for (std::size_t i = 0; i < 105; ++i) {
+        ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+        if (i == 104) {
+            ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+        } else {
+            auto ret = next(s, hd);
+            if (Status::OK != ret) { LOG(FATAL) << ret << ", " << i; }
+        }
+    }
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
