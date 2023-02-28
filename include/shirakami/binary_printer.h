@@ -27,7 +27,7 @@ public:
     constexpr binary_printer(void const* ptr, std::size_t size) noexcept
         : ptr_(ptr), size_(size) {}
 
-    constexpr binary_printer(std::string_view s) noexcept
+    constexpr explicit binary_printer(std::string_view s) noexcept
         : ptr_(s.data()), size_(s.size()) {}
 
     friend std::ostream& operator<<(std::ostream& out,
@@ -35,16 +35,17 @@ public:
         std::ios init(nullptr);
         init.copyfmt(out);
         for (std::size_t idx = 0; idx < value.size_; ++idx) {
-            auto c = *(static_cast<std::uint8_t const*>(value.ptr_) +
-                       idx); //NOLINT
+            auto c = *(static_cast<std::uint8_t const*>(value.ptr_) + // NOLINT
+                       idx);
             if (std::isprint(c) != 0) {
                 out << c;
             } else {
                 out << std::string_view("\\x");
                 out << std::hex << std::setw(2) << std::setfill('0')
                     << static_cast<std::uint32_t>(
-                               *(static_cast<std::uint8_t const*>(value.ptr_) +
-                                 idx)); //NOLINT
+                               *(static_cast<std::uint8_t const*>(
+                                         value.ptr_) + // NOLINT
+                                 idx));
             }
         }
         out.copyfmt(init);
