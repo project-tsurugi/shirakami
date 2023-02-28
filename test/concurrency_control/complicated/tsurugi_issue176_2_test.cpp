@@ -50,8 +50,8 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
     constexpr std::size_t scan_thread_num{1};
     // ==========
 
-    auto scan_worker = [st, scan_thread_num, &prepare_scan_thread_num,
-                        trial_num]() {
+    auto scan_worker = [st,
+                        &prepare_scan_thread_num]() {
         // prepare
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
@@ -101,7 +101,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     };
 
-    auto insert_delete_worker = [st, scan_thread_num,
+    auto insert_delete_worker = [st, 
                                  &prepare_scan_thread_num]() {
         // prepare
         Token s{};
@@ -125,7 +125,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {st}}));
                 wait_epoch_update();
-                for (std::size_t j = 0; j < 100; ++j) {
+                for (std::size_t j = 0; j < 100; ++j) { // NOLINT
                     memcpy(key.data(), &j, sizeof(j));
                     ASSERT_EQ(Status::OK, insert(s, st, key, val));
                 }
@@ -164,7 +164,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {st}}));
                 wait_epoch_update();
-                for (std::size_t j = 1; j < 100; ++j) {
+                for (std::size_t j = 1; j < 100; ++j) { // NOLINT
                     memcpy(key.data(), &j, sizeof(j));
                     ASSERT_EQ(Status::OK, delete_record(s, st, key));
                 }
