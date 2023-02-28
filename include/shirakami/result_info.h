@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 
+#include "binary_printer.h"
 #include "storage_options.h"
 
 namespace shirakami {
@@ -153,8 +154,9 @@ private:
 
 inline std::ostream& operator<<(std::ostream& out, result_info const& info) {
     return out << "reason_code:" << info.get_reason_code()
-            << ", storage_name:" << info.get_storage_name()
-            << ", key(len=" << info.get_key().size() << "):" << info.get_key();
+               << ", storage_name:" << binary_printer(info.get_storage_name())
+               << ", key(len=" << info.get_key().size()
+               << "):" << binary_printer(info.get_key());
 }
 
 } // namespace shirakami
