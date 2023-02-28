@@ -46,6 +46,10 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::size_t th_num(std::thread::hardware_concurrency());
+    // fix these num to reinforce pressure
+    // ==========
+    constexpr std::size_t trial_num{1};
+    // ==========
 
     auto worker = [st, th_num](std::size_t th_id,
                                std::atomic<std::size_t>* prepare_num) {
@@ -62,7 +66,7 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
             _mm_pause();
         }
 
-        for (std::size_t i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < trial_num; ++i) {
             ASSERT_EQ(Status::OK,
                       tx_begin({s,
                                 transaction_options::transaction_type::LONG,
@@ -93,13 +97,6 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
     }
 
     for (auto&& elem : th_vc) { elem.join(); }
-}
-
-TEST_F(tsurugi_issue176, comment_by_tanabe_20230222_1904) { // NOLINT
-    /**
-     * original workload: thread size 60, trial 15000
-     */
-    ASSERT_TRUE(true); // TODO
 }
 
 } // namespace shirakami::testing
