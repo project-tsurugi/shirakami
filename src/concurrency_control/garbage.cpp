@@ -177,7 +177,7 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
         return Status::ERR_FATAL;
     }
 
-    // register
+    // register record and minimum epoch of step or batch.
     auto& cont = garbage::get_container_rec();
     cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
 
@@ -261,9 +261,16 @@ void force_release_key_memory() {
 
 void release_key_memory() {
     auto& cont = garbage::get_container_rec();
-    auto ce = epoch::get_global_epoch();
+    // compute minimum epoch
+    auto me = garbage::get_min_step_epoch() < garbage::get_min_batch_epoch()
+                      ? garbage::get_min_step_epoch()
+                      : garbage::get_min_batch_epoch();
     for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
-        if ((*itr).second < ce) {
+        /**
+          * If me changed from unhooking, all tx which existed at unhooking must
+          * have finished.
+          */
+        if ((*itr).second < me) {
             delete (*itr).first; // NOLINT
             itr = cont.erase(itr);
         } else {

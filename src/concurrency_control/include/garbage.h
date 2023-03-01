@@ -66,8 +66,8 @@ namespace shirakami::garbage {
 // container for gc
 /**
  * @brief container of records which was unhooked from index.
- * First of elements is pointer to record. Second of elements is epoch after 
- * unhooking record.
+ * First of elements is pointer to record. Second of elements is global epoch 
+ * of unhooking.
  */
 [[maybe_unused]] inline std::vector< // NOLINT
         std::pair<Record*, epoch::epoch_t>>
