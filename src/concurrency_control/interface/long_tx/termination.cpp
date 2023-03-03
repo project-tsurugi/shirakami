@@ -158,7 +158,10 @@ static inline void expose_local_write(
             }
             case OP_TYPE::INSERT: {
                 tid_word tid{rec_ptr->get_tidw_ref().get_obj()};
-                if (tid.get_latest() && tid.get_absent()) {
+                if ((tid.get_latest() && tid.get_absent()) ||  // inserting
+                    (!tid.get_latest() && tid.get_absent())) { // deleted
+                    // lock record
+                    rec_ptr->get_tidw_ref().lock();
                     // update value
                     std::string vb{};
                     wso.get_value(vb);
@@ -688,13 +691,12 @@ extern Status commit(session* const ti) {
 
         tid_word ctid{};
         /**
-     * For registering write preserve result.
-     * Null (string "") may be used for pkey, but the range expressed two string
-     * don't know the endpoint is nothing or null key.
-     * So it needs boolean.
-     */
+          * For registering write preserve result.
+          * Null (string "") may be used for pkey, but the range expressed two string
+          * don't know the endpoint is nothing or null key.
+          * So it needs boolean.
+          */
         std::map<Storage, std::tuple<std::string, std::string>> write_range;
-        // sleep(1); // need for issue 176 test
         expose_local_write(ti, ctid, write_range);
 
         // sequence process

@@ -41,7 +41,6 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-#if 0
 TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     // create storage
     Storage st{};
@@ -81,9 +80,7 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-#endif
-
-TEST_F(tsurugi_issue176_3, DISABLED_comment_by_tanabe_20230301_1643) { // NOLINT
+TEST_F(tsurugi_issue176_3, comment_by_tanabe_20230301_1643) { // NOLINT
     // create storage
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
