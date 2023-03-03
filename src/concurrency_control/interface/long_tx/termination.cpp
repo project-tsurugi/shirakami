@@ -694,6 +694,7 @@ extern Status commit(session* const ti) {
      * So it needs boolean.
      */
         std::map<Storage, std::tuple<std::string, std::string>> write_range;
+        // sleep(1); // need for issue 176 test
         expose_local_write(ti, ctid, write_range);
 
         // sequence process

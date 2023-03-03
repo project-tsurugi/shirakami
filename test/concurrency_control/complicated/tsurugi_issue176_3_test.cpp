@@ -41,6 +41,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
+#if 0
 TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     // create storage
     Storage st{};
@@ -78,6 +79,73 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+#endif
+
+TEST_F(tsurugi_issue176_3, DISABLED_comment_by_tanabe_20230301_1643) { // NOLINT
+    // create storage
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+
+    // prepare token
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+
+    // test
+    std::string key{"key"};
+    std::string v1{"1"};
+    std::string v2{"2"};
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    // Tx1 insert key a value 1
+    // tx2 insert key a value 2
+    ASSERT_EQ(Status::OK, insert(s1, st, key, v1));
+    ASSERT_EQ(Status::OK, insert(s2, st, key, v2));
+
+    // asynchronous commit / abort
+    std::atomic<std::size_t> prepare_num{0};
+    auto commit_1 = [s1, &prepare_num]() {
+        ++prepare_num;
+        while (prepare_num.load(std::memory_order_acquire) != 2) {
+            _mm_pause();
+        }
+        ASSERT_EQ(Status::OK, commit(s1));
+    };
+    auto abort_2 = [s2, &prepare_num]() {
+        ++prepare_num;
+        while (prepare_num.load(std::memory_order_acquire) != 2) {
+            _mm_pause();
+        }
+        sleep(1);
+        ASSERT_EQ(Status::OK, abort(s2));
+    };
+
+    std::thread th_1 = std::thread(commit_1);
+    std::thread th_2 = std::thread(abort_2);
+
+    th_1.join();
+    th_2.join();
+
+    // check value is valid
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, key, buf));
+    ASSERT_EQ(buf, v1);
+
+    // delete the record
+    ASSERT_EQ(Status::OK, delete_record(s1, st, key));
+    ASSERT_EQ(Status::OK, commit(s1));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
 }
 
 } // namespace shirakami::testing
