@@ -5,7 +5,13 @@
 // test/include
 #include "test_tool.h"
 
+// shirakami/
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+
 #include "shirakami/interface.h"
+
+#include "index/yakushima/include/interface.h"
 
 #include "gtest/gtest.h"
 
@@ -69,6 +75,52 @@ TEST_F(short_delete_short_search, delete_cant_cause_phantom) { // NOLINT
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(short_delete_short_search,             // NOLINT
+       delete_cant_cause_node_modification) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
+    ASSERT_EQ(upsert(s, st, "b", ""), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // scan and get node version
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "a", scan_endpoint::INCLUSIVE, "b",
+                                    scan_endpoint::INCLUSIVE, hd));
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    auto* ti = static_cast<session*>(s);
+    // node must be 1
+    ASSERT_EQ(ti->get_node_set().size(), 1);
+    yakushima::node_version64_body version = ti->get_node_set().front().first;
+    // it can use after tx.
+    yakushima::node_version64* version_source_ptr =
+            ti->get_node_set().front().second;
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // delete b
+    ASSERT_EQ(Status::OK, delete_record(s, st, "b"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // wait for gc
+    Record* rec_ptr{};
+    while (get<Record>(st, "b", rec_ptr) != Status::WARN_NOT_FOUND) {
+        _mm_pause();
+    }
+    // unhooked
+
+    yakushima::node_version64_body version_after_unhooked =
+            version_source_ptr->get_stable_version();
+    // it must not be changed.
+    ASSERT_EQ(version, version_after_unhooked);
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
 }
 
 } // namespace shirakami::testing
