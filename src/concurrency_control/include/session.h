@@ -94,8 +94,6 @@ public:
         clear_tx_property();
         clear_about_scan();
         clear_about_tx_state();
-        // about result info metadata
-        get_result_info().clear();
     }
 
     /**

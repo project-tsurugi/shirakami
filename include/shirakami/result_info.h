@@ -196,7 +196,7 @@ inline std::ostream& operator<<(std::ostream& out, result_info const& info) {
     if (info.get_has_storage_name_info()) {
         out << ", storage_name:" << binary_printer(info.get_storage_name());
     } else {
-        out << ", no storage name information";
+        out << ", storage_name is not available";
     }
     // output key info
     if (info.get_has_key_info()) {
