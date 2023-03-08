@@ -117,10 +117,7 @@ Status upsert(Token token, Storage storage, const std::string_view key,
 
     INSERT_PROCESS:
         rc = insert_process(ti, storage, key, val);
-        if (rc != Status::WARN_CONCURRENT_INSERT) {
-            ti->process_before_finish_step();
-            return rc;
-        }
+        if (rc == Status::ERR_CC) { return rc; }
     }
 }
 

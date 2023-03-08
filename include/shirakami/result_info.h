@@ -111,24 +111,51 @@ public:
 
     explicit result_info(reason_code rc) : reason_code_(rc) {}
 
+    /**
+     * @brief clear info.
+     */
+    void clear() {
+        set_reason_code(reason_code::UNKNOWN);
+        set_has_key_info(false);
+        set_has_storage_name_info(false);
+        key_.clear();          // if it use set func, bool info is set as true;
+        storage_name_.clear(); // if it use set func, bool info is set as true;
+    }
+
     // start: getter / setter
 
     [[nodiscard]] reason_code get_reason_code() const { return reason_code_; }
+
+    [[nodiscard]] bool get_has_key_info() const { return has_key_info_; }
+
+    [[nodiscard]] std::string_view get_key() const { return key_; }
+
+    [[nodiscard]] bool get_has_storage_name_info() const {
+        return has_storage_name_info_;
+    }
+
+    [[nodiscard]] std::string_view get_storage_name() const {
+        return storage_name_;
+    }
 
     void set_reason_code(reason_code rc) {
         if (rc == reason_code::UNKNOWN) { set_key(""); }
         reason_code_ = rc;
     }
 
-    [[nodiscard]] std::string_view get_key() const { return key_; }
+    void set_has_key_info(bool tf) { has_key_info_ = tf; }
 
-    void set_key(std::string_view key) { key_ = key; }
-
-    [[nodiscard]] std::string_view get_storage_name() const {
-        return storage_name_;
+    void set_key(std::string_view key) {
+        set_has_key_info(true);
+        key_ = key;
     }
 
-    void set_storage_name(std::string_view name) { storage_name_ = name; }
+    void set_has_storage_name_info(bool tf) { has_storage_name_info_ = tf; }
+
+    void set_storage_name(std::string_view name) {
+        set_has_storage_name_info(true);
+        storage_name_ = name;
+    }
 
     void set_storage_name(Storage storage);
 
@@ -137,6 +164,16 @@ public:
     // end: getter / setter
 private:
     reason_code reason_code_{};
+
+    /**
+     * @brief If this is true, key_ is valid.
+     */
+    bool has_key_info_{false};
+
+    /**
+     * @brief If this is true, storage_name_ is valid.
+     */
+    bool has_storage_name_info_{false};
 
     /**
      * @brief The reason key. reason_code::KVS_DELETE, KVS_INSERT, KVS_UPDATE, 
@@ -153,10 +190,19 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& out, result_info const& info) {
-    return out << "reason_code:" << info.get_reason_code()
-               << ", storage_name:" << binary_printer(info.get_storage_name())
-               << ", key(len=" << info.get_key().size()
-               << "):" << binary_printer(info.get_key());
+    out << "reason_code:" << info.get_reason_code();
+
+    // output storage name info
+    if (info.get_has_storage_name_info()) {
+        out << ", storage_name:" << binary_printer(info.get_storage_name());
+    }
+    // output key info
+    if (info.get_has_key_info()) {
+        out << ", key(len=" << info.get_key().size()
+            << "):" << binary_printer(info.get_key());
+    }
+
+    return out;
 }
 
 } // namespace shirakami

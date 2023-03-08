@@ -94,6 +94,8 @@ public:
         clear_tx_property();
         clear_about_scan();
         clear_about_tx_state();
+        // about result info metadata
+        get_result_info().clear();
     }
 
     /**
@@ -136,13 +138,17 @@ public:
     [[nodiscard]] Status find_wp(Storage st) const;
 
     // ========== start: getter
-    [[nodiscard]] tx_id::type_session_id get_session_id() const { return session_id_; }
+    [[nodiscard]] tx_id::type_session_id get_session_id() const {
+        return session_id_;
+    }
 
     [[nodiscard]] tx_id::type_higher_info get_higher_tx_counter() const {
         return higher_tx_counter_;
     }
 
-    [[nodiscard]] tx_id::type_lower_info get_tx_counter() const { return tx_counter_; }
+    [[nodiscard]] tx_id::type_lower_info get_tx_counter() const {
+        return tx_counter_;
+    }
 
     [[nodiscard]] Tuple* get_cache_for_search_ptr() {
         return &cache_for_search_;
@@ -333,7 +339,9 @@ public:
     // ========== start: setter
     void set_session_id(tx_id::type_session_id num) { session_id_ = num; }
 
-    void set_higher_tx_counter(tx_id::type_higher_info num) { higher_tx_counter_ = num; }
+    void set_higher_tx_counter(tx_id::type_higher_info num) {
+        higher_tx_counter_ = num;
+    }
 
     void set_tx_counter(tx_id::type_lower_info num) { tx_counter_ = num; }
 
