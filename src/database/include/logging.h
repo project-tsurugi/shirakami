@@ -9,9 +9,6 @@
 
 namespace shirakami::logging {
 
-static constexpr std::string_view log_location_prefix =
-        "/:shirakami:detail_info: ";
-
 inline std::atomic<bool> enable_logging_detail_info_{false};
 
 [[maybe_unused]] static inline void dvlog(std::string_view const str) {
