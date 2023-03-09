@@ -15,9 +15,13 @@ jobs:
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GHCR_PAT }}
+      volumes:
+        - ${{ vars.ccache_dir }}:${{ vars.ccache_dir }}
     defaults:
       run:
         shell: bash
+    env:
+      CCACHE_DIR: ${{ vars.ccache_dir }}
 
     steps:
       - id: Checkout
@@ -43,7 +47,7 @@ jobs:
           cd third_party/limestone
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
           cmake --build . --target install --clean-first -- -j
 
       - id: CMake_Build
@@ -51,7 +55,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_PWAL=OFF ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_PWAL=OFF ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CMake_Build_with_PWAL
@@ -59,7 +63,7 @@ jobs:
         run: |
           mkdir -p build_pwal
           cd build_pwal
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=${{ vars.compiler_launcher }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
           cmake --build . --target all --clean-first -- -j
 
       - id: CTest
