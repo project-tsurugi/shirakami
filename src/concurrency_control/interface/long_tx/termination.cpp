@@ -661,7 +661,8 @@ extern Status commit(session* const ti) {
                          << ", wait for ltx id: " << wait_for_str;
     }
     // log debug timing event
-    DVLOG(log_debug_timing_event) << "start to check wait";
+    DVLOG(log_debug_timing_event)
+            << log_location_prefix << "ltx start to check wait";
 
     /**
      * WP2: If it is possible to prepend the order, it waits for a transaction 
@@ -681,7 +682,7 @@ extern Status commit(session* const ti) {
     }
 
     // log debug timing event
-    DVLOG(log_debug_timing_event) << "start to verify";
+    DVLOG(log_debug_timing_event) << log_location_prefix << "ltx start to verify";
 
     // verify : start
     rc = verify(ti);
@@ -689,18 +690,21 @@ extern Status commit(session* const ti) {
     if (rc == Status::ERR_CC) {
         // verfy fail
         // log debug timing event
-        DVLOG(log_debug_timing_event) << "start to abort";
+        DVLOG(log_debug_timing_event)
+                << log_location_prefix << "ltx start to abort";
         abort(ti);
     } else if (rc == Status::OK) {
         // This tx must success.
 
         // log debug timing event
-        DVLOG(log_debug_timing_event) << "start to register read by";
+        DVLOG(log_debug_timing_event)
+                << log_location_prefix << "ltx start to register read by";
 
         register_read_by(ti);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event) << "start to expose local write";
+        DVLOG(log_debug_timing_event)
+                << log_location_prefix << "ltx start to expose local write";
 
         tid_word ctid{};
         /**
@@ -713,14 +717,16 @@ extern Status commit(session* const ti) {
         expose_local_write(ti, ctid, write_range);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event) << "start to process sequence";
+        DVLOG(log_debug_timing_event)
+                << log_location_prefix << "ltx start to process sequence";
 
         // sequence process
         // This must be after cc commit and before log process
         ti->commit_sequence(ctid);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event) << "start to process logging";
+        DVLOG(log_debug_timing_event)
+                << log_location_prefix << "ltx start to process logging";
 
 #if defined(PWAL)
         auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
