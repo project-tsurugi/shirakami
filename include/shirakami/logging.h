@@ -22,6 +22,12 @@ static constexpr std::int32_t log_warning = 20;
 static constexpr std::int32_t log_info = 30;
 
 /**
+ * @brief logging level constant for debug timing event information.
+ * 
+ */
+static constexpr std::int32_t log_debug_timing_event = 35;
+
+/**
  * @brief logging level constant for debug information
  */
 static constexpr std::int32_t log_debug = 40;

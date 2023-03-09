@@ -660,6 +660,8 @@ extern Status commit(session* const ti) {
                          << ti->get_long_tx_id()
                          << ", wait for ltx id: " << wait_for_str;
     }
+    // log debug timing event
+    DVLOG(log_debug_timing_event) << "start to check wait";
 
     /**
      * WP2: If it is possible to prepend the order, it waits for a transaction 
@@ -678,16 +680,27 @@ extern Status commit(session* const ti) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
 
-    // ==========
+    // log debug timing event
+    DVLOG(log_debug_timing_event) << "start to verify";
+
     // verify : start
     rc = verify(ti);
+
     if (rc == Status::ERR_CC) {
         // verfy fail
+        // log debug timing event
+        DVLOG(log_debug_timing_event) << "start to abort";
         abort(ti);
     } else if (rc == Status::OK) {
         // This tx must success.
 
+        // log debug timing event
+        DVLOG(log_debug_timing_event) << "start to register read by";
+
         register_read_by(ti);
+
+        // log debug timing event
+        DVLOG(log_debug_timing_event) << "start to expose local write";
 
         tid_word ctid{};
         /**
@@ -699,9 +712,15 @@ extern Status commit(session* const ti) {
         std::map<Storage, std::tuple<std::string, std::string>> write_range;
         expose_local_write(ti, ctid, write_range);
 
+        // log debug timing event
+        DVLOG(log_debug_timing_event) << "start to process sequence";
+
         // sequence process
         // This must be after cc commit and before log process
         ti->commit_sequence(ctid);
+
+        // log debug timing event
+        DVLOG(log_debug_timing_event) << "start to process logging";
 
 #if defined(PWAL)
         auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
@@ -715,9 +734,9 @@ extern Status commit(session* const ti) {
 
         // todo enhancement
         /**
-     * Sort by wp and then globalize the local write set. 
-     * Eliminate wp from those that have been globalized in wp units.
-     */
+          * Sort by wp and then globalize the local write set. 
+          * Eliminate wp from those that have been globalized in wp units.
+          */
 
 
         // about transaction state
