@@ -26,7 +26,7 @@ void unlock_write_set(session* const ti) {
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
-                    << logging::log_location_prefix
+                    << log_location_prefix_detail_info
                     << "unlock key " + std::string(rec_ptr->get_key_view());
         }
         rec_ptr->get_tidw_ref().unlock();
@@ -49,7 +49,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
-                    << logging::log_location_prefix
+                    << log_location_prefix_detail_info
                     << "unlock key " +
                                std::string(
                                        wso_ptr->get_rec_ptr()->get_key_view());
@@ -60,7 +60,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
-                    << logging::log_location_prefix
+                    << log_location_prefix_detail_info
                     << "unlocked key " +
                                std::string(
                                        wso_ptr->get_rec_ptr()->get_key_view());
@@ -95,7 +95,7 @@ void change_inserting_records_state(session* const ti) {
                 // detail info
                 if (logging::get_enable_logging_detail_info()) {
                     DVLOG(log_trace)
-                            << logging::log_location_prefix
+                            << log_location_prefix_detail_info
                             << "unlock key " +
                                        std::string(rec_ptr->get_key_view());
                 }
@@ -235,7 +235,7 @@ RETRY: // NOLINT
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
-                    << logging::log_location_prefix
+                    << log_location_prefix_detail_info
                     << "lock key " + std::string(rec_ptr->get_key_view());
         }
 
@@ -245,7 +245,7 @@ RETRY: // NOLINT
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             DVLOG(log_trace)
-                    << logging::log_location_prefix
+                    << log_location_prefix_detail_info
                     << "locked key " + std::string(rec_ptr->get_key_view());
         }
 
@@ -295,7 +295,7 @@ RETRY: // NOLINT
 
         // detail info
         if (logging::get_enable_logging_detail_info()) {
-            DVLOG(log_trace) << logging::log_location_prefix
+            DVLOG(log_trace) << log_location_prefix_detail_info
                              << "inserting locked record, key " +
                                         std::string(rec_ptr->get_key_view());
         }
@@ -323,7 +323,7 @@ RETRY: // NOLINT
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "inserted locking key " +
                                    std::string(rec_ptr->get_key_view());
             }
@@ -354,7 +354,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "lock key " + std::string(rec_ptr->get_key_view());
             }
 
@@ -365,7 +365,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "locked key " + std::string(rec_ptr->get_key_view());
             }
 
@@ -394,7 +394,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "lock key " + std::string(rec_ptr->get_key_view());
             }
 
@@ -404,7 +404,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "locked key " + std::string(rec_ptr->get_key_view());
             }
 
@@ -505,7 +505,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 // detail info
                 if (logging::get_enable_logging_detail_info()) {
                     DVLOG(log_trace)
-                            << logging::log_location_prefix
+                            << log_location_prefix_detail_info
                             << "unlock key " +
                                        std::string(wso_ptr->get_rec_ptr()
                                                            ->get_key_view());
@@ -517,7 +517,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 // detail info
                 if (logging::get_enable_logging_detail_info()) {
                     DVLOG(log_trace)
-                            << logging::log_location_prefix
+                            << log_location_prefix_detail_info
                             << "unlocked key " +
                                        std::string(wso_ptr->get_rec_ptr()
                                                            ->get_key_view());

@@ -134,7 +134,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
             if (logging::get_enable_logging_detail_info()) {
                 // logging detail info
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "start wait for locked record. key is " +
                                    std::string(rec_ptr->get_key_view());
             }
@@ -142,7 +142,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
             if (logging::get_enable_logging_detail_info()) {
                 // logging detail info
                 DVLOG(log_trace)
-                        << logging::log_location_prefix
+                        << log_location_prefix_detail_info
                         << "finish wait for locked record. key is " +
                                    std::string(rec_ptr->get_key_view());
             }
@@ -152,7 +152,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                 if (logging::get_enable_logging_detail_info()) {
                     // logging detail info
                     DVLOG(log_trace)
-                            << logging::log_location_prefix
+                            << log_location_prefix_detail_info
                             << "finish wait for locked record. key is " +
                                        std::string(rec_ptr->get_key_view());
                 }
@@ -165,7 +165,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                 if (logging::get_enable_logging_detail_info()) {
                     // logging detail info
                     DVLOG(log_trace)
-                            << logging::log_location_prefix
+                            << log_location_prefix_detail_info
                             << "finish wait for locked record. key is " +
                                        std::string(rec_ptr->get_key_view());
                 }
@@ -176,7 +176,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
         }
         if (logging::get_enable_logging_detail_info()) {
             // logging detail info
-            DVLOG(log_trace) << logging::log_location_prefix
+            DVLOG(log_trace) << log_location_prefix_detail_info
                              << "finish wait for locked record. key is " +
                                         std::string(rec_ptr->get_key_view());
         }

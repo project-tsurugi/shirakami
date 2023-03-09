@@ -655,14 +655,17 @@ extern Status commit(session* const ti) {
         for (auto elem : wait_for) {
             wait_for_str.append(std::to_string(elem) + ", ");
         }
-        DVLOG(log_trace) << logging::log_location_prefix
+        DVLOG(log_trace) << log_location_prefix_detail_info
                          << "commit request accept, LTX, tx id: "
                          << ti->get_long_tx_id()
                          << ", wait for ltx id: " << wait_for_str;
     }
     // log debug timing event
+    std::string str_tx_id{};
+    get_tx_id(static_cast<Token>(ti), str_tx_id);
     DVLOG(log_debug_timing_event)
-            << log_location_prefix << "ltx start to check wait";
+            << log_location_prefix_timing_event << str_tx_id << ": "
+            << "ltx start to check wait";
 
     /**
      * WP2: If it is possible to prepend the order, it waits for a transaction 
@@ -682,7 +685,9 @@ extern Status commit(session* const ti) {
     }
 
     // log debug timing event
-    DVLOG(log_debug_timing_event) << log_location_prefix << "ltx start to verify";
+    DVLOG(log_debug_timing_event)
+            << log_location_prefix_timing_event << str_tx_id << ": "
+            << "ltx start to verify";
 
     // verify : start
     rc = verify(ti);
@@ -691,20 +696,23 @@ extern Status commit(session* const ti) {
         // verfy fail
         // log debug timing event
         DVLOG(log_debug_timing_event)
-                << log_location_prefix << "ltx start to abort";
+                << log_location_prefix_timing_event << str_tx_id << ": "
+                << "ltx start to abort";
         abort(ti);
     } else if (rc == Status::OK) {
         // This tx must success.
 
         // log debug timing event
         DVLOG(log_debug_timing_event)
-                << log_location_prefix << "ltx start to register read by";
+                << log_location_prefix_timing_event << str_tx_id << ": "
+                << "ltx start to register read by";
 
         register_read_by(ti);
 
         // log debug timing event
         DVLOG(log_debug_timing_event)
-                << log_location_prefix << "ltx start to expose local write";
+                << log_location_prefix_timing_event << str_tx_id << ": "
+                << "ltx start to expose local write";
 
         tid_word ctid{};
         /**
@@ -718,7 +726,8 @@ extern Status commit(session* const ti) {
 
         // log debug timing event
         DVLOG(log_debug_timing_event)
-                << log_location_prefix << "ltx start to process sequence";
+                << log_location_prefix_timing_event << str_tx_id << ": "
+                << "ltx start to process sequence";
 
         // sequence process
         // This must be after cc commit and before log process
@@ -726,7 +735,8 @@ extern Status commit(session* const ti) {
 
         // log debug timing event
         DVLOG(log_debug_timing_event)
-                << log_location_prefix << "ltx start to process logging";
+                << log_location_prefix_timing_event << str_tx_id << ": "
+                << "ltx start to process logging";
 
 #if defined(PWAL)
         auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
@@ -759,7 +769,7 @@ extern Status commit(session* const ti) {
 
     // detail info
     if (logging::get_enable_logging_detail_info()) {
-        DVLOG(log_trace) << logging::log_location_prefix
+        DVLOG(log_trace) << log_location_prefix_detail_info
                          << "commit request processed, LTX, tx id: "
                          << ti->get_long_tx_id() << ", return code: " << rc;
     }
