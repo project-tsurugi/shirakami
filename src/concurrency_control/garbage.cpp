@@ -274,7 +274,6 @@ void release_key_memory() {
         if ((*itr).second < me) {
             delete (*itr).first; // NOLINT
             ++erase_count;
-            //itr = cont.erase(itr);
             ++itr;
         } else {
             break;

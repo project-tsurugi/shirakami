@@ -34,16 +34,23 @@ bool point_read_by_long::is_exist(Token token) {
 }
 
 void point_read_by_long::push(body_elem_type const elem) {
+    // lock
     std::lock_guard<std::shared_mutex> lk(mtx_);
+
+    // prepare
     const auto ce = epoch::get_global_epoch();
     auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
+
+    // gc
+    std::size_t erase_count{0};
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
         if ((*itr).second < elem.second) {
             // high priori
             // check gc
             if ((*itr).first < threshold) {
-                itr = body_.erase(itr);
+                ++erase_count;
+                ++itr;
             } else {
                 break;
             }
@@ -56,6 +63,12 @@ void point_read_by_long::push(body_elem_type const elem) {
         // low priori
         break;
     }
+    // erase in bulk
+    if (erase_count > 0) {
+        body_.erase(body_.begin(), body_.begin() + erase_count);
+    }
+
+    // push info
     body_.emplace_back(elem);
 }
 
