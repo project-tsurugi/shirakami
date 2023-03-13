@@ -81,10 +81,11 @@ void sequence::gc_sequence_map() {
             }
         }
         if (ctr > 2) {
-            // it can erase (ctr - 1) times.
-            for (std::size_t i = 0; i < ctr - 1; ++i) {
-                each_sequence_object.erase(each_sequence_object.begin());
-            }
+            // it can erase (ctr - 1) elements from begin.
+            auto itr_begin = each_sequence_object.begin();
+            auto itr_end = each_sequence_object.begin();
+            advance(itr_end, ctr-1);
+            each_sequence_object.erase(itr_begin, itr_end);
         }
         ++it;
     }

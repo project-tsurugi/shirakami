@@ -125,7 +125,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
     if (gc_threshold == 0) { gc_threshold = ce; }
     std::size_t tx_id = std::get<range_read_by_long::index_tx_id>(elem);
-    
+
     // gc
     std::size_t erase_count{0};
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
