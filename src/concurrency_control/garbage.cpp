@@ -265,6 +265,7 @@ void release_key_memory() {
     auto me = garbage::get_min_step_epoch() < garbage::get_min_batch_epoch()
                       ? garbage::get_min_step_epoch()
                       : garbage::get_min_batch_epoch();
+    std::size_t erase_count{0};
     for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
         /**
           * If me changed from unhooking, all tx which existed at unhooking must
@@ -272,10 +273,15 @@ void release_key_memory() {
           */
         if ((*itr).second < me) {
             delete (*itr).first; // NOLINT
-            itr = cont.erase(itr);
+            ++erase_count;
+            //itr = cont.erase(itr);
+            ++itr;
         } else {
             break;
         }
+    }
+    if (erase_count > 0) {
+        cont.erase(cont.begin(), cont.begin() + erase_count);
     }
 }
 
