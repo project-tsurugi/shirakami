@@ -122,7 +122,7 @@ TEST_F(read_wait_two_cascading_ascending_within_epoch_abort_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), sty, y, var.at(4)));
     ASSERT_EQ(Status::OK, search_key(s.at(5), stz, z, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(0)); // TODO rarely fail.
     ASSERT_EQ(Status::OK, upsert(s.at(5), stx, x, var.at(5)));
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));

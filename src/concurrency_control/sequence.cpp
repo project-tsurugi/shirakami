@@ -84,7 +84,7 @@ void sequence::gc_sequence_map() {
             // it can erase (ctr - 1) elements from begin.
             auto itr_begin = each_sequence_object.begin();
             auto itr_end = each_sequence_object.begin();
-            advance(itr_end, ctr-1);
+            advance(itr_end, ctr - 1);
             each_sequence_object.erase(itr_begin, itr_end);
         }
         ++it;
