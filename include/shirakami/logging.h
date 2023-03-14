@@ -10,7 +10,7 @@ static constexpr std::string_view log_location_prefix_detail_info =
         "/:shirakami:detail_info: ";
 
 static constexpr std::string_view log_location_prefix_timing_event =
-        "/:shirakami:timing: ";
+        "/:shirakami:timing:"; // +<event_name>
 
 /**
  * @brief logging level constant for errors
