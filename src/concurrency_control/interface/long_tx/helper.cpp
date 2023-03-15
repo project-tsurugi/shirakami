@@ -145,11 +145,6 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
 
     f_check = loadAcquire(&rec->get_tidw_ref().get_obj());
 
-    if (f_check.get_lock() && f_check.get_latest() && f_check.get_absent()) {
-        // until WP-2, it is not found because the inserter must be short tx.
-        return Status::WARN_NOT_FOUND;
-    }
-
     for (;;) {
         if (f_check.get_lock()) {
             /**

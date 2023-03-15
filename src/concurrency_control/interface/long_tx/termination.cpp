@@ -215,7 +215,7 @@ static inline void expose_local_write(
                             // load payload if not delete.
                             wso.get_value(vb);
                         }
-                        version* new_v{new version(ctid, vb, ver)};
+                        version* new_v{new version(ctid, vb, ver)}; // NOLINT
                         pre_ver->set_next(new_v);
                     };
                     should_log = false;
