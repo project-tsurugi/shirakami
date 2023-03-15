@@ -490,6 +490,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     }
     // ==========
 
+    // optimization : read from cache.
     if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
         // it already read.
         sh.get_ci(handle).get_key(buf);
@@ -506,6 +507,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::OK;
     }
 
+    // read from record
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         tid_word tidb{};
         std::string valueb{};
@@ -520,6 +522,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             ti->process_before_finish_step();
             return rr;
         }
+        // optimization: set for re-read
         ti->get_read_set().emplace_back(
                 sh.get_scanned_storage_set().get(handle), rec_ptr, tidb);
         if (key_read) {
@@ -557,6 +560,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
         // read latest version after version function
         if (is_latest) {
+            // optimization: set for re-read
             if (key_read) {
                 rec_ptr->get_key(buf);
                 sh.get_ci(handle).set_key(buf);
@@ -598,9 +602,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
-    if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
-        return Status::ERR_NOT_IMPLEMENTED;
-    }
+
     LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
 }
