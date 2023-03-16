@@ -79,7 +79,6 @@ void storage_operation_test(std::size_t storage_num) {
     for (std::size_t i = 0; i < storage_num; ++i) {
         create_storage_and_upsert_one_record(i);
     }
-    sleep(1);
 
     fin(false);
 

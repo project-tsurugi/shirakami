@@ -67,7 +67,6 @@ TEST_F(short_delete_short_search, delete_cant_cause_phantom) { // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s2, st, "c"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // sleep so much considering gc
-    sleep(1);
 
     // delete can't cause phantom
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

@@ -560,7 +560,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
         // read latest version after version function
         if (is_latest) {
-            //sleep(1); // todo delete
             // optimization: set for re-read
             if (key_read) {
                 rec_ptr->get_key(buf);
@@ -571,9 +570,19 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 sh.get_ci(handle).set_value(buf);
                 sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
             }
-            // verify of optimistic
-            if (loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
-                f_check.get_obj()) {
+            // load stable timestamp to verify optimistic read
+            tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
+            for (;;) {
+                if (s_check.get_lock()) {
+                    _mm_pause();
+                    s_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
+                    continue;
+                }
+                break;
+            }
+            // verify optimistic read
+            if (s_check.get_obj() == f_check.get_obj()) {
+                LOG(INFO);
                 // success optimistic read latest version
                 read_register_if_ltx(rec_ptr);
                 return Status::OK;
@@ -585,6 +594,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
               * readable version at optimistic read so it failed optimistic 
               * verify but it must find readable version at version list.
               */
+            ver = rec_ptr->get_latest();
             long_tx::version_function_without_optimistic_check(
                     ti->get_valid_epoch(), ver);
         }

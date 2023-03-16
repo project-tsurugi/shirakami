@@ -71,8 +71,6 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    // wait gc
-    sleep(1);
     // expecting reference 2 and crash
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
 

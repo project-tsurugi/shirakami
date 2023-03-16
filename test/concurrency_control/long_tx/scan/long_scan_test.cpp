@@ -181,7 +181,6 @@ TEST_F(long_scan_test,                                          // NOLINT
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s));                         // NOLINT
-    sleep(1);
     for (;;) {
         auto ret = check_commit(s2);
         if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
