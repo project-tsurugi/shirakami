@@ -256,8 +256,8 @@ TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
     d_ptr->ready();
 
     for (;;) {
-        sleep(1);
         if (get_limestone_durable_epoch() > 20) { break; } // NOLINT
+        _mm_pause();
     }
 
     epoch_thread.join();

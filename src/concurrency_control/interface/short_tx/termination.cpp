@@ -677,6 +677,7 @@ extern Status commit(session* const ti) {
         return rc;
     }
 
+
     epoch::epoch_t ce{epoch::get_global_epoch()};
 
     // read wp verify

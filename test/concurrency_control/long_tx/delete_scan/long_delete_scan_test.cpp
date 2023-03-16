@@ -77,7 +77,6 @@ TEST_F(long_delete_scan_test,                   // NOLINT
     ASSERT_EQ(vb, "a");
     ASSERT_EQ(Status::OK, delete_record(s1, st, "a"));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
-    // sleep(1);
     ASSERT_EQ(Status::OK, next(s2, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     ASSERT_EQ(vb, "b");
@@ -114,7 +113,6 @@ TEST_F(long_delete_scan_test,                        // NOLINT
     // delete not read by s2
     ASSERT_EQ(Status::OK, delete_record(s1, st, "b"));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
-    // sleep(1);
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     ASSERT_EQ(vb, "a");
@@ -152,7 +150,6 @@ TEST_F(long_delete_scan_test,                             // NOLINT
                                     scan_endpoint::INF, hd));
     ASSERT_EQ(Status::OK, delete_record(s1, st, "a"));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
-    // sleep(1);
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     // because s2 see before s1 by forwarding
