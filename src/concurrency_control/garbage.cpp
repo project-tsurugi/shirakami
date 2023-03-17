@@ -61,7 +61,7 @@ void work_manager() {
         // computing about ltx
         set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
 
-        sleepMs(PARAM_EPOCH_TIME);
+        sleepMs(epoch::get_global_epoch_time_ms());
     }
 }
 
@@ -291,7 +291,7 @@ void work_cleaner() {
             unhooking_keys_and_pruning_versions();
             release_key_memory();
         }
-        sleepMs(PARAM_EPOCH_TIME);
+        sleepMs(epoch::get_global_epoch_time_ms());
     }
 
     force_release_key_memory();

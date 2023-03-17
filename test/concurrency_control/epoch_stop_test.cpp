@@ -41,12 +41,12 @@ TEST_F(epoch_stop_test, stop_epoch) { // NOLINT
     {
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
         epoch::epoch_t first{epoch::get_global_epoch()};
-        sleepMs(PARAM_EPOCH_TIME * 2);
+        sleepMs(epoch::get_global_epoch_time_ms() * 2);
         epoch::epoch_t second{epoch::get_global_epoch()};
         ASSERT_EQ(first, second);
     }
     epoch::epoch_t first{epoch::get_global_epoch()};
-    sleepMs(PARAM_EPOCH_TIME * 2);
+    sleepMs(epoch::get_global_epoch_time_ms() * 2);
     epoch::epoch_t second{epoch::get_global_epoch()};
     ASSERT_NE(first, second);
 }
@@ -59,11 +59,11 @@ TEST_F(epoch_stop_test, ptp) { // NOLINT
         ce = epoch::get_global_epoch();
         epoch::set_perm_to_proc(1);
     }
-    sleepMs(PARAM_EPOCH_TIME * 2);
+    sleepMs(epoch::get_global_epoch_time_ms() * 2);
     ASSERT_EQ(epoch::get_perm_to_proc(), 0);
     ASSERT_EQ(ce + 1, epoch::get_global_epoch());
     epoch::set_perm_to_proc(epoch::ptp_init_val);
-    sleepMs(PARAM_EPOCH_TIME * 2);
+    sleepMs(epoch::get_global_epoch_time_ms() * 2);
     ASSERT_NE(ce + 1, epoch::get_global_epoch());
 }
 

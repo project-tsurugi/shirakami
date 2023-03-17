@@ -52,7 +52,7 @@ private:
 TEST_F(li_persistent_callback_test, check_persistent_call_back) { // NOLINT
     init();
     for (;;) {
-        sleepMs(PARAM_EPOCH_TIME);
+        sleepMs(epoch::get_global_epoch_time_ms());
         if (epoch::get_durable_epoch() > 20) { break; } // NOLINT
     }
     fin();

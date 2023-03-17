@@ -6,6 +6,8 @@
 #include "memory.h"
 #include "result.h"
 
+#include "concurrency_control/include/epoch.h"
+
 namespace shirakami {
 
 void Result::displayAbortCounts() const {
@@ -29,7 +31,8 @@ void Result::displayCommitCounts() const {
 }
 
 void Result::displayEnvironmentalParameter() const {
-    std::cout << "PARAM_EPOCH_TIME:\t" << PARAM_EPOCH_TIME << std::endl;
+    std::cout << "PARAM_EPOCH_TIME:\t" << epoch::get_global_epoch_time_ms()
+              << std::endl;
 }
 
 void Result::displayTps(size_t extime) const {

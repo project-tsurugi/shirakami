@@ -26,6 +26,11 @@ static constexpr epoch_t max_epoch{INT64_MAX};
         initial_epoch}; // NOLINT
 
 /**
+ * @brief Global epoch time. Default is 40 ms.
+ */
+[[maybe_unused]] inline std::atomic<std::size_t> global_epoch_time_ms{40};
+
+/**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
  */
 [[maybe_unused]] inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch +
@@ -53,6 +58,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
     return global_epoch.load(std::memory_order_acquire);
 }
 
+[[maybe_unused]] static std::size_t get_global_epoch_time_ms() { // NOLINT
+    return global_epoch_time_ms.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static epoch_t get_cc_safe_ss_epoch() { // NOLINT
     return cc_safe_ss_epoch.load(std::memory_order_acquire);
 }
@@ -65,6 +74,10 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 
 [[maybe_unused]] static void set_global_epoch(const epoch_t epo) { // NOLINT
     global_epoch.store(epo, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_global_epoch_time_ms(const std::size_t num) {
+    global_epoch_time_ms.store(num, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_durable_epoch(epoch_t ep) {

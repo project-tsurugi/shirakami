@@ -91,7 +91,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
 
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
-        sleepMs(PARAM_EPOCH_TIME);
+        sleepMs(epoch::get_global_epoch_time_ms());
         {
             // coordination with ltx
             auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
@@ -135,7 +135,13 @@ void fin() {
     join_epoch_thread();
 }
 
-void init() { invoke_epoch_thread(); }
+void init() {
+    // set global epoch time
+    set_global_epoch_time_ms(PARAM_EPOCH_TIME);
+
+    // invoke epoch thread
+    invoke_epoch_thread();
+}
 
 void invoke_epoch_thread() {
     // initialize

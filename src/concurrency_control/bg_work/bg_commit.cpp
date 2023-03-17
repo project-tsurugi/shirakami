@@ -62,7 +62,7 @@ void bg_commit::register_tx(Token token) {
 
 void bg_commit::worker() {
     while (!worker_thread_end()) {
-        sleepMs(PARAM_EPOCH_TIME);
+        sleepMs(epoch::get_global_epoch_time_ms());
         {
             // lock for container
             std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
