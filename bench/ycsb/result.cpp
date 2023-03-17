@@ -28,6 +28,10 @@ void Result::displayCommitCounts() const {
     std::cout << "commit_counts_:\t" << total_commit_counts_ << std::endl;
 }
 
+void Result::displayEnvironmentalParameter() const {
+    std::cout << "PARAM_EPOCH_TIME:\t" << PARAM_EPOCH_TIME << std::endl;
+}
+
 void Result::displayTps(size_t extime) const {
     if (total_commit_counts_ == 0) {
         std::cout << "throughput[tps]:\t0" << std::endl;
@@ -500,6 +504,7 @@ void Result::displayAllResult([[maybe_unused]] size_t clocks_per_us,
     displayRusageRUMaxrss();
     displayAbortRate();
     displayTps(extime);
+    displayEnvironmentalParameter();
 }
 
 void Result::addLocalAllResult(const Result& other) {

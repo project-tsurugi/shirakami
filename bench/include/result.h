@@ -98,6 +98,8 @@ public:
 
     void displayEarlyAbortRate() const;
 
+    void displayEnvironmentalParameter() const;
+
     void displayExtraReads() const;
 
     void displayGCCounts() const;
