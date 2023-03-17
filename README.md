@@ -65,11 +65,6 @@ Available options:
        * It is a max size of concurrent opening session (by enter command).
        * Default: `112`
 
-    - `-DPARAM_EPOCH_TIME=<epoch time (ms)>`
-       * Epoch time related with latency of commit (durable) and span of
-       resource management.
-       * Default: `40`
-
     - `-DPARAM_RETRY_READ`
        * The number of retry read without give-up due to conflicts at reading
        record.
@@ -94,13 +89,6 @@ Available options:
       efficiency will decrease.
 
   + For high contention workloads
-    - `-DPARAM_EPOCH_TIME=<medium num, ex. 10>`
-      - For workloads that repeatedly insert and delete the same primary key,
-      new inserts will be rejected until physical unhooking occurs in garbage
-      collection, so set a small value here to execute frequently. If this
-      value is too small, the cache will be polluted frequently, so make sure
-      it is not too small.
-
     - `-DPARAM_RETRY_READ=<small num, ex. 0>`
       - When reading fails in the read phase, it is better to return the
       failure without retrying in an environment with high contention. This is
@@ -108,20 +96,10 @@ Available options:
       so retries are likely to be wasted work.
 
   + For low contention workloads
-    - `-DPARAM_EPOCH_TIME=<large num, ex. 1000>`
-      - In the single version concurrency control mode, garbage collection
-      basically causes performance degradation, so set a large value here
-      and execute it infrequently.
-
     - `-DPARAM_RETRY_READ=<medium num, ex. 20>`
       - When reading fails in the read phase, you may try until the reading
       succeeds in an environment with low contention. Because, as a result,
       the probability of aborting is small.
-
-* For low latency
-  + `-DPARAM_EPOCH_TIME=<small time, ex. 10> -DPARAM_CHECKPOINT_REST_EPOCH=<small time, ex. 10>`
-    - Frequent logging improves latency but worsens throughput.
-* For fast testing
 
 ## Install 
 

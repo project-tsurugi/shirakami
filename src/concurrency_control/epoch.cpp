@@ -135,9 +135,9 @@ void fin() {
     join_epoch_thread();
 }
 
-void init() {
+void init(std::size_t epoch_time) {
     // set global epoch time
-    set_global_epoch_time_ms(PARAM_EPOCH_TIME);
+    set_global_epoch_time_ms(epoch_time);
 
     // invoke epoch thread
     invoke_epoch_thread();

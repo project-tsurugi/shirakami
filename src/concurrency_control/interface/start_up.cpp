@@ -145,7 +145,7 @@ Status init(database_options options) { // NOLINT
 #endif
 
     // about epoch
-    epoch::init();
+    epoch::init(options.get_epoch_time());
     garbage::init();
 
 #ifdef PWAL

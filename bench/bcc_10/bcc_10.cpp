@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) try { // NOLINT
     init(); // NOLINT
     init_db();
     if (FLAGS_read_only) {
-        sleepMs(PARAM_SNAPSHOT_EPOCH * PARAM_EPOCH_TIME * 2);
+        sleepMs(PARAM_SNAPSHOT_EPOCH * epoch::get_global_epoch_time_ms() * 2);
     }
     invoke_leader();
     fin();
