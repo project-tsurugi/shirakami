@@ -582,7 +582,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             }
             // verify optimistic read
             if (s_check.get_obj() == f_check.get_obj()) {
-                LOG(INFO);
                 // success optimistic read latest version
                 read_register_if_ltx(rec_ptr);
                 return Status::OK;
