@@ -137,7 +137,9 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
-    tid.display();
+    out << "lock_:" << tid.get_lock() << ", latest_:" << tid.get_latest()
+        << ", absent_:" << tid.get_absent() << ", tid_:" << tid.get_tid()
+        << ", epoch_:" << tid.get_epoch();
     return out;
 }
 

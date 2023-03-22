@@ -46,13 +46,14 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
  * @brief 
  * 
  * @param ti 
+ * @param st
  * @param scan_res 
  * @param head_skip_rec_n 
  * @return Status::OK
  * @return Status::WARN_NOT_FOUND
  */
 Status check_not_found(
-        session* ti,
+        session* ti, Storage st,
         std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
         std::size_t& head_skip_rec_n) {
     head_skip_rec_n = 0;
@@ -98,6 +99,13 @@ Status check_not_found(
             }
         } else {
             // absent && not latest == deleted
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                /**
+                 * short mode must read deleted record and verify, so add read set
+                 */
+                ti->get_read_set().emplace_back(st, rec_ptr, tid);
+            }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
                 ti->get_tx_type() ==
@@ -179,7 +187,8 @@ Status open_scan(Token const token, Storage storage,
     // not empty
 
     std::size_t head_skip_rec_n{};
-    rc = check_not_found(ti, scan_res, head_skip_rec_n);
+    rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
+
     if (rc != Status::OK) {
         /**
          * The fact must be guaranteed by isolation. So it can get node version 
@@ -363,6 +372,15 @@ Status next(Token const token, ScanHandle const handle) {
         } else {
             // absent && not latest == deleted
             if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                /**
+                 * short mode must read deleted record and verify, so add read set
+                 */
+                auto& sh = ti->get_scan_handle();
+                ti->get_read_set().emplace_back(
+                        sh.get_scanned_storage_set().get(handle), rec_ptr, tid);
+            }
+            if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
                 ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
@@ -464,6 +482,9 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     Storage st = std::get<scan_handler::scan_cache_storage_pos>(
             sh.get_scan_cache()[handle]);
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        /**
+         * early abort optimization. If it is not, it finally finds at commit phase.
+         */
         auto wps = wp::find_wp(st);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
@@ -518,19 +539,23 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         } else {
             rr = read_record(rec_ptr, tidb, buf);
         }
-        if (rr != Status::OK) {
+        if (rr != Status::OK && rr != Status::WARN_ALREADY_DELETE) {
             ti->process_before_finish_step();
             return rr;
         }
         // optimization: set for re-read
         ti->get_read_set().emplace_back(
                 sh.get_scanned_storage_set().get(handle), rec_ptr, tidb);
-        if (key_read) {
-            sh.get_ci(handle).set_key(buf);
-            sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
-        } else {
-            sh.get_ci(handle).set_value(buf);
-            sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
+
+        if (rr != Status::WARN_ALREADY_DELETE) {
+            // if it read normal record.
+            if (key_read) {
+                sh.get_ci(handle).set_key(buf);
+                sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
+            } else {
+                sh.get_ci(handle).set_value(buf);
+                sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
+            }
         }
 
         // create node set info
@@ -540,7 +565,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
 
         ti->process_before_finish_step();
-        return Status::OK;
+        return rr;
     }
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
         ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {

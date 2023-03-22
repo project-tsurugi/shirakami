@@ -97,11 +97,14 @@ TEST_F(search_update, // NOLINT
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
             for (;;) {
-                if (rc == Status::OK) { break; }
-                if (rc == Status::WARN_CONCURRENT_UPDATE) {
+                // search must return ok or warn not found.
+                if (rc == Status::OK || rc == Status::WARN_CONCURRENT_UPDATE) {
+                    break;
+                }
+                if (rc == Status::WARN_NOT_FOUND) {
                     rc = search_key(s, st, k, vb);
                 } else {
-                    LOG(ERROR);
+                    LOG(ERROR) << rc;
                 }
             }
             ASSERT_EQ(Status::OK, update(s, st, k, v));

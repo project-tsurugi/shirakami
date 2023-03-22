@@ -340,8 +340,6 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
- * operation of this transaction.
  * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
  * other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 

@@ -71,7 +71,7 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
     {
         // not change behavior
         std::string vb{};
-        // this should find logical record deleted.
+        // this should not find logical record deleted.
         ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }

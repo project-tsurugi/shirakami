@@ -56,12 +56,24 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
-    for (std::size_t i = 0; i < 500; ++i) { // NOLINT
+    // if we execute heavy test, you change this i.
+    for (std::size_t i = 0; i < 1; ++i) { // NOLINT
         // Tx1.
         ScanHandle hd{};
-        ASSERT_EQ(Status::WARN_NOT_FOUND,
-                  open_scan(s, st, "", scan_endpoint::INF, "",
-                            scan_endpoint::INF, hd));
+        if (Status::WARN_NOT_FOUND != open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd)) {
+            // read all record
+            for (;;) {
+                std::string key_buf{};
+                ASSERT_EQ(Status::WARN_ALREADY_DELETE,
+                          read_key_from_scan(s, hd, key_buf));
+                if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
+            }
+
+            // node set must not be empty
+            auto* ti = static_cast<session*>(s);
+            ASSERT_EQ(ti->get_node_set().empty(), false);
+        }
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // Tx2.
@@ -81,16 +93,61 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
 
         // Tx3. full scan
         // record empty state
+        if (Status::WARN_NOT_FOUND != open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd)) {
+            // read all record
+            for (;;) {
+                std::string key_buf{};
+                ASSERT_EQ(Status::WARN_ALREADY_DELETE,
+                          read_key_from_scan(s, hd, key_buf));
+                if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
+            }
+
+            // node set must not be empty
+            auto* ti = static_cast<session*>(s);
+            ASSERT_EQ(ti->get_node_set().empty(), false);
+        }
+        // expect Status::OK
+        auto rc = commit(s);
+        if (rc != Status::OK) {
+            LOG(FATAL) << rc << ", "
+                       << static_cast<session*>(s)->get_result_info();
+        }
+    }
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
+    // 自分で自分の挿入中レコードコンバートタイムスタンプを観測しないかどうか
+
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("test", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+    // test
+    ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
+
+    // stop gc to stop epoch
+    {
+        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK, abort(s));
+        ScanHandle hd{};
+        // it must read deleted record
         ASSERT_EQ(Status::WARN_NOT_FOUND,
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
-        // but node set is not empty
         auto* ti = static_cast<session*>(s);
-        ASSERT_EQ(ti->get_node_set().empty(), false);
-        // expect Status::OK
-        ASSERT_EQ(Status::OK, commit(s));
+        ASSERT_EQ(ti->get_read_set().size(), 1);
+        ASSERT_EQ(ti->get_read_set().size(), 1);
+        // insert and read timestamp is converted by it.
+        ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
 
+    // cleanup
     ASSERT_EQ(Status::OK, leave(s));
 }
 

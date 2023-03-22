@@ -1,6 +1,8 @@
 
 #include <bitset>
+#include <mutex>
 
+#include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "gtest/gtest.h"

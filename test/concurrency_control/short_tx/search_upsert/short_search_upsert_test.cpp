@@ -63,7 +63,8 @@ TEST_F(short_search_upsert, search_cannot_find_concurrent_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
     std::string vb{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(token_ar.at(1), st, k, vb));
+    ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
+              search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
     ASSERT_EQ(Status::OK, commit(token_ar.at(1))); // NOLINT
     ASSERT_EQ(Status::OK, leave(token_ar.at(0)));

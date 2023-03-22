@@ -61,6 +61,12 @@ Status search_key(session* ti, Storage const storage,
     if (rs == Status::OK) {
         if (read_value) { value = read_res; }
         ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
+        return Status::OK;
+    } else if (rs == Status::WARN_ALREADY_DELETE) {
+        // it needs read verify
+        ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
+        // for low cost of code maintenance
+        return Status::WARN_NOT_FOUND;
     }
     return rs;
 }

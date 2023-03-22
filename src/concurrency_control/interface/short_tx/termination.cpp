@@ -146,7 +146,7 @@ Status abort(session* ti) { // NOLINT
 Status read_verify(session* ti, Storage const storage, tid_word read_tid,
                    tid_word check, Record* const rec_ptr) {
     if (read_tid.get_tid() != check.get_tid() ||
-        read_tid.get_epoch() != check.get_epoch() || check.get_absent() ||
+        read_tid.get_epoch() != check.get_epoch() ||
         (check.get_lock() && ti->get_write_set().search(rec_ptr) == nullptr)) {
         ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
                                                    storage);

@@ -115,7 +115,7 @@ TEST_F(short_delete_scan_test,                            // NOLINT
     ASSERT_EQ(Status::OK, delete_record(s2, st, "a"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     std::string vb{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(Status::WARN_ALREADY_DELETE, read_key_from_scan(s, hd, vb));
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

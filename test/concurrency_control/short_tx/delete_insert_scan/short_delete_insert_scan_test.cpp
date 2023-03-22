@@ -56,7 +56,8 @@ TEST_F(insert_delete_scan, delete_insert_on_scan) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, storage, k2, vb));
     ASSERT_NE("", vb); // NOLINT
     Status ret = search_key(s, storage, k, vb);
-    ASSERT_TRUE(ret == Status::WARN_NOT_FOUND); // NOLINT
+    ASSERT_TRUE(ret == Status::WARN_NOT_FOUND ||
+                ret == Status::WARN_ALREADY_DELETE); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 

@@ -111,7 +111,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                 return Status::WARN_CONCURRENT_INSERT;
             }
             if (f_check.get_absent() && !f_check.get_latest()) {
-                return Status::WARN_NOT_FOUND;
+                return Status::WARN_ALREADY_DELETE;
             }
             return Status::WARN_CONCURRENT_UPDATE;
         };
@@ -122,7 +122,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                 if (f_check.get_latest()) {
                     return Status::WARN_CONCURRENT_INSERT;
                 }
-                return Status::WARN_NOT_FOUND;
+                return Status::WARN_ALREADY_DELETE;
             }
             return Status::OK;
         };
@@ -181,7 +181,14 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                                         std::string(rec_ptr->get_key_view());
         }
 
-        if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
+        if (f_check.get_absent() && f_check.get_latest()) {
+            return Status::WARN_CONCURRENT_INSERT;
+        }
+        if (f_check.get_absent() && !f_check.get_latest()) {
+            // for read set
+            tid = f_check;
+            return Status::WARN_ALREADY_DELETE;
+        }
 
         if (read_value) { rec_ptr->get_value(val); }
         s_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
