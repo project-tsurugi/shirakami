@@ -135,9 +135,13 @@ void fin() {
     join_epoch_thread();
 }
 
-void init(std::size_t epoch_time) {
-    // set global epoch time
+void init([[maybe_unused]] std::size_t const epoch_time) {
+// set global epoch time
+#if PARAM_EPOCH_TIME > 0
+    set_global_epoch_time_ms(PARAM_EPOCH_TIME);
+#else
     set_global_epoch_time_ms(epoch_time);
+#endif
 
     // invoke epoch thread
     invoke_epoch_thread();

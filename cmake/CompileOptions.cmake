@@ -92,6 +92,12 @@ endif ()
 
 # Begin : about cc
 
+if (NOT DEFINED PARAM_EPOCH_TIME)
+    add_definitions(-DPARAM_EPOCH_TIME=0)
+else ()
+    add_definitions(-DPARAM_EPOCH_TIME=${PARAM_EPOCH_TIME})
+endif ()
+
 if (NOT DEFINED PARAM_RETRY_READ)
     add_definitions(-DPARAM_RETRY_READ=0)
 else ()

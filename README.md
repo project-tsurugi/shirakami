@@ -32,11 +32,11 @@ ninja
 
 Available options:
 * `-DBUILD_BENCHMARK=OFF`
-   * Never build benchmark programs (default: `ON`)
+   * Never build benchmark programs (default: `ON` )
 * `-DBUILD_TESTS=OFF`
-   * Never build test programs (default: `ON`)
+   * Never build test programs (default: `ON` )
 * `-DBUILD_DOCUMENTS=OFF`
-   * Never build documents by doxygen (default: `ON`)
+   * Never build documents by doxygen (default: `ON` )
 * `-DBUILD_SHARED_LIBS=OFF`
    * Create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>`
@@ -57,10 +57,14 @@ Available options:
 
 * Logging method (You can select at most one method.)
   + `-DBUILD_PWAL=ON`
-    * Enable parallel write-ahead-logging using limestone (default: `ON`)
+    - Enable parallel write-ahead-logging using limestone (default: `ON`)
 
 * Parameter setting
   + Concurrency Control
+    - `-DPARAM_EPOCH_TIME=<epoch time[ms]>`
+      - It is a time of epoch. It is also set at database_options of shirakami::init function. If it is zero, it is set by value of database_options (default is 40). This setting overrides the database_options setting.
+      - Default: `0`.
+
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>`
        * It is a max size of concurrent opening session (by enter command).
        * Default: `112`
