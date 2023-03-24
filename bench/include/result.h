@@ -77,6 +77,8 @@ public:
 
     void addLocalVersionReuse(uint64_t count);
 
+    static void displayEnvironmentalParameter();
+
     void displayAbortCounts() const;
 
     void displayAbortRate() const;
@@ -97,8 +99,6 @@ public:
                                    size_t thread_num) const;
 
     void displayEarlyAbortRate() const;
-
-    void displayEnvironmentalParameter() const;
 
     void displayExtraReads() const;
 

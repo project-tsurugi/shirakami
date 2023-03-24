@@ -30,7 +30,7 @@ void Result::displayCommitCounts() const {
     std::cout << "commit_counts_:\t" << total_commit_counts_ << std::endl;
 }
 
-void Result::displayEnvironmentalParameter() const {
+void Result::displayEnvironmentalParameter() {
     std::cout << "PARAM_EPOCH_TIME:\t" << epoch::get_global_epoch_time_ms()
               << std::endl;
 }
