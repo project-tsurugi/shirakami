@@ -675,6 +675,11 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
         if (!ti->get_requested_commit()) {
+            // start wait
+            // log debug timing event
+            DVLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                          << "start_wait : " << str_tx_id;
+
             // record requested
             ti->set_requested_commit(true);
             // register for background worker
@@ -700,6 +705,16 @@ extern Status commit(session* const ti) {
         // This tx must success.
 
         // log debug timing event
+        if (ti->get_requested_commit()) {
+            DVLOG(log_debug_timing_event)
+                    << log_location_prefix_timing_event
+                    << "precommit_with_wait : " << str_tx_id;
+        } else {
+            DVLOG(log_debug_timing_event)
+                    << log_location_prefix_timing_event
+                    << "precommit_with_nowait : " << str_tx_id;
+        }
+
         DVLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "start_register_read_by : " << str_tx_id;
