@@ -151,4 +151,32 @@ TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(tsurugi_issue106, 20230310_comment_tanabe) { // NOLINT
+    /**
+     * シナリオ：key a, c が存在する。それを自分でスキャンした後、 bbbbbbbbb (b x 9) を挿入する。
+     * 現状のアーキテクチャでは挿入したときに自己ファントムの検知は末端のボーダーノードしか返却しないため、
+     * a, c をスキャンしたボーダーノードと自身の挿入を整合する機会が無く、コミット時に node verify 成功してしまう。
+     * なぜなら b9 の挿入を見逃してしまうから。
+     */
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("test", st));
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, insert(s, st, "a", ""));
+    ASSERT_EQ(Status::OK, insert(s, st, "c", ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // test
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    // index scan include node version without read body.
+    ASSERT_EQ(Status::OK, insert(s, st, std::string(9, 'b'), ""));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
