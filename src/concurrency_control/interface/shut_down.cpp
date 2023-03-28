@@ -60,6 +60,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
             _mm_pause();
         }
     }
+    // TODO REMOVE?
     if (lpwal::get_log_dir_pointed()) {
         // create snapshot for next start.
         recover(datastore::get_datastore());

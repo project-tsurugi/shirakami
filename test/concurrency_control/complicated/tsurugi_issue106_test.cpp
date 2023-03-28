@@ -227,4 +227,45 @@ TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(tsurugi_issue106, 20230328_insight_tanabe) { // NOLINT
+    /**
+     * シナリオ：key ax9, cx9 が存在する。それをtx1 がスキャンしたあと、 tx2 が ax8 + b を挿入する。
+     * tx1 はそれによってファントムを検知するはずである。
+     */
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("test", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, insert(s1, st, std::string(9, 'a'), ""));
+    ASSERT_EQ(Status::OK, insert(s1, st, std::string(9, 'c'), ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    // test
+    // tx 1 read a, c
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, hd, buf));
+    ASSERT_EQ(buf, std::string(9, 'a'));
+    ASSERT_EQ(Status::OK, next(s1, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, hd, buf));
+    ASSERT_EQ(buf, std::string(9, 'c'));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, hd));
+    // index scan include node version without read body.
+    ASSERT_EQ(Status::OK, insert(s2, st, std::string(8, 'a') + "b", ""));
+    ASSERT_EQ(Status::OK, commit(s2));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s1)); // NOLINT
+    auto* ti = static_cast<session*>(s1);
+    ASSERT_EQ(ti->get_result_info().get_reason_code(),
+              reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
