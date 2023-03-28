@@ -171,6 +171,13 @@ TEST_F(tsurugi_issue106, 20230310_comment_tanabe) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(buf, "a");
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(buf, "c");
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     // index scan include node version without read body.
     ASSERT_EQ(Status::OK, insert(s, st, std::string(9, 'b'), ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -196,14 +203,24 @@ TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
+    // tx 1 read a, c
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, hd, buf));
+    ASSERT_EQ(buf, "a");
+    ASSERT_EQ(Status::OK, next(s1, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s1, hd, buf));
+    ASSERT_EQ(buf, "c");
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, hd));
     // index scan include node version without read body.
     ASSERT_EQ(Status::OK, insert(s2, st, std::string(9, 'b'), ""));
-    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    // TODO THIS IS WRONG, This must be ERR_CC
-    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s1)); // NOLINT
+    auto* ti = static_cast<session*>(s1);
+    ASSERT_EQ(ti->get_result_info().get_reason_code(),
+              reason_code::CC_OCC_PHANTOM_AVOIDANCE);
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
