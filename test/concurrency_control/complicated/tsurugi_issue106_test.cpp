@@ -179,4 +179,35 @@ TEST_F(tsurugi_issue106, 20230310_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
+    /**
+     * シナリオ：key a, c が存在する。それをtx1 がスキャンしたあと、 tx2 が bbbbbbbbb (b x 9) を挿入する。
+     * tx1 はそれによってファントムを検知するはずである。
+     */
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("test", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK, insert(s1, st, "a", ""));
+    ASSERT_EQ(Status::OK, insert(s1, st, "c", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    // test
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    // index scan include node version without read body.
+    ASSERT_EQ(Status::OK, insert(s2, st, std::string(9, 'b'), ""));
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    // TODO THIS IS WRONG, This must be ERR_CC
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
