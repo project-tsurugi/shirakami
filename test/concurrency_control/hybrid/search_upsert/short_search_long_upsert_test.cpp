@@ -162,8 +162,7 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
                             {st_x}}));
         epoch::set_perm_to_proc(1);
         epoch::get_ep_mtx().unlock();
-        wait_epoch_update();
-        ASSERT_EQ(epoch::get_perm_to_proc(), 0);
+        while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
         auto* ltx1s = static_cast<session*>(ltx1);
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
         Token stx{};
