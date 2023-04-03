@@ -94,6 +94,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    epoch::set_perm_to_proc(1);
+    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));
@@ -115,6 +118,7 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(7),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));
+    epoch::set_perm_to_proc(epoch::ptp_init_val); // epoch unlocked
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -229,6 +233,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    epoch::set_perm_to_proc(1);
+    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));
@@ -250,6 +257,8 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(7),
                                     transaction_options::transaction_type::LONG,
                                     {stb}}));
+    // epoch unlocked
+    epoch::set_perm_to_proc(epoch::ptp_init_val);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));
