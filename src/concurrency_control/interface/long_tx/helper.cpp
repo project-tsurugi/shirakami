@@ -116,7 +116,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
 
     // detail info
     if (logging::get_enable_logging_detail_info()) {
-        DVLOG(log_trace) << log_location_prefix_detail_info
+        VLOG(log_trace) << log_location_prefix_detail_info
                          << "tx_begin, LTX, tx id: " << long_tx_id;
     }
 

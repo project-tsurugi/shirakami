@@ -12,9 +12,9 @@
 #include "glog/logging.h"
 
 #define log_entry                                                              \
-    DVLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
 #define log_exit                                                               \
-    DVLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
 
 namespace shirakami {
 

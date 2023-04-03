@@ -11,10 +11,6 @@ namespace shirakami::logging {
 
 inline std::atomic<bool> enable_logging_detail_info_{false};
 
-[[maybe_unused]] static inline void dvlog(std::string_view const str) {
-    DVLOG(log_trace) << str;
-}
-
 [[maybe_unused]] static bool get_enable_logging_detail_info() {
     return enable_logging_detail_info_.load(std::memory_order_acquire);
 }

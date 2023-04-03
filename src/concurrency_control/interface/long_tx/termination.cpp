@@ -655,7 +655,7 @@ extern Status commit(session* const ti) {
         for (auto elem : wait_for) {
             wait_for_str.append(std::to_string(elem) + ", ");
         }
-        DVLOG(log_trace) << log_location_prefix_detail_info
+        VLOG(log_trace) << log_location_prefix_detail_info
                          << "commit request accept, LTX, tx id: "
                          << ti->get_long_tx_id()
                          << ", wait for ltx id: " << wait_for_str;
@@ -663,7 +663,7 @@ extern Status commit(session* const ti) {
     // log debug timing event
     std::string str_tx_id{};
     get_tx_id(static_cast<Token>(ti), str_tx_id);
-    DVLOG(log_debug) << log_location_prefix << str_tx_id << ": "
+    VLOG(log_debug) << log_location_prefix << str_tx_id << ": "
                      << "ltx start to check wait";
 
     /**
@@ -677,7 +677,7 @@ extern Status commit(session* const ti) {
         if (!ti->get_requested_commit()) {
             // start wait
             // log debug timing event
-            DVLOG(log_debug_timing_event) << log_location_prefix_timing_event
+            VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                           << "start_wait : " << str_tx_id;
 
             // record requested
@@ -689,7 +689,7 @@ extern Status commit(session* const ti) {
     }
 
     // log debug timing event
-    DVLOG(log_debug_timing_event) << log_location_prefix_timing_event
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                   << "start_verify : " << str_tx_id;
 
     // verify : start
@@ -698,7 +698,7 @@ extern Status commit(session* const ti) {
     if (rc == Status::ERR_CC) {
         // verfy fail
         // log debug timing event
-        DVLOG(log_debug_timing_event) << log_location_prefix_timing_event
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                       << "start_abort : " << str_tx_id;
         abort(ti);
     } else if (rc == Status::OK) {
@@ -706,23 +706,23 @@ extern Status commit(session* const ti) {
 
         // log debug timing event
         if (ti->get_requested_commit()) {
-            DVLOG(log_debug_timing_event)
+            VLOG(log_debug_timing_event)
                     << log_location_prefix_timing_event
                     << "precommit_with_wait : " << str_tx_id;
         } else {
-            DVLOG(log_debug_timing_event)
+            VLOG(log_debug_timing_event)
                     << log_location_prefix_timing_event
                     << "precommit_with_nowait : " << str_tx_id;
         }
 
-        DVLOG(log_debug_timing_event)
+        VLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "start_register_read_by : " << str_tx_id;
 
         register_read_by(ti);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event)
+        VLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "start_expose_local_write : " << str_tx_id;
 
@@ -737,7 +737,7 @@ extern Status commit(session* const ti) {
         expose_local_write(ti, ctid, write_range);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event)
+        VLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "start_process_sequence : " << str_tx_id;
 
@@ -746,7 +746,7 @@ extern Status commit(session* const ti) {
         ti->commit_sequence(ctid);
 
         // log debug timing event
-        DVLOG(log_debug_timing_event)
+        VLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "start_process_logging : " << str_tx_id;
 
@@ -781,7 +781,7 @@ extern Status commit(session* const ti) {
 
     // detail info
     if (logging::get_enable_logging_detail_info()) {
-        DVLOG(log_trace) << log_location_prefix_detail_info
+        VLOG(log_trace) << log_location_prefix_detail_info
                          << "commit request processed, LTX, tx id: "
                          << ti->get_long_tx_id() << ", return code: " << rc;
     }
