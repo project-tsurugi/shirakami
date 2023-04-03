@@ -296,8 +296,8 @@ RETRY: // NOLINT
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             VLOG(log_trace) << log_location_prefix_detail_info
-                             << "inserting locked record, key " +
-                                        std::string(rec_ptr->get_key_view());
+                            << "inserting locked record, key " +
+                                       std::string(rec_ptr->get_key_view());
         }
 
         rec_ptr->set_tid(tid);
@@ -322,10 +322,9 @@ RETRY: // NOLINT
 
             // detail info
             if (logging::get_enable_logging_detail_info()) {
-                VLOG(log_trace)
-                        << log_location_prefix_detail_info
-                        << "inserted locking key " +
-                                   std::string(rec_ptr->get_key_view());
+                VLOG(log_trace) << log_location_prefix_detail_info
+                                << "inserted locking key " +
+                                           std::string(rec_ptr->get_key_view());
             }
 
             return Status::OK;

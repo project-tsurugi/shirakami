@@ -149,8 +149,7 @@ Status session::find_high_priority_short() const {
                 // short tx
                 itr.get_tx_type() ==
                         transaction_options::transaction_type::SHORT &&
-                itr.get_operating() &&
-                itr.get_tx_began() && 
+                itr.get_operating() && itr.get_tx_began() &&
                 /**
                  * If operating false and this ltx can start in the viewpoint
                  * of epoch, stx after this operation must be serialized after 
@@ -158,6 +157,16 @@ Status session::find_high_priority_short() const {
                  */
                 // transaction order
                 itr.get_step_epoch() < get_valid_epoch()) {
+            // logging
+            std::string str_ltx_id{};
+            std::string str_stx_id{};
+            get_tx_id(static_cast<Token>(const_cast<session*>(this)),
+                      str_ltx_id);
+            get_tx_id(static_cast<Token>(const_cast<session*>(&itr)),
+                      str_stx_id);
+            VLOG(log_info) << log_location_prefix
+                           << "ltx warn premature by short tx, ltx id: "
+                           << str_ltx_id << ", stx id: " << str_stx_id;
             return Status::WARN_PREMATURE;
         }
     }

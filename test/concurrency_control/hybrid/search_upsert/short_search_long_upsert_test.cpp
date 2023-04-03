@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
@@ -29,7 +30,7 @@ class search_upsert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-"
+                "shirakami-test-concurrency_control-hybrid-"
                 "search_upsert-short_search_long_upsert_test");
         FLAGS_stderrthreshold = 0;
     }
@@ -44,17 +45,6 @@ public:
 private:
     static inline std::once_flag init_; // NOLINT
 };
-
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
 
 TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
     Storage st{};
@@ -208,6 +198,41 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         ASSERT_EQ(leave(ltx1), Status::OK);
         ASSERT_EQ(leave(ltx2), Status::OK);
     }
+}
+
+// test for logging about ltx warn premature by stx
+TEST_F(search_upsert, DISABLED_logging_for_ltx_premature_stx) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(enter(s1), Status::OK);
+    ASSERT_EQ(enter(s2), Status::OK);
+
+    auto stx_work = [s1, st]() {
+        LOG(INFO);
+        upsert(s1, st, "", "");
+        commit(s1);
+    };
+
+    auto ltx_work = [s2, st]() {
+        LOG(INFO);
+        std::string buf{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s2, transaction_options::transaction_type::LONG}));
+        wait_epoch_update();
+        ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s2, st, "", buf));
+    };
+
+    std::thread t1 = std::thread(stx_work);
+    wait_epoch_update();
+    std::thread t2 = std::thread(ltx_work);
+
+    t1.join();
+    t2.join();
+
+    ASSERT_EQ(leave(s1), Status::OK);
+    ASSERT_EQ(leave(s2), Status::OK);
 }
 
 } // namespace shirakami::testing
