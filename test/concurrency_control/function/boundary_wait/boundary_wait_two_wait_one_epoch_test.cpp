@@ -87,6 +87,7 @@ TEST_F(boundary_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    epoch::set_perm_to_proc(0);
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
@@ -99,6 +100,15 @@ TEST_F(boundary_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
+    // check same epoch
+    auto* ti1 = static_cast<session*>(s.at(1));
+    auto* ti2 = static_cast<session*>(s.at(2));
+    auto* ti3 = static_cast<session*>(s.at(3));
+    auto* ti4 = static_cast<session*>(s.at(4));
+    ASSERT_EQ(ti1->get_valid_epoch(), ti2->get_valid_epoch());
+    ASSERT_EQ(ti2->get_valid_epoch(), ti3->get_valid_epoch());
+    ASSERT_EQ(ti3->get_valid_epoch(), ti4->get_valid_epoch());
+    epoch::set_perm_to_proc(-1);
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));

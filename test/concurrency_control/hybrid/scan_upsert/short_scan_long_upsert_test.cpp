@@ -185,8 +185,9 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
                             transaction_options::transaction_type::LONG,
                             {st_x}}));
         epoch::set_perm_to_proc(1);
+        auto old_epoch = epoch::get_global_epoch();
         epoch::get_ep_mtx().unlock();
-        wait_epoch_update();
+        while (old_epoch == epoch::get_global_epoch()) { _mm_pause(); }
         ASSERT_EQ(epoch::get_perm_to_proc(), 0);
         auto* ltx1s = static_cast<session*>(ltx1);
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();

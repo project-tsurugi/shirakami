@@ -96,26 +96,15 @@ void epoch_thread_work() {
             // coordination with ltx
             auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
             std::unique_lock<std::mutex> lk{get_ep_mtx()};
-            for (;;) {
-                auto ptp{epoch::get_perm_to_proc()};
-                if (ptp < -1) {
-                    LOG(ERROR) << log_location_prefix << log_location_prefix
-                               << "unreachable path.";
-                    return;
-                }
-                if (ptp == -1) {
-                    // ptp invalid
-                    break;
-                }
-                if (ptp == 0) {
-                    // wait to lock release
-                    _mm_pause();
-                } else {
-                    // ptp allow epoch inclement
-                    epoch::set_perm_to_proc(ptp - 1);
-                    break;
-                }
-            }
+            auto ptp{epoch::get_perm_to_proc()};
+            // -1: ptp invalid
+            // 0: no work to proceed
+            if (ptp == 0) { continue; } // no work
+            if (ptp < -1) {
+                LOG(ERROR) << log_location_prefix << log_location_prefix
+                           << "unreachable path.";
+                return;
+            } 
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
@@ -124,6 +113,11 @@ void epoch_thread_work() {
             // change also datastore's epoch
             switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
 #endif
+            // compute for debug tools
+            if (ptp > 0) {
+                // ptp allow epoch inclement
+                epoch::set_perm_to_proc(ptp - 1);
+            }
             // dtor : release wp_mutex
         }
         check_epoch_load_and_update_idle_living_tx();
