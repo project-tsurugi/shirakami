@@ -28,7 +28,8 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 /**
  * @brief Global epoch time. Default is 40 ms.
  */
-[[maybe_unused]] inline std::atomic<std::size_t> global_epoch_time_ms{40};
+[[maybe_unused]] inline std::atomic<std::size_t> global_epoch_time_ms{
+        40}; // NOLINT
 
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
