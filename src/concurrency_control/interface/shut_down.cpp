@@ -45,10 +45,14 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
      * background worker about commit may access global data (object), so it 
      * must execute before cleanup environment.
      */
+    VLOG(log_debug) << log_location_prefix << ":shutdown:start_bg_commit";
     bg_work::bg_commit::fin();
+    VLOG(log_debug) << log_location_prefix << ":shutdown:end_bg_commit";
 
     // about datastore
 #if defined(PWAL)
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:start_send_txlog_wait_durable";
     lpwal::fin(); // stop damon
     if (!force_shut_down_logging) {
         // flush remaining log
@@ -60,27 +64,46 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
             _mm_pause();
         }
     }
-
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:end_send_txlog_wait_durable";
 #endif
 
     // about tx engine
+    VLOG(log_debug) << log_location_prefix << ":shutdown:start_gc";
     garbage::fin();
+    VLOG(log_debug) << log_location_prefix << ":shutdown:end_gc";
     epoch::fin();
 #ifdef PWAL
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:start_shutdown_datastore";
     datastore::get_datastore()->shutdown(); // this should after epoch::fin();
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:end_shutdown_datastore";
     // cleanup about limestone
     if (!lpwal::get_log_dir_pointed()) {
         // log dir was not pointed. So remove log dir
+        VLOG(log_debug) << log_location_prefix
+                        << ":shutdown:start_cleanup_logdir";
         lpwal::remove_under_log_dir();
+        VLOG(log_debug) << log_location_prefix
+                        << ":shutdown:end_cleanup_logdir";
     }
     lpwal::clean_up_metadata();
 #endif
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:start_delete_all_records";
     delete_all_records(); // This should be before wp::fin();
-    wp::fin();            // note: this use yakushima.
-    storage::fin();       // note: this use yakushima. delete meta storage.
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:end_delete_all_records";
+    wp::fin();      // note: this use yakushima.
+    storage::fin(); // note: this use yakushima. delete meta storage.
 
     // about index
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:start_shutdown_yakushima";
     yakushima::fin();
+    VLOG(log_debug) << log_location_prefix
+                    << ":shutdown:end_shutdown_yakushima";
 
     // clear flag
     set_initialized(false);
