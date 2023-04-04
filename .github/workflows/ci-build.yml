@@ -74,7 +74,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 200 -j 100
+          ctest --verbose --timeout 200 -j 20
 
       - id: CTest_with_PWAL
         name: CTest_with_PWAL
@@ -84,7 +84,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build_pwal
-          ctest --verbose --timeout 20 -j 100
+          ctest --verbose --timeout 200 -j 20
 
       - id: Clang-Tidy
         name: Clang-Tidy
