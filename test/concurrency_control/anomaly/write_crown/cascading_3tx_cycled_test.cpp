@@ -541,12 +541,16 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 10
     // lolo
     // ltx begin
+    epoch::set_perm_to_proc(1);
+    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
+    epoch::set_perm_to_proc(epoch::ptp_init_val); // epoch unlocked
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));

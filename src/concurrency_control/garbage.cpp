@@ -172,8 +172,9 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     rec_ptr->get_key(kb);
     rc = remove(ytk, st, kb);
     if (rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << log_location_prefix
-                   << "unreachable path";
+        LOG(ERROR) << log_location_prefix
+                   << "unreachable path: it can't find the record on yakushima,"
+                      "it is unexpected.";
         return Status::ERR_FATAL;
     }
 
@@ -196,8 +197,8 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
         return;
     }
     if (rc == Status::ERR_FATAL) {
-        LOG(ERROR) << log_location_prefix << log_location_prefix
-                   << "unreachable path";
+        LOG(ERROR) << log_location_prefix
+                   << "unreachable path: it may be programming error.";
         return;
     }
 
