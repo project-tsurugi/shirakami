@@ -174,7 +174,7 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     if (rc != Status::OK) {
         LOG(ERROR) << log_location_prefix
                    << "unreachable path: it can't find the record on yakushima,"
-                      "it is unexpected.";
+                      "it is unexpected. yakushima return code: " << rc;
         return Status::ERR_FATAL;
     }
 
