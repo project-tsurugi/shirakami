@@ -40,7 +40,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(tsurugi_issue106_2, DISABLED_20230328_comment_tanabe) { // NOLINT
+TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     int n = 99;
     Storage st{};
     ASSERT_OK(create_storage("", st));

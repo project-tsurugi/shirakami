@@ -606,7 +606,10 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
 
 Status node_verify(session* ti) {
     for (auto&& itr : ti->get_node_set()) {
-        if (std::get<0>(itr) != std::get<1>(itr)->get_stable_version()) {
+        auto old_id = std::get<0>(itr);
+        auto current_id = std::get<1>(itr)->get_stable_version();
+        if (old_id.get_vinsert_delete() != current_id.get_vinsert_delete() ||
+            old_id.get_vsplit() != current_id.get_vsplit()) {
             unlock_write_set(ti);
             short_tx::abort(ti);
             return Status::ERR_CC;
