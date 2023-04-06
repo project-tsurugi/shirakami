@@ -66,6 +66,7 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     if (handle == undefined_handle) { return Status::WARN_INVALID_HANDLE; }
     auto rc{TxState::find_and_get_tx_state(handle, out)};
     if (rc == Status::WARN_INVALID_HANDLE) { return rc; }
+    // handle is valid
     auto& ts{TxState::get_tx_state(handle)};
     // short tx
     if (out.get_serial_epoch() == 0) {
@@ -87,8 +88,12 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     // long tx
     if (out.get_serial_epoch() <= epoch::get_global_epoch()) {
         if (ts.state_kind() == TxState::StateKind::WAITING_START) {
-            ts.set_kind(TxState::StateKind::STARTED);  // for internal
-            out.set_kind(TxState::StateKind::STARTED); // for external
+            // check high priori stx
+            auto* ti = static_cast<session*>(ts.get_token());
+            if (ti->find_high_priority_short() != Status::WARN_PREMATURE) {
+                ts.set_kind(TxState::StateKind::STARTED);  // for internal
+                out.set_kind(TxState::StateKind::STARTED); // for external
+            }                                              // else : premature
         } else if (ts.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) {
             // waiting for commit by background worker.
             out.set_kind(TxState::StateKind::WAITING_CC_COMMIT); // for external
