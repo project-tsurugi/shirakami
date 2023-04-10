@@ -306,10 +306,12 @@ Status storage::delete_storage(Storage storage) {
         // single thread clean up
         for (auto&& itr : scan_res) {
             if (wp::get_finalizing()) {
-                delete *reinterpret_cast<wp::page_set_meta**>( // NOLINT
+                delete reinterpret_cast<wp::page_set_meta*>( // NOLINT
                         std::get<v_index>(itr));
             } else {
-                Record* target_rec{*std::get<v_index>(itr)};
+                Record* target_rec{reinterpret_cast<Record*>( // NOLINT
+                        std::get<v_index>(itr))};
+                // by inline optimization
                 delete target_rec; // NOLINT
             }
         }
@@ -322,7 +324,8 @@ Status storage::delete_storage(Storage storage) {
                     delete *reinterpret_cast<wp::page_set_meta**>( // NOLINT
                             std::get<v_index>(scan_res[i]));
                 } else {
-                    Record* target_rec{*std::get<v_index>(scan_res[i])};
+                    Record* target_rec{reinterpret_cast<Record*>( // NOLINT
+                            std::get<v_index>(scan_res[i]))};
                     delete target_rec; // NOLINT
                 }
             }
@@ -357,7 +360,8 @@ Status storage::delete_storage(Storage storage) {
                        << std::endl;
             return Status::ERR_FATAL;
         }
-        delete *out.first; // NOLINT
+        delete reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT
+        // by inline optimization
         rc = yakushima::remove(
                 ytoken,
                 {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT

@@ -59,7 +59,8 @@ Status check_not_found(
     head_skip_rec_n = 0;
     bool once_not_skip{false};
     for (auto& elem : scan_res) {
-        Record* rec_ptr{*std::get<1>(elem)};
+        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
+        // by inline optimization
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // inserted page.
@@ -272,7 +273,9 @@ Status open_scan(Token const token, Storage storage,
             sh.get_scan_cache()[handle]);
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        vec.emplace_back(*std::get<index_rec_ptr>(scan_res.at(i)),
+        vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
+                                 std::get<index_rec_ptr>(scan_res.at(i))),
+                         // by inline optimization
                          std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
                          std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
     }

@@ -352,7 +352,7 @@ static inline void register_wp_result_and_remove_wps(
 
         // register wp result and remove wp
         if (Status::OK !=
-            (*out.first)
+            (reinterpret_cast<wp::page_set_meta*>(out.first)) // NOLINT
                     ->get_wp_meta_ptr()
                     ->register_wp_result_and_remove_wp(std::make_tuple(
                             ti->get_valid_epoch(), ti->get_long_tx_id(),
@@ -656,15 +656,15 @@ extern Status commit(session* const ti) {
             wait_for_str.append(std::to_string(elem) + ", ");
         }
         VLOG(log_trace) << log_location_prefix_detail_info
-                         << "commit request accept, LTX, tx id: "
-                         << ti->get_long_tx_id()
-                         << ", wait for ltx id: " << wait_for_str;
+                        << "commit request accept, LTX, tx id: "
+                        << ti->get_long_tx_id()
+                        << ", wait for ltx id: " << wait_for_str;
     }
     // log debug timing event
     std::string str_tx_id{};
     get_tx_id(static_cast<Token>(ti), str_tx_id);
     VLOG(log_debug) << log_location_prefix << str_tx_id << ": "
-                     << "ltx start to check wait";
+                    << "ltx start to check wait";
 
     /**
      * WP2: If it is possible to prepend the order, it waits for a transaction 
@@ -678,7 +678,7 @@ extern Status commit(session* const ti) {
             // start wait
             // log debug timing event
             VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                          << "start_wait : " << str_tx_id;
+                                         << "start_wait : " << str_tx_id;
 
             // record requested
             ti->set_requested_commit(true);
@@ -690,7 +690,7 @@ extern Status commit(session* const ti) {
 
     // log debug timing event
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                  << "start_verify : " << str_tx_id;
+                                 << "start_verify : " << str_tx_id;
 
     // verify : start
     rc = verify(ti);
@@ -699,7 +699,7 @@ extern Status commit(session* const ti) {
         // verfy fail
         // log debug timing event
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                      << "start_abort : " << str_tx_id;
+                                     << "start_abort : " << str_tx_id;
         abort(ti);
     } else if (rc == Status::OK) {
         // This tx must success.
@@ -746,9 +746,8 @@ extern Status commit(session* const ti) {
         ti->commit_sequence(ctid);
 
         // log debug timing event
-        VLOG(log_debug_timing_event)
-                << log_location_prefix_timing_event
-                << "start_process_logging : " << str_tx_id;
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "start_process_logging : " << str_tx_id;
 
 #if defined(PWAL)
         auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
@@ -782,8 +781,8 @@ extern Status commit(session* const ti) {
     // detail info
     if (logging::get_enable_logging_detail_info()) {
         VLOG(log_trace) << log_location_prefix_detail_info
-                         << "commit request processed, LTX, tx id: "
-                         << ti->get_long_tx_id() << ", return code: " << rc;
+                        << "commit request processed, LTX, tx id: "
+                        << ti->get_long_tx_id() << ", return code: " << rc;
     }
     return rc;
 }

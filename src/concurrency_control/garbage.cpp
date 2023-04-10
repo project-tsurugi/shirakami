@@ -174,7 +174,8 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     if (rc != Status::OK) {
         LOG(ERROR) << log_location_prefix
                    << "unreachable path: it can't find the record on yakushima,"
-                      "it is unexpected. yakushima return code: " << rc;
+                      "it is unexpected. yakushima return code: "
+                   << rc;
         return Status::ERR_FATAL;
     }
 
@@ -237,7 +238,8 @@ inline void unhooking_keys_and_pruning_versions(Storage st) {
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
     for (auto&& sr : scan_res) {
-        unhooking_keys_and_pruning_versions(ytk, st, *std::get<1>(sr));
+        unhooking_keys_and_pruning_versions(
+                ytk, st, reinterpret_cast<Record*>(std::get<1>(sr))); // NOLINT
         if (get_flag_cleaner_end()) { break; }
     }
     yakushima::leave(ytk);

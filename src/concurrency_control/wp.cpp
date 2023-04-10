@@ -89,7 +89,8 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
         ret = nullptr;
         return Status::WARN_NOT_FOUND;
     }
-    ret = *out.first;
+    ret = reinterpret_cast<page_set_meta*>(out.first); // NOLINT
+    // by inline optimization
     return Status::OK;
 }
 
@@ -170,7 +171,9 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             ti->get_result_info().set_storage_name(wp_target);
             return Status::WARN_INVALID_ARGS;
         }
-        wp_meta* target_wp_meta = (*out.first)->get_wp_meta_ptr();
+        wp_meta* target_wp_meta =
+                (reinterpret_cast<page_set_meta*>(out.first)) // NOLINT
+                        ->get_wp_meta_ptr();
         if (target_wp_meta->register_wp(valid_epoch, long_tx_id) !=
             Status::OK) {
             cleanup_process();
