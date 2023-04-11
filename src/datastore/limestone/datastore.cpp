@@ -217,7 +217,8 @@ void scan_all_and_logging() {
         if (rc == Status::OK) {
             // It found some records
             for (auto&& each_rec : scan_res) {
-                Record* rec_ptr{*std::get<1>(each_rec)};
+                Record* rec_ptr{reinterpret_cast<Record*>( // NOLINT
+                        std::get<1>(each_rec))};
                 // get key val info.
                 std::string key{};
                 rec_ptr->get_key(key);
