@@ -41,7 +41,7 @@ private:
 };
 
 TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
-    int n = 99;
+    int n = 99;                                       // NOLINT
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s{};
@@ -64,14 +64,14 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     ASSERT_OK(leave(s));
 
     // scan delete nodes -> remember not_found
-    for (int loop = 5; loop > 0; loop--) {
-        ScanHandle scan;
+    for (int loop = 5; loop > 0; loop--) { // NOLINT
+        ScanHandle scan{};
         ASSERT_OK(enter(s));
         ASSERT_EQ(open_scan(s, st, "1", scan_endpoint::INCLUSIVE,
                             std::to_string(n), scan_endpoint::INCLUSIVE, scan),
                   Status::WARN_NOT_FOUND);
         LOG(INFO) << loop;
-        usleep(100000); // may run GC
+        usleep(100000); // may run GC // NOLINT
         auto rc = commit(s);
         if (rc != Status::OK) {
             auto* ti = static_cast<session*>(s);

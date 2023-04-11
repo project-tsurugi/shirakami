@@ -1,5 +1,6 @@
 build-essential
 clang-tidy-8
+clang-tidy-10
 cmake
 doxygen
 gcovr

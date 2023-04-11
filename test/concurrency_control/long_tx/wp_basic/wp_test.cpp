@@ -60,7 +60,7 @@ TEST_F(wp_test, wp_meta_basic) { // NOLINT
               yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
                                                  storage_view, out));
     ASSERT_NE(out.first, nullptr);
-    wp::page_set_meta* psmptr =
+    auto* psmptr =
             reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT
     wp::wp_meta* wp_ptr = psmptr->get_wp_meta_ptr();
     ASSERT_NE(wp_ptr, nullptr);

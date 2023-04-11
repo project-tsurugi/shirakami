@@ -51,13 +51,13 @@ private:
 
 std::string mk_key(int i) {
     std::stringstream x;
-    x << std::setw(11) << i;
+    x << std::setw(11) << i; // NOLINT
     return x.str();
 }
 
 TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
     auto pred_wait = [](int i) {
-        return (i == 7 || i == 8 || i == 63 || i == 64);
+        return (i == 7 || i == 8 || i == 63 || i == 64); // NOLINT
     };
 
     Storage st{};
@@ -66,7 +66,7 @@ TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
 
     // setup nodes [1, records]
     ASSERT_OK(enter(s));
-    int records = 136; // needs >= 136
+    int records = 136; // needs >= 136 // NOLINT
     for (int i = 1; i <= records; i++) {
         ASSERT_OK(insert(s, st, mk_key(i), ""));
     }
@@ -76,15 +76,15 @@ TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
     LOG(INFO) << "all vinsert_delete must not be changed after this.";
 
     // repeat deleting records from tail
-    for (int i = records; i > 0; i--) {
-        ScanHandle scan;
+    for (int i = records; i > 0; i--) { // NOLINT
+        ScanHandle scan{};
         ASSERT_OK(enter(s));
         ASSERT_OK(open_scan(s, st, mk_key(i), scan_endpoint::INCLUSIVE,
                             mk_key(i + 1), scan_endpoint::EXCLUSIVE, scan));
         if (pred_wait(i)) {
-            usleep(100 * 1000); // may run GC
+            usleep(100 * 1000); // may run GC // NOLINT
         }
-        std::string key;
+        std::string key{};
         ASSERT_OK(read_key_from_scan(s, scan, key));
         ASSERT_OK(delete_record(s, st, key));
         ASSERT_EQ(next(s, scan), Status::WARN_SCAN_LIMIT);
