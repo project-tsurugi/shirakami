@@ -139,8 +139,6 @@ Status init(database_options options) { // NOLINT
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
         datastore::recovery_from_datastore();
-        // logging the shirakami state after recovery
-        datastore::scan_all_and_logging(); // todo remove?
     }
 #endif
 
