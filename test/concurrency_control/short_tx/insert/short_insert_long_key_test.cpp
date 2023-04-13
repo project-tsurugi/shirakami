@@ -56,7 +56,7 @@ TEST_F(short_insert_long_key, long_key_insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(short_insert_long_key, over_35kb_key_insert) { // NOLINT
+TEST_F(short_insert_long_key, over_30kb_key_insert) { // NOLINT
     create_storage("", storage);
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};

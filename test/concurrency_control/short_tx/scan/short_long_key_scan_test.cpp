@@ -37,7 +37,7 @@ private:
 TEST_F(long_key_scan_test, long_key_scan) { // NOLINT
     Storage st{};
     create_storage("", st);
-    std::string k(1024 * 35, 'A'); // works fine with 35K // NOLINT
+    std::string k(1024 * 30, 'A'); // works fine with 30K // NOLINT
     //std::string k(1024 * 36, 'A'); // scan failed with 36K
     std::string v("a"); // NOLINT
     Token s{};

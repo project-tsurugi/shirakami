@@ -39,7 +39,7 @@ private:
 TEST_F(short_update_long_key, long_key_update) { // NOLINT
     Storage st{};
     create_storage("", st);
-    std::string k(1024 * 35, '0'); // NOLINT
+    std::string k(1024 * 30, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, k, "v"));
@@ -47,7 +47,7 @@ TEST_F(short_update_long_key, long_key_update) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(short_update_long_key, over_35kb_key_update) { // NOLINT
+TEST_F(short_update_long_key, over_30kb_key_update) { // NOLINT
     Storage st{};
     create_storage("", st);
     std::string k(1024 * 36, '0'); // NOLINT

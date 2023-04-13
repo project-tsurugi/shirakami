@@ -41,8 +41,8 @@ private:
 TEST_F(long_upsert_long_key, long_key_upsert) { // NOLINT
     Storage st{};
     create_storage("", st);
-    // upsert 35KB key
-    std::string k(1024 * 35, '0'); // NOLINT
+    // upsert 30KB key
+    std::string k(1024 * 30, '0'); // NOLINT
     std::string v("v");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -54,7 +54,7 @@ TEST_F(long_upsert_long_key, long_key_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_upsert_long_key, over_35kb_key_upsert) { // NOLINT
+TEST_F(long_upsert_long_key, over_30kb_key_upsert) { // NOLINT
     Storage st{};
     create_storage("", st);
     // upsert 36KB key

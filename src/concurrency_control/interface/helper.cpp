@@ -40,8 +40,8 @@ namespace shirakami {
 
 Status check_constraint_key_length(std::string_view const key) {
     // check constraint: key
-    if (key.size() > 35 * 1024) { // NOLINT
-        // we can't control over 35KB key.
+    if (key.size() > 30 * 1024) { // NOLINT
+        // we can't control over 30KB key.
         return Status::WARN_INVALID_KEY_LENGTH;
     }
 

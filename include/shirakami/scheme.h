@@ -138,7 +138,7 @@ enum class Status : std::int32_t {
     WARN_INVALID_HANDLE,
     /**
      * @brief Warning.
-     * @details The key is too long which we can't control (>35KB).
+     * @details The key is too long which we can't control (>30KB).
      */
     WARN_INVALID_KEY_LENGTH,
     /**

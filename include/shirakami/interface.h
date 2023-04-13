@@ -113,7 +113,7 @@ extern Status check_commit(Token token); // NOLINT
  * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
  * read only mode.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND The target page is not found or deleted.
  * @return Status::WARN_PREMATURE The long transaction must wait until the 
  * changing epoch to query some operation.
@@ -149,7 +149,7 @@ extern Status enter(Token& token); // NOLINT
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
  * have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
@@ -207,7 +207,7 @@ extern Status init(database_options options = {}); // NOLINT
  * @return Status::WARN_CONCURRENT_INSERT This operation is canceled due to 
  * concurrent insert by other tx.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  */
 extern Status insert(Token token, Storage storage,
@@ -243,7 +243,7 @@ extern Status leave(Token token); // NOLINT
  * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
  * not preserve result due to capacity limitation.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But 
  * the fact that nothing was read is guaranteed by isolation.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
@@ -345,7 +345,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
  * have problem by WARN_NOT_FOUND, you should do abort.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
@@ -390,7 +390,7 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND The record is not found.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
@@ -410,7 +410,7 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
  * wp in batch mode.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 35KB.
+ * should be equal or less than 30KB.
  * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
  * is not found.
  */

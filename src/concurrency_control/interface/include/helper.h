@@ -18,7 +18,7 @@ namespace shirakami {
 inline std::atomic<bool> initialized_{false};
 
 /**
- * @brief It checks constraint about key length (<35KB).
+ * @brief It checks constraint about key length (<30KB).
  * @param key 
  * @return Status::OK This key is valid.
  * @return Status::WARN_INVALID_KEY_LENGTH This key is invalid.

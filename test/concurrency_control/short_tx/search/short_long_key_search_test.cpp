@@ -54,7 +54,7 @@ TEST_F(long_key_test, long_key_search) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_key_test, 35kb_key_search) { // NOLINT
+TEST_F(long_key_test, 30kb_key_search) { // NOLINT
                                          // prepare
     Storage st{};
     create_storage("", st);
@@ -63,7 +63,7 @@ TEST_F(long_key_test, 35kb_key_search) { // NOLINT
     std::string sb{};
     // test
     ASSERT_EQ(Status::WARN_NOT_FOUND,
-              search_key(s, st, std::string(1024 * 35, 'a'), sb));
+              search_key(s, st, std::string(1024 * 30, 'a'), sb));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

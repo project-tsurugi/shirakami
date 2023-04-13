@@ -38,11 +38,11 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(long_search_long_key, 35kb_key_search) { // NOLINT
+TEST_F(long_search_long_key, 30kb_key_search) { // NOLINT
     Storage st{};
     create_storage("", st);
-    // insert 35KB key
-    std::string k(1024 * 35, '0'); // NOLINT
+    // insert 30KB key
+    std::string k(1024 * 30, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
