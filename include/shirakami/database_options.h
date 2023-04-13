@@ -81,7 +81,7 @@ private:
     /**
      * @brief todo. now, 1 thread.
      */
-    std::size_t logger_thread_num_{0};
+    std::size_t logger_thread_num_{0}; // NOLINT
     // ==========
 
     // ==========
@@ -89,7 +89,7 @@ private:
     /**
      * @brief Parameter of epoch [ms]
      */
-    std::size_t epoch_time_{40};
+    std::size_t epoch_time_{40}; // NOLINT
     // ==========
 
     // ==========

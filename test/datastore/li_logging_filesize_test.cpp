@@ -81,7 +81,7 @@ TEST_F(li_logging_test,                          // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare data
-    for (std::size_t i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < 100; ++i) { // NOLINT
         ASSERT_EQ(Status::OK, upsert(s, st, std::to_string(i), "v"));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT // (*1)
     }
