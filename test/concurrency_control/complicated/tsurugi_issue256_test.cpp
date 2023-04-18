@@ -43,7 +43,7 @@ private:
 };
 
 TEST_F(tsurugi_issue256, 20230412_comment_ban) { // NOLINT
-    Storage st;
+    Storage st{};
     ASSERT_OK(create_storage("A", st));
     ::usleep(100 * 1000); // NOLINT
     ASSERT_OK(delete_storage(st));
