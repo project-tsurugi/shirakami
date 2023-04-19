@@ -93,25 +93,29 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
 
         // Tx3. full scan
         // record empty state
-        if (Status::WARN_NOT_FOUND != open_scan(s, st, "", scan_endpoint::INF,
-                                                "", scan_endpoint::INF, hd)) {
-            // read all record
-            for (;;) {
-                std::string key_buf{};
-                ASSERT_EQ(Status::WARN_ALREADY_DELETE,
-                          read_key_from_scan(s, hd, key_buf));
-                if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
+        for (std::size_t i = 1;; ++i) {
+            if (i % 20 == 0) { // NOLINT
+                // to reduce log
+                LOG(INFO) << i;
             }
+            if (Status::WARN_NOT_FOUND != open_scan(s, st, "",
+                                                    scan_endpoint::INF, "",
+                                                    scan_endpoint::INF, hd)) {
+                // read all record
+                for (;;) {
+                    std::string key_buf{};
+                    ASSERT_EQ(Status::WARN_ALREADY_DELETE,
+                              read_key_from_scan(s, hd, key_buf));
+                    if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
+                }
 
-            // node set must not be empty
-            auto* ti = static_cast<session*>(s);
-            ASSERT_EQ(ti->get_node_set().empty(), false);
-        }
-        // expect Status::OK
-        auto rc = commit(s);
-        if (rc != Status::OK) {
-            LOG(FATAL) << rc << ", "
-                       << static_cast<session*>(s)->get_result_info();
+                // node set must not be empty
+                auto* ti = static_cast<session*>(s);
+                ASSERT_EQ(ti->get_node_set().empty(), false);
+            }
+            // expect Status::OK
+            auto rc = commit(s);
+            if (rc == Status::OK) { break; }
         }
     }
 

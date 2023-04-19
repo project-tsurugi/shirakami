@@ -63,11 +63,12 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         std::string vb{};
         // this should find logical record deleted.
-        ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
+        ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
     wait_epoch_update(); // start gc
-    wait_epoch_update(); // wait process of gc thread
+    // wait process of gc thread
+    sleep(1);
     {
         // not change behavior
         std::string vb{};

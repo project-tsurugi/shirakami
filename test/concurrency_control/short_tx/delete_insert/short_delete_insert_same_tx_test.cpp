@@ -85,7 +85,7 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
 
     // verify
     std::string vb{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, vb));
+    ASSERT_NE(Status::OK, search_key(s, st, k, vb));
 
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

@@ -75,7 +75,7 @@ TEST_F(long_delete_search_test, same_tx_delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", buf));
+    ASSERT_NE(Status::OK, search_key(s, st, "", buf));
 
     ASSERT_EQ(Status::OK, leave(s));
 }

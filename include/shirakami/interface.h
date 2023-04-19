@@ -276,8 +276,7 @@ extern Status next(Token token, ScanHandle handle);
  * @param[out] key the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE This transaction already executed 
- * delete_record for the same page.
+ * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -301,8 +300,7 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @param[out] value  the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE This transaction already executed 
- * delete_record for the same page.
+ * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -340,6 +338,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
+ * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
  * other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 

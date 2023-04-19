@@ -11,7 +11,7 @@
 namespace shirakami {
 
 /**
- * @brief It is used by short tx's occ read
+ * @brief This is for optimistic read of occ.
  * 
  * @param rec_ptr 
  * @param tid 

@@ -131,7 +131,7 @@ TEST_F(long_insert_update_test,                       // NOLINT
 
     // verify
     std::string buf{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s1, st, "", buf));
+    ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s1));

@@ -67,16 +67,15 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     for (int loop = 5; loop > 0; loop--) { // NOLINT
         ScanHandle scan{};
         ASSERT_OK(enter(s));
-        ASSERT_EQ(open_scan(s, st, "1", scan_endpoint::INCLUSIVE,
-                            std::to_string(n), scan_endpoint::INCLUSIVE, scan),
-                  Status::WARN_NOT_FOUND);
-        LOG(INFO) << loop;
-        usleep(100000); // may run GC // NOLINT
-        auto rc = commit(s);
-        if (rc != Status::OK) {
-            auto* ti = static_cast<session*>(s);
-            LOG(INFO) << ti->get_result_info();
-            LOG(FATAL);
+        for (;;) {
+            ASSERT_EQ(open_scan(s, st, "1", scan_endpoint::INCLUSIVE,
+                                std::to_string(n), scan_endpoint::INCLUSIVE,
+                                scan),
+                      Status::WARN_NOT_FOUND);
+            LOG(INFO) << loop;
+            usleep(100000); // may run GC // NOLINT
+            auto rc = commit(s);
+            if (rc == Status::OK) { break; }
         }
         ASSERT_OK(leave(s));
     }

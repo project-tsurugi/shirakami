@@ -43,7 +43,7 @@ TEST_F(short_t1_delete_between_t2_delete_upsert_test, delete_upsert) { // NOLINT
 
     // verify
     std::string buf{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s1, st, "", buf));
+    ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // cleanup

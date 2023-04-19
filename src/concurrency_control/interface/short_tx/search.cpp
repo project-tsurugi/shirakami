@@ -58,17 +58,14 @@ Status search_key(session* ti, Storage const storage,
     std::string read_res{};
     // read version
     Status rs{read_record(rec_ptr, read_tid, read_res, read_value)};
-    if (rs == Status::OK) {
+    // it didn't read by others lock.
+    if (rs == Status::WARN_CONCURRENT_UPDATE) { return rs; }
+    // it did tx read.
+    if (rc == Status::OK) {
+        // it read normal page
         if (read_value) { value = read_res; }
-        ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
-        return Status::OK;
     }
-    if (rs == Status::WARN_ALREADY_DELETE) {
-        // it needs read verify
-        ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
-        // for low cost of code maintenance
-        return Status::WARN_NOT_FOUND;
-    }
+    ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
     return rs;
 }
 

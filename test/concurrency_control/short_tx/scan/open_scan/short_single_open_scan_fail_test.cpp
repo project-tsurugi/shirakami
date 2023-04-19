@@ -61,8 +61,8 @@ TEST_F(open_scan_fail_test, open_scan_find_no_index) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(open_scan_fail_test,                                          // NOLINT
-       open_scan_find_some_index_nothing_to_read_due_to_inserting) { // NOLINT
+TEST_F(open_scan_fail_test,             // NOLINT
+       open_scan_find_some_inserting) { // NOLINT
     Storage st{};
     create_storage("", st);
     Token s{};
@@ -73,8 +73,8 @@ TEST_F(open_scan_fail_test,                                          // NOLINT
     ScanHandle hd{};
 
     // test
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
-                                                "", scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
     /**
      * It's index scan find s2's inserting record only, but it is not be able 
      * to read immediately. So it should returns WARN_NOT_FOUND.

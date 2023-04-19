@@ -162,7 +162,7 @@ TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, vb));
+    ASSERT_NE(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

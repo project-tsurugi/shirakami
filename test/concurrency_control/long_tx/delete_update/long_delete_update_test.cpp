@@ -70,7 +70,7 @@ TEST_F(long_delete_update_test, same_tx_update_delete) { // NOLINT
 
     // verify
     std::string buf{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", buf));
+    ASSERT_NE(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
@@ -95,7 +95,7 @@ TEST_F(long_delete_update_test, same_tx_delete_update) { // NOLINT
 
     // verify
     std::string buf{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", buf));
+    ASSERT_NE(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));

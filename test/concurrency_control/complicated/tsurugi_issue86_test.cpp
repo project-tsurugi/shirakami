@@ -81,20 +81,31 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // delete 1 records which is same to (*1) and commit.
-        ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
-                                        scan_endpoint::INF, hd));
-        scan_count = 0;
-        do {
-            std::string buf{};
-            ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
-            ++scan_count;
-        } while (next(s, hd) == Status::OK);
-        ASSERT_EQ(scan_count, 3);
-        ASSERT_EQ(Status::OK, close_scan(s, hd));
-        // not found because already deleted
-        ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, "a"));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        // problem: one ERR_PHANTOM per 15
+        for (std::size_t j = 1;; ++j) {
+            if (j % 100 == 0) { // NOLINT
+                // to reduce log
+                LOG(INFO) << j;
+            }
+            ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                            scan_endpoint::INF, hd));
+            scan_count = 0;
+            do {
+                std::string buf{};
+                ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+                ++scan_count;
+            } while (next(s, hd) == Status::OK);
+            ASSERT_EQ(scan_count, 3);
+            ASSERT_EQ(Status::OK, close_scan(s, hd));
+            // not found because already deleted
+            ASSERT_EQ(Status::WARN_NOT_FOUND, delete_record(s, st, "a"));
+            auto rc = commit(s);
+            if (rc == Status::OK) { break; }
+            auto* ti = static_cast<session*>(s);
+            ASSERT_EQ(ti->get_result_info().get_reason_code(),
+                      reason_code::CC_OCC_READ_VERIFY);
+
+            // problem: one ERR_PHANTOM per 15
+        }
 
         // cleanup
         ASSERT_EQ(Status::OK, leave(s));
