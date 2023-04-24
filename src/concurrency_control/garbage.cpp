@@ -147,7 +147,6 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
 
     // w lock
     rec_ptr->get_tidw_ref().lock(true);
-    //sleep(1); // todo remove. for develop about tsurugi issue 259.
     // reload ts
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
 
