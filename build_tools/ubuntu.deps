@@ -1,4 +1,5 @@
 build-essential
+ccache
 clang-tidy-8
 clang-tidy-10
 cmake
