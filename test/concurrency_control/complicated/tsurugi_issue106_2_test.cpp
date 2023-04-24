@@ -42,6 +42,7 @@ private:
 
 TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     int n = 99;                                       // NOLINT
+    LOG(INFO) << sizeof(tid_word);
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s{};
@@ -76,6 +77,8 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
             usleep(100000); // may run GC // NOLINT
             auto rc = commit(s);
             if (rc == Status::OK) { break; }
+            auto* ti = static_cast<session*>(s);
+            LOG(INFO) << ti->get_result_info();
         }
         ASSERT_OK(leave(s));
     }

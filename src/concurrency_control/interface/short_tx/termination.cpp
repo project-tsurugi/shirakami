@@ -184,6 +184,11 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
 
+        while (check.get_lock_by_gc()) {
+            // gc takes locks equal or less than one lock.
+            check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+        }
+
         // verify
         // ==============================
         if (read_verify(ti, itr.get_storage(), itr.get_tid(), check, rec_ptr) !=

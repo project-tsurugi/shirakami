@@ -19,9 +19,10 @@ public:
         uint64_t obj_;
         struct {
             bool lock_ : 1;
+            bool lock_by_gc_ : 1;
             bool latest_ : 1;
             bool absent_ : 1;
-            uint64_t tid_ : 29;         // NOLINT
+            std::uint64_t tid_ : 28;    // NOLINT
             epoch::epoch_t epoch_ : 32; // NOLINT
         };
     };
@@ -63,7 +64,13 @@ public:
 
     bool get_lock() { return lock_; } // NOLINT
 
+    bool get_lock_by_gc() { return lock_by_gc_; } // NOLINT
+
     [[maybe_unused]] bool get_lock() const { return lock_; } // NOLINT
+
+    [[maybe_unused]] [[nodiscard]] bool get_lock_by_gc() const {
+        return lock_by_gc_; // NOLINT
+    }
 
     [[maybe_unused]] bool get_latest() { return latest_; } // NOLINT
 
@@ -97,6 +104,8 @@ public:
 
     void set_lock(const bool lock) { this->lock_ = lock; } // NOLINT
 
+    void set_lock_by_gc(const bool lock) { this->lock_by_gc_ = lock; } // NOLINT
+
     void set_obj(const uint64_t obj) { this->obj_ = obj; } // NOLINT
 
     [[maybe_unused]] void set_tid(const uint64_t tid) {
@@ -105,7 +114,7 @@ public:
 
     void display();
 
-    void lock() {
+    void lock(bool by_gc = false) { // NOLINT
         tid_word expected;
         tid_word desired;
         expected.get_obj() = loadAcquire(get_obj());
@@ -116,6 +125,7 @@ public:
             } else {
                 desired = expected;
                 desired.set_lock(true);
+                desired.set_lock_by_gc(by_gc);
                 if (compareExchange(get_obj(), expected.get_obj(),
                                     desired.get_obj())) {
                     break;
@@ -130,6 +140,7 @@ public:
     void unlock() {
         tid_word new_tid = get_obj();
         new_tid.set_lock(false);
+        new_tid.set_lock_by_gc(false);
         storeRelease(get_obj(), new_tid.get_obj());
     }
 
@@ -137,9 +148,9 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
-    out << "lock_:" << tid.get_lock() << ", latest_:" << tid.get_latest()
-        << ", absent_:" << tid.get_absent() << ", tid_:" << tid.get_tid()
-        << ", epoch_:" << tid.get_epoch();
+    out << "lock_:" << tid.get_lock() << ", lock_by_gc:" << tid.get_lock_by_gc()
+        << ", latest_:" << tid.get_latest() << ", absent_:" << tid.get_absent()
+        << ", tid_:" << tid.get_tid() << ", epoch_:" << tid.get_epoch();
     return out;
 }
 
