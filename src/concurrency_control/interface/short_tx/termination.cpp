@@ -186,6 +186,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
 
         while (check.get_lock_by_gc()) {
             // gc takes locks equal or less than one lock.
+            _mm_pause();
             check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
         }
 
