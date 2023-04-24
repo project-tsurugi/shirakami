@@ -21,7 +21,7 @@ Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
                                      sizeof(st)},
                                     key, out)};
     if (rc == yakushima::status::OK) {
-        rec_ptr = reinterpret_cast<Record*>(out.first);
+        rec_ptr = reinterpret_cast<Record*>(out.first); // NOLINT
         // by inline optimization
         return Status::OK;
     }
