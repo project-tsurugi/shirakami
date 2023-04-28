@@ -86,4 +86,48 @@ TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(tsurugi_issue247, DISABLED_20230427_for_comment_ban) { // NOLINT
+    fin();
+    database_options options{};
+    options.set_epoch_time(1);
+    init(options);
+
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1)); // short
+    ASSERT_EQ(Status::OK, enter(s2)); // long
+
+    // make s1 large tx
+    for (std::size_t i = 0; i < 1000; ++i) {
+        std::string_view key(reinterpret_cast<char*>(&i), sizeof(i)); // NOLINT
+        ASSERT_EQ(Status::OK, insert(s1, st, key, ""));
+    }
+
+    auto s1_commit_work = [s1, st]() {
+        commit(s1); // NOLINT
+    };
+    auto th_1 = std::thread(s1_commit_work);
+
+    // s1 is high priori against s2
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
+    wait_epoch_update(); // epoch change
+    TxStateHandle hd{};
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s2, hd));
+    // default is started
+
+    TxState buf{};
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    if (buf.state_kind() == TxState::StateKind::STARTED) {
+        std::string val_buf{};
+        ASSERT_NE(Status::WARN_PREMATURE, search_key(s2, st, "", val_buf));
+    }
+
+    th_1.join();
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
