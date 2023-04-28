@@ -33,7 +33,7 @@ public:
     } // NOLINT : clang-tidy order to initialize other member, but
     // it occurs compile error.
     tid_word(const uint64_t obj) { obj_ = obj; } // NOLINT : the same as above.
-    tid_word(const tid_word& right)              // NOLINT
+    tid_word(const tid_word& right) noexcept     // NOLINT
         : obj_(right.get_obj()) {}               // NOLINT : the same as above.
 
     tid_word& operator=(const tid_word& right) { // NOLINT
