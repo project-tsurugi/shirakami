@@ -100,12 +100,12 @@ TEST_F(tsurugi_issue247, 20230427_for_comment_ban) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2)); // long
 
     // make s1 large tx
-    for (std::size_t i = 0; i < 1000; ++i) {
+    for (std::size_t i = 0; i < 1000; ++i) { // NOLINT
         std::string_view key(reinterpret_cast<char*>(&i), sizeof(i)); // NOLINT
         ASSERT_EQ(Status::OK, insert(s1, st, key, ""));
     }
 
-    auto s1_commit_work = [s1, st]() {
+    auto s1_commit_work = [s1]() {
         commit(s1); // NOLINT
     };
     auto th_1 = std::thread(s1_commit_work);
