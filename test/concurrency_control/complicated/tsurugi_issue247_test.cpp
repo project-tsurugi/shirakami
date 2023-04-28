@@ -86,7 +86,7 @@ TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(tsurugi_issue247, DISABLED_20230427_for_comment_ban) { // NOLINT
+TEST_F(tsurugi_issue247, 20230427_for_comment_ban) { // NOLINT
     fin();
     database_options options{};
     options.set_epoch_time(1);
@@ -120,10 +120,13 @@ TEST_F(tsurugi_issue247, DISABLED_20230427_for_comment_ban) { // NOLINT
 
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-    if (buf.state_kind() == TxState::StateKind::STARTED) {
-        std::string val_buf{};
-        ASSERT_NE(Status::WARN_PREMATURE, search_key(s2, st, "", val_buf));
+    while (buf.state_kind() == TxState::StateKind::WAITING_START) {
+        _mm_pause();
+        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     }
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
+    std::string val_buf{};
+    ASSERT_NE(Status::WARN_PREMATURE, search_key(s2, st, "", val_buf));
 
     th_1.join();
     ASSERT_EQ(Status::OK, leave(s1));

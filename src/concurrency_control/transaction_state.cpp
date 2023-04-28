@@ -11,13 +11,16 @@ namespace shirakami {
 
 Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
     auto* ti{static_cast<session*>(token)};
+    // check whether it already begun.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
+    // check whether it already get tx state.
     if (ti->get_has_current_tx_state_handle()) {
         handle = ti->get_current_tx_state_handle();
         return Status::WARN_ALREADY_EXISTS;
     }
 
+    // generate tx state handle
     ti->set_has_current_tx_state_handle(true);
     TxStateHandle hd{TxState::get_new_handle_ctr()};
     ti->set_current_tx_state_handle(hd);
@@ -34,7 +37,11 @@ Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
                ti->get_tx_type() ==
                        transaction_options::transaction_type::READ_ONLY) {
         ts.set_serial_epoch(static_cast<std::uint64_t>(ti->get_valid_epoch()));
-        if (ti->get_valid_epoch() > epoch::get_global_epoch()) {
+        if (
+                // wait staging
+                ti->get_valid_epoch() > epoch::get_global_epoch() ||
+                // wait high priori short
+                ti->find_high_priority_short() == Status::WARN_PREMATURE) {
             ts.set_kind(TxState::StateKind::WAITING_START);
         } else {
             ts.set_kind(TxState::StateKind::STARTED);
