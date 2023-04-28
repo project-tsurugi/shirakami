@@ -111,6 +111,12 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 #endif
         // try to get stable tidword.
         while (f_check.get_lock()) {
+            if (f_check.get_lock_by_gc()) {
+                // gc don't lock for long time, so it waits.
+                _mm_pause();
+                continue;
+            }
+
             if (logging::get_enable_logging_detail_info()) {
                 // logging detail info
                 VLOG(log_trace) << log_location_prefix_detail_info
