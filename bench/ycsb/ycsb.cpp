@@ -26,7 +26,7 @@
 // shirakami/bench
 #include "build_db.h"
 #include "gen_key.h"
-#include "gen_tx.h"
+#include "ycsb/include/gen_tx.h"
 
 // shirakami/src/include
 #include "atomic_wrapper.h"
@@ -56,6 +56,7 @@ DEFINE_uint64( // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
 DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
+DEFINE_string(ops_write_type, "update", "type of write operation.");   // NOLINT
 DEFINE_uint64(record, 10, "# database records(tuples).");              // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");         // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
@@ -99,8 +100,9 @@ static void invoke_leader() {
         thv.emplace_back(worker, i, std::ref(readys[i]), std::ref(start),
                          std::ref(quit), std::ref(res));
     }
+    LOG(INFO) << "start waitForReady";
     waitForReady(readys);
-    printf("start ycsb exp.\n"); // NOLINT
+    LOG(INFO) << "start ycsb exp.";
     storeRelease(start, true);
 #if 0
     for (size_t i = 0; i < FLAGS_duration; ++i) {
@@ -151,6 +153,15 @@ static void load_flags() {
                    << "Number of operations in a transaction must be larger "
                       "than 0.";
     }
+
+    // ops_write_typea
+    printf("FLAGS_ops_write_type : %s\n", // NOLINT
+           FLAGS_ops_write_type.data());  // NOLINT
+    if (FLAGS_ops_write_type != "update" && FLAGS_ops_write_type != "insert" &&
+        FLAGS_ops_write_type != "readmodifywrite") {
+        LOG(ERROR) << log_location_prefix << "Invalid type of wriet operation.";
+    }
+
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
@@ -204,10 +215,13 @@ int main(int argc, char* argv[]) try { // NOLINT
     gflags::SetUsageMessage(static_cast<const std::string&>(
             "YCSB benchmark for shirakami")); // NOLINT
     gflags::ParseCommandLineFlags(&argc, &argv, true);
+    FLAGS_stderrthreshold = 0; // to display info log
     load_flags();
 
     init(); // NOLINT
+    LOG(INFO) << "start build_db";
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length, FLAGS_thread);
+    LOG(INFO) << "start invoke_leader";
     invoke_leader();
     fin();
 
@@ -228,6 +242,7 @@ void waitForReady(const std::vector<char>& readys) {
 void worker(const std::size_t thid, char& ready, const bool& start,
             const bool& quit, std::vector<Result>& res) {
     // init work
+
     Xoroshiro128Plus rnd;
     FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
     std::reference_wrapper<Result> myres = std::ref(res[thid]);
@@ -244,7 +259,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     } else {
         opr_set.reserve(FLAGS_ops);
     }
-    enter(token);
+    auto ret = enter(token);
+    if (ret != Status::OK) { LOG(ERROR) << ret; }
 
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
@@ -255,8 +271,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
              * special workloads.
              */
             if (FLAGS_include_long_tx) {
-                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record,
-                          FLAGS_long_tx_ops, FLAGS_long_tx_rratio, rnd, zipf);
+                gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_thread,
+                          thid, FLAGS_long_tx_ops, FLAGS_ops_write_type,
+                          FLAGS_long_tx_rratio, rnd, zipf);
                 tx_begin({token, // NOLINT
                           transaction_options::transaction_type::LONG});
             } else if (FLAGS_include_scan_tx) {
@@ -266,26 +283,31 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 LOG(ERROR) << log_location_prefix << "fatal error";
             }
         } else {
-            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_ops,
-                      FLAGS_rratio, rnd, zipf);
+            gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_thread,
+                      thid, FLAGS_ops, FLAGS_ops_write_type, FLAGS_rratio, rnd,
+                      zipf);
         }
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 uint64_t ctr{0};
                 for (;;) {
                     std::string vb{};
-                    auto ret = search_key(token, storage, itr.get_key(), vb);
+                    ret = search_key(token, storage, itr.get_key(), vb);
                     if (ret == Status::OK) { break; }
 #ifndef NDEBUG
                     assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
 #endif
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
-                auto ret = update(token, storage, itr.get_key(),
-                                  std::string(FLAGS_val_length, '0'));
+                ret = update(token, storage, itr.get_key(),
+                             std::string(FLAGS_val_length, '0'));
 #ifndef NDEBUG
                 assert(ret == Status::OK); // NOLINT
 #endif
+            } else if (itr.get_type() == OP_TYPE::INSERT) {
+                insert(token, storage, itr.get_key(),
+                       std::string(FLAGS_val_length, '0'));
+                // rarely, ret == already_exist due to design
             } else if (itr.get_type() == OP_TYPE::SCAN) {
                 tx_begin({token, // NOLINT
                           transaction_options::transaction_type::READ_ONLY});
@@ -299,7 +321,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             abort(token);
         }
     }
-    leave(token);
+    ret = leave(token);
+    if (ret != Status::OK) { LOG(ERROR) << ret; }
+
     if (thid == 0 && (FLAGS_include_long_tx || FLAGS_include_scan_tx)) {
         if (FLAGS_include_long_tx) {
             printf("long_tx_commit_counts:\t%lu\n" // NOLINT

@@ -45,13 +45,14 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
                        const Storage pbd_storage = 0) { // NOLINT
     Xoroshiro128Plus rnd;
     Token token{};
-    enter(token);
+    auto ret = enter(token);
+    if (ret != Status::OK) { LOG(ERROR) << ret; }
 
-    tx_begin({token}); // NOLINT
+    ret = tx_begin({token}); // NOLINT
+    if (ret != Status::OK) { LOG(ERROR) << ret; }
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
-        Status ret{};
         if (get_use_separate_storage()) {
             ret = insert(token, pbd_storage, make_key(key_length, i),
                          std::string(value_length, '0'));
@@ -59,16 +60,16 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
             ret = insert(token, storage, make_key(key_length, i),
                          std::string(value_length, '0'));
         }
-        if (ret != Status::OK) { LOG(ERROR); }
+        if (ret != Status::OK) { LOG(ERROR) << ret; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) { LOG(ERROR); }
+            if (ret != Status::OK) { LOG(ERROR) << ret; }
             ctr = 0;
         }
     }
-    auto ret = commit(token);
-    if (ret != Status::OK) { LOG(ERROR); }
+    if (ctr != 0) { ret = commit(token); }
+    if (ret != Status::OK) { LOG(ERROR) << ret; }
     leave(token);
 }
 

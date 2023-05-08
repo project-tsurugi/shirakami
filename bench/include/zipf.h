@@ -13,6 +13,8 @@
 
 #include "random.h"
 
+#include "glog/logging.h"
+
 namespace shirakami {
 
 // Fast zipf distribution by Jim Gray et al.
@@ -31,8 +33,8 @@ public:
                                1.0 - theta)) /                // NOLINT
                (1.0 - zeta(2, theta) / zetan_)),
           threshold_(1.0 + std::pow(0.5, theta)) { // NOLINT
-        assert(0.0 <= theta);                      // NOLINT
-        assert(theta < 1.0);                       // NOLINT
+        assert(0.0 <= theta); // NOLINT
+        assert(theta < 1.0); // NOLINT
         // 1.0 can not be specified.
     }
 

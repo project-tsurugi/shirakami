@@ -24,6 +24,7 @@ target_link_libraries(ycsb
 target_include_directories(ycsb
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${PROJECT_SOURCE_DIR}/bench
         PRIVATE ${PROJECT_SOURCE_DIR}/bench/include
         PRIVATE ${PROJECT_SOURCE_DIR}/include
         PRIVATE ${PROJECT_SOURCE_DIR}/src
