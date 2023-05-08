@@ -364,9 +364,10 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * @details To determine the GC-capable epoch, determine the epoch at the start 
  * of the transaction. 
  * @param[in] options Transaction options. There are token got from enter 
- * command, transaction_type SHORT or LONG or READ_ONLY, and write_preserve for 
- * transaction_type LONG. Default is token:{}, transaction_type:{SHORT}, 
- * write_preserve:{}.
+ * command, options.transaction_type_ SHORT or LONG or READ_ONLY, 
+ * options.write_preserve_ for ltx, and options.read_area_ for improving ltx 
+ * performance. Default{} is token_:{}, transaction_type_:{SHORT}, 
+ * write_preserve_:{}, read_area_:{}.
  * @attention If you specify read_only is true, you can not execute 
  * transactional write operation in this transaction.
  * @return Status::OK Success.
