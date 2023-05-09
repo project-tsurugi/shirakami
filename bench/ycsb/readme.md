@@ -56,14 +56,6 @@ cd [/path/to/release_build]/bench/ycsb
   - byte size of val.
   - default : `4`
 
-for special workloads
-- `-include_long_tx`
-  - Whether one of worker (thread id == 0) threads executes long tx mode.
-  - default : `false`
-- `long_tx_ops`
-  - number of operations per a long transactions.
-  - default : `50`
- 
 ### Example
 - YCSB-A
   - rratio : `50`
