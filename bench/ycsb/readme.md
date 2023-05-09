@@ -58,6 +58,9 @@ cd [/path/to/release_build]/bench/ycsb
 - `-thread`
   - number of worker threads.
   - default : `1`
+- `-transaction_type`
+  - type of transaction. short or long or read_only
+  - default : `short`
 - `-val_length`
   - byte size of val.
   - default : `4`

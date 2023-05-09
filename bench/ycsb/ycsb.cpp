@@ -63,6 +63,7 @@ DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");         // NOLINT
 DEFINE_uint64(scan_length, 100, "number of records in scan range.");   // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
+DEFINE_string(transaction_type, "short", "type of transaction.");      // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
@@ -180,6 +181,15 @@ static void load_flags() {
         LOG(ERROR) << log_location_prefix
                    << "Number of threads must be larger than 0.";
     }
+
+    // transaction_type
+    printf("FLAGS_transaction_type : %s\n", // NOLINT
+           FLAGS_transaction_type.data());  // NOLINT
+    if (FLAGS_transaction_type != "short" && FLAGS_transaction_type != "long" &&
+        FLAGS_transaction_type != "read_only") {
+        LOG(ERROR) << log_location_prefix << "Invalid type of transaction.";
+    }
+
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
@@ -242,9 +252,30 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     while (!loadAcquire(start)) _mm_pause();
 
     while (likely(!loadAcquire(quit))) {
+        // gen query contents
         gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_thread, thid,
                   FLAGS_ops, FLAGS_ops_read_type, FLAGS_ops_write_type,
                   FLAGS_rratio, rnd, zipf);
+
+        // tx begin    
+        transaction_options::transaction_type tt{};
+        if (FLAGS_transaction_type == "short") {
+            tt = transaction_options::transaction_type::SHORT;
+            ret = tx_begin({token});
+        } else if (FLAGS_transaction_type == "long") {
+            tt = transaction_options::transaction_type::LONG;
+            ret = tx_begin({token, tt, {storage}});
+        } else if (FLAGS_transaction_type == "read_only") {
+            tt = transaction_options::transaction_type::READ_ONLY;
+            ret = tx_begin({token, tt});
+        } else {
+            LOG(FATAL) << log_location_prefix << "invalid transaction type";
+        }
+        if (ret != Status::OK) {
+            LOG(FATAL) << log_location_prefix << "unexpected error.";
+        }
+
+        // execute operations
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 uint64_t ctr{0};
