@@ -56,9 +56,11 @@ DEFINE_uint64( // NOLINT
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
 DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
 DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
+DEFINE_string(ops_read_type, "point", "type of read operation.");      // NOLINT
 DEFINE_string(ops_write_type, "update", "type of write operation.");   // NOLINT
 DEFINE_uint64(record, 10, "# database records(tuples).");              // NOLINT
 DEFINE_uint64(rratio, 100, "rate of reads in a transaction.");         // NOLINT
+DEFINE_uint64(scan_length, 100, "number of records in scan range.");   // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
@@ -136,12 +138,19 @@ static void load_flags() {
                       "than 0.";
     }
 
+    // ops_read_type
+    printf("FLAGS_ops_read_type : %s\n", // NOLINT
+           FLAGS_ops_read_type.data());  // NOLINT
+    if (FLAGS_ops_read_type != "point" && FLAGS_ops_read_type != "range") {
+        LOG(ERROR) << log_location_prefix << "Invalid type of read operation.";
+    }
+
     // ops_write_typea
     printf("FLAGS_ops_write_type : %s\n", // NOLINT
            FLAGS_ops_write_type.data());  // NOLINT
     if (FLAGS_ops_write_type != "update" && FLAGS_ops_write_type != "insert" &&
         FLAGS_ops_write_type != "readmodifywrite") {
-        LOG(ERROR) << log_location_prefix << "Invalid type of wriet operation.";
+        LOG(ERROR) << log_location_prefix << "Invalid type of write operation.";
     }
 
     if (FLAGS_record > 1) {
@@ -234,7 +243,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
     while (likely(!loadAcquire(quit))) {
         gen_tx_rw(opr_set, FLAGS_key_length, FLAGS_record, FLAGS_thread, thid,
-                  FLAGS_ops, FLAGS_ops_write_type, FLAGS_rratio, rnd, zipf);
+                  FLAGS_ops, FLAGS_ops_read_type, FLAGS_ops_write_type,
+                  FLAGS_rratio, rnd, zipf);
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
                 uint64_t ctr{0};
@@ -257,9 +267,20 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                        std::string(FLAGS_val_length, '0'));
                 // rarely, ret == already_exist due to design
             } else if (itr.get_type() == OP_TYPE::SCAN) {
-                tx_begin({token, // NOLINT
-                          transaction_options::transaction_type::READ_ONLY});
-                // todo scan to open_scan and read_from_scan
+                ScanHandle hd{};
+                ret = open_scan(token, storage, itr.get_scan_l_key(),
+                                scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),
+                                scan_endpoint::INCLUSIVE, hd,
+                                FLAGS_scan_length);
+                if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
+                std::string vb{};
+                do {
+                    ret = read_value_from_scan(token, hd, vb);
+                    if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
+                    ret = next(token, hd);
+                } while (ret != Status::WARN_SCAN_LIMIT);
+                ret = close_scan(token, hd);
+                if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
             }
         }
         if (commit(token) == Status::OK) { // NOLINT

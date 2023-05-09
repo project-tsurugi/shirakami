@@ -40,11 +40,17 @@ cd [/path/to/release_build]/bench/ycsb
 - `-ops_write_type`
   - type of write operation. update, insert, readmodifywrite.
   - default : `update`
+- `-ops_read_type`
+  - type of read operation. point, range.
+  - default : `point`
 - `-record`
   - number of database records before the running phase.
   - default : `100`
 - `-rratio`
   - rate of reads in a transaction.
+  - default : `100`
+- `-scan_length`
+  - number of records at scan range.
   - default : `100`
 - `-skew`
   - access skew of transaction.
@@ -82,7 +88,14 @@ LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb -rratio 95 -record 10
 ```
 
 - YCSB-E
-  -tbd
+  - rratio : `95`
+  - record : `100`
+  - ops_read_type : `range`
+  - ops_write_type : `insert`
+```
+LD_PRELOAD=[/path/to/some memory allocator library] ./ycsb -rratio 95 -record 100 -ops_write_type insert -ops_read_type range
+```
+
 
 -YCSB-F
   - rratio : `50`

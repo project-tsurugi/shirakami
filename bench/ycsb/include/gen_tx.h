@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include <glog/logging.h>
-
 #include "gen_key.h"
 #include "random.h"
 #include "zipf.h"
 
 #include "shirakami/logging.h"
 #include "shirakami/scheme.h"
+
+#include "glog/logging.h"
 
 namespace shirakami {
 
@@ -75,6 +75,8 @@ private:
  * @param[in] thread_num number of worker thread.
  * @param[in] thid id of thread. start from zero.
  * @param[in] opnm
+ * @param[in] ops_read_type point or range.
+ * @param[in] ops_write_type update or insert or readmodifywrite.
  * @param[in] rratio
  * @param[in,out] rnd
  * @param[in,out] zipf
@@ -82,6 +84,7 @@ private:
 static void gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len,
                       const std::size_t tpnm, const std::size_t thread_num,
                       const std::size_t thid, const std::size_t opnm,
+                      const std::string ops_read_type,
                       const std::string ops_write_type,
                       const std::size_t rratio, Xoroshiro128Plus& rnd,
                       FastZipf& zipf) {
@@ -90,8 +93,19 @@ static void gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len,
     for (std::size_t i = 0; i < opnm; ++i) {
         std::uint64_t keynm = zipf() % tpnm;
         if ((rnd.next() % 100) < rratio) { // NOLINT
-            opr_set.emplace_back(OP_TYPE::SEARCH,
-                                 make_key(key_len, keynm)); // NOLINT
+            if (ops_read_type == "point") {
+                opr_set.emplace_back(OP_TYPE::SEARCH,
+                                     make_key(key_len, keynm)); // NOLINT
+            } else if (ops_read_type == "range") {
+                std::string key1 = make_key(key_len, keynm);
+                keynm = zipf() % tpnm;
+                std::string key2 = make_key(key_len, keynm);
+                bool key1_is_small = key1 < key2;
+                opr_set.emplace_back(OP_TYPE::SCAN, key1_is_small ? key1 : key2,
+                                     key1_is_small ? key2 : key1); // NOLINT
+            } else {
+                LOG(FATAL) << "invalid read type";
+            }
         } else {
             if (ops_write_type == "update") {
                 opr_set.emplace_back(OP_TYPE::UPDATE,
