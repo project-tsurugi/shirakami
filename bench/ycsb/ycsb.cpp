@@ -37,6 +37,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
@@ -175,12 +176,6 @@ static void load_flags() {
                    << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }
-    if (FLAGS_thread >= 1) {
-        printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
-    } else {
-        LOG(ERROR) << log_location_prefix
-                   << "Number of threads must be larger than 0.";
-    }
 
     // transaction_type
     printf("FLAGS_transaction_type : %s\n", // NOLINT
@@ -188,6 +183,18 @@ static void load_flags() {
     if (FLAGS_transaction_type != "short" && FLAGS_transaction_type != "long" &&
         FLAGS_transaction_type != "read_only") {
         LOG(ERROR) << log_location_prefix << "Invalid type of transaction.";
+    }
+    if (FLAGS_transaction_type == "long") {
+        // now, ltx mode benchmark is valid for 1 thread
+        FLAGS_thread = 1;
+    }
+
+    // about thread
+    if (FLAGS_thread >= 1) {
+        printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
+    } else {
+        LOG(ERROR) << log_location_prefix
+                   << "Number of threads must be larger than 0.";
     }
 
     if (FLAGS_val_length > 1) {
@@ -257,7 +264,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                   FLAGS_ops, FLAGS_ops_read_type, FLAGS_ops_write_type,
                   FLAGS_rratio, rnd, zipf);
 
-        // tx begin    
+        if (ret == Status::WARN_ALREADY_BEGIN) { LOG(FATAL); }
+
+        // tx begin
         transaction_options::transaction_type tt{};
         if (FLAGS_transaction_type == "short") {
             tt = transaction_options::transaction_type::SHORT;
@@ -265,6 +274,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         } else if (FLAGS_transaction_type == "long") {
             tt = transaction_options::transaction_type::LONG;
             ret = tx_begin({token, tt, {storage}});
+            // wait start epoch
+            auto* ti = static_cast<session*>(token);
+            while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+                _mm_pause();
+            }
         } else if (FLAGS_transaction_type == "read_only") {
             tt = transaction_options::transaction_type::READ_ONLY;
             ret = tx_begin({token, tt});
@@ -272,7 +286,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             LOG(FATAL) << log_location_prefix << "invalid transaction type";
         }
         if (ret != Status::OK) {
-            LOG(FATAL) << log_location_prefix << "unexpected error.";
+            LOG(FATAL) << log_location_prefix << "unexpected error. " << ret;
         }
 
         // execute operations

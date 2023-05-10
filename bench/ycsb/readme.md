@@ -56,7 +56,7 @@ cd [/path/to/release_build]/bench/ycsb
   - access skew of transaction.
   - default : `0.0`
 - `-thread`
-  - number of worker threads.
+  - number of worker threads. If you use transaction_type is long, this is set for 1 at background.
   - default : `1`
 - `-transaction_type`
   - type of transaction. short or long or read_only
