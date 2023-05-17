@@ -125,4 +125,20 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     return Status::OK;
 }
 
+Status check_ltx_is_highest_priority(Token token, bool& out) {
+    // check the tx is already began.
+    auto* ti = static_cast<session*>(token);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    // the tx was already began.
+
+    // check the tx is ltx mode
+    if (ti->get_tx_type() != transaction_options::transaction_type::LONG) {
+        return Status::WARN_INVALID_ARGS;
+    }
+
+    // mock
+    out = false;
+    return Status::OK;
+}
+
 } // namespace shirakami

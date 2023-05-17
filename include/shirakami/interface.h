@@ -487,6 +487,17 @@ using log_event_callback =
  */
 Status database_set_logging_callback(log_event_callback const& callback);
 
+/**
+ * @brief check whether the ltx has highest priority.
+ * @param[in] token The token of the transaction.
+ * @param[out] out whether the ltx has highest priority. If this is true, the 
+ * transaction has highest priority.
+ * @return Status::OK success.
+ * @return Status::WARN_NOT_BEGIN The transaction is not began.
+ * @return Status::WARN_INVALID_ARGS The transaction is not long transaction mode.
+*/
+Status check_ltx_is_highest_priority(Token token, bool& out);
+
 //==========
 /**
  * About datastore
