@@ -184,10 +184,6 @@ static void load_flags() {
         FLAGS_transaction_type != "read_only") {
         LOG(ERROR) << log_location_prefix << "Invalid type of transaction.";
     }
-    if (FLAGS_transaction_type == "long") {
-        // now, ltx mode benchmark is valid for 1 thread
-        FLAGS_thread = 1;
-    }
 
     // about thread
     if (FLAGS_thread >= 1) {
@@ -297,16 +293,14 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                     std::string vb{};
                     ret = search_key(token, storage, itr.get_key(), vb);
                     if (ret == Status::OK) { break; }
-#ifndef NDEBUG
-                    assert(ret == Status::WARN_CONCURRENT_UPDATE); // NOLINT
-#endif
+                    if (ret == Status::ERR_CC) { goto ABORTED; }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 ret = update(token, storage, itr.get_key(),
                              std::string(FLAGS_val_length, '0'));
-#ifndef NDEBUG
-                assert(ret == Status::OK); // NOLINT
-#endif
+                if (ret == Status::ERR_CC) {
+                    LOG(ERROR) << "unexpected error, rc: " << ret;
+                }
             } else if (itr.get_type() == OP_TYPE::INSERT) {
                 insert(token, storage, itr.get_key(),
                        std::string(FLAGS_val_length, '0'));
@@ -317,10 +311,13 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                                 scan_endpoint::INCLUSIVE, itr.get_scan_r_key(),
                                 scan_endpoint::INCLUSIVE, hd,
                                 FLAGS_scan_length);
-                if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
+                if (ret != Status::OK || ret == Status::ERR_CC) {
+                    LOG(ERROR) << "unexpected error, rc: " << ret;
+                }
                 std::string vb{};
                 do {
                     ret = read_value_from_scan(token, hd, vb);
+                    if (ret == Status::ERR_CC) { goto ABORTED; }
                     if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
                     ret = next(token, hd);
                 } while (ret != Status::WARN_SCAN_LIMIT);
@@ -331,6 +328,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         if (commit(token) == Status::OK) { // NOLINT
             ++myres.get().get_local_commit_counts();
         } else {
+        ABORTED: // NOLINT
             ++myres.get().get_local_abort_counts();
             abort(token);
         }
