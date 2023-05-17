@@ -232,11 +232,11 @@ public:
     scan_handler& get_scan_handle() { return scan_handle_; }
 
     [[nodiscard]] epoch::epoch_t get_begin_epoch() const {
-        return begin_epoch_.load(std::memory_order_release);
+        return begin_epoch_.load(std::memory_order_acquire);
     }
 
     [[nodiscard]] epoch::epoch_t get_step_epoch() const {
-        return step_epoch_.load(std::memory_order_release);
+        return step_epoch_.load(std::memory_order_acquire);
     }
 
     /**
