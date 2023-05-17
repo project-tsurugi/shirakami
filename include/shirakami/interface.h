@@ -421,7 +421,6 @@ extern Status upsert(Token token, Storage storage, std::string_view key,
 //==========
 /**
  * transaction state api.
- * These api is able at BUILD_WP=ON build mode.
  */
 
 /**

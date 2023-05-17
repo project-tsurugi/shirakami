@@ -34,8 +34,6 @@ target_include_directories(ycsb_mb_nc
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
-if (NOT BUILD_WP)
 add_test(
         NAME ycsb_mb_nc
         COMMAND ycsb_mb_nc)
-endif()

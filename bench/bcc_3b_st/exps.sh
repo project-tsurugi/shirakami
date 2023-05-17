@@ -74,7 +74,7 @@ build_wp() {
   rm -rf build_wp_release
   mkdir build_wp_release
   cd build_wp_release
-  cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBUILD_WP=ON ..
+  cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF ..
   cmake --build . --target all -- -j
   cd ../
 }

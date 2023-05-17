@@ -33,8 +33,6 @@ target_include_directories(bcc_3b
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
-if (NOT BUILD_WP)
 add_test(
         NAME    bcc_3b
         COMMAND bcc_3b)
-endif()

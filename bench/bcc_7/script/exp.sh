@@ -8,9 +8,9 @@ build() {
     cd build_wp_release
     # $1 is 1 for pure, 2 for r-anti-track
     if test $1 -eq 1; then
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBUILD_WP=ON ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF ..
     elif test $1 -eq 2; then
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBUILD_WP=ON -DBCC_7=ON ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_CPR=OFF -DBCC_7=ON ..
     else
         echo "BAG $LINENO"
         exit
