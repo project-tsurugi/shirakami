@@ -489,6 +489,8 @@ Status database_set_logging_callback(log_event_callback const& callback);
 
 /**
  * @brief check whether the ltx has highest priority.
+ * @pre This must be called between tx begin and termination (commit/abort).
+ * If you don't save this rule, it is undefined behavior.
  * @param[in] token The token of the transaction.
  * @param[out] out whether the ltx has highest priority. If this is true, the 
  * transaction has highest priority.

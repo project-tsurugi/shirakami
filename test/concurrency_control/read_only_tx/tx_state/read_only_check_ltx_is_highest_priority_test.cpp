@@ -1,0 +1,55 @@
+
+#include "test_tool.h"
+
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+
+#include "shirakami/interface.h"
+
+#include "gtest/gtest.h"
+
+#include "glog/logging.h"
+
+namespace shirakami::testing {
+
+using namespace shirakami;
+
+class read_only_check_ltx_is_highest_priority_test
+    : public ::testing::Test { // NOLINT
+public:
+    static void call_once_f() {
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only_tx-"
+                "tx_state-read_only_check_ltx_is_highest_priority_test");
+        FLAGS_stderrthreshold = 0;
+    }
+
+    void SetUp() override {
+        std::call_once(init_google, call_once_f);
+        init(); // NOLINT
+    }
+
+    void TearDown() override { fin(); }
+
+private:
+    static inline std::once_flag init_google; // NOLINT
+};
+
+TEST_F(read_only_check_ltx_is_highest_priority_test,
+       simple) { // NOLINT
+                 // prepare
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+
+
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    // read only mode is invalid for this api
+    bool out{};
+    ASSERT_EQ(Status::WARN_INVALID_ARGS, check_ltx_is_highest_priority(s, out));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+} // namespace shirakami::testing

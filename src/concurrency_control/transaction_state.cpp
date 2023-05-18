@@ -1,4 +1,5 @@
 
+#include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
@@ -136,8 +137,19 @@ Status check_ltx_is_highest_priority(Token token, bool& out) {
         return Status::WARN_INVALID_ARGS;
     }
 
-    // mock
-    out = false;
+    {
+        // take shared lock for ongoing tx info
+        std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
+        // check highest tx id
+        std::size_t highest_tx_id{std::get<ongoing_tx::index_id>(
+                (*ongoing_tx::get_tx_info().begin()))};
+        if (highest_tx_id == ti->get_long_tx_id()) {
+            out = true;
+        } else {
+            out = false;
+        }
+    }
+
     return Status::OK;
 }
 
