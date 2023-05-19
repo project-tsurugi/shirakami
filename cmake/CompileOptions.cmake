@@ -47,6 +47,10 @@ endif ()
 
 cmake_host_system_information(RESULT cores QUERY NUMBER_OF_LOGICAL_CORES)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsized-deallocation")
+endif ()
+
 # about index
 add_definitions(-DINDEX_YAKUSHIMA)
 add_definitions(-DYAKUSHIMA_EPOCH_TIME=40)
