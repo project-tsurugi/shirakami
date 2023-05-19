@@ -249,7 +249,8 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     std::vector<shirakami::opr_obj> opr_set;
     opr_set.reserve(FLAGS_ops);
     auto ret = enter(token);
-    if (ret != Status::OK) { LOG(ERROR) << ret; }
+    if (ret != Status::OK) { LOG(FATAL) << "too many tx handle: " << ret; }
+    auto* ti = static_cast<session*>(token);
 
     storeRelease(ready, 1);
     while (!loadAcquire(start)) _mm_pause();
@@ -288,18 +289,20 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         // execute operations
         for (auto&& itr : opr_set) {
             if (itr.get_type() == OP_TYPE::SEARCH) {
-                uint64_t ctr{0};
                 for (;;) {
                     std::string vb{};
                     ret = search_key(token, storage, itr.get_key(), vb);
                     if (ret == Status::OK) { break; }
-                    if (ret == Status::ERR_CC) { goto ABORTED; }
+                    if (ret == Status::ERR_CC) { goto ABORTED; } // NOLINT
+                    if (ret == Status::ERR_FATAL) {
+                        LOG(FATAL) << log_location_prefix;
+                    }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
                 ret = update(token, storage, itr.get_key(),
                              std::string(FLAGS_val_length, '0'));
                 if (ret == Status::ERR_CC) {
-                    LOG(ERROR) << "unexpected error, rc: " << ret;
+                    LOG(FATAL) << "unexpected error, rc: " << ret;
                 }
             } else if (itr.get_type() == OP_TYPE::INSERT) {
                 insert(token, storage, itr.get_key(),
@@ -312,21 +315,28 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                                 scan_endpoint::INCLUSIVE, hd,
                                 FLAGS_scan_length);
                 if (ret != Status::OK || ret == Status::ERR_CC) {
-                    LOG(ERROR) << "unexpected error, rc: " << ret;
+                    LOG(FATAL) << "unexpected error, rc: " << ret;
                 }
                 std::string vb{};
                 do {
                     ret = read_value_from_scan(token, hd, vb);
-                    if (ret == Status::ERR_CC) { goto ABORTED; }
-                    if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
+                    if (ret == Status::ERR_CC) { goto ABORTED; } // NOLINT
+                    if (ret != Status::OK) { LOG(FATAL) << "unexpected error"; }
                     ret = next(token, hd);
                 } while (ret != Status::WARN_SCAN_LIMIT);
                 ret = close_scan(token, hd);
-                if (ret != Status::OK) { LOG(ERROR) << "unexpected error"; }
+                if (ret != Status::OK) { LOG(FATAL) << "unexpected error"; }
             }
         }
-        if (commit(token) == Status::OK) { // NOLINT
+
+    RETRY_COMMIT:
+        ret = commit(token);
+        if (ret == Status::OK) { // NOLINT
             ++myres.get().get_local_commit_counts();
+        } else if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
+            // ltx
+            _mm_pause();
+            goto RETRY_COMMIT; // NOLINT
         } else {
         ABORTED: // NOLINT
             ++myres.get().get_local_abort_counts();
