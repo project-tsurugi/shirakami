@@ -85,6 +85,8 @@ TEST_F(comp_test, test1) { // NOLINT
         ASSERT_EQ(Status::OK, enter(s));
 
         // prepare
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         for (auto i = 0; i < 14; ++i) { // NOLINT
             std::string key(1, i);
             std::string value(std::to_string(i));
@@ -94,6 +96,8 @@ TEST_F(comp_test, test1) { // NOLINT
 
         // test
         ScanHandle handle{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         // read all range

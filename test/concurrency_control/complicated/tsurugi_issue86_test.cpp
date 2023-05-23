@@ -59,6 +59,8 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
         ASSERT_EQ(Status::OK, enter(s));
 
         // insert 4 records commit
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, insert(s, st, "a", "a"));
         ASSERT_EQ(Status::OK, insert(s, st, "b", "b"));
         ASSERT_EQ(Status::OK, insert(s, st, "c", "c"));
@@ -66,6 +68,8 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // delete 1 records commit (*1)
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));
@@ -86,6 +90,9 @@ TEST_F(tsurugi_issue86, comment_221130) { // NOLINT
                 // to reduce log
                 LOG(INFO) << j;
             }
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                             scan_endpoint::INF, hd));
             scan_count = 0;
@@ -121,6 +128,8 @@ TEST_F(tsurugi_issue86, phantom) { // NOLINT
         ASSERT_EQ(Status::OK, enter(s));
         ScanHandle handle{};
         std::vector<std::size_t> def_ids{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         if (Status::OK == open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle)) {
             do {

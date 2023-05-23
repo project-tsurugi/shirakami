@@ -41,11 +41,15 @@ TEST_F(insert_update_test, insert_update) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", "v"));
     ASSERT_EQ(Status::OK, update(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -61,15 +65,21 @@ TEST_F(insert_update_test, update_insert) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update(s, st, "", "v"));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

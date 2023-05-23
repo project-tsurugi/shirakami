@@ -74,6 +74,9 @@ TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
     std::array<std::string, 4> var{"t0", "t1", "t2", "t3"};
     auto init_db = [&s, &var, a, b, u, x, sta, stb, stu, stx]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stu, u, var.at(0)));
@@ -115,6 +118,9 @@ TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -153,6 +159,9 @@ TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(2)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -199,6 +208,9 @@ TEST_F(out_of_and_inner_boundary_test, inner_boundary) { // NOLINT
     std::array<std::string, 4> var{"t0", "t1", "t2", "t3"};
     auto init_db = [&s, &var, a, b, u, x, sta, stb, stu, stx]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stu, u, var.at(0)));
@@ -240,6 +252,9 @@ TEST_F(out_of_and_inner_boundary_test, inner_boundary) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -278,6 +293,9 @@ TEST_F(out_of_and_inner_boundary_test, inner_boundary) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));

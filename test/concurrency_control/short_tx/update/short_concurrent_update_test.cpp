@@ -28,10 +28,16 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             std::int64_t v{0};
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(Status::OK, insert(s, storage, k,
                                          {reinterpret_cast<char*>(&v), // NOLINT
                                           sizeof(std::int64_t)}));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             std::string vb{};
             ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -43,6 +49,9 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             std::int64_t v{0};
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             std::string vb{};
             Status res{search_key(s, storage, k, vb)};
             while (res == Status::WARN_CONCURRENT_UPDATE) {
@@ -68,6 +77,9 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
             std::string k("aa"); // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             std::string vb{};
             ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
             ASSERT_NE("", vb);
@@ -83,7 +95,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
     auto r1 = std::async(std::launch::async, [&] {
         for (int i = 0; i < 5; ++i) { // NOLINT
             bool rc = false;
-            S::run(storage, rc);
+            ASSERT_NO_FATAL_FAILURE(S::run(storage, rc));
             if (!rc) {
                 --i;
                 continue;
@@ -92,7 +104,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
     });
     for (int i = 0; i < 5; ++i) { // NOLINT
         bool rc = false;
-        S::run(storage, rc);
+        ASSERT_NO_FATAL_FAILURE(S::run(storage, rc));
         if (!rc) {
             --i;
             continue;

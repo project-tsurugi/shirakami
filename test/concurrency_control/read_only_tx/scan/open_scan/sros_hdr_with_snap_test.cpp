@@ -1,7 +1,6 @@
 
 #include <mutex>
 
-
 #include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
@@ -22,7 +21,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only_tx-"
-                "scan-open_scan-sros_hdr_with_snap_test");
+                "scan-sros_hdr_with_snap_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -60,6 +59,8 @@ TEST_F(open_scan_test,           // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
         ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -70,6 +71,8 @@ TEST_F(open_scan_test,           // NOLINT
                             transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
 
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         // create snapshot
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -106,6 +109,8 @@ TEST_F(open_scan_test,           // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
         ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
         ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -117,6 +122,8 @@ TEST_F(open_scan_test,           // NOLINT
                             transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
 
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         ASSERT_EQ(Status::OK, delete_record(s, st, k2));
         // create snapshot
@@ -158,6 +165,8 @@ TEST_F(open_scan_test,             // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
         ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
         ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -170,6 +179,8 @@ TEST_F(open_scan_test,             // NOLINT
                             transaction_options::transaction_type::READ_ONLY}));
         wait_change_epoch();
 
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         ASSERT_EQ(Status::OK, delete_record(s, st, k2));
         ASSERT_EQ(Status::OK, delete_record(s, st, k3));

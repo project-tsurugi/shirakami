@@ -84,6 +84,8 @@ TEST_F(long_insert_test, start_after_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "test");
@@ -101,6 +103,8 @@ TEST_F(long_insert_test, insert_two_key_and_check_wp_result) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

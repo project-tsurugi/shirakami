@@ -55,6 +55,8 @@ TEST_F(long_scan_upsert_phantom_test, simple) { // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s1), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
 

@@ -54,6 +54,8 @@ TEST_F(long_search_update_two_tx_test, serial_update_tx_search_tx) { // NOLINT
     ASSERT_EQ(enter(s), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     wait_epoch_update();
@@ -84,6 +86,8 @@ TEST_F(long_search_update_two_tx_test, serial_search_tx_update_tx) { // NOLINT
     ASSERT_EQ(enter(s), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     wait_epoch_update();
@@ -103,6 +107,8 @@ TEST_F(long_search_update_two_tx_test, serial_search_tx_update_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
     ASSERT_EQ(vb, "1");
 
@@ -124,6 +130,8 @@ TEST_F(long_search_update_two_tx_test,               // NOLINT
     ASSERT_EQ(enter(s2), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
     wait_epoch_update();
@@ -143,6 +151,8 @@ TEST_F(long_search_update_two_tx_test,               // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
     ASSERT_EQ(vb, "1");
 
@@ -163,6 +173,8 @@ TEST_F(long_search_update_two_tx_test,               // NOLINT
     ASSERT_EQ(enter(s2), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
     wait_epoch_update();
@@ -182,6 +194,8 @@ TEST_F(long_search_update_two_tx_test,               // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s1, st, "", vb), Status::OK);
     ASSERT_EQ(vb, "1");
 

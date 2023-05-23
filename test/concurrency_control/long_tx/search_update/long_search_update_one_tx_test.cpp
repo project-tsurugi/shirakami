@@ -54,6 +54,8 @@ TEST_F(long_search_update_one_tx_test, same_tx_update_search) { // NOLINT
     ASSERT_EQ(enter(s), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     wait_epoch_update();
@@ -80,6 +82,8 @@ TEST_F(long_search_update_one_tx_test, same_tx_search_update) { // NOLINT
     ASSERT_EQ(enter(s), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     wait_epoch_update();
@@ -95,6 +99,8 @@ TEST_F(long_search_update_one_tx_test, same_tx_search_update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
     ASSERT_EQ(vb, "1");
 

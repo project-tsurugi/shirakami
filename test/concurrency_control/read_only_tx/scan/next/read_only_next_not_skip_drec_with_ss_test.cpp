@@ -21,8 +21,9 @@ class read_only_next_not_skip_drec_with_ss_test
 
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "scan-next_not_skip_drec_with_snap_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only_tx-"
+                "scan-read_only_next_not_skip_drec_with_snap_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -50,6 +51,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     std::string k1{"k1"};
     std::string k2{"k2"};
     std::string k3{"k3"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -62,6 +65,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
                         {}}));
     wait_epoch_update();
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -101,6 +106,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     std::string k2{"k2"};
     std::string k3{"k3"};
     std::string k4{"k4"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -114,6 +121,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
                         {}}));
     wait_epoch_update();
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
     ASSERT_EQ(Status::OK, delete_record(s, st, k3));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -158,6 +167,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
     std::string k3{"k3"};
     std::string k4{"k4"};
     std::string k5{"k5"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -172,6 +183,8 @@ TEST_F(read_only_next_not_skip_drec_with_ss_test, // NOLINT
                         {}}));
     wait_epoch_update();
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k2));
     ASSERT_EQ(Status::OK, delete_record(s, st, k3));
     ASSERT_EQ(Status::OK, delete_record(s, st, k4));

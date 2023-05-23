@@ -80,6 +80,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
                                    "t4", "t5", "t6", "t7"};
     auto init_db = [&s, &var, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
@@ -166,6 +169,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -219,6 +225,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
                                    "t4", "t5", "t6", "t7"};
     auto init_db = [&s, &var, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
@@ -310,6 +319,9 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));

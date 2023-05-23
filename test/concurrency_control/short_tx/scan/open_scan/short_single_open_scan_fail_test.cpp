@@ -37,6 +37,8 @@ private:
 TEST_F(open_scan_fail_test, open_scan_at_non_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND,
               open_scan(s, {}, "", scan_endpoint::INF, "", scan_endpoint::INF,
@@ -51,6 +53,8 @@ TEST_F(open_scan_fail_test, open_scan_find_no_index) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));
@@ -69,10 +73,14 @@ TEST_F(open_scan_fail_test,             // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
     ScanHandle hd{};
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     /**
@@ -92,17 +100,23 @@ TEST_F(open_scan_fail_test,                                        // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     {
         std::unique_lock<std::mutex> stop_epoch_for_stop_gc(
                 epoch::get_ep_mtx());
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         ScanHandle hd{};
 
         // test
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::WARN_NOT_FOUND,
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));

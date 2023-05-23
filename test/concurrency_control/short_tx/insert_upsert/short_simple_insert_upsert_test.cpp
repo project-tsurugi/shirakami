@@ -45,6 +45,8 @@ TEST_F(simple_insert_upsert, upsert_after_insert) { // NOLINT
     std::string v("v");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));

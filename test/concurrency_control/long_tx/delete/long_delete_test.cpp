@@ -71,6 +71,8 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -121,6 +123,8 @@ TEST_F(long_delete_test, delete_two_key_and_check_wp_result) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, upsert(s, st, "2", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

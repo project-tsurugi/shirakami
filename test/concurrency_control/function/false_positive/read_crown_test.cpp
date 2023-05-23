@@ -70,6 +70,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     std::array<std::string, 4> var{"t0", "t1", "t2", "t3"};
     auto init_db = [&s, &var, x, y, z, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sty, y, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stz, z, var.at(0)));
@@ -108,6 +111,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -145,6 +151,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -184,6 +193,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -223,6 +235,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -261,6 +276,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -300,6 +318,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -340,6 +361,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
@@ -380,6 +404,9 @@ TEST_F(read_crown_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));

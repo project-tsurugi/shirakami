@@ -69,6 +69,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -89,6 +91,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
 
     // test: contents
     std::string vb{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
     ASSERT_EQ(vb, "A");
     ASSERT_EQ(Status::OK, search_key(s, st, "b", vb));
@@ -115,11 +119,14 @@ TEST_F(li_single_recovery_test,                 // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
     ASSERT_EQ(Status::OK, upsert(s, st, "c", "C"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, leave(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, "b"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -137,6 +144,8 @@ TEST_F(li_single_recovery_test,                 // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test: contents
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
     ASSERT_EQ(vb, "A");

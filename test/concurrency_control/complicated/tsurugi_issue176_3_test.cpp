@@ -51,11 +51,15 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare initial record
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, insert(s, st, "2", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // delete tx
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, "2"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     auto* ti = static_cast<session*>(s);
@@ -68,6 +72,8 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     }
 
     // start full scan tx
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -130,6 +136,8 @@ TEST_F(tsurugi_issue176_3, comment_by_tanabe_20230301_1643) { // NOLINT
     th_2.join();
 
     // check value is valid
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, key, buf));
     ASSERT_EQ(buf, v1);

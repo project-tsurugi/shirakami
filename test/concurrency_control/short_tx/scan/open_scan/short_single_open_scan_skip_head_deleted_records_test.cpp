@@ -43,6 +43,8 @@ TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
     // prepare data
     std::string k1{"k1"};
     std::string k2{"k2"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -50,10 +52,14 @@ TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
     {
         std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
                 epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // test
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));
@@ -74,6 +80,8 @@ TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
     std::string k1{"k1"};
     std::string k2{"k2"};
     std::string k3{"k3"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -82,11 +90,15 @@ TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
     {
         std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
                 epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         ASSERT_EQ(Status::OK, delete_record(s, st, k2));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // test
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));
@@ -108,6 +120,8 @@ TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
     std::string k2{"k2"};
     std::string k3{"k3"};
     std::string k4{"k4"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
@@ -117,12 +131,16 @@ TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
     {
         std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
                 epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
         ASSERT_EQ(Status::OK, delete_record(s, st, k2));
         ASSERT_EQ(Status::OK, delete_record(s, st, k3));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // test
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd));

@@ -42,9 +42,13 @@ TEST_F(simple_update, update) { // NOLINT
     std::string v2("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(yakushima::status::OK, put<Record>(storage, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update(s, storage, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};

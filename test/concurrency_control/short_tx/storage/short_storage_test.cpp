@@ -36,6 +36,8 @@ TEST_F(storage, storage_not_used_storage_key) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -46,6 +48,8 @@ TEST_F(storage, storage_used_storage_key) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("NAUTI", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -61,9 +65,13 @@ TEST_F(storage, multiple_storages) { // NOLINT
     std::string v1("v1"); // NOLINT
     Token token{};
     ASSERT_EQ(Status::OK, enter(token));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token, storage0, k, v0));
     ASSERT_EQ(Status::OK, upsert(token, storage1, k, v0));
     ASSERT_EQ(Status::OK, commit(token)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({token, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token, storage0, k, v1));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(token, storage1, k, vb));

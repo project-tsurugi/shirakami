@@ -18,9 +18,10 @@ class short_delete_insert_search_upsert_scan
     : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
-                                  "delete_insert_search_upsert_scan/"
-                                  "delete_insert_search_upsert_scan_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_insert_search_upsert_scan-"
+                "short_delete_insert_search_upsert_scan_test");
         FLAGS_stderrthreshold = 0;
     }
     void SetUp() override {
@@ -45,10 +46,13 @@ TEST_F(short_delete_insert_search_upsert_scan, // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k2, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     std::string vb{}; // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));

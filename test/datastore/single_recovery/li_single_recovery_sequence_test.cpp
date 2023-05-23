@@ -75,6 +75,8 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     SequenceValue value{3};
     Token token{};
     ASSERT_EQ(Status::OK, enter(token));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
     ASSERT_EQ(Status::OK, commit(token));
     ASSERT_EQ(Status::OK, leave(token));
@@ -126,11 +128,15 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     // update data created before recovery (*1)
     version = 4; // NOLINT
     value = 5;   // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({token, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update_sequence(token, id2, version, value));
     ASSERT_EQ(Status::OK, commit(token));
     // update data created after recovery (*2)
     version = 6; // NOLINT
     value = 7;   // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({token, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update_sequence(token, id4, version, value));
     ASSERT_EQ(Status::OK, commit(token));
     wait_update();

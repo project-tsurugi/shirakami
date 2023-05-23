@@ -61,6 +61,8 @@ TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
     Token s1{}; // long
     Token s2{}; // long
     ASSERT_EQ(enter(s0), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s0, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s0, st, "a", "A"));
     ASSERT_EQ(Status::OK, insert(s0, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s0));
@@ -92,6 +94,8 @@ TEST_F(long_scan_long_wp_test, reading_lower_priority_wp) { // NOLINT
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(leave(s), Status::OK);

@@ -38,9 +38,13 @@ TEST_F(simple_scan, close_scan) { // NOLINT
     std::string v1("0"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ScanHandle handle{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, close_scan(s, handle));

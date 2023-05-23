@@ -67,6 +67,7 @@ TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
     // setup nodes [1, records]
     ASSERT_OK(enter(s));
     int records = 136; // needs >= 136 // NOLINT
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (int i = 1; i <= records; i++) {
         ASSERT_OK(insert(s, st, mk_key(i), ""));
     }
@@ -79,6 +80,7 @@ TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
     for (int i = records; i > 0; i--) { // NOLINT
         ScanHandle scan{};
         ASSERT_OK(enter(s));
+        ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_OK(open_scan(s, st, mk_key(i), scan_endpoint::INCLUSIVE,
                             mk_key(i + 1), scan_endpoint::EXCLUSIVE, scan));
         if (pred_wait(i)) {

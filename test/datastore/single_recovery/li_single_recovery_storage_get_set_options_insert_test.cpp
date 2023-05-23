@@ -74,6 +74,8 @@ TEST_F(li_single_recovery_storage_get_set_options_insert_test, // NOLINT
 
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st0, "a", "A"));
     ASSERT_EQ(Status::OK, insert(s, st1, "a", "A"));
     ASSERT_EQ(Status::OK, commit(s));

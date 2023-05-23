@@ -60,6 +60,8 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
     for (std::size_t i = 0; i < 1; ++i) { // NOLINT
         // Tx1.
         ScanHandle hd{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         if (Status::WARN_NOT_FOUND != open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd)) {
             // read all record
@@ -77,6 +79,8 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
         // Tx2.
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         for (std::size_t i = 0; i < 100; ++i) { // NOLINT
             std::string k(1, i);
             ASSERT_EQ(Status::OK, insert(s, st, k, "v"));
@@ -94,6 +98,9 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
         // Tx3. full scan
         // record empty state
         for (std::size_t i = 1;; ++i) {
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             if (i % 20 == 0) { // NOLINT
                 // to reduce log
                 LOG(INFO) << i;
@@ -132,6 +139,8 @@ TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
 
     // stop gc to stop epoch
@@ -140,6 +149,8 @@ TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
         ASSERT_EQ(Status::OK, abort(s));
         ScanHandle hd{};
         // it must read deleted record
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::WARN_NOT_FOUND,
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
@@ -167,11 +178,15 @@ TEST_F(tsurugi_issue106, 20230310_comment_tanabe) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("test", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "a", ""));
     ASSERT_EQ(Status::OK, insert(s, st, "c", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -202,6 +217,8 @@ TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "a", ""));
     ASSERT_EQ(Status::OK, insert(s1, st, "c", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -209,6 +226,8 @@ TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
     // test
     // tx 1 read a, c
     ScanHandle hd{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string buf{};
@@ -219,6 +238,8 @@ TEST_F(tsurugi_issue106, 20230327_comment_tanabe) { // NOLINT
     ASSERT_EQ(buf, "c");
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, hd));
     // index scan include node version without read body.
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s2, st, std::string(9, 'b'), ""));
     ASSERT_EQ(Status::OK, commit(s2));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s1)); // NOLINT
@@ -243,6 +264,8 @@ TEST_F(tsurugi_issue106, 20230328_insight_tanabe) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, std::string(9, 'a'), ""));
     ASSERT_EQ(Status::OK, insert(s1, st, std::string(9, 'c'), ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -250,6 +273,8 @@ TEST_F(tsurugi_issue106, 20230328_insight_tanabe) { // NOLINT
     // test
     // tx 1 read a, c
     ScanHandle hd{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string buf{};
@@ -260,6 +285,8 @@ TEST_F(tsurugi_issue106, 20230328_insight_tanabe) { // NOLINT
     ASSERT_EQ(buf, std::string(9, 'c'));
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, hd));
     // index scan include node version without read body.
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s2, st, std::string(8, 'a') + "b", ""));
     ASSERT_EQ(Status::OK, commit(s2));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s1)); // NOLINT

@@ -54,9 +54,12 @@ TEST_F(search_upsert, short_search_find_valid_wp) { // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
-    ASSERT_EQ(tx_begin({ss}), Status::OK);
+    ASSERT_EQ(tx_begin({ss, transaction_options::transaction_type::SHORT}),
+              Status::OK);
     ASSERT_EQ(tx_begin({sb, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
     wait_epoch_update();
@@ -76,6 +79,8 @@ TEST_F(search_upsert, short_search_finish_before_valid_wp) { // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     {
@@ -104,6 +109,8 @@ TEST_F(search_upsert, short_search_finish_after_valid_wp) { // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     // end prepare data
@@ -145,6 +152,8 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st_x, x, ""));
         ASSERT_EQ(Status::OK, upsert(s, st_y, y, ""));
         ASSERT_EQ(Status::OK, commit(s));
@@ -167,6 +176,9 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
         Token stx{};
         ASSERT_EQ(enter(stx), Status::OK);
+        ASSERT_EQ(
+                Status::OK,
+                tx_begin({stx, transaction_options::transaction_type::SHORT}));
         std::string buf{};
         ASSERT_EQ(Status::OK, search_key(stx, st_y, y, buf));
         ASSERT_EQ(Status::OK, commit(stx));
@@ -197,41 +209,6 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
         ASSERT_EQ(leave(ltx1), Status::OK);
         ASSERT_EQ(leave(ltx2), Status::OK);
     }
-}
-
-// test for logging about ltx warn premature by stx
-TEST_F(search_upsert, DISABLED_logging_for_ltx_premature_stx) { // NOLINT
-    Storage st{};
-    ASSERT_EQ(create_storage("", st), Status::OK);
-    Token s1{};
-    Token s2{};
-    ASSERT_EQ(enter(s1), Status::OK);
-    ASSERT_EQ(enter(s2), Status::OK);
-
-    auto stx_work = [s1, st]() {
-        LOG(INFO);
-        upsert(s1, st, "", "");
-        commit(s1);
-    };
-
-    auto ltx_work = [s2, st]() {
-        LOG(INFO);
-        std::string buf{};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s2, transaction_options::transaction_type::LONG}));
-        wait_epoch_update();
-        ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s2, st, "", buf));
-    };
-
-    std::thread t1 = std::thread(stx_work);
-    wait_epoch_update();
-    std::thread t2 = std::thread(ltx_work);
-
-    t1.join();
-    t2.join();
-
-    ASSERT_EQ(leave(s1), Status::OK);
-    ASSERT_EQ(leave(s2), Status::OK);
 }
 
 } // namespace shirakami::testing

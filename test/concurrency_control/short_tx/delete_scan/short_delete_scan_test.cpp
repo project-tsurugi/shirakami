@@ -46,17 +46,23 @@ TEST_F(short_delete_scan_test,          // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
     ASSERT_EQ(vb, "a");
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, "a"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     ASSERT_EQ(Status::OK, next(s, hd));
@@ -78,14 +84,20 @@ TEST_F(short_delete_scan_test,                                // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, "b"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     std::string vb{};
@@ -113,13 +125,19 @@ TEST_F(short_delete_scan_test,                            // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, "a"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     std::string vb{};

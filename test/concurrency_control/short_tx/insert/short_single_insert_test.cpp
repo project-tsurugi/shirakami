@@ -50,6 +50,8 @@ TEST_F(single_insert, read_only_mode_insert) { // NOLINT
 TEST_F(single_insert, insert_at_non_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, insert(s, 0, "", ""));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -97,6 +99,8 @@ TEST_F(single_insert, long_value_insert) { // NOLINT
             "5678901234567890123456789012345678901234567890");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -109,6 +113,8 @@ TEST_F(single_insert, long_key_insert) { // NOLINT
     std::string v("v");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};
@@ -125,11 +131,10 @@ TEST_F(single_insert, insert_user_abort) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    LOG(INFO);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "k", "v"));
-    LOG(INFO);
     ASSERT_EQ(Status::OK, abort(s)); // NOLINT
-    LOG(INFO);
     ASSERT_EQ(Status::OK, leave(s));
 }
 

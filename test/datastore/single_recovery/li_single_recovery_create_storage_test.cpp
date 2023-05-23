@@ -80,6 +80,8 @@ TEST_F(li_single_recovery_create_storage_test,      // NOLINT
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     EXPECT_EQ(st_list.size(), 1);
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

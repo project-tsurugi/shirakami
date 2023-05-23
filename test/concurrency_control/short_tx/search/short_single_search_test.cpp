@@ -38,6 +38,8 @@ TEST_F(single_search, search_at_non_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string vb{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_STORAGE_NOT_FOUND, search_key(s, {}, "", vb));
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -48,11 +50,17 @@ TEST_F(single_search, search) { // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, storage, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

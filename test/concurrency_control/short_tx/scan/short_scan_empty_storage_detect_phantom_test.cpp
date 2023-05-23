@@ -46,11 +46,15 @@ TEST_F(short_scan_empty_storage_detect_phantom_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::vector<const Tuple*> records{};
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));
     // phantom insert
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // detect phantom

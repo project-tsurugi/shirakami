@@ -67,6 +67,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -74,6 +76,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "b"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -90,6 +94,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     // test: contents
     std::string vb{};
     ASSERT_EQ(Status::OK, get_storage("1", st));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, st, "a", vb));
     ASSERT_EQ(vb, "b");
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

@@ -20,8 +20,9 @@ using namespace shirakami;
 class read_only_search_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
-                                  "helper-read_only_search_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-read_only_tx-search-"
+                "read_only_search_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -80,6 +81,8 @@ TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -100,6 +103,8 @@ TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
 
     // =================================
     // verify phase
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "v2");
     // =================================
@@ -124,16 +129,22 @@ TEST_F(read_only_search_test, search_SS_version) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(Status::OK, enter(s3));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v1"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v2"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
     wait_epoch_update();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v3"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -143,6 +154,8 @@ TEST_F(read_only_search_test, search_SS_version) { // NOLINT
 
     // =================================
     // test phase
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "v1");

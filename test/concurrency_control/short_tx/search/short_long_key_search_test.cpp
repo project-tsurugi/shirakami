@@ -40,11 +40,15 @@ TEST_F(long_key_test, long_key_search) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     for (std::size_t i = 1; i < 300; i++) { // NOLINT
-        std::string k(i, 'A'); // search_key doesn't find with 256
-        std::string v("a");    // NOLINT
+        std::string k(i, 'A');              // search_key doesn't find with 256
+        std::string v("a");                 // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, k, v));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         std::string sb{};
         ASSERT_EQ(Status::OK, search_key(s, st, k, sb));
         ASSERT_EQ(v, sb);
@@ -60,6 +64,8 @@ TEST_F(long_key_test, 30kb_key_search) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string sb{};
     // test
     ASSERT_EQ(Status::WARN_NOT_FOUND,
@@ -75,6 +81,8 @@ TEST_F(long_key_test, 36kb_key_search) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string sb{};
     // test
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,

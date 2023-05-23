@@ -41,8 +41,12 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     std::string v("bbb");                                      // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::vector<const Tuple*> records{};
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, end,
@@ -78,12 +82,16 @@ TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
     std::string v("bbb");                                          // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, r1, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r2, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r3, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r4, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r5, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, b, scan_endpoint::INCLUSIVE, e,
                                     scan_endpoint::EXCLUSIVE, hd));
@@ -126,6 +134,8 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     std::string v("bbb");                                   // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, r1, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r2, v));
     ASSERT_EQ(Status::OK, upsert(s, st, r3, v));
@@ -134,6 +144,8 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st, r6, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     std::string sb{};
     {
@@ -160,6 +172,8 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     {
         ASSERT_EQ(Status::OK, open_scan(s, st, r3, scan_endpoint::EXCLUSIVE, e,
                                         scan_endpoint::EXCLUSIVE, handle));

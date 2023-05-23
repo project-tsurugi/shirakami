@@ -62,11 +62,15 @@ TEST_F(c_next, next_for_two) { // NOLINT
     // prepare data
     std::string k1{"k1"};
     std::string k2{"k2"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));

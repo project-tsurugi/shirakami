@@ -42,7 +42,13 @@ TEST_F(short_insert_search_test,                                     // NOLINT
     std::array<Token, 2> token_ar{};
     ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(1),
+                        transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
               search_key(token_ar.at(1), st, k, vb));
@@ -62,7 +68,13 @@ TEST_F(short_insert_search_test, // NOLINT
     std::array<Token, 2> token_ar{};
     ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(1),
+                        transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
               search_key(token_ar.at(1), st, k, vb));

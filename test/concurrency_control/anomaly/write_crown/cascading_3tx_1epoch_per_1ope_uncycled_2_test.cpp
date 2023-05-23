@@ -76,6 +76,9 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_2_test, all) { // NOLINT
     std::array<std::string, 5> v{"t0", "t1", "t2", "t3", "t4"};
     auto init_db = [&s, &v, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, v.at(0)));
@@ -127,6 +130,9 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
@@ -181,6 +187,9 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
@@ -242,6 +251,9 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));

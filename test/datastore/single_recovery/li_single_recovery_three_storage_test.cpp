@@ -60,6 +60,8 @@ void create_storage_and_upsert_one_record(std::size_t const i) {
     ASSERT_EQ(Status::OK, create_storage(std::to_string(i), st));
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
     ASSERT_EQ(Status::OK, commit(s));             // NOLINT
 
@@ -95,6 +97,8 @@ void storage_operation_test(std::size_t storage_num) {
     std::size_t itr_num{0};
     Storage max_st{0};
     for (auto&& st : st_list) {
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(st, (storage::initial_strg_ctr + itr_num) << 32); // NOLINT
         std::string vb{};
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));

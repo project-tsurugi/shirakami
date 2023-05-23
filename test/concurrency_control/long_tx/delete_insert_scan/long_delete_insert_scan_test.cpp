@@ -58,6 +58,8 @@ TEST_F(long_delete_insert_scan_test, scan_not_miss_converting_page) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // create page x
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "x", "v1"), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
 
@@ -73,8 +75,14 @@ TEST_F(long_delete_insert_scan_test, scan_not_miss_converting_page) { // NOLINT
 
         auto work_s2 = [s2, st]() {
             // s2 delete x and insert x to create converting page
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s2,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(delete_record(s2, st, "x"), Status::OK);
             ASSERT_EQ(Status::OK, commit(s2));
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s2,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(insert(s2, st, "x", "v2"), Status::OK);
             ASSERT_EQ(Status::OK, commit(s2));
         };
@@ -95,6 +103,8 @@ TEST_F(long_delete_insert_scan_test, scan_not_miss_converting_page) { // NOLINT
     }
 
     // cleanup
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(delete_record(s1, st, "x"), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, leave(s1));

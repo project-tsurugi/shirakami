@@ -55,6 +55,8 @@ TEST_F(update_to_not_wp_area_test, simple) { // NOLINT
     std::string k{"k"};
     std::string v{"v"};
     // prepare test data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st_1, k, v));
     ASSERT_EQ(Status::OK, upsert(s, st_2, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

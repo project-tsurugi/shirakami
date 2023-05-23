@@ -52,6 +52,8 @@ TEST_F(long_diagnostic_test, simple) { // NOLINT
 
     // set lower counter higher than 9 to look hex string
     for (std::size_t i = 0; i < 10; ++i) { // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "k", "v"));
         ASSERT_EQ(Status::OK, commit(s));
     }

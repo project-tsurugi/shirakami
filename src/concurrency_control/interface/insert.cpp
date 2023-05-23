@@ -74,7 +74,7 @@ Status insert(Token const token, Storage const storage,
 
     // check it already began.
     if (!ti->get_tx_began()) {
-        tx_begin({token}); // NOLINT
+        return Status::WARN_NOT_BEGIN;
     }
     ti->process_before_start_step();
 

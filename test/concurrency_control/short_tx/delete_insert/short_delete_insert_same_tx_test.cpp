@@ -21,7 +21,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-short_tx-"
-                "delete_insert/short_delete_insert_same_tx_test");
+                "delete_insert-short_delete_insert_same_tx_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -43,8 +43,12 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert) { // NOLINT
     std::string v("bbb");     // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -59,8 +63,12 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
     std::string iv("iv");     // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, iv));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
@@ -79,11 +87,15 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_NE(Status::OK, search_key(s, st, k, vb));
 
@@ -98,6 +110,8 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));

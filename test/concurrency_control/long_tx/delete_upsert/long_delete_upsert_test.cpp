@@ -83,6 +83,8 @@ TEST_F(long_delete_upsert_test, same_tx_delete_upsert) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -95,6 +97,8 @@ TEST_F(long_delete_upsert_test, same_tx_delete_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -115,6 +119,8 @@ TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(
@@ -131,12 +137,14 @@ TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
               delete_record(s2, st, "")); // forwarding to same epoch
     ASSERT_EQ(Status::OK, commit(s1));    // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));    // NOLINT
-    /**
+                                          /**
      * If write delete is at same epoch and delete is new in the order, the 
      * last state is deleted.
      */
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -153,6 +161,8 @@ TEST_F(long_delete_upsert_test, concurrent_delete_tx_upsert_tx) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(

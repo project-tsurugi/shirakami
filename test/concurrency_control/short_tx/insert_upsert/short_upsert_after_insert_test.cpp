@@ -29,8 +29,9 @@ Storage st{};
 class upsert_after_delete : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "upsert-upsert_after_insert_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "insert_upsert-short_upsert_after_insert_test");
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);
@@ -52,10 +53,16 @@ TEST_F(upsert_after_delete, txs) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s2, st, k, v));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s1, st, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);

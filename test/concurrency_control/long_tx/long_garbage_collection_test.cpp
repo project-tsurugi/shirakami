@@ -48,6 +48,8 @@ TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
     // prepare data
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

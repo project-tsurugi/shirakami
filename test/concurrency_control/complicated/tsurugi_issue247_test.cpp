@@ -50,6 +50,8 @@ TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
 
     // tx begin s1
     auto s1_work = [s1, st]() {
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s1, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
         commit(s1); // NOLINT
     };
@@ -100,7 +102,9 @@ TEST_F(tsurugi_issue247, 20230427_for_comment_ban) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2)); // long
 
     // make s1 large tx
-    for (std::size_t i = 0; i < 1000; ++i) { // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    for (std::size_t i = 0; i < 1000; ++i) {                          // NOLINT
         std::string_view key(reinterpret_cast<char*>(&i), sizeof(i)); // NOLINT
         ASSERT_EQ(Status::OK, insert(s1, st, key, ""));
     }

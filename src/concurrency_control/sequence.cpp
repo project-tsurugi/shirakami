@@ -272,9 +272,13 @@ Status sequence::create_sequence(SequenceId* id) {
                  sizeof(initial_version));
     value.append(reinterpret_cast<char*>(&initial_value), // NOLINT
                  sizeof(initial_value));
+    ret = tx_begin({token, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+    }
     ret = upsert(token, storage::sequence_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unexpected behavior";
+        LOG(ERROR) << log_location_prefix << "unexpected behavior: " << ret;
         return Status::ERR_FATAL;
     }
     ret = commit(token);
@@ -299,9 +303,7 @@ Status sequence::update_sequence(Token const token, SequenceId const id,
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
-    if (!ti->get_tx_began()) {
-        tx_begin({token}); // NOLINT
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     //ti->process_before_start_step();
 
     //ti->process_before_finish_step();
@@ -379,6 +381,10 @@ Status sequence::delete_sequence(SequenceId const id) {
                      sizeof(version));
     new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
                      sizeof(value));
+    ret = tx_begin({token, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+    }
     ret = upsert(token, storage::sequence_storage, key, new_value);
     if (ret != Status::OK) {
         LOG(ERROR) << log_location_prefix << "unexpected behavior";

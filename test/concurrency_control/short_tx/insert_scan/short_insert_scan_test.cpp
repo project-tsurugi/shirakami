@@ -41,11 +41,15 @@ TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
     // s1 does range read.
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -54,6 +58,8 @@ TEST_F(short_insert_scan_test, insert_find_phantom) { // NOLINT
     ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s1, hd));
     // s2 does insert.
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s2, st, "k", ""));
     // s3 does insert and find phantom
     ASSERT_EQ(Status::ERR_CC, insert(s1, st, "k2", ""));
@@ -72,6 +78,8 @@ TEST_F(short_insert_scan_test, scan_read_own_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -84,7 +92,7 @@ TEST_F(short_insert_scan_test, scan_read_own_insert) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(short_insert_scan_test, // NOLINT
+TEST_F(short_insert_scan_test,                      // NOLINT
        scan_find_inserting_record_commit_success) { // NOLINT
     // prepare
     Storage st{};
@@ -94,7 +102,11 @@ TEST_F(short_insert_scan_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
@@ -109,7 +121,7 @@ TEST_F(short_insert_scan_test, // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(short_insert_scan_test, // NOLINT
+TEST_F(short_insert_scan_test,                   // NOLINT
        scan_find_inserting_record_commit_fail) { // NOLINT
     // prepare
     Storage st{};
@@ -119,14 +131,18 @@ TEST_F(short_insert_scan_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     std::string buf{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT, read_key_from_scan(s2, hd, buf));
     // test
-    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT // fail
 
     // cleanup

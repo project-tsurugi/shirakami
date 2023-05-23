@@ -108,6 +108,8 @@ TEST_F(simple_long_upsert_test, insert_two_key_and_check_wp_result) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

@@ -44,6 +44,8 @@ TEST_F(short_insert_long_key, long_key_insert) { // NOLINT
     std::string v("v");
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     Record* rec_ptr{};
@@ -61,6 +63,8 @@ TEST_F(short_insert_long_key, over_30kb_key_insert) { // NOLINT
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, insert(s, storage, k, "v"));
     ASSERT_EQ(Status::OK, leave(s));
 }

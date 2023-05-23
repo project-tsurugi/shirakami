@@ -40,6 +40,8 @@ TEST_F(scan_upsert, range_read_after_upsert_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
@@ -60,6 +62,8 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (auto i = 0; i < 14; ++i) { // NOLINT
         std::string key(1, i);
         std::string value(std::to_string(i));
@@ -68,6 +72,8 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -108,10 +114,14 @@ TEST_F(scan_upsert, range_read_tx_after_upsert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // test, upsert tx
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // range read tx
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -135,10 +145,14 @@ TEST_F(scan_upsert,                                        // NOLINT
     std::string b("b"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, a, a), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // start test, scan
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -153,6 +167,8 @@ TEST_F(scan_upsert,                                        // NOLINT
     // upsert tx
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s2, st, b, b), Status::OK);
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
@@ -173,11 +189,15 @@ TEST_F(scan_upsert,                                        // NOLINT
     std::string b("b"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, a, a), Status::OK);
     ASSERT_EQ(upsert(s, st, b, b), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // start test, scan
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -197,6 +217,8 @@ TEST_F(scan_upsert,                                        // NOLINT
     // upsert tx
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s2, st, b, b), Status::OK);
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 

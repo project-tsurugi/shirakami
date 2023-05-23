@@ -52,6 +52,9 @@ TEST_F(sequence_test, basic) { // NOLINT
         SequenceValue value{};
         ASSERT_EQ(Status::OK, create_sequence(&id));
         SequenceVersion version{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
                   update_sequence(token, id, version, value));
@@ -60,20 +63,35 @@ TEST_F(sequence_test, basic) { // NOLINT
           * version) by same arguments.
           */
         ASSERT_EQ(Status::OK, commit(token));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token));
         // this update_sequence is invalid because version is initial (0);
         version = 1;
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token));
         // this update_sequence is valid.
         version = 2;
         value = 3;
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token));
         // this update_sequence is invalid because version is 2 yet.
+        ASSERT_EQ(Status::OK,
+                  tx_begin({token,
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
                   update_sequence(token, id, version - 1, value));

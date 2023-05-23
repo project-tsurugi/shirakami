@@ -77,6 +77,9 @@ TEST_F(read_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     std::array<std::string, 5> var{"t0", "t1", "t2", "t3", "t4"};
     auto init_db = [&s, &var, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
@@ -133,6 +136,9 @@ TEST_F(read_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));

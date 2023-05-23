@@ -22,7 +22,7 @@ class session_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-session_test");
+                "shirakami-test-concurrency_control-session_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -43,6 +43,8 @@ TEST_F(session_test, member_operating) { // NOLINT
     // prepare data
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -55,6 +57,8 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
     ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
     ASSERT_EQ(ti->get_operating(), false);
     ASSERT_EQ(Status::OK, update(s, st, "k", ""));
@@ -90,6 +94,8 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
     // prepare data
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -112,6 +118,8 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
     wait_change_step_epoch();
     ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
     wait_change_step_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
     wait_change_step_epoch();
     ASSERT_EQ(Status::OK, update(s, st, "k", ""));

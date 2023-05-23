@@ -58,6 +58,8 @@ TEST_F(long_delete_search_test, same_tx_delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // start data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s));
     // end data preparation
@@ -75,6 +77,8 @@ TEST_F(long_delete_search_test, same_tx_delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_NE(Status::OK, search_key(s, st, "", buf));
 
     ASSERT_EQ(Status::OK, leave(s));
@@ -87,6 +91,8 @@ TEST_F(long_delete_search_test, same_tx_search_delete) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // start data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s));
     // end data preparation
@@ -129,6 +135,8 @@ TEST_F(long_delete_search_test, concurrent_search_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     // end preparation
@@ -166,6 +174,8 @@ TEST_F(long_delete_search_test, concurrent_delete_tx_search_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     // end preparation

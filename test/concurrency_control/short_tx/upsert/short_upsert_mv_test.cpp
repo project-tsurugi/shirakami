@@ -53,11 +53,19 @@ TEST_F(short_upsert_mv_test, new_epoch_new_version) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     std::string k{"K"};
     std::string first_v{"v"};
+    auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+    }
     ASSERT_EQ(upsert(s, st, k, first_v), Status::OK);
     ASSERT_EQ(commit(s), Status::OK);
     wait_epoch_update();
     std::string second_v{"v2"};
     // Writing after the epoch has changed should be the new version.
+    ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+    }
     ASSERT_EQ(upsert(s, st, k, second_v), Status::OK);
     ASSERT_EQ(commit(s), Status::OK);
     Record* rec_ptr{};

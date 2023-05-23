@@ -67,11 +67,15 @@ TEST_F(li_single_recovery_test,      // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, upsert(s, st, "b", "B"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, create_storage("2", st));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "x", "X"));
     ASSERT_EQ(Status::OK, upsert(s, st, "y", "Y"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -90,6 +94,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     // test: contents
     for (auto&& each_st : st_list) {
         std::string vb{};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         if (first) {
             ASSERT_EQ(Status::OK, search_key(s, each_st, "a", vb));
             ASSERT_EQ(vb, "A");

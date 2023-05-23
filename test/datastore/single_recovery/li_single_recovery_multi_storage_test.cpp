@@ -100,6 +100,8 @@ TEST_F(li_single_recovery_multi_storage_test,    // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string vb{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, t0, "a", vb));
     ASSERT_EQ("a", vb);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

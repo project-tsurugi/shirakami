@@ -33,7 +33,11 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
     std::string payload{options.payload()};
     value.append(payload);
-    auto ret = upsert(s, storage::meta_storage, key, value);
+    auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error.";
+    }
+    ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
@@ -49,7 +53,11 @@ void remove_storage_metadata(std::string_view key) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
-    auto ret = delete_record(s, storage::meta_storage, key);
+    auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error.";
+    }
+    ret = delete_record(s, storage::meta_storage, key);
     if (ret != Status::OK) {
         LOG(ERROR) << log_location_prefix
                    << "unreachable path, It can't find the record which must "
@@ -137,6 +145,10 @@ Status storage_get_options(Storage storage, storage_option& options) {
     std::string value{};
     std::size_t try_num{0};
     for (;;) {
+        ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unexpected error.";
+        }
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
             LOG(ERROR) << log_location_prefix << "unreachable path: " << s
@@ -190,6 +202,10 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     std::string payload{options.payload()};
     value.append(payload);
     // store and log information
+    ret = tx_begin({s, transaction_options::transaction_type::SHORT});
+    if (ret != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+    }
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
         LOG(ERROR) << log_location_prefix << "invalid use";

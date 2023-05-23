@@ -48,12 +48,16 @@ TEST_F(short_delete_short_search, delete_cant_cause_phantom) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s, st, "b", ""), Status::OK);
     ASSERT_EQ(upsert(s, st, "c", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "a", scan_endpoint::INCLUSIVE, "b",
                                     scan_endpoint::INCLUSIVE, hd));
@@ -64,6 +68,8 @@ TEST_F(short_delete_short_search, delete_cant_cause_phantom) { // NOLINT
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
 
     // interrupt delete tx
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, "c"));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // sleep so much considering gc
@@ -83,11 +89,15 @@ TEST_F(short_delete_short_search,             // NOLINT
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // scan and get node version
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "a", scan_endpoint::INCLUSIVE, "b",
                                     scan_endpoint::INCLUSIVE, hd));
@@ -103,6 +113,8 @@ TEST_F(short_delete_short_search,             // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // delete b
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, "b"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

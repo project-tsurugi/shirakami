@@ -56,6 +56,8 @@ TEST_F(write_skew, simple) { // NOLINT
     // prepare data
     std::size_t v{0};
     std::string_view v_view{reinterpret_cast<char*>(&v), sizeof(v)}; // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, x, v_view), Status::OK);
     ASSERT_EQ(upsert(s1, st, y, v_view), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));

@@ -56,6 +56,8 @@ TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
     Token s1{}; // long
     Token s2{}; // long
     ASSERT_EQ(enter(s0), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s0, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s0, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s0));
     wait_epoch_update();
@@ -94,6 +96,8 @@ TEST_F(long_scan_upsert_test, reading_lower_priority_wp) { // NOLINT
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(leave(s), Status::OK);
@@ -126,6 +130,8 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "", init_val));
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(leave(s), Status::OK);
@@ -172,6 +178,8 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         // test verify
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         std::string vb{};
         ASSERT_EQ(search_key(s, st, "", vb), Status::OK);
         ASSERT_EQ(vb, s1_val);

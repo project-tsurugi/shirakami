@@ -57,6 +57,8 @@ TEST_F(long_delete_update_test, same_tx_update_delete) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -69,6 +71,8 @@ TEST_F(long_delete_update_test, same_tx_update_delete) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_NE(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -82,6 +86,8 @@ TEST_F(long_delete_update_test, same_tx_delete_update) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -94,6 +100,8 @@ TEST_F(long_delete_update_test, same_tx_delete_update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_NE(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -113,6 +121,8 @@ TEST_F(long_delete_update_test, concurrent_update_tx_delete_tx) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(
@@ -131,6 +141,8 @@ TEST_F(long_delete_update_test, concurrent_update_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -148,6 +160,8 @@ TEST_F(long_delete_update_test, concurrent_delete_tx_update_tx) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(

@@ -58,6 +58,8 @@ TEST_F(long_delete_scan_test,                   // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -96,6 +98,8 @@ TEST_F(long_delete_scan_test,                        // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -134,6 +138,8 @@ TEST_F(long_delete_scan_test,                             // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, "a", ""), Status::OK);
     ASSERT_EQ(upsert(s1, st, "b", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT

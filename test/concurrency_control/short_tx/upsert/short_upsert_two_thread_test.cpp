@@ -62,6 +62,12 @@ TEST_F(short_upsert_two_thread_test,           // NOLINT
             Token s{};
             ASSERT_EQ(Status::OK, enter(s));
             std::string k{"12345678"};
+            auto ret =
+                    tx_begin({s, transaction_options::transaction_type::SHORT});
+            if (ret != Status::OK) {
+                LOG(ERROR) << log_location_prefix << "unexpected error. "
+                           << ret;
+            }
             for (std::size_t i = 0; i < ary_size; i++) {
                 std::size_t buf{};
                 if (th_id == 0) {

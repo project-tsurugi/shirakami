@@ -71,6 +71,8 @@ TEST_F(search_upsert_mth, rmw) { // NOLINT
         std::size_t v{0};
         std::string_view v_view{reinterpret_cast<char*>(&v), // NOLINT
                                 sizeof(v)};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(upsert(s, storage, elem, v_view), Status::OK);
         ASSERT_EQ(Status::OK, commit(s));
     }
@@ -90,6 +92,9 @@ TEST_F(search_upsert_mth, rmw) { // NOLINT
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         for (auto&& elem : keys) {
             for (;;) {
+                ASSERT_EQ(Status::OK,
+                          tx_begin({s, transaction_options::transaction_type::
+                                               SHORT}));
                 std::string vb{};
                 while (search_key(s, storage, elem, vb) != Status::OK) {
                     _mm_pause();
@@ -120,6 +125,8 @@ TEST_F(search_upsert_mth, rmw) { // NOLINT
 
     // verify result
     ASSERT_EQ(enter(s), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (auto&& elem : keys) {
         std::string vb{};
         ASSERT_EQ(search_key(s, storage, elem, vb), Status::OK);

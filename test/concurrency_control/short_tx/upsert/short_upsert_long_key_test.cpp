@@ -42,6 +42,8 @@ TEST_F(short_upsert_long_key, long_key_upsert) { // NOLINT
     std::string k(1024 * 30, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, "v"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -53,6 +55,8 @@ TEST_F(short_upsert_long_key, over_30kb_key_upsert) { // NOLINT
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH, upsert(s, st, k, "v"));
     ASSERT_EQ(Status::OK, leave(s));
 }

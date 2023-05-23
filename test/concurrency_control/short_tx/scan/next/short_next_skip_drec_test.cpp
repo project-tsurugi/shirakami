@@ -46,14 +46,20 @@ TEST_F(c_next, next_skip_one_drec) { // NOLINT
     std::string k1{"k1"};
     std::string k2{"k2"};
     std::string k3{"k3"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     // the cursor must point k1
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k2));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
@@ -82,15 +88,21 @@ TEST_F(c_next, next_skip_two_drec) { // NOLINT
     std::string k2{"k2"};
     std::string k3{"k3"};
     std::string k4{"k4"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     // the cursor must point k1
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k2));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k3));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
@@ -121,16 +133,22 @@ TEST_F(c_next, next_skip_three_drec) { // NOLINT
     std::string k3{"k3"};
     std::string k4{"k4"};
     std::string k5{"k5"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
     ASSERT_EQ(Status::OK, upsert(s, st, k5, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     // the cursor must point k1
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k2));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k3));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k4));

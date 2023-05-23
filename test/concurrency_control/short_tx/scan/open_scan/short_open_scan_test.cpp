@@ -46,6 +46,8 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // parepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
     ASSERT_EQ(Status::OK, insert(s, storage, k2, v1));
     ASSERT_EQ(Status::OK, insert(s, storage, k3, v1));
@@ -56,6 +58,8 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
     auto* ti{static_cast<session*>(s)};
     auto& sh = ti->get_scan_handle();
     {
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
@@ -99,14 +103,20 @@ TEST_F(open_scan_test, multi_open) { // NOLINT
     std::string v1("0"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ScanHandle handle2{};
     ASSERT_EQ(Status::WARN_NOT_FOUND,
               open_scan(s, storage, "", scan_endpoint::INF, "",
                         scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     ASSERT_EQ(0, handle);
@@ -122,15 +132,21 @@ TEST_F(open_scan_test, multi_open_reading_values) { // NOLINT
     create_storage("", storage);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ScanHandle handle2{};
     ASSERT_EQ(Status::WARN_NOT_FOUND,
               open_scan(s, storage, "", scan_endpoint::INF, "",
                         scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, "a/1", "1"));
     ASSERT_EQ(Status::OK, insert(s, storage, "b/3", "3"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s, storage, "a/", scan_endpoint::INCLUSIVE,
                                     "", scan_endpoint::INF, handle));
     ASSERT_EQ(0, handle);

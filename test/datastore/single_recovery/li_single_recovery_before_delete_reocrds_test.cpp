@@ -71,6 +71,8 @@ TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -79,7 +81,8 @@ TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
 
     ASSERT_EQ(Status::OK, enter(s));
-    std::string vb{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
@@ -98,6 +101,8 @@ TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
     ASSERT_EQ(Status::OK, create_storage("1", st, {2, ""}));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

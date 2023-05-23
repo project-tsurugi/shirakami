@@ -76,6 +76,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     std::array<std::string, 7> var{"t0", "t1", "t2", "t3", "t4", "t5", "t6"};
     auto init_db = [&s, &var, u, v, w, x, y, stu, stv, stw, stx, sty]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stu, u, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stv, v, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stw, w, var.at(0)));
@@ -137,6 +140,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -200,6 +206,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -263,6 +272,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(5)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -326,6 +338,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s.at(6)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -391,6 +406,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     // version (epoch) is same to t3(t1)
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -456,6 +474,9 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     // version (epoch) is same to t3(t1)
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));

@@ -61,6 +61,8 @@ void create_storage_and_upsert_one_record(std::size_t const i) {
 
     ASSERT_EQ(Status::OK, enter(s));
     // data creation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
     ASSERT_EQ(Status::OK, commit(s));             // NOLINT
 
@@ -97,6 +99,8 @@ void recovery_test(std::size_t recovery_num) {
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
     ASSERT_EQ(recovery_num, st_list.size());
     for (auto&& st : st_list) {
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }

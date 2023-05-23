@@ -77,6 +77,9 @@ TEST_F(one_readonly_with_occ_overlapped_test, all) { // NOLINT
     std::array<std::string, 6> v{"t0", "t1", "t2", "t3", "t4", "t5"};
     auto init_db = [&s, &v, a, b, x, y, z, sta, stb, stx, sty, stz]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), sta, a, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stb, b, v.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, v.at(0)));
@@ -134,6 +137,9 @@ TEST_F(one_readonly_with_occ_overlapped_test, all) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));

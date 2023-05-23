@@ -44,10 +44,16 @@ TEST_F(insert_after_delete, independent_tx) { // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     epoch::epoch_t before_insert{epoch::get_global_epoch()};
     //std::size_t ctr{0};
     while (Status::OK != insert(s, st, k, v)) {
@@ -73,12 +79,17 @@ TEST_F(insert_after_delete, same_tx) { // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    LOG(INFO);
     ASSERT_EQ(Status::OK, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v2.data(), v2.size()), 0);

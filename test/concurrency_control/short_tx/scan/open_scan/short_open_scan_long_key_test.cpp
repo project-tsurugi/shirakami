@@ -46,6 +46,8 @@ TEST_F(short_open_scan_long_key, 30kb_key_open_scan) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // it uses for left
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND,
               open_scan(s, st, k, scan_endpoint::INCLUSIVE, "",
@@ -64,6 +66,8 @@ TEST_F(short_open_scan_long_key, 36kb_key_open_scan) { // NOLINT
     std::string k(1024 * 36, '0'); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     // it uses for left
     ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,

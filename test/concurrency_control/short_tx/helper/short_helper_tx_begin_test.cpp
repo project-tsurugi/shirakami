@@ -127,23 +127,33 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     auto* ti = static_cast<session*>(s);
     // test upsert
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_tx_began(), false);
     // test delete
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, storage, k));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     // test insert
     while (Status::OK != insert(s, storage, k, v)) {
         // silo impl delay physical unhook 40ms
@@ -152,30 +162,42 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_tx_began(), false);
     // test update
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update(s, storage, k, v));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update(s, storage, k, v));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_tx_began(), false);
     // test search
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(ti->get_tx_began(), false);
     // test open_scan
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle handle = {};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k,
                                     scan_endpoint::INCLUSIVE, handle));
@@ -183,6 +205,8 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k,
                                     scan_endpoint::INCLUSIVE, handle));
     ASSERT_EQ(handle, 0);

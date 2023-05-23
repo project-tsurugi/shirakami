@@ -60,6 +60,9 @@ extern Status create_sequence(SequenceId* id); // NOLINT
  * @a token.
  * @return Status::WARN_ALREADY_EXIST The @a id is less than or equal to latest 
  * id of update_sequence operations of this transaction.
+ * @return Status::WARN_NOT_BEGIN The transaction is not began. 
+ * Start with short
+ * mode and try it.
  * @return Status::ERR_FATAL Programming error.
  * @warning multiple update_sequence calls to a sequence with same version 
  * number cause undefined behavior.

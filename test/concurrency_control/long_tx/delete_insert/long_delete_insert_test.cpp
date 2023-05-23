@@ -58,6 +58,8 @@ TEST_F(long_delete_insert_test, same_tx_delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // start data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s));
     // end data preparation
@@ -75,6 +77,8 @@ TEST_F(long_delete_insert_test, same_tx_delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -124,6 +128,8 @@ TEST_F(long_delete_insert_test, concurrent_insert_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     // end preparation

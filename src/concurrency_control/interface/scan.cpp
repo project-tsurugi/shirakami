@@ -150,7 +150,7 @@ Status open_scan(Token const token, Storage storage,
     auto* ti = static_cast<session*>(token);
     // tx begin if not
     if (!ti->get_tx_began()) {
-        tx_begin({token}); // NOLINT
+        return Status::WARN_NOT_BEGIN;
     }
     // pre-process
     ti->process_before_start_step();

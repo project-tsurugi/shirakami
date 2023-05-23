@@ -67,6 +67,8 @@ TEST_F(long_insert_upsert_test, same_tx_upsert_insert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -91,6 +93,8 @@ TEST_F(long_insert_upsert_test, same_tx_insert_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -124,12 +128,14 @@ TEST_F(long_insert_upsert_test, concurrent_upsert_tx_insert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s2, st, "", "")); // forwarding to same epoch
     ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2));         // NOLINT
-    /**
+                                                   /**
      * If write insert is at same epoch and insert is new in the order, the 
      * last state is insertd.
      */
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -169,6 +175,8 @@ TEST_F(long_insert_upsert_test,                     // NOLINT
     // If these is at same epoch, s2 find read info of s1.
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -201,12 +209,14 @@ TEST_F(long_insert_upsert_test,                     // NOLINT
     ASSERT_EQ(Status::OK, upsert(s2, st, "", "b")); // forwarding
     ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));              // NOLINT
-    /**
+                                                    /**
      * If these is at different epoch, s2 didn't do forwarding and didn't find 
      * read info..
      */
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "b");

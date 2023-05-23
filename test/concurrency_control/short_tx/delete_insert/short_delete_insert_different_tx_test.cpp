@@ -21,7 +21,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-short_tx-"
-                "delete_insert/short_delete_insert_different_tx_test");
+                "delete_insert-short_delete_insert_different_tx_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -48,12 +48,18 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     // end preparation
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(delete_record(s2, st, ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s2));
 
@@ -78,13 +84,21 @@ TEST_F(short_delete_insert_different_tx_test, delete_insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s3));
 
     // data preparation
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
     // end preparation
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(delete_record(s1, st, ""), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s2, st, "", ""));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s3, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(delete_record(s3, st, ""), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));

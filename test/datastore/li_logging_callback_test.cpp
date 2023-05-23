@@ -76,6 +76,8 @@ TEST_F(li_logging_callback_test,        // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "b"));
     ASSERT_EQ(Status::OK, upsert(s, st, "c", "d"));
     ASSERT_EQ(Status::OK, upsert(s, st2, "x", "y"));
@@ -112,16 +114,22 @@ TEST_F(li_logging_callback_test,                                  // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
 
     // insert two page
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "A", "B"));
     ASSERT_EQ(Status::OK, insert(s, st, "a", "b"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // update two page
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, update(s, st, "A", "C"));
     ASSERT_EQ(Status::OK, update(s, st, "a", "c"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // delete two page
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, "A"));
     ASSERT_EQ(Status::OK, delete_record(s, st, "a"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT

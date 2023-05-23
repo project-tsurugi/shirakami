@@ -15,8 +15,9 @@ namespace shirakami::testing {
 class delete_scan_upsert : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "delete_scan_upsert_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_scan_upsert-short_delete_scan_upsert_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -39,9 +40,13 @@ TEST_F(delete_scan_upsert, range_read_delete) { // NOLINT
     std::string v("v");   // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(upsert(s, st, k2, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));

@@ -58,6 +58,8 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
         ASSERT_EQ(Status::OK, enter(s));
         std::string key{std::to_string(th_id)};
         std::string val{"value"};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, key, val));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         wait_epoch_update();

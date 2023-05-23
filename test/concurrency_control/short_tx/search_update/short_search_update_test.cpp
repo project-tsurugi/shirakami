@@ -49,8 +49,12 @@ TEST_F(search_update, pointReadUpdate) { // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, update(s, st, k, v2));
@@ -68,6 +72,8 @@ TEST_F(search_update, // NOLINT
     // prepare data
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, k, v1), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
@@ -94,6 +100,9 @@ TEST_F(search_update, // NOLINT
         LOG(INFO) << "start work";
 
         for (;;) {
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
             for (;;) {

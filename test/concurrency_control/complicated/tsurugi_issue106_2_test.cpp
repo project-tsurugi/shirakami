@@ -51,6 +51,7 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     //   "0" : alive node,
     //   "1" - n : dead node (before GC)
     ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_OK(insert(s, st, "0", "")); // min
     for (int i = 1; i <= n; i++) {
         ASSERT_OK(insert(s, st, std::to_string(i), ""));
@@ -58,6 +59,7 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
     ASSERT_OK(commit(s));
     ASSERT_OK(leave(s));
     ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (int i = 1; i <= n; i++) {
         ASSERT_OK(delete_record(s, st, std::to_string(i)));
     }
@@ -69,6 +71,8 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
         ScanHandle scan{};
         ASSERT_OK(enter(s));
         for (;;) {
+            ASSERT_OK(tx_begin(
+                    {s, transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(open_scan(s, st, "1", scan_endpoint::INCLUSIVE,
                                 std::to_string(n), scan_endpoint::INCLUSIVE,
                                 scan),

@@ -18,8 +18,9 @@ namespace shirakami::testing {
 class short_delete_short_search : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "short_delete_short_search_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-short_tx-"
+                "delete_search-short_delete_short_search_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
@@ -39,8 +40,12 @@ TEST_F(short_delete_short_search, search_delete) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", vb));
     ASSERT_EQ(vb, "");
@@ -54,13 +59,19 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     {
         // stop gc
         std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         std::string vb{};
         // this should find logical record deleted.
         ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, "", vb));
@@ -70,6 +81,8 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
     // wait process of gc thread
     sleep(1);
     {
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         // not change behavior
         std::string vb{};
         // this should not find logical record deleted.

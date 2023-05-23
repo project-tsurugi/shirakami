@@ -153,8 +153,12 @@ TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     std::string v2("v2"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
@@ -162,6 +166,8 @@ TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_NE(Status::OK, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
@@ -177,6 +183,10 @@ TEST_F(short_delete_insert_search,                     // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s2, st, ""));

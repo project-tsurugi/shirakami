@@ -59,6 +59,8 @@ TEST_F(tsurugi_issue234, comment_by_ban_20230308) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // create page x
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(insert(s1, st, "x", "v1"), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1));
 
@@ -72,6 +74,8 @@ TEST_F(tsurugi_issue234, comment_by_ban_20230308) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s2, st, "x", "v2"));
 
     /**

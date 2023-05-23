@@ -118,7 +118,7 @@ Status delete_record(Token token, Storage storage,
 
     // check whether it already began.
     if (!ti->get_tx_began()) {
-        tx_begin({token}); // NOLINT
+        return Status::WARN_NOT_BEGIN;
     }
     ti->process_before_start_step();
 

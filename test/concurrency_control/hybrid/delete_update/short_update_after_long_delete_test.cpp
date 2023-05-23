@@ -18,7 +18,12 @@ using namespace shirakami;
 
 class short_update_after_long_delete : public ::testing::Test { // NOLINT
 public:
-    static void call_once_f() { FLAGS_stderrthreshold = 0; }
+    static void call_once_f() {
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-hybrid-delete_update-"
+                "short_update_after_long_delete_test");
+        FLAGS_stderrthreshold = 0;
+    }
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
@@ -46,6 +51,8 @@ TEST_F(short_update_after_long_delete, independent_tx) { // NOLINT
     std::string v("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -53,6 +60,8 @@ TEST_F(short_update_after_long_delete, independent_tx) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));

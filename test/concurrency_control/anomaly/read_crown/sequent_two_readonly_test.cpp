@@ -73,6 +73,9 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     std::array<std::string, 6> var{"t0", "t1", "t2", "t3", "t4", "t5"};
     auto init_db = [&s, &var, u, v, x, y, stu, stv, stx, sty]() {
         epoch::set_perm_to_proc(epoch::ptp_init_val);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s.at(0),
+                            transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stu, u, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stv, v, var.at(0)));
         ASSERT_EQ(Status::OK, upsert(s.at(0), stx, x, var.at(0)));
@@ -129,6 +132,9 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -183,6 +189,9 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -240,6 +249,9 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));
@@ -297,6 +309,9 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
             reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 
     // verify
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s.at(0), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stu, u, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stv, v, buf));

@@ -42,18 +42,22 @@ TEST_F(short_search_upsert, simple) { // NOLINT
     std::string k{"k"};
     std::string v{"v"};
     std::string vb{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s, st, k, vb), Status::WARN_NOT_FOUND);
     ASSERT_EQ(upsert(s, st, k, v), Status::OK);
     ASSERT_EQ(search_key(s, st, k, vb), Status::OK);
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(commit(s), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(search_key(s, st, k, vb), Status::OK);
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
     ASSERT_EQ(commit(s), Status::OK);
     ASSERT_EQ(leave(s), Status::OK);
 }
 
-TEST_F(short_search_upsert, // NOLINT
+TEST_F(short_search_upsert,                                          // NOLINT
        search_can_find_concurrent_inserting_by_upsert_commit_fail) { // NOLINT
     Storage st{};
     create_storage("", st);
@@ -62,7 +66,13 @@ TEST_F(short_search_upsert, // NOLINT
     std::array<Token, 2> token_ar{};
     ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(1),
+                        transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
               search_key(token_ar.at(1), st, k, vb));
@@ -81,12 +91,18 @@ TEST_F(short_search_upsert, // NOLINT
     std::array<Token, 2> token_ar{};
     ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(1),
+                        transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::WARN_CONCURRENT_INSERT,
               search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(1))); // NOLINT
-    ASSERT_EQ(Status::OK, commit(token_ar.at(0)));     // NOLINT
+    ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
     ASSERT_EQ(Status::OK, leave(token_ar.at(0)));
     ASSERT_EQ(Status::OK, leave(token_ar.at(1)));
 }
@@ -100,11 +116,20 @@ TEST_F(short_search_upsert, search_find_concurrent_upsert_at_commit) { // NOLINT
     std::array<Token, 2> token_ar{};
     ASSERT_EQ(Status::OK, enter(token_ar.at(0)));
     ASSERT_EQ(Status::OK, enter(token_ar.at(1)));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
     ASSERT_EQ(Status::OK, commit(token_ar.at(0))); // NOLINT
 
     // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(0),
+                        transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(token_ar.at(0), st, k, v));
+    ASSERT_EQ(Status::OK,
+              tx_begin({token_ar.at(1),
+                        transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(token_ar.at(1), st, k, vb));
     ASSERT_EQ(Status::OK, commit(token_ar.at(0)));     // NOLINT

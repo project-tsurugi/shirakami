@@ -50,10 +50,16 @@ TEST_F(simple_scan, test_after_delete_api) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     {
         std::unique_lock<std::mutex> stop_epoch{epoch::get_ep_mtx()};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
         ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
         ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::WARN_NOT_FOUND,
                   open_scan(s, st, "", scan_endpoint::INF, "",

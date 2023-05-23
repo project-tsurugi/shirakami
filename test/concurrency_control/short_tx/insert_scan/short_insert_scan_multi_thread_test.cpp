@@ -14,6 +14,9 @@
 
 #include "shirakami/interface.h"
 
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
+
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
@@ -56,10 +59,13 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
 
             for (;;) {
                 ScanHandle hd{};
+                ASSERT_EQ(Status::OK,
+                          tx_begin({s, transaction_options::transaction_type::
+                                               SHORT}));
                 auto ret = open_scan(s, st, "", scan_endpoint::INF, "",
                                      scan_endpoint::INF, hd);
                 if (ret != Status::OK) {
-                    abort(s);
+                    ASSERT_EQ(Status::OK, abort(s));
                     continue;
                 }
                 std::size_t ct = 0;
@@ -88,6 +94,12 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
 
             std::string k{"12345678"}; // to allocate 8 bites definitely.
             for (std::size_t i = 1; i <= 5000; ++i) { // NOLINT
+                auto* ti = static_cast<session*>(s);
+                if (!ti->get_tx_began()) {
+                    ASSERT_EQ(Status::OK,
+                              tx_begin({s, transaction_options::
+                                                   transaction_type::SHORT}));
+                }
                 memcpy(k.data(), &i, sizeof(i));
                 ASSERT_EQ(insert(s, st, k, "v"), Status::OK);
                 if (i % 500 == 0) { // NOLINT

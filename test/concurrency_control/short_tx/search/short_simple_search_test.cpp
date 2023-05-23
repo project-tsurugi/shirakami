@@ -40,8 +40,12 @@ TEST_F(simple_search, search_search) { // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);
@@ -57,6 +61,8 @@ TEST_F(simple_search, search_local_upsert) { // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
@@ -72,8 +78,12 @@ TEST_F(simple_search, search_upsert_search) { // NOLINT
     std::string v2("ccc"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string vb{};
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(memcmp(vb.data(), v.data(), v.size()), 0);

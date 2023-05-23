@@ -18,8 +18,8 @@ Storage storage;
 class delete_after_write : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-silo-"
-                                  "delete_delete_after_write_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
+                                  "delete-short_delete_after_write_test");
     }
 
     void SetUp() override {
@@ -39,6 +39,8 @@ TEST_F(delete_after_write, delete_after_insert) { // NOLINT
     std::string v1("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
               delete_record(s, storage, k1));
@@ -52,6 +54,8 @@ TEST_F(delete_after_write, delete_after_upsert) { // NOLINT
     std::string v1("v"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT,
               delete_record(s, storage, k1));

@@ -64,6 +64,8 @@ TEST_F(short_scan_long_upsert_test, short_scan_find_valid_wp) { // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     ASSERT_EQ(tx_begin({ss}), Status::OK);
@@ -90,6 +92,8 @@ TEST_F(short_scan_long_upsert_test,         // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     {
@@ -122,6 +126,8 @@ TEST_F(short_scan_long_upsert_test,        // NOLINT
     ASSERT_EQ(enter(ss), Status::OK);
     ASSERT_EQ(enter(sb), Status::OK);
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     // end prepare data
@@ -169,6 +175,8 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
         // prepare data
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st_x, x, ""));
         ASSERT_EQ(Status::OK, upsert(s, st_y, y, ""));
         ASSERT_EQ(Status::OK, commit(s));
@@ -193,6 +201,9 @@ TEST_F(short_scan_long_upsert_test,             // NOLINT
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
         Token stx{};
         ASSERT_EQ(enter(stx), Status::OK);
+        ASSERT_EQ(
+                Status::OK,
+                tx_begin({stx, transaction_options::transaction_type::SHORT}));
         std::string buf{};
         ScanHandle hd{};
         ASSERT_EQ(Status::OK, open_scan(stx, st_y, "", scan_endpoint::INF, "",

@@ -43,8 +43,12 @@ TEST_F(simple_insert, insert) { // NOLINT
     std::string v("bbb"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k, v));
     ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, storage, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
@@ -70,12 +74,16 @@ TEST_F(simple_insert, insert) { // NOLINT
     // insert one char (0) records.
     char k2 = 0;
     std::string_view key_view{&k2, sizeof(k2)};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, key_view, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     check_records(key_view, v);
 
     // insert null key records.
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, "", v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

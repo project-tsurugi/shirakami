@@ -55,6 +55,8 @@ TEST_F(long_search_test, read_write_mode_single_long_search_success) { // NOLINT
     ASSERT_EQ(enter(s), Status::OK);
 
     // prepare data
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));
     wait_epoch_update();
@@ -81,6 +83,8 @@ TEST_F(long_search_test,                               // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, upsert(s, st, "2", ""));
     ASSERT_EQ(Status::OK, upsert(s, st, "3", ""));
@@ -122,6 +126,8 @@ TEST_F(long_search_test,                                              // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -153,6 +159,8 @@ TEST_F(long_search_test,                                              // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -184,6 +192,8 @@ TEST_F(long_search_test,                                          // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
@@ -215,6 +225,8 @@ TEST_F(long_search_test,                                          // NOLINT
     Token s2{};
     ASSERT_EQ(enter(s), Status::OK);
     ASSERT_EQ(enter(s2), Status::OK);
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "1", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

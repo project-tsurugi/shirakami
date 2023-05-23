@@ -57,6 +57,8 @@ TEST_F(long_insert_update_test, same_tx_update_insert) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
@@ -69,6 +71,8 @@ TEST_F(long_insert_update_test, same_tx_update_insert) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -93,6 +97,8 @@ TEST_F(long_insert_update_test, same_tx_insert_update) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", buf));
     ASSERT_EQ(buf, "b");
@@ -130,6 +136,8 @@ TEST_F(long_insert_update_test,                       // NOLINT
     // s2 found s1's read info of update
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
@@ -146,6 +154,8 @@ TEST_F(long_insert_update_test,                             // NOLINT
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
@@ -165,6 +175,8 @@ TEST_F(long_insert_update_test,                             // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));  // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -204,6 +216,8 @@ TEST_F(long_insert_update_test,                     // NOLINT
     // If these is at same epoch, s2 find read info of s1.
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");
@@ -238,6 +252,8 @@ TEST_F(long_insert_update_test,                     // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));                          // NOLINT
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "a");

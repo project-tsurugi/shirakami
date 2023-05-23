@@ -48,8 +48,12 @@ TEST_F(upsert_after_upsert, double_upsert_same_tx) { // NOLINT
     std::string v3("ddd"); // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v2));
     ASSERT_EQ(Status::OK, upsert(s, st, k, v3));
     std::string vb{};
@@ -67,11 +71,17 @@ TEST_F(upsert_after_upsert, double_upsert_diff_tx) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", "1"));
     ASSERT_EQ(Status::OK, upsert(s2, st, "", "2"));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
     std::string buf{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "2");
     ASSERT_EQ(Status::OK, commit(s1));
@@ -92,6 +102,8 @@ TEST_F(upsert_after_upsert, multi_upsert) { // NOLINT
     ASSERT_EQ(tx_begin({s2}), Status::OK); // to block gc
 
     for (std::size_t i = 0; i < 100; ++i) { // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, k, v));
         ASSERT_EQ(Status::OK, commit(s));
     }

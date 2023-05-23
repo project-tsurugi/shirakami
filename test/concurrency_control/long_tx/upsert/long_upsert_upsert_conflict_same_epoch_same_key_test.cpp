@@ -88,6 +88,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
 
     // verify
     std::string buf{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "v2");
 
@@ -131,6 +133,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "v2");
@@ -181,6 +185,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(Status::OK, rc);
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "v2");
@@ -231,6 +237,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(Status::OK, rc);
 
     // verify
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(buf, "v2");

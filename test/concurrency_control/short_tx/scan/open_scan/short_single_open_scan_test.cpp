@@ -39,6 +39,8 @@ TEST_F(open_scan_test, open_scan_read_own_insert_one) { // NOLINT
     create_storage("", st);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "", ""));
 
     // test
@@ -62,12 +64,16 @@ TEST_F(open_scan_test, open_scan_read_existing_page) { // NOLINT
     std::string v{"v"};     // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    ScanHandle handle{};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v));
     ASSERT_EQ(Status::OK, insert(s, storage, k2, v));
     ASSERT_EQ(Status::OK, insert(s, storage, k3, v));
     ASSERT_EQ(Status::OK, insert(s, storage, k4, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k2, scan_endpoint::INCLUSIVE,
                                     "sa0", scan_endpoint::EXCLUSIVE, handle));
     std::string sb{};

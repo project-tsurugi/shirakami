@@ -71,6 +71,9 @@ TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
         {
             std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
             ep = epoch::get_global_epoch();
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
             ASSERT_EQ(Status::OK, commit(s));
         }
@@ -120,6 +123,9 @@ TEST_F(search_session, read_version_epoch_descending_order) { // NOLINT
         {
             std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
             ep = epoch::get_global_epoch();
+            ASSERT_EQ(Status::OK,
+                      tx_begin({s,
+                                transaction_options::transaction_type::SHORT}));
             ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
             ASSERT_EQ(Status::OK, commit(s));
         }

@@ -57,6 +57,8 @@ TEST_F(long_read_from_scan_conflict_wp_test, long_find_wp) { // NOLINT
 
     // prepare data
     std::string k{"k"};
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     wait_epoch_update();

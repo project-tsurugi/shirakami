@@ -51,18 +51,35 @@ TEST_F(sequence_multiple_update_test, basic) { // NOLINT
         SequenceVersion version{};
         ++version;
         SequenceValue value{1};
+        auto ret =
+                tx_begin({token, transaction_options::transaction_type::SHORT});
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+        }
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
+        ret = tx_begin({token, transaction_options::transaction_type::SHORT});
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+        }
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
+        ret = tx_begin({token, transaction_options::transaction_type::SHORT});
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+        }
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token)); // NOLINT
         std::this_thread::sleep_for(200ms);
         ++version;
+        ret = tx_begin({token, transaction_options::transaction_type::SHORT});
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+        }
         ASSERT_EQ(Status::OK, update_sequence(token, id, version, value));
         ASSERT_EQ(Status::OK, commit(token)); // NOLINT
 

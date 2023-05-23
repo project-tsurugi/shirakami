@@ -42,11 +42,15 @@ TEST_F(scan_upsert_phantom, scan_upsert_tx_find_phantom) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, "1", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
     // s1 scan and register node info
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -54,6 +58,8 @@ TEST_F(scan_upsert_phantom, scan_upsert_tx_find_phantom) { // NOLINT
     ASSERT_EQ(Status::OK, read_key_from_scan(s1, handle, sb));
     ASSERT_EQ(sb, "1");
     // s2 insert and commit
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s2, st, "2", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // s1 insert 3 and find phantom
@@ -76,11 +82,15 @@ TEST_F(scan_upsert_phantom, scan_find_phantom_by_upsert) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s1, st, "1", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
     // s1 scan and register node info
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ScanHandle handle{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
@@ -88,6 +98,8 @@ TEST_F(scan_upsert_phantom, scan_find_phantom_by_upsert) { // NOLINT
     ASSERT_EQ(Status::OK, read_key_from_scan(s1, handle, sb));
     ASSERT_EQ(sb, "1");
     // s2 insert and commit
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s2, st, "2", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     // s1 commit and find phantom
