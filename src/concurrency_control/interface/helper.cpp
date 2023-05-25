@@ -218,7 +218,6 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
     if (tid.get_absent() && !tid.get_latest()) {
         // success, the record is deleted
         tid.set_latest(true);
-        tid.set_absent(true);
         rec_ptr->set_tid(tid);
         rec_ptr->get_tidw_ref().unlock();
         return Status::OK;
