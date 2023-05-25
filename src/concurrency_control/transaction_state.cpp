@@ -143,11 +143,7 @@ Status check_ltx_is_highest_priority(Token token, bool& out) {
         // check highest tx id
         std::size_t highest_tx_id{std::get<ongoing_tx::index_id>(
                 (*ongoing_tx::get_tx_info().begin()))};
-        if (highest_tx_id == ti->get_long_tx_id()) {
-            out = true;
-        } else {
-            out = false;
-        }
+        out = highest_tx_id == ti->get_long_tx_id();
     }
 
     return Status::OK;
