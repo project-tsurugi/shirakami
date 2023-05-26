@@ -64,6 +64,7 @@ TEST_F(tsurugi_issue284, 20230525_comment_ban) { // NOLINT
     ASSERT_OK(create_storage("", st));
     Token s{};
     ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (int i = 1; i <= n; i++) {
         ASSERT_OK(insert(s, st, mk_key(i), common_val));
     }
@@ -79,10 +80,14 @@ TEST_F(tsurugi_issue284, 20230525_comment_ban) { // NOLINT
             Token s{};
             auto key = mk_key(i);
             ASSERT_OK(enter(s));
+            ASSERT_OK(tx_begin(
+                    {s, transaction_options::transaction_type::SHORT}));
             ASSERT_OK(delete_record(s, st, key));
             ASSERT_OK(commit(s));
             ASSERT_OK(leave(s));
             ASSERT_OK(enter(s));
+            ASSERT_OK(tx_begin(
+                    {s, transaction_options::transaction_type::SHORT}));
             ASSERT_OK(insert(s, st, key, common_val));
             ASSERT_OK(commit(s));
             ASSERT_OK(leave(s));
