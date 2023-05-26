@@ -218,22 +218,6 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
     if (tid.get_absent() && !tid.get_latest()) {
         // success, the record is deleted
         tid.set_latest(true);
-        auto ce = epoch::get_global_epoch();
-        if (tid.get_epoch() < ce) {
-            // make version for distinguishing by reading of ltx
-            version* new_v{new version("", rec_ptr->get_latest())}; // NOLINT
-            // create the timestamp of the version
-            tid_word pre_tid = tid;
-            pre_tid.set_absent(false);
-            pre_tid.set_latest(false);
-            pre_tid.set_lock(false);
-            // set timestamp for old version
-            rec_ptr->get_latest()->set_tid(pre_tid);
-            // update for second version by latest version
-            rec_ptr->set_latest(new_v);
-            // for distinguishing epoch by ltx
-            tid.set_epoch(ce);
-        }
         rec_ptr->set_tid(tid);
         rec_ptr->get_tidw_ref().unlock();
         return Status::OK;

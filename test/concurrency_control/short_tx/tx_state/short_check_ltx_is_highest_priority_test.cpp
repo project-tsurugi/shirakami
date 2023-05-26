@@ -35,9 +35,9 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(short_check_ltx_is_highest_priority_test,
-       simple) { // NOLINT
-                 // prepare
+TEST_F(short_check_ltx_is_highest_priority_test, // NOLINT
+       simple) {                                 // NOLINT
+                                                 // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
 
