@@ -270,7 +270,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             ret = tx_begin({token});
         } else if (FLAGS_transaction_type == "long") {
             tt = transaction_options::transaction_type::LONG;
-            ret = tx_begin({token, tt, {storage}});
+            if (FLAGS_rratio == 100) {
+                ret = tx_begin({token, tt});
+            } else {
+                ret = tx_begin({token, tt, {storage}});
+            }
             // wait start epoch
             auto* ti = static_cast<session*>(token);
             while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
@@ -331,12 +335,15 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
     RETRY_COMMIT:
         ret = commit(token);
+        if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
+            // ltx
+            do {
+                _mm_pause();
+                ret = check_commit(token);
+            } while (ret == Status::WARN_WAITING_FOR_OTHER_TX);
+        }
         if (ret == Status::OK) { // NOLINT
             ++myres.get().get_local_commit_counts();
-        } else if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
-            // ltx
-            _mm_pause();
-            goto RETRY_COMMIT; // NOLINT
         } else {
         ABORTED: // NOLINT
             ++myres.get().get_local_abort_counts();
