@@ -65,7 +65,7 @@ Status search_key(session* ti, Storage const storage,
         // it read normal page
         if (read_value) { value = read_res; }
     }
-    ti->get_read_set().emplace_back(storage, rec_ptr, read_tid);
+    ti->push_to_read_set_for_stx({storage, rec_ptr, read_tid});
     return rs;
 }
 

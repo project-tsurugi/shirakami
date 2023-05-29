@@ -29,7 +29,7 @@ static inline Status insert_process(session* const ti, Storage st,
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 VLOG(log_trace) << log_location_prefix_detail_info
-                                 << "insert record, key " + std::string(key);
+                                << "insert record, key " + std::string(key);
             }
 
             Status check_node_set_res{ti->update_node_set(nvp)};
@@ -73,9 +73,7 @@ Status insert(Token const token, Storage const storage,
     auto* ti = static_cast<session*>(token);
 
     // check it already began.
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     ti->process_before_start_step();
 
     // check for write
@@ -123,8 +121,7 @@ Status insert(Token const token, Storage const storage,
                 // start: make read set
                 if (ti->get_tx_type() ==
                     transaction_options::transaction_type::SHORT) {
-                    ti->get_read_set().emplace_back(storage, rec_ptr,
-                                                    found_tid);
+                    ti->push_to_read_set_for_stx({storage, rec_ptr, found_tid});
                 } else if (ti->get_tx_type() ==
                            transaction_options::transaction_type::LONG) {
                     // register read_by_set

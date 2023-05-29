@@ -111,7 +111,7 @@ Status check_not_found(
                 /**
                  * short mode must read deleted record and verify, so add read set
                  */
-                ti->get_read_set().emplace_back(st, rec_ptr, tid);
+                ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
@@ -149,9 +149,7 @@ Status open_scan(Token const token, Storage storage,
     // take thread info
     auto* ti = static_cast<session*>(token);
     // tx begin if not
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     // pre-process
     ti->process_before_start_step();
 
@@ -393,8 +391,9 @@ Status next(Token const token, ScanHandle const handle) {
                  * short mode must read deleted record and verify, so add read set
                  */
                 auto& sh = ti->get_scan_handle();
-                ti->get_read_set().emplace_back(
-                        sh.get_scanned_storage_set().get(handle), rec_ptr, tid);
+                ti->push_to_read_set_for_stx(
+                        {sh.get_scanned_storage_set().get(handle), rec_ptr,
+                         tid});
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
@@ -560,8 +559,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             return rr;
         }
         // optimization: set for re-read
-        ti->get_read_set().emplace_back(
-                sh.get_scanned_storage_set().get(handle), rec_ptr, tidb);
+        ti->push_to_read_set_for_stx(
+                {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
 
         if (rr == Status::OK) {
             // it read normal record.

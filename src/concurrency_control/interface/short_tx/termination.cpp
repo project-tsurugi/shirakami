@@ -144,7 +144,7 @@ Status abort(session* ti) { // NOLINT
 }
 
 Status read_verify(session* ti, Storage const storage, tid_word read_tid,
-                   tid_word check, Record* const rec_ptr) {
+                   tid_word check, const Record* const rec_ptr) {
     if (
             // different tid
             read_tid.get_tid() != check.get_tid() ||

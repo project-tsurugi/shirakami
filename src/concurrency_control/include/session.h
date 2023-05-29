@@ -326,11 +326,13 @@ public:
         }
     }
 
-    void push_to_read_set(read_set_obj&& elem) {
+    void push_to_read_set_for_stx(read_set_obj&& elem) {
+        std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
         read_set_for_stx_.emplace_back(std::move(elem));
     }
 
     void push_to_write_set(write_set_obj&& elem) {
+        std::lock_guard<std::shared_mutex> lk{mtx_write_set_};
         write_set_.push(std::move(elem));
     }
 
@@ -536,9 +538,14 @@ private:
     std::set<wp::page_set_meta*> read_negative_list_{};
 
     /**
-     * @brief local read set.
+     * @brief local read set for stx.
      */
     read_set_for_stx_type read_set_for_stx_{};
+
+    /**
+     * @brief mutex for local read set for stx.
+    */
+    std::shared_mutex mtx_read_set_for_stx_;
 
     /**
      * @brief cache for search api.
@@ -551,6 +558,11 @@ private:
      * @brief local write set.
      */
     local_write_set write_set_{};
+
+    /**
+     * @brief mutex for local write set.
+    */
+    std::shared_mutex mtx_write_set_;
 
     /**
      * @brief The begin epoch of stx transaction begin used for GC.
