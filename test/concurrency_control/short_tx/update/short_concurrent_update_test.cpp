@@ -95,7 +95,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
     auto r1 = std::async(std::launch::async, [&] {
         for (int i = 0; i < 5; ++i) { // NOLINT
             bool rc = false;
-            ASSERT_NO_FATAL_FAILURE(S::run(storage, rc));
+            ASSERT_NO_FATAL_FAILURE(S::run(storage, rc)); // NOLINT
             if (!rc) {
                 --i;
                 continue;
@@ -104,7 +104,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
     });
     for (int i = 0; i < 5; ++i) { // NOLINT
         bool rc = false;
-        ASSERT_NO_FATAL_FAILURE(S::run(storage, rc));
+        ASSERT_NO_FATAL_FAILURE(S::run(storage, rc)); // NOLINT
         if (!rc) {
             --i;
             continue;

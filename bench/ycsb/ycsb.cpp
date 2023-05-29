@@ -270,7 +270,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             ret = tx_begin({token, tt});
         } else if (FLAGS_transaction_type == "long") {
             tt = transaction_options::transaction_type::LONG;
-            if (FLAGS_rratio == 100) {
+            if (FLAGS_rratio == 100) { // NOLINT
                 ret = tx_begin({token, tt});
             } else {
                 ret = tx_begin({token, tt, {storage}});
