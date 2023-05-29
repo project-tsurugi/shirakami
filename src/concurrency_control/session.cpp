@@ -44,7 +44,7 @@ void session::clear_local_set() {
     range_read_by_long_set_.clear();
     point_read_by_short_set_.clear();
     range_read_by_short_set_.clear();
-    read_set_.clear();
+    read_set_for_stx_.clear();
     read_set_for_ltx().clear();
     wp_set_.clear();
     write_set_.clear();

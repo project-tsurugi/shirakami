@@ -44,7 +44,7 @@ public:
                                 std::string, scan_endpoint>>;
     using point_read_by_short_set_type = std::set<point_read_by_short*>;
     using range_read_by_short_set_type = std::set<range_read_by_short*>;
-    using read_set_type = std::vector<read_set_obj>;
+    using read_set_for_stx_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     /**
      * map <key, value>: key is table info. value is tuple information: 
@@ -213,7 +213,7 @@ public:
         return read_negative_list_;
     }
 
-    read_set_type& get_read_set() { return read_set_; }
+    read_set_for_stx_type& get_read_set() { return read_set_for_stx_; }
 
     /**
      * @brief get the value of tx_began_.
@@ -327,7 +327,7 @@ public:
     }
 
     void push_to_read_set(read_set_obj&& elem) {
-        read_set_.emplace_back(std::move(elem));
+        read_set_for_stx_.emplace_back(std::move(elem));
     }
 
     void push_to_write_set(write_set_obj&& elem) {
@@ -538,7 +538,7 @@ private:
     /**
      * @brief local read set.
      */
-    read_set_type read_set_{};
+    read_set_for_stx_type read_set_for_stx_{};
 
     /**
      * @brief cache for search api.
