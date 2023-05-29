@@ -22,8 +22,10 @@
 
 // shirakami-impl interface library
 #include "clock.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "random.h"
+
+#include "concurrency_control/include/session.h"
+#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 
@@ -52,7 +54,13 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     if (ret != Status::OK) { LOG(ERROR) << ret; }
 
     std::size_t ctr{0};
+    auto* ti = static_cast<session*>(token);
     for (uint64_t i = start; i <= end; ++i) {
+        if (!ti->get_tx_began()) {
+            ret = tx_begin(
+                    {token, transaction_options::transaction_type::SHORT});
+            if (ret != Status::OK) { LOG(ERROR); }
+        }
         if (get_use_separate_storage()) {
             ret = insert(token, pbd_storage, make_key(key_length, i),
                          std::string(value_length, '0'));

@@ -267,7 +267,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         transaction_options::transaction_type tt{};
         if (FLAGS_transaction_type == "short") {
             tt = transaction_options::transaction_type::SHORT;
-            ret = tx_begin({token});
+            ret = tx_begin({token, tt});
         } else if (FLAGS_transaction_type == "long") {
             tt = transaction_options::transaction_type::LONG;
             if (FLAGS_rratio == 100) {
