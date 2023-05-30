@@ -104,6 +104,18 @@ Status check_not_found(
                     return Status::OK;
                 }
             }
+
+            /**
+             * first version must be inserting page or deleted page
+            */
+            version* ver = rec_ptr->get_latest();
+            for (;;) {
+                ver = ver->get_next();
+                if (ver == nullptr) { break; }
+                if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                    return Status::OK;
+                }
+            }
         } else {
             // absent && not latest == deleted
             if (ti->get_tx_type() ==

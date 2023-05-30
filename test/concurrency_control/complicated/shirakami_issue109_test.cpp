@@ -43,7 +43,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(shirakami_issue109, DISABLED_simple) { // NOLINT
+TEST_F(shirakami_issue109, simple) { // NOLINT
     Storage st{};
     ASSERT_OK(create_storage("", st));
     // stop gc
