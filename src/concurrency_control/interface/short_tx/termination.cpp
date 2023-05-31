@@ -180,7 +180,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     tid_word check{};
     std::vector<Storage> accessed_st{};
     // read verify
-    for (auto&& itr : ti->get_read_set()) {
+    for (auto&& itr : ti->get_read_set_for_stx()) {
         auto* rec_ptr = itr.get_rec_ptr();
         check.get_obj() = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
 
@@ -653,7 +653,7 @@ void register_point_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
     std::set<Record*> recs{};
-    for (auto&& itr : ti->get_read_set()) { recs.insert(itr.get_rec_ptr()); }
+    for (auto&& itr : ti->get_read_set_for_stx()) { recs.insert(itr.get_rec_ptr()); }
 
     for (auto&& itr : recs) {
         auto& ro{itr->get_read_by()};
@@ -664,7 +664,12 @@ void register_point_read_by_short(session* const ti) {
 void register_range_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
-    for (auto&& itr : ti->get_range_read_by_short_set()) { itr->push(ce); }
+    {
+        //take read lock
+        std::shared_lock<std::shared_mutex> lk{
+                ti->get_mtx_range_read_by_short_set()};
+        for (auto&& itr : ti->get_range_read_by_short_set()) { itr->push(ce); }
+    }
 }
 
 void process_tx_state(session* ti,

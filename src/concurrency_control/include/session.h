@@ -176,6 +176,8 @@ public:
 
     node_set_type& get_node_set() { return node_set_; }
 
+    std::shared_mutex& get_mtx_node_set() { return mtx_node_set_; }
+
     /**
      * @brief get the value of mrc_tid_.
      */
@@ -197,6 +199,10 @@ public:
         return point_read_by_short_set_;
     }
 
+    std::shared_mutex& get_mtx_range_read_by_short_set() {
+        return mtx_range_read_by_short_set_;
+    }
+
     range_read_by_short_set_type& get_range_read_by_short_set() {
         return range_read_by_short_set_;
     }
@@ -213,7 +219,7 @@ public:
         return read_negative_list_;
     }
 
-    read_set_for_stx_type& get_read_set() { return read_set_for_stx_; }
+    read_set_for_stx_type& get_read_set_for_stx() { return read_set_for_stx_; }
 
     /**
      * @brief get the value of tx_began_.
@@ -326,7 +332,21 @@ public:
         }
     }
 
+    void clear_range_read_by_short_set() {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{
+                get_mtx_range_read_by_short_set()};
+        get_range_read_by_short_set().clear();
+    }
+
+    void clear_read_set_for_stx() {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
+        read_set_for_stx_.clear();
+    }
+
     void push_to_read_set_for_stx(read_set_obj&& elem) {
+        // take write lock
         std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
         read_set_for_stx_.emplace_back(std::move(elem));
     }
@@ -520,6 +540,11 @@ private:
 
     point_read_by_short_set_type point_read_by_short_set_{};
 
+    /**
+     * mutex for range_read_by_short_set_
+    */
+    std::shared_mutex mtx_range_read_by_short_set_;
+
     range_read_by_short_set_type range_read_by_short_set_{};
 
     /**
@@ -585,6 +610,11 @@ private:
      * @brief local set for phantom avoidance.
      */
     node_set_type node_set_{};
+
+    /**
+     * @brief mutex for local node set
+    */
+    std::shared_mutex mtx_node_set_;
 
     /**
      * @brief about scan operation.

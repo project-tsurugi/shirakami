@@ -214,14 +214,20 @@ Status open_scan(Token const token, Storage storage,
          * The fact must be guaranteed by isolation. So it can get node version 
          * and it must check about phantom at commit phase.
          */
-        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            for (auto&& elem : nvec) {
-                // engineering optimization, shrink nvec size.
-                if (!ti->get_node_set().empty() &&       // not empty
-                    ti->get_node_set().back() == elem) { // last elem is same
-                    continue;                            // skip registering.
+        {
+            // take write lock for node set
+            std::lock_guard<std::shared_mutex> lk{ti->get_mtx_node_set()};
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                for (auto&& elem : nvec) {
+                    // engineering optimization, shrink nvec size.
+                    if (!ti->get_node_set().empty() && // not empty
+                        ti->get_node_set().back() ==
+                                elem) { // last elem is same
+                        continue;       // skip registering.
+                    }
+                    ti->get_node_set().emplace_back(elem);
                 }
-                ti->get_node_set().emplace_back(elem);
             }
         }
         ti->process_before_finish_step();
@@ -255,7 +261,12 @@ Status open_scan(Token const token, Storage storage,
             return Status::ERR_FATAL;
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
-        ti->get_range_read_by_short_set().insert(rrbs);
+        {
+            // take write lock
+            std::lock_guard<std::shared_mutex> lk{
+                    ti->get_mtx_range_read_by_short_set()};
+            ti->get_range_read_by_short_set().insert(rrbs);
+        }
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
         LOG(ERROR) << log_location_prefix << "unreachable path";

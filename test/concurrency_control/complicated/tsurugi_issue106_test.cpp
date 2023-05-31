@@ -155,8 +155,7 @@ TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
         auto* ti = static_cast<session*>(s);
-        ASSERT_EQ(ti->get_read_set().size(), 1);
-        ASSERT_EQ(ti->get_read_set().size(), 1);
+        ASSERT_EQ(ti->get_read_set_for_stx().size(), 1);
         // insert and read timestamp is converted by it.
         ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
