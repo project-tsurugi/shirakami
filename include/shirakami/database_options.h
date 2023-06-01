@@ -79,7 +79,8 @@ private:
     std::filesystem::path log_directory_path_{""};
 
     /**
-     * @brief todo. now, 1 thread.
+     * @brief todo. now, 1 thread. in the future, shirakami ask datastore module
+     * to use the number of logger_thread_num_ to use for logging.
      */
     std::size_t logger_thread_num_{0}; // NOLINT
     // ==========
