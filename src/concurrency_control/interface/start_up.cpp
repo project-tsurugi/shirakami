@@ -114,7 +114,11 @@ Status init(database_options options) { // NOLINT
      * This executes create_channel and pass it to shirakami's executor.
      */
     datastore::init_about_session_table(log_dir);
+    VLOG(log_debug_timing_event)
+            << log_location_prefix_timing_event << "startup:start_datastore_ready";
     ready(datastore::get_datastore());
+    VLOG(log_debug_timing_event)
+            << log_location_prefix_timing_event << "startup:end_datastore_ready";
 
 #endif
 
@@ -138,10 +142,14 @@ Status init(database_options options) { // NOLINT
 
 #ifdef PWAL
     // recover shirakami from datastore recovered.
+    VLOG(log_debug_timing_event)
+            << log_location_prefix_timing_event << "startup:start_recovery_from_datastore";
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
         datastore::recovery_from_datastore();
     }
+    VLOG(log_debug_timing_event)
+            << log_location_prefix_timing_event << "startup:end_recovery_from_datastore";
 #endif
 
     // about epoch
