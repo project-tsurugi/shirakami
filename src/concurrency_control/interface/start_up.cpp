@@ -18,6 +18,7 @@
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
 #include "database/include/logging.h"
+#include "database/include/thread_pool.h"
 
 #ifdef PWAL
 
@@ -152,6 +153,9 @@ Status init(database_options options) { // NOLINT
 
     // about back ground worker about commit
     bg_work::bg_commit::init();
+
+    //// about thread pool
+    //thread_pool::init();
 
     set_initialized(true); // about init command
     return Status::OK;

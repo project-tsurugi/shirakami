@@ -33,6 +33,11 @@
     - header: `/:shirakami:timing:shutdown:end_shutdown_yakushima`
       - 出力内容：yakushima に関するシャットダウン処理の開始と終了。当該処理は yakushima におけるツリー構造の全てを解体し、それに関するヒープメモリを解放する作業である。
   
+<!-- - header: `/:shirakami:timing:shutdown:start_shutdown_thread_pool`
+    - header: `/:shirakami:timing:shutdown:end_shutdown_thread_pool`
+      - 出力内容：スレッドプールに関するシャットダウン処理の開始と終了。当該処理はスレッドプールのワーカースレッドへ終了シグナルを送信し、スレッドプールのタスクキューに格納された全てのタスクの終了とワーカースレッドの終了を行う。
+-->
+
   - commit phase
     - header: `/:shirakami:timing:start_wait`
       - 出力形式：ヘッダー＋ tx id

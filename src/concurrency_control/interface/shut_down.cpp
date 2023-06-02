@@ -16,6 +16,8 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
+#include "database/include/thread_pool.h"
+
 #ifdef PWAL
 
 #include "concurrency_control/include/lpwal.h"
@@ -108,6 +110,13 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     yakushima::fin();
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << ":shutdown:end_shutdown_yakushima";
+
+    //// about thread pool
+    //VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+    //                             << ":shutdown:start_shutdown_thread_pool";
+    //thread_pool::fin();
+    //VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+    //                             << ":shutdown:end_shutdown_thread_pool";
 
     // clear flag
     set_initialized(false);
