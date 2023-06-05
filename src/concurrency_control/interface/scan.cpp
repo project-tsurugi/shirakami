@@ -30,6 +30,7 @@ Status close_scan(Token const token, ScanHandle const handle) {
 
 inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
+    std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
     for (ScanHandle i = 0;; ++i) {
         auto itr = sh.get_scan_cache().find(i);
         if (itr == sh.get_scan_cache().end()) {
@@ -297,17 +298,20 @@ Status open_scan(Token const token, Storage storage,
 
     // Cache a pointer to record.
     auto& sh = ti->get_scan_handle();
-    std::get<scan_handler::scan_cache_storage_pos>(
-            sh.get_scan_cache()[handle]) = storage;
-    auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
-            sh.get_scan_cache()[handle]);
-    vec.reserve(scan_res.size());
-    for (std::size_t i = 0; i < scan_res.size(); ++i) {
-        vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
-                                 std::get<index_rec_ptr>(scan_res.at(i))),
-                         // by inline optimization
-                         std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
-                         std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+    {
+        std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        std::get<scan_handler::scan_cache_storage_pos>(
+                sh.get_scan_cache()[handle]) = storage;
+        auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
+                sh.get_scan_cache()[handle]);
+        vec.reserve(scan_res.size());
+        for (std::size_t i = 0; i < scan_res.size(); ++i) {
+            vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
+                                     std::get<index_rec_ptr>(scan_res.at(i))),
+                             // by inline optimization
+                             std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
+                             std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+        }
     }
 
     // increment for head skipped records
@@ -329,30 +333,39 @@ Status next(Token const token, ScanHandle const handle) {
     /**
      * Check whether the handle is valid.
      */
-    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-        ti->process_before_finish_step();
-        return Status::WARN_INVALID_HANDLE;
+    {
+        // take read lock
+        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+            ti->process_before_finish_step();
+            return Status::WARN_INVALID_HANDLE;
+        }
     }
     // valid handle
 
     // increment cursor
     for (;;) {
-        std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-        ++scan_index;
+        Record* rec_ptr{};
+        {
+            // take read lock
+            std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+            std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+            ++scan_index;
 
-        // check range of cursor
-        if (std::get<scan_handler::scan_cache_vec_pos>(
-                    sh.get_scan_cache()[handle])
-                    .size() <= scan_index) {
-            ti->process_before_finish_step();
-            return Status::WARN_SCAN_LIMIT;
+            // check range of cursor
+            if (std::get<scan_handler::scan_cache_vec_pos>(
+                        sh.get_scan_cache()[handle])
+                        .size() <= scan_index) {
+                ti->process_before_finish_step();
+                return Status::WARN_SCAN_LIMIT;
+            }
+
+            // check target record
+            auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+                    sh.get_scan_cache()[handle]);
+            auto itr = scan_buf.begin() + scan_index;
+            rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
-
-        // check target record
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        auto itr = scan_buf.begin() + scan_index;
-        Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))};
 
         // check local write set
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
@@ -443,7 +456,7 @@ Status next(Token const token, ScanHandle const handle) {
     }
 
     // reset cache in cursor
-    ti->get_scan_handle().get_ci(handle).reset();
+    //ti->get_scan_handle().get_ci(handle).reset();
     ti->process_before_finish_step();
     return Status::OK;
 }
@@ -472,31 +485,40 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     auto& sh = ti->get_scan_handle();
 
-    // ==========
-    /**
+    Record* rec_ptr{};
+    yakushima::node_version64* nv_ptr{};
+    yakushima::node_version64_body nv{};
+    {
+        // take read lock
+        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        // ==========
+        /**
      * Check whether the handle is valid.
      */
-    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-        ti->process_before_finish_step();
-        return Status::WARN_INVALID_HANDLE;
-    }
-    // ==========
+        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+            ti->process_before_finish_step();
+            return Status::WARN_INVALID_HANDLE;
+        }
+        // ==========
 
-    scan_handler::scan_elem_type target_elem;
-    auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-            sh.get_scan_cache()[handle]);
-    std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-    auto itr = scan_buf.begin() + scan_index;
-    if (scan_buf.size() <= scan_index) {
-        ti->process_before_finish_step();
-        return Status::WARN_SCAN_LIMIT;
-    }
+        scan_handler::scan_elem_type target_elem;
+        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+                sh.get_scan_cache()[handle]);
+        std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+        auto itr = scan_buf.begin() + scan_index;
+        nv = std::get<1>(*itr);
+        nv_ptr = std::get<2>(*itr);
+        if (scan_buf.size() <= scan_index) {
+            ti->process_before_finish_step();
+            return Status::WARN_SCAN_LIMIT;
+        }
 
-    // ==========
-    /**
-     * Check read-own-write
-     */
-    Record* rec_ptr{const_cast<Record*>(std::get<0>(*itr))}; // NOLINT
+        // ==========
+        /**
+          * Check read-own-write
+          */
+        rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    }
     const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -517,8 +539,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     // ==========
     // wp verify section
-    Storage st = std::get<scan_handler::scan_cache_storage_pos>(
-            sh.get_scan_cache()[handle]);
+    Storage st{};
+    {
+        // take read lock
+        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        st = std::get<scan_handler::scan_cache_storage_pos>(
+                sh.get_scan_cache()[handle]);
+    }
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         /**
          * early abort optimization. If it is not, it finally finds at commit phase.
@@ -549,30 +576,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     }
     // ==========
 
-    // check local cache.
-    if (key_read && sh.get_ci(handle).get_was_read(cursor_info::op_type::key)) {
-        // it already read.
-        sh.get_ci(handle).get_key(buf);
-        ti->process_before_finish_step();
-        read_register_if_ltx(rec_ptr);
-        return Status::OK;
-    }
-    if (!key_read &&
-        sh.get_ci(handle).get_was_read(cursor_info::op_type::value)) {
-        // it already read.
-        sh.get_ci(handle).get_value(buf);
-        ti->process_before_finish_step();
-        read_register_if_ltx(rec_ptr);
-        return Status::OK;
-    }
-
     // check target record
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         tid_word tidb{};
         std::string valueb{};
         Status rr{};
         if (key_read) {
-            const_cast<Record*>(std::get<0>(*itr))->get_key(buf);
+            rec_ptr->get_key(buf);
             rr = read_record(rec_ptr, tidb, valueb, false);
         } else {
             rr = read_record(rec_ptr, tidb, buf);
@@ -585,21 +595,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->push_to_read_set_for_stx(
                 {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
 
-        if (rr == Status::OK) {
-            // it read normal record.
-            if (key_read) {
-                sh.get_ci(handle).set_key(buf);
-                sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
-            } else {
-                sh.get_ci(handle).set_value(buf);
-                sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
-            }
-        }
-
         // create node set info
         auto& ns = ti->get_node_set();
-        if (ns.empty() || std::get<1>(ns.back()) != std::get<2>(*itr)) {
-            ns.emplace_back(std::get<1>(*itr), std::get<2>(*itr));
+        if (ns.empty() || std::get<1>(ns.back()) != nv_ptr) {
+            ns.emplace_back(nv, nv_ptr);
         }
 
         ti->process_before_finish_step();
@@ -623,15 +622,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
         // read latest version after version function
         if (is_latest) {
-            // optimization: set for re-read
             if (key_read) {
                 rec_ptr->get_key(buf);
-                sh.get_ci(handle).set_key(buf);
-                sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
             } else {
                 ver->get_value(buf);
-                sh.get_ci(handle).set_value(buf);
-                sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
             }
             // load stable timestamp to verify optimistic read
             tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
@@ -668,13 +662,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             ver->get_value(buf);
         }
 
-        if (key_read) {
-            sh.get_ci(handle).set_key(buf);
-            sh.get_ci(handle).set_was_read(cursor_info::op_type::key);
-        } else {
-            sh.get_ci(handle).set_value(buf);
-            sh.get_ci(handle).set_was_read(cursor_info::op_type::value);
-        }
         read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
@@ -702,18 +689,21 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
 
     auto& sh = ti->get_scan_handle();
 
-    if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-        /**
-         * the handle was invalid.
-         */
-        ti->process_before_finish_step();
-        return Status::WARN_INVALID_HANDLE;
-    }
+    {
+        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+            /**
+              * the handle was invalid.
+              */
+            ti->process_before_finish_step();
+            return Status::WARN_INVALID_HANDLE;
+        }
 
-    size = std::get<scan_handler::scan_cache_vec_pos>(
-                   sh.get_scan_cache()[handle])
-                   .size();
-    ti->process_before_finish_step();
+        size = std::get<scan_handler::scan_cache_vec_pos>(
+                       sh.get_scan_cache()[handle])
+                       .size();
+        ti->process_before_finish_step();
+    }
     return Status::OK;
 }
 

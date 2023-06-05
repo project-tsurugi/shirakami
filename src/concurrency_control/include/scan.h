@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <shared_mutex>
 #include <tuple>
 
 #include "shirakami/logging.h"
@@ -12,80 +13,37 @@
 
 namespace shirakami {
 
-class cursor_info {
-public:
-    enum class op_type {
-        key,
-        value,
-    };
-
-    void get_key(std::string& out) { out = key_; }
-
-    void get_value(std::string& out) { out = value_; }
-
-    bool get_was_read(cursor_info::op_type op) {
-        if (op == op_type::key) { return was_read_.test(0); }
-        if (op == op_type::value) { return was_read_.test(1); }
-        LOG(ERROR) << "unreachable path";
-        return true;
-    }
-
-    void set_key(std::string_view key) { key_ = key; }
-
-    void set_value(std::string_view value) { value_ = value; }
-
-    void set_was_read(cursor_info::op_type op) {
-        if (op == op_type::key) {
-            was_read_.set(0);
-        } else if (op == op_type::value) {
-            was_read_.set(1);
-        } else {
-            LOG(ERROR) << "unreachable path";
-        }
-    }
-
-    void reset() {
-        reset_was_read();
-        key_.clear();
-        value_.clear();
-    }
-
-    void reset_was_read() { was_read_.reset(); }
-
-private:
-    /**
-     * @brief position 0 means whether it already read key. position 1 means 
-     * whether it already read value.
-     */
-    std::bitset<2> was_read_;
-    std::string key_{};
-    std::string value_{};
-};
-
-class cursor_set {
-public:
-    cursor_info& get(ScanHandle hd) { return cset_[hd]; }
-
-    void clear() { cset_.clear(); }
-
-    void clear(ScanHandle hd) { cset_.erase(hd); }
-
-private:
-    std::map<ScanHandle, cursor_info> cset_;
-};
-
 class scanned_storage_set {
 public:
-    Storage get(ScanHandle const hd) { return map_[hd]; }
+    Storage get(ScanHandle const hd) {
+        std::shared_lock<std::shared_mutex> lk{get_mtx()};
+        return map_[hd];
+    }
 
-    void clear() { map_.clear(); }
+    void clear() {
+        std::lock_guard<std::shared_mutex> lk{get_mtx()};
+        map_.clear();
+    }
 
-    void clear(ScanHandle const hd) { map_.erase(hd); }
+    void clear(ScanHandle const hd) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx()};
+        map_.erase(hd);
+    }
 
-    void set(ScanHandle const hd, Storage const st) { map_[hd] = st; };
+    void set(ScanHandle const hd, Storage const st) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx()};
+        map_[hd] = st;
+    };
+
+    std::shared_mutex& get_mtx() { return mtx_; }
 
 private:
     std::map<ScanHandle, Storage> map_;
+
+    /**
+     * @brief mutex for scanned storage set
+    */
+    std::shared_mutex mtx_{};
 };
 
 class scan_handler {
@@ -101,23 +59,28 @@ public:
     static constexpr std::size_t scan_cache_vec_pos = 1;
 
     void clear() {
-        get_scan_cache().clear();
-        get_scan_cache_itr().clear();
-        cs_.clear();
+        {
+            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
+            get_scan_cache().clear();
+            get_scan_cache_itr().clear();
+        }
+        get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
         // about scan cache
-        auto itr = get_scan_cache().find(hd);
-        if (itr == get_scan_cache().end()) {
-            return Status::WARN_INVALID_HANDLE;
-        }
-        get_scan_cache().erase(itr);
+        {
+            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
+            auto itr = get_scan_cache().find(hd);
+            if (itr == get_scan_cache().end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+            get_scan_cache().erase(itr);
 
-        // about scan cache iterator
-        auto index_itr = get_scan_cache_itr().find(hd);
-        get_scan_cache_itr().erase(index_itr);
-        cs_.clear(hd);
+            // about scan cache iterator
+            auto index_itr = get_scan_cache_itr().find(hd);
+            get_scan_cache_itr().erase(index_itr);
+        }
 
         // about scanned storage set
         scanned_storage_set_.clear(hd);
@@ -125,7 +88,7 @@ public:
         return Status::OK;
     }
 
-    cursor_info& get_ci(ScanHandle hd) { return cs_.get(hd); }
+    // getter
 
     [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
         return scan_cache_;
@@ -134,6 +97,8 @@ public:
     [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
         return scan_cache_itr_;
     }
+
+    std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
 
     scanned_storage_set& get_scanned_storage_set() {
         return scanned_storage_set_;
@@ -151,18 +116,17 @@ private:
     scan_cache_itr_type scan_cache_itr_{};
 
     /**
+     * @brief mutex for scan cache
+    */
+    std::shared_mutex mtx_scan_cache_{};
+
+    /**
      * @brief scanned storage set.
      * @details As a result of being scanned, the pointer to the record 
      * is retained. However, it does not retain the scanned storage information
      * . Without it, you will have problems generating read sets.
      */
     scanned_storage_set scanned_storage_set_{};
-
-    /**
-     * @brief 
-     * @attention
-     */
-    cursor_set cs_{};
 };
 
 } // namespace shirakami
