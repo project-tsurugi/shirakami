@@ -8,6 +8,8 @@
 namespace shirakami {
 
 Status local_write_set::erase(write_set_obj* wso) {
+    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+
     if (for_batch_) {
         auto result = get_ref_cont_for_bt().find(wso->get_rec_ptr());
         if (result == get_ref_cont_for_bt().end()) {
@@ -25,7 +27,24 @@ Status local_write_set::erase(write_set_obj* wso) {
     return Status::OK;
 }
 
+void local_write_set::get_storage_set(std::set<Storage>& out) {
+    out.clear();
+
+    std::shared_lock<std::shared_mutex> lk{get_mtx()};
+    if (get_for_batch()) {
+        for (auto&& wso : get_ref_cont_for_bt()) {
+            out.insert(wso.second.get_storage());
+        }
+    } else {
+        for (auto&& wso : get_ref_cont_for_occ()) {
+            out.insert(wso.get_storage());
+        }
+    }
+}
+
 void local_write_set::push(write_set_obj&& elem) {
+    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+
     if (get_for_batch()) {
         cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
     } else {
@@ -44,6 +63,8 @@ void local_write_set::push(write_set_obj&& elem) {
 }
 
 write_set_obj* local_write_set::search(Record const* const rec_ptr) {
+    std::shared_lock<std::shared_mutex> lk{get_mtx()};
+
     if (for_batch_) {
         auto ret{cont_for_bt_.find(const_cast<Record*>(rec_ptr))};
         if (ret == cont_for_bt_.end()) { return nullptr; }
@@ -58,6 +79,7 @@ write_set_obj* local_write_set::search(Record const* const rec_ptr) {
 
 void local_write_set::sort_if_ol() {
     if (for_batch_) return;
+    std::lock_guard<std::shared_mutex> lk{get_mtx()};
     std::sort(cont_for_occ_.begin(), cont_for_occ_.end());
 }
 

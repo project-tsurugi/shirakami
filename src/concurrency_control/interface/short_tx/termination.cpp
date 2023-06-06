@@ -31,13 +31,16 @@ void unlock_write_set(session* const ti) {
         }
         rec_ptr->get_tidw_ref().unlock();
     };
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
-            process(itr.first);
-        }
-    } else {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
-            process(itr.get_rec_ptr());
+    {
+        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
+        if (ti->get_write_set().get_for_batch()) {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+                process(itr.first);
+            }
+        } else {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+                process(itr.get_rec_ptr());
+            }
         }
     }
 }
@@ -68,15 +71,18 @@ void unlock_records(session* const ti, std::size_t num_locked) {
 
         --num_locked;
     };
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
-            process(&itr.second);
-            if (num_locked == 0) { break; }
-        }
-    } else {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
-            process(&itr);
-            if (num_locked == 0) { break; }
+    {
+        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
+        if (ti->get_write_set().get_for_batch()) {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+                process(&itr.second);
+                if (num_locked == 0) { break; }
+            }
+        } else {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+                process(&itr);
+                if (num_locked == 0) { break; }
+            }
         }
     }
 }
@@ -116,13 +122,16 @@ void change_inserting_records_state(session* const ti) {
             }
         }
     };
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
-            process(&itr.second);
-        }
-    } else {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
-            process(&itr);
+    {
+        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
+        if (ti->get_write_set().get_for_batch()) {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+                process(&itr.second);
+            }
+        } else {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+                process(&itr);
+            }
         }
     }
 }
@@ -438,15 +447,18 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 
         return Status::OK;
     };
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
-            auto rc = process(&itr.second);
-            if (rc != Status::OK) { return rc; }
-        }
-    } else {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
-            auto rc = process(&itr);
-            if (rc != Status::OK) { return rc; }
+    {
+        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
+        if (ti->get_write_set().get_for_batch()) {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+                auto rc = process(&itr.second);
+                if (rc != Status::OK) { return rc; }
+            }
+        } else {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+                auto rc = process(&itr);
+                if (rc != Status::OK) { return rc; }
+            }
         }
     }
 
@@ -594,21 +606,24 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
 #ifdef PWAL
     std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
 #endif
-    if (ti->get_write_set().get_for_batch()) {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
-            auto rc = process(&itr.second);
-            if (rc == Status::OK) { continue; }
-            if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-            LOG(ERROR) << log_location_prefix << "impossible code path.";
-            return Status::ERR_FATAL;
-        }
-    } else {
-        for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
-            auto rc = process(&itr);
-            if (rc == Status::OK) { continue; }
-            if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-            LOG(ERROR) << log_location_prefix << "impossible code path.";
-            return Status::ERR_FATAL;
+    {
+        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
+        if (ti->get_write_set().get_for_batch()) {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
+                auto rc = process(&itr.second);
+                if (rc == Status::OK) { continue; }
+                if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+                LOG(ERROR) << log_location_prefix << "impossible code path.";
+                return Status::ERR_FATAL;
+            }
+        } else {
+            for (auto&& itr : ti->get_write_set().get_ref_cont_for_occ()) {
+                auto rc = process(&itr);
+                if (rc == Status::OK) { continue; }
+                if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
+                LOG(ERROR) << log_location_prefix << "impossible code path.";
+                return Status::ERR_FATAL;
+            }
         }
     }
 

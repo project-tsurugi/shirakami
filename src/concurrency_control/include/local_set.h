@@ -5,6 +5,7 @@
 #pragma once
 
 #include <map>
+#include <shared_mutex>
 #include <string_view>
 
 #include "cpu.h"
@@ -163,11 +164,20 @@ public:
 
     Status erase(write_set_obj* wso);
 
-    [[nodiscard]] bool get_for_batch() const { return for_batch_; }
+    [[nodiscard]] bool get_for_batch() const {
+        return for_batch_.load(std::memory_order_acq_rel);
+    }
+
+    std::shared_mutex& get_mtx() { return mtx_; }
 
     cont_for_bt_type& get_ref_cont_for_bt() { return cont_for_bt_; }
 
     cont_for_occ_type& get_ref_cont_for_occ() { return cont_for_occ_; }
+
+    /**
+     * @brief get list of storage about write
+     * */
+    void get_storage_set(std::set<Storage>& out);
 
     /**
      * @brief push an element to local write set.
@@ -181,7 +191,9 @@ public:
      */
     write_set_obj* search(Record const* rec_ptr);
 
-    void set_for_batch(bool const tf) { for_batch_ = tf; }
+    void set_for_batch(bool const tf) {
+        for_batch_.store(tf, std::memory_order_release);
+    }
 
     void sort_if_ol();
 
@@ -204,7 +216,7 @@ public:
     void unlock(std::size_t num);
 
 private:
-    bool for_batch_{false};
+    std::atomic<bool> for_batch_{false};
     /**
      * @brief container for batch.
      */
@@ -213,6 +225,8 @@ private:
      * @brief container for short tx.
      */
     cont_for_occ_type cont_for_occ_;
+
+    std::shared_mutex mtx_;
 };
 
 class local_sequence_set {

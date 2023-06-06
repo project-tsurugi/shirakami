@@ -32,9 +32,8 @@ bool ongoing_tx::exist_wait_for(session* ti) {
     // check local write set
     std::set<Storage> st_set{};
     // create and compaction about storage set
-    for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-        st_set.insert(wso.second.get_storage());
-    }
+    ti->get_write_set().get_storage_set(st_set);
+
     // check wait
     for (auto&& elem : tx_info_) {
         // check overwrites
