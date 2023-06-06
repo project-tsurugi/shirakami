@@ -1,0 +1,24 @@
+# shirakami documents
+
+- abort_materials.md
+  - shirakami が内部的なアボートしたとき、その詳細情報を取得する機構に関して説明する。
+- database_options.md
+  - shirakami の起動コマンドパラメーターに関して説明する。
+- definition_of_term.md
+  - 単語の定義について説明する。
+- design-ja.md
+  - shirakami エンジン全体に関するデザインドキュメント。
+- design-sequence-ja.md
+  - シーケンス機構に関するデザインドキュメント。
+- details_information_for_debug.md
+  - デバッグ情報出力に関するドキュメント。
+- engineering_optimizations.md
+  - エンジニアリング最適化に関するドキュメント。
+- event_log.md
+  - タイミングイベントログに関するドキュメント。
+- print_diagnostic.md
+  - 診断情報出力に関するドキュメント。
+- status.md
+  - shirakami の公開APIの返り値に関するドキュメント。
+- transaction_state.md
+  - トランザクションの状態遷移に関するドキュメント。
