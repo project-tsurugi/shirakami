@@ -216,17 +216,9 @@ Status open_scan(Token const token, Storage storage,
          * and it must check about phantom at commit phase.
          */
         {
-            // take write lock for node set
-            std::lock_guard<std::shared_mutex> lk{ti->get_mtx_node_set()};
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 for (auto&& elem : nvec) {
-                    // engineering optimization, shrink nvec size.
-                    if (!ti->get_node_set().empty() && // not empty
-                        ti->get_node_set().back() ==
-                                elem) { // last elem is same
-                        continue;       // skip registering.
-                    }
                     ti->get_node_set().emplace_back(elem);
                 }
             }
@@ -596,10 +588,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
 
         // create node set info
-        auto& ns = ti->get_node_set();
-        if (ns.empty() || std::get<1>(ns.back()) != nv_ptr) {
-            ns.emplace_back(nv, nv_ptr);
-        }
+        ti->get_node_set().emplace_back({nv, nv_ptr});
 
         ti->process_before_finish_step();
         return rr;

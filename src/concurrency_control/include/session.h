@@ -36,8 +36,6 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) session {
 public:
-    using node_set_type = std::vector<std::pair<yakushima::node_version64_body,
-                                                yakushima::node_version64*>>;
     using point_read_by_long_set_type = std::set<point_read_by_long*>;
     using range_read_by_long_set_type =
             std::set<std::tuple<range_read_by_long*, std::string, scan_endpoint,
@@ -173,10 +171,6 @@ public:
     }
 
     // ========== end: diagnostics
-
-    node_set_type& get_node_set() { return node_set_; }
-
-    std::shared_mutex& get_mtx_node_set() { return mtx_node_set_; }
 
     /**
      * @brief get the value of mrc_tid_.
@@ -473,26 +467,14 @@ public:
 
     // ========== end: setter
 
+    // ========== start: node set
+    node_set& get_node_set() { return node_set_; }
+
     Status update_node_set(yakushima::node_version64* nvp) { // NOLINT
-        for (auto&& elem : node_set_) {
-            if (std::get<1>(elem) == nvp) {
-                yakushima::node_version64_body nvb = nvp->get_stable_version();
-                if (std::get<0>(elem).get_vinsert_delete() + 1 !=
-                    nvb.get_vinsert_delete()) {
-                    return Status::ERR_CC;
-                }
-                std::get<0>(elem) = nvb; // update
-                /**
-                  * note : discussion.
-                  * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
-                  * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
-                  * Even if you find a match, you have to search for everything because there may be other matches.
-                  * If you do not allow duplication, the situation is the opposite.
-                  */
-            }
-        }
-        return Status::OK;
+        return get_node_set().update_node_set(nvp);
     }
+
+    // ========== end: node set
 
 private:
     /**
@@ -609,12 +591,7 @@ private:
     /**
      * @brief local set for phantom avoidance.
      */
-    node_set_type node_set_{};
-
-    /**
-     * @brief mutex for local node set
-    */
-    std::shared_mutex mtx_node_set_;
+    node_set node_set_{};
 
     /**
      * @brief about scan operation.

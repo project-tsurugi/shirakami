@@ -248,4 +248,94 @@ private:
     cont_type set_;
 };
 
+class node_set {
+public:
+    using set_type = std::vector<std::pair<yakushima::node_version64_body,
+                                           yakushima::node_version64*>>;
+
+    auto clear() {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        return get_set().clear();
+    }
+
+    Status update_node_set(yakushima::node_version64* nvp) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        for (auto&& elem : set_) {
+            if (std::get<1>(elem) == nvp) {
+                yakushima::node_version64_body nvb = nvp->get_stable_version();
+                if (std::get<0>(elem).get_vinsert_delete() + 1 !=
+                    nvb.get_vinsert_delete()) {
+                    return Status::ERR_CC;
+                }
+                std::get<0>(elem) = nvb; // update
+                /**
+                  * note : discussion.
+                  * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
+                  * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
+                  * Even if you find a match, you have to search for everything because there may be other matches.
+                  * If you do not allow duplication, the situation is the opposite.
+                  */
+            }
+        }
+        return Status::OK;
+    }
+
+    void emplace_back(std::pair<yakushima::node_version64_body,
+                                yakushima::node_version64*>
+                              elem) {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        // engineering optimization, shrink nvec size.
+        if (!get_set().empty() &&       // not empty
+            get_set().back() == elem) { // last elem is same
+            return;                     // skip registering.
+        }
+        get_set().emplace_back(elem);
+    }
+
+    auto empty() {
+        std::shared_lock<std::shared_mutex> lk{get_mtx_set()};
+        return get_set().empty();
+    }
+
+    auto front() {
+        std::shared_lock<std::shared_mutex> lk{get_mtx_set()};
+        return get_set().front();
+    }
+
+    std::shared_mutex& get_mtx_set() { return mtx_set_; }
+
+    set_type& get_set() { return set_; }
+
+    Status node_verify() {
+        std::shared_lock<std::shared_mutex> lk{get_mtx_set()};
+        for (auto&& itr : get_set()) {
+            auto old_id = std::get<0>(itr);
+            auto current_id = std::get<1>(itr)->get_stable_version();
+            if (old_id.get_vinsert_delete() !=
+                        current_id.get_vinsert_delete() ||
+                old_id.get_vsplit() != current_id.get_vsplit()) {
+                return Status::ERR_CC;
+            }
+        }
+        return Status::OK;
+    }
+
+    auto size() {
+        std::shared_lock<std::shared_mutex> lk{get_mtx_set()};
+        return get_set().size();
+    }
+
+private:
+    /**
+     * @brief local set for phantom avoidance.
+     */
+    set_type set_;
+
+    /**
+     * @brief mutex for local node set
+    */
+    std::shared_mutex mtx_set_;
+};
+
 } // namespace shirakami

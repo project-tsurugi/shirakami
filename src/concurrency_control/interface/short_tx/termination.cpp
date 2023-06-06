@@ -615,20 +615,6 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
     return Status::OK;
 }
 
-Status node_verify(session* ti) {
-    for (auto&& itr : ti->get_node_set()) {
-        auto old_id = std::get<0>(itr);
-        auto current_id = std::get<1>(itr)->get_stable_version();
-        if (old_id.get_vinsert_delete() != current_id.get_vinsert_delete() ||
-            old_id.get_vsplit() != current_id.get_vsplit()) {
-            unlock_write_set(ti);
-            short_tx::abort(ti);
-            return Status::ERR_CC;
-        }
-    }
-    return Status::OK;
-}
-
 void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     // about tid
     auto tid_a{commit_tid};
@@ -653,7 +639,9 @@ void register_point_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
     std::set<Record*> recs{};
-    for (auto&& itr : ti->get_read_set_for_stx()) { recs.insert(itr.get_rec_ptr()); }
+    for (auto&& itr : ti->get_read_set_for_stx()) {
+        recs.insert(itr.get_rec_ptr());
+    }
 
     for (auto&& itr : recs) {
         auto& ro{itr->get_read_by()};
@@ -707,7 +695,7 @@ extern Status commit(session* const ti) {
     }
 
     // node verify
-    rc = node_verify(ti);
+    rc = ti->get_node_set().node_verify();
     if (rc != Status::OK) {
         unlock_write_set(ti);
         short_tx::abort(ti);
