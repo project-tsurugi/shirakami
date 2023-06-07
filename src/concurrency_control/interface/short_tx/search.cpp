@@ -50,7 +50,10 @@ Status search_key(session* ti, Storage const storage,
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_ALREADY_DELETE;
         }
-        if (read_value) { in_ws->get_value(value); }
+        if (read_value) {
+            std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
+            in_ws->get_value(value);
+        }
         return Status::OK;
     }
 
