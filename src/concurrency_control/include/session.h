@@ -290,7 +290,7 @@ public:
     [[nodiscard]] const wp_set_type& get_wp_set() const { return wp_set_; }
 
     [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
-        return read_version_max_epoch_;
+        return read_version_max_epoch_.load(std::memory_order_acquire);
     }
 
     local_read_set_for_ltx& read_set_for_ltx() { return read_set_for_ltx_; }
@@ -450,8 +450,8 @@ public:
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
-    void set_read_version_max_epoch(epoch::epoch_t ep) {
-        read_version_max_epoch_ = ep;
+    void set_read_version_max_epoch(epoch::epoch_t const ep) {
+        read_version_max_epoch_.store(ep, std::memory_order_release);
     }
 
     void set_valid_epoch(epoch::epoch_t ep) {
@@ -683,7 +683,7 @@ private:
      * @details When a transaction attempts a preamble, it checks this value 
      * to determine if it is breaking its boundaries.
      */
-    epoch::epoch_t read_version_max_epoch_{};
+    std::atomic<epoch::epoch_t> read_version_max_epoch_{};
 
     local_read_set_for_ltx read_set_for_ltx_;
 
