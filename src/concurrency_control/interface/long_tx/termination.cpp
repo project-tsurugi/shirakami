@@ -412,10 +412,16 @@ void register_read_by(session* const ti) {
     }
 
     // range read
-    for (auto&& elem : ti->get_range_read_by_long_set()) {
-        std::get<0>(elem)->push({ti->get_valid_epoch(), ti->get_long_tx_id(),
-                                 std::get<1>(elem), std::get<2>(elem),
-                                 std::get<3>(elem), std::get<4>(elem)});
+    {
+        // take read lock
+        std::shared_lock<std::shared_mutex> lk{
+                ti->get_range_read_set_for_ltx().get_mtx_set()};
+        for (auto&& elem : ti->get_range_read_set_for_ltx().get_set()) {
+            std::get<0>(elem)->push({ti->get_valid_epoch(),
+                                     ti->get_long_tx_id(), std::get<1>(elem),
+                                     std::get<2>(elem), std::get<3>(elem),
+                                     std::get<4>(elem)});
+        }
     }
 }
 

@@ -243,7 +243,7 @@ Status open_scan(Token const token, Storage storage,
           * read_from_scan, and the range is fixed and registered at the end of 
           * the transaction.
           */
-        ti->get_range_read_by_long_set().insert(std::make_tuple(
+        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
                 rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {

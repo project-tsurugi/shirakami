@@ -36,7 +36,7 @@ static void process_before_return_not_found(session* const ti,
         }
         // get range read  by info
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-        ti->get_range_read_by_long_set().insert(std::make_tuple(
+        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
                 rrbp, std::string(key), scan_endpoint::INCLUSIVE,
                 std::string(key), scan_endpoint::INCLUSIVE));
     }

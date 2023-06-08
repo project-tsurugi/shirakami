@@ -19,6 +19,7 @@
 
 #endif
 
+#include "concurrency_control/include/local_set.h"
 #include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/scan.h"
 #include "concurrency_control/include/tid.h"
@@ -37,9 +38,6 @@ namespace shirakami {
 class alignas(CACHE_LINE_SIZE) session {
 public:
     using point_read_by_long_set_type = std::set<point_read_by_long*>;
-    using range_read_by_long_set_type =
-            std::set<std::tuple<range_read_by_long*, std::string, scan_endpoint,
-                                std::string, scan_endpoint>>;
     using point_read_by_short_set_type = std::set<point_read_by_short*>;
     using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_for_stx_type = std::vector<read_set_obj>;
@@ -185,8 +183,8 @@ public:
         return point_read_by_long_set_;
     }
 
-    range_read_by_long_set_type& get_range_read_by_long_set() {
-        return range_read_by_long_set_;
+    range_read_set_for_ltx& get_range_read_set_for_ltx() {
+        return range_read_set_for_ltx_;
     }
 
     point_read_by_short_set_type& get_point_read_by_short_set() {
@@ -518,7 +516,7 @@ private:
 
     point_read_by_long_set_type point_read_by_long_set_{};
 
-    range_read_by_long_set_type range_read_by_long_set_{};
+    range_read_set_for_ltx range_read_set_for_ltx_{};
 
     point_read_by_short_set_type point_read_by_short_set_{};
 
