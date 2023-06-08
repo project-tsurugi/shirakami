@@ -251,15 +251,27 @@ class local_read_set_for_ltx {
 public:
     using cont_type = std::set<Record*>;
 
-    void clear() { set_.clear(); }
+    std::shared_mutex& get_mtx_set() { return mtx_set_; }
 
-    void push(Record* rec) { set_.insert(rec); }
+    void clear() {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        set_.clear();
+    }
+
+    void push(Record* rec) {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        set_.insert(rec);
+    }
 
     // getter
     cont_type& set() { return set_; }
 
 private:
     cont_type set_;
+
+    std::shared_mutex mtx_set_{};
 };
 
 class node_set {
