@@ -379,7 +379,7 @@ public:
         set_.clear();
     }
 
-    void insert(elem_type elem) {
+    void insert(elem_type const& elem) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         set_.insert(elem);
     }
