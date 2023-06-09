@@ -1,6 +1,8 @@
 
 #include <algorithm>
 
+#include "storage.h"
+
 #include "concurrency_control/include/long_tx.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/read_plan.h"
@@ -56,9 +58,30 @@ Status check_read_area(session* ti, Storage st) {
 }
 
 void preprocess_read_area(transaction_options::read_area& ra) {
-    // It doesn't need to reduce redundant because the set type is set.
+    std::vector<Storage> st_list{};
+    storage::list_storage(st_list);
 
-    // remove from positive by negative
+    // if you don't set positive / negative, you may read all.
+    if (ra.get_positive_list().empty() && ra.get_negative_list().empty()) {
+        for (auto elem : st_list) {
+            ra.get_positive_list().insert(elem);
+        }
+
+        return;
+    }
+
+    // if you set positive only, you can read that only.
+    // no work to need
+
+    // if you set negative only, you can read other than negative
+    if (ra.get_positive_list().empty() && !ra.get_negative_list().empty()) {
+        // register all to positive and remove by negative
+        for (auto elem : st_list) {
+            ra.get_positive_list().insert(elem);
+        }
+    }
+
+    // if you set positive and negative, you can read positive erased by negative
     for (auto elem : ra.get_negative_list()) {
         auto& pset = ra.get_positive_list();
         for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
@@ -109,6 +132,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
         long_tx::abort(ti);
         return Status::WARN_INVALID_ARGS;
     }
+    // 読みうるものは必ず read positive として登録する。
     ti->set_read_area(ra);
 
     // update metadata
