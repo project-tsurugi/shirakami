@@ -312,6 +312,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             while (waiting_start_th.load(std::memory_order_acquire) !=
                    FLAGS_thread - 1) {
                 _mm_pause();
+                if (quit.load(std::memory_order_acquire)) { return; }
             }
             ++waiting_start_th;
         } else {
@@ -319,6 +320,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             while (waiting_start_th.load(std::memory_order_acquire) !=
                    FLAGS_thread) {
                 _mm_pause();
+                if (quit.load(std::memory_order_acquire)) { return; }
             }
         }
 
@@ -344,7 +346,10 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             } else if (itr->get_type() == OP_TYPE::INSERT) {
                 insert(token, storage, itr->get_key(),
                        std::string(FLAGS_val_length, '0'));
-                // rarely, ret == already_exist due to design
+                if (ret != Status::OK && ret != Status::WARN_ALREADY_EXISTS) {
+                    LOG(FATAL) << log_location_prefix
+                               << "unexpected error, rc: " << ret;
+                }
             } else if (itr->get_type() == OP_TYPE::SCAN) {
                 ScanHandle hd{};
                 ret = open_scan(token, storage, itr->get_scan_l_key(),
@@ -375,6 +380,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             while (fin_strand_th.load(std::memory_order_acquire) !=
                    FLAGS_thread - 1) {
                 _mm_pause();
+                if (quit.load(std::memory_order_acquire)) { return; }
             }
             // initialize mutex
             waiting_start_th.store(0, std::memory_order_acquire);
@@ -385,6 +391,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             while (fin_strand_th.load(std::memory_order_acquire) !=
                    FLAGS_thread) {
                 _mm_pause();
+                if (quit.load(std::memory_order_acquire)) { return; }
             }
         }
 
