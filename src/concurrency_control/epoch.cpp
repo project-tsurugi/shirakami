@@ -24,7 +24,7 @@ namespace shirakami::epoch {
 inline void check_epoch_load_and_update_idle_living_tx() {
     auto ce{epoch::get_global_epoch()};
     for (auto&& itr : session_table::get_session_table()) {
-        if (!itr.get_operating()) {
+        if (itr.get_operating().load(std::memory_order_acquire) == 0) {
             // this session is not processing now.
             if (itr.get_step_epoch() < ce) { itr.set_step_epoch(ce); }
         }
@@ -104,7 +104,7 @@ void epoch_thread_work() {
                 LOG(ERROR) << log_location_prefix << log_location_prefix
                            << "unreachable path.";
                 return;
-            } 
+            }
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);

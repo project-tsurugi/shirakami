@@ -50,41 +50,41 @@ TEST_F(session_test, member_operating) { // NOLINT
 
     // test
     auto* ti{static_cast<session*>(s)};
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, tx_begin({s}));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, update(s, st, "k", ""));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, upsert(s, st, "k", ""));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, "k"));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     std::string sb{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", sb));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, exist_key(s, st, ""));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     std::size_t sz{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, sz));
-    ASSERT_EQ(ti->get_operating(), false);
+    ASSERT_EQ(ti->get_operating(), 0);
     ASSERT_EQ(Status::OK, leave(s));
 }
 

@@ -149,7 +149,8 @@ Status session::find_high_priority_short() const {
                 // short tx
                 itr.get_tx_type() ==
                         transaction_options::transaction_type::SHORT &&
-                itr.get_operating() && itr.get_tx_began() &&
+                (itr.get_operating().load(std::memory_order_acquire) != 0) &&
+                itr.get_tx_began() &&
                 /**
                  * If operating false and this ltx can start in the viewpoint
                  * of epoch, stx after this operation must be serialized after 

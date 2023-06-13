@@ -117,10 +117,7 @@ Status delete_record(Token token, Storage storage,
     ti->process_before_start_step();
 
     // check whether it already began.
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
-    ti->process_before_start_step();
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::DELETE)};

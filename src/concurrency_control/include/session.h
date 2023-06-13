@@ -175,9 +175,7 @@ public:
      */
     [[nodiscard]] tid_word get_mrc_tid() const { return mrc_tid_; }
 
-    [[nodiscard]] bool get_operating() const {
-        return operating_.load(std::memory_order_acquire);
-    }
+    std::atomic<std::size_t>& get_operating() { return operating_; }
 
     point_read_by_long_set_type& get_point_read_by_long_set() {
         return point_read_by_long_set_;
@@ -312,15 +310,23 @@ public:
     // ========== end: getter
 
     void process_before_start_step() {
-        set_operating(true);
+        get_operating()++;
         set_step_epoch(epoch::get_global_epoch());
     }
 
     void process_before_finish_step() {
-        if (!get_operating()) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
-        } else {
-            set_operating(false);
+        auto expected = get_operating().load(std::memory_order_acquire);
+        for (;;) {
+            if (expected == 0) {
+                LOG(ERROR) << log_location_prefix << "programming error.";
+                break;
+            }
+            auto desired = expected - 1;
+            if (get_operating().compare_exchange_weak(
+                        expected, desired, std::memory_order_acq_rel,
+                        std::memory_order_acquire)) {
+                break;
+            }
         }
     }
 
@@ -393,8 +399,8 @@ public:
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
-    void set_operating(bool tf) {
-        operating_.store(tf, std::memory_order_release);
+    void set_operating(std::size_t num) {
+        operating_.store(num, std::memory_order_release);
     }
 
     void set_read_area(transaction_options::read_area const& ra) {
@@ -608,7 +614,7 @@ private:
      * To resolve that situation, it use this variable for background thread 
      * to update @a valid_epoch_  automatically.
      */
-    std::atomic<bool> operating_{false};
+    std::atomic<std::size_t> operating_{0};
 
     // ========== start: tx state
 
