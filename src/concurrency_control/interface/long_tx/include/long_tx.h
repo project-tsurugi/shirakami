@@ -68,10 +68,8 @@ extern Status version_traverse_and_read(session* ti, Record* rec_ptr,
  * @param[in] ti 
  * @param[in] wp_meta_ptr
  * @param[in] read_key read information about key.
- * @return Status Status::ERR_CC Fail due to effective wp.
- * @return Status Status::OK No effective wp or no wp.
  */
-[[maybe_unused]] extern Status
+[[maybe_unused]] extern void
 wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
                          std::string_view read_info);
 

@@ -95,6 +95,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
     // check for read area invalidation
     auto rs = check_read_area(ti, storage);
     if (rs == Status::ERR_READ_AREA_VIOLATION) {
+        std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         long_tx::abort(ti);
         ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
         return rs;
@@ -148,13 +149,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // wp verify and forwarding
-    rc = wp_verify_and_forwarding(ti, wp_meta_ptr, key);
-    if (rc != Status::OK) {
-        if (rc == Status::ERR_CC) {
-            ti->set_result(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
-        }
-        return rc;
-    }
+    wp_verify_and_forwarding(ti, wp_meta_ptr, key);
 
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
     if (rc == Status::OK) { create_read_set_for_read_info(ti, rec_ptr); }

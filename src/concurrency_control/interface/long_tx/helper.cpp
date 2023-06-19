@@ -193,7 +193,7 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
     return version_function_without_optimistic_check(ep, ver);
 }
 
-Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
+void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
                                 const std::string_view read_info) {
     auto wps = wp_meta_ptr->get_wped();
     if (!wp::wp_meta::empty(wps)) {
@@ -204,8 +204,6 @@ Status wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
             wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps, read_info);
         }
     }
-
-    return Status::OK;
 }
 
 } // namespace shirakami::long_tx

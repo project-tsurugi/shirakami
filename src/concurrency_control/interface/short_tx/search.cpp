@@ -25,6 +25,7 @@ inline Status wp_verify(session* const ti, Storage const st) {
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
     if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
+        std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         short_tx::abort(ti);
         ti->set_result(reason_code::CC_OCC_WP_VERIFY);
         return Status::ERR_CC;

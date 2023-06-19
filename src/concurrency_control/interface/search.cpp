@@ -24,9 +24,7 @@ Status exist_key(Token const token, Storage const storage,
     if (ret != Status::OK) { return ret; }
 
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     ti->process_before_start_step();
 
     std::string dummy{};
@@ -54,23 +52,36 @@ Status search_key(Token const token, Storage const storage,
     if (ret != Status::OK) { return ret; }
 
     auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     ti->process_before_start_step();
 
     Status rc{};
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+    transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
+    if (this_tx_type == transaction_options::transaction_type::LONG) {
         rc = long_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::SHORT) {
+    } else if (this_tx_type == transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
-    } else if (ti->get_tx_type() ==
+    } else if (this_tx_type ==
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
+    }
+    if (rc <= Status::OK) {
+        // It is not error by this strand thread, check termination
+        std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
+        if (ti->get_result_info().get_reason_code() != reason_code::UNKNOWN) {
+            // but concurrent strand thread failed
+            if (this_tx_type == transaction_options::transaction_type::LONG) {
+                long_tx::abort(ti);
+                rc = Status::ERR_CC;
+            } else if (this_tx_type ==
+                       transaction_options::transaction_type::SHORT) {
+                short_tx::abort(ti);
+                rc = Status::ERR_CC;
+            }
+        }
     }
     ti->process_before_finish_step();
     return rc;
