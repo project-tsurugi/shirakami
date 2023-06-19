@@ -40,9 +40,7 @@ void clear_about_read_area(session* ti) {
 
 void session::clear_local_set() {
     node_set_.clear();
-    point_read_by_long_set_.clear();
     get_range_read_set_for_ltx().clear();
-    point_read_by_short_set_.clear();
     clear_range_read_by_short_set();
     clear_read_set_for_stx();
     read_set_for_ltx().clear();

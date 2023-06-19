@@ -295,6 +295,10 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             } else if (FLAGS_transaction_type == "read_only") {
                 tt = transaction_options::transaction_type::READ_ONLY;
                 ret = tx_begin({token, tt});
+                // wait start epoch
+                while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+                    _mm_pause();
+                }
             } else {
                 LOG(FATAL) << log_location_prefix << "invalid transaction type";
             }
