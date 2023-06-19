@@ -6,6 +6,7 @@
 
 #include <array>
 #include <atomic>
+#include <mutex>
 #include <set>
 
 #include "cpu.h"
@@ -174,6 +175,8 @@ public:
     [[nodiscard]] tid_word get_mrc_tid() const { return mrc_tid_; }
 
     std::atomic<std::size_t>& get_operating() { return operating_; }
+
+    std::mutex& get_mtx_termination() { return mtx_termination_; }
 
     range_read_set_for_ltx& get_range_read_set_for_ltx() {
         return range_read_set_for_ltx_;
@@ -601,6 +604,13 @@ private:
      * to update @a valid_epoch_  automatically.
      */
     std::atomic<std::size_t> operating_{0};
+
+    /**
+     * @brief It uses for strand thread. All data access api can run concurrently
+     *  and the state of termination is confused. So that use this mutex for 
+     * termination and find consistency.
+    */
+    std::mutex mtx_termination_{};
 
     // ========== start: tx state
 

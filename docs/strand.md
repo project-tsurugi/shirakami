@@ -3,9 +3,9 @@
 - shirakami には strand 機構が存在する。これは単一トランザクションを複数スレッドによって並列処理可能な機構である。それによって、単一のトランザクション処理を効率よく実施する。
 
 - strand の仕様
-  - tx_begin コマンドが成功して以降、commit / abort コマンドを送信する前のデータアクセス (read / write) APIに関して、スレッドセーフになる。
+  - tx_begin コマンドが成功して以降、commit / abort コマンドを送信する前のデータアクセスAPIに関して、スレッドセーフになる。
+    - データアクセスAPI: データの読み書きに関する物。open_scan, read_key_from_scan, read_value_from_scan, next, close_scan, search_key, update, upsert, insert, delete_record, 
   - データアクセスAPIと commit / abort コマンドの送信が前後してしまったときの動作は未定義。
-  - 
 
 - strand の注意点
   - strand スレッド間では単一トランザクションに属するという性質を有するため、データの同期によってキャッシュ汚染等が引き起こされて単一スレッドよりも性能が劣化するケースが多い。ユーザーは確実に strand の恩恵を受けられるような使い方を検討し、実施する必要がある。
