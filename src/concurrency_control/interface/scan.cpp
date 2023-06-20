@@ -8,6 +8,7 @@
 
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/interface/short_tx/include/short_tx.h"
 
 #include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
@@ -41,6 +42,32 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
         }
     }
     return Status::WARN_SCAN_LIMIT;
+}
+
+/**
+ * This is for some creating for this tx and consider other concurrent strand 
+ * thread. If that failed, this cleanup local effect, respect the result and 
+ * return;
+*/
+Status fin_process(session* const ti, Status const this_result) {
+    if (this_result <= Status::OK) {
+        // It is not error by this strand thread, check termination
+        std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
+        transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
+        if (ti->get_result_info().get_reason_code() != reason_code::UNKNOWN) {
+            // but concurrent strand thread failed
+            if (this_tx_type == transaction_options::transaction_type::LONG) {
+                long_tx::abort(ti);
+                return Status::ERR_CC;
+            } else if (this_tx_type ==
+                       transaction_options::transaction_type::SHORT) {
+                short_tx::abort(ti);
+                return Status::ERR_CC;
+            }
+        }
+    }
+
+    return this_result;
 }
 
 /**
@@ -224,7 +251,7 @@ Status open_scan(Token const token, Storage storage,
             }
         }
         ti->process_before_finish_step();
-        return rc;
+        return fin_process(ti, rc);
     }
 
     // check read information
@@ -313,7 +340,7 @@ Status open_scan(Token const token, Storage storage,
 
     sh.get_scanned_storage_set().set(handle, storage);
     ti->process_before_finish_step();
-    return Status::OK;
+    return fin_process(ti, Status::OK);
 }
 
 Status next(Token const token, ScanHandle const handle) {
