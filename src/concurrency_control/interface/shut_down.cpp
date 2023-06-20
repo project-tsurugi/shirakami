@@ -1,5 +1,7 @@
 
 
+#include <cstdlib>
+#include <cstring>
 #include <string_view>
 
 #include "atomic_wrapper.h"
@@ -98,7 +100,12 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 #endif
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << ":shutdown:start_delete_all_records";
-    delete_all_records(); // This should be before wp::fin();
+    auto *fast_shutdown = std::getenv("TSURUGI_FAST_SHUTDOWN");
+    if (fast_shutdown != nullptr && std::strcmp(fast_shutdown, "1") == 0) {
+        LOG(INFO) << log_location_prefix << "skipped delete_all_records";
+    } else {
+        delete_all_records(); // This should be before wp::fin();
+    }
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << ":shutdown:end_delete_all_records";
     wp::fin();      // note: this use yakushima.
