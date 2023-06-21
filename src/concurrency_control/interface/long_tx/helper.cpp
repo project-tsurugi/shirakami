@@ -63,9 +63,7 @@ void preprocess_read_area(transaction_options::read_area& ra) {
 
     // if you don't set positive / negative, you may read all.
     if (ra.get_positive_list().empty() && ra.get_negative_list().empty()) {
-        for (auto elem : st_list) {
-            ra.get_positive_list().insert(elem);
-        }
+        for (auto elem : st_list) { ra.insert_to_positive_list(elem); }
 
         return;
     }
@@ -76,17 +74,15 @@ void preprocess_read_area(transaction_options::read_area& ra) {
     // if you set negative only, you can read other than negative
     if (ra.get_positive_list().empty() && !ra.get_negative_list().empty()) {
         // register all to positive and remove by negative
-        for (auto elem : st_list) {
-            ra.get_positive_list().insert(elem);
-        }
+        for (auto elem : st_list) { ra.insert_to_positive_list(elem); }
     }
 
     // if you set positive and negative, you can read positive erased by negative
     for (auto elem : ra.get_negative_list()) {
-        auto& pset = ra.get_positive_list();
+        auto pset = ra.get_positive_list();
         for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
             if (elem == *itr) {
-                ra.get_positive_list().erase(elem);
+                ra.erase_from_positive_list(elem);
                 break;
             }
         }
@@ -141,7 +137,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     // detail info
     if (logging::get_enable_logging_detail_info()) {
         VLOG(log_trace) << log_location_prefix_detail_info
-                         << "tx_begin, LTX, tx id: " << long_tx_id;
+                        << "tx_begin, LTX, tx id: " << long_tx_id;
     }
 
     return Status::OK;
@@ -194,7 +190,7 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
 }
 
 void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
-                                const std::string_view read_info) {
+                              const std::string_view read_info) {
     auto wps = wp_meta_ptr->get_wped();
     if (!wp::wp_meta::empty(wps)) {
         // exist wp

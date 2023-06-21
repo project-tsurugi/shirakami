@@ -31,17 +31,23 @@ public:
             : positive_list_(std::move(plist)),
               negative_list_(std::move(nlist)) {}
 
-        [[nodiscard]] list_type& get_positive_list() { return positive_list_; }
+        void erase_from_positive_list(Storage st) { positive_list_.erase(st); }
+
+        [[nodiscard]] list_type get_positive_list() { return positive_list_; }
 
         [[nodiscard]] list_type const& get_positive_list() const {
             return positive_list_;
         }
 
-        [[nodiscard]] list_type& get_negative_list() { return negative_list_; }
+        [[nodiscard]] list_type get_negative_list() { return negative_list_; }
 
         [[nodiscard]] list_type const& get_negative_list() const {
             return negative_list_;
         }
+
+        void insert_to_positive_list(Storage st) { positive_list_.insert(st); }
+
+        void insert_to_negative_list(Storage st) { negative_list_.insert(st); }
 
     private:
         list_type positive_list_{};
