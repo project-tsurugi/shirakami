@@ -50,15 +50,15 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
      * must execute before cleanup environment.
      */
     VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << ":shutdown:start_bg_commit";
+            << log_location_prefix_timing_event << "shutdown:start_bg_commit";
     bg_work::bg_commit::fin();
     VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << ":shutdown:end_bg_commit";
+            << log_location_prefix_timing_event << "shutdown:end_bg_commit";
 
     // about datastore
 #if defined(PWAL)
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:start_send_txlog_wait_durable";
+                                 << "shutdown:start_send_txlog_wait_durable";
     lpwal::fin(); // stop damon
     if (!force_shut_down_logging) {
         // flush remaining log
@@ -71,35 +71,35 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
         }
     }
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:end_send_txlog_wait_durable";
+                                 << "shutdown:end_send_txlog_wait_durable";
 #endif
 
     // about tx engine
     VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << ":shutdown:start_gc";
+            << log_location_prefix_timing_event << "shutdown:start_gc";
     garbage::fin();
     VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << ":shutdown:end_gc";
+            << log_location_prefix_timing_event << "shutdown:end_gc";
     epoch::fin();
 #ifdef PWAL
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:start_shutdown_datastore";
+                                 << "shutdown:start_shutdown_datastore";
     datastore::get_datastore()->shutdown(); // this should after epoch::fin();
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:end_shutdown_datastore";
+                                 << "shutdown:end_shutdown_datastore";
     // cleanup about limestone
     if (!lpwal::get_log_dir_pointed()) {
         // log dir was not pointed. So remove log dir
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << ":shutdown:start_cleanup_logdir";
+                                     << "shutdown:start_cleanup_logdir";
         lpwal::remove_under_log_dir();
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << ":shutdown:end_cleanup_logdir";
+                                     << "shutdown:end_cleanup_logdir";
     }
     lpwal::clean_up_metadata();
 #endif
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:start_delete_all_records";
+                                 << "shutdown:start_delete_all_records";
     auto *fast_shutdown = std::getenv("TSURUGI_FAST_SHUTDOWN");
     if (fast_shutdown != nullptr && std::strcmp(fast_shutdown, "1") == 0) {
         LOG(INFO) << log_location_prefix << "skipped delete_all_records";
@@ -107,23 +107,23 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
         delete_all_records(); // This should be before wp::fin();
     }
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:end_delete_all_records";
+                                 << "shutdown:end_delete_all_records";
     wp::fin();      // note: this use yakushima.
     storage::fin(); // note: this use yakushima. delete meta storage.
 
     // about index
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:start_shutdown_yakushima";
+                                 << "shutdown:start_shutdown_yakushima";
     yakushima::fin();
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << ":shutdown:end_shutdown_yakushima";
+                                 << "shutdown:end_shutdown_yakushima";
 
     //// about thread pool
     //VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-    //                             << ":shutdown:start_shutdown_thread_pool";
+    //                             << "shutdown:start_shutdown_thread_pool";
     //thread_pool::fin();
     //VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-    //                             << ":shutdown:end_shutdown_thread_pool";
+    //                             << "shutdown:end_shutdown_thread_pool";
 
     // clear flag
     set_initialized(false);
