@@ -66,19 +66,19 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                             return true;
                         }
                     }
-                    //// check nlist // todo remove after impl compliment
-                    //// between p and n.
-                    //auto nlist = out->get_read_plan().get_negative_list();
-                    //bool n_hit{false};
-                    //for (auto n_id : nlist) {
-                    //    if (n_id == std::get<ongoing_tx::index_id>(elem)) {
-                    //        n_hit = true;
-                    //        break;
-                    //    }
-                    //}
-                    //if (n_hit) { continue; }
-                    //// empty read positive mean universe.
-                    //return true;
+                    // check nlist // todo remove after impl compliment
+                    // between p and n.
+                    auto nlist = out->get_read_plan().get_negative_list();
+                    bool n_hit{false};
+                    for (auto n_id : nlist) {
+                        if (n_id == std::get<ongoing_tx::index_id>(elem)) {
+                            n_hit = true;
+                            break;
+                        }
+                    }
+                    if (n_hit) { continue; }
+                    // empty read positive mean universe.
+                    return true;
                 }
             }
         }
