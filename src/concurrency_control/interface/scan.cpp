@@ -442,6 +442,7 @@ Status next(Token const token, ScanHandle const handle) {
             if (tid.get_epoch() != 0) {
                 // this is converting page, there may be readable rec
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                    // last version cant be read but it can read middle
                     version* ver = rec_ptr->get_latest();
                     for (;;) {
                         ver = ver->get_next();
@@ -455,6 +456,9 @@ Status next(Token const token, ScanHandle const handle) {
                         // there is a readable rec
                         break;
                     }
+                } else {
+                    // it can read latest version
+                    break;
                 }
             }
         } else {
