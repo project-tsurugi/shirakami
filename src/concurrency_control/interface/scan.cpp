@@ -59,8 +59,8 @@ Status fin_process(session* const ti, Status const this_result) {
             if (this_tx_type == transaction_options::transaction_type::LONG) {
                 long_tx::abort(ti);
                 return Status::ERR_CC;
-            } else if (this_tx_type ==
-                       transaction_options::transaction_type::SHORT) {
+            }
+            if (this_tx_type == transaction_options::transaction_type::SHORT) {
                 short_tx::abort(ti);
                 return Status::ERR_CC;
             }
@@ -437,6 +437,25 @@ Status next(Token const token, ScanHandle const handle) {
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 break;
+            }
+            // rtx, ltx may read middle of version list
+            if (tid.get_epoch() != 0) {
+                // this is converting page, there may be readable rec
+                if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                    version* ver = rec_ptr->get_latest();
+                    for (;;) {
+                        ver = ver->get_next();
+                        if (ver == nullptr) { break; }
+                        if (ver->get_tid().get_epoch() <
+                            ti->get_valid_epoch()) {
+                            break;
+                        }
+                    }
+                    if (ver != nullptr) {
+                        // there is a readable rec
+                        break;
+                    }
+                }
             }
         } else {
             // absent && not latest == deleted

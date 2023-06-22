@@ -49,29 +49,27 @@ constexpr std::string_view common_val = "0";
 
 std::string mk_key(int i) {
     std::ostringstream ss;
-    //ss << std::setw(7) << std::setfill('0') << i;
-    ss << std::setw(11) << std::setfill('0') << i;
+    ss << std::setw(11) << std::setfill('0') << i; // NOLINT
     return ss.str();
 }
 
-TEST_F(tsurugi_issue307, DISABLED_simple) { // NOLINT
+TEST_F(tsurugi_issue307, simple) { // NOLINT
     // DEFINE_int32(records, 2000, "number of records");
     // DEFINE_int32(rounds, 10000, "number of scan rounds");
     // DEFINE_int32(mod_thread, 1, "number of delete/insert threads");
     // DEFINE_int32(scan_thread, 6, "number of scan threads");
     // DEFINE_bool(read_only, false, "use RTX for scan (if false, use LTX)");
 
-    constexpr int n = 10000;
-    constexpr int rounds = 50000;
+    constexpr int n = 1000;
+    constexpr int rounds = 100;
     constexpr int mod_thread = 1;
     constexpr int scan_thread = 6;
-    constexpr bool read_only = true;
 
     // setup: make
     //   1 ... n: all values are "0"
-    Storage st;
+    Storage st{};
     ASSERT_OK(create_storage("", st));
-    Token s;
+    Token s{};
     ASSERT_OK(enter(s));
     ASSERT_OK(tx_begin(s));
     for (int i = 1; i <= n; i++) {
@@ -84,7 +82,7 @@ TEST_F(tsurugi_issue307, DISABLED_simple) { // NOLINT
     std::atomic<bool> done = false;
     LOG(INFO) << "start";
 
-    auto work_del_ins = [mod_thread, &st, n, &done](int tid) {
+    auto work_del_ins = [&st, &done](int tid) {
         int i = tid;
         while (!done) {
             Token s{};
@@ -107,13 +105,11 @@ TEST_F(tsurugi_issue307, DISABLED_simple) { // NOLINT
             if (i >= n) i = tid;
         }
     };
-    auto tx_type = read_only ? transaction_options::transaction_type::READ_ONLY
-                             : transaction_options::transaction_type::LONG;
-    auto work_scan = [n, rounds, &st, &done, tx_type]() {
+    auto work_scan = [&st, &done]() {
         for (int i = 0; i < rounds; i++) {
             Token s{};
             ASSERT_OK(enter(s));
-            tx_begin({s, tx_type});
+            tx_begin({s, transaction_options::transaction_type::READ_ONLY});
             TxStateHandle sth{};
             ASSERT_OK(acquire_tx_state_handle(s, sth));
             while (true) {
@@ -128,23 +124,37 @@ TEST_F(tsurugi_issue307, DISABLED_simple) { // NOLINT
                 rc != Status::OK) {
                 LOG(FATAL);
             }
+            auto* ti = static_cast<session*>(s);
+            auto entry_size =
+                    std::get<scan_handler::scan_cache_vec_pos>(
+                            ti->get_scan_handle().get_scan_cache()[scanh])
+                            .size();
+            if (entry_size != n && entry_size != n - 1) {
+                // open scan bug
+                LOG(FATAL);
+            }
             int count = 0;
             do {
                 std::string key;
                 std::string val;
                 if (auto rc = read_key_from_scan(s, scanh, key);
                     rc != Status::OK) {
+                    // version function or gc bug
                     LOG(FATAL);
                 }
                 if (auto rc = read_value_from_scan(s, scanh, val);
                     rc != Status::OK) {
+                    // version function or gc bug
                     LOG(FATAL);
                 }
                 if (val != common_val) { LOG(FATAL); }
                 count++;
             } while (next(s, scanh) == Status::OK);
             if (auto rc = commit(s); rc != Status::OK) { LOG(FATAL); }
-            if (count != n && count != n - 1) { LOG(FATAL) << count; }
+            if (count != n && count != n - 1) {
+                // next bug
+                LOG(FATAL) << count;
+            }
             ASSERT_OK(leave(s));
         }
         done = true;
