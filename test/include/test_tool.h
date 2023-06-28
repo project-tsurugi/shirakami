@@ -14,4 +14,12 @@ static inline void wait_epoch_update() {
     }
 }
 
+static inline void wait_cc_safe_ss_epoch_update() {
+    auto ce{epoch::get_cc_safe_ss_epoch()};
+    for (;;) {
+        if (ce != epoch::get_cc_safe_ss_epoch()) { break; }
+        _mm_pause();
+    }
+}
+
 } // namespace shirakami

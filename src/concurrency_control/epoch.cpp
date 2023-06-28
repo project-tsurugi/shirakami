@@ -41,43 +41,50 @@ inline void compute_and_set_cc_safe_ss_epoch() {
         return;
     }
     // exist ltx
-    auto* ti = std::get<ongoing_tx::index_session>(
-            *ongoing_tx::get_tx_info().begin());
-    // acquire read lock about overtaken ltx set
-    std::shared_lock<std::shared_mutex> lk_ols{ti->get_mtx_overtaken_ltx_set()};
-    // check
-    if (ti->get_overtaken_ltx_set().empty()) {
-        // no forwarding, set cc safe ss epoch
-        set_cc_safe_ss_epoch(ti->get_valid_epoch());
-        return;
-    }
-    auto result_epoch = ti->get_valid_epoch();
-    // compute return epoch
-    for (auto&& oe : ti->get_overtaken_ltx_set()) {
-        wp::wp_meta* wp_meta_ptr{oe.first};
-        // get read lock
-        std::shared_lock<std::shared_mutex> lk{
-                wp_meta_ptr->get_mtx_wp_result_set()};
-        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
-             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
-             ++wp_result_itr) {
-            // prepare committed information
-            auto wp_result_id =
-                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            auto wp_result_epoch =
-                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
-            auto wp_result_was_committed =
-                    wp::wp_meta::wp_result_elem_extract_was_committed(
-                            (*wp_result_itr));
-            if (wp_result_was_committed) {
-                /**
-                  * the target ltx was commited, so it needs to check.
-                  */
-                for (auto&& hid : std::get<0>(oe.second)) {
-                    if (wp_result_id == hid) {
-                        if (wp_result_epoch < result_epoch) {
-                            result_epoch = wp_result_epoch;
-                            break;
+    epoch_t result_epoch{0};
+    for (auto& elem : ongoing_tx::get_tx_info()) {
+        auto* ti = std::get<ongoing_tx::index_session>(elem);
+        // acquire read lock about overtaken ltx set
+        std::shared_lock<std::shared_mutex> lk_ols{
+                ti->get_mtx_overtaken_ltx_set()};
+        // check
+        if (ti->get_overtaken_ltx_set().empty()) {
+            // no forwarding
+            if (result_epoch == 0) {
+                result_epoch = ti->get_valid_epoch();
+            }
+            // else, already initialize for non zero
+            continue;
+        }
+        // exist forwording, compute return epoch
+        for (auto&& oe : ti->get_overtaken_ltx_set()) {
+            wp::wp_meta* wp_meta_ptr{oe.first};
+            // get read lock
+            std::shared_lock<std::shared_mutex> lk{
+                    wp_meta_ptr->get_mtx_wp_result_set()};
+            for (auto&& wp_result_itr =
+                         wp_meta_ptr->get_wp_result_set().begin();
+                 wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
+                 ++wp_result_itr) {
+                // prepare committed information
+                auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(
+                        (*wp_result_itr));
+                auto wp_result_epoch =
+                        wp::wp_meta::wp_result_elem_extract_epoch(
+                                (*wp_result_itr));
+                auto wp_result_was_committed =
+                        wp::wp_meta::wp_result_elem_extract_was_committed(
+                                (*wp_result_itr));
+                if (wp_result_was_committed) {
+                    /**
+                      * the target ltx was commited, so it needs to check.
+                      */
+                    for (auto&& hid : std::get<0>(oe.second)) {
+                        if (wp_result_id == hid) {
+                            if (wp_result_epoch < result_epoch) {
+                                result_epoch = wp_result_epoch;
+                                break;
+                            }
                         }
                     }
                 }
