@@ -40,6 +40,9 @@ private:
 };
 
 // for issue#307
+// When cc_safe_ss_epoch is much smaller than global_epoch,
+// opening two RTX consecutively makes ongoing_tx ill-ordered,
+// This causes cc_safe_ss_epoch regression.
 
 TEST_F(tsurugi_issue307_2, DISABLED_ongoing_tx_must_be_ordered) { // NOLINT
     Token sr1;  // for RTX1
@@ -54,29 +57,28 @@ TEST_F(tsurugi_issue307_2, DISABLED_ongoing_tx_must_be_ordered) { // NOLINT
         ASSERT_OK(leave(s));
     };
 
-    begin_rtx(sr1);
-    begin_rtx(sr2);
+    // setup: make cc_safe_ss_epoch << global_epoch
 
-    // if you begin and end each rtx alternately, cc_safe_ss_epoch does not move.
-    // (is this correct behavior?)
-    for (int i = 0; i < 5; i++) {
-        end_rtx(sr1);
-        begin_rtx(sr1);
-        wait_epoch_update();
-        end_rtx(sr2);
-        begin_rtx(sr2);
+    Token sl;  // for LTX (use in setup)
+    // begin LTX to keep cc_safe_ss_epoch old
+    ASSERT_OK(enter(sl));
+    ASSERT_OK(tx_begin({sl, transaction_options::transaction_type::LONG}));
+
+    // advance global_epoch
+    for (int i = 0; i < 10; i++) {
         wait_epoch_update();
     }
 
     // setup done
 
     epoch::epoch_t at_start = epoch::get_cc_safe_ss_epoch();
+    ASSERT_LT(at_start, epoch::get_global_epoch());
 
     // do the thing
 
-    // end all rtxs
-    end_rtx(sr1);
-    end_rtx(sr2);
+    // end all ltxs/rtxs
+    ASSERT_OK(commit(sl));
+    ASSERT_OK(leave(sl));
     // ... and begin two rtxs
     begin_rtx(sr1);
     begin_rtx(sr2);
@@ -87,13 +89,14 @@ TEST_F(tsurugi_issue307_2, DISABLED_ongoing_tx_must_be_ordered) { // NOLINT
     epoch::epoch_t after_the_thing = epoch::get_cc_safe_ss_epoch();
     EXPECT_GT(after_the_thing, at_start);  // cc_safe_ss_epoch is advanced (maybe +10)
 
-    // check1: ongoing_tx::tx_info_ must be ordered (if not, bug)
+    // check1: ongoing_tx::tx_info_ must be ordered (if ill-ordered, bug)
     {
         std::unique_lock<std::shared_mutex> lk(ongoing_tx::get_mtx());
-        ASSERT_EQ(ongoing_tx::get_tx_info().size(), 2);
-        auto& txi1 = ongoing_tx::get_tx_info()[0];
-        auto& txi2 = ongoing_tx::get_tx_info()[1];
-        EXPECT_LE(std::get<ongoing_tx::index_epoch>(txi1), std::get<ongoing_tx::index_epoch>(txi2));
+        if (ongoing_tx::get_tx_info().size() == 2) {  // check order if no empty
+            auto& txi1 = ongoing_tx::get_tx_info()[0];
+            auto& txi2 = ongoing_tx::get_tx_info()[1];
+            EXPECT_LE(std::get<ongoing_tx::index_epoch>(txi1), std::get<ongoing_tx::index_epoch>(txi2));
+        }
     }
     for (int i = 0; i < 9; i++) {
         wait_epoch_update();
