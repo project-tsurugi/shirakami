@@ -45,9 +45,12 @@ void work_manager() {
         epoch::epoch_t min_step_epoch{epoch::max_epoch}; // for occ
         // computing about short
         epoch::epoch_t before_loop{epoch::get_global_epoch()};
+        epoch::epoch_t valid_epoch{0};
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_begin_epoch());
+                auto ve = se.get_valid_epoch();
+                if (ve != 0) { valid_epoch = ve; }
             }
         }
         if (min_step_epoch != epoch::max_epoch) {
@@ -65,7 +68,13 @@ void work_manager() {
             set_min_step_epoch(before_loop);
         }
         // computing about ltx
-        set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
+        if (valid_epoch != 0) {
+            // exist some ltx
+            auto csse = epoch::get_cc_safe_ss_epoch();
+            set_min_batch_epoch(csse < valid_epoch ? csse : valid_epoch);
+        } else {
+            set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
+        }
 
         sleepMs(epoch::get_global_epoch_time_ms());
     }
