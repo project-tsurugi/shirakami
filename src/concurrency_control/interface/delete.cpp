@@ -106,7 +106,7 @@ static void process_before_return_not_found(session* const ti,
     }
 }
 
-Status delete_record(Token token, Storage storage,
+Status delete_record_body(Token token, Storage storage,
                      const std::string_view key) { // NOLINT
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -114,7 +114,6 @@ Status delete_record(Token token, Storage storage,
 
     // process about worker
     auto* ti = static_cast<session*>(token);
-    ti->process_before_start_step();
 
     // check whether it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
@@ -122,7 +121,6 @@ Status delete_record(Token token, Storage storage,
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::DELETE)};
     if (rc != Status::OK) {
-        ti->process_before_finish_step();
         return rc;
     }
 
@@ -133,34 +131,36 @@ Status delete_record(Token token, Storage storage,
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
-            ti->process_before_finish_step();
             return process_after_write(ti, in_ws);
         }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
-            ti->process_before_finish_step();
             process_before_return_not_found(ti, storage, key);
             return Status::WARN_NOT_FOUND;
         }
         // prepare write
         ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
         register_read_if_ltx(ti, rec_ptr);
-        ti->process_before_finish_step();
         return Status::OK;
     }
     if (rc == Status::WARN_NOT_FOUND) {
         process_before_return_not_found(ti, storage, key);
-        ti->process_before_finish_step();
         return Status::WARN_NOT_FOUND;
     }
     if (rc == Status::WARN_STORAGE_NOT_FOUND) {
-        ti->process_before_finish_step();
         return Status::WARN_STORAGE_NOT_FOUND;
     }
     LOG(ERROR) << log_location_prefix << "unexpected error: " << rc;
-    ti->process_before_finish_step();
     return Status::ERR_FATAL;
+}
+
+Status delete_record(Token token, Storage storage, const std::string_view key) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = delete_record_body(token, storage, key);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami
