@@ -49,9 +49,24 @@ Status enter(Token& token) { // NOLINT
     return Status::OK;
 }
 
+void assert_before_unlock(session* const ti) {
+    if (ti->get_tx_began()) {
+        LOG(ERROR) << log_location_prefix << "tx began at leave";
+    }
+    if (ti->get_operating().load(std::memory_order_acquire) != 0) {
+        LOG(ERROR) << log_location_prefix << "operating is not zero at leave";
+    }
+}
+
+void unlock_for_other_client(session* const ti) {
+    assert_before_unlock(ti);
+    ti->set_visible(false); // unlock
+}
+
 Status leave(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
-        if (&itr == static_cast<session*>(token)) {
+        auto* ti = static_cast<session*>(token);
+        if (&itr == ti) {
             if (itr.get_visible()) {
                 if (itr.get_tx_began()) {
                     // there is a halfway tx.
@@ -73,8 +88,7 @@ Status leave(Token const token) { // NOLINT
 
                 yakushima::leave(
                         static_cast<session*>(token)->get_yakushima_token());
-                itr.set_tx_began(false);
-                itr.set_visible(false);
+                unlock_for_other_client(ti);
                 return Status::OK;
             }
             return Status::WARN_NOT_IN_A_SESSION;
