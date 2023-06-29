@@ -77,9 +77,7 @@ Status insert_body(Token const token, Storage const storage,
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::INSERT)};
-    if (rc != Status::OK) {
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     for (;;) {
         // index access to check local write set
@@ -150,6 +148,7 @@ Status insert(Token const token, Storage const storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
     auto ret = insert_body(token, storage, key, val);
     ti->process_before_finish_step();
     return ret;
