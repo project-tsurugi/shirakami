@@ -31,7 +31,7 @@ static inline Status insert_process(session* const ti, Storage st,
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 VLOG(log_trace) << log_location_prefix_detail_info
-                                 << "insert record, key " + std::string(key);
+                                << "insert record, key " + std::string(key);
             }
 
             Status check_node_set_res{ti->update_node_set(nvp)};
@@ -56,8 +56,8 @@ static inline Status insert_process(session* const ti, Storage st,
     return Status::WARN_CONCURRENT_INSERT;
 }
 
-Status upsert(Token token, Storage storage, const std::string_view key,
-              const std::string_view val) {
+Status upsert_body(Token token, Storage storage, const std::string_view key,
+                   const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -66,17 +66,11 @@ Status upsert(Token token, Storage storage, const std::string_view key,
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
-    ti->process_before_start_step();
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::UPSERT)};
-    if (rc != Status::OK) {
-        ti->process_before_finish_step();
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     for (;;) {
         // index access to check local write set
@@ -91,7 +85,6 @@ Status upsert(Token token, Storage storage, const std::string_view key,
                 } else {
                     in_ws->set_val(val);
                 }
-                ti->process_before_finish_step();
                 return Status::OK;
             }
 
@@ -111,7 +104,6 @@ Status upsert(Token token, Storage storage, const std::string_view key,
             // prepare update
             ti->get_write_set().push(
                     {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
-            ti->process_before_finish_step();
             return Status::OK;
         }
 
@@ -119,6 +111,15 @@ Status upsert(Token token, Storage storage, const std::string_view key,
         rc = insert_process(ti, storage, key, val);
         if (rc == Status::ERR_CC) { return rc; }
     }
+}
+
+Status upsert(Token token, Storage storage, const std::string_view key,
+              const std::string_view val) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = upsert_body(token, storage, key, val);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami
