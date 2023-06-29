@@ -67,7 +67,7 @@ TEST_F(epoch_no_stop_test,                                   // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti{static_cast<session*>(s)};
-    ti->set_operating(true);
+    ti->set_operating(1);
     auto first_epoch{ti->get_step_epoch()};
     sleepMs(epoch::get_global_epoch_time_ms() * 2);
     auto second_epoch{ti->get_step_epoch()};

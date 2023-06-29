@@ -36,17 +36,13 @@
 
 namespace shirakami {
 
-Status tx_begin(transaction_options options) { // NOLINT
-                                               // get tx options
+Status tx_begin_body(transaction_options options) { // NOLINT
+                                                    // get tx options
     Token token = options.get_token();
 
     // get thread info
     auto* ti = static_cast<session*>(token);
-    ti->process_before_start_step();
-    if (ti->get_tx_began()) {
-        ti->process_before_finish_step();
-        return Status::WARN_ALREADY_BEGIN;
-    }
+    if (ti->get_tx_began()) { return Status::WARN_ALREADY_BEGIN; }
 
     // clear abort result info
     ti->get_result_info().clear();
@@ -70,10 +66,7 @@ Status tx_begin(transaction_options options) { // NOLINT
         ti->set_requested_commit(false);
 
         auto rc{long_tx::tx_begin(ti, write_preserve, options.get_read_area())};
-        if (rc != Status::OK) {
-            ti->process_before_finish_step();
-            return rc;
-        }
+        if (rc != Status::OK) { return rc; }
         ti->get_write_set().set_for_batch(true);
     } else if (tx_type == transaction_options::transaction_type::SHORT) {
         ti->get_write_set().set_for_batch(false);
@@ -81,7 +74,6 @@ Status tx_begin(transaction_options options) { // NOLINT
         auto rc{read_only_tx::tx_begin(ti)};
         if (rc != Status::OK) {
             LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
-            ti->process_before_finish_step();
             return rc;
         }
     } else {
@@ -107,7 +99,6 @@ Status tx_begin(transaction_options options) { // NOLINT
         // ltx and rtx
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
     }
-    ti->process_before_finish_step();
 
     /**
      * This is for concurrent programming. It teaches to other thread that this
@@ -115,6 +106,15 @@ Status tx_begin(transaction_options options) { // NOLINT
      */
     ti->set_tx_began(true);
     return Status::OK;
+}
+
+Status tx_begin(transaction_options options) { // NOLINT
+    Token token = options.get_token();
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = tx_begin_body(options);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami

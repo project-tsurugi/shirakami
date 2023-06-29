@@ -20,13 +20,18 @@
 
 namespace shirakami {
 
-Status close_scan(Token const token, ScanHandle const handle) {
+Status close_scan_body(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
-
-    ti->process_before_finish_step();
     return ti->get_scan_handle().clear(handle);
+}
+
+Status close_scan(Token const token, ScanHandle const handle) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = close_scan_body(token, handle);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
@@ -59,8 +64,8 @@ Status fin_process(session* const ti, Status const this_result) {
             if (this_tx_type == transaction_options::transaction_type::LONG) {
                 long_tx::abort(ti);
                 return Status::ERR_CC;
-            } else if (this_tx_type ==
-                       transaction_options::transaction_type::SHORT) {
+            }
+            if (this_tx_type == transaction_options::transaction_type::SHORT) {
                 short_tx::abort(ti);
                 return Status::ERR_CC;
             }
@@ -176,10 +181,10 @@ Status check_not_found(
     return Status::WARN_NOT_FOUND;
 }
 
-Status open_scan(Token const token, Storage storage,
-                 const std::string_view l_key, const scan_endpoint l_end,
-                 const std::string_view r_key, const scan_endpoint r_end,
-                 ScanHandle& handle, std::size_t const max_size) {
+Status open_scan_body(Token const token, Storage storage,
+                      const std::string_view l_key, const scan_endpoint l_end,
+                      const std::string_view r_key, const scan_endpoint r_end,
+                      ScanHandle& handle, std::size_t const max_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(l_key);
     if (ret != Status::OK) { return ret; }
@@ -191,7 +196,6 @@ Status open_scan(Token const token, Storage storage,
     // tx begin if not
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     // pre-process
-    ti->process_before_start_step();
 
     // check about long tx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
@@ -215,10 +219,7 @@ Status open_scan(Token const token, Storage storage,
 
     // find slot to log scan result.
     auto rc = find_open_scan_slot(ti, handle);
-    if (rc != Status::OK) {
-        ti->process_before_finish_step();
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     // scan for index
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
@@ -250,7 +251,6 @@ Status open_scan(Token const token, Storage storage,
                 }
             }
         }
-        ti->process_before_finish_step();
         return fin_process(ti, rc);
     }
 
@@ -339,14 +339,24 @@ Status open_scan(Token const token, Storage storage,
     scan_index += head_skip_rec_n;
 
     sh.get_scanned_storage_set().set(handle, storage);
-    ti->process_before_finish_step();
     return fin_process(ti, Status::OK);
 }
 
-Status next(Token const token, ScanHandle const handle) {
+Status open_scan(Token const token, Storage storage,
+                 const std::string_view l_key, const scan_endpoint l_end,
+                 const std::string_view r_key, const scan_endpoint r_end,
+                 ScanHandle& handle, std::size_t const max_size) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end,
+                              handle, max_size);
+    ti->process_before_finish_step();
+    return ret;
+}
+
+Status next_body(Token const token, ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
     /**
@@ -356,7 +366,6 @@ Status next(Token const token, ScanHandle const handle) {
         // take read lock
         std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            ti->process_before_finish_step();
             return Status::WARN_INVALID_HANDLE;
         }
     }
@@ -375,7 +384,6 @@ Status next(Token const token, ScanHandle const handle) {
             if (std::get<scan_handler::scan_cache_vec_pos>(
                         sh.get_scan_cache()[handle])
                         .size() <= scan_index) {
-                ti->process_before_finish_step();
                 return Status::WARN_SCAN_LIMIT;
             }
 
@@ -438,6 +446,29 @@ Status next(Token const token, ScanHandle const handle) {
                 transaction_options::transaction_type::SHORT) {
                 break;
             }
+            // rtx, ltx may read middle of version list
+            if (tid.get_epoch() != 0) {
+                // this is converting page, there may be readable rec
+                if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                    // last version cant be read but it can read middle
+                    version* ver = rec_ptr->get_latest();
+                    for (;;) {
+                        ver = ver->get_next();
+                        if (ver == nullptr) { break; }
+                        if (ver->get_tid().get_epoch() <
+                            ti->get_valid_epoch()) {
+                            break;
+                        }
+                    }
+                    if (ver != nullptr) {
+                        // there is a readable rec
+                        break;
+                    }
+                } else {
+                    // it can read latest version
+                    break;
+                }
+            }
         } else {
             // absent && not latest == deleted
             if (ti->get_tx_type() ==
@@ -476,8 +507,15 @@ Status next(Token const token, ScanHandle const handle) {
 
     // reset cache in cursor
     //ti->get_scan_handle().get_ci(handle).reset();
-    ti->process_before_finish_step();
     return Status::OK;
+}
+
+Status next(Token const token, ScanHandle const handle) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = next_body(token, handle);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 /**
@@ -500,7 +538,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     };
 
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
 
@@ -515,7 +552,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
      * Check whether the handle is valid.
      */
         if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            ti->process_before_finish_step();
             return Status::WARN_INVALID_HANDLE;
         }
         // ==========
@@ -527,10 +563,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto itr = scan_buf.begin() + scan_index;
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);
-        if (scan_buf.size() <= scan_index) {
-            ti->process_before_finish_step();
-            return Status::WARN_SCAN_LIMIT;
-        }
+        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
 
         // ==========
         /**
@@ -541,7 +574,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
-            ti->process_before_finish_step();
             read_register_if_ltx(rec_ptr);
             return Status::WARN_ALREADY_DELETE;
         }
@@ -551,7 +583,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
             inws->get_value(buf);
         }
-        ti->process_before_finish_step();
         read_register_if_ltx(rec_ptr);
         return Status::OK;
     }
@@ -606,10 +637,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         } else {
             rr = read_record(rec_ptr, tidb, buf);
         }
-        if (rr == Status::WARN_CONCURRENT_UPDATE) {
-            ti->process_before_finish_step();
-            return rr;
-        }
+        if (rr == Status::WARN_CONCURRENT_UPDATE) { return rr; }
         // optimization: set for re-read
         ti->push_to_read_set_for_stx(
                 {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
@@ -617,7 +645,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // create node set info
         ti->get_node_set().emplace_back({nv, nv_ptr});
 
-        ti->process_before_finish_step();
         return rr;
     }
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
@@ -688,20 +715,27 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
 Status read_key_from_scan(Token const token, ScanHandle const handle,
                           std::string& key) {
-    return read_from_scan(token, handle, true, key);
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = read_from_scan(token, handle, true, key);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 Status read_value_from_scan(Token const token, ScanHandle const handle,
                             std::string& value) {
-    return read_from_scan(token, handle, false, value);
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = read_from_scan(token, handle, false, value);
+    ti->process_before_finish_step();
+    return ret;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(Token const token,
-                                                   ScanHandle const handle,
-                                                   std::size_t& size) {
+[[maybe_unused]] Status scannable_total_index_size_body(Token const token,
+                                                        ScanHandle const handle,
+                                                        std::size_t& size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     auto& sh = ti->get_scan_handle();
 
@@ -711,16 +745,24 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
             /**
               * the handle was invalid.
               */
-            ti->process_before_finish_step();
             return Status::WARN_INVALID_HANDLE;
         }
 
         size = std::get<scan_handler::scan_cache_vec_pos>(
                        sh.get_scan_cache()[handle])
                        .size();
-        ti->process_before_finish_step();
     }
     return Status::OK;
+}
+
+[[maybe_unused]] Status scannable_total_index_size(Token const token,
+                                                   ScanHandle const handle,
+                                                   std::size_t& size) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = scannable_total_index_size_body(token, handle, size);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami

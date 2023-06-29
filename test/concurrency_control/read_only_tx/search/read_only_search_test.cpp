@@ -90,6 +90,14 @@ TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(s, st, "", "v2"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    auto ce = epoch::get_global_epoch();
+    for (;;) {
+        if (ce >= epoch::get_cc_safe_ss_epoch()) {
+            _mm_pause();
+            continue;
+        }
+        break;
+    }
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
     wait_epoch_update();

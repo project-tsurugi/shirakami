@@ -62,9 +62,9 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-Status insert(Token const token, Storage const storage,
-              const std::string_view key, // NOLINT
-              const std::string_view val) {
+Status insert_body(Token const token, Storage const storage,
+                   const std::string_view key, // NOLINT
+                   const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -74,12 +74,10 @@ Status insert(Token const token, Storage const storage,
 
     // check it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::INSERT)};
     if (rc != Status::OK) {
-        ti->process_before_finish_step();
         return rc;
     }
 
@@ -92,13 +90,11 @@ Status insert(Token const token, Storage const storage,
                 if (in_ws->get_op() == OP_TYPE::INSERT ||
                     in_ws->get_op() == OP_TYPE::UPDATE ||
                     in_ws->get_op() == OP_TYPE::UPSERT) {
-                    ti->process_before_finish_step();
                     return Status::WARN_ALREADY_EXISTS;
                 }
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);
-                    ti->process_before_finish_step();
                     return Status::OK;
                 }
             }
@@ -108,7 +104,6 @@ Status insert(Token const token, Storage const storage,
             if (rc == Status::OK) {
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
-                ti->process_before_finish_step();
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
@@ -128,7 +123,6 @@ Status insert(Token const token, Storage const storage,
                     register_read_if_ltx(ti, rec_ptr);
                 } else {
                     LOG(ERROR) << log_location_prefix << "unexpected path";
-                    ti->process_before_finish_step();
                     return Status::ERR_FATAL;
                 }
                 // end: make read set
@@ -136,23 +130,29 @@ Status insert(Token const token, Storage const storage,
             } else if (rc == Status::WARN_CONCURRENT_INSERT) {
                 ti->get_write_set().push(
                         {storage, OP_TYPE::INSERT, rec_ptr, val});
-                ti->process_before_finish_step();
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
-            ti->process_before_finish_step();
             return rc;
         }
 
     INSERT_PROCESS:
         auto rc{insert_process(ti, storage, key, val, rec_ptr)};
         if (rc == Status::OK) {
-            ti->process_before_finish_step();
             register_read_if_ltx(ti, rec_ptr);
             return Status::OK;
         }
         if (rc == Status::ERR_CC) { return rc; }
     }
+}
+
+Status insert(Token const token, Storage const storage,
+              const std::string_view key, // NOLINT
+              const std::string_view val) {
+    auto* ti = static_cast<session*>(token);
+    auto ret = insert_body(token, storage, key, val);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami

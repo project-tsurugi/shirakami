@@ -70,6 +70,7 @@ public:
     void clear_about_long_tx_metadata() {
         set_read_version_max_epoch(0);
         set_long_tx_id(0);
+        set_valid_epoch(0);
     }
 
     void clear_about_tx_state() {

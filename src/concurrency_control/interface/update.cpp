@@ -42,9 +42,9 @@ static void process_before_return_not_found(session* const ti,
     }
 }
 
-Status update(Token token, Storage storage,
-              const std::string_view key, // NOLINT
-              const std::string_view val) {
+Status update_body(Token token, Storage storage,
+                   const std::string_view key, // NOLINT
+                   const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -53,17 +53,11 @@ Status update(Token token, Storage storage,
     auto* ti = static_cast<session*>(token);
 
     // check whether it already began.
-    if (!ti->get_tx_began()) {
-        return Status::WARN_NOT_BEGIN;
-    }
-    ti->process_before_start_step();
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::UPDATE)};
-    if (rc != Status::OK) {
-        ti->process_before_finish_step();
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     // index access to check local write set
     Record* rec_ptr{};
@@ -72,11 +66,9 @@ Status update(Token token, Storage storage,
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
             if (in_ws->get_op() == OP_TYPE::DELETE) {
-                ti->process_before_finish_step();
                 return Status::WARN_ALREADY_DELETE;
             }
             in_ws->set_val(val);
-            ti->process_before_finish_step();
             return Status::OK;
         }
 
@@ -84,7 +76,6 @@ Status update(Token token, Storage storage,
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
             process_before_return_not_found(ti, storage, key);
-            ti->process_before_finish_step();
             return Status::WARN_NOT_FOUND;
         }
 
@@ -92,12 +83,20 @@ Status update(Token token, Storage storage,
         ti->get_write_set().push(
                 {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
         register_read_if_ltx(ti, rec_ptr);
-        ti->process_before_finish_step();
         return Status::OK;
     }
     process_before_return_not_found(ti, storage, key);
-    ti->process_before_finish_step();
     return Status::WARN_NOT_FOUND;
+}
+
+Status update(Token token, Storage storage,
+              const std::string_view key, // NOLINT
+              const std::string_view val) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = update_body(token, storage, key, val);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami

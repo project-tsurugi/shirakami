@@ -17,15 +17,14 @@
 
 namespace shirakami {
 
-Status exist_key(Token const token, Storage const storage,
-                 std::string_view const key) {
+Status exist_key_body(Token const token, Storage const storage,
+                      std::string_view const key) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     std::string dummy{};
     Status rc{};
@@ -56,19 +55,26 @@ Status exist_key(Token const token, Storage const storage,
             }
         }
     }
-    ti->process_before_finish_step();
     return rc;
 }
 
-Status search_key(Token const token, Storage const storage,
-                  std::string_view const key, std::string& value) {
+Status exist_key(Token const token, Storage const storage,
+                 std::string_view const key) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = exist_key_body(token, storage, key);
+    ti->process_before_finish_step();
+    return ret;
+}
+
+Status search_key_body(Token const token, Storage const storage,
+                       std::string_view const key, std::string& value) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     Status rc{};
     transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
@@ -98,8 +104,16 @@ Status search_key(Token const token, Storage const storage,
             }
         }
     }
-    ti->process_before_finish_step();
     return rc;
+}
+
+Status search_key(Token const token, Storage const storage,
+                  std::string_view const key, std::string& value) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = search_key_body(token, storage, key, value);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 } // namespace shirakami

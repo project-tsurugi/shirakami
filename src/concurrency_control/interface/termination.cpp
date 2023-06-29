@@ -11,12 +11,11 @@
 
 namespace shirakami {
 
-Status abort(Token token) { // NOLINT
+Status abort_body(Token token) { // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     // set result info
     ti->set_result(reason_code::USER_ABORT);
@@ -34,7 +33,6 @@ Status abort(Token token) { // NOLINT
              * It was already requested.
              * So user must use check_commit function to check result.
              */
-            ti->process_before_finish_step();
             return Status::WARN_ILLEGAL_OPERATION;
         }
         rc = long_tx::abort(ti);
@@ -45,15 +43,21 @@ Status abort(Token token) { // NOLINT
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return rc;
     }
-    ti->process_before_finish_step();
     return rc;
 }
 
-Status commit(Token const token) {
+Status abort(Token token) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = abort_body(token);
+    ti->process_before_finish_step();
+    return ret;
+}
+
+Status commit_body(Token const token) {
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    ti->process_before_start_step();
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
@@ -99,8 +103,15 @@ Status commit(Token const token) {
         LOG(ERROR) << log_location_prefix << "unexpected error";
         return Status::ERR_FATAL;
     }
-    ti->process_before_finish_step();
     return rc;
+}
+
+Status commit(Token const token) {
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = commit_body(token);
+    ti->process_before_finish_step();
+    return ret;
 }
 
 Status check_commit(Token token) {
