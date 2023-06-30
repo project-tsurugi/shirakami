@@ -50,9 +50,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
         // check
         if (ti->get_overtaken_ltx_set().empty()) {
             // no forwarding
-            if (result_epoch == 0) {
-                result_epoch = ti->get_valid_epoch();
-            }
+            if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
             // else, already initialize for non zero
             continue;
         }

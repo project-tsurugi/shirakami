@@ -16,8 +16,20 @@ public:
     using write_preserve_type = std::vector<Storage>;
 
     enum class transaction_type : std::int32_t {
+        /**
+         * @brief It is optimized for long transaction which its abort rate is 
+         * over 99.9 % when it executes by short mode.
+        */
         LONG,
+        /**
+         * @brief It is optimized for few contention workload.
+        */
         SHORT,
+        /**
+         * @brief It is optmized for read only transaction. It reads slightly 
+         * old safe snapshot without verify. It is also LTX and it must wait 1
+         * epoch to start at least.
+        */
         READ_ONLY,
     };
 

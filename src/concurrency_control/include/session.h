@@ -492,7 +492,7 @@ private:
      * @attention For internal. Don't clear at tx termination. This is used for
      * lock-free coordination for multi-threads.
      */
-    transaction_options::transaction_type tx_type_{
+    std::atomic<transaction_options::transaction_type> tx_type_{
             transaction_options::transaction_type::SHORT};
 
     /**
