@@ -66,7 +66,7 @@ Status update_body(Token token, Storage storage,
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
             if (in_ws->get_op() == OP_TYPE::DELETE) {
-                return Status::WARN_ALREADY_DELETE;
+                return Status::WARN_NOT_FOUND;
             }
             in_ws->set_val(val);
             return Status::OK;

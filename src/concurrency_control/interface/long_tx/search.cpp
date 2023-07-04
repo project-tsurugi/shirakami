@@ -107,7 +107,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
 static Status hit_local_write_set(write_set_obj* const in_ws, Record* rec_ptr,
                                   std::string& value, bool const read_value) {
     if (in_ws->get_op() == OP_TYPE::DELETE) {
-        return Status::WARN_ALREADY_DELETE;
+        return Status::WARN_NOT_FOUND;
     }
     if (read_value) {
         std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
@@ -139,7 +139,7 @@ Status search_key(session* ti, Storage const storage,
             }
             return rc;
         }
-        if (rc == Status::WARN_ALREADY_DELETE) { return rc; }
+        if (rc == Status::WARN_NOT_FOUND) { return rc; }
     }
 
     // check storage existence and extract wp meta info

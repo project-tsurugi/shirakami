@@ -575,7 +575,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
             read_register_if_ltx(rec_ptr);
-            return Status::WARN_ALREADY_DELETE;
+            return Status::WARN_NOT_FOUND;
         }
         if (key_read) {
             inws->get_key(buf);

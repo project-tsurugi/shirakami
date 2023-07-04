@@ -96,7 +96,7 @@ TEST_F(long_delete_update_test, same_tx_delete_update) { // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, update(s, st, "", "a"));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, "", "a"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify

@@ -67,7 +67,7 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
             // read all record
             for (;;) {
                 std::string key_buf{};
-                ASSERT_EQ(Status::WARN_ALREADY_DELETE,
+                ASSERT_EQ(Status::WARN_NOT_FOUND,
                           read_key_from_scan(s, hd, key_buf));
                 if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
             }
@@ -111,7 +111,7 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
                 // read all record
                 for (;;) {
                     std::string key_buf{};
-                    ASSERT_EQ(Status::WARN_ALREADY_DELETE,
+                    ASSERT_EQ(Status::WARN_NOT_FOUND,
                               read_key_from_scan(s, hd, key_buf));
                     if (next(s, hd) == Status::WARN_SCAN_LIMIT) { break; }
                 }

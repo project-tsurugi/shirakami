@@ -143,8 +143,6 @@ extern Status enter(Token& token); // NOLINT
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The read targets was deleted by delete 
- * operation of this transaction.
  * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
  * other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
@@ -279,7 +277,6 @@ extern Status next(Token token, ScanHandle handle);
  * @param[out] key the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -303,7 +300,6 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @param[out] value  the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
  * inserted. Please wait to finish the concurrent transaction which is 
  * inserting the target page or call abort api call.
@@ -341,7 +337,6 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
- * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
  * other's insert.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
@@ -390,7 +385,6 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
  * @return Status::OK Success.
- * @return Status::WARN_ALREADY_DELETE The target page was already deleted.
  * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length

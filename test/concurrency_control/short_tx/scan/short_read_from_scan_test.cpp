@@ -90,7 +90,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     /**
      * test
      * if read_from_scan detects the record deleted by myself, it function
-     * returns Status::WARN_ALREADY_DELETE.
+     * returns Status::WARN_NOT_FOUND
      */
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
@@ -98,7 +98,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
                                     scan_endpoint::INCLUSIVE, handle));
     // range : k, k2, k3
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, abort(s));
 
     /**
@@ -118,7 +118,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
               tx_begin({s2, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s2, st, k));
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, read_key_from_scan(s, handle, sb));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, next(s, handle));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
