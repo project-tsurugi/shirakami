@@ -638,6 +638,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             rr = read_record(rec_ptr, tidb, buf);
         }
         if (rr == Status::WARN_CONCURRENT_UPDATE) { return rr; }
+        // note: update can't log effect, but insert / delete log read effect.
         // optimization: set for re-read
         ti->push_to_read_set_for_stx(
                 {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
@@ -655,6 +656,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto rc{long_tx::version_function_with_optimistic_check(
                 rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
         if (rc == Status::WARN_NOT_FOUND) {
+            // version list traversed.
             read_register_if_ltx(rec_ptr);
             return rc;
         }
@@ -665,10 +667,12 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
         // read latest version after version function
         if (is_latest) {
-            if (key_read) {
-                rec_ptr->get_key(buf);
-            } else {
-                ver->get_value(buf);
+            if (!f_check.get_absent()) {
+                if (key_read) {
+                    rec_ptr->get_key(buf);
+                } else {
+                    ver->get_value(buf);
+                }
             }
             // load stable timestamp to verify optimistic read
             tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
@@ -684,6 +688,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             if (s_check.get_obj() == f_check.get_obj()) {
                 // success optimistic read latest version
                 read_register_if_ltx(rec_ptr);
+                if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
                 return Status::OK;
             }
             /**
@@ -698,14 +703,17 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                     ti->get_valid_epoch(), ver);
         }
 
-        // read non-latest version after version function
-        if (key_read) {
-            rec_ptr->get_key(buf);
-        } else {
-            ver->get_value(buf);
+        if (!ver->get_tid().get_absent()) {
+            // read non-latest version after version function
+            if (key_read) {
+                rec_ptr->get_key(buf);
+            } else {
+                ver->get_value(buf);
+            }
         }
 
         read_register_if_ltx(rec_ptr);
+        if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         return Status::OK;
     }
 
