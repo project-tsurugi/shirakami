@@ -74,12 +74,6 @@ enum class Status : std::int32_t {
     WARN_ALREADY_BEGIN = -1000,
     /**
      * @brief Warning.
-     * @details The transaction executed some operation for the page which it 
-     * already executed delete operation for the page.
-     */
-    WARN_ALREADY_DELETE,
-    /**
-     * @brief Warning.
      * @details The transaction tried to insert, but failed due to concurrent 
      * insert.
      */
@@ -257,8 +251,6 @@ inline constexpr std::string_view to_string_view( // NOLINT
     switch (value) {
         case Status::WARN_ALREADY_BEGIN:
             return "WARN_ALREADY_BEGIN"sv; // NOLINT
-        case Status::WARN_ALREADY_DELETE:
-            return "WARN_ALREADY_DELETE"sv; // NOLINT
         case Status::WARN_ALREADY_EXISTS:
             return "WARN_ALREADY_EXISTS"sv; // NOLINT
         case Status::WARN_ALREADY_INIT:

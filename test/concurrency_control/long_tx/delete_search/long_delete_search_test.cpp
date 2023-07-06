@@ -73,7 +73,7 @@ TEST_F(long_delete_search_test, same_tx_delete_search) { // NOLINT
     // test
     ASSERT_EQ(delete_record(s, st, ""), Status::OK);
     std::string buf{};
-    ASSERT_EQ(search_key(s, st, "", buf), Status::WARN_ALREADY_DELETE);
+    ASSERT_EQ(search_key(s, st, "", buf), Status::WARN_NOT_FOUND);
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify

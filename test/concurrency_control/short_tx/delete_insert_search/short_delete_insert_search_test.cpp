@@ -137,8 +137,7 @@ TEST_F(short_delete_insert_search,          // NOLINT
             ASSERT_EQ(Status::OK, tx_begin({s}));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
-            ASSERT_TRUE(rc == Status::WARN_NOT_FOUND ||
-                        rc == Status::WARN_ALREADY_DELETE);
+            ASSERT_TRUE(rc == Status::WARN_NOT_FOUND);
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
             ASSERT_EQ(Status::OK, leave(s));
         }
@@ -163,7 +162,7 @@ TEST_F(short_delete_insert_search, delete_insert_delete_search) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, st, k, v2));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     std::string vb{};
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, k, vb));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, k, vb));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK,

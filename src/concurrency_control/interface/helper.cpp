@@ -177,7 +177,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
     }
     // for reading deleted target
     if (!f_check.get_latest() && f_check.get_absent()) {
-        return Status::WARN_ALREADY_DELETE;
+        return Status::WARN_NOT_FOUND;
     }
 
     // for reading normal target

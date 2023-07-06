@@ -269,7 +269,7 @@ TEST_F(comp_test, test2) { // NOLINT
 
     // check by search
     ASSERT_EQ(Status::OK, search_key(s, st, a, buf));
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, b, buf));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, b, buf));
     ASSERT_EQ(Status::OK, search_key(s, st, c, buf));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 

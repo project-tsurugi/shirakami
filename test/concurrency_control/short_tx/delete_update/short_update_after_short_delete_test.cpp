@@ -73,7 +73,7 @@ TEST_F(update_after_delete, same_tx) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
-    ASSERT_EQ(Status::WARN_ALREADY_DELETE, update(s, st, k, v2));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, update(s, st, k, v2));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 

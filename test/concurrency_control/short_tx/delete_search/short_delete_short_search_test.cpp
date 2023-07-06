@@ -74,7 +74,7 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         std::string vb{};
         // this should find logical record deleted.
-        ASSERT_EQ(Status::WARN_ALREADY_DELETE, search_key(s, st, "", vb));
+        ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
     wait_epoch_update(); // start gc
