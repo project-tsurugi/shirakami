@@ -55,20 +55,13 @@ TEST_F(read_area_test, register_same_st) { // NOLINT
                                     {{st, st}, {st2, st2}}}));
 
     // check global table
-    // st
-    wp::page_set_meta* out{};
-    ASSERT_EQ(Status::OK, find_page_set_meta(st, out));
-    read_plan::list_type list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 0);
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 1);
-
-    // st2
-    ASSERT_EQ(Status::OK, find_page_set_meta(st2, out));
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 1);
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+    }
 
     // check local worker info
     auto* ti = static_cast<session*>(s);
@@ -89,7 +82,7 @@ TEST_F(read_area_test, register_same_st) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
+TEST_F(read_area_test, register_and_remove_posi_only_commit) { // NOLINT
     Token s{};
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -98,32 +91,34 @@ TEST_F(read_area_test, register_and_remove_posi) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {},
                                     {{st}, {}}}));
-    // check existence about read area
-    wp::page_set_meta* out{};
-    ASSERT_EQ(Status::OK, find_page_set_meta(st, out));
-    // check positive list
-    read_plan::list_type list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 1);
-    auto* ti = static_cast<session*>(s);
-    ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
-    // check negative list
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 0);
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
 
     // commit erase above info
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // check no existence about read area
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 0);
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 0);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
+
 
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(read_area_test, register_and_remove_nega) { // NOLINT
+TEST_F(read_area_test, register_and_remove_nega_only_commit) { // NOLINT
     Token s{};
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -132,27 +127,99 @@ TEST_F(read_area_test, register_and_remove_nega) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {},
                                     {{}, {st}}}));
-    // check existence about read area
-    wp::page_set_meta* out{};
-    ASSERT_EQ(Status::OK, find_page_set_meta(st, out));
-    // check negative list
-    read_plan::list_type list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 1);
-    auto* ti = static_cast<session*>(s);
-    ASSERT_EQ(ti->get_long_tx_id(), *list.begin());
-    // check positive list
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+    }
 
     // commit erase above info
     wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // check no existence about read area
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 0);
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 0);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(read_area_test, register_and_remove_posi_only_abort) { // NOLINT
+    Token s{};
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{st}, {}}}));
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
+
+    // commit erase above info
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, abort(s)); // NOLINT
+
+    // check no existence about read area
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 0);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
+
+
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(read_area_test, register_and_remove_nega_only_abort) { // NOLINT
+    Token s{};
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{}, {st}}}));
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+    }
+
+    // commit erase above info
+    wait_epoch_update();
+    ASSERT_EQ(Status::OK, abort(s)); // NOLINT
+
+    // check no existence about read area
+    // check global table
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 0);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+    }
 
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -175,25 +242,13 @@ TEST_F(read_area_test, conflict_positive_negative) { // NOLINT
                                     {{st1, st2}, {st2, st3}}}));
 
     // check global table
-    // st1
-    wp::page_set_meta* out{};
-    ASSERT_EQ(Status::OK, find_page_set_meta(st1, out));
-    read_plan::list_type list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 0);
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 1);
-    // st2
-    ASSERT_EQ(Status::OK, find_page_set_meta(st2, out));
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 1);
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
-    // st3
-    ASSERT_EQ(Status::OK, find_page_set_meta(st3, out));
-    list = out->get_read_plan().get_negative_list();
-    ASSERT_EQ(list.size(), 1);
-    list = out->get_read_plan().get_positive_list();
-    ASSERT_EQ(list.size(), 0);
+    {
+        std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
+        ASSERT_EQ(read_plan::get_cont().size(), 1);
+        auto ra = *read_plan::get_cont().begin();
+        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
+        ASSERT_EQ(ra.second.get_negative_list().size(), 2);
+    }
 
     // check local worker info
     auto* ti = static_cast<session*>(s);

@@ -26,64 +26,41 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
 }
 
 Status check_read_area(session* ti, Storage st) {
-    // check positive list
-    if (!ti->get_read_area().get_positive_list().empty()) {
-        bool is_found{false};
-        for (auto elem : ti->get_read_area().get_positive_list()) {
-            if (elem == st) {
-                is_found = true;
-                // it can break
-                break;
-            }
-        }
-        if (!is_found) { return Status::ERR_READ_AREA_VIOLATION; }
-        // success verify about positive list
+    auto ra = ti->get_read_area();
+    auto plist = ra.get_positive_list();
+    auto nlist = ra.get_negative_list();
+
+    // cond 1 empty and empty
+    if (plist.empty() && nlist.empty()) { return Status::OK; }
+
+    // cond 3 only nlist
+    if (plist.empty()) {
+        // nlist is not empty
+        auto itr = nlist.find(st);
+        if (itr != nlist.end()) { return Status::ERR_READ_AREA_VIOLATION; }
+        return Status::OK;
     }
 
-    // check negative list
-    if (!ti->get_read_area().get_negative_list().empty()) {
-        bool is_found{false};
-        for (auto elem : ti->get_read_area().get_negative_list()) {
-            if (elem == st) {
-                is_found = true;
-                // it can break
-                break;
-            }
-        }
-        if (is_found) { return Status::ERR_READ_AREA_VIOLATION; }
-        // success verify about negative list
+    // cond 2 only plist and cond 4 p and n
+    // it can read from only plist
+    // plist is not empty
+    auto itr = plist.find(st);
+    if (itr != plist.end()) { // found
+        return Status::OK;
     }
-
-    return Status::OK;
+    return Status::ERR_READ_AREA_VIOLATION;
 }
 
 void preprocess_read_area(transaction_options::read_area& ra) {
-    std::vector<Storage> st_list{};
-    storage::list_storage(st_list);
-
-    // if you don't set positive / negative, you may read all.
-    if (ra.get_positive_list().empty() && ra.get_negative_list().empty()) {
-        for (auto elem : st_list) { ra.insert_to_positive_list(elem); }
-
-        return;
-    }
-
-    // if you set positive only, you can read that only.
-    // no work to need
-
-    // if you set negative only, you can read other than negative
-    if (ra.get_positive_list().empty() && !ra.get_negative_list().empty()) {
-        // register all to positive and remove by negative
-        for (auto elem : st_list) { ra.insert_to_positive_list(elem); }
-    }
-
-    // if you set positive and negative, you can read positive erased by negative
-    for (auto elem : ra.get_negative_list()) {
-        auto pset = ra.get_positive_list();
-        for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
-            if (elem == *itr) {
-                ra.erase_from_positive_list(elem);
-                break;
+    if (!ra.get_positive_list().empty() && !ra.get_negative_list().empty()) {
+        // if you set positive and negative, you can read positive erased by negative
+        for (auto elem : ra.get_negative_list()) {
+            auto pset = ra.get_positive_list();
+            for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
+                if (elem == *itr) {
+                    ra.erase_from_positive_list(elem);
+                    break;
+                }
             }
         }
     }
@@ -123,12 +100,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     // cut positive list by negative list.
     preprocess_read_area(ra);
     // set read area
-    auto rc = set_read_plans(ti, ti->get_long_tx_id(), ra);
-    if (rc != Status::OK) {
-        long_tx::abort(ti);
-        return Status::WARN_INVALID_ARGS;
-    }
-    // 読みうるものは必ず read positive として登録する。
+    read_plan::add_elem(ti->get_long_tx_id(), ra);
     ti->set_read_area(ra);
 
     // update metadata

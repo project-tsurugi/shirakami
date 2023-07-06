@@ -157,6 +157,9 @@ Status init(database_options options) { // NOLINT
     //// about thread pool
     //thread_pool::init();
 
+    // about read area
+    read_plan::init();
+
     set_initialized(true); // about init command
     return Status::OK;
 }

@@ -55,7 +55,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_SUITE_P( // NOLINT
         TwoBoolParam, tsurugi_issue284_2,
         ::testing::Values(
                 std::make_tuple(transaction_options::transaction_type::LONG,
@@ -69,14 +69,14 @@ INSTANTIATE_TEST_SUITE_P(
                         false)));
 
 
-TEST_P(tsurugi_issue284_2,
+TEST_P(tsurugi_issue284_2,                           // NOLINT
        read_from_scan_must_not_read_absent_record) { // NOLINT
     auto tx_type = std::get<0>(GetParam());
     bool FLAGS_check_open_scan = std::get<1>(GetParam());
     // setup
-    Storage st;
+    Storage st{};
     ASSERT_OK(create_storage("", st));
-    Token s;
+    Token s{};
     ASSERT_OK(enter(s));
     ASSERT_OK(tx_begin(s));
     if (!FLAGS_check_open_scan) { ASSERT_OK(insert(s, st, "0", "val")); }
@@ -97,10 +97,10 @@ TEST_P(tsurugi_issue284_2,
     ASSERT_OK(leave(s));
 
     // LTX/RTX begin
-    Token l;
+    Token l{};
     ASSERT_OK(enter(l));
     ASSERT_OK(tx_begin({l, tx_type}));
-    TxStateHandle sth;
+    TxStateHandle sth{};
     ASSERT_OK(acquire_tx_state_handle(l, sth));
     while (true) {
         TxState state;
@@ -118,7 +118,7 @@ TEST_P(tsurugi_issue284_2,
     ASSERT_OK(insert(s, st, "2", "val"));
 
     // LTX/RTX: open_scan
-    ScanHandle scanh;
+    ScanHandle scanh{};
     ASSERT_OK(open_scan(l, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         scanh));
 

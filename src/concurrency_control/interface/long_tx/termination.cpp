@@ -377,6 +377,9 @@ static inline void cleanup_process(
     register_wp_result_and_remove_wps(ti, was_committed, write_range);
     ongoing_tx::remove_id(ti->get_long_tx_id());
 
+    // clear about read plan
+    read_plan::remove_elem(ti->get_long_tx_id());
+
     // local effect
     ti->clean_up();
 }

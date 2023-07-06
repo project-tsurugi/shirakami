@@ -11,76 +11,46 @@
 
 namespace shirakami {
 
-Status check_list(std::set<Storage> const& target_list,
-                  std::set<wp::page_set_meta*>& out_list) {
-    for (auto elem : target_list) {
-        wp::page_set_meta* out{};
-        auto rc = find_page_set_meta(elem, out);
-        if (rc == Status::WARN_NOT_FOUND) { return Status::WARN_INVALID_ARGS; }
-        // rc must be Status::OK
-        if (rc != Status::OK) {
+bool read_plan::check_potential_read_anti(
+        std::size_t const tx_id, std::set<Storage> const& write_storages) {
+    std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
+    for (auto elem : get_cont()) {
+        if (elem.first > tx_id) {
             LOG(ERROR) << log_location_prefix
-                       << "It strongly suspect that DML and DDL are mixed.";
-            return Status::ERR_FATAL;
+                       << "container is ordered by tx id and it scan from low "
+                          "number. why it missed own and see high priori?";
+            return false;
         }
-        out_list.insert(out);
+        if (elem.first == tx_id) { return false; }
+        // elem is high priori tx
+        auto plist = elem.second.get_positive_list();
+        auto nlist = elem.second.get_negative_list();
+
+        // cond1 empty and empty
+        if (plist.empty() && nlist.empty()) {
+            // it may read all
+            return true;
+        }
+
+        for (auto elem : write_storages) {
+            // cond3 only nlist
+            if (plist.empty()) {
+                auto itr = nlist.find(elem);
+                if (itr == nlist.end()) { return true; }
+            }
+
+            // cond2,4 only plist or p and n
+            if (nlist.empty() || (!plist.empty() && !nlist.empty())) {
+                auto itr = plist.find(elem);
+                if (itr != plist.end()) { return true; }
+            }
+        }
     }
 
-    return Status::OK;
-}
-
-Status check_storage_existence_and_collect_psm_info(
-        transaction_options::read_area const& ra,
-        std::set<wp::page_set_meta*>& plist_meta,
-        std::set<wp::page_set_meta*>& nlist_meta) {
-    // clear each out list
-    plist_meta.clear();
-    nlist_meta.clear();
-
-    // about positive list
-    auto rc = check_list(ra.get_positive_list(), plist_meta);
-    if (rc != Status::OK) { return rc; }
-
-    // about negative list
-    rc = check_list(ra.get_negative_list(), nlist_meta);
-    if (rc != Status::OK) { return rc; }
-
-    return Status::OK;
-}
-
-void update_read_area(std::size_t const tx_id,
-                      std::set<wp::page_set_meta*> const& plist_meta,
-                      std::set<wp::page_set_meta*> const& nlist_meta) {
-    // about plist
-    for (auto* elem : plist_meta) {
-        elem->get_read_plan().update_positive_list(tx_id);
-    }
-
-    // about nlist
-    for (auto* elem : nlist_meta) {
-        elem->get_read_plan().update_negative_list(tx_id);
-    }
-}
-
-Status set_read_plans(Token token, std::size_t const tx_id,
-                      transaction_options::read_area const& ra) {
-    auto* ti = static_cast<session*>(token);
-
-    // check storage existence and collect metadata info
-    std::set<wp::page_set_meta*> plist_meta{};
-    std::set<wp::page_set_meta*> nlist_meta{};
-    auto rc = check_storage_existence_and_collect_psm_info(ra, plist_meta,
-                                                           nlist_meta);
-    if (rc != Status::OK) { return rc; }
-    // success
-
-    update_read_area(tx_id, plist_meta, nlist_meta);
-
-    // log plist nlist
-    ti->set_read_positive_list(plist_meta);
-    ti->set_read_negative_list(nlist_meta);
-
-    return Status::OK;
+    LOG(ERROR) << log_location_prefix
+               << "container is ordered by tx id and it scan from low "
+                  "number. why it missed own and see high priori?";
+    return false;
 }
 
 } // namespace shirakami

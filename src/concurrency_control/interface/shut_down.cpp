@@ -125,6 +125,9 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     //VLOG(log_debug_timing_event) << log_location_prefix_timing_event
     //                             << "shutdown:end_shutdown_thread_pool";
 
+    // about read area
+    read_plan::fin();
+
     // clear flag
     set_initialized(false);
 } catch (std::exception& e) {

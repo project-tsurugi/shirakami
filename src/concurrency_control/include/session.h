@@ -198,22 +198,6 @@ public:
         return read_area_;
     }
 
-    std::shared_mutex& get_mtx_read_positive_list() {
-        return mtx_read_positive_list_;
-    }
-
-    std::set<wp::page_set_meta*>& get_read_positive_list() {
-        return read_positive_list_;
-    }
-
-    std::shared_mutex& get_mtx_read_negative_list() {
-        return mtx_read_negative_list_;
-    }
-
-    std::set<wp::page_set_meta*>& get_read_negative_list() {
-        return read_negative_list_;
-    }
-
     read_set_for_stx_type& get_read_set_for_stx() { return read_set_for_stx_; }
 
     /**
@@ -413,14 +397,6 @@ public:
         read_area_ = ra;
     }
 
-    void set_read_positive_list(std::set<wp::page_set_meta*> const& plist) {
-        read_positive_list_ = plist;
-    }
-
-    void set_read_negative_list(std::set<wp::page_set_meta*> const& nlist) {
-        read_negative_list_ = nlist;
-    }
-
     void set_tx_began(bool tf) {
         tx_began_.store(tf, std::memory_order_release);
     }
@@ -541,20 +517,6 @@ private:
      * @brief read area information used for long transaction.
      */
     transaction_options::read_area read_area_{};
-
-    std::shared_mutex mtx_read_positive_list_{};
-
-    /**
-     * @brief cache about computation around read_area_
-     */
-    std::set<wp::page_set_meta*> read_positive_list_{};
-
-    std::shared_mutex mtx_read_negative_list_{};
-
-    /**
-     * @brief cache about computation around read_area_
-     */
-    std::set<wp::page_set_meta*> read_negative_list_{};
 
     /**
      * @brief local read set for stx.

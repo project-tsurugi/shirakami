@@ -42,47 +42,15 @@ bool ongoing_tx::exist_wait_for(session* ti) {
             // wait_for hit.
             if (std::get<ongoing_tx::index_id>(elem) < id) { return true; }
         }
-        if (has_wp) {
-            // check potential read-anti
-            if (std::get<ongoing_tx::index_id>(elem) < id) {
-                // check read area
-                // check each storage
-                for (auto st : st_set) {
-                    wp::page_set_meta* out{};
-                    auto rc = find_page_set_meta(st, out);
-                    if (rc == Status::WARN_NOT_FOUND) {
-                        break; // todo error handling
-                    }
-                    if (rc != Status::OK) {
-                        LOG(ERROR) << log_location_prefix
-                                   << "It strongly suspect that DML and DDL "
-                                      "are mixed.";
-                        break;
-                    }
-                    // check plist
-                    auto plist = out->get_read_plan().get_positive_list();
-                    for (auto p_id : plist) {
-                        if (p_id == std::get<ongoing_tx::index_id>(elem)) {
-                            return true;
-                        }
-                    }
-                    //// check nlist // todo remove after impl compliment
-                    //// between p and n.
-                    //auto nlist = out->get_read_plan().get_negative_list();
-                    //bool n_hit{false};
-                    //for (auto n_id : nlist) {
-                    //    if (n_id == std::get<ongoing_tx::index_id>(elem)) {
-                    //        n_hit = true;
-                    //        break;
-                    //    }
-                    //}
-                    //if (n_hit) { continue; }
-                    //// empty read positive mean universe.
-                    //return true;
-                }
-            }
-        }
     }
+
+    // check about write
+    if (has_wp) {
+        // check potential read-anti and read area for each write storage
+        bool ret = read_plan::check_potential_read_anti(id, st_set);
+        if (ret) { return true; }
+    }
+
     return false;
 }
 

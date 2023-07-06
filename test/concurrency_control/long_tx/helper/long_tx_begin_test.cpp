@@ -70,11 +70,10 @@ TEST_F(long_tx_begin_test, positive_read_area_not_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::WARN_INVALID_ARGS,
-              tx_begin({s,
-                        transaction_options::transaction_type::LONG,
-                        {},
-                        {{st}, {}}}));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{st}, {}}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -83,11 +82,10 @@ TEST_F(long_tx_begin_test, negative_read_area_not_existing_storage) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     Storage st{};
-    ASSERT_EQ(Status::WARN_INVALID_ARGS,
-              tx_begin({s,
-                        transaction_options::transaction_type::LONG,
-                        {},
-                        {{}, {st}}}));
+    ASSERT_EQ(Status::OK, tx_begin({s,
+                                    transaction_options::transaction_type::LONG,
+                                    {},
+                                    {{}, {st}}}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, leave(s));
 }

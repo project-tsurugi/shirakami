@@ -20,35 +20,7 @@ bool session::check_exist_wp_set(Storage storage) const {
     return false;
 }
 
-void clear_about_read_area(session* ti) {
-    // gc global information
-    {
-        std::shared_lock<std::shared_mutex> plk{
-                ti->get_mtx_read_positive_list()};
-        std::shared_lock<std::shared_mutex> nlk{
-                ti->get_mtx_read_negative_list()};
-        if (!ti->get_read_positive_list().empty()) {
-            for (auto* elem : ti->get_read_positive_list()) {
-                elem->get_read_plan().erase_positive_list(ti->get_long_tx_id());
-            }
-        }
-        if (!ti->get_read_negative_list().empty()) {
-            for (auto* elem : ti->get_read_negative_list()) {
-                elem->get_read_plan().erase_negative_list(ti->get_long_tx_id());
-            }
-        }
-    }
-
-    // clear plist nlist
-    {
-        std::lock_guard<std::shared_mutex> plk{
-                ti->get_mtx_read_positive_list()};
-        std::lock_guard<std::shared_mutex> nlk{
-                ti->get_mtx_read_negative_list()};
-        ti->get_read_negative_list().clear();
-        ti->get_read_positive_list().clear();
-    }
-}
+void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 
 void session::clear_local_set() {
     node_set_.clear();
