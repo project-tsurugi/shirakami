@@ -196,7 +196,9 @@ Status sequence::sequence_map_find_and_verify(SequenceId const id,
         return Status::WARN_NOT_FOUND;
     }
 
+    LOG(INFO) << std::get<0>(last_itr->second) << ", " << version;
     if (std::get<0>(last_itr->second) < version) { return Status::OK; }
+    LOG(INFO) << std::get<0>(last_itr->second) << ", " << version;
     return Status::WARN_ILLEGAL_OPERATION;
 }
 

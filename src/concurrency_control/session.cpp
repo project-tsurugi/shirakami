@@ -58,7 +58,6 @@ void session::commit_sequence(tid_word ctid) {
             SequenceId id = itr->first;
             SequenceVersion version = std::get<0>(itr->second);
             SequenceValue value = std::get<1>(itr->second);
-
             // check update sequence object
             auto ret = sequence::sequence_map_find_and_verify(id, version);
             if (ret == Status::WARN_ILLEGAL_OPERATION ||
@@ -98,6 +97,7 @@ void session::commit_sequence(tid_word ctid) {
                 LOG(ERROR) << log_location_prefix << "unreachable path";
                 return;
             }
+            ++itr;
         }
     }
 }
