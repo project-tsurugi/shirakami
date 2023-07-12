@@ -177,6 +177,9 @@ public:
         return worker_number_;
     }
 
+    /**
+     * @pre take mtx of logs
+    */
     void push_log(log_record const& log) {
         if (logs_.empty()) {
             set_min_log_epoch(log.get_wv().get_major_write_version());

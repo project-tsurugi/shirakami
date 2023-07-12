@@ -47,59 +47,70 @@ void session::clear_tx_property() { set_tx_began(false); }
 void session::commit_sequence(tid_word ctid) {
     auto& ss = sequence_set().set();
     // ss is sequence set
-    if (!ss.empty()) {
+    if (ss.empty()) { return; }
 
-        std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+    std::lock_guard<std::shared_mutex> lk_for_sm{sequence::sequence_map_smtx()};
 
-        // gc after write lock
-        sequence::gc_sequence_map();
-
-        for (auto itr = ss.begin(); itr != ss.end();) { // NOLINT
-            SequenceId id = itr->first;
-            SequenceVersion version = std::get<0>(itr->second);
-            SequenceValue value = std::get<1>(itr->second);
-            // check update sequence object
-            auto ret = sequence::sequence_map_find_and_verify(id, version);
-            if (ret == Status::WARN_ILLEGAL_OPERATION ||
-                ret == Status::WARN_NOT_FOUND) {
-                // fail
-                itr = ss.erase(itr);
-                continue;
-            }
-            if (ret != Status::OK) {
-                LOG(ERROR) << log_location_prefix << "unreachable path";
-                itr = ss.erase(itr);
-                continue;
-            }
+    // gc after write lock
+    sequence::gc_sequence_map();
 
 #ifdef PWAL
-            // This entry is valid. it generates log.
-            // gen key
-            std::string key{};
-            key.append(reinterpret_cast<const char*>(&id), // NOLINT
-                       sizeof(id));
-            // gen value
-            std::string new_value{}; // value is version + value
-            new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
-                             sizeof(version));
-            new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
-                             sizeof(value));
-            log_operation lo{log_operation::UPSERT};
-            get_lpwal_handle().push_log(shirakami::lpwal::log_record(
-                    lo, lpwal::write_version_type(ctid.get_epoch(), version),
-                    storage::sequence_storage, key, new_value));
+    std::vector<shirakami::lpwal::log_record> log_recs{};
+#endif
+    for (auto itr = ss.begin(); itr != ss.end();) { // NOLINT
+        SequenceId id = itr->first;
+        SequenceVersion version = std::get<0>(itr->second);
+        SequenceValue value = std::get<1>(itr->second);
+        // check update sequence object
+        auto ret = sequence::sequence_map_find_and_verify(ctid.get_epoch(), id,
+                                                          version);
+        if (ret == Status::WARN_ILLEGAL_OPERATION ||
+            ret == Status::WARN_NOT_FOUND) {
+            // fail
+            itr = ss.erase(itr);
+            continue;
+        }
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unreachable path";
+            itr = ss.erase(itr);
+            continue;
+        }
+
+#ifdef PWAL
+        // This entry is valid. it generates log.
+        // gen key
+        std::string key{};
+        key.append(reinterpret_cast<const char*>(&id), // NOLINT
+                   sizeof(id));
+        // gen value
+        std::string new_value{}; // value is version + value
+        new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
+                         sizeof(version));
+        new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
+                         sizeof(value));
+        log_operation lo{log_operation::UPSERT};
+        // log to local to reduce contention for locks
+        log_recs.emplace_back(shirakami::lpwal::log_record(
+                lo, lpwal::write_version_type(ctid.get_epoch(), version),
+                storage::sequence_storage, key, new_value));
 #endif
 
-            // update sequence object
-            auto epoch = ctid.get_epoch();
-            ret = sequence::sequence_map_update(id, epoch, version, value);
-            if (ret != Status::OK) {
-                LOG(ERROR) << log_location_prefix << "unreachable path";
-                return;
-            }
-            ++itr;
+        // update sequence object
+        auto epoch = ctid.get_epoch();
+        ret = sequence::sequence_map_update(id, epoch, version, value);
+        if (ret != Status::OK) {
+            LOG(ERROR) << log_location_prefix << "unreachable path";
+            return;
         }
+        ++itr;
     }
+
+#ifdef PWAL
+    // push log to pwal buffer
+    std::unique_lock<std::mutex> lk_for_pwal_buf{
+            get_lpwal_handle().get_mtx_logs()};
+    for (auto& elem : log_recs) { get_lpwal_handle().push_log(elem); }
+#endif
 }
 
 std::set<std::size_t> session::extract_wait_for() {

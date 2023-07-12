@@ -52,10 +52,11 @@ public:
     static Status sequence_map_check_exist(SequenceId id);
 
     static Status
-    sequence_map_find(SequenceId id, epoch::epoch_t epoch,
+    sequence_map_find(SequenceId id,
                       std::tuple<SequenceVersion, SequenceValue>& out);
 
-    static Status sequence_map_find_and_verify(SequenceId id,
+    static Status sequence_map_find_and_verify(epoch::epoch_t epoch,
+                                               SequenceId id,
                                                SequenceVersion version);
 
     static Status sequence_map_push(SequenceId id);

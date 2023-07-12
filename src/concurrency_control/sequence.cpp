@@ -147,7 +147,7 @@ Status sequence::sequence_map_push(SequenceId const id,
 }
 
 Status
-sequence::sequence_map_find(SequenceId const id, epoch::epoch_t const epoch,
+sequence::sequence_map_find(SequenceId const id,
                             std::tuple<SequenceVersion, SequenceValue>& out) {
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
@@ -166,18 +166,13 @@ sequence::sequence_map_find(SequenceId const id, epoch::epoch_t const epoch,
         return Status::WARN_NOT_FOUND;
     }
 
-    for (auto ritr = found_id_itr->second.rbegin();
-         ritr != found_id_itr->second.rend(); ++ritr) {
-        if (ritr->first <= epoch) {
-            out = ritr->second;
-            return Status::OK;
-        }
-    }
-    return Status::WARN_NOT_FOUND;
+    out = last_itr->second;
+    return Status::OK;
 }
 
 // for update sequence function
-Status sequence::sequence_map_find_and_verify(SequenceId const id,
+Status sequence::sequence_map_find_and_verify(epoch::epoch_t epoch,
+                                              SequenceId const id,
                                               SequenceVersion const version) {
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
@@ -196,9 +191,15 @@ Status sequence::sequence_map_find_and_verify(SequenceId const id,
         return Status::WARN_NOT_FOUND;
     }
 
-    LOG(INFO) << std::get<0>(last_itr->second) << ", " << version;
-    if (std::get<0>(last_itr->second) < version) { return Status::OK; }
-    LOG(INFO) << std::get<0>(last_itr->second) << ", " << version;
+    if (std::get<0>(last_itr->second) < version) {
+        if (last_itr->first > epoch) {
+            // fix sequence map
+            auto erased_itr = found_id_itr->second.end();
+            erased_itr--;
+            found_id_itr->second.erase(erased_itr);
+        }
+        return Status::OK;
+    }
     return Status::WARN_ILLEGAL_OPERATION;
 }
 
@@ -320,17 +321,9 @@ Status sequence::read_sequence(SequenceId const id,
      */
     std::shared_lock<std::shared_mutex> lk{sequence::sequence_map_smtx()};
 
-#ifdef PWAL
-    // get durable epoch
-    auto epoch = lpwal::get_durable_epoch();
-#else
-    // get global epoch
-    auto epoch = epoch::get_global_epoch();
-#endif
-
     // read sequence object
     std::tuple<SequenceVersion, SequenceValue> out;
-    auto ret = sequence::sequence_map_find(id, epoch, out);
+    auto ret = sequence::sequence_map_find(id, out);
     if (ret == Status::WARN_NOT_FOUND) { return ret; }
     if (ret != Status::OK) {
         LOG(ERROR) << log_location_prefix << "unreachable path";

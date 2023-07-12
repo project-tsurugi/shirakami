@@ -56,31 +56,32 @@ static std::string mk_key(int i) {
 // * OCC2 ...commit() finished
 //     * sequence::sequence_map = {seqid0 -> { ..., e0 -> {2, 2}, e1 -> {1, 1} }}  <- XXX: order reversal
 
-TEST_F(tsurugi_issue313_2, DISABLED_sequence_epoch_ver_order) { // NOLINT
+TEST_F(tsurugi_issue313_2, sequence_epoch_ver_order) { // NOLINT
 
-    int n = 655360;  // set this for enough size
-    SequenceId seqid;
+    int n = 655360; // set this for enough size
+    SequenceId seqid{};
     ASSERT_OK(create_sequence(&seqid));
 
-    auto set_seq = [seqid](Token s, int v){
-        SequenceVersion seqver;
-        SequenceValue seqval;
+    auto set_seq = [seqid](Token s, int v) {
+        SequenceVersion seqver{};
+        SequenceValue seqval{};
         read_sequence(seqid, &seqver, &seqval);
         ASSERT_OK(update_sequence(s, seqid, v, v));
     };
     auto commit_leave = [](Token s, bool wait = false) {
         if (wait) { wait_epoch_update(); }
+        LOG(INFO) << wait;
         LOG(INFO) << "commit begin " << s;
         ASSERT_OK(commit(s));
         LOG(INFO) << "commit end " << s;
         ASSERT_OK(leave(s));
     };
 
-    Storage st;
+    Storage st{};
     ASSERT_OK(create_storage("", st));
 
     // setup many records for search_key
-    Token s;
+    Token s{};
     ASSERT_OK(enter(s));
     ASSERT_OK(tx_begin(s));
     auto epoch_insert_start = epoch::get_global_epoch();
@@ -88,7 +89,8 @@ TEST_F(tsurugi_issue313_2, DISABLED_sequence_epoch_ver_order) { // NOLINT
         ASSERT_OK(insert(s, st, mk_key(i), "val"));
         if (i % 1000 == 0) {
             if (epoch::get_global_epoch() - epoch_insert_start > 20) {
-                LOG(INFO) << "takes too long time, shrink n " << n << " to " << i;
+                LOG(INFO) << "takes too long time, shrink n " << n << " to "
+                          << i;
                 n = i;
                 break;
             }
@@ -98,16 +100,16 @@ TEST_F(tsurugi_issue313_2, DISABLED_sequence_epoch_ver_order) { // NOLINT
     ASSERT_OK(leave(s));
     LOG(INFO) << "setup done";
 
-    Token s1;
+    Token s1{};
     ASSERT_OK(enter(s1));
     ASSERT_OK(tx_begin(s1));
     set_seq(s1, 1);
-    Token s2;
+    Token s2{};
     ASSERT_OK(enter(s2));
     ASSERT_OK(tx_begin(s2));
     // grow read_set_for_stx
     for (int i = 0; i < n; i++) {
-        std::string val;
+        std::string val{};
         ASSERT_OK(search_key(s2, st, mk_key(i), val));
     }
     set_seq(s2, 2);
@@ -116,6 +118,15 @@ TEST_F(tsurugi_issue313_2, DISABLED_sequence_epoch_ver_order) { // NOLINT
     std::thread th2(commit_leave, s2);
     th1.join();
     th2.join();
+
+    sleep(1);
+    SequenceId sid{seqid};
+    SequenceVersion sver{};
+    SequenceValue sval{};
+    LOG(INFO);
+    ASSERT_OK(read_sequence(sid, &sver, &sval));
+    ASSERT_EQ(sver, 2);
+    ASSERT_EQ(sval, 2);
 }
 
 } // namespace shirakami::testing
