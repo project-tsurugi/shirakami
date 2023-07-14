@@ -165,7 +165,7 @@ public:
     Status erase(write_set_obj* wso);
 
     [[nodiscard]] bool get_for_batch() const {
-        return for_batch_.load(std::memory_order_acq_rel);
+        return for_batch_.load(std::memory_order_acquire);
     }
 
     std::shared_mutex& get_mtx() { return mtx_; }
