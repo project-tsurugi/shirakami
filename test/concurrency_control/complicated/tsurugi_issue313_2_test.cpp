@@ -38,7 +38,7 @@ private:
 
 static std::string mk_key(int i) {
     std::ostringstream ss;
-    ss << std::setw(7) << std::setfill('0') << i;
+    ss << std::setw(7) << std::setfill('0') << i; // NOLINT
     return ss.str();
 }
 
@@ -58,7 +58,7 @@ static std::string mk_key(int i) {
 
 TEST_F(tsurugi_issue313_2, sequence_epoch_ver_order) { // NOLINT
 
-    int n = 655360; // set this for enough size
+    int n = 655360; // set this for enough size // NOLINT
     SequenceId seqid{};
     ASSERT_OK(create_sequence(&seqid));
 
@@ -87,8 +87,8 @@ TEST_F(tsurugi_issue313_2, sequence_epoch_ver_order) { // NOLINT
     auto epoch_insert_start = epoch::get_global_epoch();
     for (int i = 0; i < n; i++) {
         ASSERT_OK(insert(s, st, mk_key(i), "val"));
-        if (i % 1000 == 0) {
-            if (epoch::get_global_epoch() - epoch_insert_start > 20) {
+        if (i % 1000 == 0) {                                           // NOLINT
+            if (epoch::get_global_epoch() - epoch_insert_start > 20) { // NOLINT
                 LOG(INFO) << "takes too long time, shrink n " << n << " to "
                           << i;
                 n = i;

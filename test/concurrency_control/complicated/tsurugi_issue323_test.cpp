@@ -45,7 +45,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
     ));
 
 void wait_start_tx(Token tx) {
-    TxStateHandle sth;
+    TxStateHandle sth{};
     ASSERT_OK(acquire_tx_state_handle(tx, sth));
     while (true) {
         TxState state;
@@ -59,11 +59,11 @@ TEST_P(tsurugi_issue323, must_not_read_inserting_record) { // NOLINT
     transaction_type write_tx_type = std::get<0>(GetParam());
     transaction_type read_tx_type = std::get<1>(GetParam());
     // setup
-    Storage st;
+    Storage st{};
     ASSERT_OK(create_storage("", st));
     wait_epoch_update();
 
-    Token txw;
+    Token txw{};
     ASSERT_OK(enter(txw));
     if (write_tx_type == transaction_type::LONG) {
         ASSERT_OK(tx_begin({txw, write_tx_type, {st}}));
@@ -73,7 +73,7 @@ TEST_P(tsurugi_issue323, must_not_read_inserting_record) { // NOLINT
     wait_start_tx(txw);
     wait_epoch_update();
 
-    Token txr;
+    Token txr{};
     ASSERT_OK(enter(txr));
     ASSERT_OK(tx_begin({txr, read_tx_type}));
     wait_start_tx(txr);
