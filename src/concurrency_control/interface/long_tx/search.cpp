@@ -42,7 +42,9 @@ RETRY:
 
     // read latest version after version function
     if (is_latest) {
-        if (read_value) { ver->get_value(value); }
+        if (!f_check.get_absent()) {
+            if (read_value) { ver->get_value(value); }
+        }
         if (ver == rec_ptr->get_latest() &&
             loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
                     f_check.get_obj()) {
@@ -52,6 +54,7 @@ RETRY:
             if (read_epoch > ti->get_read_version_max_epoch()) {
                 ti->set_read_version_max_epoch(read_epoch);
             }
+            if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
             return Status::OK;
         }
         /**
@@ -68,7 +71,9 @@ RETRY:
     if (ver == nullptr) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
     }
-    if (read_value) { ver->get_value(value); }
+    if (!ver->get_tid().get_absent()) {
+        if (read_value) { ver->get_value(value); }
+    }
     // check max epoch of read version
     auto read_epoch{ver->get_tid().get_epoch()};
     if (read_epoch > ti->get_read_version_max_epoch()) {
@@ -106,9 +111,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
 
 static Status hit_local_write_set(write_set_obj* const in_ws, Record* rec_ptr,
                                   std::string& value, bool const read_value) {
-    if (in_ws->get_op() == OP_TYPE::DELETE) {
-        return Status::WARN_NOT_FOUND;
-    }
+    if (in_ws->get_op() == OP_TYPE::DELETE) { return Status::WARN_NOT_FOUND; }
     if (read_value) {
         std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
         in_ws->get_value(value);

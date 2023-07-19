@@ -55,7 +55,7 @@ void wait_start_tx(Token tx) {
     }
 }
 
-TEST_P(tsurugi_issue323, DISABLED_must_not_read_inserting_record) { // NOLINT
+TEST_P(tsurugi_issue323, must_not_read_inserting_record) { // NOLINT
     transaction_type write_tx_type = std::get<0>(GetParam());
     transaction_type read_tx_type = std::get<1>(GetParam());
     // setup
