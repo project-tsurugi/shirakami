@@ -46,7 +46,7 @@ inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
             return Status::OK;
         }
     }
-    return Status::WARN_SCAN_LIMIT;
+    return Status::WARN_MAX_OPEN_SCAN;
 }
 
 /**

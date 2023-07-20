@@ -244,6 +244,8 @@ extern Status leave(Token token); // NOLINT
  * @return Status::OK success.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
+ * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of 
+ * concurrent open_scan without close_scan.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But 
  * the fact that nothing was read is guaranteed by isolation.

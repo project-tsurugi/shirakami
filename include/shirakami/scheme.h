@@ -136,6 +136,12 @@ enum class Status : std::int32_t {
      */
     WARN_INVALID_KEY_LENGTH,
     /**
+     * @brief Warning.
+     * @details The limits of number of concurrent open_scan without close_scan 
+     * at the tx.
+    */
+    WARN_MAX_OPEN_SCAN,
+    /**
      * @brief Warning
      * @details The status that the user calls api which needs tx_begin and 
      * some operations.
@@ -273,6 +279,8 @@ inline constexpr std::string_view to_string_view( // NOLINT
             return "WARN_INVALID_HANDLE"sv; // NOLINT
         case Status::WARN_INVALID_KEY_LENGTH:
             return "WARN_INVALID_KEY_LENGTH"sv; // NOLINT
+        case Status::WARN_MAX_OPEN_SCAN:
+            return "WARN_MAX_OPEN_SCAN"sv; // NOLINT
         case Status::WARN_NOT_BEGIN:
             return "WARN_NOT_BEGIN"sv; // NOLINT
         case Status::WARN_NOT_FOUND:
