@@ -205,6 +205,8 @@ extern Status init(database_options options = {}); // NOLINT
  *  existing the record.
  * @return Status::WARN_CONCURRENT_INSERT This operation is canceled due to 
  * concurrent insert by other tx.
+ * @return Status::WARN_ILLEGAL_OPERATION You execute insert on read only 
+ * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
@@ -240,8 +242,6 @@ extern Status leave(Token token); // NOLINT
  * @attention This scan limits range which is specified by @b l_key, @b l_end, 
  * @b r_key, and @b r_end.
  * @return Status::OK success.
- * @return Status::WARN_SCAN_LIMIT The scan could find some records but could
- * not preserve result due to capacity limitation.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
@@ -385,7 +385,7 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
  * @return Status::OK Success.
- * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute update on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
@@ -404,7 +404,7 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @param[in] val the value of the upserted record
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success
- * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute upsert on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
  * wp in batch mode.
