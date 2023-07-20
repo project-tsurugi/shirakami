@@ -43,6 +43,10 @@ public:
             : positive_list_(std::move(plist)),
               negative_list_(std::move(nlist)) {}
 
+        [[nodiscard]] bool empty() const {
+            return positive_list_.empty() && negative_list_.empty();
+        }
+
         void erase_from_positive_list(Storage st) { positive_list_.erase(st); }
 
         [[nodiscard]] list_type get_positive_list() { return positive_list_; }
@@ -93,7 +97,9 @@ public:
         return write_preserve_;
     }
 
-    [[nodiscard]] read_area get_read_area() { return read_area_; }
+    [[nodiscard]] read_area get_read_area() const { return read_area_; }
+
+    void set_read_area(read_area const& ra) { read_area_ = ra; }
 
     void set_token(Token token) { token_ = token; }
 
@@ -177,11 +183,35 @@ to_string(std::vector<Storage> const& write_preserve) noexcept {
     return buf;
 }
 
+inline std::string to_string(const transaction_options::read_area ra) noexcept {
+    std::string buf{};
+    if (ra.empty()) { return buf; }
+    if (!ra.get_positive_list().empty()) {
+        buf += "positive list{";
+        for (auto&& elem : ra.get_positive_list()) {
+            buf += std::to_string(elem);
+            if (elem != *ra.get_positive_list().rbegin()) { buf += ", "; }
+        }
+        buf += "}";
+        if (!ra.get_negative_list().empty()) { buf += ", "; }
+    }
+    if (!ra.get_negative_list().empty()) {
+        buf += "negative list{";
+        for (auto&& elem : ra.get_negative_list()) {
+            buf += std::to_string(elem);
+            if (elem != *ra.get_negative_list().rbegin()) { buf += ", "; }
+        }
+        buf += "}";
+    }
+    return buf;
+}
+
 inline std::ostream& operator<<(std::ostream& out,
                                 const transaction_options to) { // NOLINT
     return out << "Token: " << to.get_token()
                << ", transaction_type: " << to.get_transaction_type()
-               << ", write_preserve: " << to_string(to.get_write_preserve());
+               << ", write_preserve: " << to_string(to.get_write_preserve())
+               << ", read_area: " << to_string(to.get_read_area());
 }
 
 } // namespace shirakami

@@ -35,6 +35,20 @@ TEST_F(transaction_options_test, print_out_object) { // NOLINT
     options.set_token(&options);
     options.set_transaction_type(transaction_options::transaction_type::LONG);
     options.set_write_preserve({1, 2, 3});
+    // no read area
+    options.set_read_area({});
+    LOG(INFO) << options;
+    // positive only
+    options.set_read_area({{1}, {}});
+    LOG(INFO) << options;
+    // negative only
+    options.set_read_area({{}, {1}});
+    LOG(INFO) << options;
+    // posi nega
+    options.set_read_area({{1}, {2}});
+    LOG(INFO) << options;
+    // multiple posi nega
+    options.set_read_area({{1, 2}, {3, 4, 5}});
     LOG(INFO) << options;
 }
 
