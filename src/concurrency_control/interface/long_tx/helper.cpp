@@ -66,6 +66,44 @@ void preprocess_read_area(transaction_options::read_area& ra) {
     }
 }
 
+void update_wp_at_commit(session* const ti, std::set<Storage> const& sts) {
+    /**
+     * write preserve はTX開始時点に宣言したものよりも実体の方が同じか小さくなる。
+     * 小さくできるなら小さくすることで、他Txへの影響を軽減する。
+     * */
+    for (auto itr = ti->get_wp_set().begin(); itr != ti->get_wp_set().end();) {
+        bool hit_actual{false};
+        for (auto actual_write_storage : sts) {
+            if (actual_write_storage == itr->first) {
+                // exactly, write this storage
+                hit_actual = true;
+                break;
+            }
+        }
+        if (hit_actual) {
+            ++itr;
+            continue;
+        } // else
+          /**
+         * wp したが、実際には書かなかったストレージである。コミット処理前にこれを
+         * 取り除く
+        */
+        {
+            itr->second->get_wp_lock().lock();
+            auto ret =
+                    itr->second->remove_wp_without_lock(ti->get_long_tx_id());
+            if (ret == Status::OK) {
+                // 縮退成功
+                itr = ti->get_wp_set().erase(itr);
+                continue;
+            }
+            LOG(ERROR) << log_location_prefix << "unexpected code path";
+            itr->second->get_wp_lock().unlock();
+        }
+        ++itr;
+    }
+}
+
 Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
                 transaction_options::read_area ra) { // NOLINT
     // get wp mutex, exclude long tx's coming and epoch update

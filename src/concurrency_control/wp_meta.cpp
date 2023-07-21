@@ -143,7 +143,10 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
         wp_result_set_.emplace_back(elem);
     }
     wp_lock_.lock();
-    return remove_wp_without_lock(wp_result_elem_extract_id(elem));
+    auto ret = remove_wp_without_lock(wp_result_elem_extract_id(elem));
+    if (ret == Status::OK) { return ret; }
+    wp_lock_.unlock();
+    return ret;
 }
 
 [[nodiscard]] Status wp_meta::remove_wp_without_lock(std::size_t const id) {
@@ -155,6 +158,7 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
             return Status::OK;
         }
     }
+    LOG(ERROR) << log_location_prefix << "unexpected code path";
     return Status::WARN_NOT_FOUND;
 }
 

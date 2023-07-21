@@ -327,23 +327,6 @@ static inline void register_wp_result_and_remove_wps(
         std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
-        Storage page_set_meta_storage = wp::get_page_set_meta_storage();
-        std::string_view page_set_meta_storage_view = {
-                reinterpret_cast<char*>( // NOLINT
-                        &page_set_meta_storage),
-                sizeof(page_set_meta_storage)};
-        std::string_view storage_view = {
-                reinterpret_cast<char*>(&storage), // NOLINT
-                sizeof(storage)};
-        std::pair<wp::page_set_meta**, std::size_t> out{};
-        auto rc{yakushima::get<wp::page_set_meta*>(page_set_meta_storage_view,
-                                                   storage_view, out)};
-        if (rc != yakushima::status::OK) {
-            LOG(ERROR) << log_location_prefix << "Error: " << rc
-                       << ". It strongly suspect that DML and DDL are "
-                          "mixed.";
-            return;
-        }
 
         // check write range
         auto wr_itr = write_range.find(storage);
@@ -357,14 +340,11 @@ static inline void register_wp_result_and_remove_wps(
 
         // register wp result and remove wp
         if (Status::OK !=
-            (reinterpret_cast<wp::page_set_meta*>(out.first)) // NOLINT
-                    ->get_wp_meta_ptr()
-                    ->register_wp_result_and_remove_wp(std::make_tuple(
-                            ti->get_valid_epoch(), ti->get_long_tx_id(),
-                            was_committed,
-                            std::make_tuple(write_something,
-                                            std::string(write_range_left),
-                                            std::string(write_range_right))))) {
+            (elem.second->register_wp_result_and_remove_wp(std::make_tuple(
+                    ti->get_valid_epoch(), ti->get_long_tx_id(), was_committed,
+                    std::make_tuple(write_something,
+                                    std::string(write_range_left),
+                                    std::string(write_range_right)))))) {
             LOG(ERROR) << "Fail to register wp result and remove wp.";
         }
     }
@@ -518,6 +498,10 @@ Status verify(session* const ti) {
                     ++wp_result_itr;
                 }
             }
+            /**
+             * wp result set から見つからないということは、相手は wp 宣言をしたが
+             * 実際には書かなくて wp が縮退されたということ。そのままスルーしてよい。
+            */
         }
     }
 
