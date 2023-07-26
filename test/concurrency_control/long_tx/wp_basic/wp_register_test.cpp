@@ -17,6 +17,8 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "test_tool.h"
+
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
@@ -71,4 +73,37 @@ TEST_F(wp_register_test, multi_register) { // NOLINT
     ASSERT_EQ(wu.count(), 2);
 }
 
+TEST_F(wp_register_test, shrink_at_commit) { // NOLINT
+    /**
+     * コミット時の write preserve 圧縮をテストする。
+    */
+    // prepare
+    Storage st1{};
+    Storage st2{};
+    ASSERT_EQ(create_storage("test1", st1), Status::OK);
+    ASSERT_EQ(create_storage("test2", st2), Status::OK);
+
+    Token s{};
+    ASSERT_EQ(enter(s), Status::OK);
+
+    // test
+    ASSERT_EQ(tx_begin({s,
+                        transaction_options::transaction_type::LONG,
+                        {st1, st2}}),
+              Status::OK);
+    wait_epoch_update();
+    //  書くのは一か所のみ
+    ASSERT_EQ(Status::OK, upsert(s, st1, "", ""));
+    ASSERT_EQ(Status::OK, commit(s));
+
+    // verify
+    wp::wp_meta* wp_meta_ptr{};
+    wp::find_wp_meta(st1, wp_meta_ptr);
+    ASSERT_EQ(1, wp_meta_ptr->get_wp_result_set().size());
+    wp::find_wp_meta(st2, wp_meta_ptr);
+    ASSERT_EQ(0, wp_meta_ptr->get_wp_result_set().size());
+
+    // cleanup
+    ASSERT_EQ(leave(s), Status::OK);
+}
 } // namespace shirakami::testing
