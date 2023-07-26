@@ -1,6 +1,7 @@
 
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/wp.h"
+#include "concurrency_control/interface/long_tx/include/long_tx.h"
 
 namespace shirakami {
 
@@ -33,6 +34,10 @@ bool ongoing_tx::exist_wait_for(session* ti) {
     std::set<Storage> st_set{};
     // create and compaction about storage set
     ti->get_write_set().get_storage_set(st_set);
+    if (!ti->get_requested_commit()) {
+        // first request, so update wp
+        long_tx::update_wp_at_commit(ti, st_set);
+    }
 
     // check wait
     for (auto&& elem : tx_info_) {
