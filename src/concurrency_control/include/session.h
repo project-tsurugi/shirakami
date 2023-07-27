@@ -144,10 +144,6 @@ public:
         return tx_counter_;
     }
 
-    [[nodiscard]] Tuple* get_cache_for_search_ptr() {
-        return &cache_for_search_;
-    }
-
     // ========== start: tx state
     [[nodiscard]] bool get_has_current_tx_state_handle() const {
         return has_current_tx_state_handle_;
@@ -352,11 +348,6 @@ public:
 
     void set_tx_counter(tx_id::type_lower_info num) { tx_counter_ = num; }
 
-    void set_cache_for_search(Tuple tuple) {
-        cache_for_search_ = std::move(tuple);
-    } // NOLINT
-    // because Tuple is small size data.
-
     // ========== start: tx state
     void set_current_tx_state_handle(TxStateHandle hd) {
         current_tx_state_handle_.store(hd, std::memory_order_release);
@@ -527,13 +518,6 @@ private:
      * @brief mutex for local read set for stx.
     */
     std::shared_mutex mtx_read_set_for_stx_;
-
-    /**
-     * @brief cache for search api.
-     * @details The search function returns Tuple *. For speeding up, the 
-     * entity does not currently exist on the table, so we have it here.
-     */
-    Tuple cache_for_search_;
 
     /**
      * @brief local write set.
