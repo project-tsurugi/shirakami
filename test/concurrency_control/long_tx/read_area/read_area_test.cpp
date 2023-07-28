@@ -6,6 +6,7 @@
 
 #include "test_tool.h"
 
+#include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"

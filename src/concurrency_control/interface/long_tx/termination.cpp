@@ -9,6 +9,7 @@
 #include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/ongoing_tx.h"
+#include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
