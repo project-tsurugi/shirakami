@@ -68,7 +68,7 @@ TEST_F(tsurugi_issue313_2, sequence_epoch_ver_order) { // NOLINT
         read_sequence(seqid, &seqver, &seqval);
         ASSERT_OK(update_sequence(s, seqid, v, v));
     };
-    auto commit_leave = [](Token s, bool wait = false) {
+    auto commit_leave = [](Token s, bool wait = false) { // NOLINT
         if (wait) { wait_epoch_update(); }
         LOG(INFO) << wait;
         LOG(INFO) << "commit begin " << s;
