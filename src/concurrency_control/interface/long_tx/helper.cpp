@@ -72,6 +72,20 @@ void update_wp_at_commit(session* const ti, std::set<Storage> const& sts) {
      * 小さくできるなら小さくすることで、他Txへの影響を軽減する。
      * */
     for (auto itr = ti->get_wp_set().begin(); itr != ti->get_wp_set().end();) {
+        // check the storage is valid yet
+        Storage target_st{itr->first};
+        wp::page_set_meta* target_psm_ptr{};
+        auto ret = wp::find_page_set_meta(target_st, target_psm_ptr);
+        if (ret != Status::OK ||
+            // check the ptr was not changed
+            (ret == Status::OK &&
+             itr->second != target_psm_ptr->get_wp_meta_ptr())) {
+            LOG(ERROR) << log_location_prefix
+                       << "Error. Suspected mix of DML and DDL";
+            ++itr;
+            continue;
+        }
+
         bool hit_actual{false};
         for (auto actual_write_storage : sts) {
             if (actual_write_storage == itr->first) {
@@ -90,8 +104,7 @@ void update_wp_at_commit(session* const ti, std::set<Storage> const& sts) {
         */
         {
             itr->second->get_wp_lock().lock();
-            auto ret =
-                    itr->second->remove_wp_without_lock(ti->get_long_tx_id());
+            ret = itr->second->remove_wp_without_lock(ti->get_long_tx_id());
             if (ret == Status::OK) {
                 // 縮退成功
                 itr = ti->get_wp_set().erase(itr);

@@ -17,7 +17,7 @@ namespace shirakami::testing {
 class ongoing_tx_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
+        google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "ongoing_tx_test");
         FLAGS_stderrthreshold = 0; // output more than INFO
     }
@@ -38,10 +38,10 @@ TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     ti->set_long_tx_id(2);
     ti->set_valid_epoch(2);
     Storage st{};
-    wp::wp_meta wp_meta{};
+    wp::wp_meta* wp_meta{};
     ti->get_wp_set().emplace_back(
-            std::make_pair(st, &wp_meta)); // the pair is dummy
-    std::get<0>(ti->get_overtaken_ltx_set()[&wp_meta])
+            std::make_pair(st, wp_meta)); // the pair is dummy
+    std::get<0>(ti->get_overtaken_ltx_set()[wp_meta])
             .insert(1); // wp_meta is dummy
     ASSERT_EQ(ongoing_tx::exist_wait_for(ti), true);
     ongoing_tx::remove_id(1);
