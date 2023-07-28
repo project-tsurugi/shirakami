@@ -328,6 +328,17 @@ static inline void register_wp_result_and_remove_wps(
         std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
     for (auto&& elem : ti->get_wp_set()) {
         Storage storage = elem.first;
+        // check the storage is valid yet
+        wp::page_set_meta* target_psm_ptr{};
+        auto ret = wp::find_page_set_meta(storage, target_psm_ptr);
+        if (ret != Status::OK ||
+            // check the ptr was not changed
+            (ret == Status::OK &&
+             elem.second != target_psm_ptr->get_wp_meta_ptr())) {
+            LOG(ERROR) << log_location_prefix
+                       << "Error. Suspected mix of DML and DDL";
+            continue;
+        }
 
         // check write range
         auto wr_itr = write_range.find(storage);
