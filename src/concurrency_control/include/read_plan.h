@@ -49,6 +49,17 @@ public:
         }
     }
 
+    static read_area_type get_elem(std::size_t const tx_id) {
+        std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
+        auto itr = get_cont().find(tx_id);
+        if (itr != get_cont().end()) {
+            // found
+            return itr->second;
+        }
+        LOG(ERROR) << log_location_prefix << "may be some error.";
+        return {};
+    }
+
     static bool
     check_potential_read_anti(std::size_t const tx_id,
                               std::set<Storage> const& write_storages);

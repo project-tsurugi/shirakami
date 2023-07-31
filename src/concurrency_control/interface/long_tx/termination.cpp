@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "storage.h"
 
 #include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
@@ -671,11 +672,27 @@ void process_tx_state(session* ti,
     }
 }
 
+void update_read_area(session* const ti) {
+    if (ti->get_ltx_storage_read_set().empty()) {
+        // write only tx
+        read_plan::add_elem(ti->get_long_tx_id(),
+                            {{storage::dummy_storage}, {}});
+        return;
+    }
+
+    // update
+    read_plan::add_elem(ti->get_long_tx_id(),
+                        {{ti->get_ltx_storage_read_set()}, {}});
+}
+
 extern Status commit(session* const ti) {
     // check premature
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
         return Status::WARN_PREMATURE;
     }
+
+    // update read area
+    update_read_area(ti);
 
     // detail info
     if (logging::get_enable_logging_detail_info()) {

@@ -25,7 +25,7 @@ Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
     return Status::OK;
 }
 
-Status check_read_area(session* ti, Storage st) {
+Status check_read_area_body(session* ti, Storage const st) {
     auto ra = ti->get_read_area();
     auto plist = ra.get_positive_list();
     auto nlist = ra.get_negative_list();
@@ -49,6 +49,15 @@ Status check_read_area(session* ti, Storage st) {
         return Status::OK;
     }
     return Status::ERR_READ_AREA_VIOLATION;
+}
+
+Status check_read_area(session* ti, Storage const st) {
+    auto ret = check_read_area_body(ti, st);
+    if (ret == Status::OK) {
+        // log read storage
+        ti->insert_to_ltx_storage_read_set(st);
+    }
+    return ret;
 }
 
 void preprocess_read_area(transaction_options::read_area& ra) {

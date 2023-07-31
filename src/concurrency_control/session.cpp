@@ -25,16 +25,13 @@ void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 void session::clear_local_set() {
     node_set_.clear();
     get_range_read_set_for_ltx().clear();
+    clear_ltx_storage_read_set();
     clear_range_read_by_short_set();
     clear_read_set_for_stx();
     read_set_for_ltx().clear();
     wp_set_.clear();
     write_set_.clear();
-    {
-        // get mutex
-        std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
-        overtaken_ltx_set_.clear();
-    }
+    clear_overtaken_ltx_set();
     if (tx_type_ != transaction_options::transaction_type::SHORT) {
         clear_about_read_area(this);
         set_read_area({});

@@ -49,6 +49,7 @@ public:
             std::map<wp::wp_meta*,
                      std::tuple<std::set<std::size_t>,
                                 std::tuple<std::string, std::string>>>;
+    using ltx_storage_read_set_type = std::set<Storage>;
 
 
     /**
@@ -174,6 +175,14 @@ public:
     std::atomic<std::size_t>& get_operating() { return operating_; }
 
     std::mutex& get_mtx_termination() { return mtx_termination_; }
+
+    std::shared_mutex& get_mtx_ltx_storage_read_set() {
+        return mtx_ltx_storage_read_set_;
+    }
+
+    ltx_storage_read_set_type& get_ltx_storage_read_set() {
+        return ltx_storage_read_set_;
+    }
 
     range_read_set_for_ltx& get_range_read_set_for_ltx() {
         return range_read_set_for_ltx_;
@@ -315,6 +324,16 @@ public:
         }
     }
 
+    void clear_ltx_storage_read_set() {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        get_ltx_storage_read_set().clear();
+    }
+
+    void clear_overtaken_ltx_set() {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
+        overtaken_ltx_set_.clear();
+    }
+
     void clear_range_read_by_short_set() {
         // take write lock
         std::lock_guard<std::shared_mutex> lk{
@@ -326,6 +345,11 @@ public:
         // take write lock
         std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
         read_set_for_stx_.clear();
+    }
+
+    void insert_to_ltx_storage_read_set(Storage const st) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        get_ltx_storage_read_set().insert(st);
     }
 
     void push_to_read_set_for_stx(read_set_obj&& elem) {
@@ -492,6 +516,18 @@ private:
      * @details If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
+
+    /**
+     * @brief for optimization for read area
+     * @details ltx mode log where they read the storage and update read area
+     * at commit phase.
+    */
+    ltx_storage_read_set_type ltx_storage_read_set_{};
+
+    /**
+     * @brief mutex for @a ltx_storage_read_set_.
+    */
+    std::shared_mutex mtx_ltx_storage_read_set_{};
 
     range_read_set_for_ltx range_read_set_for_ltx_{};
 
