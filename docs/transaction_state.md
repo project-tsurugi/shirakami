@@ -8,7 +8,7 @@ stateDiagram-v2
     WAITING_START
     note right of WAITING_START
         Trigger: LTX and RTX are in this state first. 
-        Executable api for the tx: check_tx_state, release_tx_state_handle
+        Executable api for the tx: Almost all
     end note
     STARTED
     note left of STARTED
@@ -46,6 +46,8 @@ stateDiagram-v2
     [*] --> WAITING_START: LTX
     [*] --> WAITING_START: RTX
     WAITING_START --> STARTED
+    WAITING_START --> WAITING_START: LTX
+    WAITING_START --> ABORTED: LTX
     STARTED --> WAITING_CC_COMMIT: LTX
     WAITING_CC_COMMIT --> ABORTED
     WAITING_CC_COMMIT --> WAITING_DURABLE
