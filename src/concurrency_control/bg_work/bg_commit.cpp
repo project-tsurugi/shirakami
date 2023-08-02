@@ -13,7 +13,7 @@
 namespace shirakami::bg_work {
 
 void bg_commit::clear_tx() {
-    std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
+    std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
     cont_wait_tx().clear();
 }
 
@@ -22,7 +22,7 @@ void bg_commit::init() {
     worker_thread_end(false);
 
     // invoke thread
-    worker_thread() = std::thread(worker);
+    for (auto&& elem : workers()) { elem = std::thread(worker); }
 }
 
 void bg_commit::fin() {
@@ -30,7 +30,7 @@ void bg_commit::fin() {
     worker_thread_end(true);
 
     // wait thread end
-    worker_thread().join();
+    for (auto&& elem : workers()) { elem.join(); }
 
     /**
      * cleanup container because after next startup, manager thread will 
@@ -50,7 +50,7 @@ void bg_commit::register_tx(Token token) {
 
     // lock for container
     {
-        std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
+        std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
         auto ret = cont_wait_tx().insert(
                 std::make_tuple(ti->get_long_tx_id(), token));
         if (!ret.second) {
@@ -63,43 +63,87 @@ void bg_commit::register_tx(Token token) {
 void bg_commit::worker() {
     while (!worker_thread_end()) {
         sleepMs(epoch::get_global_epoch_time_ms());
-        {
-            // lock for container
-            std::unique_lock<std::mutex> lk_{mtx_cont_wait_tx()};
-            for (auto itr = cont_wait_tx().begin(); // NOLINT
-                 itr != cont_wait_tx().end();) {
-                Token token = std::get<1>(*itr);
-                auto* ti = static_cast<session*>(token);
-                // check from long
-                if (ti->get_tx_type() !=
-                            transaction_options::transaction_type::LONG ||
-                    !ti->get_requested_commit()) {
-                    // not long or not requested commit.
-                    LOG(ERROR) << log_location_prefix << "unexpected error";
-                    return;
-                }
 
-                // try commit
-                auto rc = shirakami::long_tx::commit(ti);
+        std::set<std::size_t> checked_ids{};
+        Token token{};
+        std::size_t tx_id{};
+        session* ti{};
+    // find process tx
+    REFIND : // NOLINT
+    {
+        std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+        auto itr = cont_wait_tx().begin();
+        for (; itr != cont_wait_tx().end(); ++itr) {
+            token = std::get<1>(*itr);
+            tx_id = std::get<0>(*itr);
+            ti = static_cast<session*>(token);
+            // check from long
+            if (ti->get_tx_type() !=
+                        transaction_options::transaction_type::LONG ||
+                !ti->get_requested_commit()) {
+                // not long or not requested commit.
+                LOG(ERROR) << log_location_prefix << "unexpected error";
+                return;
+            }
 
-                // check result
-                if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-                    /**
-                      * Basically (without read area function), lower priority 
-                      * than this transaction wait for the result of this 
-                      * transaction.
-                      */
-                    /**
-                      * choice 1: continue;
-                      * choice 2: break;
-                      */
-                    ++itr;
+            // check conflict between worker
+            {
+                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                // find by the id
+                auto find_itr = used_ids().find(tx_id);
+                if (find_itr != used_ids().end()) {
+                    // found
                     continue;
-                }
-                ti->set_result_requested_commit(rc);
-                itr = cont_wait_tx().erase(itr);
+                } // not found, not currently used
+                // check already checked
+                auto checked_itr = checked_ids.find(tx_id);
+                if (checked_itr != checked_ids.end()) {
+                    // found
+                    continue;
+                } // not found, not currently used and not checked
+                used_ids().insert(tx_id);
+                checked_ids.insert(tx_id);
+                break;
             }
         }
+        if (itr == cont_wait_tx().end()) {
+            // reached last
+            checked_ids.clear();
+            continue;
+        }
+    }
+
+        // process
+        // try commit
+        auto rc = shirakami::long_tx::commit(ti);
+        // check result
+        if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
+            /**
+              * Basically (without read area function), lower priority 
+              * than this transaction wait for the result of this 
+              * transaction.
+              */
+            // erase from used_ids
+            {
+                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                used_ids().erase(tx_id);
+            }
+            goto REFIND; // NOLINT
+        }                // termination was successed
+        ti->set_result_requested_commit(rc);
+
+        // erase the tx from cont
+        {
+            std::lock_guard<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+            cont_wait_tx().erase(std::make_tuple(tx_id, token));
+            // erase from used_ids
+            {
+                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                used_ids().erase(tx_id);
+            }
+        }
+
+        goto REFIND; // NOLINT
     }
 }
 
