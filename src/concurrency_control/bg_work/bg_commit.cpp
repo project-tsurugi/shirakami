@@ -167,6 +167,27 @@ void bg_commit::worker() {
     }
 }
 
+void bg_commit::show_waiting() {
+    std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+    VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting start";
+    auto itr = cont_wait_tx().begin();
+    for (; itr != cont_wait_tx().end(); ++itr) {
+        Token token = std::get<1>(*itr);
+        std::size_t tx_id = std::get<0>(*itr);
+        auto* ti = static_cast<session*>(token);
+        // check from long
+        if (ti->get_tx_type() != transaction_options::transaction_type::LONG ||
+            !ti->get_requested_commit()) {
+            // not long or not requested commit.
+            LOG(ERROR) << log_location_prefix << "unexpected error";
+            return;
+        }
+        auto rc = long_tx::check_wait_for_preceding_bt(ti);
+        VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting tx_id " << tx_id << " checked, rc = " << rc;
+    }
+    VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting end";
+}
+
 void bg_commit::show_list() {
     std::stringstream ss{};
     ss << "/:shirakami:wait_reason:bg_commit cont_wait:";

@@ -129,6 +129,7 @@ void epoch_thread_work() {
                 epoch::set_perm_to_proc(ptp - 1);
             }
             // dtor : release wp_mutex
+            bg_work::bg_commit::show_waiting();
         }
         check_epoch_load_and_update_idle_living_tx();
     }

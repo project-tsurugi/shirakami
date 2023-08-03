@@ -61,6 +61,8 @@ public:
 
     static void worker();
 
+    static void show_waiting();
+
     static void show_list();
 
 private:
