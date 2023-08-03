@@ -62,7 +62,8 @@ public:
 
     static bool
     check_potential_read_anti(std::size_t tx_id,
-                              std::set<Storage> const& write_storages);
+                              std::set<Storage> const& write_storages,
+                              bool check_all_tx = false);  // NOLINT
 
     // getter / setter
     static cont_type& get_cont() { return cont_; }

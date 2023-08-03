@@ -217,6 +217,79 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     return false;
 }
 
+bool ongoing_tx::check_wait_for(session* ti, Status& out_status) {
+    out_status = Status::OK; // initialize arg
+    bool hit = false;
+    std::size_t id = ti->get_long_tx_id();
+    bool has_wp = !ti->get_wp_set().empty();
+    auto wait_for = ti->extract_wait_for();
+    // check local write set
+    std::set<Storage> st_set{};
+    // create and compaction about storage set
+    ti->get_write_set().get_storage_set(st_set);
+
+    // check boundary wait
+    {
+        std::shared_lock<std::shared_mutex> lk{mtx_};
+        for (auto&& elem : tx_info_) {
+            auto w_id = std::get<ongoing_tx::index_id>(elem);
+            // check overwrites
+            if (w_id < id) {
+                if (wait_for.find(w_id) != wait_for.end()) {
+                    // wait_for hit.
+                    /**
+                     * boundary wait 確定.
+                     * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
+                     * に対する前置を確定するとともに、x1 が前置する相手に前置する。
+                     * これは待ち確認のたびにパスを一つ短絡化するため、
+                     * get_requested_commit() の確認を噛ませていない。
+                     * */
+                    out_status = waiting_bypass(ti);
+                    if (out_status != Status::OK) { return false; }
+                    if (VLOG_IS_ON(log_debug_timing_event)) {
+                        std::string str_tx_id{};
+                        get_tx_id(static_cast<Token>(ti), str_tx_id);
+                        std::string str_w_tx_id{};
+                        get_tx_id(static_cast<Token>(std::get<ongoing_tx::index_session>(elem)),
+                                  str_w_tx_id);
+                        LOG(INFO)
+                                << "/:shirakami:wait_reason:boundary "
+                                << str_tx_id << " ltx_id:" << id
+                                << " waiting, reason: waiting high priori tx "
+                                << str_w_tx_id << " ltx_id:" << w_id;
+                    }
+                    hit = true;
+                }
+            } else {
+                // considering for only high priori ltx
+                break;
+            }
+        }
+    }
+
+    // check about write
+    if (has_wp) {
+        // check potential read-anti and read area for each write storage
+        bool ret = read_plan::check_potential_read_anti(id, st_set, true);
+        if (!ret) {
+            // no need to read wait and it can try IWR
+            return hit;
+        }
+        // should wait read except write only
+
+        // check write only
+        bool write_only = ti->is_write_only_ltx_now();
+        if (write_only) {
+            /*remove side-effect*/ // ti->set_is_force_backwarding(true);
+            return hit;
+        }
+        // not write only and may have high priori read
+        return true;
+    }
+
+    return hit;
+}
+
 void ongoing_tx::push(tx_info_elem_type const ti) {
     std::lock_guard<std::shared_mutex> lk{mtx_};
     if (tx_info_.empty()) {

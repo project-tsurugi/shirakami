@@ -45,6 +45,17 @@ public:
     static bool exist_wait_for(session* ti, Status& out_status);
 
     /**
+     * @brief
+     *
+     * @param[in] ti This tx's session information.
+     * @param[out] Status::OK success to check wait
+     * @param[out] Status::ERR_CC early validation and read upper bound violation
+     * @return true It exists transactions to wait.
+     * @return false It doesn't exist transactions to wait.
+     */
+    static bool check_wait_for(session* ti, Status& out_status);
+
+    /**
      * @brief Get the lowest epoch
      * 
      * @return std::size_t if ret equals to 0, tx_info_ is empty. Otherwise, ret is lowest epoch.

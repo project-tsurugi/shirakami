@@ -5,6 +5,7 @@
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/include/ongoing_tx.h"
 
 #include "shirakami/interface.h"
 
@@ -182,8 +183,9 @@ void bg_commit::show_waiting() {
             LOG(ERROR) << log_location_prefix << "unexpected error";
             return;
         }
-        auto rc = long_tx::check_wait_for_preceding_bt(ti);
-        VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting tx_id " << tx_id << " checked, rc = " << rc;
+        Status rc{};
+        bool need_wait = ongoing_tx::check_wait_for(ti, rc);
+        VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting tx_id " << tx_id << " check done, need_wait = " << std::boolalpha << need_wait << ", rc = " << rc;
     }
     VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting end";
 }

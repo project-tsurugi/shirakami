@@ -12,16 +12,17 @@
 namespace shirakami {
 
 bool read_plan::check_potential_read_anti(
-        std::size_t const tx_id, std::set<Storage> const& write_storages) {
+        std::size_t const tx_id, std::set<Storage> const& write_storages, bool check_all_tx) {
+    bool hit = false;
     std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
     for (auto elem : get_cont()) {
         if (elem.first > tx_id) {
             LOG(ERROR) << log_location_prefix
                        << "container is ordered by tx id and it scan from low "
                           "number. why it missed own and see high priori?";
-            return false;
+            return hit;
         }
-        if (elem.first == tx_id) { return false; }
+        if (elem.first == tx_id) { return hit; }
         // elem is high priori tx
         auto plist = elem.second.get_positive_list();
         auto nlist = elem.second.get_negative_list();
@@ -33,6 +34,10 @@ bool read_plan::check_potential_read_anti(
                     << "/:shirakami:wait_reason:read_area ltx_id:"
                     << tx_id << " waiting, reason: high priori tx "
                     << "(ltx_id:" << elem.first << ") may read all storage";
+            if (check_all_tx) {
+                hit = true;
+                continue;
+            }
             return true;
         }
 
@@ -46,6 +51,10 @@ bool read_plan::check_potential_read_anti(
                             << tx_id << " waiting, reason: high priori tx "
                             << "(ltx_id:" << elem.first << ") may read "
                             << "storage " << st;
+                    if (check_all_tx) {
+                        hit = true;
+                        break;
+                    }
                     return true;
                 }
             }
@@ -59,6 +68,10 @@ bool read_plan::check_potential_read_anti(
                             << tx_id << " waiting, reason: high priori tx "
                             << "(ltx_id:" << elem.first << ") may read "
                             << "storage " << st;
+                    if (check_all_tx) {
+                        hit = true;
+                        break;
+                    }
                     return true;
                 }
             }
@@ -68,7 +81,7 @@ bool read_plan::check_potential_read_anti(
     LOG(ERROR) << log_location_prefix
                << "container is ordered by tx id and it scan from low "
                   "number. why it missed own and see high priori?";
-    return false;
+    return hit;
 }
 
 } // namespace shirakami
