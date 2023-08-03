@@ -1,4 +1,5 @@
 #include <future>
+#include <thread>
 
 #include "shirakami/interface.h"
 
