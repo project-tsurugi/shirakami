@@ -3,6 +3,7 @@ Checks: "-*,\
 abseil-*,\
 boost-*,\
 bugprone-*,\
+-bugprone-easily-swappable-parameters,\
 cert-*,\
 cppcoreguidelines-*,\
 -cppcoreguidelines-macro-usage,\
@@ -18,6 +19,7 @@ google-*,\
 -google-runtime-references,\
 hicpp-*,\
 -hicpp-braces-around-statements,\
+-hicpp-named-parameter,\
 -hicpp-no-array-decay,\
 -hicpp-noexcept-move,\
 llvm-*,\
@@ -32,6 +34,7 @@ performance-*,\
 -performance-noexcept-move-constructor,\
 readability-*,\
 -readability-braces-around-statements,\
+-readability-identifier-length,\
 -readability-named-parameter,\
 "
 CheckOptions:
