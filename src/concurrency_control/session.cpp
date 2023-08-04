@@ -14,10 +14,10 @@
 namespace shirakami {
 
 bool session::check_exist_wp_set(Storage storage) const {
-    for (auto&& elem : get_wp_set()) {
-        if (elem.first == storage) { return true; }
-    }
-    return false;
+    return std::any_of(get_wp_set().begin(), get_wp_set().end(),
+                       [storage](std::pair<Storage, wp::wp_meta*> elem) {
+                           return elem.first == storage;
+                       });
 }
 
 void clear_about_read_area(session* ti) { ti->set_read_area({}); }

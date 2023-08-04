@@ -217,7 +217,7 @@ private:
      * given by internally.
      */
     static inline std::unordered_map<std::string, Storage> // NOLINT
-            key_handle_map_;
+            key_handle_map_;                               // NOLINT
 
     /**
      * @brief Mutex for key handle map.

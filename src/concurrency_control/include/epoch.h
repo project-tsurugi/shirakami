@@ -22,22 +22,19 @@ static constexpr epoch_t max_epoch{INT64_MAX};
  * @brief global epoch
  * @pre We start with 1 because we give 0 the meaning of uninitialized.
  */
-[[maybe_unused]] inline std::atomic<epoch_t> global_epoch{
-        initial_epoch}; // NOLINT
+inline std::atomic<epoch_t> global_epoch{initial_epoch}; // NOLINT
 
 /**
  * @brief Global epoch time. Default is 40 ms.
  */
-[[maybe_unused]] inline std::atomic<std::size_t> global_epoch_time_ms{
-        40}; // NOLINT
+inline std::atomic<std::size_t> global_epoch_time_ms{40}; // NOLINT
 
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
  */
-[[maybe_unused]] inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch +
-                                                              1}; // NOLINT
+inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch + 1}; // NOLINT
 
-[[maybe_unused]] inline std::atomic<epoch_t> durable_epoch{0};
+inline std::atomic<epoch_t> durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
 
@@ -99,7 +96,7 @@ static constexpr ptp_body_type ptp_init_val{-1};
  * @details If this is -1, this variable is invalid. If not, epoch manager can
  * proceed epoch for the value of this.
  */
-[[maybe_unused]] inline std::atomic<ptp_body_type> perm_to_proc_{-1};
+inline std::atomic<ptp_body_type> perm_to_proc_{-1}; // NOLINT
 
 [[maybe_unused]] static void set_perm_to_proc(ptp_body_type num) {
     perm_to_proc_.store(num, std::memory_order_release);

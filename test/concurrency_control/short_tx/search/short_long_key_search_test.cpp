@@ -68,8 +68,14 @@ TEST_F(long_key_test, 30kb_key_search) { // NOLINT
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string sb{};
     // test
-    ASSERT_EQ(Status::WARN_NOT_FOUND,
-              search_key(s, st, std::string(1024 * 30, 'a'), sb));
+    ASSERT_EQ(
+            Status::WARN_NOT_FOUND,
+            search_key(
+                    s, st,
+                    std::string(static_cast<std::basic_string<char>::size_type>(
+                                        1024 * 30),
+                                'a'),
+                    sb));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
@@ -85,8 +91,14 @@ TEST_F(long_key_test, 36kb_key_search) { // NOLINT
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string sb{};
     // test
-    ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,
-              search_key(s, st, std::string(1024 * 36, 'a'), sb));
+    ASSERT_EQ(
+            Status::WARN_INVALID_KEY_LENGTH,
+            search_key(
+                    s, st,
+                    std::string(static_cast<std::basic_string<char>::size_type>(
+                                        1024 * 36),
+                                'a'),
+                    sb));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

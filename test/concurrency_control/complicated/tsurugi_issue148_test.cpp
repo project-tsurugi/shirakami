@@ -1,6 +1,4 @@
 
-#include <glog/logging.h>
-
 #include <mutex>
 
 #include "clock.h"

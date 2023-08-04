@@ -16,8 +16,6 @@
 
 #include <xmmintrin.h>
 
-#include <glog/logging.h>
-
 #include <cstring>
 
 // shirakami/test
@@ -35,7 +33,6 @@
 #include "compiler.h"
 #include "cpu.h"
 #include "gflags/gflags.h"
-#include "glog/logging.h"
 
 #include "concurrency_control/include/tuple_local.h"
 
@@ -43,6 +40,7 @@
 
 #include "boost/filesystem.hpp"
 
+#include "glog/logging.h"
 
 using namespace shirakami;
 

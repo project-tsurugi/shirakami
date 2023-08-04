@@ -62,8 +62,8 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-Status insert_body(Token const token, Storage const storage,
-                   const std::string_view key, // NOLINT
+Status insert_body(Token const token, Storage const storage, // NOLINT
+                   const std::string_view key,               // NOLINT
                    const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -144,8 +144,8 @@ Status insert_body(Token const token, Storage const storage,
     }
 }
 
-Status insert(Token const token, Storage const storage,
-              const std::string_view key, // NOLINT
+Status insert(Token const token, Storage const storage, // NOLINT
+              const std::string_view key,               // NOLINT
               const std::string_view val) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();

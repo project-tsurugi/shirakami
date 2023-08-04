@@ -83,7 +83,7 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
             reinterpret_cast<const char*>(&st), // NOLINT
             sizeof(st)};
     std::pair<page_set_meta**, std::size_t> out{};
-    auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
+    auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view, // NOLINT
                                            storage_view, out)};
     if (rc != yakushima::status::OK) {
         ret = nullptr;
@@ -152,8 +152,9 @@ Status write_preserve(Token token, std::vector<Storage> storage,
                 reinterpret_cast<char*>(&wp_target), // NOLINT
                 sizeof(wp_target)};
         std::pair<page_set_meta**, std::size_t> out{};
-        auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view,
-                                               storage_view, out)};
+        auto rc{yakushima::get<page_set_meta*>( // NOLINT
+                page_set_meta_storage_view,     // NOLINT
+                storage_view, out)};
 
         auto cleanup_process = [ti, long_tx_id]() {
             for (auto&& elem : ti->get_wp_set()) {

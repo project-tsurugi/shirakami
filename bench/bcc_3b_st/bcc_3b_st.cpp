@@ -89,7 +89,7 @@ void waitForReady(const std::vector<char>& readys) {
     while (!isReady(readys)) { _mm_pause(); }
 }
 
-void worker(const std::size_t thid, const bool is_ol, char& ready,
+void worker(const std::size_t thid, const bool is_ol, char& ready, // NOLINT
             const bool& start, const bool& quit, simple_result& res) {
     // init work
     Xoroshiro128Plus rnd;
@@ -99,7 +99,12 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
             static_cast<const int>(is_ol ? thid + FLAGS_bt_thread : thid));
 
     Token token{};
-    Storage storage{is_ol ? get_ol_storages()[thid] : get_bt_storages()[thid]};
+    Storage storage{};
+    if (is_ol) {
+        storage = get_ol_storages()[thid];
+    } else {
+        storage = get_bt_storages()[thid];
+    }
     std::vector<shirakami::opr_obj> opr_set;
     opr_set.reserve(is_ol ? FLAGS_ol_ops : FLAGS_bt_ops);
     while (Status::OK != enter(token)) { _mm_pause(); }

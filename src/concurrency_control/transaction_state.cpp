@@ -10,7 +10,8 @@
 
 namespace shirakami {
 
-Status acquire_tx_state_handle(Token const token, TxStateHandle& handle) {
+Status acquire_tx_state_handle(Token const token, // NOLINT
+                               TxStateHandle& handle) {
     auto* ti{static_cast<session*>(token)};
     // check whether it already begun.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }

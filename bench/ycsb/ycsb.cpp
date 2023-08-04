@@ -16,8 +16,6 @@
 
 #include <xmmintrin.h>
 
-#include <glog/logging.h>
-
 #include <cstring>
 
 // shirakami/test

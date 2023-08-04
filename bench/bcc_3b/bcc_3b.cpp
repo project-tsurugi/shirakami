@@ -93,11 +93,12 @@ void waitForReady(const std::vector<char>& readys) {
     while (!isReady(readys)) { _mm_pause(); }
 }
 
-void worker(const std::size_t thid, const bool is_ol, char& ready,
-            const bool& start, const bool& quit, simple_result& res) {
+void worker(const std::size_t thid, const bool is_ol, char& ready,     // NOLINT
+            const bool& start, const bool& quit, simple_result& res) { // NOLINT
     // init work
     Xoroshiro128Plus rnd;
-    FastZipf zipf(&rnd, is_ol ? FLAGS_ol_skew : FLAGS_bt_skew, FLAGS_rec);
+    FastZipf zipf(&rnd, is_ol ? FLAGS_ol_skew : FLAGS_bt_skew, // NOLINT
+                  FLAGS_rec);                                  // NOLINT
 
     setThreadAffinity(
             static_cast<const int>(is_ol ? thid + FLAGS_bt_thread : thid));

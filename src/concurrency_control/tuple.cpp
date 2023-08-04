@@ -10,8 +10,8 @@
 namespace shirakami {
 
 Tuple::Impl::Impl(std::string_view key, std::string_view val) {
-    key_ = key;
-    value_ = val;
+    key_ = key;   // NOLINT
+    value_ = val; // NOLINT
 }
 
 void Tuple::Impl::get_key(std::string& out) const { // NOLINT
@@ -36,7 +36,7 @@ Tuple::Tuple(const Tuple& right) {
     pimpl_ = std::make_unique<Impl>(*right.pimpl_);
 }
 
-Tuple::Tuple(Tuple&& right) { pimpl_ = std::move(right.pimpl_); }
+Tuple::Tuple(Tuple&& right) { pimpl_ = std::move(right.pimpl_); } // NOLINT
 
 Tuple& Tuple::operator=(const Tuple& right) { // NOLINT
     this->pimpl_ = std::make_unique<Impl>(*right.pimpl_);

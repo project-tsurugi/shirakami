@@ -52,7 +52,7 @@ public:
     }
 
     size_t operator()() { // NOLINT
-        double u = rnd_->next() / static_cast<double> UINT64_MAX;
+        double u = rnd_->next() / static_cast<double> UINT64_MAX; // NOLINT
         double uz = u * zetan_;
         if (uz < 1.0) return 0;
         if (uz < threshold_) return 1;

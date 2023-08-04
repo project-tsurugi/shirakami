@@ -4,9 +4,6 @@
 #include <bitset>
 #include <mutex>
 
-// apt
-#include <glog/logging.h>
-
 #include "compiler.h"
 
 #include "concurrency_control/include/epoch.h"

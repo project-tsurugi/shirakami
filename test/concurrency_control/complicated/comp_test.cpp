@@ -1,6 +1,4 @@
 
-#include <glog/logging.h>
-
 #include <mutex>
 
 #include "clock.h"
@@ -88,7 +86,7 @@ TEST_F(comp_test, test1) { // NOLINT
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         for (auto i = 0; i < 14; ++i) { // NOLINT
-            std::string key(1, i);
+            std::string key(1, i);      // NOLINT
             std::string value(std::to_string(i));
             ASSERT_EQ(upsert(s, st, key, value), Status::OK);
         }
@@ -121,7 +119,7 @@ TEST_F(comp_test, test1) { // NOLINT
 
         // 4
         for (auto i = 0; i < 14; ++i) { // NOLINT
-            std::string key(1, i);
+            std::string key(1, i);      // NOLINT
             std::string value(std::to_string(i));
             ASSERT_EQ(upsert(s, st, key, value), Status::OK);
         }

@@ -42,10 +42,8 @@ private:
 };
 
 static bool is_ready(const std::vector<char>& readys) {
-    for (const char& b : readys) {
-        if (loadAcquire(b) == 0) return false;
-    }
-    return true;
+    return std::all_of(readys.begin(), readys.end(),
+                       [](char b) { return b != 0; });
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {

@@ -17,11 +17,11 @@ enum class task_kind : std::int32_t {
 class thread_task {
 public:
     // getter
-    task_kind get_task_kind() const { return task_kind_; }
+    [[nodiscard]] task_kind get_task_kind() const { return task_kind_; }
 
-    Token get_token() const { return token_; }
+    [[nodiscard]] Token get_token() const { return token_; }
 
-    bool get_completed() const {
+    [[nodiscard]] bool get_completed() const {
         return completed_.load(std::memory_order_acquire);
     }
 

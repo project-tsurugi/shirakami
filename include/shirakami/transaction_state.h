@@ -152,7 +152,7 @@ public:
 
     static void insert_tx_state(TxStateHandle hd) {
         std::lock_guard<std::shared_mutex> lk{mtx_hc_};
-        handle_container_.insert(std::make_pair(TxStateHandle(hd), TxState()));
+        handle_container_.insert(std::make_pair(hd, TxState()));
     }
 
     static std::atomic<TxStateHandle>& get_handle_ctr() { return handle_ctr_; }

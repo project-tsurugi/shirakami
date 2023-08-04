@@ -183,7 +183,8 @@ to_string(std::vector<Storage> const& write_preserve) noexcept {
     return buf;
 }
 
-inline std::string to_string(const transaction_options::read_area ra) noexcept {
+inline std::string
+to_string(const transaction_options::read_area& ra) noexcept {
     std::string buf{};
     if (ra.empty()) { return buf; }
     if (!ra.get_positive_list().empty()) {

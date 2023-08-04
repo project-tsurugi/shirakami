@@ -51,7 +51,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storage_and_upsert_one_record(std::size_t const i) {
+void create_storage_and_upsert_one_record(std::size_t const i) { // NOLINT
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -70,7 +70,7 @@ void create_storage_and_upsert_one_record(std::size_t const i) {
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-void recovery_test(std::size_t recovery_num) {
+void recovery_test(std::size_t recovery_num) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -80,7 +80,7 @@ void recovery_test(std::size_t recovery_num) {
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
     std::vector<Storage> st_list{};
-    for (std::size_t i = 0; i < recovery_num; ++i) {
+    for (std::size_t i = 0; i < recovery_num; ++i) { // NOLINT
         create_storage_and_upsert_one_record(i);
         fin(false);
         // recovery

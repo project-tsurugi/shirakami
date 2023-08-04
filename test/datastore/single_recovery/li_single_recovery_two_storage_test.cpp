@@ -51,7 +51,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-void create_storage_and_upsert_one_record(std::size_t const i) {
+void create_storage_and_upsert_one_record(std::size_t const i) { // NOLINT
     // prepare
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
@@ -78,7 +78,7 @@ void storage_operation_test(std::size_t storage_num) {
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
-    for (std::size_t i = 0; i < storage_num; ++i) {
+    for (std::size_t i = 0; i < storage_num; ++i) { // NOLINT
         create_storage_and_upsert_one_record(i);
     }
 

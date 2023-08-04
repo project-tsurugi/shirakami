@@ -65,7 +65,7 @@ TEST_F(scan_upsert, upsert_after_range_read_same_tx) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     for (auto i = 0; i < 14; ++i) { // NOLINT
-        std::string key(1, i);
+        std::string key(1, i);      // NOLINT
         std::string value(std::to_string(i));
         ASSERT_EQ(upsert(s, st, key, value), Status::OK);
     }

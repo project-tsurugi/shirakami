@@ -28,14 +28,14 @@ namespace shirakami {
 /**
  * @brief One storage for ycsb experiments.
  */
-inline Storage storage;
+inline Storage storage{}; // NOLINT
 
 /**
  * @brief For ycsb_mb_nc.cpp
  * @details If this is true, All worker threads access separate storage. 
  * Therefore, there is no conflict.
  */
-inline bool use_separate_storage{false};
+inline bool use_separate_storage{false}; // NOLINT
 
 /**
  * @brief For ycsb_mb_nc.cpp
@@ -43,7 +43,7 @@ inline bool use_separate_storage{false};
  * Therefore, there is no conflict.
  */
 alignas(CACHE_LINE_SIZE) inline std::vector< // NOLINT
-        Storage> separate_storage{};
+        Storage> separate_storage{};         // NOLINT
 
 /**
  * global variables getter / setter

@@ -20,13 +20,13 @@
 
 namespace shirakami {
 
-Status close_scan_body(Token const token, ScanHandle const handle) {
+Status close_scan_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     return ti->get_scan_handle().clear(handle);
 }
 
-Status close_scan(Token const token, ScanHandle const handle) {
+Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = close_scan_body(token, handle);
@@ -34,7 +34,8 @@ Status close_scan(Token const token, ScanHandle const handle) {
     return ret;
 }
 
-inline Status find_open_scan_slot(session* const ti, ScanHandle& out) {
+inline Status find_open_scan_slot(session* const ti, // NOLINT
+                                  ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
     std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
     for (ScanHandle i = 0;; ++i) {
@@ -181,7 +182,7 @@ Status check_not_found(
     return Status::WARN_NOT_FOUND;
 }
 
-Status open_scan_body(Token const token, Storage storage,
+Status open_scan_body(Token const token, Storage storage, // NOLINT
                       const std::string_view l_key, const scan_endpoint l_end,
                       const std::string_view r_key, const scan_endpoint r_end,
                       ScanHandle& handle, std::size_t const max_size) {
@@ -342,7 +343,7 @@ Status open_scan_body(Token const token, Storage storage,
     return fin_process(ti, Status::OK);
 }
 
-Status open_scan(Token const token, Storage storage,
+Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
@@ -354,7 +355,7 @@ Status open_scan(Token const token, Storage storage,
     return ret;
 }
 
-Status next_body(Token const token, ScanHandle const handle) {
+Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
@@ -390,7 +391,7 @@ Status next_body(Token const token, ScanHandle const handle) {
             // check target record
             auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                     sh.get_scan_cache()[handle]);
-            auto itr = scan_buf.begin() + scan_index;
+            auto itr = scan_buf.begin() + scan_index; // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
 
@@ -510,7 +511,7 @@ Status next_body(Token const token, ScanHandle const handle) {
     return Status::OK;
 }
 
-Status next(Token const token, ScanHandle const handle) {
+Status next(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = next_body(token, handle);
@@ -560,7 +561,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-        auto itr = scan_buf.begin() + scan_index;
+        auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
@@ -721,7 +722,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     return Status::ERR_FATAL;
 }
 
-Status read_key_from_scan(Token const token, ScanHandle const handle,
+Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                           std::string& key) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
@@ -730,8 +731,8 @@ Status read_key_from_scan(Token const token, ScanHandle const handle,
     return ret;
 }
 
-Status read_value_from_scan(Token const token, ScanHandle const handle,
-                            std::string& value) {
+Status read_value_from_scan(Token const token, // NOLINT
+                            ScanHandle const handle, std::string& value) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, false, value);
@@ -739,9 +740,9 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
     return ret;
 }
 
-[[maybe_unused]] Status scannable_total_index_size_body(Token const token,
-                                                        ScanHandle const handle,
-                                                        std::size_t& size) {
+Status scannable_total_index_size_body(Token const token, // NOLINT
+                                       ScanHandle const handle,
+                                       std::size_t& size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
@@ -763,9 +764,8 @@ Status read_value_from_scan(Token const token, ScanHandle const handle,
     return Status::OK;
 }
 
-[[maybe_unused]] Status scannable_total_index_size(Token const token,
-                                                   ScanHandle const handle,
-                                                   std::size_t& size) {
+Status scannable_total_index_size(Token const token, // NOLINT
+                                  ScanHandle const handle, std::size_t& size) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = scannable_total_index_size_body(token, handle, size);

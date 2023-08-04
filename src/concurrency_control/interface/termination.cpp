@@ -54,7 +54,7 @@ Status abort(Token token) { // NOLINT
     return ret;
 }
 
-Status commit_body(Token const token) {
+Status commit_body(Token const token) { // NOLINT
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
@@ -106,7 +106,7 @@ Status commit_body(Token const token) {
     return rc;
 }
 
-Status commit(Token const token) {
+Status commit(Token const token) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = commit_body(token);

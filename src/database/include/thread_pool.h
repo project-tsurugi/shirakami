@@ -20,8 +20,7 @@ public:
     /**
      * @brief init thread pool
     */
-    static void
-    init(std::size_t thread_pool_size = 10) {
+    static void init(std::size_t thread_pool_size = 10) { // NOLINT
         // set thread pool size
         set_thread_pool_size(thread_pool_size);
 
@@ -62,7 +61,9 @@ public:
         return running_.load(std::memory_order_acquire);
     }
 
-    static std::unique_ptr<std::thread[]>& get_threads() { return threads_; }
+    static std::unique_ptr<std::thread[]>& get_threads() { // NOLINT
+        return threads_;
+    }
 
     static concurrent_queue<thread_task*>& get_task_queue() {
         return task_queue_;
@@ -83,22 +84,22 @@ private:
     /**
      * @brief # of threads of thread pool.
     */
-    static inline std::size_t thread_pool_size_{};
+    static inline std::size_t thread_pool_size_{}; // NOLINT
 
     /**
      * @brief whether thread pool runs
     */
-    static inline std::atomic<bool> running_{false};
+    static inline std::atomic<bool> running_{false}; // NOLINT
 
     /**
      * @brief threads of thread pool
     */
-    static inline std::unique_ptr<std::thread[]> threads_;
+    static inline std::unique_ptr<std::thread[]> threads_; // NOLINT
 
     /**
      * @brief task container
     */
-    static inline concurrent_queue<thread_task*> task_queue_;
+    static inline concurrent_queue<thread_task*> task_queue_; // NOLINT
 };
 
 } // namespace shirakami

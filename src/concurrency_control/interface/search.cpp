@@ -17,7 +17,7 @@
 
 namespace shirakami {
 
-Status exist_key_body(Token const token, Storage const storage,
+Status exist_key_body(Token const token, Storage const storage, // NOLINT
                       std::string_view const key) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -58,7 +58,7 @@ Status exist_key_body(Token const token, Storage const storage,
     return rc;
 }
 
-Status exist_key(Token const token, Storage const storage,
+Status exist_key(Token const token, Storage const storage, // NOLINT
                  std::string_view const key) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
@@ -67,7 +67,7 @@ Status exist_key(Token const token, Storage const storage,
     return ret;
 }
 
-Status search_key_body(Token const token, Storage const storage,
+Status search_key_body(Token const token, Storage const storage, // NOLINT
                        std::string_view const key, std::string& value) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -107,7 +107,7 @@ Status search_key_body(Token const token, Storage const storage,
     return rc;
 }
 
-Status search_key(Token const token, Storage const storage,
+Status search_key(Token const token, Storage const storage, // NOLINT
                   std::string_view const key, std::string& value) {
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();

@@ -69,7 +69,7 @@ void create_storage_and_upsert_one_record(std::size_t const i) {
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-void storage_operation_test(std::size_t storage_num) {
+void storage_operation_test(std::size_t storage_num) { // NOLINT
     // start
     std::string log_dir{};
     int tid = syscall(SYS_gettid); // NOLINT
@@ -78,7 +78,7 @@ void storage_operation_test(std::size_t storage_num) {
             "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
 
-    for (std::size_t i = 0; i < storage_num; ++i) {
+    for (std::size_t i = 0; i < storage_num; ++i) { // NOLINT
         create_storage_and_upsert_one_record(i);
     }
 

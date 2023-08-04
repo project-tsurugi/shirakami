@@ -298,7 +298,7 @@ void release_key_memory() {
         }
     }
     if (erase_count > 0) {
-        cont.erase(cont.begin(), cont.begin() + erase_count);
+        cont.erase(cont.begin(), cont.begin() + erase_count); // NOLINT
     }
 }
 

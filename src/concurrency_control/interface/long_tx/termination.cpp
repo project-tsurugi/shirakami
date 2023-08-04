@@ -834,7 +834,7 @@ extern Status commit(session* const ti) {
     return rc;
 }
 
-Status check_commit(Token const token) {
+Status check_commit(Token const token) { // NOLINT
     auto* ti = static_cast<session*>(token);
 
     // check for requested commit.

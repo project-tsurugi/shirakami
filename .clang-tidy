@@ -6,6 +6,7 @@ bugprone-*,\
 -bugprone-easily-swappable-parameters,\
 cert-*,\
 cppcoreguidelines-*,\
+-cppcoreguidelines-avoid-non-const-global-variables,\
 -cppcoreguidelines-macro-usage,\
 -cppcoreguidelines-pro-type-const-cast,\
 fuchsia-*,\
@@ -34,6 +35,7 @@ performance-*,\
 -performance-noexcept-move-constructor,\
 readability-*,\
 -readability-braces-around-statements,\
+-readability-function-cognitive-complexity,\
 -readability-identifier-length,\
 -readability-named-parameter,\
 "

@@ -79,7 +79,7 @@ Status init(database_options options) { // NOLINT
         lpwal::set_log_dir_pointed(true);
         // check exist
         boost::filesystem::path ldp{
-                std::string(options.get_log_directory_path())};
+                std::string(options.get_log_directory_path())}; // NOLINT
         boost::system::error_code error;
         const bool result = boost::filesystem::exists(ldp, error);
         if (!result || error) {

@@ -20,7 +20,7 @@ Status create_sequence(SequenceId* const id) {
     return sequence::create_sequence(id);
 }
 
-Status update_sequence(Token const token, SequenceId const id,
+Status update_sequence(Token const token, SequenceId const id, // NOLINT
                        SequenceVersion const version,
                        SequenceValue const value) {
     return sequence::update_sequence(token, id, version, value);
@@ -300,7 +300,8 @@ Status sequence::create_sequence(SequenceId* id) {
     return Status::OK;
 }
 
-Status sequence::update_sequence(Token const token, SequenceId const id,
+Status sequence::update_sequence(Token const token, // NOLINT
+                                 SequenceId const id,
                                  SequenceVersion const version,
                                  SequenceValue const value) {
     auto* ti = static_cast<session*>(token);

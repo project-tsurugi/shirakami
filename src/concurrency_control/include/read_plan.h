@@ -35,7 +35,7 @@ public:
         clear();
     }
 
-    static void add_elem(std::size_t const tx_id, read_area_type const ra) {
+    static void add_elem(std::size_t const tx_id, read_area_type const& ra) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
         get_cont()[tx_id] = ra;
     }
@@ -61,7 +61,7 @@ public:
     }
 
     static bool
-    check_potential_read_anti(std::size_t const tx_id,
+    check_potential_read_anti(std::size_t tx_id,
                               std::set<Storage> const& write_storages);
 
     // getter / setter
@@ -73,12 +73,12 @@ private:
     /**
      * @brief mutex for container.
      */
-    static inline std::shared_mutex mtx_cont_;
+    static inline std::shared_mutex mtx_cont_; // NOLINT
 
     /**
      * @brief container for read area
     */
-    static inline cont_type cont_;
+    static inline cont_type cont_; // NOLINT
 };
 
 } // namespace shirakami

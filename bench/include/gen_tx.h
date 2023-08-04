@@ -22,15 +22,12 @@ public:
     opr_obj() = default;
 
     // for search
-    opr_obj(const OP_TYPE type, std::string_view key)
+    opr_obj(OP_TYPE type, std::string_view key)
         : type_(type), key_(key) {} // NOLINT
 
     // for scan
-    opr_obj(const OP_TYPE type, std::string_view str1, std::string_view str2)
-        : type_(type) {
-        scan_l_key_ = str1;
-        scan_r_key_ = str2;
-    }
+    opr_obj(OP_TYPE type, std::string_view str1, std::string_view str2)
+        : type_(type), scan_l_key_(str1), scan_r_key_(str2) {}
 
     opr_obj(const opr_obj& right) = delete;
 

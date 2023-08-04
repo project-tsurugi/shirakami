@@ -22,15 +22,12 @@ public:
     opr_obj() = default;
 
     // for search
-    opr_obj(const OP_TYPE type, std::string_view key)
+    opr_obj(OP_TYPE type, std::string_view key)
         : type_(type), key_(key) {} // NOLINT
 
     // for scan
-    opr_obj(const OP_TYPE type, std::string_view str1, std::string_view str2)
-        : type_(type) {
-        scan_l_key_ = str1;
-        scan_r_key_ = str2;
-    }
+    opr_obj(OP_TYPE type, std::string_view str1, std::string_view str2)
+        : type_(type), scan_l_key_(str1), scan_r_key_(str2) {}
 
     opr_obj(const opr_obj& right) = delete;
 
@@ -84,8 +81,8 @@ private:
 static void gen_tx_rw(std::vector<opr_obj>& opr_set, const std::size_t key_len,
                       const std::size_t tpnm, const std::size_t thread_num,
                       const std::size_t thid, const std::size_t opnm,
-                      const std::string ops_read_type,
-                      const std::string ops_write_type,
+                      const std::string& ops_read_type,
+                      const std::string& ops_write_type,
                       const std::size_t rratio, Xoroshiro128Plus& rnd,
                       FastZipf& zipf) {
     using namespace shirakami;

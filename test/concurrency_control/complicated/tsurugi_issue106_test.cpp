@@ -1,6 +1,4 @@
 
-#include <glog/logging.h>
-
 #include <mutex>
 
 #include "clock.h"
@@ -82,13 +80,13 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         for (std::size_t i = 0; i < 100; ++i) { // NOLINT
-            std::string k(1, i);
+            std::string k(1, i);                // NOLINT
             ASSERT_EQ(Status::OK, insert(s, st, k, "v"));
         }
 
         // second
         for (std::size_t i = 0; i < 100; ++i) { // NOLINT
-            std::string k(1, i);
+            std::string k(1, i);                // NOLINT
             ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s, st, k, "v"));
         }
 

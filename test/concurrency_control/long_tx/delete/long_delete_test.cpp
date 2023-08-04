@@ -172,8 +172,13 @@ TEST_F(long_delete_test, long_key_test) { // NOLINT
     wait_epoch_update();
 
     // test
-    ASSERT_EQ(Status::WARN_INVALID_KEY_LENGTH,
-              delete_record(s, st, std::string(1024 * 36, 'a')));
+    ASSERT_EQ(
+            Status::WARN_INVALID_KEY_LENGTH,
+            delete_record(
+                    s, st,
+                    std::string(static_cast<std::basic_string<char>::size_type>(
+                                        1024 * 36),
+                                'a')));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

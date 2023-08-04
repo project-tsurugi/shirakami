@@ -16,8 +16,6 @@
 
 #include <xmmintrin.h>
 
-#include <glog/logging.h>
-
 #include <cstring>
 
 // shirakami/test
@@ -331,8 +329,9 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
         // execute operations
         for (std::size_t i = 0; i < FLAGS_ops / FLAGS_thread; ++i) {
             // make cursor: begin + for block size + loop num
-            auto itr =
-                    opr_set.begin() + (FLAGS_ops / FLAGS_thread * (thid)) + i;
+            auto itr = opr_set.begin() +                     // NOLINT
+                       (FLAGS_ops / FLAGS_thread * (thid)) + // NOLINT
+                       i;                                    // NOLINT
             if (itr->get_type() == OP_TYPE::SEARCH) {
                 std::string vb{};
                 ret = search_key(token, storage, itr->get_key(), vb);

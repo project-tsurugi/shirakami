@@ -79,7 +79,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
 
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    Status rc;
+    Status rc{};
     do {
         rc = check_commit(s2);
         _mm_pause();

@@ -8,12 +8,10 @@
 namespace shirakami::wp {
 
 bool wp_meta::empty(const wp_meta::wped_type& wped) {
-    for (auto&& elem : wped) {
-        if (elem != std::pair<epoch::epoch_t, std::size_t>(0, 0)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+            wped.begin(), wped.end(), [](wp::wp_meta::wped_elem_type elem) {
+                return elem == std::pair<epoch::epoch_t, std::size_t>(0, 0);
+            });
 }
 
 Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
