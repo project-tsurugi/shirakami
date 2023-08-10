@@ -172,10 +172,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                      * get_requested_commit() の確認を噛ませていない。
                      * */
                     out_status = waiting_bypass(ti);
-                    if (out_status != Status::OK) {
-                        return false;
-                    }
-                    return true;
+                    return out_status == Status::OK;
                 }
             }
         }
