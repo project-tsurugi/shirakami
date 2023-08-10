@@ -31,17 +31,6 @@ public:
     static constexpr std::size_t index_session = 2;
     using tx_info_type = std::vector<tx_info_elem_type>;
 
-    /**
-     * @brief Change epoch of @a tx_id for @a new_ep.
-     * @pre The lock of ongoing_tx was acquired outside from this tx.
-     * @param[in] tx_id The target tx id.
-     * @param[in] new_ep The target epoch of the tx.
-     * @return Status::OK success
-     * @return Status::WARN_NOT_FOUND fail for not existing @a tx_id.
-     */
-    static Status change_epoch_without_lock(std::size_t tx_id,
-                                            epoch::epoch_t new_ep);
-
     static bool exist_id(std::size_t id);
 
     /**
@@ -84,6 +73,14 @@ public:
     static void set_lowest_epoch(epoch::epoch_t ep) {
         lowest_epoch_.store(ep, std::memory_order_release);
     }
+
+    /**
+     * @brief waiting bypass
+     * @param[in] ti bypassing transaction info
+     * @return Status::OK success
+     * @return Status::ERR_CC early validation and read upper bound violation
+    */
+    static Status waiting_bypass(session* ti);
 
 private:
     /**

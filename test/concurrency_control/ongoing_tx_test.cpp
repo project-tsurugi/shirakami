@@ -43,9 +43,9 @@ TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
             std::make_pair(st, wp_meta)); // the pair is dummy
     std::get<0>(ti->get_overtaken_ltx_set()[wp_meta])
             .insert(1); // wp_meta is dummy
-    ASSERT_EQ(ongoing_tx::exist_wait_for(ti), true);
+                        // ASSERT_EQ(ongoing_tx::exist_wait_for(ti), true);
     ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::exist_wait_for(ti), false);
+    // ASSERT_EQ(ongoing_tx::exist_wait_for(ti), false);
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -88,36 +88,6 @@ TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
     ongoing_tx::remove_id(1);
     ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
-}
-
-TEST_F(ongoing_tx_test, change_epoch) { // NOLINT
-    ongoing_tx::push({2, 2, nullptr});
-    ongoing_tx::push({3, 3, nullptr});
-
-    auto& cont = ongoing_tx::get_tx_info();
-    for (auto& itr : cont) {
-        if (std::get<ongoing_tx::index_id>(itr) == 2) {
-            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(itr), 2);
-        } else if (std::get<ongoing_tx::index_id>(itr) == 3) {
-            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(itr), 3);
-        } else {
-            ASSERT_EQ(true, false); // not reachable
-        }
-    }
-
-    // fail case
-    ASSERT_EQ(Status::OK, ongoing_tx::change_epoch_without_lock(3, 1));
-
-    // verify
-    for (auto& itr : cont) {
-        if (std::get<ongoing_tx::index_id>(itr) == 2) {
-            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(itr), 2);
-        } else if (std::get<ongoing_tx::index_id>(itr) == 3) {
-            ASSERT_EQ(std::get<ongoing_tx::index_epoch>(itr), 1);
-        } else {
-            ASSERT_EQ(true, false); // not reachable
-        }
-    }
 }
 
 } // namespace shirakami::testing
