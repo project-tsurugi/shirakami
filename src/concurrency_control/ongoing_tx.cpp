@@ -140,7 +140,8 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     return Status::OK;
 }
 
-bool ongoing_tx::exist_wait_for(session* ti) {
+bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
+    out_status = Status::OK; // initialize arg
     std::size_t id = ti->get_long_tx_id();
     bool has_wp = !ti->get_wp_set().empty();
     auto wait_for = ti->extract_wait_for();
@@ -170,7 +171,10 @@ bool ongoing_tx::exist_wait_for(session* ti) {
                      * これは待ち確認のたびにパスを一つ短絡化するため、
                      * get_requested_commit() の確認を噛ませていない。
                      * */
-                    waiting_bypass(ti);
+                    out_status = waiting_bypass(ti);
+                    if (out_status != Status::OK) {
+                        return false;
+                    }
                     return true;
                 }
             }

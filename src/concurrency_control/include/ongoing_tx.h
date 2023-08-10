@@ -37,10 +37,12 @@ public:
      * @brief 
      * 
      * @param[in] ti This tx's session information.
+     * @param[out] Status::OK success to check wait
+     * @param[out] Status::ERR_CC early validation and read upper bound violation
      * @return true It exists transactions to wait.
      * @return false It doesn't exist transactions to wait.
      */
-    static bool exist_wait_for(session* ti);
+    static bool exist_wait_for(session* ti, Status& out_status);
 
     /**
      * @brief Get the lowest epoch
@@ -77,7 +79,7 @@ public:
     /**
      * @brief waiting bypass
      * @param[in] ti bypassing transaction info
-     * @return Status::OK success
+     * @return Status::OK success to check wait
      * @return Status::ERR_CC early validation and read upper bound violation
     */
     static Status waiting_bypass(session* ti);

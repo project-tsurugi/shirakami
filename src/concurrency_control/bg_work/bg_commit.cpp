@@ -82,7 +82,9 @@ void bg_commit::worker() {
                         transaction_options::transaction_type::LONG ||
                 !ti->get_requested_commit()) {
                 // not long or not requested commit.
-                LOG(ERROR) << log_location_prefix << "unexpected error";
+                LOG(ERROR) << log_location_prefix << "unexpected error. "
+                           << ti->get_tx_type() << ", "
+                           << ti->get_requested_commit();
                 return;
             }
 

@@ -626,10 +626,11 @@ Status verify(session* const ti) {
 }
 
 Status check_wait_for_preceding_bt(session* const ti) {
-    if (ongoing_tx::exist_wait_for(ti)) {
+    Status rc{};
+    if (ongoing_tx::exist_wait_for(ti, rc)) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
-    return Status::OK;
+    return rc;
 }
 
 Status verify_kvs_error(session* const ti) {
@@ -719,7 +720,7 @@ extern Status commit(session* const ti) {
      */
     // check wait
     auto rc = check_wait_for_preceding_bt(ti);
-    if (rc != Status::OK) {
+    if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
         ti->set_tx_state_if_valid(TxState::StateKind::WAITING_CC_COMMIT);
         if (!ti->get_requested_commit()) {
             // start wait
@@ -733,6 +734,14 @@ extern Status commit(session* const ti) {
             bg_work::bg_commit::register_tx(static_cast<void*>(ti));
         }
         return Status::WARN_WAITING_FOR_OTHER_TX;
+    }
+    if (rc == Status::ERR_CC) {
+        abort(ti);
+        goto END_COMMIT; // NOLINT
+    }
+    if (rc != Status::OK) {
+        LOG(ERROR) << log_location_prefix << "unexpected error. " << rc;
+        return rc;
     }
 
     // log debug timing event
@@ -825,6 +834,7 @@ extern Status commit(session* const ti) {
         LOG(ERROR) << "unexpected code path";
     }
 
+END_COMMIT: // NOLINT
     // detail info
     if (logging::get_enable_logging_detail_info()) {
         VLOG(log_trace) << log_location_prefix_detail_info
