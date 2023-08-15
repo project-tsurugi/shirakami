@@ -462,25 +462,17 @@ Status verify(session* const ti) {
                                 // the ltx didn't write.
                                 break;
                             }
-                            if (!
-                                // hit case
-                                (
-                                        /**
-                                         * read left point <= write left point
-                                         * <= read right point
-                                         */
-                                        (std::get<0>(read_range) <=
-                                                 std::get<1>(write_result) &&
-                                         std::get<1>(write_result) <=
-                                                 std::get<1>(read_range)) ||
-                                        /**
-                                         *  write left point < read left point
-                                         * <= write right point
-                                        */
-                                        (std::get<1>(write_result) <
-                                                 std::get<0>(read_range) &&
-                                         std::get<0>(read_range) <=
-                                                 std::get<2>(write_result)))) {
+                            if (
+                                    /**
+                                      * read right point < write left point
+                                      */
+                                    (std::get<1>(read_range) <
+                                     std::get<1>(write_result)) ||
+                                    /**
+                                      * write right point < read left point
+                                      */
+                                    (std::get<2>(write_result) <
+                                     std::get<0>(read_range))) {
                                 // can't hit
                                 break;
                             }
