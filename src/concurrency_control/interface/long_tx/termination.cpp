@@ -736,6 +736,9 @@ extern Status commit(session* const ti) {
         return Status::WARN_WAITING_FOR_OTHER_TX;
     }
     if (rc == Status::ERR_CC) {
+        // log debug timing event
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "start_abort : " << str_tx_id;
         abort(ti);
         goto END_COMMIT; // NOLINT
     }
