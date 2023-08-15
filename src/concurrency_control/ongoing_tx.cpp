@@ -164,15 +164,19 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                 wait_for.end()) {
                 // wait_for hit.
                 if (std::get<ongoing_tx::index_id>(elem) < id) {
-                    /**
+/**
                      * boundary wait 確定.
                      * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
                      * に対する前置を確定するとともに、x1 が前置する相手に前置する。
                      * これは待ち確認のたびにパスを一つ短絡化するため、
                      * get_requested_commit() の確認を噛ませていない。
                      * */
+#if 0
                     out_status = waiting_bypass(ti);
                     return out_status == Status::OK;
+#else
+                    return true;
+#endif
                 }
             }
         }
