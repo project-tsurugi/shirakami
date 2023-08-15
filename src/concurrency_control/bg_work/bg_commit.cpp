@@ -169,12 +169,16 @@ void bg_commit::worker() {
 }
 
 void bg_commit::show_waiting() {
-    std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
-    VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting start";
-    auto itr = cont_wait_tx().begin();
-    for (; itr != cont_wait_tx().end(); ++itr) {
-        Token token = std::get<1>(*itr);
-        std::size_t tx_id = std::get<0>(*itr);
+    std::vector<cont_type::key_type> cont_wait_tx_copy;
+    {
+        std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+        VLOG(35) << "/:shirakami:diag317:bg_commit:show_waiting start";
+        std::vector<cont_type::key_type> cont_wait_tx_copy2(cont_wait_tx().begin(), cont_wait_tx().end());
+        cont_wait_tx_copy = std::move(cont_wait_tx_copy2);
+    }
+    for (auto e : cont_wait_tx_copy) {
+        Token token = std::get<1>(e);
+        std::size_t tx_id = std::get<0>(e);
         auto* ti = static_cast<session*>(token);
         // check from long
         if (ti->get_tx_type() != transaction_options::transaction_type::LONG ||
