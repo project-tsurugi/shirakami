@@ -220,14 +220,18 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
 bool ongoing_tx::check_wait_for(session* ti, Status& out_status) {
     out_status = Status::OK; // initialize arg
     bool hit = false;
+    VLOG(35) << "/:shirakami:diag317:ongoing_tx:check_wait_for p0";
     std::size_t id = ti->get_long_tx_id();
     bool has_wp = !ti->get_wp_set().empty();
+    VLOG(35) << "/:shirakami:diag317:ongoing_tx:check_wait_for p2";
     auto wait_for = ti->extract_wait_for();
+    VLOG(35) << "/:shirakami:diag317:ongoing_tx:check_wait_for p3";
     // check local write set
     std::set<Storage> st_set{};
     // create and compaction about storage set
     ti->get_write_set().get_storage_set(st_set);
 
+    VLOG(35) << "/:shirakami:diag317:ongoing_tx:check_wait_for p5 tx_id " << id;
     // check boundary wait
     {
         std::shared_lock<std::shared_mutex> lk{mtx_};
@@ -267,6 +271,7 @@ bool ongoing_tx::check_wait_for(session* ti, Status& out_status) {
         }
     }
 
+    VLOG(35) << "/:shirakami:diag317:ongoing_tx:check_wait_for p8 tx_id " << id;
     // check about write
     if (has_wp) {
         // check potential read-anti and read area for each write storage
