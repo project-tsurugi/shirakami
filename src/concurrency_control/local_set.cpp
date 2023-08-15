@@ -31,23 +31,17 @@ void local_write_set::get_storage_set(std::set<Storage>& out) {
     out.clear();
 
     std::shared_lock<std::shared_mutex> lk{get_mtx()};
-    if (get_for_batch()) {
-        for (auto&& wso : get_ref_cont_for_bt()) {
-            out.insert(wso.second.get_storage());
-        }
-    } else {
-        for (auto&& wso : get_ref_cont_for_occ()) {
-            out.insert(wso.get_storage());
-        }
-    }
+    out = storage_set_;
 }
 
 void local_write_set::push(write_set_obj&& elem) {
     std::lock_guard<std::shared_mutex> lk{get_mtx()};
 
     if (get_for_batch()) {
+        storage_set_.insert(elem.get_storage());
         cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
     } else {
+        storage_set_.insert(elem.get_storage());
         cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
         if (cont_for_occ_.size() > 100) {            // NOLINT
             // swtich to use cont_for_bt_ for performance

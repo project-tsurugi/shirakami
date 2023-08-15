@@ -162,6 +162,7 @@ public:
     void clear() {
         cont_for_occ_.clear();
         cont_for_bt_.clear();
+        storage_set_.clear();
     }
 
     Status erase(write_set_obj* wso);
@@ -227,6 +228,10 @@ private:
      * @brief container for short tx.
      */
     cont_for_occ_type cont_for_occ_;
+    /**
+     * @brief storage set.
+     */
+    std::set<Storage> storage_set_;
 
     std::shared_mutex mtx_;
 };
