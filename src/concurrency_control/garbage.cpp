@@ -10,6 +10,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
+#include "database/include/logging.h"
+
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/logging.h"
@@ -243,7 +245,9 @@ void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
     }
 }
 
-inline void unhooking_keys_and_pruning_versions(Storage st) {
+inline void
+unhooking_keys_and_pruning_versions_at_the_storage(Storage st,
+                                                   std::size_t& record_num) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
     // full scan
@@ -257,15 +261,20 @@ inline void unhooking_keys_and_pruning_versions(Storage st) {
                 ytk, st, reinterpret_cast<Record*>(std::get<1>(sr))); // NOLINT
         if (get_flag_cleaner_end()) { break; }
     }
+
+    // for detail info
+    record_num += scan_res.size();
+
+    // cleanup
     yakushima::leave(ytk);
 }
 
-inline void unhooking_keys_and_pruning_versions() {
+inline void unhooking_keys_and_pruning_versions(std::size_t& record_num) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
         if (wp::get_page_set_meta_storage() != st) {
-            unhooking_keys_and_pruning_versions(st);
+            unhooking_keys_and_pruning_versions_at_the_storage(st, record_num);
         }
         if (get_flag_cleaner_end()) { break; }
     }
@@ -304,11 +313,47 @@ void release_key_memory() {
 
 void work_cleaner() {
     while (!get_flag_cleaner_end()) {
+        // prepare for detail info
+        std::size_t record_num = 0;
+
+        // gc
         {
             std::unique_lock lk{get_mtx_cleaner()};
-            unhooking_keys_and_pruning_versions();
+            unhooking_keys_and_pruning_versions(record_num);
             release_key_memory();
         }
+
+        // output detail info
+        if (logging::get_enable_logging_detail_info()) {
+            // logging detail info
+            std::size_t estimation_border_node_num =
+                    record_num / (yakushima::key_slice_length / 2);
+            std::size_t estimation_interior_node_num = 0;
+            // consider number of interior node from botom to top
+            std::size_t each_level_interior_node_num =
+                    estimation_border_node_num /
+                    (yakushima::interior_node::child_length / 2);
+            while (each_level_interior_node_num >=
+                   (yakushima::interior_node::child_length / 2)) {
+                estimation_interior_node_num += each_level_interior_node_num;
+                each_level_interior_node_num /=
+                        (yakushima::interior_node::child_length / 2);
+            }
+            estimation_interior_node_num++; // for root node.
+            std::size_t estimation_memory =
+                    sizeof(yakushima::border_node) *
+                            estimation_border_node_num +
+                    sizeof(yakushima::interior_node) *
+                            estimation_interior_node_num;
+            VLOG(log_trace) << log_location_prefix_detail_info << "GC found "
+                            << record_num
+                            << " records. Estimation of memory usage for "
+                               "Yakushima(Filling rate is 50%): "
+                            << estimation_memory;
+        }
+
+
+        // sleep
         sleepMs(epoch::get_global_epoch_time_ms());
     }
 
