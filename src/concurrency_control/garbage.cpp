@@ -340,16 +340,19 @@ void work_cleaner() {
                         (yakushima::interior_node::child_length / 2);
             }
             estimation_interior_node_num++; // for root node.
+#if 0
             std::size_t estimation_memory =
                     sizeof(yakushima::border_node) *
                             estimation_border_node_num +
                     sizeof(yakushima::interior_node) *
                             estimation_interior_node_num;
+#endif
             VLOG(log_trace) << log_location_prefix_detail_info << "GC found "
                             << record_num
-                            << " records. Estimation of memory usage for "
-                               "Yakushima(Filling rate is 50%): "
-                            << estimation_memory;
+                            << " records. Estimation of number of nodes in "
+                               "Yakushima(Filling rate is 50%): interior node: "
+                            << estimation_interior_node_num
+                            << ", border node: " << estimation_border_node_num;
         }
 
 
