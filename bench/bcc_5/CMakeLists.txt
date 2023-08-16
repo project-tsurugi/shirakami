@@ -28,12 +28,10 @@ target_include_directories(bcc_5
         PRIVATE ${PROJECT_SOURCE_DIR}/src
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
-# Debug builds take a long time and cannot be automated. Release builds finish 
+# Debug builds take a long time and cannot be automated. Release builds finish
 # in a realistic amount of time.
 #add_test(
 #        NAME    bcc_5

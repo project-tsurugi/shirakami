@@ -3,7 +3,7 @@ file(GLOB SOURCES
         )
 
 # about cc
-file(GLOB CC_SOURCES 
+file(GLOB CC_SOURCES
 "concurrency_control/bg_work/*.cpp"
 "concurrency_control/*.cpp"
 "concurrency_control/interface/*.cpp"
@@ -34,7 +34,6 @@ add_library(shirakami
 target_include_directories(shirakami
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
         )
 
 find_package(Threads REQUIRED)
@@ -48,6 +47,7 @@ target_link_libraries(shirakami
         PRIVATE ${tbb_prefix}tbbmalloc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Threads::Threads
+        PRIVATE yakushima
         )
 
 if (BUILD_PWAL)

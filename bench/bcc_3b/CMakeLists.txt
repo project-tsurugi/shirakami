@@ -28,8 +28,6 @@ target_include_directories(bcc_3b
         PRIVATE ${PROJECT_SOURCE_DIR}/src
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 

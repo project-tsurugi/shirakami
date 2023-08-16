@@ -19,7 +19,14 @@ target_link_libraries(ycsb_mb_nc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
+        PRIVATE yakushima
         )
+
+if (BUILD_PWAL)
+  target_link_libraries(ycsb_mb_nc
+        PRIVATE limestone
+  )
+endif()
 
 target_include_directories(ycsb_mb_nc
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -29,8 +36,6 @@ target_include_directories(ycsb_mb_nc
         PRIVATE ${PROJECT_SOURCE_DIR}/src
         PRIVATE ${PROJECT_SOURCE_DIR}/src/include
         PRIVATE ${PROJECT_SOURCE_DIR}/test/include
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
         PRIVATE ${gflags_INCLUDE_DIR}
         )
 
