@@ -162,7 +162,7 @@ public:
     void clear() {
         cont_for_occ_.clear();
         cont_for_bt_.clear();
-        storage_set_.clear();
+        storage_count_.clear();
     }
 
     Status erase(write_set_obj* wso);
@@ -231,7 +231,7 @@ private:
     /**
      * @brief storage set.
      */
-    std::set<Storage> storage_set_;
+    std::unordered_map<Storage, std::size_t> storage_count_;
 
     std::shared_mutex mtx_;
 };
