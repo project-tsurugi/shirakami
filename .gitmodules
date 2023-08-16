@@ -1,12 +1,6 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
   url = https://github.com/google/googletest.git
-[submodule "third_party/yakushima"]
-	path = third_party/yakushima
-	url = git@github.com:project-tsurugi/yakushima.git
 [submodule "third_party/hopscotch-map"]
 	path = third_party/hopscotch-map
 	url = https://github.com/Tessil/hopscotch-map.git
-[submodule "third_party/limestone"]
-	path = third_party/limestone
-	url = git@github.com:project-tsurugi/limestone.git
