@@ -30,16 +30,30 @@ Status local_write_set::erase(write_set_obj* wso) {
 void local_write_set::get_storage_set(std::set<Storage>& out) {
     out.clear();
 
-    std::shared_lock<std::shared_mutex> lk{get_mtx()};
+    {
+        std::shared_lock<std::shared_mutex> lk1{get_mtx()};
+        if (!storage_set_.empty()) {
+            out = storage_set_;
+            return;
+        }
+    }
+    // take write lock to modify storage_set_
+    std::lock_guard<std::shared_mutex> lk2{get_mtx()};
+    // recheck
+    if (!storage_set_.empty()) {
+        out = storage_set_;
+        return;
+    }
     if (get_for_batch()) {
         for (auto&& wso : get_ref_cont_for_bt()) {
-            out.insert(wso.second.get_storage());
+            storage_set_.insert(wso.second.get_storage());
         }
     } else {
         for (auto&& wso : get_ref_cont_for_occ()) {
-            out.insert(wso.get_storage());
+            storage_set_.insert(wso.get_storage());
         }
     }
+    out = storage_set_;
 }
 
 void local_write_set::push(write_set_obj&& elem) {
