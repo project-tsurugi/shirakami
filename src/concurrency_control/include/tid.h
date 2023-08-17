@@ -114,25 +114,7 @@ public:
 
     void display();
 
-    void lock(bool by_gc = false) { // NOLINT
-        tid_word expected;
-        tid_word desired;
-        expected.get_obj() = loadAcquire(get_obj());
-        for (;;) {
-            if (expected.get_lock()) {
-                _mm_pause();
-                expected.get_obj() = loadAcquire(get_obj());
-            } else {
-                desired = expected;
-                desired.set_lock(true);
-                desired.set_lock_by_gc(by_gc);
-                if (compareExchange(get_obj(), expected.get_obj(),
-                                    desired.get_obj())) {
-                    break;
-                }
-            }
-        }
-    }
+    void lock(bool by_gc = false);
 
     /**
      * @pre This is called after lock() function.

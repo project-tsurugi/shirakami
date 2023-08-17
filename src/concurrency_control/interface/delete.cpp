@@ -37,7 +37,11 @@ namespace shirakami {
     return Status::OK;
 }
 
-inline void cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
+/**
+ * @return true canceled
+ * @return false not canceled
+*/
+inline bool cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
@@ -47,8 +51,10 @@ inline void cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
         delete_tid.set_latest(false);
         delete_tid.set_lock(false);
         storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
+        return true;
     }
     rec_ptr->get_tidw_ref().unlock();
+    return false;
 }
 
 static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
@@ -61,7 +67,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert_if_tomb_stone(wso->get_rec_ptr(), ti->get_step_epoch());
         ti->get_write_set().erase(wso);
-        // insert operation already registered read for ltx
+        // insert operation already registered read non-existence for ltx
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
@@ -74,8 +80,18 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
-        cancel_insert_if_tomb_stone(wso->get_rec_ptr(), ti->get_step_epoch());
-        ti->get_write_set().erase(wso);
+        [[maybe_unused]] auto rc = cancel_insert_if_tomb_stone(
+                wso->get_rec_ptr(), ti->get_step_epoch());
+        // escape info
+        Storage st = wso->get_storage();
+        Record* rec_ptr = wso->get_rec_ptr();
+        auto rs = ti->get_write_set().erase(wso);
+        if (rs != Status::OK) { LOG(ERROR) << "unexpected error: " << rs; }
+        if (!rc) {
+            // if this was update
+            ti->get_write_set().push({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+            register_read_if_ltx(ti, wso->get_rec_ptr());
+        }
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
     LOG(ERROR) << log_location_prefix << "unknown code path";
@@ -107,7 +123,7 @@ static void process_before_return_not_found(session* const ti,
 }
 
 Status delete_record_body(Token token, Storage storage,
-                     const std::string_view key) { // NOLINT
+                          const std::string_view key) { // NOLINT
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -120,9 +136,7 @@ Status delete_record_body(Token token, Storage storage,
 
     // check for write
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::DELETE)};
-    if (rc != Status::OK) {
-        return rc;
-    }
+    if (rc != Status::OK) { return rc; }
 
     // index access to check local write set
     Record* rec_ptr{};
@@ -130,9 +144,7 @@ Status delete_record_body(Token token, Storage storage,
     if (Status::OK == rc) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) {
-            return process_after_write(ti, in_ws);
-        }
+        if (in_ws != nullptr) { return process_after_write(ti, in_ws); }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {

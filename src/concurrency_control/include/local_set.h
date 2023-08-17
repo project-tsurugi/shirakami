@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <iterator>
 #include <map>
 #include <shared_mutex>
+#include <sstream>
 #include <string_view>
 
 #include "cpu.h"
@@ -228,6 +230,26 @@ private:
 
     std::shared_mutex mtx_;
 };
+
+inline std::ostream& operator<<(std::ostream& out,     // NOLINT
+                                local_write_set& ws) { // NOLINT
+                                                       // now occ only
+    std::stringstream ss;
+    ss << "for_batch_: " << ws.get_for_batch() << std::endl;
+    // for occ container
+    ss << "about occ container" << std::endl;
+    for (auto itr = ws.get_ref_cont_for_occ().begin();
+         itr != ws.get_ref_cont_for_occ().end(); ++itr) {
+        ss << "No " << std::distance(ws.get_ref_cont_for_occ().begin(), itr)
+           << ", storage_: " << itr->get_storage() << ", op_: " << itr->get_op()
+           << ", rec_ptr_: " << itr->get_rec_ptr() << ", val_: ";
+        std::string val_buf{};
+        itr->get_value(val_buf);
+        ss << val_buf << std::endl;
+    }
+    out << ss.str();
+    return out;
+}
 
 class local_sequence_set {
 public:
