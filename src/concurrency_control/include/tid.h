@@ -114,7 +114,7 @@ public:
 
     void display();
 
-    void lock(bool by_gc = false);
+    void lock(bool by_gc = false); // NOLINT
 
     /**
      * @pre This is called after lock() function.

@@ -64,7 +64,7 @@ void bg_commit::worker() {
     while (!worker_thread_end()) {
         sleepMs(epoch::get_global_epoch_time_ms());
 
-        std::set<std::size_t> checked_ids{};
+        std::set<std::size_t> checked_ids = {};
         Token token{};
         std::size_t tx_id{};
         session* ti{};
@@ -72,6 +72,14 @@ void bg_commit::worker() {
     REFIND : // NOLINT
     {
         std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+        // if cont empty then clear used_ids
+        if (cont_wait_tx().empty()) {
+            {
+                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                if (!used_ids().empty()) { used_ids().clear(); }
+            }
+            continue;
+        }
         auto itr = cont_wait_tx().begin();
         for (; itr != cont_wait_tx().end(); ++itr) {
             token = std::get<1>(*itr);
@@ -125,8 +133,11 @@ void bg_commit::worker() {
               * than this transaction wait for the result of this 
               * transaction.
               */
-            // erase from used_ids
             {
+                /**
+                 * concurrent thread へコミット処理を許容する。checked_ids によって
+                 * 自身は次の周回まで繰り返してトライすることは無い。
+                */
                 std::unique_lock<std::mutex> lk2{mtx_used_ids()};
                 used_ids().erase(tx_id);
             }
@@ -138,12 +149,12 @@ void bg_commit::worker() {
         {
             std::lock_guard<std::shared_mutex> lk1{mtx_cont_wait_tx()};
             cont_wait_tx().erase(std::make_tuple(tx_id, token));
-            // erase from used_ids
-            {
-                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
-                used_ids().erase(tx_id);
-            }
         }
+        /**
+         * used_ids から tx_id 要素を削除して並行スレッドへコミット処理を許容しては
+         * ならない。なぜならコミット処理が同一TXに対して重複してエラーになる。待ち
+         * リストが空になったら安全に used_ids をクリアする。
+        */
 
         goto REFIND; // NOLINT
     }

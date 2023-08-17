@@ -85,6 +85,8 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
         _mm_pause();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
     ASSERT_EQ(Status::ERR_CC, rc);
+    //auto* ti = static_cast<session*>(s2);
+    //EXPECT_EQ(ti->get_result_info().get_reason_code(), reason_code::KVS_INSERT);
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
