@@ -50,6 +50,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
         std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
         for (auto ols_itr = ti->get_overtaken_ltx_set().begin();
+             // for each storage
              ols_itr != ti->get_overtaken_ltx_set().end();) {
             auto& overtaken_ltx_ids = std::get<0>(ols_itr->second);
             // find bypass
@@ -171,7 +172,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                      * これは待ち確認のたびにパスを一つ短絡化するため、
                      * get_requested_commit() の確認を噛ませていない。
                      * */
-#if 0
+#if 1
                     out_status = waiting_bypass(ti);
                     return out_status == Status::OK;
 #else
