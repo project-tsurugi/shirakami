@@ -214,7 +214,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         if (rs == Status::ERR_READ_AREA_VIOLATION) {
             long_tx::abort(ti);
             ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
-            return rs;
+            return Status::ERR_CC;
         }
     }
 

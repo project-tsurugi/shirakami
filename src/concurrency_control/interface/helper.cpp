@@ -75,10 +75,19 @@ Status check_before_write_ops(session* const ti, Storage const st,
             return Status::WARN_WRITE_WITHOUT_WP;
         }
         if (op != OP_TYPE::UPSERT) {
+            // check for read area invalidation
+            auto rs = long_tx::check_read_area(ti, st);
+            if (rs == Status::ERR_READ_AREA_VIOLATION) {
+                std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
+                long_tx::abort(ti);
+                ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
+                return rs;
+            }
             // insert and delete with read
             // may need forwarding
             long_tx::wp_verify_and_forwarding(ti, wm, key);
         }
+
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {
         // check wp

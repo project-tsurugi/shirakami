@@ -122,6 +122,7 @@ extern Status check_commit(Token token); // NOLINT
  * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::OK success.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status delete_record(Token token, Storage storage, // NOLINT
                             std::string_view key);
@@ -211,6 +212,7 @@ extern Status init(database_options options = {}); // NOLINT
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status insert(Token token, Storage storage,
                      std::string_view key, // NOLINT
@@ -251,6 +253,7 @@ extern Status leave(Token token); // NOLINT
  * the fact that nothing was read is guaranteed by isolation.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
  * for some high priority transactions.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key,
@@ -393,6 +396,7 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_NOT_FOUND The record is not found.
+ * @return Status::ERR_CC Error about concurrency control.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
                      std::string_view val); // NOLINT

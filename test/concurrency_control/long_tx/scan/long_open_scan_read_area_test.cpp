@@ -96,7 +96,7 @@ TEST_F(long_open_scan_read_area_test,          // NOLINT
     wait_epoch_update();
     // test
     ScanHandle hd{};
-    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
+    ASSERT_EQ(Status::ERR_CC,
               open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         hd));
 
