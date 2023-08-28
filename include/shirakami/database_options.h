@@ -20,32 +20,22 @@ public:
         : open_mode_(om), log_directory_path_(log_directory_path) {}
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path,
-                     std::size_t logger_thread_num)
-        : open_mode_(om), log_directory_path_(log_directory_path),
-          logger_thread_num_(logger_thread_num) {}
 
-    database_options(open_mode om, std::filesystem::path&& log_directory_path,
-                     std::size_t logger_thread_num,
                      bool enable_logging_detail_info)
         : open_mode_(om), log_directory_path_(log_directory_path),
-          logger_thread_num_(logger_thread_num),
+
           enable_logging_detail_info_(enable_logging_detail_info) {}
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path,
-                     std::size_t logger_thread_num, std::size_t epoch_time,
-                     bool enable_logging_detail_info)
+                     std::size_t epoch_time, bool enable_logging_detail_info)
         : open_mode_(om), log_directory_path_(log_directory_path),
-          logger_thread_num_(logger_thread_num), epoch_time_(epoch_time),
+          epoch_time_(epoch_time),
           enable_logging_detail_info_(enable_logging_detail_info) {}
 
     open_mode get_open_mode() { return open_mode_; }
 
     std::filesystem::path get_log_directory_path() {
         return log_directory_path_;
-    }
-
-    [[nodiscard]] std::size_t get_logger_thread_num() const {
-        return logger_thread_num_;
     }
 
     [[nodiscard]] std::size_t get_epoch_time() const { return epoch_time_; }
@@ -59,8 +49,6 @@ public:
     void set_log_directory_path(std::filesystem::path& pt) {
         log_directory_path_ = pt;
     }
-
-    void set_logger_thread_num(std::size_t num) { logger_thread_num_ = num; }
 
     void set_epoch_time(std::size_t epoch) { epoch_time_ = epoch; }
 
@@ -78,11 +66,6 @@ private:
     // about logging
     std::filesystem::path log_directory_path_{""};
 
-    /**
-     * @brief todo. now, 1 thread. in the future, shirakami ask datastore module
-     * to use the number of logger_thread_num_ to use for logging.
-     */
-    std::size_t logger_thread_num_{0}; // NOLINT
     // ==========
 
     // ==========
@@ -125,7 +108,6 @@ inline std::ostream& operator<<(std::ostream& out,
 inline std::ostream& operator<<(std::ostream& out, database_options options) {
     return out << std::boolalpha << "open_mode:" << options.get_open_mode()
                << ", log_directory_path:" << options.get_log_directory_path()
-               << ", logger_thread_num:" << options.get_logger_thread_num()
                << ", enable_logging_detail_info:"
                << options.get_enable_logging_detail_info()
                << ", epoch_time:" << options.get_epoch_time();

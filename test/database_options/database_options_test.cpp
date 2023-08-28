@@ -36,7 +36,6 @@ TEST_F(database_options_test, print_out_object) { // NOLINT
     options.set_open_mode(database_options::open_mode::RESTORE);
     std::filesystem::path ldp{"hogehoge"};
     options.set_log_directory_path(ldp);
-    options.set_logger_thread_num(100); // NOLINT
     LOG(INFO) << options;
     options.set_epoch_time(100); // NOLINT
     LOG(INFO) << options;
