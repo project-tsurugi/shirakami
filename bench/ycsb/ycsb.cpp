@@ -325,9 +325,19 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                     if (ret == Status::ERR_CC) { goto ABORTED; } // NOLINT
                     if (ret != Status::OK) { LOG(FATAL) << "unexpected error"; }
                     ret = next(token, hd);
+                    if (loadAcquire(quit)) {
+                        // for fast exit if it is over exp time.
+                        // for scan loop
+                        goto ABORTED;
+                    }
                 } while (ret != Status::WARN_SCAN_LIMIT);
                 ret = close_scan(token, hd);
                 if (ret != Status::OK) { LOG(FATAL) << "unexpected error"; }
+            }
+            if (loadAcquire(quit)) {
+                // for fast exit if it is over exp time.
+                // for operation loop
+                goto ABORTED;
             }
         }
 
@@ -338,6 +348,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             do {
                 _mm_pause();
                 ret = check_commit(token);
+                if (loadAcquire(quit)) {
+                    // for fast exit if it is over exp time.
+                    // for waiting commit
+                    return;
+                }
             } while (ret == Status::WARN_WAITING_FOR_OTHER_TX);
         }
         if (ret == Status::OK) { // NOLINT
