@@ -101,8 +101,10 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 #endif
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:start_delete_all_records";
-    auto* fast_shutdown = std::getenv("TSURUGI_FAST_SHUTDOWN");
-    if (fast_shutdown != nullptr && std::strcmp(fast_shutdown, "1") == 0) {
+    auto* fast_shutdown_envstr = std::getenv("TSURUGI_FAST_SHUTDOWN");
+    bool fast_shutdown = fast_shutdown_envstr != nullptr
+                         && std::strcmp(fast_shutdown_envstr, "1") == 0;
+    if (fast_shutdown) {
         LOG(INFO) << log_location_prefix << "skipped delete_all_records";
     } else {
         delete_all_records(); // This should be before wp::fin();
@@ -115,6 +117,10 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     // about index
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:start_shutdown_yakushima";
+    if (fast_shutdown) {
+        yakushima::storage::get_storages()->store_root_ptr(nullptr);
+        LOG(INFO) << log_location_prefix << "skipping yakushima destroy";
+    }
     yakushima::fin();
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:end_shutdown_yakushima";
