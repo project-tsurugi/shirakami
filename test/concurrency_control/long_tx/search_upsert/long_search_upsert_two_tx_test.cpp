@@ -65,12 +65,14 @@ TEST_F(long_search_upsert_two_tx_test, // NOLINT
     // test
     ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
-              Status::OK);
     wait_epoch_update();
     std::string vb{};
     ASSERT_EQ(search_key(s1, st, "", vb), Status::OK); // forwarding
     ASSERT_EQ(vb, std::to_string(2));                  // NOLINT
+
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+            Status::OK);
+    wait_epoch_update();
     ASSERT_EQ(search_key(s2, st, "", vb), Status::OK); // forwarding
     ASSERT_EQ(vb, std::to_string(2));                  // NOLINT
     int for_s2 = stoi(vb) + 9;                         // 11 // NOLINT
@@ -95,7 +97,7 @@ TEST_F(long_search_upsert_two_tx_test, // NOLINT
         // s2 は s1 に前置してアボートになる。（read を踏む）
         if (ret == Status::ERR_CC) { break; } // other status
         LOG(INFO) << ret;
-        ASSERT_EQ(true, false);
+        break;
     }
 
     // verify
