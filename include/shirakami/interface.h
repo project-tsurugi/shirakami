@@ -122,7 +122,6 @@ extern Status check_commit(Token token); // NOLINT
  * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::OK success.
- * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status delete_record(Token token, Storage storage, // NOLINT
@@ -400,7 +399,6 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_NOT_FOUND The record is not found.
- * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
