@@ -123,6 +123,7 @@ extern Status check_commit(Token token); // NOLINT
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::OK success.
  * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status delete_record(Token token, Storage storage, // NOLINT
                             std::string_view key);
@@ -213,6 +214,7 @@ extern Status init(database_options options = {}); // NOLINT
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status insert(Token token, Storage storage,
                      std::string_view key, // NOLINT
@@ -254,6 +256,7 @@ extern Status leave(Token token); // NOLINT
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
  * for some high priority transactions.
  * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status open_scan(Token token, Storage storage, std::string_view l_key,
                         scan_endpoint l_end, std::string_view r_key,
@@ -356,6 +359,7 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status search_key(Token token, Storage storage, std::string_view key,
                          std::string& value); // NOLINT
@@ -397,6 +401,7 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
  * @return Status::WARN_NOT_FOUND The record is not found.
  * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 extern Status update(Token token, Storage storage, std::string_view key,
                      std::string_view val); // NOLINT

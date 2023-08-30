@@ -58,7 +58,7 @@ TEST_F(single_long_search_read_area_2_test, read_area_negative_hit) { // NOLINT
               Status::OK);
     wait_epoch_update();
     std::string vb{};
-    ASSERT_EQ(search_key(s, st, "", vb), Status::ERR_CC);
+    ASSERT_EQ(search_key(s, st, "", vb), Status::ERR_READ_AREA_VIOLATION);
     ASSERT_EQ(leave(s), Status::OK);
 }
 
