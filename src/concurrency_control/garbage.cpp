@@ -289,7 +289,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     };
 
     for (auto&& sr : scan_res) {
-        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
+        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr));
 
         // gathering stats info
         average_key_size += rec_ptr->get_key_view().size();
@@ -315,10 +315,10 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
-        std::size_t entry_num{};
-        std::size_t average_version_list_size{};
-        std::size_t average_key_size{};
-        std::size_t average_value_size{};
+        std::size_t entry_num;
+        std::size_t average_version_list_size;
+        std::size_t average_key_size;
+        std::size_t average_value_size;
         if (wp::get_page_set_meta_storage() != st) {
             unhooking_keys_and_pruning_versions_at_the_storage(
                     st, entry_num, average_version_list_size, average_key_size,
@@ -368,7 +368,7 @@ void output_gc_stats(stats_info_type const& stats_info) {
     ss << log_location_prefix_detail_info << "===Stats by GC===" << std::endl
        << "# storages: " << stats_info.size() << std::endl;
 
-    for (const auto& elem : stats_info) {
+    for (auto& elem : stats_info) {
         ss << "# entries: " << std::get<1>(elem) << std::endl
            << "avarage length of version list per entry: " << std::get<2>(elem)
            << std::endl
