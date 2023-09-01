@@ -2,8 +2,6 @@
 
 #include <mutex>
 #include <thread>
-#include <tuple>
-#include <vector>
 
 #include "concurrent_queue.h"
 
@@ -11,15 +9,10 @@
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/version.h"
 
-#include "shirakami/storage_options.h"
-
 #include "glog/logging.h"
 
 namespace shirakami::garbage {
 
-using stats_info_type =
-        std::vector<std::tuple<Storage, std::size_t, std::size_t, std::size_t,
-                               std::size_t>>;
 // background thread
 //================================================================================
 /**

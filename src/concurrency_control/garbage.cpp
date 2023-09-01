@@ -1,4 +1,4 @@
-#include <sstream>
+
 #include <xmmintrin.h>
 
 #include "clock.h"
@@ -82,17 +82,14 @@ void work_manager() {
     }
 }
 
-version* find_latest_invisible_version_from_batch(
-        Record* rec_ptr, version*& pre_ver,
-        std::size_t& average_version_list_size) {
+version* find_latest_invisible_version_from_batch(Record* rec_ptr,
+                                                  version*& pre_ver) {
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
         LOG(ERROR) << log_location_prefix << log_location_prefix
                    << "unreachable path";
     }
-    // gathering stats info
-    ++average_version_list_size;
     for (;;) {
         ver = ver->get_next();
         if (ver == nullptr) { return nullptr; }
@@ -101,8 +98,6 @@ version* find_latest_invisible_version_from_batch(
             pre_ver = ver;
             return ver->get_next();
         }
-        // gathering stats info
-        ++average_version_list_size;
     }
 }
 
@@ -211,9 +206,8 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     return Status::OK;
 }
 
-void unhooking_keys_and_pruning_versions(
-        yakushima::Token ytk, Storage st, Record* rec_ptr,
-        std::size_t& average_version_list_size) {
+void unhooking_keys_and_pruning_versions(yakushima::Token ytk, Storage st,
+                                         Record* rec_ptr) {
     // unhooking keys
     auto rc{unhooking_key(ytk, st, rec_ptr)};
     if (rc == Status::OK) {
@@ -227,8 +221,7 @@ void unhooking_keys_and_pruning_versions(
     }
 
     version* pre_ver{};
-    version* ver{find_latest_invisible_version_from_batch(
-            rec_ptr, pre_ver, average_version_list_size)};
+    version* ver{find_latest_invisible_version_from_batch(rec_ptr, pre_ver)};
     if (ver == nullptr) {
         // no version from long tx view.
         return;
@@ -244,8 +237,6 @@ void unhooking_keys_and_pruning_versions(
         pre_ver = ver;
         ver = ver->get_next();
         if (ver == nullptr) { return; }
-        // gathering stats info
-        ++average_version_list_size;
     }
     if (ver != nullptr) {
         // pruning versions
@@ -254,79 +245,37 @@ void unhooking_keys_and_pruning_versions(
     }
 }
 
-inline void unhooking_keys_and_pruning_versions_at_the_storage(
-        Storage st, std::size_t& record_num,
-        std::size_t& average_version_list_size, std::size_t& average_key_size,
-        std::size_t& average_value_size) {
+inline void
+unhooking_keys_and_pruning_versions_at_the_storage(Storage st,
+                                                   std::size_t& record_num) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
-    // init about stats
-    record_num = 0;
-    average_version_list_size = 0;
-    average_key_size = 0;
-    average_value_size = 0;
-
     // full scan
     yakushima::Token ytk{};
     while (yakushima::enter(ytk) != yakushima::status::OK) { _mm_pause(); }
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
-    if (scan_res.empty()) { return; } // empty by current action
-    // not empty
-
-    // gathering stats info
-    record_num = scan_res.size();
-
-    auto process_before_fin = [record_num, &average_version_list_size,
-                               &average_key_size, &average_value_size]() {
-        // maybe 0 due to current delete action or 0 length key or value
-        if (average_version_list_size != 0) {
-            average_version_list_size /= record_num;
-        }
-        if (average_key_size != 0) { average_key_size /= record_num; }
-        if (average_value_size != 0) { average_value_size /= record_num; }
-    };
-
     for (auto&& sr : scan_res) {
-        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr));
-
-        // gathering stats info
-        average_key_size += rec_ptr->get_key_view().size();
-        std::string buf;
-        rec_ptr->get_value(buf);
-        average_value_size += buf.size();
-
         unhooking_keys_and_pruning_versions(
-                ytk, st, rec_ptr, average_version_list_size); // NOLINT
-        if (get_flag_cleaner_end()) {
-            process_before_fin();
-            break;
-        }
+                ytk, st, reinterpret_cast<Record*>(std::get<1>(sr))); // NOLINT
+        if (get_flag_cleaner_end()) { break; }
     }
+
+    // for detail info
+    record_num += scan_res.size();
 
     // cleanup
     yakushima::leave(ytk);
-
-    process_before_fin();
 }
 
-inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
+inline void unhooking_keys_and_pruning_versions(std::size_t& record_num) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
-        std::size_t entry_num;
-        std::size_t average_version_list_size;
-        std::size_t average_key_size;
-        std::size_t average_value_size;
         if (wp::get_page_set_meta_storage() != st) {
-            unhooking_keys_and_pruning_versions_at_the_storage(
-                    st, entry_num, average_version_list_size, average_key_size,
-                    average_value_size);
+            unhooking_keys_and_pruning_versions_at_the_storage(st, record_num);
         }
-        stats_info.emplace_back(
-                std::make_tuple(st, entry_num, average_version_list_size,
-                                average_key_size, average_value_size));
         if (get_flag_cleaner_end()) { break; }
     }
 }
@@ -362,45 +311,50 @@ void release_key_memory() {
     }
 }
 
-void output_gc_stats(stats_info_type const& stats_info) {
-    std::stringstream ss;
-    ss.clear();
-    ss << log_location_prefix_detail_info << "===Stats by GC===" << std::endl
-       << "# storages: " << stats_info.size() << std::endl;
-
-    for (auto& elem : stats_info) {
-        ss << "# entries: " << std::get<1>(elem) << std::endl
-           << "avarage length of version list per entry: " << std::get<2>(elem)
-           << std::endl
-           << "average key size per entry: " << std::get<3>(elem) << std::endl
-           << "average value size per entry: " << std::get<4>(elem)
-           << std::endl;
-    }
-    VLOG(log_trace) << ss.str();
-}
-
 void work_cleaner() {
     while (!get_flag_cleaner_end()) {
         // prepare for detail info
-        /**
-         * Storage, number of entry in the storage, average length of version,
-         * average length of key, average length of value
-         **/
-        stats_info_type stats_info;
-        stats_info.clear();
+        std::size_t record_num = 0;
 
         // gc
         {
             std::unique_lock lk{get_mtx_cleaner()};
-            unhooking_keys_and_pruning_versions(stats_info);
+            unhooking_keys_and_pruning_versions(record_num);
             release_key_memory();
         }
 
         // output detail info
         if (logging::get_enable_logging_detail_info()) {
             // logging detail info
-            output_gc_stats(stats_info);
+            std::size_t estimation_border_node_num =
+                    record_num / (yakushima::key_slice_length / 2);
+            std::size_t estimation_interior_node_num = 0;
+            // consider number of interior node from botom to top
+            std::size_t each_level_interior_node_num =
+                    estimation_border_node_num /
+                    (yakushima::interior_node::child_length / 2);
+            while (each_level_interior_node_num >=
+                   (yakushima::interior_node::child_length / 2)) {
+                estimation_interior_node_num += each_level_interior_node_num;
+                each_level_interior_node_num /=
+                        (yakushima::interior_node::child_length / 2);
+            }
+            estimation_interior_node_num++; // for root node.
+#if 0
+            std::size_t estimation_memory =
+                    sizeof(yakushima::border_node) *
+                            estimation_border_node_num +
+                    sizeof(yakushima::interior_node) *
+                            estimation_interior_node_num;
+#endif
+            VLOG(log_trace) << log_location_prefix_detail_info << "GC found "
+                            << record_num
+                            << " records. Estimation of number of nodes in "
+                               "Yakushima(Filling rate is 50%): interior node: "
+                            << estimation_interior_node_num
+                            << ", border node: " << estimation_border_node_num;
         }
+
 
         // sleep
         sleepMs(epoch::get_global_epoch_time_ms());
