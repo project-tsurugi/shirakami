@@ -163,4 +163,27 @@ TEST_F(double_insert, insert_insert_conflict_abort_commit) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(double_insert, insert_commit_insert_commit_serial) { // NOLINT
+
+    // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s1{};
+    ASSERT_EQ(Status::OK, enter(s1));
+
+    // test
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::WARN_ALREADY_EXISTS, insert(s1, st, "", ""));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+}
+
 } // namespace shirakami::testing
