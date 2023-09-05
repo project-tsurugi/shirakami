@@ -150,4 +150,65 @@ TEST_F(short_insert_scan_test,                   // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(short_insert_scan_test,                   // NOLINT
+        scan_insert_commit_fail) { // NOLINT
+    Storage st;
+    ASSERT_EQ(Status::OK, create_storage("", st));
+
+    Token s;
+
+    std::string km1("/");
+    std::string k00("0");
+    std::string kp1("1");
+
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
+
+    ASSERT_EQ(Status::OK, insert(s, st, k00, ""));
+    ASSERT_EQ(Status::OK, insert(s, st, kp1, ""));
+
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK, tx_begin({s}));
+
+    ScanHandle sh;
+    std::string key;
+    std::string val;
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, sh));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, sh, key));
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, sh, val));
+    ASSERT_EQ(key, k00);
+    ASSERT_EQ(val, "");
+
+    ASSERT_EQ(Status::OK, search_key(s, st, key, val));
+    ASSERT_EQ(val, "");
+
+    ASSERT_EQ(Status::OK, delete_record(s, st, key));
+    ASSERT_EQ(Status::OK, insert(s, st, km1, ""));
+
+    ASSERT_EQ(Status::OK, next(s, sh));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, sh, key));
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, sh, val));
+    ASSERT_EQ(key, kp1);
+    ASSERT_EQ(val, "");
+
+    ASSERT_EQ(Status::OK, search_key(s, st, key, val));
+    ASSERT_EQ(val, "");
+
+    ASSERT_EQ(Status::OK, delete_record(s, st, key));
+    ASSERT_EQ(Status::OK, insert(s, st, k00, ""));
+
+    ASSERT_EQ(next(s, sh), Status::WARN_SCAN_LIMIT);
+
+    EXPECT_EQ(Status::OK, commit(s));
+
+    {
+        auto tri = transaction_result_info(s);
+        std::cerr << *tri;
+    }
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 } // namespace shirakami::testing
