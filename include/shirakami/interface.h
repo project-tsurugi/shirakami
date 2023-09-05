@@ -74,6 +74,12 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @return false otherwise (`callback` will be called asynchronously)
  */
 extern bool commit(Token token, commit_callback_type callback);
+
+/**
+ * @brief old api. it is planed to remove from api.
+*/
+extern Status commit(Token token); // NOLINT
+
 /**
  * @brief It checks result of the transaction requested commit.
  * @param[in] token This should be the token which was used for commit api.
