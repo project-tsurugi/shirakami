@@ -19,6 +19,7 @@
 #include "transaction_options.h"
 #include "transaction_state.h"
 #include "tuple.h"
+#include "tx_state_notification.h"
 
 namespace shirakami {
 
@@ -47,24 +48,33 @@ extern Status abort(Token token); // NOLINT
 extern Status close_scan(Token token, ScanHandle handle); // NOLINT
 
 /**
- * @brief It checks this transaction can commit and executes commit.
- * @details If this function return ERR_... status, this called abort function 
- * implicitly. Otherwise, it commits.
- * @param[in] token retrieved by enter().
- * @pre You executed enter command and you didn't execute leave command.
- * @return Status::ERR_CC Error about concurrency control.
- * @return Status::ERR_KVS Error about key value store.
- * @return Status::OK success.
- * @return Status::WARN_NOT_BEGIN This transaction was not begun.
- * @return Status::WARN_PREMATURE The long transaction must wait until the 
- * changing epoch to query some operation.
- * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
+ * @brief commit function with result notified by callback
+ * @param token the target transaction control handle retrieved with enter().
+ * @param callback the callback function invoked when (pre-)commit completes. 
+ * It's called exactly once. If this function returns false, caller must keep 
+ * the `callback` safely callable until its call, including not only the 
+ * successful commit but the case when transaction is aborted for some reason, 
+ * e.g. error with commit validation, or database is suddenly closed, etc.
+ *
+ * The callback receives following StatusCode:
+ *   - Status::ERR_CC Error about concurrency control.
+ *   - Status::ERR_KVS Error about key value store.
+ *   - Status::OK success
+ *   - Status::WARN_NOT_BEGIN This transaction was not begun.
+ *   - Status::WARN_PREMATURE The long transaction must wait until the changing 
+ * epoch to query some operation.
+ *   - Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
  * for finishing commit by other high priority tx. You must execute check_commit 
  * to check result. If you use other api (ex. data access api), it causes 
  * undefined behavior. 
+ * On successful commit completion (i.e. Status::OK is passed) 
+ * durability_marker_type is available. Otherwise (and abort occurs on commit 
+ * try,) reason_code is available to indicate the abort reason.
+ *
+ * @return true if calling callback completed by the end of this function call
+ * @return false otherwise (`callback` will be called asynchronously)
  */
-extern Status commit(Token token); // NOLINT
-
+extern bool commit(Token token, commit_callback_type callback);
 /**
  * @brief It checks result of the transaction requested commit.
  * @param[in] token This should be the token which was used for commit api.
