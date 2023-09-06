@@ -109,7 +109,7 @@ Status init(database_options options) { // NOLINT
         recover(datastore::get_datastore());
     }
     datastore::get_datastore()->add_persistent_callback(
-            epoch::set_durable_epoch); // should execute before ready()
+            epoch::set_datastore_durable_epoch); // should execute before ready()
     /**
      * This executes create_channel and pass it to shirakami's executor.
      */

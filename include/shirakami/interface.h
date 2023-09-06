@@ -63,9 +63,6 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  *   - Status::WARN_NOT_BEGIN This transaction was not begun.
  *   - Status::WARN_PREMATURE The long transaction must wait until the changing 
  * epoch to query some operation.
- *   - Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
- * for finishing commit by other high priority tx. If you use other api (ex. 
- * data access api) after this command, it causes undefined behavior. 
  * On successful commit completion (i.e. Status::OK is passed) 
  * durability_marker_type is available. Otherwise (and abort occurs on commit 
  * try,) reason_code is available to indicate the abort reason.

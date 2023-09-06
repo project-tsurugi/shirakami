@@ -53,7 +53,7 @@ TEST_F(li_persistent_callback_test, check_persistent_call_back) { // NOLINT
     init();
     for (;;) {
         sleepMs(epoch::get_global_epoch_time_ms());
-        if (epoch::get_durable_epoch() > 20) { break; } // NOLINT
+        if (epoch::get_datastore_durable_epoch() > 20) { break; } // NOLINT
     }
     fin();
 }

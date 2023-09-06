@@ -34,7 +34,7 @@ inline std::atomic<std::size_t> global_epoch_time_ms{40}; // NOLINT
  */
 inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch + 1}; // NOLINT
 
-inline std::atomic<epoch_t> durable_epoch{0}; // NOLINT
+inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
 
@@ -42,8 +42,8 @@ inline std::atomic<epoch_t> durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] inline std::mutex ep_mtx_; // NOLINT
 
-[[maybe_unused]] static epoch_t get_durable_epoch() { // NOLINT
-    return durable_epoch.load(std::memory_order_acquire);
+[[maybe_unused]] static epoch_t get_datastore_durable_epoch() { // NOLINT
+    return datastore_durable_epoch.load(std::memory_order_acquire);
 }
 
 [[maybe_unused]] static bool get_epoch_thread_end() { // NOLINT
@@ -78,8 +78,8 @@ inline std::atomic<epoch_t> durable_epoch{0}; // NOLINT
     global_epoch_time_ms.store(num, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_durable_epoch(epoch_t ep) {
-    durable_epoch.store(ep, std::memory_order_release);
+[[maybe_unused]] static void set_datastore_durable_epoch(epoch_t ep) {
+    datastore_durable_epoch.store(ep, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_cc_safe_ss_epoch(const epoch_t ep) {
