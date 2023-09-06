@@ -101,8 +101,12 @@ Status init(database_options options) { // NOLINT
     std::string metadata_dir{log_dir + "m"};
     boost::filesystem::path metadata_path(metadata_dir);
     try {
-        datastore::start_datastore(
-                limestone::api::configuration(data_locations, metadata_path));
+        auto limestone_config =
+                limestone::api::configuration(data_locations, metadata_path);
+        if (int max_para = options.get_recover_max_parallelism(); max_para > 0) {
+            limestone_config.set_recover_max_parallelism(max_para);
+        }
+        datastore::start_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {

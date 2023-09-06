@@ -40,6 +40,10 @@ public:
 
     [[nodiscard]] std::size_t get_epoch_time() const { return epoch_time_; }
 
+    [[nodiscard]] int get_recover_max_parallelism() const {
+        return recover_max_parallelism_;
+    }
+
     [[nodiscard]] bool get_enable_logging_detail_info() const {
         return enable_logging_detail_info_;
     }
@@ -51,6 +55,8 @@ public:
     }
 
     void set_epoch_time(std::size_t epoch) { epoch_time_ = epoch; }
+
+    void set_recover_max_parallelism(int num) { recover_max_parallelism_ = num; }
 
     void set_enable_logging_detail_info(bool tf) {
         enable_logging_detail_info_ = tf;
@@ -74,6 +80,11 @@ private:
      * @brief Parameter of epoch [ms]
      */
     std::size_t epoch_time_{40}; // NOLINT
+    // ==========
+
+    // ==========
+    // about recovery
+    int recover_max_parallelism_{0};
     // ==========
 
     // ==========
@@ -110,7 +121,8 @@ inline std::ostream& operator<<(std::ostream& out, database_options options) {
                << ", log_directory_path:" << options.get_log_directory_path()
                << ", enable_logging_detail_info:"
                << options.get_enable_logging_detail_info()
-               << ", epoch_time:" << options.get_epoch_time();
+               << ", epoch_time:" << options.get_epoch_time()
+               << ", recover_max_parallelism_:" << options.get_recover_max_parallelism();
 }
 
 } // namespace shirakami
