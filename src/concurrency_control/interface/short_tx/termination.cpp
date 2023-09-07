@@ -689,15 +689,24 @@ void process_tx_state(session* ti,
     }
 }
 
+void call_commit_callback(commit_callback_type cb, Status sc, reason_code rc,
+                          durability_marker_type dm) {
+    if (cb) { cb(sc, rc, dm); }
+}
+
 extern Status commit(session* const ti) {
+    // get commit callback
+    auto cb = ti->get_commit_callback();
+
     // write lock phase
     tid_word commit_tid{};
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
         short_tx::abort(ti);
+        call_commit_callback(cb, rc, ti->get_result_info().get_reason_code(),
+                             0);
         return rc;
     }
-
 
     epoch::epoch_t ce{epoch::get_global_epoch()};
 
@@ -706,6 +715,8 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         unlock_write_set(ti);
         short_tx::abort(ti);
+        call_commit_callback(cb, rc, ti->get_result_info().get_reason_code(),
+                             0);
         return rc;
     }
 
@@ -715,6 +726,8 @@ extern Status commit(session* const ti) {
         unlock_write_set(ti);
         short_tx::abort(ti);
         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+        call_commit_callback(cb, rc, ti->get_result_info().get_reason_code(),
+                             0);
         return rc;
     }
 
@@ -756,6 +769,7 @@ extern Status commit(session* const ti) {
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);
 
+    call_commit_callback(cb, rc, {}, ce);
     return Status::OK;
 }
 

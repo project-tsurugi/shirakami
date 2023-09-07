@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <vector>
 
 #include "shirakami/tx_state_notification.h"
@@ -7,6 +8,8 @@
 namespace shirakami {
 
 inline std::vector<durability_callback_type> durability_callbacks{};
+
+inline std::mutex mtx_durability_callbacks{};
 
 /**
  * @brief Registration of durability_callback.
@@ -22,6 +25,10 @@ extern void clear_durability_callbacks();
 [[maybe_unused]] static std::vector<durability_callback_type>&
 get_durability_callbacks() {
     return durability_callbacks;
+}
+
+[[maybe_unused]] static std::mutex& get_mtx_durability_callbacks() {
+    return mtx_durability_callbacks;
 }
 
 } // namespace shirakami

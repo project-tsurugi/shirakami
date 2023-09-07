@@ -285,6 +285,8 @@ public:
 
     local_read_set_for_ltx& read_set_for_ltx() { return read_set_for_ltx_; }
 
+    commit_callback_type get_commit_callback() { return commit_callback_; }
+
     // ========== end: long tx
 
     // ========== stat: result info
@@ -458,6 +460,8 @@ public:
     void set_valid_epoch(epoch::epoch_t ep) {
         valid_epoch_.store(ep, std::memory_order_release);
     }
+
+    void set_commit_callback(commit_callback_type cb) { commit_callback_ = cb; }
 
     // ========== end: long tx
 
@@ -687,6 +691,11 @@ private:
     std::atomic<epoch::epoch_t> read_version_max_epoch_{};
 
     local_read_set_for_ltx read_set_for_ltx_;
+
+    /**
+     * @brief Memory for waiting ltx
+    */
+    commit_callback_type commit_callback_{};
 
     // ========== end: long tx
 

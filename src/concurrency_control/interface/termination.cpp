@@ -54,10 +54,15 @@ Status abort(Token token) { // NOLINT
     return ret;
 }
 
-Status commit_body(Token const token) { // NOLINT
+Status commit_body(Token const token,
+                   commit_callback_type callback = {}) { // NOLINT
+    // default 引数は後方互換性のため。いずれ削除する。
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+
+    // log callback
+    ti->set_commit_callback(callback);
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
@@ -112,6 +117,14 @@ Status commit(Token const token) { // NOLINT
     auto ret = commit_body(token);
     ti->process_before_finish_step();
     return ret;
+}
+
+bool commit(Token token, commit_callback_type callback) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    auto ret = commit_body(token, callback);
+    ti->process_before_finish_step();
+    return ret == Status::WARN_WAITING_FOR_OTHER_TX;
 }
 
 Status check_commit(Token token) {

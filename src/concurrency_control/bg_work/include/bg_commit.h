@@ -9,6 +9,8 @@
 
 #include "shirakami/scheme.h"
 
+#include "shirakami/tx_state_notification.h"
+
 namespace shirakami::bg_work {
 
 class bg_commit {
@@ -18,7 +20,8 @@ public:
      * of long transactions.
      */
     static constexpr std::size_t th_num = 2;
-    using cont_type = std::set<std::tuple<std::size_t, Token>>;
+    using cont_type =
+            std::set<std::tuple<std::size_t, Token>>;
     using worker_cont_type = std::array<std::thread, th_num>;
     using used_ids_type = std::set<std::size_t>;
 

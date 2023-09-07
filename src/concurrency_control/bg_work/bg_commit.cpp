@@ -69,7 +69,7 @@ void bg_commit::worker() {
         std::size_t tx_id{};
         session* ti{};
     // find process tx
-    REFIND : // NOLINT
+    REFIND: // NOLINT
     {
         std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
         // if cont empty then clear used_ids
