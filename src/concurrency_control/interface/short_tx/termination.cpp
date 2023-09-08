@@ -689,8 +689,8 @@ void process_tx_state(session* ti,
     }
 }
 
-void call_commit_callback(commit_callback_type cb, Status sc, reason_code rc,
-                          durability_marker_type dm) {
+void call_commit_callback(commit_callback_type const& cb, Status sc,
+                          reason_code rc, durability_marker_type dm) {
     if (cb) { cb(sc, rc, dm); }
 }
 

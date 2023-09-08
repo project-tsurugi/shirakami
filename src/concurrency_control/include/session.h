@@ -461,7 +461,9 @@ public:
         valid_epoch_.store(ep, std::memory_order_release);
     }
 
-    void set_commit_callback(commit_callback_type cb) { commit_callback_ = cb; }
+    void set_commit_callback(commit_callback_type cb) {
+        commit_callback_ = std::move(cb);
+    }
 
     // ========== end: long tx
 
