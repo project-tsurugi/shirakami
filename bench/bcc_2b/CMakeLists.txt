@@ -13,7 +13,6 @@ target_link_libraries(bcc_2b
         PRIVATE glog::glog
         PRIVATE shirakami
         PRIVATE shirakami-impl
-        PRIVATE tsl::hopscotch_map
         PRIVATE ${tbb_prefix}tbb
         PRIVATE ${tbb_prefix}tbbmalloc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy

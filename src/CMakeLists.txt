@@ -42,7 +42,6 @@ target_link_libraries(shirakami
         PUBLIC api
         PRIVATE Boost::filesystem
         PRIVATE glog::glog
-        PRIVATE tsl::hopscotch_map
         PRIVATE ${tbb_prefix}tbb
         PRIVATE ${tbb_prefix}tbbmalloc
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
