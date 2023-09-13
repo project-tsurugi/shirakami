@@ -54,8 +54,8 @@ TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
+    stop_epoch();
     {
-        std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
         ASSERT_EQ(Status::OK,
                   tx_begin({s,
                             transaction_options::transaction_type::READ_ONLY}));
@@ -64,6 +64,7 @@ TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
     }
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
@@ -79,17 +80,14 @@ TEST_F(read_only_scan_test, start_before_epoch_long_tx_exist) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, enter(s2));
     ScanHandle hd{};
-    {
-        std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s2, transaction_options::transaction_type::LONG}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s,
-                            transaction_options::transaction_type::READ_ONLY}));
-        ASSERT_EQ(Status::WARN_PREMATURE,
-                  open_scan(s, st, "", scan_endpoint::INF, "",
-                            scan_endpoint::INF, hd));
-    } // start epoch
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s2, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::WARN_PREMATURE, open_scan(s, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, hd));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));

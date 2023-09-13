@@ -120,12 +120,14 @@ TEST_F(long_insert_update_test,                       // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
 
     // test
@@ -159,12 +161,14 @@ TEST_F(long_insert_update_test,                             // NOLINT
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
 
     // test
@@ -195,17 +199,14 @@ TEST_F(long_insert_update_test,                     // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    {
-        std::unique_lock stop_epoch{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s1,
-                            transaction_options::transaction_type::LONG,
-                            {st}}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s2,
-                            transaction_options::transaction_type::LONG,
-                            {st}}));
-    }
+    stop_epoch();
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
 
     // test

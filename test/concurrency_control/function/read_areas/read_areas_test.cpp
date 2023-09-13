@@ -93,6 +93,7 @@ TEST_F(read_areas_test, // NOLINT
 
     // ==========
     // within epoch
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -103,6 +104,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -140,6 +142,7 @@ TEST_F(read_areas_test, // NOLINT
 
     // ==========
     // 1 epoch
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -150,6 +153,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -188,6 +192,7 @@ TEST_F(read_areas_test, // NOLINT
 
     // ==========
     // two wait within epoch
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -202,6 +207,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -249,6 +255,7 @@ TEST_F(read_areas_test, // NOLINT
 
     // ==========
     // two wait one epoch
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -263,6 +270,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -311,6 +319,7 @@ TEST_F(read_areas_test, // NOLINT
 
     // ==========
     // two wait two epoch
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -325,6 +334,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
@@ -96,20 +97,19 @@ TEST_F(short_scan_long_upsert_test,         // NOLINT
               tx_begin({ss, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(ss, st, "", ""));
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({ss}), Status::OK); // NOLINT
-        ASSERT_EQ(tx_begin({sb,                // NOLINT
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ScanHandle hd{};
-        ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
-                                        scan_endpoint::INF, hd));
-        std::string buf{};
-        ASSERT_EQ(Status::OK, read_key_from_scan(ss, hd, buf));
-        ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({ss}), Status::OK); // NOLINT
+    ASSERT_EQ(tx_begin({sb,                // NOLINT
+                        transaction_options::transaction_type::LONG,
+                        {st}}),
+              Status::OK);
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(ss, hd, buf));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, upsert(sb, st, "", ""));
     ASSERT_EQ(Status::OK, commit(sb)); // NOLINT
@@ -132,19 +132,18 @@ TEST_F(short_scan_long_upsert_test,        // NOLINT
     ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
     // end prepare data
     // start test
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({ss}), Status::OK); // NOLINT
-        ASSERT_EQ(tx_begin({sb,                // NOLINT
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ScanHandle hd{};
-        ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
-                                        scan_endpoint::INF, hd));
-        std::string buf{};
-        ASSERT_EQ(Status::OK, read_key_from_scan(ss, hd, buf));
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({ss}), Status::OK); // NOLINT
+    ASSERT_EQ(tx_begin({sb,                // NOLINT
+                        transaction_options::transaction_type::LONG,
+                        {st}}),
+              Status::OK);
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(ss, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(ss, hd, buf));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::ERR_CC, commit(ss)); // NOLINT
     // due to wp

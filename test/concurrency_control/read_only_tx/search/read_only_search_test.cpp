@@ -58,14 +58,12 @@ TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     std::string buf{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s,
-                            transaction_options::transaction_type::READ_ONLY}));
-        // operation before start epoch
-        ASSERT_EQ(Status::WARN_PREMATURE, search_key(s, st, "", buf));
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    // operation before start epoch
+    ASSERT_EQ(Status::WARN_PREMATURE, search_key(s, st, "", buf));
+    resume_epoch();
     wait_epoch_update();
     // operation after start epoch
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", buf));

@@ -17,7 +17,8 @@ namespace shirakami::testing {
 // ltx/rtx search_key may read inserting record
 
 class tsurugi_issue323
-    : public ::testing::TestWithParam<std::tuple<transaction_type, transaction_type>> {
+    : public ::testing::TestWithParam<
+              std::tuple<transaction_type, transaction_type>> {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
@@ -37,12 +38,15 @@ private:
 };
 
 INSTANTIATE_TEST_SUITE_P( // NOLINT
-    TxTypePair, tsurugi_issue323, ::testing::Values(
-        std::make_tuple(transaction_type::SHORT, transaction_type::LONG),
-        std::make_tuple(transaction_type::SHORT, transaction_type::READ_ONLY),
-        std::make_tuple(transaction_type::LONG, transaction_type::LONG),
-        std::make_tuple(transaction_type::LONG, transaction_type::READ_ONLY)
-    ));
+        TxTypePair, tsurugi_issue323,
+        ::testing::Values(std::make_tuple(transaction_type::SHORT,
+                                          transaction_type::LONG),
+                          std::make_tuple(transaction_type::SHORT,
+                                          transaction_type::READ_ONLY),
+                          std::make_tuple(transaction_type::LONG,
+                                          transaction_type::LONG),
+                          std::make_tuple(transaction_type::LONG,
+                                          transaction_type::READ_ONLY)));
 
 void wait_start_tx(Token tx) {
     TxStateHandle sth{};
@@ -85,9 +89,7 @@ TEST_P(tsurugi_issue323, must_not_read_inserting_record) { // NOLINT
 
     std::string got_value;
     auto rc_search = search_key(txr, st, key, got_value);
-    if (rc_search == Status::OK) {
-        EXPECT_EQ(got_value, value);
-    }
+    if (rc_search == Status::OK) { EXPECT_EQ(got_value, value); }
 
     ASSERT_OK(abort(txw));
     ASSERT_OK(leave(txw));

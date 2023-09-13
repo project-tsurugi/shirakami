@@ -123,7 +123,6 @@ Status init(database_options options) { // NOLINT
 
     // about cc
     session_table::init_session_table();
-    //epoch::invoke_epoch_thread();
 
     // about index
     // pre condition : before wp::init() because wp::init() use yakushima function.

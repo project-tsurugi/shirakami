@@ -96,29 +96,23 @@ TEST_F(read_wait_two_cascading_dscending_within_epoch_test, // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s.at(1),
-                            transaction_options::transaction_type::LONG,
-                            {stz}}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s.at(2),
-                            transaction_options::transaction_type::LONG,
-                            {sta}}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s.at(3),
-                            transaction_options::transaction_type::LONG,
-                            {stb}}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s.at(4),
-                            transaction_options::transaction_type::LONG,
-                            {sty}}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s.at(5),
-                            transaction_options::transaction_type::LONG,
-                            {stx}}));
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK, tx_begin({s.at(1),
+                                    transaction_options::transaction_type::LONG,
+                                    {stz}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(2),
+                                    transaction_options::transaction_type::LONG,
+                                    {sta}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3),
+                                    transaction_options::transaction_type::LONG,
+                                    {stb}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(4),
+                                    transaction_options::transaction_type::LONG,
+                                    {sty}}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(5),
+                                    transaction_options::transaction_type::LONG,
+                                    {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));

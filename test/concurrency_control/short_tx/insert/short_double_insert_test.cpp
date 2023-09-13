@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/session.h"
@@ -46,7 +47,7 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
     std::string v("v");
     Token s{};
     {
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
+        stop_epoch();
         ASSERT_EQ(Status::OK, enter(s));
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
@@ -65,6 +66,7 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, insert(s, st, k, v));
     }
+    resume_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }

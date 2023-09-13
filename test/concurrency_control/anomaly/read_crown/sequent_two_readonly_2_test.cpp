@@ -90,6 +90,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     // note: o is occ, l is ltx, x is omit
     // ltx4_prep_omit
     // lllxl
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -99,6 +100,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stv, v, buf));
     ASSERT_EQ(buf, var.at(0));

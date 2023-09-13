@@ -22,4 +22,11 @@ static inline void wait_cc_safe_ss_epoch_update() {
     }
 }
 
+static inline void stop_epoch() {
+    epoch::set_perm_to_proc(1);
+    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+}
+
+static inline void resume_epoch() { epoch::set_perm_to_proc(-1); }
+
 } // namespace shirakami

@@ -55,14 +55,11 @@ TEST_F(long_delete_test, start_before_epoch) { // NOLINT
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
-    {
-        std::unique_lock stop_epoch{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s,
-                            transaction_options::transaction_type::LONG,
-                            {st}}));
-        ASSERT_EQ(Status::WARN_PREMATURE, delete_record(s, st, ""));
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ASSERT_EQ(Status::WARN_PREMATURE, delete_record(s, st, ""));
+    resume_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -80,12 +77,11 @@ TEST_F(long_delete_test, single_long_delete) { // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    wait_epoch_update();
-    wait_epoch_update();
-    wait_epoch_update();
-    // verify key existence
-    Record* rec_ptr{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, get<Record>(st, "", rec_ptr));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    std::string vb{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s));
 }
@@ -130,10 +126,12 @@ TEST_F(long_delete_test, delete_two_key_and_check_wp_result) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // test
+    stop_epoch();
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
+    resume_epoch();
     wait_epoch_update();
     std::string vb{};
     // block gc about write presreve result info

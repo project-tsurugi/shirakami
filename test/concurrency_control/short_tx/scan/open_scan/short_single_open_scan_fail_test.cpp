@@ -1,6 +1,8 @@
 
 #include <mutex>
 
+#include "test_tool.h"
+
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
@@ -106,8 +108,7 @@ TEST_F(open_scan_fail_test,                                        // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     {
-        std::unique_lock<std::mutex> stop_epoch_for_stop_gc(
-                epoch::get_ep_mtx());
+        stop_epoch();
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
@@ -121,6 +122,7 @@ TEST_F(open_scan_fail_test,                                        // NOLINT
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
     }
+    resume_epoch();
 
     ASSERT_EQ(Status::OK, leave(s));
 }

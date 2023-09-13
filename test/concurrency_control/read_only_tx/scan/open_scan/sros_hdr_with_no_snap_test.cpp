@@ -1,6 +1,7 @@
 
 #include <mutex>
 
+#include "test_tool.h"
 
 #include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/session.h"
@@ -58,22 +59,19 @@ TEST_F(open_scan_test,                   // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
-        {
-            // for no snapshot
-            std::unique_lock mtx_e{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        // for no snapshot
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         // test
         ASSERT_EQ(Status::OK,
@@ -105,24 +103,21 @@ TEST_F(open_scan_test,                   // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
-        {
-            // for no snapshot
-            std::unique_lock mtx_e{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        // for no snapshot
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k2));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k2));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         // test
         ASSERT_EQ(Status::OK,
@@ -155,26 +150,23 @@ TEST_F(open_scan_test,                     // NOLINT
     {
         // for stop gc
         std::unique_lock mtx_c{garbage::get_mtx_cleaner()};
-        {
-            // for no snapshot
-            std::unique_lock mtx_e{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        // for no snapshot
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k2));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k3));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k2));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k3));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         // test
         ASSERT_EQ(Status::OK,

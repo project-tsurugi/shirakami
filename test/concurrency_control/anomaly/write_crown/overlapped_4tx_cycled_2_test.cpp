@@ -528,29 +528,28 @@ TEST_F(overlapped_4tx_cycled_2_test, all) { // NOLINT
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
     wait_epoch_update();
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
-        ASSERT_EQ(buf, v.at(0));
-        ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
-        ASSERT_EQ(buf, v.at(0));
-        ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
-        ASSERT_EQ(buf, v.at(0));
-        ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
-        ASSERT_EQ(buf, v.at(0));
-        ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
-        ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-        ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
-        ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
-        ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
-        ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
-        ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
-        ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
-        ASSERT_EQ(Status::OK, commit(s.at(1)));
-        ASSERT_EQ(Status::OK, commit(s.at(2)));
-        ASSERT_EQ(Status::OK, commit(s.at(3)));
-        ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(2), sty, y, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(3), stz, z, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
+    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(3), stb, b, v.at(3)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stz, z, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(2), stb, b, v.at(2)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
+    ASSERT_EQ(Status::OK, upsert(s.at(1), stb, b, v.at(1)));
+    ASSERT_EQ(Status::OK, commit(s.at(1)));
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
+    resume_epoch();
 
     // verify
     ASSERT_EQ(

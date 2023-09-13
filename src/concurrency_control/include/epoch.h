@@ -25,9 +25,9 @@ static constexpr epoch_t max_epoch{INT64_MAX};
 inline std::atomic<epoch_t> global_epoch{initial_epoch}; // NOLINT
 
 /**
- * @brief Global epoch time. Default is 40 ms.
+ * @brief Global epoch time. Default is 40 ms == 40,000 us.
  */
-inline std::atomic<std::size_t> global_epoch_time_ms{40}; // NOLINT
+inline std::atomic<std::size_t> global_epoch_time_us{40 * 1000}; // NOLINT
 
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
@@ -56,8 +56,8 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
     return global_epoch.load(std::memory_order_acquire);
 }
 
-[[maybe_unused]] static std::size_t get_global_epoch_time_ms() { // NOLINT
-    return global_epoch_time_ms.load(std::memory_order_acquire);
+[[maybe_unused]] static std::size_t get_global_epoch_time_us() { // NOLINT
+    return global_epoch_time_us.load(std::memory_order_acquire);
 }
 
 [[maybe_unused]] static epoch_t get_cc_safe_ss_epoch() { // NOLINT
@@ -74,8 +74,8 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
     global_epoch.store(epo, std::memory_order_release);
 }
 
-[[maybe_unused]] static void set_global_epoch_time_ms(const std::size_t num) {
-    global_epoch_time_ms.store(num, std::memory_order_release);
+[[maybe_unused]] static void set_global_epoch_time_us(const std::size_t num) {
+    global_epoch_time_us.store(num, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_datastore_durable_epoch(epoch_t ep) {
@@ -96,7 +96,7 @@ static constexpr ptp_body_type ptp_init_val{-1};
  * @details If this is -1, this variable is invalid. If not, epoch manager can
  * proceed epoch for the value of this.
  */
-inline std::atomic<ptp_body_type> perm_to_proc_{-1}; // NOLINT
+inline std::atomic<ptp_body_type> perm_to_proc_{ptp_init_val}; // NOLINT
 
 [[maybe_unused]] static void set_perm_to_proc(ptp_body_type num) {
     perm_to_proc_.store(num, std::memory_order_release);

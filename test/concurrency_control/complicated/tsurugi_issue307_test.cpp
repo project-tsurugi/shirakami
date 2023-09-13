@@ -19,11 +19,11 @@
 
 using namespace shirakami;
 
-class tsurugi_issue307 : public ::testing::Test { // NOLINT
+class tsurugi_issue307_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
-                                  "complicated-tsurugi_issue307");
+                                  "complicated-tsurugi_issue307_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -51,7 +51,7 @@ std::string mk_key(int i) {
     return ss.str();
 }
 
-TEST_F(tsurugi_issue307, simple) { // NOLINT
+TEST_F(tsurugi_issue307_test, simple) { // NOLINT
     // DEFINE_int32(records, 2000, "number of records");
     // DEFINE_int32(rounds, 10000, "number of scan rounds");
     // DEFINE_int32(mod_thread, 1, "number of delete/insert threads");

@@ -87,16 +87,14 @@ TEST_F(read_only_scan_upsert_test,                               // NOLINT
     // prepare data
     std::string k{"k"};
     std::string v{"v"};
-    {
-        std::unique_lock stop_epoch{epoch::get_ep_mtx()}; // stop epoch
-        ASSERT_EQ(Status::OK,
-                  tx_begin({sl,
-                            transaction_options::transaction_type::READ_ONLY}));
-        ASSERT_EQ(Status::OK,
-                  tx_begin({ss, transaction_options::transaction_type::SHORT}));
-        ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
-        ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({sl, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({ss, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, upsert(ss, st, k, v));
+    ASSERT_EQ(Status::OK, commit(ss)); // NOLINT
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(sl, st, "", scan_endpoint::INF, "",

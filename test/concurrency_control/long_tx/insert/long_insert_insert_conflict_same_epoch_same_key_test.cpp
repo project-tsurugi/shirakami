@@ -68,17 +68,12 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({s1,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ASSERT_EQ(tx_begin({s2,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    resume_epoch();
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);
@@ -111,17 +106,12 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({s1,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ASSERT_EQ(tx_begin({s2,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    resume_epoch();
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
@@ -149,17 +139,12 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({s1,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ASSERT_EQ(tx_begin({s2,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    resume_epoch();
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, "", ""), Status::OK);
@@ -193,17 +178,12 @@ TEST_F(long_insert_insert_conflict_same_epoch_same_key_test, // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(tx_begin({s1,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-        ASSERT_EQ(tx_begin({s2,
-                            transaction_options::transaction_type::LONG,
-                            {st}}),
-                  Status::OK);
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
+              Status::OK);
+    resume_epoch();
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, "", ""), Status::OK);

@@ -62,7 +62,7 @@ void bg_commit::register_tx(Token token) {
 
 void bg_commit::worker() {
     while (!worker_thread_end()) {
-        sleepMs(epoch::get_global_epoch_time_ms());
+        usleep(epoch::get_global_epoch_time_us());
 
         std::set<std::size_t> checked_ids = {};
         Token token{};

@@ -93,7 +93,7 @@ void daemon_work() {
     bool can_compute_min_flush_ep{true};
     for (;;) {
         // sleep epoch time
-        sleepMs(epoch::get_global_epoch_time_ms());
+        usleep(epoch::get_global_epoch_time_us());
 
         // check fin
         if (get_stopping()) { break; }

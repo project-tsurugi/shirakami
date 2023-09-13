@@ -123,12 +123,14 @@ TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
 
     // test
@@ -165,12 +167,14 @@ TEST_F(long_delete_upsert_test, concurrent_delete_tx_upsert_tx) { // NOLINT
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
 
     // test

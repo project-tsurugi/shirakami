@@ -64,12 +64,12 @@ TEST_F(write_skew, simple) { // NOLINT
 
     // stop epoch
     // epoch align 2 tx.
-    epoch::get_ep_mtx().lock();
+    stop_epoch();
     ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
     ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
-    epoch::get_ep_mtx().unlock();
+    resume_epoch();
 
     // wait change epoch
     wait_epoch_update();

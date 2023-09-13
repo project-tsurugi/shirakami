@@ -45,16 +45,14 @@ TEST_F(read_only_open_scan_test,             // NOLINT
     Token s{};
     ASSERT_EQ(enter(s), Status::OK);
     ScanHandle hd{};
-    {
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-        ASSERT_EQ(
-                tx_begin({s, transaction_options::transaction_type::READ_ONLY}),
-                Status::OK);
-        // operation before start epoch
-        ASSERT_EQ(open_scan(s, st, "", scan_endpoint::INF, "",
-                            scan_endpoint::INF, hd),
-                  Status::WARN_PREMATURE);
-    }
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::READ_ONLY}),
+              Status::OK);
+    // operation before start epoch
+    ASSERT_EQ(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        hd),
+              Status::WARN_PREMATURE);
+    resume_epoch();
     wait_epoch_update();
     // operation after start epoch
     ASSERT_NE(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF,

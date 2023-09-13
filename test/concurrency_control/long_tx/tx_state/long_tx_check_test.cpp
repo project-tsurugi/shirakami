@@ -14,12 +14,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class long_check_tx_state_test : public ::testing::Test { // NOLINT
+class long_tx_check_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging(
-                "shirakami-test-concurrency_control-wp-"
-                "interface-tx_state-long_check_tx_state_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
+                                  "interface-tx_state-long_tx_check_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -34,19 +33,18 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-TEST_F(long_check_tx_state_test, long_tx_road_to_abort) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_road_to_abort) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
     TxState buf{};
-    {
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s, transaction_options::transaction_type::LONG}));
-        ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
+    resume_epoch();
     wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
@@ -61,19 +59,18 @@ TEST_F(long_check_tx_state_test, long_tx_road_to_abort) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_check_tx_state_test, long_tx_road_to_commit) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
     TxState buf{};
-    {
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s, transaction_options::transaction_type::LONG}));
-        ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
+    resume_epoch();
     wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
@@ -81,14 +78,13 @@ TEST_F(long_check_tx_state_test, long_tx_road_to_commit) { // NOLINT
     // second should not change without commit api
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    stop_epoch();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
 #endif
-    } // release epoch lock
+    resume_epoch();
 #ifdef PWAL
     // wait durable
     auto ce = epoch::get_global_epoch();
@@ -103,7 +99,7 @@ TEST_F(long_check_tx_state_test, long_tx_road_to_commit) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(long_check_tx_state_test, long_tx_started_to_waiting_durable) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_started_to_waiting_durable) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, leave(s));
@@ -115,19 +111,18 @@ TEST_F(long_check_tx_state_test, long_tx_started_to_waiting_durable) { // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    stop_epoch();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
 #else
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
 #endif
-    } // release epoch lock
+    resume_epoch();
 }
 
-TEST_F(long_check_tx_state_test, long_tx_wait_high_priori_tx) { // NOLINT
+TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     // ==============================
     // prepare
     Token s1{};
@@ -145,11 +140,13 @@ TEST_F(long_check_tx_state_test, long_tx_wait_high_priori_tx) { // NOLINT
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s1));
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
+    resume_epoch();
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s2, hd));
     wait_epoch_update();
@@ -167,19 +164,18 @@ TEST_F(long_check_tx_state_test, long_tx_wait_high_priori_tx) { // NOLINT
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_CC_COMMIT);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 #ifdef PWAL
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        for (;;) {
-            if (check_commit(s2) == Status::OK) { break; }
-            _mm_pause();
-        }
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-        /**
+    stop_epoch();
+    for (;;) {
+        if (check_commit(s2) == Status::OK) { break; }
+        _mm_pause();
+    }
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    /**
          * If epoch does not change from commit, this status must be 
          * WAITING_DURABLE
          */
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
-    }
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    resume_epoch();
     for (;;) {
         _mm_pause();
         ASSERT_EQ(Status::OK, check_tx_state(hd, buf));

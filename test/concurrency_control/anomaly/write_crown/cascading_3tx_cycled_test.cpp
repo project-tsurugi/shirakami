@@ -361,12 +361,14 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 6
     // ooll
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(
@@ -414,12 +416,14 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 7
     // olol
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stz, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(
@@ -464,12 +468,14 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 8
     // lool
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -517,12 +523,14 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 9
     // ollo
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stz, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(
@@ -571,8 +579,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 10
     // lolo
     // ltx begin
-    epoch::set_perm_to_proc(1);
-    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    stop_epoch();
     // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
@@ -580,7 +587,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
-    epoch::set_perm_to_proc(epoch::ptp_init_val); // epoch unlocked
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -624,12 +631,14 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 11
     // lloo
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stz, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -677,6 +686,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 12
     // olll
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stz, stb}}));
@@ -686,6 +696,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(
@@ -729,6 +740,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 13
     // loll
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
@@ -738,6 +750,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -780,6 +793,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 14
     // llol
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
@@ -789,6 +803,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -833,6 +848,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 15
     // lllo
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
@@ -842,6 +858,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sta, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
@@ -886,6 +903,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // test case 16
     // llll
     // ltx begin
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty, stb}}));
@@ -898,6 +916,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+    resume_epoch();
     wait_epoch_update();
     // start operation test
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));

@@ -94,6 +94,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     // note: o is occ, l is ltx, x is omit
     // ltx6
     // llllll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
@@ -106,6 +107,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stw, w, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -160,6 +162,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
 
     // occ1ltx4_succ_omit
     // ollllx
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -169,6 +172,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
@@ -226,6 +230,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
 
     // ltx5_succ_omit
     // lllllx
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
@@ -238,6 +243,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stw, w, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -292,6 +298,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
 
     // occ1ltx5
     // olllll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -301,6 +308,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
@@ -358,6 +366,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
 
     // ltx1occ1ltx3_prep_omit
     // lollxl
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
@@ -367,6 +376,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stw, w, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -426,6 +436,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
 
     // ltx5_prep_omit
     // llllol
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
@@ -438,6 +449,7 @@ TEST_F(cascading_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stv}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stw, w, buf));
     ASSERT_EQ(buf, var.at(0));

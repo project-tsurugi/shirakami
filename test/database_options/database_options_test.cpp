@@ -42,11 +42,11 @@ TEST_F(database_options_test, print_out_object) { // NOLINT
 
     // test about epoch time.
     init(options);
-    ASSERT_EQ(epoch::get_global_epoch_time_ms(), 100);
+    ASSERT_EQ(epoch::get_global_epoch_time_us(), 100);
     fin();
     options.set_epoch_time(1);
     init(options);
-    ASSERT_EQ(epoch::get_global_epoch_time_ms(), 1);
+    ASSERT_EQ(epoch::get_global_epoch_time_us(), 1);
     fin();
 }
 

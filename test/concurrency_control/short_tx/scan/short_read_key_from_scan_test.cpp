@@ -1,6 +1,8 @@
 
 #include <mutex>
 
+#include "test_tool.h"
+
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/tuple_local.h"
 
@@ -49,22 +51,23 @@ TEST_F(simple_scan, test_after_delete_api) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     {
-        std::unique_lock<std::mutex> stop_epoch{epoch::get_ep_mtx()};
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::SHORT}));
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
         ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
         ASSERT_EQ(Status::OK, commit(s));
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
         ScanHandle hd{};
         ASSERT_EQ(Status::WARN_NOT_FOUND,
                   open_scan(s, st, "", scan_endpoint::INF, "",
                             scan_endpoint::INF, hd));
     }
+    resume_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 
