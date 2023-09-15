@@ -153,7 +153,7 @@ Status init(database_options options) { // NOLINT
 #endif
 
     // about back ground worker about commit
-    bg_work::bg_commit::init();
+    bg_work::bg_commit::init(options.get_waiting_resolver_threads());
 
     //// about thread pool
     //thread_pool::init();

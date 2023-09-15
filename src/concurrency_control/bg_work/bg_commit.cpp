@@ -17,12 +17,17 @@ void bg_commit::clear_tx() {
     cont_wait_tx().clear();
 }
 
-void bg_commit::init() {
+void bg_commit::init(std::size_t waiting_resolver_threads_num) {
     // send signal
     worker_thread_end(false);
 
+    // set waiting resolver threads
+    waiting_resolver_threads(waiting_resolver_threads_num);
+
     // invoke thread
-    for (auto&& elem : workers()) { elem = std::thread(worker); }
+    for (std::size_t i = 0; i < waiting_resolver_threads_num; ++i) {
+        workers().emplace_back(std::thread(worker));
+    }
 }
 
 void bg_commit::fin() {
@@ -31,6 +36,8 @@ void bg_commit::fin() {
 
     // wait thread end
     for (auto&& elem : workers()) { elem.join(); }
+    // cleanup workers
+    workers().clear();
 
     /**
      * cleanup container because after next startup, manager thread will 

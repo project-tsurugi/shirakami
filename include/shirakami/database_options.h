@@ -32,6 +32,14 @@ public:
           epoch_time_(epoch_time),
           enable_logging_detail_info_(enable_logging_detail_info) {}
 
+    database_options(open_mode om, std::filesystem::path&& log_directory_path,
+                     std::size_t epoch_time, bool enable_logging_detail_info,
+                     std::size_t waiting_resolver_threads)
+        : open_mode_(om), log_directory_path_(log_directory_path),
+          epoch_time_(epoch_time),
+          enable_logging_detail_info_(enable_logging_detail_info),
+          waiting_resolver_threads_(waiting_resolver_threads) {}
+
     open_mode get_open_mode() { return open_mode_; }
 
     std::filesystem::path get_log_directory_path() {
@@ -44,6 +52,10 @@ public:
         return enable_logging_detail_info_;
     }
 
+    [[nodiscard]] std::size_t get_waiting_resolver_threads() {
+        return waiting_resolver_threads_;
+    }
+
     void set_open_mode(open_mode om) { open_mode_ = om; }
 
     void set_log_directory_path(std::filesystem::path& pt) {
@@ -54,6 +66,10 @@ public:
 
     void set_enable_logging_detail_info(bool tf) {
         enable_logging_detail_info_ = tf;
+    }
+
+    void set_waiting_resolver_threads(std::size_t nm) {
+        waiting_resolver_threads_ = nm;
     }
 
 private:
@@ -83,6 +99,11 @@ private:
      * 
      */
     bool enable_logging_detail_info_{false};
+
+    /**
+     * @brief The number of waiting resolver threads about ltx waiting list
+    */
+    std::size_t waiting_resolver_threads_{2};
     // ==========
 };
 
@@ -96,7 +117,7 @@ to_string_view(database_options::open_mode value) {
         case database_options::open_mode::RESTORE:
             return "RESTORE";
         default:
-            abort();
+            std::abort();
     }
 }
 
@@ -110,7 +131,9 @@ inline std::ostream& operator<<(std::ostream& out, database_options options) {
                << ", log_directory_path:" << options.get_log_directory_path()
                << ", enable_logging_detail_info:"
                << options.get_enable_logging_detail_info()
-               << ", epoch_time:" << options.get_epoch_time();
+               << ", epoch_time:" << options.get_epoch_time()
+               << ", waiting_resolver_threads:"
+               << options.get_waiting_resolver_threads();
 }
 
 } // namespace shirakami
