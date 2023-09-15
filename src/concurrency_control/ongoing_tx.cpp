@@ -159,10 +159,10 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     {
         std::shared_lock<std::shared_mutex> lk{mtx_};
         for (auto&& elem : tx_info_) {
+            auto w_id = std::get<ongoing_tx::index_id>(elem);
             // check overwrites
-            if (std::get<ongoing_tx::index_id>(elem) < id) {
-                if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
-                    wait_for.end()) {
+            if (w_id < id) {
+                if (wait_for.find(w_id) != wait_for.end()) {
                     // wait_for hit.
                     /**
                      * boundary wait 確定.
@@ -172,7 +172,20 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                      * get_requested_commit() の確認を噛ませていない。
                      * */
                     out_status = waiting_bypass(ti);
-                    return out_status == Status::OK;
+                    if (out_status != Status::OK) { return false; }
+                    if (VLOG_IS_ON(log_debug_timing_event)) {
+                        std::string str_tx_id{};
+                        get_tx_id(static_cast<Token>(ti), str_tx_id);
+                        std::string str_w_tx_id{};
+                        auto* wti = std::get<ongoing_tx::index_session>(elem);
+                        get_tx_id(static_cast<Token>(wti), str_w_tx_id);
+                        LOG(INFO)
+                                << "/:shirakami:wait_reason:boundary "
+                                << str_tx_id << " ltx_id:" << id
+                                << " waiting, reason: waiting high priori tx "
+                                << str_w_tx_id << " ltx_id:" << w_id;
+                    }
+                    return true;
                 }
             } else {
                 // considering for only high priori ltx

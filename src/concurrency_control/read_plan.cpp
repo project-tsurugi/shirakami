@@ -29,20 +29,38 @@ bool read_plan::check_potential_read_anti(
         // cond1 empty and empty
         if (plist.empty() && nlist.empty()) {
             // it may read all
+            VLOG(log_debug_timing_event)
+                    << "/:shirakami:wait_reason:read_area ltx_id:"
+                    << tx_id << " waiting, reason: high priori tx "
+                    << "(ltx_id:" << elem.first << ") may read all storage";
             return true;
         }
 
-        for (auto elem : write_storages) {
+        for (auto st : write_storages) {
             // cond3 only nlist
             if (plist.empty()) {
-                auto itr = nlist.find(elem);
-                if (itr == nlist.end()) { return true; }
+                auto itr = nlist.find(st);
+                if (itr == nlist.end()) {
+                    VLOG(log_debug_timing_event)
+                            << "/:shirakami:wait_reason:read_area ltx_id:"
+                            << tx_id << " waiting, reason: high priori tx "
+                            << "(ltx_id:" << elem.first << ") may read "
+                            << "storage " << st;
+                    return true;
+                }
             }
 
             // cond2,4 only plist or p and n
             if (nlist.empty() || (!plist.empty() && !nlist.empty())) {
-                auto itr = plist.find(elem);
-                if (itr != plist.end()) { return true; }
+                auto itr = plist.find(st);
+                if (itr != plist.end()) {
+                    VLOG(log_debug_timing_event)
+                            << "/:shirakami:wait_reason:read_area ltx_id:"
+                            << tx_id << " waiting, reason: high priori tx "
+                            << "(ltx_id:" << elem.first << ") may read "
+                            << "storage " << st;
+                    return true;
+                }
             }
         }
     }

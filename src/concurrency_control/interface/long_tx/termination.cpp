@@ -721,7 +721,9 @@ void call_commit_callback(commit_callback_type const& cb, Status sc,
 
 extern Status commit(session* const ti) {
     // check premature
-    if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+    if (auto ge = epoch::get_global_epoch(); ge < ti->get_valid_epoch()) {
+        VLOG(log_debug_timing_event) << "/:shirakami:wait_reason:premature "
+                                     << ge << " < " << ti->get_valid_epoch();
         ti->call_commit_callback(Status::WARN_PREMATURE, {}, 0);
         return Status::WARN_PREMATURE;
     }

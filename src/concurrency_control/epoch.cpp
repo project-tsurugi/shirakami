@@ -114,6 +114,9 @@ void epoch_thread_work() {
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
             compute_and_set_cc_safe_ss_epoch();
+            VLOG(log_debug_timing_event)
+                    << log_location_prefix << "new_epoch:" << new_epoch
+                    << " cc_safe_ss_epoch:" << get_cc_safe_ss_epoch();
 #ifdef PWAL
             // change also datastore's epoch
             switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
