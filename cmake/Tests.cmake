@@ -59,29 +59,19 @@ function(register_tests)
 
             add_executable(${test_name} ${src} ${TESTS_COMMON_SOURCES})
 
-            if (fname MATCHES "hopscotch_map_test$")
-                target_include_directories(${test_name}
-                        PRIVATE ${PROJECT_SOURCE_DIR}
-                        )
-            else()
-                target_include_directories(${test_name}
-                        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                        PRIVATE ${PROJECT_SOURCE_DIR}
-                        PRIVATE ${PROJECT_SOURCE_DIR}/src
-                        PRIVATE ${PROJECT_SOURCE_DIR}/test/include
-                        PRIVATE ${PROJECT_SOURCE_DIR}/include
-                        PRIVATE ${PROJECT_SOURCE_DIR}/third_party
-                        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
-                        PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
-                        )
-            endif()
+            target_include_directories(${test_name}
+                    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                    PRIVATE ${PROJECT_SOURCE_DIR}
+                    PRIVATE ${PROJECT_SOURCE_DIR}/src
+                    PRIVATE ${PROJECT_SOURCE_DIR}/test/include
+                    PRIVATE ${PROJECT_SOURCE_DIR}/include
+                    PRIVATE ${PROJECT_SOURCE_DIR}/third_party
+                    PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
+                    PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
+                    )
 
             if(TARGET ${TESTS_TARGET})
-                if (fname MATCHES "hopscotch_map_test")
-                    target_link_libraries(${test_name}
-                            PRIVATE tsl::hopscotch_map
-                            )
-                elseif((fname MATCHES "clock_test") OR
+                if((fname MATCHES "clock_test") OR
                 (fname MATCHES "error_test") OR
                 (fname MATCHES "logger_test") OR
                 (fname MATCHES "memory_test") OR
@@ -92,7 +82,6 @@ function(register_tests)
                     target_link_libraries(${test_name}
                             PRIVATE ${TESTS_TARGET}
                             PRIVATE Boost::filesystem
-                            PRIVATE tsl::hopscotch_map
                             )
                 endif()
             endif()
@@ -106,7 +95,7 @@ function(register_tests)
             else()
                 target_link_libraries(${test_name} PRIVATE gtest_main)
             endif()
-            target_link_libraries(${test_name} 
+            target_link_libraries(${test_name}
                             PRIVATE Threads::Threads
                             )
             if (BUILD_PWAL)

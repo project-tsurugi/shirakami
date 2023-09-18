@@ -17,6 +17,5 @@ target_include_directories(map
 target_link_libraries(map
         PRIVATE glog::glog
         PRIVATE gflags::gflags
-        PRIVATE tsl::hopscotch_map
         PRIVATE Threads::Threads
         )
