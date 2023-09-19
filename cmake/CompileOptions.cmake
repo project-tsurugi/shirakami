@@ -132,11 +132,6 @@ endif ()
 
 # about diff set of cpr
 set(cpr_diff_set 0)
-if (CPR_DIFF_HOPSCOTCH)
-    set(cpr_diff_set 1)
-    add_definitions(-DCPR_DIFF_HOPSCOTCH)
-    message("It uses hopscotch hash for cpr's diff set.")
-endif()
 if (CPR_DIFF_UM)
     if(cpr_diff_set)
         message(FATAL_ERROR "You should select one method for cpr's diff set.")

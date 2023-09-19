@@ -32,8 +32,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-#include <tsl/hopscotch_map.h>
-
 using namespace shirakami;
 
 /**
@@ -79,17 +77,6 @@ void std_unordered_map_bench(const std::vector<std::uint64_t>& data) {
               << std::endl;                                    // NOLINT
 }
 
-void hopscotch_map_bench(const std::vector<std::uint64_t>& data) {
-    tsl::hopscotch_map<std::uint64_t, std::uint64_t> map;
-    std::uint64_t begin{rdtscp()};
-    for (auto&& elem : data) { map[elem] = elem; }
-    std::uint64_t end{rdtscp()};
-    std::cout << "hopscotch_map_throughput[ops/us]:\t"
-              << FLAGS_elem_num /
-                         ((end - begin) / FLAGS_cpumhz / 1000) // NOLINT
-              << std::endl;                                    // NOLINT
-}
-
 void prepare_data(std::vector<std::uint64_t>& data) {
     data.clear();
     data.reserve(FLAGS_elem_num);
@@ -111,7 +98,6 @@ int main(int argc, char* argv[]) { // NOLINT
     prepare_data(data);
     std_map_bench(data);
     std_unordered_map_bench(data);
-    hopscotch_map_bench(data);
 
     return 0;
 }
