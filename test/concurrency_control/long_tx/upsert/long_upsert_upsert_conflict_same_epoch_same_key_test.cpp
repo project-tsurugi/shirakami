@@ -221,7 +221,7 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    EXPECT_EQ(buf, "v2");
+    ASSERT_TRUE((buf == "v1") || (buf == "v2"));
     /**
      * ltx をコミットするバックグラウンドスレッドは現在二つ。s1 がコミット申請時点で 
      * read の実態をグローバルに登録しs2 はそれを見て waiting bypass. s2 が先駆けて
