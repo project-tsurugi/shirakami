@@ -52,7 +52,7 @@ public:
         return enable_logging_detail_info_;
     }
 
-    [[nodiscard]] std::size_t get_waiting_resolver_threads() {
+    [[nodiscard]] std::size_t get_waiting_resolver_threads() const {
         return waiting_resolver_threads_;
     }
 

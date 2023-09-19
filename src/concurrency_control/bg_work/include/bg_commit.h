@@ -37,7 +37,7 @@ public:
 
     static cont_type& cont_wait_tx() { return cont_wait_tx_; }
 
-    [[nodiscard]] std::size_t waiting_resolver_threads() {
+    [[nodiscard]] static std::size_t waiting_resolver_threads() {
         return waiting_resolver_threads_.load(std::memory_order_acquire);
     }
 
