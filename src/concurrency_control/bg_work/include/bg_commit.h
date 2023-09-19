@@ -20,14 +20,8 @@ public:
      * @brief First element of tuple is long tx id to sort container by priority
      * of long transactions.
      */
-<<<<<<< HEAD
-    static constexpr std::size_t th_num = 2;
-    using cont_type = std::set<std::tuple<std::size_t, Token>>;
-    using worker_cont_type = std::array<std::thread, th_num>;
-=======
     using cont_type = std::set<std::tuple<std::size_t, Token>>;
     using worker_cont_type = std::vector<std::thread>;
->>>>>>> master
     using used_ids_type = std::set<std::size_t>;
 
     // start: getter
