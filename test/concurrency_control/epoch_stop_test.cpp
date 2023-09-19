@@ -40,14 +40,14 @@ TEST_F(epoch_stop_test, stop_epoch) { // NOLINT
     stop_epoch();
     {
         epoch::epoch_t first{epoch::get_global_epoch()};
-        usleep(epoch::get_global_epoch_time_us() * 2);
+        sleepUs(epoch::get_global_epoch_time_us() * 2);
         epoch::epoch_t second{epoch::get_global_epoch()};
         LOG(INFO) << first;
         LOG(INFO) << second;
     }
     resume_epoch();
     epoch::epoch_t first{epoch::get_global_epoch()};
-    usleep(epoch::get_global_epoch_time_us() * 4);
+    sleepUs(epoch::get_global_epoch_time_us() * 4);
     epoch::epoch_t second{epoch::get_global_epoch()};
     LOG(INFO) << first;
     LOG(INFO) << second;
@@ -62,11 +62,11 @@ TEST_F(epoch_stop_test, ptp) { // NOLINT
         epoch::set_perm_to_proc(1);
         LOG(INFO) << ce;
     }
-    usleep(epoch::get_global_epoch_time_us() * 4);
+    sleepUs(epoch::get_global_epoch_time_us() * 4);
     LOG(INFO) << epoch::get_perm_to_proc();
     LOG(INFO) << epoch::get_global_epoch();
     epoch::set_perm_to_proc(epoch::ptp_init_val);
-    usleep(epoch::get_global_epoch_time_us() * 4);
+    sleepUs(epoch::get_global_epoch_time_us() * 4);
     LOG(INFO) << epoch::get_global_epoch();
 }
 

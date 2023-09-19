@@ -76,7 +76,7 @@ TEST_F(tsurugi_issue106_2, 20230328_comment_tanabe) { // NOLINT
                                 scan),
                       Status::WARN_NOT_FOUND);
             LOG(INFO) << loop;
-            usleep(100000); // may run GC // NOLINT
+            sleepUs(100000); // may run GC // NOLINT
             auto rc = commit(s);
             if (rc == Status::OK) { break; }
             auto* ti = static_cast<session*>(s);

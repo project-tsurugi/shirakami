@@ -21,4 +21,8 @@ namespace shirakami {
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
+[[maybe_unused]] static void sleepUs(size_t us) {
+    std::this_thread::sleep_for(std::chrono::microseconds(us));
+}
+
 } // namespace shirakami

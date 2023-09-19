@@ -78,7 +78,7 @@ void work_manager() {
             set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
         }
 
-        usleep(epoch::get_global_epoch_time_us());
+        sleepUs(epoch::get_global_epoch_time_us());
     }
 }
 
@@ -357,7 +357,7 @@ void work_cleaner() {
 
 
         // sleep
-        usleep(epoch::get_global_epoch_time_us());
+        sleepUs(epoch::get_global_epoch_time_us());
     }
 
     force_release_key_memory();

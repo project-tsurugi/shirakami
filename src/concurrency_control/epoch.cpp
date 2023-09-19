@@ -96,7 +96,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
 
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
-        usleep(epoch::get_global_epoch_time_us());
+        sleepUs(epoch::get_global_epoch_time_us());
         {
             // coordination with ltx
             auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());

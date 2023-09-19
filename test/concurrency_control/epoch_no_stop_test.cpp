@@ -67,7 +67,7 @@ TEST_F(epoch_no_stop_test,                                   // NOLINT
     auto* ti{static_cast<session*>(s)};
     ti->set_operating(1);
     auto first_epoch{ti->get_step_epoch()};
-    usleep(epoch::get_global_epoch_time_us() * 2);
+    sleepUs(epoch::get_global_epoch_time_us() * 2);
     auto second_epoch{ti->get_step_epoch()};
     ASSERT_EQ(first_epoch, second_epoch);
     LOG(INFO) << first_epoch << " " << second_epoch;
