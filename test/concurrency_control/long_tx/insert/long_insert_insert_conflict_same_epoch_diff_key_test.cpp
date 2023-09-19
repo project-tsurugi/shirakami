@@ -124,4 +124,83 @@ TEST_F(long_insert_insert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(long_insert_insert_conflict_same_epoch_diff_key_test, // NOLINT
+       different_key_same_epoch_co_high_low_diff_storage) {  // NOLINT
+    /**
+     * There are two long tx.
+     * They are same epoch.
+     * They insert different (unique) key to the same storage.
+     * Commit order is 1. high priority tx, 2. low priority tx.
+     */
+
+    Storage st1{};
+    Storage st2{};
+    ASSERT_EQ(create_storage("a", st1), Status::OK);
+    ASSERT_EQ(create_storage("b", st2), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    stop_epoch();
+    ASSERT_EQ(
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st1}}),
+            Status::OK);
+    ASSERT_EQ(
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st2}}),
+            Status::OK);
+    resume_epoch();
+    wait_epoch_update();
+
+    std::string pk1{"pk1"};
+    std::string pk2{"pk2"};
+    ASSERT_EQ(insert(s1, st1, pk1, ""), Status::OK);
+    ASSERT_EQ(insert(s2, st2, pk2, ""), Status::OK);
+
+    ASSERT_EQ(Status::OK, commit(s1));
+    ASSERT_EQ(Status::OK, commit(s2));
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(long_insert_insert_conflict_same_epoch_diff_key_test, // NOLINT
+       different_key_same_epoch_co_low_high_diff_storage) {  // NOLINT
+    /**
+     * There are two long tx.
+     * They are same epoch.
+     * They insert different (unique) key to the same storage.
+     * Commit order is 1. low priority tx, 2. high priority tx.
+     */
+
+    Storage st1{};
+    Storage st2{};
+    ASSERT_EQ(create_storage("a", st1), Status::OK);
+    ASSERT_EQ(create_storage("b", st2), Status::OK);
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+    stop_epoch();
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st1}}),
+              Status::OK);
+    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st2}}),
+              Status::OK);
+    resume_epoch();
+    wait_epoch_update();
+
+    std::string pk1{"pk1"};
+    std::string pk2{"pk2"};
+    ASSERT_EQ(insert(s1, st1, pk1, ""), Status::OK);
+    ASSERT_EQ(insert(s2, st2, pk2, ""), Status::OK);
+
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s1));
+    Status rc{};
+    do {
+        rc = check_commit(s2);
+    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+    ASSERT_EQ(Status::OK, rc);
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
