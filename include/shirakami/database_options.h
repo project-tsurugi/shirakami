@@ -87,9 +87,9 @@ private:
     // ==========
     // tuning parameter
     /**
-     * @brief Parameter of epoch [ms]
+     * @brief Parameter of epoch [us]
      */
-    std::size_t epoch_time_{40}; // NOLINT
+    std::size_t epoch_time_{40000}; // NOLINT
     // ==========
 
     // ==========

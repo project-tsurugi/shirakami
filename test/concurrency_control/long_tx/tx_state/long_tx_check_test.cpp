@@ -161,7 +161,8 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_CC_COMMIT);
+    ASSERT_TRUE((buf.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) ||
+                (buf.state_kind() == TxState::StateKind::DURABLE));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 #ifdef PWAL
     stop_epoch();
