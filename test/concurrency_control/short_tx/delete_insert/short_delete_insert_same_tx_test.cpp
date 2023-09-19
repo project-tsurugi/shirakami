@@ -73,11 +73,11 @@ TEST_F(short_delete_insert_same_tx_test, delete_insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK, insert(s, st, k, iv));
     ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    Record* rec_ptr{};
-    ASSERT_EQ(Status::OK, get<Record>(st, k, rec_ptr));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string val{};
-    rec_ptr->get_value(val);
-    ASSERT_EQ(val, v);
+    ASSERT_NE(Status::OK, search_key(s, st, k, val));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
 
 TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT

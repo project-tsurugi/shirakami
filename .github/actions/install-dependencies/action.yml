@@ -1,0 +1,46 @@
+name: Shirakami-Install-Dependencies
+
+inputs:
+  token:
+    description: token for checkout private repo
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Checkout_Limestone
+      uses: actions/checkout@v3
+      with:
+        repository: project-tsurugi/limestone
+        path: build-deps/limestone
+        ref: master
+        token: ${{ inputs.token }}
+
+    - name: Checkout_Yakushima
+      uses: actions/checkout@v3
+      with:
+        repository: project-tsurugi/yakushima
+        path: build-deps/yakushima
+        ref: master
+        token: ${{ inputs.token }}
+
+    - name: Install_Limestone
+      run: |
+        cd build-deps/limestone
+        rm -fr build
+        mkdir build
+        cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+        cmake --build . --target install --clean-first
+      shell: bash
+
+    - name: Install_Yakushima
+      run: |
+        cd build-deps/yakushima
+        rm -fr build
+        mkdir build
+        cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_BENCHMARK=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+        cmake --build . --target install --clean-first
+      shell: bash

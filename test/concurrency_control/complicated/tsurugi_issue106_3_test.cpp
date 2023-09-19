@@ -82,7 +82,7 @@ TEST_F(tsurugi_issue106_3, 20230319_comment_ban) { // NOLINT
         ASSERT_OK(open_scan(s, st, mk_key(i), scan_endpoint::INCLUSIVE,
                             mk_key(i + 1), scan_endpoint::EXCLUSIVE, scan));
         if (pred_wait(i)) {
-            usleep(100 * 1000); // may run GC // NOLINT
+            sleepUs(100 * 1000); // may run GC // NOLINT
         }
         std::string key{};
         ASSERT_OK(read_key_from_scan(s, scan, key));

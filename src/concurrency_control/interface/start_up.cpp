@@ -113,7 +113,7 @@ Status init(database_options options) { // NOLINT
         recover(datastore::get_datastore());
     }
     datastore::get_datastore()->add_persistent_callback(
-            epoch::set_durable_epoch); // should execute before ready()
+            epoch::set_datastore_durable_epoch); // should execute before ready()
     /**
      * This executes create_channel and pass it to shirakami's executor.
      */
@@ -131,7 +131,6 @@ Status init(database_options options) { // NOLINT
 
     // about cc
     session_table::init_session_table();
-    //epoch::invoke_epoch_thread();
 
     // about index
     // pre condition : before wp::init() because wp::init() use yakushima function.
@@ -165,7 +164,7 @@ Status init(database_options options) { // NOLINT
 #endif
 
     // about back ground worker about commit
-    bg_work::bg_commit::init();
+    bg_work::bg_commit::init(options.get_waiting_resolver_threads());
 
     //// about thread pool
     //thread_pool::init();

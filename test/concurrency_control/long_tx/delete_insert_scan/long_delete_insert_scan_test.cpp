@@ -69,38 +69,35 @@ TEST_F(long_delete_insert_scan_test, scan_not_miss_converting_page) { // NOLINT
     wait_epoch_update();
     // it can see x-v1
 
-    {
-        // block gc by stopping epoch
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
+    // block gc by stopping epoch
+    stop_epoch();
 
-        auto work_s2 = [s2, st]() {
-            // s2 delete x and insert x to create converting page
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s2,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(delete_record(s2, st, "x"), Status::OK);
-            ASSERT_EQ(Status::OK, commit(s2));
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s2,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(insert(s2, st, "x", "v2"), Status::OK);
-            ASSERT_EQ(Status::OK, commit(s2));
-        };
+    auto work_s2 = [s2, st]() {
+        // s2 delete x and insert x to create converting page
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s2, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(delete_record(s2, st, "x"), Status::OK);
+        ASSERT_EQ(Status::OK, commit(s2));
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s2, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(insert(s2, st, "x", "v2"), Status::OK);
+        ASSERT_EQ(Status::OK, commit(s2));
+    };
 
-        auto work_s1 = [s1, st]() {
-            // test: s1 must see x-v1
-            std::string buf{};
-            ASSERT_EQ(Status::OK, search_key(s1, st, "x", buf));
-            ASSERT_EQ(buf, "v1");
-            ASSERT_EQ(Status::OK, commit(s1));
-        };
+    auto work_s1 = [s1, st]() {
+        // test: s1 must see x-v1
+        std::string buf{};
+        ASSERT_EQ(Status::OK, search_key(s1, st, "x", buf));
+        ASSERT_EQ(buf, "v1");
+        ASSERT_EQ(Status::OK, commit(s1));
+    };
 
-        std::thread th_1 = std::thread(work_s1);
-        std::thread th_2 = std::thread(work_s2);
+    std::thread th_1 = std::thread(work_s1);
+    std::thread th_2 = std::thread(work_s2);
 
-        th_1.join();
-        th_2.join();
-    }
+    th_1.join();
+    th_2.join();
+    resume_epoch();
 
     // cleanup
     ASSERT_EQ(Status::OK,

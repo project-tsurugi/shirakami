@@ -42,6 +42,7 @@ option(FORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD "If the command clang-fo
 if (BUILD_PWAL)
   find_package(limestone REQUIRED)
 endif()
+find_package(yakushima REQUIRED)
 
 find_package(Boost
         COMPONENTS filesystem)
@@ -108,7 +109,6 @@ install(
 
 add_subdirectory(src)
 add_subdirectory(third_party)
-add_subdirectory(third_party/hopscotch-map)
 
 if (BUILD_BENCHMARK)
     add_subdirectory(bench)

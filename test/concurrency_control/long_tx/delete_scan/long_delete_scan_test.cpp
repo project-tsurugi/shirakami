@@ -65,11 +65,13 @@ TEST_F(long_delete_scan_test,                   // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
@@ -105,11 +107,13 @@ TEST_F(long_delete_scan_test,                        // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
@@ -145,11 +149,13 @@ TEST_F(long_delete_scan_test,                             // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     // test
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(Status::OK,
               tx_begin({s2, transaction_options::transaction_type::LONG}));
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",

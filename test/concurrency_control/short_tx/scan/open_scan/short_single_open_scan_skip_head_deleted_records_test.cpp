@@ -1,6 +1,8 @@
 
 #include <mutex>
 
+#include "test_tool.h"
+
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
@@ -50,8 +52,7 @@ TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     {
-        std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
-                epoch::get_ep_mtx()};
+        stop_epoch();
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -67,6 +68,7 @@ TEST_F(open_scan_test, open_scan_skip_head_one_deleted_record) { // NOLINT
         ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
         ASSERT_EQ(sb, k2);
     }
+    resume_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -88,8 +90,7 @@ TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     {
-        std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
-                epoch::get_ep_mtx()};
+        stop_epoch();
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -106,6 +107,7 @@ TEST_F(open_scan_test, open_scan_skip_head_two_deleted_record) { // NOLINT
         ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
         ASSERT_EQ(sb, k3);
     }
+    resume_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 
@@ -129,8 +131,7 @@ TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     {
-        std::unique_lock<std::mutex> stop_epoch_for_stop_gc{
-                epoch::get_ep_mtx()};
+        stop_epoch();
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, k1));
@@ -148,6 +149,7 @@ TEST_F(open_scan_test, open_scan_skip_head_three_deleted_record) { // NOLINT
         ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
         ASSERT_EQ(sb, k4);
     }
+    resume_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 

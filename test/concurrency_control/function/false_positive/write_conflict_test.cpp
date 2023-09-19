@@ -261,12 +261,14 @@ TEST_F(write_conflict_test, all) { // NOLINT
 
     // 1occ2ltx
     // oll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
@@ -304,12 +306,14 @@ TEST_F(write_conflict_test, all) { // NOLINT
 
     // 1ltx1occ1ltx
     // lol
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx, sty}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -347,6 +351,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
 
     // 2ltx1occ
     // llo
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx, sty},
@@ -354,6 +359,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sta}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -391,6 +397,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
 
     // 3ltx
     // lll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx, sty},
@@ -401,6 +408,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));

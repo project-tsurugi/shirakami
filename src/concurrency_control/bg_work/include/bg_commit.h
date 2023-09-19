@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <map>
 #include <mutex>
 #include <set>
@@ -9,6 +10,8 @@
 
 #include "shirakami/scheme.h"
 
+#include "shirakami/tx_state_notification.h"
+
 namespace shirakami::bg_work {
 
 class bg_commit {
@@ -17,9 +20,8 @@ public:
      * @brief First element of tuple is long tx id to sort container by priority
      * of long transactions.
      */
-    static constexpr std::size_t th_num = 2;
     using cont_type = std::set<std::tuple<std::size_t, Token>>;
-    using worker_cont_type = std::array<std::thread, th_num>;
+    using worker_cont_type = std::vector<std::thread>;
     using used_ids_type = std::set<std::size_t>;
 
     // start: getter
@@ -34,15 +36,24 @@ public:
     static std::shared_mutex& mtx_cont_wait_tx() { return mtx_cont_wait_tx_; }
 
     static cont_type& cont_wait_tx() { return cont_wait_tx_; }
+
+    [[nodiscard]] static std::size_t waiting_resolver_threads() {
+        return waiting_resolver_threads_.load(std::memory_order_acquire);
+    }
+
     // end: getter
 
     // start: setter
+    static void waiting_resolver_threads(std::size_t nm) {
+        waiting_resolver_threads_.store(nm, std::memory_order_release);
+    }
+
     static void worker_thread_end(bool tf) { worker_thread_end_ = tf; }
     // end: setter
 
     static void clear_tx();
 
-    static void init();
+    static void init(std::size_t waiting_resolver_threads_num);
 
     static void fin();
 
@@ -51,6 +62,11 @@ public:
     static void worker();
 
 private:
+    /**
+     * @brief The number of threads for resolving waiting list.
+    */
+    static inline std::atomic<std::size_t> waiting_resolver_threads_{2};
+
     /**
      * @brief ltx commit verify threads
     */

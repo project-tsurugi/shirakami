@@ -48,8 +48,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
     constexpr std::size_t scan_thread_num{1};
     // ==========
 
-    auto scan_worker = [st,
-                        &prepare_scan_thread_num]() {
+    auto scan_worker = [st, &prepare_scan_thread_num]() {
         // prepare
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
@@ -99,8 +98,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
         ASSERT_EQ(Status::OK, leave(s));
     };
 
-    auto insert_delete_worker = [st, 
-                                 &prepare_scan_thread_num]() {
+    auto insert_delete_worker = [st, &prepare_scan_thread_num]() {
         // prepare
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));

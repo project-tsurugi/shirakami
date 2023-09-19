@@ -129,6 +129,7 @@ if (BUILD_PWAL)
             PRIVATE ${tbb_prefix}tbb
             PRIVATE ${tbb_prefix}tbbmalloc
             PRIVATE ${tbb_prefix}tbbmalloc_proxy
+            PRIVATE yakushima
           SOURCES ${TEST_SOURCES}
   )
 else()
@@ -140,6 +141,7 @@ else()
             PRIVATE ${tbb_prefix}tbb
             PRIVATE ${tbb_prefix}tbbmalloc
             PRIVATE ${tbb_prefix}tbbmalloc_proxy
+            PRIVATE yakushima
           SOURCES ${TEST_SOURCES}
   )
 endif()

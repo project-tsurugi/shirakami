@@ -54,21 +54,18 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
 
     {
         std::unique_lock key_gc_lk{garbage::get_mtx_cleaner()};
-        {
-            std::unique_lock ep_lk{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k2));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k2));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         ASSERT_EQ(Status::OK,
                   tx_begin({sl,
@@ -113,23 +110,20 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
 
     {
         std::unique_lock key_gc_lk{garbage::get_mtx_cleaner()};
-        {
-            std::unique_lock ep_lk{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k2));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k3));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k2));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k3));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         ASSERT_EQ(Status::OK,
                   tx_begin({sl,
@@ -175,25 +169,22 @@ TEST_F(read_only_next_not_skip_drec_with_no_ss_test, // NOLINT
 
     {
         std::unique_lock key_gc_lk{garbage::get_mtx_cleaner()};
-        {
-            std::unique_lock ep_lk{epoch::get_ep_mtx()};
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
-            ASSERT_EQ(Status::OK, upsert(s, st, k5, ""));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k2));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k3));
-            ASSERT_EQ(Status::OK, delete_record(s, st, k4));
-            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        }
+        stop_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k1, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k2, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k3, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k4, ""));
+        ASSERT_EQ(Status::OK, upsert(s, st, k5, ""));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k2));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k3));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k4));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        resume_epoch();
 
         ASSERT_EQ(Status::OK,
                   tx_begin({sl,

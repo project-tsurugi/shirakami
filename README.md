@@ -61,8 +61,8 @@ Available options:
 
 * Parameter setting
   + Concurrency Control
-    - `-DPARAM_EPOCH_TIME=<epoch time[ms]>`
-      - It is a time of epoch. It is also set at database_options of shirakami::init function. If it is zero, it is set by value of database_options (default is 40). This setting overrides the database_options setting.
+    - `-DPARAM_EPOCH_TIME=<epoch time[us]>`
+      - It is a time of epoch. It is also set at database_options of shirakami::init function. If it is zero, it is set by value of database_options (default is 40000). This setting overrides the database_options setting.
       - Default: `0`.
 
     - `-DKVS_MAX_PARALLEL_THREADS=<max concurrent session size>`

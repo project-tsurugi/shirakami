@@ -29,11 +29,11 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class read_wait_one_epoch_test : public ::testing::Test { // NOLINT
+class read_wait_witin_one_epoch_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-function-"
-                                  "read_wait-read_wait_one_epoch_test");
+                                  "read_wait-read_wait_witin_one_epoch_test");
         FLAGS_stderrthreshold = 0;
     }
 
@@ -48,8 +48,8 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(read_wait_one_epoch_test, within_epoch) { // NOLINT
-                                                 // create table
+TEST_F(read_wait_witin_one_epoch_test, within_epoch) { // NOLINT
+                                                       // create table
     // ==========
     // prepare
     Storage sta{};
@@ -89,6 +89,7 @@ TEST_F(read_wait_one_epoch_test, within_epoch) { // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -98,6 +99,7 @@ TEST_F(read_wait_one_epoch_test, within_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -142,8 +144,8 @@ TEST_F(read_wait_one_epoch_test, within_epoch) { // NOLINT
     // ==========
 }
 
-TEST_F(read_wait_one_epoch_test, one_epoch) { // NOLINT
-                                              // create table
+TEST_F(read_wait_witin_one_epoch_test, one_epoch) { // NOLINT
+                                                    // create table
     // ==========
     // prepare
     Storage sta{};
@@ -183,6 +185,7 @@ TEST_F(read_wait_one_epoch_test, one_epoch) { // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -192,6 +195,7 @@ TEST_F(read_wait_one_epoch_test, one_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -237,8 +241,8 @@ TEST_F(read_wait_one_epoch_test, one_epoch) { // NOLINT
     // ==========
 }
 
-TEST_F(read_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
-                                                         // create table
+TEST_F(read_wait_witin_one_epoch_test, one_epoch_with_abort) { // NOLINT
+                                                               // create table
     // ==========
     // prepare
     Storage sta{};
@@ -278,6 +282,7 @@ TEST_F(read_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -287,6 +292,7 @@ TEST_F(read_wait_one_epoch_test, one_epoch_with_abort) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));

@@ -96,6 +96,7 @@ TEST_F(read_wait_two_wait_two_epoch_with_abort_test, // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -108,6 +109,7 @@ TEST_F(read_wait_two_wait_two_epoch_with_abort_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));

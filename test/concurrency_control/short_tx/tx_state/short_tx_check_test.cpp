@@ -66,8 +66,8 @@ TEST_F(short_check_tx_state_test, short_tx_road_to_commit) { // NOLINT
     TxStateHandle hd{};
     ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
     TxState buf{};
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
+    {
+        stop_epoch();
         ASSERT_EQ(Status::OK, commit(s));
         ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
@@ -75,7 +75,8 @@ TEST_F(short_check_tx_state_test, short_tx_road_to_commit) { // NOLINT
 #else
         ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
 #endif
-    } // release epoch lock
+    }
+    resume_epoch();
 #ifdef PWAL
     // wait durable
     auto ce = epoch::get_global_epoch();

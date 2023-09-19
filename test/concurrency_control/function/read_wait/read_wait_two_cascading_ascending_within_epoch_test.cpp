@@ -96,9 +96,7 @@ TEST_F(read_wait_two_cascading_ascending_within_epoch_test, // NOLINT
     // ==========
     // note: o is occ, l is ltx
     // 4l
-    epoch::set_perm_to_proc(1);
-    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
-    // epoch locked
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stz}}));
@@ -114,7 +112,7 @@ TEST_F(read_wait_two_cascading_ascending_within_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(5),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
-    epoch::set_perm_to_proc(epoch::ptp_init_val); // unlocked
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));

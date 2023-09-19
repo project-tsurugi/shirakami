@@ -20,6 +20,7 @@
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
 #include "database/include/thread_pool.h"
+#include "database/include/tx_state_notification.h"
 
 #ifdef PWAL
 
@@ -67,13 +68,16 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
         epoch::epoch_t ce{epoch::get_global_epoch()};
         // wait durable above flushing
         for (;;) {
-            if (epoch::get_durable_epoch() >= ce) { break; }
+            if (epoch::get_datastore_durable_epoch() >= ce) { break; }
             _mm_pause();
         }
     }
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:end_send_txlog_wait_durable";
+
 #endif
+    // about callbacks
+    clear_durability_callbacks();
 
     // about tx engine
     VLOG(log_debug_timing_event)
@@ -102,8 +106,8 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:start_delete_all_records";
     auto* fast_shutdown_envstr = std::getenv("TSURUGI_FAST_SHUTDOWN");
-    bool fast_shutdown = fast_shutdown_envstr != nullptr
-                         && std::strcmp(fast_shutdown_envstr, "1") == 0;
+    bool fast_shutdown = fast_shutdown_envstr != nullptr &&
+                         std::strcmp(fast_shutdown_envstr, "1") == 0;
     if (fast_shutdown) {
         LOG(INFO) << log_location_prefix << "skipped delete_all_records";
     } else {

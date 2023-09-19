@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
@@ -68,15 +69,13 @@ TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
     epoch::epoch_t ep3{};
     auto stop_log_epoch_insert_wait_epoch_update = [s, st](std::string_view k,
                                                            epoch::epoch_t& ep) {
-        {
-            std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-            ep = epoch::get_global_epoch();
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-            ASSERT_EQ(Status::OK, commit(s));
-        }
+        stop_epoch();
+        ep = epoch::get_global_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
+        ASSERT_EQ(Status::OK, commit(s));
+        resume_epoch();
         wait_epoch_update();
     };
     stop_log_epoch_insert_wait_epoch_update(k1, ep1);
@@ -120,15 +119,13 @@ TEST_F(search_session, read_version_epoch_descending_order) { // NOLINT
     epoch::epoch_t ep3{};
     auto stop_log_epoch_insert_wait_epoch_update = [s, st](std::string_view k,
                                                            epoch::epoch_t& ep) {
-        {
-            std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
-            ep = epoch::get_global_epoch();
-            ASSERT_EQ(Status::OK,
-                      tx_begin({s,
-                                transaction_options::transaction_type::SHORT}));
-            ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
-            ASSERT_EQ(Status::OK, commit(s));
-        }
+        stop_epoch();
+        ep = epoch::get_global_epoch();
+        ASSERT_EQ(Status::OK,
+                  tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, upsert(s, st, k, ""));
+        ASSERT_EQ(Status::OK, commit(s));
+        resume_epoch();
         wait_epoch_update();
     };
     stop_log_epoch_insert_wait_epoch_update(k1, ep1);

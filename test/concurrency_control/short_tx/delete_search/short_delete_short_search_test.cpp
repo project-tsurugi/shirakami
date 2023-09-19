@@ -63,9 +63,9 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(upsert(s, st, "", ""), Status::OK);
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    // stop gc
+    stop_epoch();
     {
-        // stop gc
-        std::unique_lock<std::mutex> lk{epoch::get_ep_mtx()};
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, delete_record(s, st, ""));
@@ -77,6 +77,7 @@ TEST_F(short_delete_short_search, delete_search) { // NOLINT
         ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s, st, "", vb));
         ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     }
+    resume_epoch();
     wait_epoch_update(); // start gc
     // wait process of gc thread
     sleep(1);

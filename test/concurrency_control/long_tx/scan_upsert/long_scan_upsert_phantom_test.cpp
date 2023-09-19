@@ -61,10 +61,12 @@ TEST_F(long_scan_upsert_phantom_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));
 
     // test
+    stop_epoch();
     ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
     ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
+    resume_epoch();
     wait_epoch_update();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s1, st, "", scan_endpoint::INF, "",

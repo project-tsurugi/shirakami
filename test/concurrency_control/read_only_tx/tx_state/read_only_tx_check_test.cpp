@@ -39,15 +39,14 @@ TEST_F(read_only_check_tx_state_test, read_only_tx_road_to_abort) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
     TxState buf{};
-    {
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s,
-                            transaction_options::transaction_type::READ_ONLY}));
-        ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
-    }
+
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
+    resume_epoch();
     wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
@@ -67,15 +66,13 @@ TEST_F(read_only_check_tx_state_test, read_only_tx_road_to_commit) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     TxStateHandle hd{};
     TxState buf{};
-    {
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK,
-                  tx_begin({s,
-                            transaction_options::transaction_type::READ_ONLY}));
-        ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
-    }
+    stop_epoch();
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    ASSERT_EQ(Status::OK, acquire_tx_state_handle(s, hd));
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_START);
+    resume_epoch();
     wait_epoch_update();
     // first
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
@@ -83,14 +80,13 @@ TEST_F(read_only_check_tx_state_test, read_only_tx_road_to_commit) { // NOLINT
     // second should not change without commit api
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    stop_epoch();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
 #endif
-    } // release epoch lock
+    resume_epoch();
 #ifdef PWAL
     // wait durable
     auto ce = epoch::get_global_epoch();
@@ -118,16 +114,15 @@ TEST_F(read_only_check_tx_state_test,             // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
-    { // acquire epoch lock
-        std::unique_lock<std::mutex> eplk{epoch::get_ep_mtx()};
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-        ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
+    stop_epoch();
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
 #else
-        ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
+    ASSERT_EQ(buf.state_kind(), TxState::StateKind::DURABLE);
 #endif
-    } // release epoch lock
+    resume_epoch();
 }
 
 } // namespace shirakami::testing

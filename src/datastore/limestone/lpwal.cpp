@@ -12,6 +12,7 @@
 #include "storage.h"
 
 #include "database/include/database.h"
+#include "database/include/tx_state_notification.h"
 #include "datastore/limestone/include/limestone_api_helper.h"
 
 #include "shirakami/log_record.h"
@@ -92,7 +93,7 @@ void daemon_work() {
     bool can_compute_min_flush_ep{true};
     for (;;) {
         // sleep epoch time
-        sleepMs(epoch::get_global_epoch_time_ms());
+        sleepUs(epoch::get_global_epoch_time_us());
 
         // check fin
         if (get_stopping()) { break; }
@@ -114,9 +115,12 @@ void daemon_work() {
             }
         }
         // set durable epoch
-        auto lep{epoch::get_durable_epoch()};
+        auto lep{epoch::get_datastore_durable_epoch()};
         if (lep >= min_flush_ep) {
-            lpwal::set_durable_epoch(min_flush_ep - 1);
+            durability_marker_type new_dm = min_flush_ep - 1;
+            lpwal::set_durable_epoch(new_dm);
+            // call registered callbacks
+            call_durability_callbacks(new_dm);
             // reset tool for computing durable epoch
             can_compute_min_flush_ep = true;
             min_flush_ep = 0;

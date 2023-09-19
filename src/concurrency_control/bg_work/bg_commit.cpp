@@ -17,12 +17,17 @@ void bg_commit::clear_tx() {
     cont_wait_tx().clear();
 }
 
-void bg_commit::init() {
+void bg_commit::init(std::size_t waiting_resolver_threads_num) {
     // send signal
     worker_thread_end(false);
 
+    // set waiting resolver threads
+    waiting_resolver_threads(waiting_resolver_threads_num);
+
     // invoke thread
-    for (auto&& elem : workers()) { elem = std::thread(worker); }
+    for (std::size_t i = 0; i < waiting_resolver_threads_num; ++i) {
+        workers().emplace_back(std::thread(worker));
+    }
 }
 
 void bg_commit::fin() {
@@ -31,6 +36,8 @@ void bg_commit::fin() {
 
     // wait thread end
     for (auto&& elem : workers()) { elem.join(); }
+    // cleanup workers
+    workers().clear();
 
     /**
      * cleanup container because after next startup, manager thread will 
@@ -62,14 +69,14 @@ void bg_commit::register_tx(Token token) {
 
 void bg_commit::worker() {
     while (!worker_thread_end()) {
-        sleepMs(epoch::get_global_epoch_time_ms());
+        sleepUs(epoch::get_global_epoch_time_us());
 
         std::set<std::size_t> checked_ids = {};
         Token token{};
         std::size_t tx_id{};
         session* ti{};
     // find process tx
-    REFIND : // NOLINT
+    REFIND: // NOLINT
     {
         std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
         // if cont empty then clear used_ids

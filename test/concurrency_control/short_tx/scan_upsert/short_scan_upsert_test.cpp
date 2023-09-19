@@ -2,6 +2,8 @@
 #include <mutex>
 #include <thread>
 
+#include "concurrency_control/include/epoch.h"
+
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"

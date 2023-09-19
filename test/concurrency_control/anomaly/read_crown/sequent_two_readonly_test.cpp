@@ -90,6 +90,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     // note: o is occ, l is ltx, x is omit
     // ltx5
     // lllll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -99,6 +100,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stv, v, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -150,6 +152,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
 
     // ltx5
     // llllx
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {stx}}));
@@ -159,6 +162,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(1), stv, v, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -207,12 +211,14 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
 
     // occ1_ltx3_prep_omit
     // ollxl
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
@@ -267,12 +273,14 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
 
     // 1occ3ltx
     // ollll
+    stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {stu}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
+    resume_epoch();
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,

@@ -135,12 +135,14 @@ TEST_F(long_delete_insert_test, concurrent_insert_tx_delete_tx) { // NOLINT
     // end preparation
 
     // test preparation
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
     // preparation
 
@@ -174,12 +176,14 @@ TEST_F(long_delete_insert_test, concurrent_delete_tx_insert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s2));
 
     // test preparation
+    stop_epoch();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    resume_epoch();
     wait_epoch_update();
     // preparation
 
