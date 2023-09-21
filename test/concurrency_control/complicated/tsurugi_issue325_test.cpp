@@ -68,7 +68,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_OK(upsert(s, st, "", ""));
     ++wait_callback;
-    ASSERT_FALSE(commit(s, cb));
+    ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
 
     // ltx
@@ -84,8 +84,8 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_OK(upsert(s2, st, "", ""));
     ++wait_callback;
     ++wait_callback;
-    ASSERT_TRUE(commit(s2, cb));
-    ASSERT_FALSE(commit(s, cb));
+    ASSERT_FALSE(commit(s2, cb));
+    ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
 
     // read only
@@ -94,7 +94,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     wait_epoch_update();
     ASSERT_OK(search_key(s, st, "", buf));
     ++wait_callback;
-    ASSERT_FALSE(commit(s, cb));
+    ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
 
     // cleanup
