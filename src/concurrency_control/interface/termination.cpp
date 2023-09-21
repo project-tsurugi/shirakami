@@ -124,7 +124,7 @@ bool commit(Token token, commit_callback_type callback) { // NOLINT
     ti->process_before_start_step();
     auto ret = commit_body(token, std::move(callback));
     ti->process_before_finish_step();
-    return ret == Status::WARN_WAITING_FOR_OTHER_TX;
+    return ret != Status::WARN_WAITING_FOR_OTHER_TX;
 }
 
 Status check_commit(Token token) {
