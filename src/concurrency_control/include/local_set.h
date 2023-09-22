@@ -338,6 +338,15 @@ public:
             get_set().back() == elem) { // last elem is same
             return;                     // skip registering.
         }
+
+        for (auto&& elem_set : set_) {
+            if (std::get<1>(elem_set) == std::get<1>(elem)) {
+                /**
+                 * Node versions already added in a previous scan operation.
+                */
+                return;
+            }
+        }
         get_set().emplace_back(elem);
     }
 

@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
@@ -150,12 +151,12 @@ TEST_F(short_insert_scan_test,                   // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(short_insert_scan_test,                   // NOLINT
-        scan_insert_commit_fail) { // NOLINT
-    Storage st;
+TEST_F(short_insert_scan_test,    // NOLINT
+       scan_insert_commit_fail) { // NOLINT
+    Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
 
-    Token s;
+    Token s{};
 
     std::string km1("/");
     std::string k00("0");
@@ -171,12 +172,14 @@ TEST_F(short_insert_scan_test,                   // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 
     ASSERT_EQ(Status::OK, enter(s));
-    ASSERT_EQ(Status::OK, tx_begin({s}));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
 
-    ScanHandle sh;
-    std::string key;
-    std::string val;
-    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, sh));
+    ScanHandle sh{};
+    std::string key{};
+    std::string val{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, sh));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, sh, key));
     ASSERT_EQ(Status::OK, read_value_from_scan(s, sh, val));
     ASSERT_EQ(key, k00);
@@ -202,22 +205,17 @@ TEST_F(short_insert_scan_test,                   // NOLINT
 
     ASSERT_EQ(next(s, sh), Status::WARN_SCAN_LIMIT);
 
-    EXPECT_EQ(Status::OK, commit(s));
-
-    {
-        auto tri = transaction_result_info(s);
-        std::cerr << *tri;
-    }
+    ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(short_insert_scan_test,  // NOLINT
-        scan_2nd_insert_fail) { // NOLINT
+TEST_F(short_insert_scan_test, // NOLINT
+       scan_2nd_insert_fail) { // NOLINT
     // sequence for "UPDATE table SET pk = pk-2"
-    Storage st;
+    Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
 
-    Token s;
+    Token s{};
 
     std::string km2(".");
     std::string km1("/");
@@ -236,10 +234,11 @@ TEST_F(short_insert_scan_test,  // NOLINT
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK, tx_begin({s}));
 
-    ScanHandle sh;
-    std::string key;
-    std::string val;
-    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, sh));
+    ScanHandle sh{};
+    std::string key{};
+    std::string val{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, sh));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, sh, key));
     ASSERT_EQ(Status::OK, read_value_from_scan(s, sh, val));
     ASSERT_EQ(key, k00);
@@ -265,12 +264,7 @@ TEST_F(short_insert_scan_test,  // NOLINT
 
     ASSERT_EQ(next(s, sh), Status::WARN_SCAN_LIMIT);
 
-    EXPECT_EQ(Status::OK, commit(s));
-
-    {
-        auto tri = transaction_result_info(s);
-        std::cerr << *tri;
-    }
+    ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
 }
 
