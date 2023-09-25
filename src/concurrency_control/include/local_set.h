@@ -328,26 +328,41 @@ public:
         return Status::OK;
     }
 
-    void emplace_back(std::pair<yakushima::node_version64_body,
-                                yakushima::node_version64*>
-                              elem) {
+    Status emplace_back(std::pair<yakushima::node_version64_body,
+                                  yakushima::node_version64*>
+                                elem) {
         // take write lock
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         // engineering optimization, shrink nvec size.
         if (!get_set().empty() &&       // not empty
             get_set().back() == elem) { // last elem is same
-            return;                     // skip registering.
+            return Status::OK;          // skip registering.
         }
 
-        for (auto&& elem_set : set_) {
-            if (std::get<1>(elem_set) == std::get<1>(elem)) {
-                /**
-                 * Node versions already added in a previous scan operation.
-                */
-                return;
+        // early validation
+        auto cnvp = std::get<1>(elem)->get_stable_version();
+        if (cnvp != std::get<0>(elem)) {
+            // looks like phantom
+            // check self phantom possibility
+            for (auto&& elem_set : set_) {
+                if (std::get<1>(elem_set) == std::get<1>(elem)) {
+                    /**
+                      * Node versions already added in a previous scan operation.
+                      */
+                    if (cnvp == std::get<0>(elem_set)) {
+                        // the difference due to old self insert.
+                        return Status::OK;
+                    }
+                    // the difference include other tx's insert
+                    return Status::ERR_CC;
+                }
             }
+            // phantom due to other tx's insert
+            return Status::ERR_CC;
         }
+
         get_set().emplace_back(elem);
+        return Status::OK;
     }
 
     auto empty() {

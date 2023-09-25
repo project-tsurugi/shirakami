@@ -248,7 +248,12 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
                 for (auto&& elem : nvec) {
-                    ti->get_node_set().emplace_back(elem);
+                    auto rc_ns = ti->get_node_set().emplace_back(elem);
+                    if (rc_ns == Status::ERR_CC) {
+                        short_tx::abort(ti);
+                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                        return Status::ERR_CC;
+                    }
                 }
             }
         }
@@ -303,16 +308,33 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     if (scan_res.size() < nvec.size()) {
         auto add_ns = [&ti, &nvec](std::size_t n) {
             for (std::size_t i = 0; i < n; ++i) {
-                ti->get_node_set().emplace_back(nvec.at(i));
+                auto rc = ti->get_node_set().emplace_back(nvec.at(i));
+                if (rc == Status::ERR_CC) {
+                    short_tx::abort(ti);
+                    ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                    return Status::ERR_CC;
+                }
             }
+            return Status::OK;
         };
         if (scan_res.size() + 1 == nvec.size()) {
             nvec_delta = 1;
-            add_ns(1);
+            rc = add_ns(1);
+            if (rc == Status::ERR_CC) {
+                long_tx::abort(ti);
+                ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                return rc;
+            }
+
 
         } else if (scan_res.size() + 2 == nvec.size()) {
             nvec_delta = 2;
-            add_ns(2);
+            rc = add_ns(2);
+            if (rc == Status::ERR_CC) {
+                long_tx::abort(ti);
+                ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                return rc;
+            }
         }
     }
 
@@ -644,9 +666,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->push_to_read_set_for_stx(
                 {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
 
-        // create node set info
-        ti->get_node_set().emplace_back({nv, nv_ptr});
-
+        // create node set info, maybe phantom (Status::ERR_CC)
+        auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
+        if (rc == Status::ERR_CC) {
+            short_tx::abort(ti);
+            ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+            return Status::ERR_CC;
+        } // else: return result about read (rr: read result)
         return rr;
     }
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
