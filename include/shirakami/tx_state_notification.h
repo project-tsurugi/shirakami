@@ -35,6 +35,8 @@ using durability_callback_type = std::function<void(durability_marker_type)>;
  * shirakami::fin(). By calling the function multiple-times, multiple callbacks 
  * can be registered for a single shirakami interface. When there are multiple 
  * callbacks registered, the order of callback invocation is undefined.
+ * When shirakami::fin() is called, the callback object passed as `cb`
+ * parameter is destroyed.
  * It is not thread safe.
  * @param cb the callback function invoked on durability status change
  * @return Status::OK if function is successful

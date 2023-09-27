@@ -57,11 +57,13 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
 
     std::atomic<std::size_t> wait_callback{0};
     // commit callback
-    auto cb = [&wait_callback](Status rs, reason_code rc,
+    auto p = std::make_shared<int>(0); // to verify copy of cb is destroyed after callback is invoked
+    auto cb = [&wait_callback, p](Status rs, reason_code rc,
                                durability_marker_type dm) {
         LOG(INFO) << rs << ", " << rc << ", " << dm;
         --wait_callback;
     };
+    ASSERT_EQ(p.use_count(), 2); // referred from p and cb
 
     // occ
     LOG(INFO) << "about occ";
@@ -70,6 +72,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ++wait_callback;
     ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
+    EXPECT_EQ(p.use_count(), 2);
 
     // ltx
     LOG(INFO) << "about ltx";
@@ -87,6 +90,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_FALSE(commit(s2, cb));
     ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
+    EXPECT_EQ(p.use_count(), 2);
 
     // read only
     LOG(INFO) << "about rtx";
@@ -96,6 +100,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ++wait_callback;
     ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
+    EXPECT_EQ(p.use_count(), 2);
 
     // cleanup
     ASSERT_OK(leave(s));
