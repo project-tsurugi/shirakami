@@ -72,9 +72,14 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                 std::string buf{};
                 do {
                     ret = read_key_from_scan(s, hd, buf);
-                    if (ret == Status::OK) { ++ct; }
+                    if (ret == Status::OK) {
+                        ++ct;
+                    } else if (ret == Status::ERR_CC) {
+                        break;
+                    }
                     ret = next(s, hd);
                 } while (ret == Status::OK);
+                if (ret == Status::ERR_CC) { continue; }
                 ret = commit(s); // NOLINT
                 if (ret == Status::OK) {
                     ASSERT_EQ(ct % 500, 0);
