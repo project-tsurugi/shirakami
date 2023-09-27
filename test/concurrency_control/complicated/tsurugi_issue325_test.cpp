@@ -57,9 +57,10 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
 
     std::atomic<std::size_t> wait_callback{0};
     // commit callback
-    auto p = std::make_shared<int>(0); // to verify copy of cb is destroyed after callback is invoked
+    auto p = std::make_shared<int>(
+            0); // to verify copy of cb is destroyed after callback is invoked
     auto cb = [&wait_callback, p](Status rs, reason_code rc,
-                               durability_marker_type dm) {
+                                  durability_marker_type dm) {
         LOG(INFO) << rs << ", " << rc << ", " << dm;
         --wait_callback;
     };
@@ -90,6 +91,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_FALSE(commit(s2, cb));
     ASSERT_TRUE(commit(s, cb));
     while (wait_callback != 0) { _mm_pause(); }
+    sleep(1);
     EXPECT_EQ(p.use_count(), 2);
 
     // read only

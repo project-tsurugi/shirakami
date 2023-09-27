@@ -700,9 +700,6 @@ extern Status commit(session* const ti) {
         return Status::WARN_PREMATURE;
     }
 
-    // get commit callback
-    auto cb = ti->get_commit_callback();
-
     // update read area
     update_read_area(ti);
 
@@ -751,8 +748,8 @@ extern Status commit(session* const ti) {
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "start_abort : " << str_tx_id;
         abort(ti);
-        call_commit_callback(cb, rc, ti->get_result_info().get_reason_code(),
-                             0);
+        ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
+                                 0);
         goto END_COMMIT; // NOLINT
     }
     if (rc != Status::OK) {
@@ -773,8 +770,8 @@ extern Status commit(session* const ti) {
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "start_abort : " << str_tx_id;
         abort(ti);
-        call_commit_callback(cb, rc, ti->get_result_info().get_reason_code(),
-                             0);
+        ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
+                                 0);
     } else if (rc == Status::OK) {
         // This tx must success.
 
@@ -844,7 +841,7 @@ extern Status commit(session* const ti) {
         process_tx_state(ti, ti->get_valid_epoch());
 
         // call commit callback
-        call_commit_callback(cb, rc, {}, ti->get_valid_epoch());
+        ti->call_commit_callback(rc, {}, ti->get_valid_epoch());
 
         // clean up
         cleanup_process(ti, true, write_range);

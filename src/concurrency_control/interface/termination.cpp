@@ -108,6 +108,7 @@ Status commit_body(Token const token,                    // NOLINT
         LOG(ERROR) << log_location_prefix << "unexpected error";
         return Status::ERR_FATAL;
     }
+
     return rc;
 }
 

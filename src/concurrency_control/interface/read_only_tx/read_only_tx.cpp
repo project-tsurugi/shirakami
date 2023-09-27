@@ -44,14 +44,11 @@ void process_tx_state(session* const ti,
 }
 
 Status commit(session* const ti) {
-    // get commit callback
-    auto cb = ti->get_commit_callback();
-
     // about transaction state
     process_tx_state(ti, ti->get_valid_epoch());
 
     // call callback
-    if (cb) { cb(Status::OK, {}, ti->get_valid_epoch()); }
+    ti->call_commit_callback(Status::OK, {}, ti->get_valid_epoch());
 
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);

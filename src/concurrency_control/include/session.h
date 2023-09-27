@@ -53,6 +53,21 @@ public:
 
 
     /**
+     * @brief call commit callback and clear the callback stored
+    */
+    void call_commit_callback(Status sc, reason_code rc,
+                              durability_marker_type dm) {
+        // get callback
+        auto cb = get_commit_callback();
+
+        // call callback if it can
+        if (cb) { cb(sc, rc, dm); }
+
+        // clear callback
+        set_commit_callback({});
+    }
+
+    /**
      * @brief compare and swap for visible_.
      */
     bool cas_visible(bool& expected, bool& desired) {

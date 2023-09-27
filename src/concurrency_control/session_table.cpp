@@ -39,6 +39,8 @@ void session_table::init_session_table() {
         itr.set_session_id(worker_number);
         // for strand
         itr.set_operating(0);
+        // for commit callback
+        itr.set_commit_callback({});
 #ifdef PWAL
         itr.get_lpwal_handle().init();
         itr.get_lpwal_handle().set_worker_number(worker_number);
