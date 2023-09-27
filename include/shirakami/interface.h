@@ -55,6 +55,8 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * the `callback` safely callable until its call, including not only the 
  * successful commit but the case when transaction is aborted for some reason, 
  * e.g. error with commit validation, or database is suddenly closed, etc.
+ * After the callback invocation, the callback object passed as `callback`
+ * parameter will be quickly destroyed.
  *
  * The callback receives following StatusCode:
  *   - Status::ERR_CC Error about concurrency control.
