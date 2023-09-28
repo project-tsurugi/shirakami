@@ -43,23 +43,21 @@
 
 namespace shirakami {
 
-std::string for_output_config(database_options const& options) {
-    std::stringstream ss{};
-    ss << std::boolalpha << std::endl
-       << "database_options about config parameters" << std::endl
-       << "epoch_duration: " << options.get_epoch_time() << std::endl
-       << "The duration of epoch. Default is 40,000 [us]." << std::endl
-       << std::endl
-       << "waiting_resolver_threads: " << options.get_waiting_resolver_threads()
-       << std::endl
-       << "The number of threads which process about waiting ltx for commit. "
-          "Default is 2.";
-    return ss.str();
+void for_output_config(database_options const& options) {
+    // about epoch_duration
+    LOG(INFO) << log_location_prefix_config
+              << "epoch_duration: " << options.get_epoch_time() << ", "
+              << "The duration of epoch. Default is 40,000 [us].";
+    // about waiting_resolver_thrads
+    LOG(INFO) << log_location_prefix_config << "waiting_resolver_threads: "
+              << options.get_waiting_resolver_threads() << ", "
+              << "The number of threads which process about waiting ltx for "
+                 "commit. Default is 2.";
 }
 
 Status init(database_options options) { // NOLINT
     // logging config information
-    LOG(INFO) << log_location_prefix_config << for_output_config(options);
+    for_output_config(options);
 
 
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
