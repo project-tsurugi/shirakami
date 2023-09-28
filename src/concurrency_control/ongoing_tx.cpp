@@ -160,10 +160,10 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
         std::shared_lock<std::shared_mutex> lk{mtx_};
         for (auto&& elem : tx_info_) {
             // check overwrites
-            if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
-                wait_for.end()) {
-                // wait_for hit.
-                if (std::get<ongoing_tx::index_id>(elem) < id) {
+            if (std::get<ongoing_tx::index_id>(elem) < id) {
+                if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
+                    wait_for.end()) {
+                    // wait_for hit.
                     /**
                      * boundary wait 確定.
                      * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
@@ -174,6 +174,9 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                     out_status = waiting_bypass(ti);
                     return out_status == Status::OK;
                 }
+            } else {
+                // considering for only high priori ltx
+                break;
             }
         }
     }
