@@ -1,5 +1,6 @@
 
 
+#include <sstream>
 #include <string_view>
 
 #include "atomic_wrapper.h"
@@ -42,8 +43,24 @@
 
 namespace shirakami {
 
+std::string_view for_output_config(database_options options) {
+    std::stringstream ss{};
+    ss << std::boolalpha << std::endl
+       << "database_options about config parameters" << std::endl
+       << "epoch_duration: " << options.get_epoch_time() << std::endl
+       << "The duration of epoch. Default is 40,000 [us]." << std::endl
+       << std::endl
+       << "waiting_resolver_threads: " << options.get_waiting_resolver_threads()
+       << std::endl
+       << "The number of threads which process about waiting ltx for commit. "
+          "Default is 2.";
+    return ss.str();
+}
+
 Status init(database_options options) { // NOLINT
-    // It can't point const options. It cause compile error.
+    // logging config information
+    LOG(INFO) << log_location_prefix_config << for_output_config(options);
+
 
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -103,7 +120,8 @@ Status init(database_options options) { // NOLINT
     try {
         auto limestone_config =
                 limestone::api::configuration(data_locations, metadata_path);
-        if (int max_para = options.get_recover_max_parallelism(); max_para > 0) {
+        if (int max_para = options.get_recover_max_parallelism();
+            max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);
         }
         datastore::start_datastore(limestone_config);
@@ -118,11 +136,11 @@ Status init(database_options options) { // NOLINT
      * This executes create_channel and pass it to shirakami's executor.
      */
     datastore::init_about_session_table(log_dir);
-    VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << "startup:start_datastore_ready";
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                 << "startup:start_datastore_ready";
     ready(datastore::get_datastore());
-    VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << "startup:end_datastore_ready";
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                 << "startup:end_datastore_ready";
 
 #endif
 
@@ -145,14 +163,14 @@ Status init(database_options options) { // NOLINT
 
 #ifdef PWAL
     // recover shirakami from datastore recovered.
-    VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << "startup:start_recovery_from_datastore";
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                 << "startup:start_recovery_from_datastore";
     if (options.get_open_mode() != database_options::open_mode::CREATE &&
         !enable_true_log_nothing) {
         datastore::recovery_from_datastore();
     }
-    VLOG(log_debug_timing_event)
-            << log_location_prefix_timing_event << "startup:end_recovery_from_datastore";
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                 << "startup:end_recovery_from_datastore";
 #endif
 
     // about epoch
