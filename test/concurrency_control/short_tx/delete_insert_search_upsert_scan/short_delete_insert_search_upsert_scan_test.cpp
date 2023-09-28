@@ -22,7 +22,7 @@ public:
                 "shirakami-test-concurrency_control-short_tx-"
                 "delete_insert_search_upsert_scan-"
                 "short_delete_insert_search_upsert_scan_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);

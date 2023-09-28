@@ -21,7 +21,7 @@ class storage_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-storage-storage_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

@@ -17,7 +17,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-common-"
                                   "helper-c_helper_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

@@ -32,7 +32,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-long_tx-"
                 "search_upsert-long_search_upsert_wait_test_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

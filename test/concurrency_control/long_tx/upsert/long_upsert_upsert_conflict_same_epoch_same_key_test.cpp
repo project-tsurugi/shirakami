@@ -37,7 +37,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-long_tx-"
                 "upsert-long_upsert_upsert_conflict_same_epoch_same_key_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

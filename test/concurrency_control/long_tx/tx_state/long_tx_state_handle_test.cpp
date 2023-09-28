@@ -16,7 +16,7 @@ class long_tx_state_handle_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("long_tx_state_handle_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

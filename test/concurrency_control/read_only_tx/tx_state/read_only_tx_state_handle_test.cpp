@@ -18,7 +18,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only_tx-tx_state-read_"
                 "only_tx_state_handle_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

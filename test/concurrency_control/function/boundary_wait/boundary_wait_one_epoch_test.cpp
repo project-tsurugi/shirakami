@@ -34,7 +34,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-function-"
                                   "boundary_wait-boundary_wait_one_epoch_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

@@ -35,7 +35,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx-"
                                   "insert_update-long_insert_update_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

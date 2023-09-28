@@ -42,7 +42,7 @@ public:
         google::InitGoogleLogging("shirakami-test-datastore-"
                                   "li_single_recovery_"
                                   "delete_one_storage_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override { std::call_once(init_google, call_once_f); }

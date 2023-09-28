@@ -30,7 +30,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-wp_"
                                   "basic-wp_register_remove_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

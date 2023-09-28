@@ -20,7 +20,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
                                   "insert_scan-insert_scan_phantom_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

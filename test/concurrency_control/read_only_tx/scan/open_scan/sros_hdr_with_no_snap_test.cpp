@@ -24,7 +24,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only-"
                 "scan-open_scan-sros_hdr_with_no_snap_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

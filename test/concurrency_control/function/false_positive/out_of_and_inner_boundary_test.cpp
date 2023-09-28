@@ -35,7 +35,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-function-"
                 "false_positive-out_of_and_inner_boundary_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

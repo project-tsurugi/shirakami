@@ -34,7 +34,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-anomaly-"
                 "write_crown-cascading_3tx_1epoch_per_1ope_cycled_4_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

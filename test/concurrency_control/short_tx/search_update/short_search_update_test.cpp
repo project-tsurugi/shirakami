@@ -21,7 +21,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-search_update_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

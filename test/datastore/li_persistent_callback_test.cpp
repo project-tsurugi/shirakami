@@ -38,7 +38,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-datastore-"
                                   "li_persistent_callback_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override { std::call_once(init_google, call_once_f); }

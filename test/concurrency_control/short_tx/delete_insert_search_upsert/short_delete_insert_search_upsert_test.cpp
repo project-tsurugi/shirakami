@@ -27,7 +27,7 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-short_tx-"
                                   "delete_insert_search_upsert-short_delete_"
                                   "insert_search_upsert_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);

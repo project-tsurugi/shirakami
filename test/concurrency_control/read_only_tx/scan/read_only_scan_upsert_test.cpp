@@ -33,7 +33,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only_tx-"
                 "scan-read_only_scan_upsert_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

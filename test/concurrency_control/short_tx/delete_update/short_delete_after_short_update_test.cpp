@@ -22,7 +22,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-short_tx-delete_update-"
                 "short_delete_after_short_update_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

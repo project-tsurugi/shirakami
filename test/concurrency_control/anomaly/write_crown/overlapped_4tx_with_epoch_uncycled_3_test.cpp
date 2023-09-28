@@ -36,7 +36,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-anomaly-"
                 "write_crown-overlapped_4tx_with_epoch_uncycled_3_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

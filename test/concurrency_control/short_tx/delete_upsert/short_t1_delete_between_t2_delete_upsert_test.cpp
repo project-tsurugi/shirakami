@@ -19,7 +19,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-short_tx-"
                 "delete_short_t1_delete_between_t2_delete_upsert_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

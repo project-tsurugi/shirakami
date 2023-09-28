@@ -24,7 +24,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only_tx-"
                 "scan-next-read_only_next_not_skip_drec_with_no_ss_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

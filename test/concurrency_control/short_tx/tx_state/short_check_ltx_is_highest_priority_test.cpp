@@ -21,7 +21,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-short_tx-"
                 "tx_state-short_check_ltx_is_highest_priority_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

@@ -33,7 +33,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-hybrid-scan_wp-"
                 "short_read_from_scan_conflict_wp_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

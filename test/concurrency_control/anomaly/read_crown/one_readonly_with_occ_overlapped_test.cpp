@@ -35,7 +35,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-anomaly-"
                 "read_crown-one_readonly_with_occ_overlapped_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

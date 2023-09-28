@@ -26,7 +26,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only_tx-"
                 "search-read_only_search_long_key_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_google_, call_once_f);

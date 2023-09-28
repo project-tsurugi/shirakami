@@ -20,7 +20,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-long_tx-tx_state-"
                 "long_tx_state_metadata_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

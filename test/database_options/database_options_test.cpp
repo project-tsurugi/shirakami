@@ -18,7 +18,7 @@ class database_options_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-start-database_options_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override { std::call_once(init_google, call_once_f); }

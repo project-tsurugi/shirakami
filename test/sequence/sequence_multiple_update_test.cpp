@@ -28,7 +28,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-sequence-sequence_multiple_update_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
     void SetUp() override {
         std::call_once(init_, call_once_f);

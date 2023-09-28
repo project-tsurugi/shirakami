@@ -24,7 +24,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-read_only-"
                 "scan-long_open_scan_read_area_test");
-        FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_stderrthreshold = 0; // output more than INFO
     }
 
     void SetUp() override {

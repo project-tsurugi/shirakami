@@ -40,7 +40,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
                                   "li_multi_recovery_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override { std::call_once(init_google, call_once_f); }
