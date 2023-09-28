@@ -43,7 +43,7 @@
 
 namespace shirakami {
 
-std::string_view for_output_config(database_options options) {
+std::string for_output_config(database_options const& options) {
     std::stringstream ss{};
     ss << std::boolalpha << std::endl
        << "database_options about config parameters" << std::endl
