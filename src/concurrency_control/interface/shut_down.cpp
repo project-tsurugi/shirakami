@@ -19,6 +19,7 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
+#include "database/include/database.h"
 #include "database/include/thread_pool.h"
 #include "database/include/tx_state_notification.h"
 

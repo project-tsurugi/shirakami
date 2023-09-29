@@ -99,17 +99,6 @@ extern Status commit(Token token); // NOLINT
 extern Status check_commit(Token token); // NOLINT
 
 /**
- * @brief Delete the all records in all tables.
- * @pre This function is called by a single thread and doesn't allow concurrent 
- * processing by other threads. 
- * This is not DML operations but DDL operations.
- * @details  It must not call tx_begin(Token token) before this calling. And 
- * it doesn't need to call enter/leave around calling this function.
- * @return Status::OK success
- */
-[[maybe_unused]] extern Status delete_all_records(); // NOLINT
-
-/**
  * @brief delete the record for the given key
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the handle of storage.

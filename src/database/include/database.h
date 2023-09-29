@@ -20,4 +20,13 @@ set_log_event_callback(log_event_callback const& callback) {
     log_event_callback_ = callback;
 }
 
+/**
+ * @brief Delete the all records in all tables.
+ * @pre This function is called by a single thread and doesn't allow concurrent 
+ * processing by other threads. 
+ * This is not transactional operation.
+ * @return Status::OK success
+ */
+[[maybe_unused]] extern Status delete_all_records(); // NOLINT
+
 } // namespace shirakami

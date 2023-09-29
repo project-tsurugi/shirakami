@@ -212,7 +212,7 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     ASSERT_EQ(handle, 0);
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
-    delete_all_records();
+    // cleanup
     ASSERT_EQ(Status::OK, leave(s));
 }
 
