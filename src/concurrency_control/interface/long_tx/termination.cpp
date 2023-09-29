@@ -770,6 +770,9 @@ extern Status commit(session* const ti) {
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "start_abort : " << str_tx_id;
         abort(ti);
+        // log debug timing event
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "end_abort : " << str_tx_id;
         ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
                                  0);
     } else if (rc == Status::OK) {
@@ -853,6 +856,10 @@ extern Status commit(session* const ti) {
     }
 
 END_COMMIT: // NOLINT
+    // log debug timing event
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                 << "end_precommit : " << str_tx_id;
+
     // detail info
     if (logging::get_enable_logging_detail_info()) {
         VLOG(log_trace) << log_location_prefix_detail_info
