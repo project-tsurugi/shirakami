@@ -19,6 +19,7 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
+#include "database/include/database.h"
 #include "database/include/logging.h"
 #include "database/include/thread_pool.h"
 
@@ -56,6 +57,9 @@ void for_output_config(database_options const& options) {
 }
 
 Status init(database_options options) { // NOLINT
+    // set flag
+    set_is_shutdowning(false);
+
     // logging config information
     for_output_config(options);
 

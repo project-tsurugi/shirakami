@@ -46,6 +46,8 @@ namespace shirakami {
 
 void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
+    // set flag
+    set_is_shutdowning(true);
 
     /**
      * about back ground worker about commit
@@ -139,6 +141,9 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 
     // about read area
     read_plan::fin();
+
+    // set flag
+    set_is_shutdowning(false);
 
     // clear flag
     set_initialized(false);

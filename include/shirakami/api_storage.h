@@ -30,14 +30,12 @@ extern Status create_storage(std::string_view key, Storage& storage,
 /**
  * @brief delete existing storage and records under the storage.
  * @param[in] storage the storage handle retrieved with create_storage().
- * @param[in] is_logging If ths is true, this is treated as transactional DDL.
- * If this is false, this is treated as non transactional operation.
  * @return Status::OK if successful.
  * @return Status::WARN_INVALID_HANDLE if the storage is not registered with 
  * the given name.
  * @return Status::ERR_FATAL Some programming error.
  */
-extern Status delete_storage(Storage storage, bool is_logging = true);
+extern Status delete_storage(Storage storage);
 
 /**
  * @brief Get the storage handle by using key.

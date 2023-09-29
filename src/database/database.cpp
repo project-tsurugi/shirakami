@@ -26,7 +26,7 @@ Status database_set_logging_callback(log_event_callback const& callback) {
     // delete all storages.
     for (auto&& elem : storage_list) {
         if (elem != wp::get_page_set_meta_storage()) {
-            if (delete_storage(elem, false) != Status::OK) {
+            if (delete_storage(elem) != Status::OK) {
                 LOG(ERROR) << log_location_prefix << "try delete_storage("
                            << elem << ")";
                 return Status::ERR_FATAL;

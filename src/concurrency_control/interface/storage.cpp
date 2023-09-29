@@ -16,6 +16,8 @@
 #include "shirakami/logging.h"
 #include "shirakami/storage_options.h"
 
+#include "database/include/database.h"
+
 #include "yakushima/include/kvs.h"
 
 #include "glog/logging.h"
@@ -100,7 +102,7 @@ Status create_storage(std::string_view const key, Storage& storage,
     return Status::OK;
 }
 
-Status delete_storage(Storage const storage, bool is_logging) {
+Status delete_storage(Storage const storage) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
     if (ret != Status::OK) { return ret; }
@@ -115,7 +117,7 @@ Status delete_storage(Storage const storage, bool is_logging) {
             return Status::ERR_FATAL;
         }
 
-        if (is_logging) { remove_storage_metadata(key); }
+        if (!get_is_shutdowning()) { remove_storage_metadata(key); }
     }
     return Status::OK;
 }
