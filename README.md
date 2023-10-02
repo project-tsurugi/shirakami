@@ -1,10 +1,11 @@
-# shirakami - Transaction Engine.
+# Shirakami - Transaction Engine.
 
 ## Requirements
 
 * CMake `>= 3.10`
 * C++ Compiler `>= C++17`
-* Build related libraries - on Ubuntu, you can install with following command:
+* Build related libraries - on Ubuntu, you can install with following command. 
+Please check in advance whether ubuntu.deps is correct.:
 
 ```sh
 # clone this repository
@@ -23,10 +24,12 @@ RUN apt update -y && apt install -y $(cat build_tools/ubuntu.deps)
 
 ## How to build
 
+* Shirakami uses Yakushima for in-memory index. So you must install Yakushima for build.
+
 ```sh
 mkdir build
 cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/path/to/yakushima/installed ..
 ninja
 ```
 
@@ -40,7 +43,7 @@ Available options:
 * `-DBUILD_SHARED_LIBS=OFF`
    * Create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>`
-   * Indicate prerequiste installation directory
+   * Indicate prerequiste installation directory (ex. yakushima)
 * `-DFORCE_INSTALL_RPATH=ON`
    * Force set RPATH for non-default library paths
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON`
@@ -73,13 +76,6 @@ Available options:
        * The number of retry read without give-up due to conflicts at reading
        record.
        * Default : `0`
-
-* Benchmarking (project_root/bench)
-  + RocksDB
-    - `-DBUILD_ROCKSDB_BENCH=ON`
-      * Build project_root/bench/rocksdb_bench.
-      * Default: `OFF`
-        
 
 ## Recommendation
 
