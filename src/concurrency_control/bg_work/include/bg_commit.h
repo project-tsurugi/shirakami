@@ -61,6 +61,8 @@ public:
 
     static void worker();
 
+    static void show_list();
+
 private:
     /**
      * @brief The number of threads for resolving waiting list.

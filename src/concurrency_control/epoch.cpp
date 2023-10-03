@@ -1,6 +1,7 @@
 
 #include "clock.h"
 
+#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/epoch_internal.h"
 #include "concurrency_control/include/ongoing_tx.h"
@@ -117,6 +118,7 @@ void epoch_thread_work() {
             VLOG(log_debug_timing_event)
                     << log_location_prefix << "new_epoch:" << new_epoch
                     << " cc_safe_ss_epoch:" << get_cc_safe_ss_epoch();
+            bg_work::bg_commit::show_list();
 #ifdef PWAL
             // change also datastore's epoch
             switch_epoch(shirakami::datastore::get_datastore(), new_epoch);

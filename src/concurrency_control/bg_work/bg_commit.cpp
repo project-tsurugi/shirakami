@@ -167,4 +167,20 @@ void bg_commit::worker() {
     }
 }
 
+void bg_commit::show_list() {
+    std::stringstream ss{};
+    ss << "/:shirakami:wait_reason:bg_commit cont_wait:";
+    {
+        std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+        auto itr = cont_wait_tx().begin();
+        for (; itr != cont_wait_tx().end(); ++itr) {
+            //auto token = std::get<1>(*itr);
+            auto tx_id = std::get<0>(*itr);
+            //auto ti = static_cast<session*>(token);
+            ss << " " << tx_id;
+        }
+    }
+    VLOG(10) << ss.str();
+}
+
 } // namespace shirakami::bg_work
