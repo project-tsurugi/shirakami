@@ -78,6 +78,11 @@ else ()
     message("It uses no logging method.")
 endif ()
 
+if (TSURUGI_FAST_SHUTDOWN)
+    add_definitions(-DTSURUGI_FAST_SHUTDOWN_ON)
+    message("shutdown shortcut is enabled by default.")
+endif ()
+
 # Begin : parameter settings
 
 # Begin : about kvs

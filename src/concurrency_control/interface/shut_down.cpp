@@ -44,6 +44,20 @@
 
 namespace shirakami {
 
+static inline bool is_fast_shutdown() {
+    // check environ "TSURUGI_FAST_SHUTDOWN" first
+    if (auto* fast_shutdown_envstr = std::getenv("TSURUGI_FAST_SHUTDOWN");
+        fast_shutdown_envstr != nullptr && *fast_shutdown_envstr != '\0') {
+        return std::strcmp(fast_shutdown_envstr, "1") == 0;
+    }
+    // use default value from build parameter
+#if defined(TSURUGI_FAST_SHUTDOWN_ON)
+    return true;
+#else
+    return false;
+#endif
+}
+
 void fin([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
     // set flag
@@ -108,9 +122,7 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
 #endif
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "shutdown:start_delete_all_records";
-    auto* fast_shutdown_envstr = std::getenv("TSURUGI_FAST_SHUTDOWN");
-    bool fast_shutdown = fast_shutdown_envstr != nullptr &&
-                         std::strcmp(fast_shutdown_envstr, "1") == 0;
+    bool fast_shutdown = is_fast_shutdown();
     if (fast_shutdown) {
         LOG(INFO) << log_location_prefix << "skipped delete_all_records";
     } else {
