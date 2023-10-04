@@ -172,6 +172,16 @@ public:
         set_tx_type(transaction_options::transaction_type::READ_ONLY);
     }
 
+    [[nodiscard]] bool is_write_only_ltx_now() {
+        std::shared_lock<std::shared_mutex> lk_point_read{
+                read_set_for_ltx().get_mtx_set()};
+        std::shared_lock<std::shared_mutex> lk_range_read{
+                get_range_read_set_for_ltx().get_mtx_set()};
+        return get_tx_type() == transaction_options::transaction_type::LONG &&
+               read_set_for_ltx().set().empty() &&
+               get_range_read_set_for_ltx().get_set().empty();
+    }
+
     // ========== start: getter
     [[nodiscard]] tx_id::type_session_id get_session_id() const {
         return session_id_;

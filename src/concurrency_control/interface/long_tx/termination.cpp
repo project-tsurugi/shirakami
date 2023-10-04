@@ -152,6 +152,7 @@ static inline void expose_local_write(
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
+        bool should_backward{ti->get_is_force_backwarding()};
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT: {
                 // not accept fallthrough!
@@ -204,10 +205,20 @@ static inline void expose_local_write(
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);
                 } else if (ti->get_valid_epoch() == pre_tid.get_epoch()) {
-                    // para write
-                    should_log = false;
-                    ctid.set_tid(pre_tid.get_tid());
-                    ctid.set_epoch(pre_tid.get_epoch());
+                    if (should_backward) {
+                        // non invisible write due to bypass read wait
+                        should_log = true;
+                        std::string vb{};
+                        wso.get_value(vb);
+                        rec_ptr->get_latest()->set_value(vb);
+                        ctid.set_tid(pre_tid.get_tid());
+                    } else {
+                        // invisible write
+                        should_log = false;
+                        //ctid.set_tid(pre_tid.get_tid());
+                        //ctid.set_epoch(pre_tid.get_epoch());
+                    }
+                    // unlock and set ctid
                     rec_ptr->set_tid(ctid);
                 } else {
                     // case: middle of list
@@ -238,7 +249,18 @@ static inline void expose_local_write(
                             break;
                         }
                         if (tid.get_epoch() == ti->get_valid_epoch()) {
-                            // para (partial order) write, invisible write
+                            // para (partial order) write, normally invisible write
+                            if (should_backward) {
+                                // non invisible write due to bypass read wait
+                                should_log = true;
+                                std::string vb{};
+                                wso.get_value(vb);
+                                // set value
+                                ver->set_value(vb);
+                                // set tid
+                                ctid.set_tid(pre_tid.get_tid());
+                                ver->set_tid(ctid);
+                            }
                             break;
                         }
                         pre_ver = ver;

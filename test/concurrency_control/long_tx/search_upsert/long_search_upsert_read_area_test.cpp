@@ -68,8 +68,8 @@ TEST_F(long_search_upsert_read_area_test, explicit_read_positive) { // NOLINT
     // ==============================
 
     // ==============================
-    // test
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    // test (blind write not wait for ltx)
+    ASSERT_EQ(Status::OK, commit(s2));
     // ==============================
 
     // ==============================
@@ -101,8 +101,8 @@ TEST_F(long_search_upsert_read_area_test, universe_read_positive) { // NOLINT
     // ==============================
 
     // ==============================
-    // test
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    // test (blind write not wait for other ltx)
+    ASSERT_EQ(Status::OK, commit(s2));
     // ==============================
 
     // ==============================
@@ -167,8 +167,8 @@ TEST_F(long_search_upsert_read_area_test, not_set_read_negative) { // NOLINT
     // ==============================
 
     // ==============================
-    // test
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    // test (blind write not wait for other ltx)
+    ASSERT_EQ(Status::OK, commit(s2));
     // ==============================
 
     // ==============================

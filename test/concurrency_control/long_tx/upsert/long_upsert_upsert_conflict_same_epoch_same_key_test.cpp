@@ -75,8 +75,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     resume_epoch();
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s2, st, "", "v1"), Status::OK);
-    ASSERT_EQ(upsert(s1, st, "", "v2"), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
@@ -86,7 +86,7 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    ASSERT_EQ(buf, "v2");
+    ASSERT_EQ(buf, "1");
 
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
@@ -116,8 +116,8 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     resume_epoch();
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s1, st, "", "v2"), Status::OK);
-    ASSERT_EQ(upsert(s2, st, "", "v1"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
 
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, commit(s2));
@@ -127,7 +127,7 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    ASSERT_EQ(buf, "v2");
+    ASSERT_EQ(buf, "1");
 
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
@@ -157,24 +157,19 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     resume_epoch();
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s2, st, "", "v1"), Status::OK);
-    ASSERT_EQ(upsert(s1, st, "", "v2"), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
 
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    Status rc{};
-    do {
-        rc = check_commit(s2);
-        _mm_pause();
-    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::OK, rc);
 
     // verify
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    ASSERT_TRUE(buf == "v2" || buf == "v1");
+    ASSERT_EQ(buf, "2");
+    ASSERT_EQ(Status::OK, commit(s1));
 
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
@@ -204,29 +199,18 @@ TEST_F(long_upsert_upsert_conflict_same_epoch_same_key_test, // NOLINT
     resume_epoch();
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s1, st, "", "v2"), Status::OK);
-    ASSERT_EQ(upsert(s2, st, "", "v1"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
 
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    Status rc{};
-    do {
-        rc = check_commit(s2);
-        _mm_pause();
-    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::OK, rc);
 
     // verify
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    ASSERT_TRUE((buf == "v1") || (buf == "v2"));
-    /**
-     * ltx をコミットするバックグラウンドスレッドは現在二つ。s1 がコミット申請時点で 
-     * read の実態をグローバルに登録しs2 はそれを見て waiting bypass. s2 が先駆けて
-     * 書くと version order s1 < s2 (s1 はｋ後から来て invisible write)
-    */
+    ASSERT_EQ(buf, "2");
 
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));

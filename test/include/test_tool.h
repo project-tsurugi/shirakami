@@ -4,6 +4,8 @@
 
 #include "concurrency_control/include/epoch.h"
 
+#define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
+
 namespace shirakami {
 
 static inline void wait_epoch_update() {

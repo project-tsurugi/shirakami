@@ -185,7 +185,20 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     if (has_wp) {
         // check potential read-anti and read area for each write storage
         bool ret = read_plan::check_potential_read_anti(id, st_set);
-        if (ret) { return true; }
+        if (!ret) {
+            // no need to read wait and it can try IWR
+            return false;
+        }
+        // should wait read except write only
+
+        // check write only
+        bool write_only = ti->is_write_only_ltx_now();
+        if (write_only) {
+            ti->set_is_force_backwarding(true);
+            return false;
+        }
+        // not write only and may have high priori read
+        return true;
     }
 
     return false;

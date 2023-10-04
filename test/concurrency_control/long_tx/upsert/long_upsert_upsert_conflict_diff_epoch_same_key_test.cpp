@@ -138,17 +138,19 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
               Status::OK);
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s1, st, "", ""), Status::OK);
-    ASSERT_EQ(upsert(s2, st, "", ""), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
 
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    Status rc{};
-    do {
-        rc = check_commit(s2);
-        _mm_pause();
-    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::OK, rc);
+
+    // verify
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::SHORT}),
+              Status::OK);
+    std::string buf{};
+    ASSERT_OK(search_key(s1, st, "", buf));
+    ASSERT_EQ(buf, "2");
+
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
@@ -176,17 +178,19 @@ TEST_F(long_upsert_upsert_conflict_diff_epoch_same_key_test, // NOLINT
               Status::OK);
     wait_epoch_update();
 
-    ASSERT_EQ(upsert(s2, st, "", ""), Status::OK);
-    ASSERT_EQ(upsert(s1, st, "", ""), Status::OK);
+    ASSERT_EQ(upsert(s2, st, "", "2"), Status::OK);
+    ASSERT_EQ(upsert(s1, st, "", "1"), Status::OK);
 
-    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
-    Status rc{};
-    do {
-        rc = check_commit(s2);
-        _mm_pause();
-    } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
-    ASSERT_EQ(Status::OK, rc);
+
+    // verify
+    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::SHORT}),
+              Status::OK);
+    std::string buf{};
+    ASSERT_OK(search_key(s1, st, "", buf));
+    ASSERT_EQ(buf, "2");
+
     ASSERT_EQ(Status::OK, leave(s1));
     ASSERT_EQ(Status::OK, leave(s2));
 }
