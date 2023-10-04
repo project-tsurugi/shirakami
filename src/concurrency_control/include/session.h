@@ -147,6 +147,31 @@ public:
      */
     [[nodiscard]] Status find_wp(Storage st) const;
 
+    void init_flags_for_tx_begin() { get_result_info().clear(); }
+
+    void init_flags_for_stx_begin() {
+        init_flags_for_tx_begin();
+        set_tx_type(transaction_options::transaction_type::SHORT);
+        get_write_set().set_for_batch(false);
+    }
+
+    void init_flags_for_ltx_begin() {
+        init_flags_for_tx_begin();
+        /**
+          * It may be called without check_commit for the ltx.
+          * Clear metadata initialized at check_commit.
+          */
+        set_requested_commit(false);
+        set_is_force_backwarding(false);
+        set_tx_type(transaction_options::transaction_type::LONG);
+        get_write_set().set_for_batch(true);
+    }
+
+    void init_flags_for_rtx_begin() {
+        init_flags_for_tx_begin();
+        set_tx_type(transaction_options::transaction_type::READ_ONLY);
+    }
+
     // ========== start: getter
     [[nodiscard]] tx_id::type_session_id get_session_id() const {
         return session_id_;
@@ -301,6 +326,10 @@ public:
     local_read_set_for_ltx& read_set_for_ltx() { return read_set_for_ltx_; }
 
     commit_callback_type get_commit_callback() { return commit_callback_; }
+
+    [[nodiscard]] bool get_is_force_backwarding() const {
+        return is_force_backwarding_.load(std::memory_order_acquire);
+    }
 
     // ========== end: long tx
 
@@ -467,6 +496,10 @@ public:
     }
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
+
+    void set_is_force_backwarding(bool const tf) {
+        is_force_backwarding_.store(tf, std::memory_order_release);
+    }
 
     void set_read_version_max_epoch(epoch::epoch_t const ep) {
         read_version_max_epoch_.store(ep, std::memory_order_release);
@@ -669,6 +702,11 @@ private:
      * @note It may be accessed by user and shirakami background worker.
      */
     std::atomic<Status> result_requested_commit_{};
+
+    /**
+     * @brief Whether this tx is forced to backward due to protocol logic.
+    */
+    std::atomic<bool> is_force_backwarding_{false};
 
     /**
      * @brief long tx id.

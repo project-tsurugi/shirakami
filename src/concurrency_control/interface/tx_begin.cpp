@@ -59,18 +59,14 @@ Status tx_begin_body(transaction_options options) { // NOLINT
         }
     }
     if (tx_type == transaction_options::transaction_type::LONG) {
-        /**
-             * It may be called without check_commit for the ltx.
-             * Clear metadata initialized at check_commit.
-             */
-        ti->set_requested_commit(false);
+        ti->init_flags_for_ltx_begin();
 
         auto rc{long_tx::tx_begin(ti, write_preserve, options.get_read_area())};
         if (rc != Status::OK) { return rc; }
-        ti->get_write_set().set_for_batch(true);
     } else if (tx_type == transaction_options::transaction_type::SHORT) {
-        ti->get_write_set().set_for_batch(false);
+        ti->init_flags_for_stx_begin();
     } else if (tx_type == transaction_options::transaction_type::READ_ONLY) {
+        ti->init_flags_for_rtx_begin();
         auto rc{read_only_tx::tx_begin(ti)};
         if (rc != Status::OK) {
             LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
@@ -80,7 +76,7 @@ Status tx_begin_body(transaction_options options) { // NOLINT
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
-    ti->set_tx_type(tx_type);
+    // begin success, set begin epoch
     ti->set_begin_epoch(epoch::get_global_epoch());
 
     // about tx counter
