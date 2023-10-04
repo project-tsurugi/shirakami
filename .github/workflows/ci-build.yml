@@ -28,12 +28,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.GHA_PAT }}
 
       - name: Install_Dependencies
         uses: ./.github/actions/install-dependencies
-        with:
-          token: ${{ secrets.GHA_PAT }}
 
       - name: CMake_Build
         run: |
@@ -92,12 +89,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.GHA_PAT }}
 
       - name: Install_Dependencies
         uses: ./.github/actions/install-dependencies
-        with:
-          token: ${{ secrets.GHA_PAT }}
 
       - name: CMake_Generate
         run: |
