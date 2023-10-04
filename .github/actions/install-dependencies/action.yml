@@ -1,9 +1,6 @@
 name: Shirakami-Install-Dependencies
 
 inputs:
-  token:
-    description: token for checkout private repo
-    required: true
   checkout:
     description: Skip checkout if false
     default: true
@@ -22,7 +19,6 @@ runs:
         repository: project-tsurugi/limestone
         path: ${{ inputs.path }}/limestone
         ref: master
-        token: ${{ inputs.token }}
 
     - name: Checkout_Yakushima
       uses: actions/checkout@v3
@@ -31,7 +27,6 @@ runs:
         repository: project-tsurugi/yakushima
         path: ${{ inputs.path }}/yakushima
         ref: master
-        token: ${{ inputs.token }}
 
     - name: Install_Limestone
       run: |
