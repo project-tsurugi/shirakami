@@ -40,10 +40,11 @@ void extract_higher_priori_ltx_info(session* const ti,
                         std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
                 auto& read_range =
                         std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                if (target_set.empty()) {
+                if (target_set.empty() || !std::get<2>(read_range)) {
                     // initialize read range
                     std::get<0>(read_range) = key;
                     std::get<1>(read_range) = key;
+                    std::get<2>(read_range) = true;
                 } else {
                     // already initialize, update read range
                     if (key < std::get<0>(read_range)) {
@@ -52,6 +53,33 @@ void extract_higher_priori_ltx_info(session* const ti,
                         std::get<1>(read_range) = key;
                     }
                 }
+                target_set.insert(wped.second);
+            }
+        }
+    }
+}
+
+void extract_higher_priori_ltx_info(session* const ti,
+                                    wp_meta* const wp_meta_ptr,
+                                    wp_meta::wped_type const& wps) {
+    for (auto&& wped : wps) {
+        if (wped.second != 0) {
+            if (wped.second < ti->get_long_tx_id()) {
+                // this tx decides that wped.second tx may be the forwarding target.
+
+                // get mutex
+                std::lock_guard<std::shared_mutex> lk{
+                        ti->get_mtx_overtaken_ltx_set()};
+
+                /**
+                 * If this is the first forwarding against this table, 
+                 * initialize read range.
+                 */
+                auto& target_set =
+                        std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+                auto& read_range =
+                        std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+                std::get<2>(read_range) = false;
                 target_set.insert(wped.second);
             }
         }

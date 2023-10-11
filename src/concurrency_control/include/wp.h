@@ -86,6 +86,9 @@ void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
                                     wp_meta::wped_type const& wps,
                                     std::string_view key);
 
+void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
+                                    wp_meta::wped_type const& wps);
+
 /**
  * @brief termination process about wp.
  */

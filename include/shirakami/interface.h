@@ -234,7 +234,8 @@ extern Status insert(Token token, Storage storage,
 extern Status leave(Token token); // NOLINT
 
 /**
- * @brief This function preserve the specified range of masstree
+ * @brief This function preserve the specified range of masstree. If you use ltx
+ * mode, it may log forwarding and read information.
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the handle of storage.
  * @param[in] l_key the left end key of range.
@@ -257,6 +258,7 @@ extern Status leave(Token token); // NOLINT
  * the fact that nothing was read is guaranteed by isolation.
  * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
  * for some high priority transactions.
+ * @return Status::WARN_STORAGE_NOT_FOUND The storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */

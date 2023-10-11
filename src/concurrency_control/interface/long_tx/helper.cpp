@@ -222,14 +222,47 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
 }
 
 void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
-                              const std::string_view read_info) {
+                              const std::string_view read_key) {
     auto wps = wp_meta_ptr->get_wped();
     if (!wp::wp_meta::empty(wps)) {
         // exist wp
         auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
         if (ep_id.second < ti->get_long_tx_id()) {
             // the wp is higher priority long tx than this.
-            wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps, read_info);
+            wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps, read_key);
+        }
+    }
+}
+
+void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
+    auto wps = wp_meta_ptr->get_wped();
+    if (!wp::wp_meta::empty(wps)) {
+        // exist wp
+        auto ep_id{wp::wp_meta::find_min_ep_id(wps)};
+        if (ep_id.second < ti->get_long_tx_id()) {
+            // the wp is higher priority long tx than this.
+            wp::extract_higher_priori_ltx_info(ti, wp_meta_ptr, wps);
+        }
+    }
+}
+
+void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
+                             const std::string_view key) {
+    // get mutex
+    std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+
+    auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+    if (!std::get<2>(read_range)) {
+        // it was not initialized
+        std::get<0>(read_range) = key;
+        std::get<1>(read_range) = key;
+        std::get<2>(read_range) = true;
+    } else {
+        // it was initialized
+        if (key < std::get<0>(read_range)) {
+            std::get<0>(read_range) = key;
+        } else if (key > std::get<1>(read_range)) {
+            std::get<1>(read_range) = key;
         }
     }
 }

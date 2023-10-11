@@ -73,11 +73,8 @@ TEST_F(short_read_from_scan_conflict_wp_test, short_find_wp) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ScanHandle hd{};
-    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
-                                    scan_endpoint::INF, hd));
-    // test
-    std::string sb{};
-    ASSERT_EQ(Status::ERR_CC, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(Status::ERR_CC, open_scan(s, st, "", scan_endpoint::INF, "",
+                                        scan_endpoint::INF, hd));
 
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(sl));

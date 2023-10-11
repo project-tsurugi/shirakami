@@ -444,8 +444,6 @@ void register_read_by(session* const ti) {
 }
 
 Status verify(session* const ti) {
-    auto this_epoch = ti->get_valid_epoch();
-
     // forwarding verify
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
     {
@@ -456,7 +454,7 @@ Status verify(session* const ti) {
             std::lock_guard<std::shared_mutex> lk{
                     wp_meta_ptr->get_mtx_wp_result_set()};
             bool is_first_item_before_gc_threshold{true};
-            std::tuple<std::string, std::string> read_range =
+            std::tuple<std::string, std::string, bool> read_range =
                     std::get<1>(oe.second);
             for (auto&& wp_result_itr =
                          wp_meta_ptr->get_wp_result_set().begin();
@@ -544,7 +542,6 @@ Status verify(session* const ti) {
         }
     }
 
-
     // verify for write set
     {
         std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
@@ -617,7 +614,7 @@ Status verify(session* const ti) {
                     range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
                     std::string keyb{};
                     wso.first->get_key(keyb);
-                    auto rb{rrbp->is_exist(this_epoch, keyb)};
+                    auto rb{rrbp->is_exist(ti->get_valid_epoch(), keyb)};
 
                     // for long
                     if (rb) {

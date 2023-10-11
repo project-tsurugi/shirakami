@@ -49,6 +49,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
+// single tx
 
 TEST_F(long_insert_scan_test,  // NOLINT
        scan_read_own_insert) { // NOLINT

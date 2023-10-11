@@ -218,47 +218,39 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         }
     }
 
+    // check storage existence
+    wp::wp_meta* wp_meta_ptr{};
+    if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+
     // find slot to log scan result.
     auto rc = find_open_scan_slot(ti, handle);
     if (rc != Status::OK) { return rc; }
 
-    // scan for index
-    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
-    constexpr std::size_t index_rec_ptr{1};
-    std::vector<std::pair<yakushima::node_version64_body,
-                          yakushima::node_version64*>>
-            nvec;
-    constexpr std::size_t index_nvec_body{0};
-    constexpr std::size_t index_nvec_ptr{1};
-    rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
-    if (rc != Status::OK) { return rc; }
-    // not empty
-
-    std::size_t head_skip_rec_n{};
-    /**
-     * skip leading unreadable records.
-     */
-    rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
-    if (rc != Status::OK) {
+    // ==========
+    // wp verify section
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         /**
-         * The fact must be guaranteed by isolation. So it can get node version 
-         * and it must check about phantom at commit phase.
+         * early abort optimization. If it is not, it finally finds at commit phase.
          */
-        {
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
-                for (auto&& elem : nvec) {
-                    auto rc_ns = ti->get_node_set().emplace_back(elem);
-                    if (rc_ns == Status::ERR_CC) {
-                        short_tx::abort(ti);
-                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-                        return Status::ERR_CC;
-                    }
-                }
-            }
+        auto wps = wp::find_wp(storage);
+        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+        if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
+            abort(ti);
+            ti->set_result(reason_code::CC_OCC_WP_VERIFY);
+            return Status::ERR_CC;
         }
-        return fin_process(ti, rc);
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
+        // wp verify and forwarding
+        long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr);
+    } else if (ti->get_tx_type() !=
+               transaction_options::transaction_type::READ_ONLY) {
+        LOG(ERROR) << log_location_prefix << "unreachable path";
+        return Status::ERR_FATAL;
     }
+    // ==========
 
     // check read information
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
@@ -297,6 +289,56 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                transaction_options::transaction_type::READ_ONLY) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
+    }
+
+    // for no hit
+    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, r_key]() {
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key);
+            long_tx::update_local_read_range(ti, wp_meta_ptr, r_key);
+        }
+    };
+
+    // scan for index
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    constexpr std::size_t index_rec_ptr{1};
+    std::vector<std::pair<yakushima::node_version64_body,
+                          yakushima::node_version64*>>
+            nvec;
+    constexpr std::size_t index_nvec_body{0};
+    constexpr std::size_t index_nvec_ptr{1};
+    rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
+    if (rc != Status::OK) {
+        update_local_read_range_if_ltx();
+        return rc;
+    }
+    // not empty of targeting records
+
+    std::size_t head_skip_rec_n{};
+    /**
+     * skip leading unreadable records.
+     */
+    rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
+    if (rc != Status::OK) {
+        /**
+         * The fact must be guaranteed by isolation. So it can get node version 
+         * and it must check about phantom at commit phase.
+         */
+        {
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                for (auto&& elem : nvec) {
+                    auto rc_ns = ti->get_node_set().emplace_back(elem);
+                    if (rc_ns == Status::ERR_CC) {
+                        short_tx::abort(ti);
+                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                        return Status::ERR_CC;
+                    }
+                }
+            }
+        }
+        update_local_read_range_if_ltx();
+        return fin_process(ti, rc);
     }
 
     /**
@@ -591,11 +633,26 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
 
         // ==========
-        /**
-          * Check read-own-write
-          */
         rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
     }
+
+    // log read range info if ltx
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        wp::wp_meta* wp_meta_ptr{};
+        if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
+                             wp_meta_ptr) != Status::OK) {
+            // todo special case. interrupt DDL
+            return Status::WARN_STORAGE_NOT_FOUND;
+        }
+        // update local read range
+        std::string key_buf{};
+        rec_ptr->get_key(key_buf);
+        long_tx::update_local_read_range(ti, wp_meta_ptr, key_buf);
+    }
+
+    /**
+      * Check read-own-write
+      */
     const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
     if (inws != nullptr) {
         if (inws->get_op() == OP_TYPE::DELETE) {
@@ -610,44 +667,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
         read_register_if_ltx(rec_ptr);
         return Status::OK;
-    }
-    // ==========
-
-    // ==========
-    // wp verify section
-    Storage st{};
-    {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        st = std::get<scan_handler::scan_cache_storage_pos>(
-                sh.get_scan_cache()[handle]);
-    }
-    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-        /**
-         * early abort optimization. If it is not, it finally finds at commit phase.
-         */
-        auto wps = wp::find_wp(st);
-        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
-            abort(ti);
-            ti->set_result(reason_code::CC_OCC_WP_VERIFY);
-            return Status::ERR_CC;
-        }
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        // check storage existence and extract wp meta info
-        wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(st, wp_meta_ptr) != Status::OK) {
-            // todo special case. interrupt DDL
-            return Status::WARN_STORAGE_NOT_FOUND;
-        }
-        // wp verify and forwarding
-        long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr,
-                                          rec_ptr->get_key_view());
-    } else if (ti->get_tx_type() !=
-               transaction_options::transaction_type::READ_ONLY) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
-        return Status::ERR_FATAL;
     }
     // ==========
 
