@@ -125,9 +125,26 @@ Status search_key(session* ti, Storage const storage,
     auto rc = check_before_execution(ti, storage);
     if (rc != Status::OK) { return rc; }
 
+    // check storage existence and extract wp meta info
+    wp::wp_meta* wp_meta_ptr{};
+    if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+
+    // wp verify and forwarding
+    wp_verify_and_forwarding(ti, wp_meta_ptr, key);
+
     // index access
     Record* rec_ptr{};
     if (Status::WARN_NOT_FOUND == get<Record>(storage, key, rec_ptr)) {
+        // create read info as predicate tracing point read
+        wp::page_set_meta* psm{};
+        rc = wp::find_page_set_meta(storage, psm);
+        if (rc != Status::OK) { return Status::WARN_STORAGE_NOT_FOUND; }
+        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
+        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
+                rrbp, std::string(key), scan_endpoint::INCLUSIVE,
+                std::string(key), scan_endpoint::INCLUSIVE));
         return Status::WARN_NOT_FOUND;
     }
 
@@ -144,15 +161,6 @@ Status search_key(session* ti, Storage const storage,
         }
         if (rc == Status::WARN_NOT_FOUND) { return rc; }
     }
-
-    // check storage existence and extract wp meta info
-    wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
-        return Status::WARN_STORAGE_NOT_FOUND;
-    }
-
-    // wp verify and forwarding
-    wp_verify_and_forwarding(ti, wp_meta_ptr, key);
 
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
     if (rc == Status::OK) { create_read_set_for_read_info(ti, rec_ptr); }
