@@ -98,7 +98,7 @@ TEST_F(tsurugi_issue378, case_2) { // NOLINT
                                                 "", scan_endpoint::INF, hd2));
     ASSERT_EQ(Status::OK, insert(s2, st, "3", "100"));
 
-    std::atomic<Status> cb_rc;
+    std::atomic<Status> cb_rc{};
     std::atomic<bool> was_called{false};
     auto cb = [&cb_rc,
                &was_called](Status rs, [[maybe_unused]] reason_code rc,
@@ -146,7 +146,7 @@ TEST_F(tsurugi_issue378, case_3) { // NOLINT
                                                 "", scan_endpoint::INF, hd2));
     ASSERT_EQ(Status::OK, insert(s2, st, "3", "100"));
 
-    std::atomic<Status> cb_rc;
+    std::atomic<Status> cb_rc{};
     std::atomic<bool> was_called{false};
     auto cb = [&cb_rc,
                &was_called](Status rs, [[maybe_unused]] reason_code rc,
@@ -194,7 +194,7 @@ TEST_F(tsurugi_issue378, case_4) { // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(s2, st, "", buf));
     ASSERT_EQ(Status::OK, insert(s2, st, "3", "100"));
 
-    std::atomic<Status> cb_rc;
+    std::atomic<Status> cb_rc{};
     std::atomic<bool> was_called{false};
     auto cb = [&cb_rc,
                &was_called](Status rs, [[maybe_unused]] reason_code rc,
@@ -242,7 +242,7 @@ TEST_F(tsurugi_issue378, case_5) { // NOLINT
                                                 "", scan_endpoint::INF, hd2));
     ASSERT_EQ(Status::OK, upsert(s2, st, "id1", "100"));
 
-    std::atomic<Status> cb_rc;
+    std::atomic<Status> cb_rc{};
     std::atomic<bool> was_called{false};
     auto cb = [&cb_rc,
                &was_called](Status rs, [[maybe_unused]] reason_code rc,
