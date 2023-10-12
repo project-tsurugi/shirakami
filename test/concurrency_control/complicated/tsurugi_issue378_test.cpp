@@ -220,6 +220,8 @@ TEST_F(tsurugi_issue378, case_5) { // NOLINT
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
+    // empty table
+
     Token s1{};
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s1));
@@ -240,23 +242,79 @@ TEST_F(tsurugi_issue378, case_5) { // NOLINT
     ScanHandle hd2{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s2, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd2));
-    ASSERT_EQ(Status::OK, upsert(s2, st, "id1", "100"));
+    ASSERT_EQ(Status::OK, insert(s2, st, "id1", "100"));
 
-    std::atomic<Status> cb_rc{};
-    std::atomic<bool> was_called{false};
-    auto cb = [&cb_rc,
-               &was_called](Status rs, [[maybe_unused]] reason_code rc,
-                            [[maybe_unused]] durability_marker_type dm) {
-        cb_rc.store(rs, std::memory_order_release);
-        was_called.store(true, std::memory_order_release);
-    };
+    //    std::atomic<Status> cb_rc{};
+    //    std::atomic<bool> was_called{false};
+    //    auto cb = [&cb_rc,
+    //               &was_called](Status rs, [[maybe_unused]] reason_code rc,
+    //                            [[maybe_unused]] durability_marker_type dm) {
+    //        cb_rc.store(rs, std::memory_order_release);
+    //        was_called.store(true, std::memory_order_release);
+    //    };
 
-    ASSERT_FALSE(commit(s2, cb));      // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
+
+    //    while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
+    //
+    //    ASSERT_EQ(Status::OK, cb_rc.load(std::memory_order_acquire));
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(tsurugi_issue378, DISABLED_case_6) { // NOLINT
+                                   // tx1 point read, tx2 range read
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    // initialized data: [1,100], [2,200], [3,300], [4,400], [5,500], [6,600]
+    Token s1{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, insert(s1, st, "1", "100"));
+    ASSERT_EQ(Status::OK, insert(s1, st, "2", "200"));
+    ASSERT_EQ(Status::OK, insert(s1, st, "3", "300"));
+    ASSERT_EQ(Status::OK, insert(s1, st, "4", "400"));
+    ASSERT_EQ(Status::OK, insert(s1, st, "5", "500"));
+    ASSERT_EQ(Status::OK, insert(s1, st, "6", "600"));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
-    while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
+    // tx1
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    std::string buf{};
+    ASSERT_EQ(Status::OK, search_key(s1, st, "1", buf));
+    ASSERT_EQ(Status::OK, insert(s1, st, "7", "700"));
+    // tx2
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s2));
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
 
-    ASSERT_EQ(Status::ERR_CC, cb_rc.load(std::memory_order_acquire));
+    ScanHandle hd2{};
+    ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd2));
+    for (std::size_t i = 1; i <= 6; ++i) { // NOLINT
+        ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd2, buf));
+        ASSERT_EQ(buf, std::to_string(i));
+        if (i < 6) { // NOLINT
+            ASSERT_EQ(Status::OK, next(s2, hd2));
+        } else {
+            ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s2, hd2));
+        }
+    }
+    ASSERT_EQ(Status::OK, update(s2, st, "1", "150"));
+
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
