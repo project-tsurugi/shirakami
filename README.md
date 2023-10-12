@@ -48,6 +48,8 @@ Available options:
    * Force set RPATH for non-default library paths
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON`
    * Use formatting for source files
+* `-DTSURUGI_FAST_SHUTDOWN=ON`
+   * Enable the shutdown process shortcut by default (default: `OFF` )
 * For debugging only
   + `-DENABLE_SANITIZER=OFF`
     - Disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug` )
