@@ -1,5 +1,6 @@
 
 #include "database/include/tx_state_notification.h"
+#include "concurrency_control/include/epoch.h"
 
 #ifdef PWAL
 
@@ -13,7 +14,7 @@ void add_durability_callbacks(durability_callback_type const& dc) {
     std::unique_lock<std::mutex> lk{get_mtx_durability_callbacks()};
 #ifdef PWAL
     // enable logging
-    dc(lpwal::get_durable_epoch());
+    dc(epoch::get_datastore_durable_epoch());
 #endif
     get_durability_callbacks().emplace_back(dc);
 }

@@ -1,6 +1,7 @@
 
 #include "test_tool.h"
 
+#include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
@@ -91,7 +92,7 @@ TEST_F(read_only_check_tx_state_test, read_only_tx_road_to_commit) { // NOLINT
     // wait durable
     auto ce = epoch::get_global_epoch();
     for (;;) {
-        if (lpwal::get_durable_epoch() >= ce) { break; }
+        if (epoch::get_datastore_durable_epoch() >= ce) { break; }
         _mm_pause();
     }
 #endif

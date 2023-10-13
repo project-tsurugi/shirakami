@@ -752,8 +752,10 @@ extern Status commit(session* const ti) {
     }
 #endif
 
+    auto this_dm = epoch::get_global_epoch();
+
     // about tx state
-    process_tx_state(ti, ce);
+    process_tx_state(ti, this_dm);
 
     // clean up local set
     ti->clean_up();
@@ -761,7 +763,7 @@ extern Status commit(session* const ti) {
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);
 
-    ti->call_commit_callback(rc, {}, ce);
+    ti->call_commit_callback(rc, {}, this_dm);
     return Status::OK;
 }
 

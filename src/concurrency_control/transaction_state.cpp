@@ -1,4 +1,5 @@
 
+#include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
@@ -81,7 +82,8 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     if (out.get_serial_epoch() == 0) {
         if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
 #ifdef PWAL
-            if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {
+            if (ts.get_durable_epoch() <=
+                epoch::get_datastore_durable_epoch()) {
                 ts.set_kind(TxState::StateKind::DURABLE);  // for internal
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }
@@ -108,7 +110,8 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
             out.set_kind(TxState::StateKind::WAITING_CC_COMMIT); // for external
         } else if (ts.state_kind() == TxState::StateKind::WAITING_DURABLE) {
 #ifdef PWAL
-            if (ts.get_durable_epoch() <= lpwal::get_durable_epoch()) {
+            if (ts.get_durable_epoch() <=
+                epoch::get_datastore_durable_epoch()) {
                 ts.set_kind(TxState::StateKind::DURABLE);  // for internal
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }

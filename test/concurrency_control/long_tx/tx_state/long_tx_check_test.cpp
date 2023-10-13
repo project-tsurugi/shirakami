@@ -1,6 +1,7 @@
 
 #include "test_tool.h"
 
+#include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
@@ -19,7 +20,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
                                   "interface-tx_state-long_tx_check_test");
-        // FLAGS_stderrthreshold = 0;
+        FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
@@ -79,6 +80,7 @@ TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
     stop_epoch();
+    LOG(INFO) << epoch::get_global_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
@@ -89,7 +91,7 @@ TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     // wait durable
     auto ce = epoch::get_global_epoch();
     for (;;) {
-        if (lpwal::get_durable_epoch() >= ce) { break; }
+        if (epoch::get_datastore_durable_epoch() >= ce) { break; }
         _mm_pause();
     }
 #endif
@@ -158,14 +160,14 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     std::string sbuf{};
     ASSERT_EQ(Status::OK, search_key(s2, st, "", sbuf));
     // must wait high priori ltx due to forwarding
+    stop_epoch();
     ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
-    ASSERT_TRUE((buf.state_kind() == TxState::StateKind::WAITING_CC_COMMIT) ||
-                (buf.state_kind() == TxState::StateKind::DURABLE));
+    ASSERT_TRUE(buf.state_kind() == TxState::StateKind::WAITING_CC_COMMIT);
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    // at least, s2 dm is the same to s1 or later
 #ifdef PWAL
-    stop_epoch();
     for (;;) {
         if (check_commit(s2) == Status::OK) { break; }
         _mm_pause();

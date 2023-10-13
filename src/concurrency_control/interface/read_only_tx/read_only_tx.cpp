@@ -44,11 +44,14 @@ void process_tx_state(session* const ti,
 }
 
 Status commit(session* const ti) {
+    // about durability marker
+    auto this_dm{epoch::get_global_epoch()};
+
     // about transaction state
-    process_tx_state(ti, ti->get_valid_epoch());
+    process_tx_state(ti, this_dm);
 
     // call callback
-    ti->call_commit_callback(Status::OK, {}, ti->get_valid_epoch());
+    ti->call_commit_callback(Status::OK, {}, this_dm);
 
     // set transaction result
     ti->set_result(reason_code::UNKNOWN);

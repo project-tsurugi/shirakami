@@ -89,7 +89,7 @@ TEST_F(sequence_ltx_test, basic) { // NOLINT
         // wait updating result effect
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
-            if (lpwal::get_durable_epoch() > ce) { break; }
+            if (epoch::get_datastore_durable_epoch() > ce) { break; }
             _mm_pause();
         }
 #endif

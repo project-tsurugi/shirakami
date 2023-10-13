@@ -113,7 +113,7 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
     auto wait_update = []() {
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
-            if (lpwal::get_durable_epoch() > ce) { break; }
+            if (epoch::get_datastore_durable_epoch() > ce) { break; }
             _mm_pause();
         }
     };
@@ -182,7 +182,7 @@ TEST_F(li_single_recovery_sequence_test,                 // NOLINT
     auto wait_update = []() {
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
-            if (lpwal::get_durable_epoch() > ce) { break; }
+            if (epoch::get_datastore_durable_epoch() > ce) { break; }
             _mm_pause();
         }
     };

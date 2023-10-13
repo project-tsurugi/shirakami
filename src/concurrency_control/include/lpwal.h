@@ -53,11 +53,6 @@ namespace shirakami::lpwal {
  */
 [[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
 
-/**
- * @brief Durable epoch of pwal.
- */
-[[maybe_unused]] inline std::atomic<epoch::epoch_t> durable_epoch_; // NOLINT
-
 class write_version_type {
 public:
     using major_write_version_type = epoch::epoch_t;
@@ -165,10 +160,6 @@ public:
 
     std::mutex& get_mtx_logs() { return mtx_logs_; }
 
-    epoch::epoch_t get_last_flushed_epoch() {
-        return last_flushed_epoch_.load(std::memory_order_acquire);
-    }
-
     limestone::api::log_channel* get_log_channel_ptr() {
         return log_channel_ptr_;
     }
@@ -189,15 +180,10 @@ public:
 
     void init() {
         worker_number_ = 0;
-        last_flushed_epoch_ = 0;
         min_log_epoch_ = 0;
         logs_.clear();
         // this can't due to concurrent programming
         // log_channel_ptr_ = nullptr;
-    }
-
-    void set_last_flushed_epoch(epoch::epoch_t e) {
-        last_flushed_epoch_.store(e, std::memory_order_release);
     }
 
     void set_log_channel_ptr(limestone::api::log_channel* ptr) {
@@ -215,12 +201,6 @@ private:
      * @brief worker thread number used for logging callback.
      */
     std::size_t worker_number_{};
-
-    /**
-     * @brief max epoch of flushed log. It is used for computing durable epoch.
-     * 
-     */
-    std::atomic<epoch::epoch_t> last_flushed_epoch_{0};
 
     /**
      * @brief minimum epoch of logs_. If this is 0, no log.
@@ -303,17 +283,9 @@ private:
     return stopping_.load(std::memory_order_acquire);
 }
 
-[[maybe_unused]] static epoch::epoch_t get_durable_epoch() {
-    return durable_epoch_.load(std::memory_order_acquire);
-}
-
 // setter of global variables
 [[maybe_unused]] static void set_stopping(bool tf) {
     stopping_.store(tf, std::memory_order_release);
-}
-
-[[maybe_unused]] static void set_durable_epoch(epoch::epoch_t e) {
-    durable_epoch_.store(e, std::memory_order_release);
 }
 
 /**

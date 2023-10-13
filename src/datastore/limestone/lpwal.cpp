@@ -58,11 +58,6 @@ void add_entry_from_logs(handler& handle) {
                       static_cast<std::uint64_t>(
                               log_elem.get_wv().get_minor_write_version()));
         }
-        if (log_elem.get_wv().get_major_write_version() >
-            handle.get_last_flushed_epoch()) {
-            handle.set_last_flushed_epoch(
-                    log_elem.get_wv().get_major_write_version());
-        }
 
         // log for callback
         if (enable_callback &&
@@ -89,8 +84,6 @@ void add_entry_from_logs(handler& handle) {
 }
 
 void daemon_work() {
-    epoch::epoch_t min_flush_ep{0};
-    bool can_compute_min_flush_ep{true};
     for (;;) {
         // sleep epoch time
         sleepUs(epoch::get_global_epoch_time_us());
@@ -103,30 +96,6 @@ void daemon_work() {
         for (auto&& es : session_table::get_session_table()) {
             // flush work
             flush_log(&es);
-
-            // compute durable epoch
-            if (can_compute_min_flush_ep) {
-                auto fe{es.get_lpwal_handle().get_last_flushed_epoch()};
-                if (min_flush_ep == 0) {
-                    min_flush_ep = fe;
-                } else {
-                    if (min_flush_ep > fe) { min_flush_ep = fe; }
-                }
-            }
-        }
-        // set durable epoch
-        auto lep{epoch::get_datastore_durable_epoch()};
-        if (lep >= min_flush_ep) {
-            durability_marker_type new_dm = min_flush_ep - 1;
-            lpwal::set_durable_epoch(new_dm);
-            // call registered callbacks
-            call_durability_callbacks(new_dm);
-            // reset tool for computing durable epoch
-            can_compute_min_flush_ep = true;
-            min_flush_ep = 0;
-        } else {
-            // stop compute because lep may not overtake min_flush_ep
-            can_compute_min_flush_ep = false;
         }
     }
 }
@@ -134,7 +103,6 @@ void daemon_work() {
 void init() {
     // initialize "some" global variables
     set_stopping(false);
-    lpwal::set_durable_epoch(0);
     // start damon thread
     daemon_thread_ = std::thread(daemon_work);
 }
@@ -155,48 +123,11 @@ void flush_log(Token token) {
     auto& handle = ti->get_lpwal_handle();
     // this is called worker or daemon, so use try_lock
     if (handle.get_mtx_logs().try_lock()) {
-        // register epoch before flush work (*1)
-        auto ce{epoch::get_global_epoch()};
-
         // flush log if exist
         if (!handle.get_logs().empty()) {
             begin_session(handle.get_log_channel_ptr());
             add_entry_from_logs(handle);
             end_session(handle.get_log_channel_ptr());
-        }
-
-        // update last flushed epoch
-        if (ti->get_visible()) {
-            // the session is opened
-            // If this block is executed by daemon thread, this is optimization.
-            if (ti->get_tx_began()) {
-                if (ti->get_tx_type() ==
-                    transaction_options::transaction_type::SHORT) {
-                    handle.set_last_flushed_epoch(ti->get_step_epoch());
-                } else if (ti->get_tx_type() ==
-                           transaction_options::transaction_type::LONG) {
-                    auto oep{ongoing_tx::get_lowest_epoch()};
-                    if (oep == 0) {
-                        // the ltx was committed without logging and no logs
-                        handle.set_last_flushed_epoch(ce);
-                    } else {
-                        handle.set_last_flushed_epoch(oep);
-                        // It may set older value than before, but no problem.
-                    }
-                } else if (ti->get_tx_type() ==
-                           transaction_options::transaction_type::READ_ONLY) {
-                    // read only
-                    handle.set_last_flushed_epoch(ce);
-                } else {
-                    LOG(ERROR) << log_location_prefix << "unreachable path";
-                }
-            } else {
-                // if tx not begin. daemon thread uses this code.
-                handle.set_last_flushed_epoch(ce);
-            }
-        } else {
-            // the session is not opened. daemon thread uses this code.
-            handle.set_last_flushed_epoch(ce);
         }
 
         handle.get_mtx_logs().unlock();

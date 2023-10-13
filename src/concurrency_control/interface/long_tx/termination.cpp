@@ -858,12 +858,14 @@ extern Status commit(session* const ti) {
           * Eliminate wp from those that have been globalized in wp units.
           */
 
+        auto this_dm = epoch::get_global_epoch();
 
         // about transaction state
-        process_tx_state(ti, ti->get_valid_epoch());
+        process_tx_state(ti, this_dm);
+        LOG(INFO) << ti->get_long_tx_id() << ", " << this_dm;
 
         // call commit callback
-        ti->call_commit_callback(rc, {}, ti->get_valid_epoch());
+        ti->call_commit_callback(rc, {}, this_dm);
 
         // clean up
         cleanup_process(ti, true, write_range);

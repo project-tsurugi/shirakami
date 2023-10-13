@@ -8,7 +8,9 @@
 #include <mutex>
 #include <thread>
 
-#include "glog/logging.h" // todo remove
+#include "database/include/tx_state_notification.h"
+
+#include "glog/logging.h"
 
 namespace shirakami::epoch {
 
@@ -80,6 +82,7 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] static void set_datastore_durable_epoch(epoch_t ep) {
     datastore_durable_epoch.store(ep, std::memory_order_release);
+    call_durability_callbacks(ep);
 }
 
 [[maybe_unused]] static void set_cc_safe_ss_epoch(const epoch_t ep) {
