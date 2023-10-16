@@ -862,7 +862,6 @@ extern Status commit(session* const ti) {
 
         // about transaction state
         process_tx_state(ti, this_dm);
-        LOG(INFO) << ti->get_long_tx_id() << ", " << this_dm;
 
         // call commit callback
         ti->call_commit_callback(rc, {}, this_dm);

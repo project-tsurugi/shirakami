@@ -20,7 +20,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
                                   "interface-tx_state-long_tx_check_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
@@ -80,7 +80,6 @@ TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);
     stop_epoch();
-    LOG(INFO) << epoch::get_global_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #ifdef PWAL
