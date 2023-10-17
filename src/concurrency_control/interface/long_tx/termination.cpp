@@ -563,16 +563,12 @@ Status verify(session* const ti) {
                 // expect the record existing
                 if (!(tid.get_latest() && !tid.get_absent())) {
                     if (wso.second.get_op() == OP_TYPE::UPDATE) {
-                        ti->get_result_info().set_key_storage_name(
-                                rec_ptr->get_key_view(),
-                                wso.second.get_storage());
                         ti->set_result(reason_code::KVS_UPDATE);
                     } else {
                         ti->set_result(reason_code::KVS_DELETE);
-                        ti->get_result_info().set_key_storage_name(
-                                rec_ptr->get_key_view(),
-                                wso.second.get_storage());
                     }
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
                     return Status::ERR_CC;
                 }
             }

@@ -213,6 +213,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto rs = long_tx::check_read_area(ti, storage);
         if (rs == Status::ERR_READ_AREA_VIOLATION) {
             long_tx::abort(ti);
+            ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
             return rs;
         }
@@ -238,6 +239,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
             abort(ti);
+            ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CC;
         }
@@ -331,6 +333,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                     auto rc_ns = ti->get_node_set().emplace_back(elem);
                     if (rc_ns == Status::ERR_CC) {
                         short_tx::abort(ti);
+                        ti->get_result_info().set_storage_name(storage);
                         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                         return Status::ERR_CC;
                     }
@@ -349,11 +352,12 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     std::size_t nvec_delta{0};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         if (scan_res.size() < nvec.size()) {
-            auto add_ns = [&ti, &nvec](std::size_t n) {
+            auto add_ns = [&ti, &nvec, storage](std::size_t n) {
                 for (std::size_t i = 0; i < n; ++i) {
                     auto rc = ti->get_node_set().emplace_back(nvec.at(i));
                     if (rc == Status::ERR_CC) {
                         short_tx::abort(ti);
+                        ti->get_result_info().set_storage_name(storage);
                         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                         return Status::ERR_CC;
                     }
@@ -364,7 +368,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 nvec_delta = 1;
                 rc = add_ns(1);
                 if (rc == Status::ERR_CC) {
-                    long_tx::abort(ti);
+                    short_tx::abort(ti);
+                    ti->get_result_info().set_storage_name(storage);
                     ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                     return rc;
                 }
@@ -374,7 +379,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 nvec_delta = 2;
                 rc = add_ns(2);
                 if (rc == Status::ERR_CC) {
-                    long_tx::abort(ti);
+                    short_tx::abort(ti);
+                    ti->get_result_info().set_storage_name(storage);
                     ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                     return rc;
                 }
@@ -691,6 +697,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
         if (rc == Status::ERR_CC) {
             short_tx::abort(ti);
+            ti->get_result_info().set_storage_name(
+                    sh.get_scanned_storage_set().get(handle));
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             return Status::ERR_CC;
         } // else: return result about read (rr: read result)

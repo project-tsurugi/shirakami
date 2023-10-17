@@ -102,6 +102,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
     if (rs == Status::ERR_READ_AREA_VIOLATION) {
         std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         long_tx::abort(ti);
+        ti->get_result_info().set_storage_name(storage);
         ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
         return rs;
     }

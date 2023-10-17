@@ -204,8 +204,10 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         if (read_verify(ti, itr.get_storage(), itr.get_tid(), check, rec_ptr) !=
             Status::OK) {
             unlock_write_set(ti);
-            short_tx::abort(ti);
+            ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
+                                                       itr.get_storage());
             ti->set_result(reason_code::CC_OCC_READ_VERIFY);
+            short_tx::abort(ti);
             return Status::ERR_CC;
         }
         // ==============================
