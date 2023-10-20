@@ -73,10 +73,11 @@ TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     };
     wait_epoch_update();
 
-    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_CONFLICT_ON_WRITE_PRESERVE);
+    ASSERT_EQ(insert(s2, st, k, v), Status::ERR_CC);
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
+              reason_code::CC_OCC_WP_VERIFY);
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
 
-    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));
@@ -110,9 +111,10 @@ TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);
-    ASSERT_EQ(insert(s2, st, k, v), Status::WARN_CONFLICT_ON_WRITE_PRESERVE);
+    ASSERT_EQ(insert(s2, st, k, v), Status::ERR_CC);
+    ASSERT_EQ(static_cast<session*>(s2)->get_result_info().get_reason_code(),
+              reason_code::CC_OCC_WP_VERIFY);
 
-    ASSERT_EQ(Status::OK, commit(s2));
     ASSERT_EQ(Status::OK, commit(s1));
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));

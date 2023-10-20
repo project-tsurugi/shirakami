@@ -5,6 +5,7 @@
 #include "test_tool.h"
 
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
 #include "index/yakushima/include/interface.h"
@@ -105,9 +106,9 @@ TEST_F(short_delete_test, short_delete_find_wp) { // NOLINT
     // test
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::WARN_CONFLICT_ON_WRITE_PRESERVE,
-              delete_record(s, st, ""));
-    ASSERT_EQ(Status::OK, abort(s));
+    ASSERT_EQ(Status::ERR_CC, delete_record(s, st, ""));
+    ASSERT_EQ(static_cast<session*>(s)->get_result_info().get_reason_code(),
+              reason_code::CC_OCC_WP_VERIFY);
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));

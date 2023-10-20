@@ -14,6 +14,7 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
+#include "concurrency_control/interface/short_tx/include/short_tx.h"
 
 #include "database/include/logging.h"
 
@@ -91,15 +92,19 @@ Status check_before_write_ops(session* const ti, Storage const st,
 
     } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {
-        // check wp
-        auto wps{wm->get_wped()};
-        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
-            // exist valid wp
-            //ti->get_result_info().set_reason_code(
-            //        reason_code::CC_OCC_WP_VERIFY);
-            //ti->get_result_info().set_key_storage_name(key, st);
-            return Status::WARN_CONFLICT_ON_WRITE_PRESERVE;
+        if (op != OP_TYPE::UPSERT) {
+            // check wp
+            auto wps{wm->get_wped()};
+            auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
+            if (find_min_ep != 0) {
+                // exist valid wp
+                std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
+                short_tx::abort(ti);
+                ti->get_result_info().set_reason_code(
+                        reason_code::CC_OCC_WP_VERIFY);
+                ti->get_result_info().set_key_storage_name(key, st);
+                return Status::ERR_CC;
+            }
         }
     }
 

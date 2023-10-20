@@ -18,7 +18,8 @@
 
 namespace shirakami::short_tx {
 
-inline Status wp_verify(session* const ti, Storage const st) {
+inline Status wp_verify(session* const ti, Storage const st,
+                        std::string_view const key) {
     wp::wp_meta* wm{};
     auto rc{wp::find_wp_meta(st, wm)};
     if (rc != Status::OK) { return Status::WARN_STORAGE_NOT_FOUND; }
@@ -28,6 +29,7 @@ inline Status wp_verify(session* const ti, Storage const st) {
         std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         short_tx::abort(ti);
         ti->set_result(reason_code::CC_OCC_WP_VERIFY);
+        ti->get_result_info().set_key_storage_name(key, st);
         return Status::ERR_CC;
     }
     return Status::OK;
@@ -37,7 +39,7 @@ Status search_key(session* ti, Storage const storage,
                   std::string_view const key, std::string& value,
                   bool const read_value) {
     // check wp
-    auto rc{wp_verify(ti, storage)};
+    auto rc{wp_verify(ti, storage, key)};
     if (rc != Status::OK) { return rc; }
 
     // index access
