@@ -105,7 +105,7 @@ public:
         return scanned_storage_set_;
     }
 
-    [[nodiscard]] bool get_is_full_scan() {
+    [[nodiscard]] bool get_is_full_scan() const {
         return is_full_scan_;
     }
 

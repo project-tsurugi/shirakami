@@ -585,7 +585,8 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
-void check_ltx_full_scan_and_log(Token const token, ScanHandle const handle) {
+void check_ltx_full_scan_and_log(Token const token, // NOLINT
+                                 ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     auto& sh = ti->get_scan_handle();
     /**
