@@ -257,6 +257,7 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
         std::get<0>(read_range) = key;
         std::get<1>(read_range) = key;
         std::get<2>(read_range) = true;
+        std::get<3>(read_range) = false;
     } else {
         // it was initialized
         if (key < std::get<0>(read_range)) {

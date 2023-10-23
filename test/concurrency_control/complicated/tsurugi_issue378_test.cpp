@@ -265,7 +265,7 @@ TEST_F(tsurugi_issue378, case_5) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
-TEST_F(tsurugi_issue378, DISABLED_case_6) { // NOLINT
+TEST_F(tsurugi_issue378, case_6) { // NOLINT
                                    // tx1 point read, tx2 range read
     // prepare
     Storage st{};

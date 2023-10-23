@@ -412,6 +412,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     scan_index += head_skip_rec_n;
 
     sh.get_scanned_storage_set().set(handle, storage);
+    sh.set_is_full_scan(l_end == scan_endpoint::INF &&
+                        r_end == scan_endpoint::INF);
     return fin_process(ti, Status::OK);
 }
 
@@ -583,10 +585,47 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
+void check_ltx_full_scan_and_log(Token const token, ScanHandle const handle) {
+    auto* ti = static_cast<session*>(token);
+    auto& sh = ti->get_scan_handle();
+    /**
+     * Check whether the handle is valid.
+     */
+    {
+        // take read lock
+        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+            return;
+        }
+    }
+    // valid handle
+
+    // check full scan
+    if (sh.get_is_full_scan()) {
+        // log full scan
+        // get storage info
+        wp::wp_meta* wp_meta_ptr{};
+        if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
+                             wp_meta_ptr) != Status::OK) {
+            // todo special case. interrupt DDL
+            return;
+        }
+        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+
+        auto& read_range =
+                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        std::get<3>(read_range) = true;
+    }
+}
+
 Status next(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = next_body(token, handle);
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
+        ret == Status::WARN_SCAN_LIMIT) {
+        check_ltx_full_scan_and_log(token, handle);
+    }
     ti->process_before_finish_step();
     return ret;
 }

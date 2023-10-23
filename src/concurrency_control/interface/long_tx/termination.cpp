@@ -454,8 +454,7 @@ Status verify(session* const ti) {
             std::lock_guard<std::shared_mutex> lk{
                     wp_meta_ptr->get_mtx_wp_result_set()};
             bool is_first_item_before_gc_threshold{true};
-            std::tuple<std::string, std::string, bool> read_range =
-                    std::get<1>(oe.second);
+            auto read_range = std::get<1>(oe.second);
             for (auto&& wp_result_itr =
                          wp_meta_ptr->get_wp_result_set().begin();
                  wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
@@ -482,24 +481,8 @@ Status verify(session* const ti) {
                                 // the ltx didn't write.
                                 break;
                             }
-                            if (
-                                    /**
-                                      * read right point < write left point
-                                      */
-                                    (std::get<1>(read_range) <
-                                     std::get<1>(write_result)) ||
-                                    /**
-                                      * write right point < read left point
-                                      */
-                                    (std::get<2>(write_result) <
-                                     std::get<0>(read_range))) {
-                                // can't hit
-                                break;
-                            }
-
-                            // the itr show overtaken ltx
-                            if (wp_result_epoch < ti->get_valid_epoch()) {
-                                // try forwarding
+                            // def ramda for hit
+                            auto hit_process = [ti, wp_result_epoch]() {
                                 // check read upper bound
                                 if (ti->get_read_version_max_epoch() >=
                                     wp_result_epoch) {
@@ -510,6 +493,36 @@ Status verify(session* const ti) {
                                     return Status::ERR_CC;
                                 } // forwarding not break own old read
                                 ti->set_valid_epoch(wp_result_epoch);
+                                return Status::OK;
+                            };
+                            if (std::get<3>(read_range)) {
+                                // this was full scan
+                                auto rc = hit_process();
+                                if (rc == Status::ERR_CC) { return rc; }
+                            } else {
+                                // this was not full scan
+                                // check range
+                                if (
+                                        /**
+                                      * read right point < write left point
+                                      */
+                                        (std::get<1>(read_range) <
+                                         std::get<1>(write_result)) ||
+                                        /**
+                                      * write right point < read left point
+                                      */
+                                        (std::get<2>(write_result) <
+                                         std::get<0>(read_range))) {
+                                    // can't hit
+                                    break;
+                                }
+
+                                // the itr show overtaken ltx
+                                if (wp_result_epoch < ti->get_valid_epoch()) {
+                                    // try forwarding
+                                    auto rc = hit_process();
+                                    if (rc == Status::ERR_CC) { return rc; }
+                                }
                             }
                             // verify success
                             break;

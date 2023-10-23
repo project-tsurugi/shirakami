@@ -45,6 +45,7 @@ void extract_higher_priori_ltx_info(session* const ti,
                     std::get<0>(read_range) = key;
                     std::get<1>(read_range) = key;
                     std::get<2>(read_range) = true;
+                    std::get<3>(read_range) = false;
                 } else {
                     // already initialize, update read range
                     if (key < std::get<0>(read_range)) {

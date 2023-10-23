@@ -44,12 +44,12 @@ public:
     /**
      * map <key, value>: key is table info. value is tuple information: 
      * overtaken ltxs, read information compressed to range information, 
-     * whether read info was initialized.
+     * whether read info was initialized, whether read is full scan
      */
     using overtaken_ltx_set_type = std::map<
             wp::wp_meta*,
             std::tuple<std::set<std::size_t>,
-                       std::tuple<std::string, std::string, bool>>>;
+                       std::tuple<std::string, std::string, bool, bool>>>;
     using ltx_storage_read_set_type = std::set<Storage>;
 
 

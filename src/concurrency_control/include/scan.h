@@ -80,6 +80,7 @@ public:
             // about scan cache iterator
             auto index_itr = get_scan_cache_itr().find(hd);
             get_scan_cache_itr().erase(index_itr);
+            set_is_full_scan(false);
         }
 
         // about scanned storage set
@@ -102,6 +103,16 @@ public:
 
     scanned_storage_set& get_scanned_storage_set() {
         return scanned_storage_set_;
+    }
+
+    [[nodiscard]] bool get_is_full_scan() {
+        return is_full_scan_;
+    }
+
+    // setter
+
+    void set_is_full_scan(bool tf) {
+        is_full_scan_ = tf;
     }
 
 private:
@@ -127,6 +138,11 @@ private:
      * . Without it, you will have problems generating read sets.
      */
     scanned_storage_set scanned_storage_set_{};
+
+    /**
+     * @brief This is for ltx
+    */
+    bool is_full_scan_{false};
 };
 
 } // namespace shirakami
