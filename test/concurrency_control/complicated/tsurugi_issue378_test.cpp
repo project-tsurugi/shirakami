@@ -321,4 +321,41 @@ TEST_F(tsurugi_issue378, case_6) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(tsurugi_issue378, case_7) { // NOLINT
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_EQ(Status::OK, enter(s1));
+    ASSERT_EQ(Status::OK, enter(s2));
+
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    std::string buf{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              search_key(s1, st, "\x80\x00\x00\x01", buf));
+    ASSERT_EQ(Status::OK,
+              insert(s1, st, "\x80\x00\x00\x06", "\x7f\xff\xfd\xa7"));
+
+    ASSERT_EQ(
+            Status::OK,
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    ScanHandle shd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s2, st, "", scan_endpoint::INF,
+                                                "", scan_endpoint::INF, shd));
+    ASSERT_EQ(Status::OK,
+              insert(s2, st, "\x80\x00\x00\x01", "\x7f\xff\xff\x9b"));
+
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
+    ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s1));
+    ASSERT_EQ(Status::OK, leave(s2));
+}
+
 } // namespace shirakami::testing
