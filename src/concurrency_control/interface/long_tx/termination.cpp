@@ -725,6 +725,7 @@ void call_commit_callback(commit_callback_type const& cb, Status sc,
 extern Status commit(session* const ti) {
     // check premature
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
+        ti->call_commit_callback(Status::WARN_PREMATURE, {}, 0);
         return Status::WARN_PREMATURE;
     }
 

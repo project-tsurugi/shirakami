@@ -59,7 +59,10 @@ Status commit_body(Token const token,                    // NOLINT
     // default 引数は後方互換性のため。いずれ削除する。
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
-    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+    if (!ti->get_tx_began()) {
+        if (callback) { callback(Status::WARN_NOT_BEGIN, {}, 0); }
+        return Status::WARN_NOT_BEGIN;
+    }
 
     // log callback
     ti->set_commit_callback(callback); // NOLINT
