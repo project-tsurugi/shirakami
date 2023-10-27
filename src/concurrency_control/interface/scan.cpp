@@ -294,10 +294,12 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // for no hit
-    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, r_key]() {
+    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key,
+                                           r_key](bool is_full_scan) {
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
             long_tx::update_local_read_range(ti, wp_meta_ptr, l_key);
             long_tx::update_local_read_range(ti, wp_meta_ptr, r_key);
+            long_tx::update_local_read_range(ti, wp_meta_ptr, is_full_scan);
         }
     };
 
@@ -311,7 +313,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     constexpr std::size_t index_nvec_ptr{1};
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
     if (rc != Status::OK) {
-        update_local_read_range_if_ltx();
+        update_local_read_range_if_ltx(l_end == scan_endpoint::INF &&
+                                       r_end == scan_endpoint::INF);
         return rc;
     }
     // not empty of targeting records
@@ -340,7 +343,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 }
             }
         }
-        update_local_read_range_if_ltx();
+        update_local_read_range_if_ltx(l_end == scan_endpoint::INF &&
+                                       r_end == scan_endpoint::INF);
         return fin_process(ti, rc);
     }
 
