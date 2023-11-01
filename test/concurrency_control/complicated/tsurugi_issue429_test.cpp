@@ -63,6 +63,7 @@ void full_scan_and_read(Token& t, Storage &st) {
     scan_and_read(t, st, true, true, "", scan_endpoint::INF, "", scan_endpoint::INF);
 }
 
+// same API sequence as original scenario in issue429
 TEST_F(tsurugi_issue429, DISABLED_case_1) {
     VLOG(10) << "case 1";
     Storage st;
@@ -127,6 +128,45 @@ TEST_F(tsurugi_issue429, DISABLED_case_1) {
 
     ASSERT_OK(delete_storage(st));
 }
+
+TEST_F(tsurugi_issue429, DISABLED_short_case) {
+    VLOG(10) << "short case";
+    Storage st;
+    ASSERT_OK(create_storage("", st));
+    wait_epoch_update();
+
+    Token t;
+
+    VLOG(10) << "prepare THE table with data: A";
+    ASSERT_OK(enter(t));
+    ASSERT_OK(tx_begin(t));
+    ASSERT_OK(insert(t, st, "A", "A0"));
+    ASSERT_OK(commit(t));
+    ASSERT_OK(leave(t));
+    wait_epoch_update();
+
+    VLOG(10) << "TX: begin ltx";
+    ASSERT_OK(enter(t));
+    ASSERT_OK(tx_begin({t, transaction_type::LONG, {st}}));
+    wait_epoch_update();
+    VLOG(10) << "TX: upsert D";
+    ASSERT_OK(upsert(t, st, "D", "D2"));
+    wait_epoch_update();
+    VLOG(10) << "TX: abort";
+    ASSERT_OK(abort(t));
+
+    VLOG(10) << "TX: begin occ";
+    ASSERT_OK(enter(t));
+    ASSERT_OK(tx_begin(t));
+    VLOG(10) << "TX: select full";
+    full_scan_and_read(t, st);
+    VLOG(10) << "TX: commit will ok";
+    ASSERT_OK(commit(t));
+    ASSERT_OK(leave(t));
+
+    ASSERT_OK(delete_storage(st));
+}
+
 // NOLINTEND
 
 } // namespace shirakami::testing
