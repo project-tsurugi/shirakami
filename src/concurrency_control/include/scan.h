@@ -80,7 +80,8 @@ public:
             // about scan cache iterator
             auto index_itr = get_scan_cache_itr().find(hd);
             get_scan_cache_itr().erase(index_itr);
-            set_is_full_scan(false);
+            set_r_key("");
+            set_r_end(scan_endpoint::EXCLUSIVE);
         }
 
         // about scanned storage set
@@ -105,15 +106,15 @@ public:
         return scanned_storage_set_;
     }
 
-    [[nodiscard]] bool get_is_full_scan() const { return is_full_scan_; }
-
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
+
+    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
 
     // setter
 
-    void set_is_full_scan(bool tf) { is_full_scan_ = tf; }
-
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
+
+    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
 
 private:
     /**
@@ -139,14 +140,14 @@ private:
      */
     scanned_storage_set scanned_storage_set_{};
 
-    bool is_full_scan_{false};
-
     /**
      * @brief range of right endpoint for ltx
      * @details if user read to right endpoint till scan limit, shirakami needs
      * to know this information to log range info.
     */
     std::string r_key_{};
+
+    scan_endpoint r_end_{};
 };
 
 } // namespace shirakami

@@ -294,12 +294,11 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // for no hit
-    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key,
-                                           r_key](bool is_full_scan) {
+    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, l_end, r_key,
+                                           r_end]() {
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key);
-            long_tx::update_local_read_range(ti, wp_meta_ptr, r_key);
-            long_tx::update_local_read_range(ti, wp_meta_ptr, is_full_scan);
+            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end,
+                                             r_key, r_end);
         }
     };
 
@@ -313,8 +312,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     constexpr std::size_t index_nvec_ptr{1};
     rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
     if (rc != Status::OK) {
-        update_local_read_range_if_ltx(l_end == scan_endpoint::INF &&
-                                       r_end == scan_endpoint::INF);
+        update_local_read_range_if_ltx();
         return rc;
     }
     // not empty of targeting records
@@ -343,8 +341,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 }
             }
         }
-        update_local_read_range_if_ltx(l_end == scan_endpoint::INF &&
-                                       r_end == scan_endpoint::INF);
+        update_local_read_range_if_ltx();
         return fin_process(ti, rc);
     }
 
@@ -415,10 +412,14 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             ti->get_scan_handle().get_scan_cache_itr()[handle];
     scan_index += head_skip_rec_n;
 
+    // for hit, register left end point info as already read
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
+    }
+
     sh.get_scanned_storage_set().set(handle, storage);
-    sh.set_is_full_scan(l_end == scan_endpoint::INF &&
-                        r_end == scan_endpoint::INF);
     sh.set_r_key(r_key);
+    sh.set_r_end(r_end);
     return fin_process(ti, Status::OK);
 }
 
@@ -590,8 +591,8 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
-void check_ltx_scan_range_and_log(Token const token, // NOLINT
-                                  ScanHandle const handle) {
+void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
+                                     ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     auto& sh = ti->get_scan_handle();
     /**
@@ -619,13 +620,12 @@ void check_ltx_scan_range_and_log(Token const token, // NOLINT
 
         auto& read_range =
                 std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        // check full scan
-        if (sh.get_is_full_scan()) {
-            std::get<1>(read_range) = scan_endpoint::INF;
-            std::get<3>(read_range) = scan_endpoint::INF;
-        } else {
-            // log right endpoint info
+        if (std::get<2>(read_range) < sh.get_r_key()) {
             std::get<2>(read_range) = sh.get_r_key();
+        }
+        // conside only inf
+        if (sh.get_r_end() == scan_endpoint::INF) {
+            std::get<3>(read_range) = scan_endpoint::INF;
         }
     }
 }
@@ -636,7 +636,8 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     auto ret = next_body(token, handle);
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
         ret == Status::WARN_SCAN_LIMIT) {
-        check_ltx_scan_range_and_log(token, handle);
+        // register right end point info
+        check_ltx_scan_range_rp_and_log(token, handle);
     }
     ti->process_before_finish_step();
     return ret;

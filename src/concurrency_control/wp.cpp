@@ -79,7 +79,7 @@ void extract_higher_priori_ltx_info(session* const ti,
                         std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
                 auto& read_range =
                         std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                std::get<2>(read_range) = false;
+                std::get<4>(read_range) = false;
                 target_set.insert(wped.second);
             }
         }

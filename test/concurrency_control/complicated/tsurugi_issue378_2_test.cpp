@@ -187,7 +187,7 @@ TEST_P(tsurugi_issue378_2_test, case_2b) {
     ASSERT_OK(delete_storage(st));
 }
 
-TEST_P(tsurugi_issue378_2_test, DISABLED_case_3b) {
+TEST_P(tsurugi_issue378_2_test, case_3b) {
     bool rev = GetParam();
     Storage st;
     ASSERT_OK(create_storage("", st));
