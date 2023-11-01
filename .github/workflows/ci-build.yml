@@ -101,7 +101,7 @@ jobs:
 
       - name: Clang-Tidy
         run: |
-          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench|test)/.*\.(h|hh)$' $(pwd)'/(src|bench|test)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
+          python tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench)/.*\.(h|hh)$' $(pwd)'/(src|bench)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
 
       - name: Doxygen
         run: |
