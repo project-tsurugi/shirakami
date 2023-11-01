@@ -418,6 +418,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     sh.get_scanned_storage_set().set(handle, storage);
     sh.set_is_full_scan(l_end == scan_endpoint::INF &&
                         r_end == scan_endpoint::INF);
+    sh.set_r_key(r_key);
     return fin_process(ti, Status::OK);
 }
 
@@ -589,8 +590,8 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
-void check_ltx_full_scan_and_log(Token const token, // NOLINT
-                                 ScanHandle const handle) {
+void check_ltx_scan_range_and_log(Token const token, // NOLINT
+                                  ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     auto& sh = ti->get_scan_handle();
     /**
@@ -605,21 +606,27 @@ void check_ltx_full_scan_and_log(Token const token, // NOLINT
     }
     // valid handle
 
-    // check full scan
-    if (sh.get_is_full_scan()) {
-        // log full scan
-        // get storage info
-        wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
-                             wp_meta_ptr) != Status::OK) {
-            // todo special case. interrupt DDL
-            return;
-        }
+    // log full scan
+    // get storage info
+    wp::wp_meta* wp_meta_ptr{};
+    if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
+                         wp_meta_ptr) != Status::OK) {
+        // todo special case. interrupt DDL
+        return;
+    }
+    {
         std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
         auto& read_range =
                 std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        std::get<3>(read_range) = true;
+        // check full scan
+        if (sh.get_is_full_scan()) {
+            std::get<1>(read_range) = scan_endpoint::INF;
+            std::get<3>(read_range) = scan_endpoint::INF;
+        } else {
+            // log right endpoint info
+            std::get<2>(read_range) = sh.get_r_key();
+        }
     }
 }
 
@@ -629,7 +636,7 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     auto ret = next_body(token, handle);
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
         ret == Status::WARN_SCAN_LIMIT) {
-        check_ltx_full_scan_and_log(token, handle);
+        check_ltx_scan_range_and_log(token, handle);
     }
     ti->process_before_finish_step();
     return ret;

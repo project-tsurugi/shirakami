@@ -237,17 +237,17 @@ TEST_F(long_scan_test,                                     // NOLINT
     ASSERT_EQ(Status::OK, wp::find_wp_meta(st, wp_meta_ptr));
     auto& range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "1");
+    ASSERT_EQ(std::get<2>(range), "1");
     ASSERT_EQ(Status::OK, next(s2, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     ASSERT_EQ(vb, "2");
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "2");
+    ASSERT_EQ(std::get<2>(range), "2");
     ASSERT_EQ(Status::OK, next(s2, hd));
     ASSERT_EQ(Status::OK, read_key_from_scan(s2, hd, vb));
     ASSERT_EQ(vb, "3");
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "3");
+    ASSERT_EQ(std::get<2>(range), "3");
 
 
     // clean up test

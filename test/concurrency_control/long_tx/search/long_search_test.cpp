@@ -103,13 +103,13 @@ TEST_F(long_search_test,                               // NOLINT
     ASSERT_EQ(Status::OK, wp::find_wp_meta(st, wp_meta_ptr));
     auto& range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "1");
+    ASSERT_EQ(std::get<2>(range), "1");
     ASSERT_EQ(Status::OK, search_key(s2, st, "2", vb));
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "2");
+    ASSERT_EQ(std::get<2>(range), "2");
     ASSERT_EQ(Status::OK, search_key(s2, st, "3", vb));
     ASSERT_EQ(std::get<0>(range), "1");
-    ASSERT_EQ(std::get<1>(range), "3");
+    ASSERT_EQ(std::get<2>(range), "3");
 
 
     // clean up test

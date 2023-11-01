@@ -40,18 +40,17 @@ void extract_higher_priori_ltx_info(session* const ti,
                         std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
                 auto& read_range =
                         std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                if (target_set.empty() || !std::get<2>(read_range)) {
+                if (target_set.empty() || !std::get<4>(read_range)) {
                     // initialize read range
                     std::get<0>(read_range) = key;
-                    std::get<1>(read_range) = key;
-                    std::get<2>(read_range) = true;
-                    std::get<3>(read_range) = false;
+                    std::get<2>(read_range) = key;
+                    std::get<4>(read_range) = true;
                 } else {
                     // already initialize, update read range
                     if (key < std::get<0>(read_range)) {
                         std::get<0>(read_range) = key;
-                    } else if (key > std::get<1>(read_range)) {
-                        std::get<1>(read_range) = key;
+                    } else if (key > std::get<2>(read_range)) {
+                        std::get<2>(read_range) = key;
                     }
                 }
                 target_set.insert(wped.second);

@@ -119,8 +119,8 @@ Status ongoing_tx::waiting_bypass(session* ti) {
                             }
                             // about right endpoint
                             std::string right_end_source =
-                                    std::get<1>(std::get<1>(ols_elem.second));
-                            std::string& right_end_base = std::get<1>(
+                                    std::get<2>(std::get<1>(ols_elem.second));
+                            std::string& right_end_base = std::get<2>(
                                     std::get<1>(local_ols_itr->second));
                             if (right_end_base < right_end_source) {
                                 right_end_base = right_end_source;

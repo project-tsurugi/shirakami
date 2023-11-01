@@ -252,33 +252,33 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
     std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
     auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    if (!std::get<2>(read_range)) {
+    if (!std::get<4>(read_range)) {
         // it was not initialized
         std::get<0>(read_range) = key;
-        std::get<1>(read_range) = key;
-        std::get<2>(read_range) = true;
-        std::get<3>(read_range) = false;
+        std::get<2>(read_range) = key;
+        std::get<4>(read_range) = true;
     } else {
         // it was initialized
         if (key < std::get<0>(read_range)) {
             std::get<0>(read_range) = key;
-        } else if (key > std::get<1>(read_range)) {
-            std::get<1>(read_range) = key;
+        } else if (key > std::get<2>(read_range)) {
+            std::get<2>(read_range) = key;
         }
     }
 }
 
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
-                             bool is_full_scan) {
+                             [[maybe_unused]] bool is_full_scan) {
     // get mutex
     std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
     auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    if (!std::get<2>(read_range)) {
+    if (!std::get<4>(read_range)) {
         // it was not initialized
-        std::get<2>(read_range) = true;
+        std::get<4>(read_range) = true;
     }
-    std::get<3>(read_range) = is_full_scan;
+    std::get<1>(read_range) = scan_endpoint::INF;
+    std::get<3>(read_range) = scan_endpoint::INF;
 }
 
 } // namespace shirakami::long_tx

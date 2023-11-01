@@ -495,34 +495,31 @@ Status verify(session* const ti) {
                                 ti->set_valid_epoch(wp_result_epoch);
                                 return Status::OK;
                             };
-                            if (std::get<3>(read_range)) {
-                                // this was full scan
-                                auto rc = hit_process();
-                                if (rc == Status::ERR_CC) { return rc; }
-                            } else {
-                                // this was not full scan
-                                // check range
-                                if (
-                                        /**
+                            // check range
+                            if (
+                                    /**
                                       * read right point < write left point
                                       */
-                                        (std::get<1>(read_range) <
-                                         std::get<1>(write_result)) ||
-                                        /**
+                                    (std::get<2>(read_range) <
+                                             std::get<1>(write_result) &&
+                                     std::get<3>(read_range) !=
+                                             scan_endpoint::INF) ||
+                                    /**
                                       * write right point < read left point
                                       */
-                                        (std::get<2>(write_result) <
-                                         std::get<0>(read_range))) {
-                                    // can't hit
-                                    break;
-                                }
+                                    (std::get<2>(write_result) <
+                                             std::get<0>(read_range) &&
+                                     std::get<1>(read_range) !=
+                                             scan_endpoint::INF)) {
+                                // can't hit
+                                break;
+                            }
 
-                                // the itr show overtaken ltx
-                                if (wp_result_epoch < ti->get_valid_epoch()) {
-                                    // try forwarding
-                                    auto rc = hit_process();
-                                    if (rc == Status::ERR_CC) { return rc; }
-                                }
+                            // the itr show overtaken ltx
+                            if (wp_result_epoch < ti->get_valid_epoch()) {
+                                // try forwarding
+                                auto rc = hit_process();
+                                if (rc == Status::ERR_CC) { return rc; }
                             }
                             // verify success
                             break;
