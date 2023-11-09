@@ -104,6 +104,25 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
     return Status::ERR_FATAL;
 }
 
+[[maybe_unused]] static inline void list_key(Storage st) {
+    LOG(INFO) << __func__;
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    std::vector<std::pair<yakushima::node_version64_body,
+                          yakushima::node_version64*>>
+            nvec;
+    auto rc{yakushima::scan(
+            {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            "", yakushima::scan_endpoint::INF, "",
+            yakushima::scan_endpoint::INF, scan_res, &nvec)};
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) { return; }
+    if (rc == yakushima::status::WARN_NOT_EXIST ||
+        rc == yakushima::status::OK_ROOT_IS_NULL) {
+        return;
+    }
+    for (auto& elem : scan_res) { LOG(INFO) << std::get<0>(elem); }
+    LOG(INFO) << __func__;
+}
+
 static inline Status remove(yakushima::Token tk, Storage st,
                             std::string_view key) {
     auto rc{yakushima::remove(

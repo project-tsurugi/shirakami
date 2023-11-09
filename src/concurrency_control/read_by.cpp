@@ -84,6 +84,12 @@ bool range_read_by_long::is_exist(epoch::epoch_t const ep,
                                   std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
+        LOG(INFO) << ep << ", " << key;
+        LOG(INFO) << std::get<range_read_by_long::index_epoch>(elem) << ", "
+                  << std::get<range_read_by_long::index_l_key>(elem) << ", "
+                  << std::get<range_read_by_long::index_l_ep>(elem) << ", "
+                  << std::get<range_read_by_long::index_r_key>(elem) << ", "
+                  << std::get<range_read_by_long::index_r_ep>(elem);
         if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
             // check the key is right from left point
             if (std::get<range_read_by_long::index_l_ep>(elem) ==
@@ -103,6 +109,7 @@ bool range_read_by_long::is_exist(epoch::epoch_t const ep,
                      std::get<range_read_by_long::index_r_ep>(elem) ==
                              scan_endpoint::INCLUSIVE) // same
                 ) {
+                    LOG(INFO) << __func__;
                     return true;
                 }
             }

@@ -422,7 +422,7 @@ void register_read_by(session* const ti) {
 }
 
 Status verify(session* const ti) {
-    auto this_epoch = ti->get_valid_epoch();
+    [[maybe_unused]] auto this_epoch = ti->get_valid_epoch();
 
     // forwarding verify
     auto gc_threshold = ongoing_tx::get_lowest_epoch();
@@ -462,6 +462,12 @@ Status verify(session* const ti) {
                                 // the ltx didn't write.
                                 break;
                             }
+                            LOG(INFO)
+                                    << "read range " << std::get<0>(read_range)
+                                    << ", " << std::get<1>(read_range)
+                                    << ", write range, "
+                                    << std::get<1>(write_result) << ", "
+                                    << std::get<2>(write_result);
                             if (
                                     /**
                                       * read right point < write left point
@@ -474,8 +480,12 @@ Status verify(session* const ti) {
                                     (std::get<2>(write_result) <
                                      std::get<0>(read_range))) {
                                 // can't hit
+                                LOG(INFO) << "no hit";
                                 break;
                             }
+                            LOG(INFO) << "hit, wp_result_epoch: "
+                                      << wp_result_epoch << ", valid_epoch: "
+                                      << ti->get_valid_epoch();
 
                             // the itr show overtaken ltx
                             if (wp_result_epoch < ti->get_valid_epoch()) {
@@ -490,6 +500,8 @@ Status verify(session* const ti) {
                                     return Status::ERR_CC;
                                 } // forwarding not break own old read
                                 ti->set_valid_epoch(wp_result_epoch);
+                                LOG(INFO) << "valid_epoch : "
+                                          << ti->get_valid_epoch();
                             }
                             // verify success
                             break;
@@ -595,7 +607,8 @@ Status verify(session* const ti) {
                     range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
                     std::string keyb{};
                     wso.first->get_key(keyb);
-                    auto rb{rrbp->is_exist(this_epoch, keyb)};
+                    auto rb{rrbp->is_exist(this_epoch, keyb)}; // this is a problem
+                    // auto rb{rrbp->is_exist(ti->get_valid_epoch(), keyb)}; // correct
 
                     // for long
                     if (rb) {
