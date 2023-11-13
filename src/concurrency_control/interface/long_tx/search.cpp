@@ -22,6 +22,10 @@
 
 namespace shirakami::long_tx {
 
+/**
+ * @return Status::WARN_NOT_FOUND
+ * @return Status::OK
+*/
 extern Status version_traverse_and_read(session* const ti,
                                         Record* const rec_ptr,
                                         std::string& value,
@@ -135,17 +139,23 @@ Status search_key(session* ti, Storage const storage,
     // wp verify and forwarding
     wp_verify_and_forwarding(ti, wp_meta_ptr, key);
 
-    // index access
-    Record* rec_ptr{};
-    if (Status::WARN_NOT_FOUND == get<Record>(storage, key, rec_ptr)) {
+    // registering read info at no found
+    auto process_at_no_found = [storage, key, ti]() {
         // create read info as predicate tracing point read
         wp::page_set_meta* psm{};
-        rc = wp::find_page_set_meta(storage, psm);
+        auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) { return Status::WARN_STORAGE_NOT_FOUND; }
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
         ti->get_range_read_set_for_ltx().insert(std::make_tuple(
                 rrbp, std::string(key), scan_endpoint::INCLUSIVE,
                 std::string(key), scan_endpoint::INCLUSIVE));
+        return Status::OK;
+    };
+
+    // index access
+    Record* rec_ptr{};
+    if (Status::WARN_NOT_FOUND == get<Record>(storage, key, rec_ptr)) {
+        process_at_no_found();
         return Status::WARN_NOT_FOUND;
     }
 
@@ -164,7 +174,11 @@ Status search_key(session* ti, Storage const storage,
     }
 
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
-    if (rc == Status::OK) { create_read_set_for_read_info(ti, rec_ptr); }
+    if (rc == Status::OK) {
+        create_read_set_for_read_info(ti, rec_ptr);
+    } else if (rc == Status::WARN_NOT_FOUND) {
+        process_at_no_found();
+    }
     return rc;
 }
 
