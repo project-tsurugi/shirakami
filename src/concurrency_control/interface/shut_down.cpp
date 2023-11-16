@@ -170,7 +170,6 @@ void fin([[maybe_unused]] bool force_shut_down_logging) {
                         << force_shut_down_logging;
     fin_body(force_shut_down_logging);
     shirakami_log_exit << "fin";
-    return;
 }
 
 } // namespace shirakami
