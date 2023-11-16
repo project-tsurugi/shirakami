@@ -1,6 +1,7 @@
 
 #include "database/include/tx_state_notification.h"
 #include "concurrency_control/include/epoch.h"
+#include "database/include/logging.h"
 
 #ifdef PWAL
 
@@ -36,7 +37,9 @@ void clear_durability_callbacks() {
 
 Status
 register_durability_callback(durability_callback_type const cb) { // NOLINT
+    shirakami_log_entry << "register_durability_callback";
     add_durability_callbacks(cb);
+    shirakami_log_exit << "register_durability_callback";
     return Status::OK;
 }
 

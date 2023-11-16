@@ -147,10 +147,14 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
 Status insert(Token const token, Storage const storage, // NOLINT
               const std::string_view key,               // NOLINT
               const std::string_view val) {
+    shirakami_log_entry << "insert, token: " << token
+                        << ", storage: " << storage << ", key: " << key
+                        << ", val: " << val;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = insert_body(token, storage, key, val);
     ti->process_before_finish_step();
+    shirakami_log_exit << "insert, Status: " << ret;
     return ret;
 }
 

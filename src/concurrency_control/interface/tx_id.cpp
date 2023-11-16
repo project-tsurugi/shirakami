@@ -5,10 +5,11 @@
 
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
+#include "database/include/logging.h"
 
 namespace shirakami {
 
-Status get_tx_id(Token token, std::string& tx_id) {
+Status get_tx_id_body(Token token, std::string& tx_id) {
     // prepare
     auto* ti = static_cast<session*>(token);
 
@@ -46,6 +47,14 @@ Status get_tx_id(Token token, std::string& tx_id) {
     tx_id += ss.str();
 
     return Status::OK;
+}
+
+Status get_tx_id(Token token, std::string& tx_id) {
+    shirakami_log_entry << "get_tx_id, token: " << token
+                        << ", tx_id: " << tx_id;
+    auto ret = get_tx_id_body(token, tx_id);
+    shirakami_log_exit << "get_tx_id, Status: " << ret << ", tx_id: " << tx_id;
+    return ret;
 }
 
 } // namespace shirakami

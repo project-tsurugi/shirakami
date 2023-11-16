@@ -14,6 +14,7 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
+#include "database/include/logging.h"
 
 #ifdef PWAL
 
@@ -105,11 +106,13 @@ Status tx_begin_body(transaction_options options) { // NOLINT
 }
 
 Status tx_begin(transaction_options options) { // NOLINT
+    shirakami_log_entry << "tx_begin, options: " << options;
     Token token = options.get_token();
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = tx_begin_body(options);
     ti->process_before_finish_step();
+    shirakami_log_exit << "tx_begin, Status: " << ret;
     return ret;
 }
 

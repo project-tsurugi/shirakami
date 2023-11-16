@@ -14,6 +14,7 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
+#include "database/include/logging.h"
 
 #ifdef PWAL
 
@@ -36,7 +37,7 @@
 
 namespace shirakami {
 
-Status enter(Token& token) { // NOLINT
+Status enter_body(Token& token) { // NOLINT
     Status ret_status = session_table::decide_token(token);
     if (ret_status != Status::OK) return ret_status;
 
@@ -47,6 +48,13 @@ Status enter(Token& token) { // NOLINT
     static_cast<session*>(token)->set_yakushima_token(kvs_token);
 
     return Status::OK;
+}
+
+Status enter(Token& token) { // NOLINT
+    shirakami_log_entry << "enter, token: " << token;
+    auto ret = enter_body(token);
+    shirakami_log_exit << "enter, Status: " << ret;
+    return ret;
 }
 
 void assert_before_unlock(session* const ti) {
@@ -63,7 +71,7 @@ void unlock_for_other_client(session* const ti) {
     ti->set_visible(false); // unlock
 }
 
-Status leave(Token const token) { // NOLINT
+Status leave_body(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
         auto* ti = static_cast<session*>(token);
         if (&itr == ti) {
@@ -95,6 +103,13 @@ Status leave(Token const token) { // NOLINT
         }
     }
     return Status::WARN_INVALID_ARGS;
+}
+
+Status leave(Token const token) { // NOLINT
+    shirakami_log_entry << "leave, token: " << token;
+    auto ret = leave_body(token);
+    shirakami_log_exit << "leave, Status: " << ret;
+    return ret;
 }
 
 } // namespace shirakami

@@ -20,6 +20,7 @@
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 
 #include "database/include/database.h"
+#include "database/include/logging.h"
 #include "database/include/thread_pool.h"
 #include "database/include/tx_state_notification.h"
 
@@ -58,7 +59,7 @@ static inline bool is_fast_shutdown() {
 #endif
 }
 
-void fin([[maybe_unused]] bool force_shut_down_logging) try {
+void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
     // set flag
     set_is_shutdowning(true);
@@ -161,6 +162,14 @@ void fin([[maybe_unused]] bool force_shut_down_logging) try {
     set_initialized(false);
 } catch (std::exception& e) {
     LOG(ERROR) << log_location_prefix << e.what();
+    return;
+}
+
+void fin([[maybe_unused]] bool force_shut_down_logging) {
+    shirakami_log_entry << "fin, force_shut_down_logging: "
+                        << force_shut_down_logging;
+    fin_body(force_shut_down_logging);
+    shirakami_log_exit << "fin";
     return;
 }
 

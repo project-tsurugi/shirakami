@@ -10,6 +10,7 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
+#include "database/include/logging.h"
 
 #include "shirakami/interface.h"
 
@@ -60,10 +61,13 @@ Status exist_key_body(Token const token, Storage const storage, // NOLINT
 
 Status exist_key(Token const token, Storage const storage, // NOLINT
                  std::string_view const key) {
+    shirakami_log_entry << "exist_key, token: " << token
+                        << ", storage: " << storage << ", key: " << key;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = exist_key_body(token, storage, key);
     ti->process_before_finish_step();
+    shirakami_log_exit << "exist_key, Status: " << ret;
     return ret;
 }
 
@@ -109,10 +113,14 @@ Status search_key_body(Token const token, Storage const storage, // NOLINT
 
 Status search_key(Token const token, Storage const storage, // NOLINT
                   std::string_view const key, std::string& value) {
+    shirakami_log_entry << "search_key, token: " << token
+                        << ", storage: " << storage << ", key: " << key
+                        << ", value: " << value;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = search_key_body(token, storage, key, value);
     ti->process_before_finish_step();
+    shirakami_log_exit << "search_key, Status: " << ret << ", value: " << value;
     return ret;
 }
 

@@ -11,6 +11,7 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/include/helper.h"
+#include "database/include/logging.h"
 
 #include "shirakami/interface.h"
 #include "shirakami/logging.h"
@@ -74,8 +75,8 @@ void remove_storage_metadata(std::string_view key) {
     LOG(ERROR) << log_location_prefix << "unreachable path";
 }
 
-Status create_storage(std::string_view const key, Storage& storage,
-                      storage_option const& options) {
+Status create_storage_body(std::string_view const key, Storage& storage,
+                           storage_option const& options) {
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
@@ -102,7 +103,16 @@ Status create_storage(std::string_view const key, Storage& storage,
     return Status::OK;
 }
 
-Status delete_storage(Storage const storage) {
+Status create_storage(std::string_view const key, Storage& storage,
+                      storage_option const& options) {
+    shirakami_log_entry << "create_storage, key: " << key
+                        << ", storage: " << storage << ", options: " << options;
+    auto ret = create_storage_body(key, storage, options);
+    shirakami_log_exit << "create_storage, " << ret;
+    return ret;
+}
+
+Status delete_storage_body(Storage const storage) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
     if (ret != Status::OK) { return ret; }
@@ -122,18 +132,38 @@ Status delete_storage(Storage const storage) {
     return Status::OK;
 }
 
-Status get_storage(std::string_view const key, Storage& out) {
+Status delete_storage(Storage const storage) {
+    shirakami_log_entry << "delete_storage, storage: " << storage;
+    auto ret = delete_storage_body(storage);
+    shirakami_log_exit << "delete_storage, " << ret;
+    return ret;
+}
+
+Status get_storage_body(std::string_view const key, Storage& out) {
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
     return storage::key_handle_map_get_storage(key, out);
 }
 
-Status list_storage(std::vector<std::string>& out) {
-    return storage::list_storage(out);
+Status get_storage(std::string_view const key, Storage& out) {
+    shirakami_log_entry << "get_storage, key: " << key << ", out: " << out;
+    auto ret = get_storage_body(key, out);
+    shirakami_log_exit << "get_storage, " << ret;
+    return ret;
 }
 
-Status storage_get_options(Storage storage, storage_option& options) {
+Status list_storage_body(std::vector<std::string>& out) {
+    return storage::list_storage(out);
+}
+Status list_storage(std::vector<std::string>& out) {
+    shirakami_log_entry << "list_storage";
+    auto ret = list_storage_body(out);
+    shirakami_log_exit << "list_storage";
+    return ret;
+}
+
+Status storage_get_options_body(Storage storage, storage_option& options) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
@@ -184,7 +214,16 @@ Status storage_get_options(Storage storage, storage_option& options) {
     return Status::OK;
 }
 
-Status storage_set_options(Storage storage, storage_option const& options) {
+Status storage_get_options(Storage storage, storage_option& options) {
+    shirakami_log_entry << "storage_get_options, storage: " << storage
+                        << ", options: " << options;
+    auto ret = storage_get_options_body(storage, options);
+    shirakami_log_exit << "storage_get_options, " << ret;
+    return ret;
+}
+
+Status storage_set_options_body(Storage storage,
+                                storage_option const& options) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
@@ -219,6 +258,14 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     } // else
     LOG(ERROR) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
+}
+
+Status storage_set_options(Storage storage, storage_option const& options) {
+    shirakami_log_entry << "storage_set_options, storage: " << storage
+                        << ", options: " << options;
+    auto ret = storage_set_options_body(storage, options);
+    shirakami_log_exit << "storage_set_options, " << ret;
+    return ret;
 }
 
 Status storage::register_storage(Storage storage, storage_option options) {

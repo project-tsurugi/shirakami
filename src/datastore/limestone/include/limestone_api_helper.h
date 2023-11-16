@@ -4,17 +4,13 @@
 #include "limestone/api/snapshot.h"
 
 #include "concurrency_control/include/epoch.h"
+#include "database/include/logging.h"
 
 #include "shirakami/logging.h"
 
 #include "boost/filesystem/path.hpp"
 
 #include "glog/logging.h"
-
-#define log_entry                                                              \
-    VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
-#define log_exit                                                               \
-    VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
 
 namespace shirakami {
 

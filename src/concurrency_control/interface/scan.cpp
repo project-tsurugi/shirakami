@@ -5,11 +5,10 @@
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp_meta.h"
-
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
-
+#include "database/include/logging.h"
 #include "index/yakushima/include/interface.h"
 #include "index/yakushima/include/scheme.h"
 
@@ -27,10 +26,13 @@ Status close_scan_body(Token const token, ScanHandle const handle) { // NOLINT
 }
 
 Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
+    shirakami_log_entry << "close_scan, token: " << token
+                        << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = close_scan_body(token, handle);
     ti->process_before_finish_step();
+    shirakami_log_exit << "close_scan, Status: " << ret;
     return ret;
 }
 
@@ -427,11 +429,17 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
+    shirakami_log_entry << "open_scan, token: " << token
+                        << ", storage: " << storage << ", l_key: " << l_key
+                        << ", l_end: " << l_end << ", r_key: " << r_key
+                        << ", r_end: " << r_end << ", handle: " << handle
+                        << ", max_size: " << max_size;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end,
                               handle, max_size);
     ti->process_before_finish_step();
+    shirakami_log_exit << "open_scan, Status: " << ret;
     return ret;
 }
 
@@ -631,6 +639,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
 }
 
 Status next(Token const token, ScanHandle const handle) { // NOLINT
+    shirakami_log_entry << "next, token: " << token << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = next_body(token, handle);
@@ -640,6 +649,7 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
         check_ltx_scan_range_rp_and_log(token, handle);
     }
     ti->process_before_finish_step();
+    shirakami_log_exit << "next, Status: " << ret;
     return ret;
 }
 
@@ -831,19 +841,27 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
 Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                           std::string& key) {
+    shirakami_log_entry << "read_key_from_scan, token: " << token
+                        << ", handle: " << handle << ", key: " << key;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, true, key);
     ti->process_before_finish_step();
+    shirakami_log_exit << "read_key_from_scan, Status: " << ret
+                       << ", key: " << key;
     return ret;
 }
 
 Status read_value_from_scan(Token const token, // NOLINT
                             ScanHandle const handle, std::string& value) {
+    shirakami_log_entry << "read_value_from_scan, token: " << token
+                        << ", handle: " << handle << ", value: " << value;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, false, value);
     ti->process_before_finish_step();
+    shirakami_log_exit << "read_value_from_scan, Status: " << ret
+                       << ", value: " << value;
     return ret;
 }
 
@@ -873,10 +891,15 @@ Status scannable_total_index_size_body(Token const token, // NOLINT
 
 Status scannable_total_index_size(Token const token, // NOLINT
                                   ScanHandle const handle, std::size_t& size) {
+    shirakami_log_entry << "scannable_total_index_size, "
+                        << "token: " << token << ", handle: " << handle
+                        << ", size: " << size;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = scannable_total_index_size_body(token, handle, size);
     ti->process_before_finish_step();
+    shirakami_log_exit << "scannable_total_index_size, Status: " << ret
+                       << ", size: " << size;
     return ret;
 }
 

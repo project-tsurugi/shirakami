@@ -56,7 +56,7 @@ void for_output_config(database_options const& options) {
                  "commit. Default is 2.";
 }
 
-Status init(database_options options) { // NOLINT
+Status init_body(database_options options) { // NOLINT
     // set flag
     set_is_shutdowning(false);
 
@@ -194,6 +194,13 @@ Status init(database_options options) { // NOLINT
 
     set_initialized(true); // about init command
     return Status::OK;
+}
+
+Status init(database_options options) { // NOLINT
+    shirakami_log_entry << "init, options: " << options;
+    auto ret = init_body(options);
+    shirakami_log_exit << "init, Status: " << ret;
+    return ret;
 }
 
 } // namespace shirakami

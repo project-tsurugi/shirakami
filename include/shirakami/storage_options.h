@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <ostream>
+
 namespace shirakami {
 
 /**
@@ -43,5 +46,12 @@ private:
 
     std::string payload_{};
 };
+
+inline std::ostream& operator<<(std::ostream& out,
+                                storage_option const& options) {
+    out << "storage_option: id: " << std::to_string(options.id())
+        << ", payload: " << options.payload();
+    return out;
+}
 
 } // namespace shirakami

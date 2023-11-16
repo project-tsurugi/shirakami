@@ -4,6 +4,7 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
+#include "database/include/logging.h"
 
 #include "shirakami/interface.h"
 
@@ -47,10 +48,12 @@ Status abort_body(Token token) { // NOLINT
 }
 
 Status abort(Token token) { // NOLINT
+    shirakami_log_entry << "abort, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = abort_body(token);
     ti->process_before_finish_step();
+    shirakami_log_exit << "abort, Status: " << ret;
     return ret;
 }
 
@@ -116,24 +119,32 @@ Status commit_body(Token const token,                    // NOLINT
 }
 
 Status commit(Token const token) { // NOLINT
+    shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = commit_body(token);
     ti->process_before_finish_step();
+    shirakami_log_exit << "commit, Status: " << ret;
     return ret;
 }
 
 bool commit(Token token, commit_callback_type callback) { // NOLINT
+    shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = commit_body(token, std::move(callback));
     ti->process_before_finish_step();
+    shirakami_log_exit << "commit, bool: "
+                       << (ret != Status::WARN_WAITING_FOR_OTHER_TX);
     return ret != Status::WARN_WAITING_FOR_OTHER_TX;
 }
 
 Status check_commit(Token token) {
     // check commit is for only ltx
-    return long_tx::check_commit(token);
+    shirakami_log_entry << "check_commit, token: " << token;
+    auto ret = long_tx::check_commit(token);
+    shirakami_log_exit << "check_commit, Status: " << ret;
+    return ret;
 }
 
 } // namespace shirakami

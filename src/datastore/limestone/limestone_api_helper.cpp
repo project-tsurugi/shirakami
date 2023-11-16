@@ -1,5 +1,6 @@
 
 #include "datastore/limestone/include/limestone_api_helper.h"
+#include "database/include/logging.h"
 
 #include "shirakami/scheme.h"
 
@@ -14,9 +15,9 @@ create_channel(limestone::api::datastore* ds,
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return nullptr;
     }
-    //log_entry << "datastore::create_channel(): " << location;
+    shirakami_log_entry << "datastore::create_channel(): " << location;
     auto& ret = ds->create_channel(location);
-    //log_exit << "datastore::create_channel()";
+    shirakami_log_exit << "datastore::create_channel()";
     return &ret;
 }
 
@@ -26,9 +27,9 @@ get_snapshot(limestone::api::datastore* ds) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return nullptr;
     }
-    //log_entry << "datastore::get_snapshot()";
+    shirakami_log_entry << "datastore::get_snapshot()";
     auto ret = ds->get_snapshot();
-    //log_exit << "datastore::get_snapshot(): ret: " << ret;
+    shirakami_log_exit << "datastore::get_snapshot(): ret: " << ret.get();
     return ret;
 }
 
@@ -37,9 +38,9 @@ void ready(limestone::api::datastore* ds) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    log_entry << "datastore::ready()";
+    shirakami_log_entry << "datastore::ready()";
     ds->ready();
-    log_exit << "datastore::ready()";
+    shirakami_log_exit << "datastore::ready()";
 }
 
 void recover(limestone::api::datastore* ds) {
@@ -47,9 +48,9 @@ void recover(limestone::api::datastore* ds) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    log_entry << "datastore::recover()";
+    shirakami_log_entry << "datastore::recover()";
     ds->recover();
-    log_exit << "datastore::recover()";
+    shirakami_log_exit << "datastore::recover()";
 }
 
 void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
@@ -57,9 +58,9 @@ void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    //log_entry << "datastore::switch_epoch()";
+    shirakami_log_entry << "datastore::switch_epoch()";
     ds->switch_epoch(ep);
-    //log_exit << "datastore::switch_epoch()";
+    shirakami_log_exit << "datastore::switch_epoch()";
 }
 
 // log channel
@@ -72,14 +73,14 @@ void add_entry(limestone::api::log_channel* lc,
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    log_entry << "log_channel::add_entry(): storage_id: " << storage_id
-              << ", key: " << key << ", val: " << val
-              << ", major write version: " << major_version
-              << ", minor write version: " << minor_version;
+    shirakami_log_entry << "log_channel::add_entry(): storage_id: "
+                        << storage_id << ", key: " << key << ", val: " << val
+                        << ", major write version: " << major_version
+                        << ", minor write version: " << minor_version;
     lc->add_entry(
             storage_id, key, val,
             limestone::api::write_version_type(major_version, minor_version));
-    log_exit << "log_channel::add_entry()";
+    shirakami_log_exit << "log_channel::add_entry()";
 }
 
 void remove_entry(limestone::api::log_channel* const lc,
@@ -91,13 +92,14 @@ void remove_entry(limestone::api::log_channel* const lc,
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    log_entry << "log_channel::remove_entry(): storage_id: " << storage_id
-              << ", key: " << key << ", major write version: " << major_version
-              << ", minor write version: " << minor_version;
+    shirakami_log_entry << "log_channel::remove_entry(): storage_id: "
+                        << storage_id << ", key: " << key
+                        << ", major write version: " << major_version
+                        << ", minor write version: " << minor_version;
     lc->remove_entry(
             storage_id, key,
             limestone::api::write_version_type(major_version, minor_version));
-    log_exit << "log_channel::remove_entry()";
+    shirakami_log_exit << "log_channel::remove_entry()";
 }
 
 void begin_session(limestone::api::log_channel* lc) {
@@ -105,9 +107,9 @@ void begin_session(limestone::api::log_channel* lc) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    //log_entry << "log_channel::begin_session()";
+    shirakami_log_entry << "log_channel::begin_session()";
     lc->begin_session();
-    //log_exit << "log_channel::begin_session()";
+    shirakami_log_exit << "log_channel::begin_session()";
 }
 
 void end_session(limestone::api::log_channel* lc) {
@@ -115,9 +117,9 @@ void end_session(limestone::api::log_channel* lc) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    //log_entry << "log_channel::end_session()";
+    shirakami_log_entry << "log_channel::end_session()";
     lc->end_session();
-    //log_exit << "log_channel::end_session()";
+    shirakami_log_exit << "log_channel::end_session()";
 }
 
 } // namespace shirakami

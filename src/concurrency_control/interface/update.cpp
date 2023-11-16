@@ -4,6 +4,7 @@
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
+#include "database/include/logging.h"
 
 #include "index/yakushima/include/interface.h"
 
@@ -92,10 +93,14 @@ Status update_body(Token token, Storage storage,
 Status update(Token token, Storage storage,
               const std::string_view key, // NOLINT
               const std::string_view val) {
+    shirakami_log_entry << "update, token: " << token
+                        << ", storage: " << storage << ", key: " << key
+                        << ", val: " << val;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = update_body(token, storage, key, val);
     ti->process_before_finish_step();
+    shirakami_log_exit << "update, Status: " << ret;
     return ret;
 }
 

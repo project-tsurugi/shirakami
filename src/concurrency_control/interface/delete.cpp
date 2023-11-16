@@ -9,7 +9,7 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
-
+#include "database/include/logging.h"
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
@@ -148,10 +148,13 @@ Status delete_record_body(Token token, Storage storage,
 }
 
 Status delete_record(Token token, Storage storage, const std::string_view key) {
+    shirakami_log_entry << "delete_record, token: " << token
+                        << ", storage: " << storage << ", key: " << key;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = delete_record_body(token, storage, key);
     ti->process_before_finish_step();
+    shirakami_log_exit << "delete_record, Status: " << ret;
     return ret;
 }
 

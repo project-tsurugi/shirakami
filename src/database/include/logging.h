@@ -2,12 +2,18 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <iostream>
 
 #include "shirakami/logging.h"
 
 #include "glog/logging.h"
 
 namespace shirakami::logging {
+
+#define shirakami_log_entry                                                    \
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
+#define shirakami_log_exit                                                     \
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
 
 inline std::atomic<bool> enable_logging_detail_info_{false};
 
