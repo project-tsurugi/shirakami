@@ -81,35 +81,40 @@ void point_read_by_long::print() {
 }
 
 bool range_read_by_long::is_exist(epoch::epoch_t const ep,
+                                  std::size_t const ltx_id,
                                   std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
     for (auto&& elem : body_) {
-        if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
-            // check the key is right from left point
-            if (std::get<range_read_by_long::index_l_ep>(elem) ==
-                        scan_endpoint::INF || // inf
-                std::get<range_read_by_long::index_l_key>(elem) <
-                        key || // right
-                (std::get<range_read_by_long::index_l_key>(elem) == key &&
-                 std::get<range_read_by_long::index_l_ep>(elem) ==
-                         scan_endpoint::INCLUSIVE) // same
-            ) {
-                // check the key is left from right point
-                if (std::get<range_read_by_long::index_r_ep>(elem) ==
+        if (ltx_id > std::get<range_read_by_long::index_tx_id>(elem)) {
+            // check against higher priori ltxs
+            if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
+                // check the key is right from left point
+                if (std::get<range_read_by_long::index_l_ep>(elem) ==
                             scan_endpoint::INF || // inf
-                    std::get<range_read_by_long::index_r_key>(elem) >
-                            key || // left
-                    (std::get<range_read_by_long::index_r_key>(elem) == key &&
-                     std::get<range_read_by_long::index_r_ep>(elem) ==
+                    std::get<range_read_by_long::index_l_key>(elem) <
+                            key || // right
+                    (std::get<range_read_by_long::index_l_key>(elem) == key &&
+                     std::get<range_read_by_long::index_l_ep>(elem) ==
                              scan_endpoint::INCLUSIVE) // same
                 ) {
-                    return true;
+                    // check the key is left from right point
+                    if (std::get<range_read_by_long::index_r_ep>(elem) ==
+                                scan_endpoint::INF || // inf
+                        std::get<range_read_by_long::index_r_key>(elem) >
+                                key || // left
+                        (std::get<range_read_by_long::index_r_key>(elem) ==
+                                 key &&
+                         std::get<range_read_by_long::index_r_ep>(elem) ==
+                                 scan_endpoint::INCLUSIVE) // same
+                    ) {
+                        return true;
+                    }
                 }
             }
-        }
-        if (std::get<range_read_by_long::index_epoch>(elem) > ep) {
-            // no more due to invariant
-            break;
+            if (std::get<range_read_by_long::index_epoch>(elem) > ep) {
+                // no more due to invariant
+                break;
+            }
         }
     }
 

@@ -620,7 +620,8 @@ Status verify(session* const ti) {
                     range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
                     std::string keyb{};
                     wso.first->get_key(keyb);
-                    auto rb{rrbp->is_exist(ti->get_valid_epoch(), keyb)};
+                    auto rb{rrbp->is_exist(ti->get_valid_epoch(),
+                                           ti->get_long_tx_id(), keyb)};
 
                     // for long
                     if (rb) {

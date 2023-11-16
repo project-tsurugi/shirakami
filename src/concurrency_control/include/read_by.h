@@ -73,7 +73,7 @@ public:
                        std::string, scan_endpoint>;
     using body_type = std::vector<body_elem_type>;
 
-    bool is_exist(epoch::epoch_t ep, std::string_view key);
+    bool is_exist(epoch::epoch_t ep, std::size_t ltx_id, std::string_view key);
 
     /**
      * @brief push element and gc.
