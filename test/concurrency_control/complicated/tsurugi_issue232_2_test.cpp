@@ -157,33 +157,21 @@ TEST_F(tsurugi_issue232_2, case_12) {
     VLOG(10) << "TX3: insert storageB key1";
     ASSERT_OK(insert(t3, stB, "k1", "v1"));
 
-    // TX3 commit waiting, ideally no need to wait, but TX3 will wait
-    // by the implementation at 2023.
-    VLOG(10) << "TX3: commit (may wait)";
-    Status t3_rc = commit(t3);
-    if (t3_rc != Status::WARN_WAITING_FOR_OTHER_TX && t3_rc != Status::OK) {
-        LOG(FATAL) << "assertion failed rc=" << t3_rc;
-    }
+    std::atomic<Status> cb_rc{};
+    std::atomic<bool> was_called{false};
+    auto cb = [&cb_rc,
+               &was_called](Status rs, [[maybe_unused]] reason_code rc,
+                            [[maybe_unused]] durability_marker_type dm) {
+        cb_rc.store(rs, std::memory_order_release);
+        was_called.store(true, std::memory_order_release);
+    };
 
-    wait_epoch_update();
-    wait_epoch_update();
-    if (t3_rc != Status::OK) {
-        t3_rc = check_commit(t3);
-        if (t3_rc != Status::WARN_WAITING_FOR_OTHER_TX && t3_rc != Status::OK) {
-            LOG(FATAL) << "assertion failed rc=" << t3_rc;
-        }
-    }
+    ASSERT_FALSE(commit(t3, cb)); // NOLINT
+    while (!was_called) { _mm_pause(); }
+    ASSERT_OK(cb_rc);
 
     VLOG(10) << "TX1: commit";
     ASSERT_OK(commit(t1));
-    wait_epoch_update();
-    wait_epoch_update();
-    // TX3 < TX1
-    // TX2 never read B (by read area ex-B)
-    VLOG(10) << "TX3: commit-waiting -> OK";
-    if (t3_rc != Status::OK) {
-        ASSERT_OK(check_commit(t3));
-    }
 
     ASSERT_OK(leave(t3));
     ASSERT_OK(leave(t1));
