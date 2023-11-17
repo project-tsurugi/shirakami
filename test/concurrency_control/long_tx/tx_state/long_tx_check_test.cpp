@@ -18,8 +18,8 @@ using namespace shirakami;
 class long_tx_check_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-wp-"
-                                  "interface-tx_state-long_tx_check_test");
+        google::InitGoogleLogging("shirakami-test-concurrency_control-long_tx"
+                                  "tx_state-long_tx_check_test");
         // FLAGS_stderrthreshold = 0;
     }
 

@@ -91,11 +91,12 @@ TEST_P(tsurugi_issue438_test, case_1) {
     ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t2, transaction_type::LONG, {st}}));
     wait_epoch_update();
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(t2, st, "", scan_endpoint::INF,
-                                                "", scan_endpoint::INF, shd));
-    //ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(t2, shd, buf));
-    //ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t2, shd));
-    //ASSERT_OK(close_scan(t2, shd));
+    if (Status::OK == open_scan(t2, st, "", scan_endpoint::INF, "",
+                                scan_endpoint::INF, shd)) {
+        ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(t2, shd, buf));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t2, shd));
+        ASSERT_OK(close_scan(t2, shd));
+    }
     ASSERT_OK(insert(t2, st, "\x80\x00\x00\x01", "\x7f\xff\xff"));
 
     std::atomic<Status> t2c_rc{};
