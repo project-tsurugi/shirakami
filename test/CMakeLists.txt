@@ -15,8 +15,8 @@
 
 file(GLOB WP_TEST_SOURCES
         "concurrency_control/*.cpp"
-        "concurrency_control/anomaly/read_crown/*.cpp"
-        "concurrency_control/anomaly/write_crown/*.cpp"
+        "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
+        "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
         "concurrency_control/anomaly/write_skew/*.cpp"
         "concurrency_control/complicated/*.cpp"
         "concurrency_control/function/boundary_wait/*.cpp"
