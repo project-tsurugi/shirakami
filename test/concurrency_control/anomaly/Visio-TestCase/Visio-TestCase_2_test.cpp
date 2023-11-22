@@ -25,7 +25,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
                 "anomaly-Visio-TestCase-Visio-TestCase_2_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
