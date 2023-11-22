@@ -15,6 +15,7 @@
 
 file(GLOB WP_TEST_SOURCES
         "concurrency_control/*.cpp"
+        "concurrency_control/anomaly/Visio-TestCase/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/boundary_wait/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/cascading_wait/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/false_positive/*.cpp"
