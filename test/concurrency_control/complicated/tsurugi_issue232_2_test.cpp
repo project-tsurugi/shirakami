@@ -21,7 +21,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue232_2");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
@@ -99,13 +99,16 @@ TEST_F(tsurugi_issue232_2, case_11) {
 
     VLOG(10) << "TX1: commit";
     ASSERT_OK(commit(t1));
-    wait_epoch_update();
-    wait_epoch_update();
+    auto rc = check_commit(t3);
+    while (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
+        _mm_pause();
+        rc = check_commit(t3);
+    }
     // TX1 does not read storageB
     // can TX3 < TX1
     // TX2 never read B (by read area ex-B)
     VLOG(10) << "TX3: commit-waiting -> OK";
-    ASSERT_OK(check_commit(t3));
+    ASSERT_OK(rc);
 
     ASSERT_OK(leave(t3));
     ASSERT_OK(leave(t1));
