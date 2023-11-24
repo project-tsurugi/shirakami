@@ -24,7 +24,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-Test'Case_5_test");
+                "anomaly-Visio-TestCase-Visio-Test'Case_6_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -45,20 +45,20 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, true,
+                                transaction_type::SHORT, true, false, true,
                                 true), // c1
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                false, true, true,
+                                true, false, true,
                                 true), // c2
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, false, true, true,
+                                transaction_type::SHORT, true, false, true,
                                 true), // c3
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, true,
+                                transaction_type::SHORT, true, true, true,
                                 true), // c4
                 std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::SHORT,
@@ -66,11 +66,11 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                                 true), // c5
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, false, true, true,
+                                transaction_type::LONG, true, false, true,
                                 true), // c6
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                false, true, true,
+                                true, true, true,
                                 false), // c7
                 std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
@@ -78,7 +78,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                                 true), // c8
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::LONG, transaction_type::SHORT,
-                                false, true, true,
+                                true, true, true,
                                 false), // c9
                 std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::LONG, transaction_type::SHORT,
@@ -90,7 +90,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                                 false), // c11
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::LONG, transaction_type::LONG,
-                                false, true, true,
+                                true, true, true,
                                 false), // c12
                 std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::LONG, transaction_type::LONG,
@@ -111,7 +111,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
-    // read crown, read only が crown を形成するケース（三項） RoWx2 + RO
+    // read crown, read only が crown を形成するケース（三項で順序入れ替え）
     transaction_type t1_type = std::get<0>(GetParam());
     transaction_type t2_type = std::get<1>(GetParam());
     transaction_type t3_type = std::get<2>(GetParam());
@@ -210,6 +210,10 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         ASSERT_EQ(buf, "0");
     }
 
+    // t1 write x and commit
+    ASSERT_OK(upsert(t1, stx, "x", "1"));
+    commit(t1, cb1);
+
     // t3 begin, write a and commit
     if (t3_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t3, t3_type}));
@@ -221,10 +225,6 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     }
     ASSERT_OK(upsert(t3, sta, "a", "3"));
     commit(t3, cb3);
-
-    // t1 write x and commit
-    ASSERT_OK(upsert(t1, stx, "x", "1"));
-    commit(t1, cb1);
 
     // t4 begin, read a
     if (t4_type == transaction_type::SHORT) {
