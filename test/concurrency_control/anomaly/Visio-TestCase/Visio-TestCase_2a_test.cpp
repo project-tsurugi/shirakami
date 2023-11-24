@@ -1,9 +1,12 @@
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
+#include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
+
 #include "test_tool.h"
+
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 
 
 using namespace shirakami;
@@ -19,8 +22,9 @@ class Visio_TestCase
                          transaction_type, bool, bool, bool, bool>> {
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-"
-                                  "anomaly-Visio-TestCase-Visio-TestCase_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-"
+                "anomaly-Visio-TestCase-Visio-TestCase_2a_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -36,73 +40,30 @@ private:
 };
 
 INSTANTIATE_TEST_SUITE_P( // NOLINT
-        TxTypePair, Visio_TestCase,
-        ::testing::Values(
+        tx_type_and_result_pair, Visio_TestCase,
+        ::testing::Values( // param and result list
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT,
-                                transaction_type::SHORT, true, false, true,
-                                false), // c1
+                                transaction_type::SHORT, false, true, true,
+                                true), // c1
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true, true), // c2
+                                false, true, true,
+                                true), // c2
                 std::make_tuple(transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, true, false, true,
+                                transaction_type::SHORT, true, true, true,
                                 false), // c3
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::SHORT,
-                                transaction_type::SHORT, true, true, false,
-                                true), // c4
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, false, true,
-                                false), // c5
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, true, false, true,
-                                true), // c6
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, false, true), // c7
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true, true), // c8
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true, false), // c9
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, false, true, false), // c10
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, true, false,
-                                true), // c11
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, true, true,
-                                false), // c12
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, false, true,
-                                true), // c13
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, false,
-                                true), // c14
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true,
-                                false), // c15
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, true, true,
-                                false) // c16
+                                transaction_type::SHORT, false, true, false,
+                                true) // c4
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
-    // Write Crown 1 WP が消えていく場合
+    // Write Crown 1 WP が残る場合
     transaction_type t1_type = std::get<0>(GetParam());
     transaction_type t2_type = std::get<1>(GetParam());
     transaction_type t3_type = std::get<2>(GetParam());
@@ -114,6 +75,44 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     bool t2_was_finished = false;
     bool t3_was_finished = false;
     bool t4_was_finished = false;
+
+    std::atomic<Status> cb_rc1{};
+    std::atomic<Status> cb_rc2{};
+    std::atomic<Status> cb_rc3{};
+    std::atomic<Status> cb_rc4{};
+    [[maybe_unused]] reason_code rc1{};
+    [[maybe_unused]] reason_code rc2{};
+    [[maybe_unused]] reason_code rc3{};
+    [[maybe_unused]] reason_code rc4{};
+    std::atomic<bool> was_called1{false};
+    std::atomic<bool> was_called2{false};
+    std::atomic<bool> was_called3{false};
+    std::atomic<bool> was_called4{false};
+    auto cb1 = [&cb_rc1, &rc1,
+                &was_called1](Status rs, [[maybe_unused]] reason_code rc,
+                              [[maybe_unused]] durability_marker_type dm) {
+        cb_rc1.store(rs, std::memory_order_release);
+        rc1 = rc;
+        was_called1.store(true, std::memory_order_release);
+    };
+    auto cb2 = [&cb_rc2,
+                &was_called2](Status rs, [[maybe_unused]] reason_code rc,
+                              [[maybe_unused]] durability_marker_type dm) {
+        cb_rc2.store(rs, std::memory_order_release);
+        was_called2.store(true, std::memory_order_release);
+    };
+    auto cb3 = [&cb_rc3,
+                &was_called3](Status rs, [[maybe_unused]] reason_code rc,
+                              [[maybe_unused]] durability_marker_type dm) {
+        cb_rc3.store(rs, std::memory_order_release);
+        was_called3.store(true, std::memory_order_release);
+    };
+    auto cb4 = [&cb_rc4,
+                &was_called4](Status rs, [[maybe_unused]] reason_code rc,
+                              [[maybe_unused]] durability_marker_type dm) {
+        cb_rc4.store(rs, std::memory_order_release);
+        was_called4.store(true, std::memory_order_release);
+    };
 
     // setup
     Storage stx{};
@@ -176,14 +175,6 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         ASSERT_EQ(buf, "0");
     }
 
-    // t1 write y and commit
-    ASSERT_OK(upsert(t1, sty, "y", "1"));
-    if (t1_can_commit) {
-        ASSERT_OK(commit(t1));
-    } else {
-        ASSERT_EQ(Status::ERR_CC, commit(t1));
-    }
-
     // t3 read z
     if (t3_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t3, t3_type}));
@@ -202,16 +193,6 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         // success case
         ASSERT_OK(search_key(t3, stz, "z", buf));
         ASSERT_EQ(buf, "0");
-    }
-
-    // t2 write z and commit
-    if (!t2_was_finished) {
-        ASSERT_OK(upsert(t2, stz, "z", "2"));
-        if (t2_can_commit) {
-            ASSERT_OK(commit(t2));
-        } else {
-            ASSERT_EQ(Status::ERR_CC, commit(t2));
-        }
     }
 
     // t4 read a
@@ -234,23 +215,78 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         ASSERT_EQ(buf, "0");
     }
 
-    // t3 write z and commit
-    if (!t3_was_finished) {
-        ASSERT_OK(upsert(t3, sta, "a", "3"));
-        if (t3_can_commit) {
-            ASSERT_OK(commit(t3));
-        } else {
-            ASSERT_EQ(Status::ERR_CC, commit(t3));
-        }
-    }
-
     // t4 write z and commit
     if (!t4_was_finished) {
         ASSERT_OK(upsert(t4, stx, "x", "4"));
-        if (t4_can_commit) {
-            ASSERT_OK(commit(t4));
+        commit(t4, cb4);
+    }
+
+    // t3 write z and commit
+    if (!t3_was_finished) {
+        ASSERT_OK(upsert(t3, sta, "a", "3"));
+        commit(t3, cb3);
+    }
+
+    // t2 write z and commit
+    if (!t2_was_finished) {
+        ASSERT_OK(upsert(t2, stz, "z", "2"));
+        commit(t2, cb2);
+    }
+
+    // t1 write y and commit
+    ASSERT_OK(upsert(t1, sty, "y", "1"));
+    //if (t1_type == transaction_type::SHORT &&
+    //    t4_type == transaction_type::LONG) {
+    /**
+     * WP はコミット後にコールバックを呼んで、
+     * トランザクション状態を更新してから解除される。
+     * それは早急にそのトランザクションをCCエンジンがユーザーに対して
+     * 掴んでいる状態から解放するため。
+     * そのため、もし結果が期待通りで無かったらここでsleepする時間を増やすしかない。
+    */
+    //    sleep(1);
+    //}
+    commit(t1, cb1);
+
+    // verify t1
+    // wait commit
+    while (!was_called1) { _mm_pause(); }
+    if (t1_can_commit) {
+        ASSERT_EQ(cb_rc1, Status::OK);
+    } else {
+        ASSERT_EQ(cb_rc1, Status::ERR_CC);
+    }
+
+    // verify t2
+    if (!t2_was_finished) {
+        // wait commit
+        while (!was_called2) { _mm_pause(); }
+        if (t2_can_commit) {
+            ASSERT_EQ(cb_rc2, Status::OK);
         } else {
-            ASSERT_EQ(Status::ERR_CC, commit(t4));
+            ASSERT_EQ(cb_rc2, Status::ERR_CC);
+        }
+    }
+
+    // verify t3
+    if (!t3_was_finished) {
+        // wait commit
+        while (!was_called3) { _mm_pause(); }
+        if (t3_can_commit) {
+            ASSERT_EQ(cb_rc3, Status::OK);
+        } else {
+            ASSERT_EQ(cb_rc3, Status::ERR_CC);
+        }
+    }
+
+    // verify t4
+    if (!t4_was_finished) {
+        // wait commit
+        while (!was_called4) { _mm_pause(); }
+        if (t4_can_commit) {
+            ASSERT_EQ(cb_rc4, Status::OK);
+        } else {
+            ASSERT_EQ(cb_rc4, Status::ERR_CC);
         }
     }
 

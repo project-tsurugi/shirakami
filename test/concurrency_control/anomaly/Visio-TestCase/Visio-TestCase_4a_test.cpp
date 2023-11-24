@@ -24,7 +24,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-Test'Case_6_test");
+                "anomaly-Visio-TestCase-Visio-TestCase_4a_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -59,59 +59,11 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT, true, true, true,
-                                true), // c4
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, false, true,
-                                true), // c5
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, true, false, true,
-                                true), // c6
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, true,
-                                false), // c7
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true,
-                                true), // c8
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true,
-                                false), // c9
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, false, true,
-                                true), // c10
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, true, true,
-                                false), // c11
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, true, true,
-                                false), // c12
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, false, true,
-                                true), // c13
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, true,
-                                false), // c14
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true,
-                                false), // c15
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, true, true,
-                                false) // c16
+                                false) // c4
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
-    // read crown, read only が crown を形成するケース（三項で順序入れ替え）
+    // read abort
     transaction_type t1_type = std::get<0>(GetParam());
     transaction_type t2_type = std::get<1>(GetParam());
     transaction_type t3_type = std::get<2>(GetParam());
@@ -120,8 +72,8 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     bool t2_can_commit = std::get<5>(GetParam());
     bool t3_can_commit = std::get<6>(GetParam());
     bool t4_can_commit = std::get<7>(GetParam());
-    [[maybe_unused]] bool t2_was_finished{false};
-    [[maybe_unused]] bool t4_was_finished{false};
+    bool t2_was_finished{false};
+    bool t4_was_finished{false};
 
     std::atomic<Status> cb_rc1{};
     std::atomic<Status> cb_rc2{};
@@ -153,12 +105,12 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     };
 
     // setup
-    Storage sta{};
-    Storage stu{};
     Storage stx{};
-    ASSERT_OK(create_storage("a", sta));
-    ASSERT_OK(create_storage("u", stu));
+    Storage sty{};
+    Storage stz{};
     ASSERT_OK(create_storage("x", stx));
+    ASSERT_OK(create_storage("y", sty));
+    ASSERT_OK(create_storage("z", stz));
 
     // prepare
     Token t1;
@@ -171,30 +123,30 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     ASSERT_OK(enter(t4));
 
     ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
-    ASSERT_OK(upsert(t1, sta, "a", "0"));
-    ASSERT_OK(upsert(t1, stu, "u", "0"));
     ASSERT_OK(upsert(t1, stx, "x", "0"));
+    ASSERT_OK(upsert(t1, sty, "y", "0"));
+    ASSERT_OK(upsert(t1, stz, "z", "0"));
     ASSERT_OK(commit(t1));
 
     // test
-    // t1 begin, read a
+    // t1 begin, read x
     if (t1_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t1, t1_type}));
     } else if (t1_type == transaction_type::LONG) {
-        ASSERT_OK(tx_begin({t1, t1_type, {stx}}));
+        ASSERT_OK(tx_begin({t1, t1_type, {sty}}));
         wait_epoch_update();
     } else {
         LOG(FATAL);
     }
     std::string buf{};
-    ASSERT_OK(search_key(t1, sta, "a", buf));
+    ASSERT_OK(search_key(t1, stx, "x", buf));
     ASSERT_EQ(buf, "0");
 
-    // t2 begin, read x
+    // t2 begin, read y
     if (t2_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t2, t2_type}));
     } else if (t2_type == transaction_type::LONG) {
-        ASSERT_OK(tx_begin({t2, t2_type, {stu}}));
+        ASSERT_OK(tx_begin({t2, t2_type, {stz}}));
         wait_epoch_update();
     } else {
         LOG(FATAL);
@@ -202,31 +154,31 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     if (t2_type == transaction_type::SHORT &&
         t1_type == transaction_type::LONG) {
         // fail case
-        ASSERT_EQ(Status::ERR_CC, search_key(t2, stx, "x", buf));
+        ASSERT_EQ(Status::ERR_CC, search_key(t2, sty, "y", buf));
         t2_was_finished = true;
     } else {
-        // success case
-        ASSERT_OK(search_key(t2, stx, "x", buf));
+        // success
+        ASSERT_OK(search_key(t2, sty, "y", buf));
         ASSERT_EQ(buf, "0");
     }
 
-    // t1 write x and commit
-    ASSERT_OK(upsert(t1, stx, "x", "1"));
+    // t1 write y and commit
+    ASSERT_OK(upsert(t1, sty, "y", "1"));
     commit(t1, cb1);
 
-    // t3 begin, write a and commit
+    // t3 begin, write z and commit
     if (t3_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t3, t3_type}));
     } else if (t3_type == transaction_type::LONG) {
-        ASSERT_OK(tx_begin({t3, t3_type, {sta}}));
+        ASSERT_OK(tx_begin({t3, t3_type, {stz}}));
         wait_epoch_update();
     } else {
         LOG(FATAL);
     }
-    ASSERT_OK(upsert(t3, sta, "a", "3"));
+    ASSERT_OK(upsert(t3, stz, "z", "3"));
     commit(t3, cb3);
 
-    // t4 begin, read a
+    // t4 begin, read z
     if (t4_type == transaction_type::SHORT) {
         ASSERT_OK(tx_begin({t4, t4_type}));
     } else if (t4_type == transaction_type::LONG) {
@@ -235,26 +187,28 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     } else {
         LOG(FATAL);
     }
-    ASSERT_OK(search_key(t4, sta, "a", buf));
-    ASSERT_EQ(buf, "3");
-
-    // t4 read u, commit
     if (t4_type == transaction_type::SHORT &&
         t2_type == transaction_type::LONG) {
         // fail case
-        ASSERT_EQ(Status::ERR_CC, search_key(t4, stu, "u", buf));
+        ASSERT_EQ(Status::ERR_CC, search_key(t4, stz, "z", buf));
         t4_was_finished = true;
     } else {
         // success case
-        ASSERT_OK(search_key(t4, stu, "u", buf));
-        ASSERT_EQ(buf, "0");
-        commit(t4, cb4);
+        ASSERT_OK(search_key(t4, stz, "z", buf));
+        ASSERT_EQ(buf, "3");
     }
 
     // t2 write z, commit
     if (!t2_was_finished) {
-        ASSERT_OK(upsert(t2, stu, "u", "2"));
+        ASSERT_OK(upsert(t2, stz, "z", "2"));
         commit(t2, cb2);
+    }
+
+    // t4 read y, commit
+    if (!t4_was_finished) {
+        ASSERT_OK(search_key(t4, sty, "y", buf));
+        ASSERT_EQ(buf, "1");
+        commit(t4, cb4);
     }
 
     // verify t1

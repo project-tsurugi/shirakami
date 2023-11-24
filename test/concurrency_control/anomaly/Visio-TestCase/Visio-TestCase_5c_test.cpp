@@ -24,7 +24,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-Test'Case_5_test");
+                "anomaly-Visio-TestCase-Visio-Test'Case_5c_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -42,40 +42,6 @@ private:
 INSTANTIATE_TEST_SUITE_P( // NOLINT
         tx_type_and_result_pair, Visio_TestCase,
         ::testing::Values( // param and result list
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, true,
-                                true), // c1
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                false, true, true,
-                                true), // c2
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, false, true, true,
-                                true), // c3
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, true,
-                                true), // c4
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, false, true,
-                                true), // c5
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, false, true, true,
-                                true), // c6
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                false, true, true,
-                                false), // c7
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true,
-                                true), // c8
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::LONG, transaction_type::SHORT,
                                 false, true, true,
@@ -91,23 +57,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::LONG, transaction_type::LONG,
                                 false, true, true,
-                                false), // c12
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, false, true,
-                                true), // c13
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, true,
-                                false), // c14
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true,
-                                false), // c15
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                true, true, true,
-                                false) // c16
+                                false) // c12
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT

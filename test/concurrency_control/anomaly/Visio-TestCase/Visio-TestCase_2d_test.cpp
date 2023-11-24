@@ -24,7 +24,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-TestCase_2_test");
+                "anomaly-Visio-TestCase-Visio-TestCase_2d_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -42,56 +42,6 @@ private:
 INSTANTIATE_TEST_SUITE_P( // NOLINT
         tx_type_and_result_pair, Visio_TestCase,
         ::testing::Values( // param and result list
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, true,
-                                true), // c1
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                false, true, true,
-                                true), // c2
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, true, true, true,
-                                false), // c3
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, false, true, false,
-                                true), // c4
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, false, true,
-                                true), // c5
-                std::make_tuple(transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, false, true, true,
-                                true), // c6
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                false, true, false,
-                                true), // c7
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true,
-                                true), // c8
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, true, true,
-                                false), // c9
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                true, false, true,
-                                false), // c10
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, true, true, false,
-                                true), // c11
-                std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
-                                transaction_type::LONG, transaction_type::LONG,
-                                false, true, true,
-                                true), // c12
                 std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::LONG, transaction_type::LONG,
                                 true, false, true,
