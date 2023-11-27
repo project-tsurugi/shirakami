@@ -4,26 +4,10 @@
 
 namespace shirakami {
 
-inline log_event_callback log_event_callback_; // NOLINT
-
 inline std::atomic<bool> is_shutdowning_{false}; // NOLINT
-
-[[maybe_unused]] static void clear_log_event_callback() {
-    log_event_callback f;
-    log_event_callback_ = f;
-}
 
 [[maybe_unused]] static bool get_is_shutdowning() {
     return is_shutdowning_.load(std::memory_order_acquire);
-}
-
-[[maybe_unused]] static log_event_callback get_log_event_callback() {
-    return log_event_callback_;
-}
-
-[[maybe_unused]] static void
-set_log_event_callback(log_event_callback const& callback) {
-    log_event_callback_ = callback;
 }
 
 [[maybe_unused]] static void set_is_shutdowning(bool tf) {

@@ -480,28 +480,6 @@ Status release_tx_state_handle(TxStateHandle handle);
 Status check_tx_state(TxStateHandle handle, TxState& out);
 
 /**
- * @brief log event callback function type.
- * @details callback invoked on logging event on cc engine or datastore. The callback arguments are
- *   - the log worker number (0-origin index)
- *   - the log record begin pointer to iterate all the logged records
- *   - the log record end pointer to detect end position of the logged records
- */
-using log_event_callback =
-        std::function<void(std::size_t, log_record*, log_record*)>;
-
-/**
- * @brief set logging event callback
- * @details register the callback invoked on the logging event (cc engine or 
- * datastore defines event timing)
- * @param handle the database handle
- * @param callback the callback to be invoked whose arguments are log worker 
- * number and iterator for log records
- * @return Status::OK if the call is successful
- * @return Status::WARN_INVALID_ARGS @a callback is not executable.
- */
-Status database_set_logging_callback(log_event_callback const& callback);
-
-/**
  * @brief check whether the ltx has highest priority.
  * @pre This must be called between tx begin and termination (commit/abort).
  * If you don't save this rule, it is undefined behavior.

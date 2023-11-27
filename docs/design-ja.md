@@ -141,11 +141,6 @@
 * `chek_tx_state`
   + 獲得したステータスハンドルに関するトランザクションの状態を確認する。
 
-## ロギングコールバック API
-
-* `database_set_logging_callback`
-  + ロギングの際に呼び出したいコールバック関数を登録する。
-
 ## データストア API
 
 * `get_datastore`

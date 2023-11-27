@@ -9,22 +9,6 @@
 
 namespace shirakami {
 
-Status database_set_logging_callback_body(log_event_callback const& callback) {
-    if (callback) {
-        // callback is executable
-        set_log_event_callback(callback);
-        return Status::OK;
-    }
-    return Status::WARN_INVALID_ARGS;
-}
-
-Status database_set_logging_callback(log_event_callback const& callback) {
-    shirakami_log_entry << "database_set_logging_callback";
-    auto ret = database_set_logging_callback_body(callback);
-    shirakami_log_exit << "database_set_logging_callback";
-    return ret;
-}
-
 [[maybe_unused]] Status delete_all_records() { // NOLINT
     //check list of all storage
     std::vector<Storage> storage_list;
