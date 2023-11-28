@@ -141,6 +141,7 @@ Status init_body(database_options options) { // NOLINT
     datastore::init_about_session_table(log_dir);
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:start_datastore_ready";
+    ready(datastore::get_datastore());
     if (datastore::get_datastore()->last_epoch() < epoch::initial_epoch) {
         epoch::set_global_epoch(epoch::initial_epoch);
     } else {
@@ -148,7 +149,6 @@ Status init_body(database_options options) { // NOLINT
     }
     LOG(INFO) << datastore::get_datastore()->last_epoch();
     LOG(INFO) << datastore::get_datastore()->last_epoch() + 1;
-    ready(datastore::get_datastore());
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:end_datastore_ready";
 
