@@ -35,7 +35,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class li_multi_recovery_test : public ::testing::Test { // NOLINT
+class li_seq_three_recovery_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
@@ -108,8 +108,8 @@ void recovery_test(std::size_t recovery_num) {
     fin();
 }
 
-TEST_F(li_multi_recovery_test,                 // NOLINT
-       two_recovery_test) {                    // NOLINT
+TEST_F(li_seq_three_recovery_test,                 // NOLINT
+       three_recovery_test) {                    // NOLINT
     ASSERT_NO_FATAL_FAILURE(recovery_test(3)); // NOLINT
 }
 

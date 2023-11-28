@@ -34,7 +34,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class li_single_recovery_test : public ::testing::Test { // NOLINT
+class li_no_write_between_two_recovery_test : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-data_store-"
@@ -56,7 +56,7 @@ static std::string create_log_dir_name() {
     return "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
 }
 
-TEST_F(li_single_recovery_test,         // NOLINT
+TEST_F(li_no_write_between_two_recovery_test,         // NOLINT
        no_write_between_two_recovery) { // NOLINT
     // prepare
     std::string log_dir{};
