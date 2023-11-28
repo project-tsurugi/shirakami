@@ -11,6 +11,7 @@
 #include "include/helper.h"
 
 #include "concurrency_control/bg_work/include/bg_commit.h"
+#include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/epoch_internal.h"
 #include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
@@ -140,6 +141,13 @@ Status init_body(database_options options) { // NOLINT
     datastore::init_about_session_table(log_dir);
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:start_datastore_ready";
+    if (datastore::get_datastore()->last_epoch() < epoch::initial_epoch) {
+        epoch::set_global_epoch(epoch::initial_epoch);
+    } else {
+        epoch::set_global_epoch(datastore::get_datastore()->last_epoch() + 1);
+    }
+    LOG(INFO) << datastore::get_datastore()->last_epoch();
+    LOG(INFO) << datastore::get_datastore()->last_epoch() + 1;
     ready(datastore::get_datastore());
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:end_datastore_ready";

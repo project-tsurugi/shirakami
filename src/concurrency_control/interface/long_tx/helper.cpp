@@ -196,7 +196,6 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
     is_latest = false;
 
     f_check = loadAcquire(&rec->get_tidw_ref().get_obj());
-
     for (;;) {
         if (f_check.get_lock()) {
             /**

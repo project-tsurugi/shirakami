@@ -53,6 +53,7 @@ public:
                                 std::tuple<std::string, scan_endpoint,
                                            std::string, scan_endpoint, bool>>>;
     using ltx_storage_read_set_type = std::set<Storage>;
+    static constexpr std::uint64_t initial_mrc_tid{0};
 
 
     /**
@@ -571,7 +572,7 @@ private:
     /**
      * @brief most recently chosen tid for calculate new tid of occ.
      */
-    tid_word mrc_tid_{};
+    tid_word mrc_tid_{initial_mrc_tid};
 
     /**
      * @brief If this is true, this session is live, otherwise, not live.

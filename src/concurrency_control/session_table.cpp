@@ -41,6 +41,8 @@ void session_table::init_session_table() {
         itr.set_operating(0);
         // for commit callback
         itr.set_commit_callback({});
+        // for mrc tid
+        itr.set_mrc_tid(session::initial_mrc_tid);
 #ifdef PWAL
         itr.get_lpwal_handle().init();
         itr.get_lpwal_handle().set_worker_number(worker_number);
