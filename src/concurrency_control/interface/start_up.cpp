@@ -139,18 +139,22 @@ Status init_body(database_options options) { // NOLINT
      * This executes create_channel and pass it to shirakami's executor.
      */
     datastore::init_about_session_table(log_dir);
+
+    // datastore ready
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:start_datastore_ready";
-    if (datastore::get_datastore()->last_epoch() < epoch::initial_epoch) {
-        epoch::set_global_epoch(epoch::initial_epoch);
-    } else {
-        epoch::set_global_epoch(datastore::get_datastore()->last_epoch() + 1);
-    }
-    LOG(INFO) << datastore::get_datastore()->last_epoch();
-    LOG(INFO) << datastore::get_datastore()->last_epoch() + 1;
     ready(datastore::get_datastore());
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:end_datastore_ready";
+
+    // epoch adjustment
+    auto new_epoch = epoch::initial_epoch;
+    if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
+        new_epoch = datastore::get_datastore()->last_epoch() + 1;
+    }
+    epoch::set_global_epoch(new_epoch);
+    // change also datastore's epoch, this must be after ready()
+    switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
 
 #endif
 

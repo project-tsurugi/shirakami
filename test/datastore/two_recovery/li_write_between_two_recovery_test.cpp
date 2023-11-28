@@ -17,11 +17,14 @@
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/lpwal.h"
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/version.h"
 
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"
+
+#include "limestone/api/datastore.h"
 
 #include "gtest/gtest.h"
 
@@ -62,7 +65,6 @@ TEST_F(li_single_recovery_test,      // NOLINT
     std::string log_dir{};
     log_dir = create_log_dir_name();
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
-    LOG(INFO) << epoch::get_global_epoch();
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("1", st));
     Token s{};
@@ -71,11 +73,11 @@ TEST_F(li_single_recovery_test,      // NOLINT
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "A"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    auto epoch1 = static_cast<session*>(s)->get_mrc_tid().get_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
-    LOG(INFO) << epoch::get_global_epoch();
     ASSERT_EQ(Status::OK, enter(s));
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
@@ -84,6 +86,8 @@ TEST_F(li_single_recovery_test,      // NOLINT
     ASSERT_EQ(vb, "A");
     ASSERT_EQ(Status::OK, upsert(s, st, "a", "b"));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    auto epoch2 = static_cast<session*>(s)->get_mrc_tid().get_epoch();
+    ASSERT_GT(epoch2, epoch1);
     ASSERT_EQ(Status::OK, leave(s));
     fin(false);
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
