@@ -58,9 +58,9 @@ void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
-    shirakami_log_entry << "datastore::switch_epoch()";
+    shirakami_ex_log_entry << "datastore::switch_epoch()";
     ds->switch_epoch(ep);
-    shirakami_log_exit << "datastore::switch_epoch()";
+    shirakami_ex_log_exit << "datastore::switch_epoch()";
 }
 
 // log channel

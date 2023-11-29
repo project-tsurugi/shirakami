@@ -46,4 +46,9 @@ static constexpr std::int32_t log_debug = 40;
  */
 static constexpr std::int32_t log_trace = 50;
 
+/**
+ * @brief logging level constant for excessive traces
+*/
+static constexpr std::int32_t log_ex_trace = 100;
+
 } // namespace shirakami

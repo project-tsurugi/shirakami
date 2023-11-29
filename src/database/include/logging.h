@@ -14,6 +14,12 @@ namespace shirakami::logging {
     VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
 #define shirakami_log_exit                                                     \
     VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
+#define shirakami_ex_log_entry                                                 \
+    VLOG(log_ex_trace) << std::boolalpha << log_location_prefix                \
+                       << "-->" // NOLINT
+#define shirakami_ex_log_exit                                                  \
+    VLOG(log_ex_trace) << std::boolalpha << log_location_prefix                \
+                       << "<--" // NOLINT
 
 inline std::atomic<bool> enable_logging_detail_info_{false};
 
