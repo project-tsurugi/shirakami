@@ -156,6 +156,8 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     }
 
     if (!wait_for.empty()) {
+        ti->set_was_considering_forwarding_at_once(true);
+
         // check boundary wait
         {
             std::shared_lock<std::shared_mutex> lk{mtx_};
@@ -181,7 +183,11 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                 }
             }
         }
+    }
 
+    if (ti->get_was_considering_forwarding_at_once()) {
+        // at least, this tx was considering forwarding so needs to check read
+        // wait.
         // check about write
         if (has_wp) {
             // check potential read-anti and read area for each write storage

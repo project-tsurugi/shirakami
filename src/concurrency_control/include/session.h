@@ -91,6 +91,7 @@ public:
         set_read_version_max_epoch(0);
         set_long_tx_id(0);
         set_valid_epoch(0);
+        set_was_considering_forwarding_at_once(false);
     }
 
     void clear_about_tx_state() {
@@ -315,6 +316,10 @@ public:
         return requested_commit_.load(std::memory_order_acquire);
     }
 
+    [[nodiscard]] bool get_was_considering_forwarding_at_once() const {
+        return was_considering_forwarding_at_once_;
+    }
+
     [[nodiscard]] Status get_result_requested_commit() const {
         return result_requested_commit_.load(std::memory_order_acquire);
     }
@@ -503,6 +508,10 @@ public:
             set_result_requested_commit(Status::WARN_WAITING_FOR_OTHER_TX);
         }
         requested_commit_.store(tf, std::memory_order_release);
+    }
+
+    void set_was_considering_forwarding_at_once (bool tf) {
+        was_considering_forwarding_at_once_ = tf;
     }
 
     void set_result_requested_commit(Status st) {
@@ -709,6 +718,12 @@ private:
      * @note It may be accessed by user and shirakami background worker.
      */
     std::atomic<bool> requested_commit_{};
+
+    /**
+     * @brief whether this tx was considering forwarding at once. This is used
+     * for considering read wait
+    */
+    bool was_considering_forwarding_at_once_{false};
 
     /**
      * @brief The requested transaction commit status which is/was decided 
