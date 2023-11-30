@@ -23,6 +23,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_wait/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_and_boundary_wait/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_areas/*.cpp"
+        "concurrency_control/anomaly/Visio-TestCase_Parallel/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
         "concurrency_control/anomaly/write_skew/*.cpp"

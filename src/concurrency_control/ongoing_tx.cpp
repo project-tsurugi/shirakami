@@ -155,50 +155,52 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
         long_tx::update_wp_at_commit(ti, st_set);
     }
 
-    // check boundary wait
-    {
-        std::shared_lock<std::shared_mutex> lk{mtx_};
-        for (auto&& elem : tx_info_) {
-            // check overwrites
-            if (std::get<ongoing_tx::index_id>(elem) < id) {
-                if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
-                    wait_for.end()) {
-                    // wait_for hit.
-                    /**
+    if (!wait_for.empty()) {
+        // check boundary wait
+        {
+            std::shared_lock<std::shared_mutex> lk{mtx_};
+            for (auto&& elem : tx_info_) {
+                // check overwrites
+                if (std::get<ongoing_tx::index_id>(elem) < id) {
+                    if (wait_for.find(std::get<ongoing_tx::index_id>(elem)) !=
+                        wait_for.end()) {
+                        // wait_for hit.
+                        /**
                      * boundary wait 確定.
                      * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
                      * に対する前置を確定するとともに、x1 が前置する相手に前置する。
                      * これは待ち確認のたびにパスを一つ短絡化するため、
                      * get_requested_commit() の確認を噛ませていない。
                      * */
-                    out_status = waiting_bypass(ti);
-                    return out_status == Status::OK;
+                        out_status = waiting_bypass(ti);
+                        return out_status == Status::OK;
+                    }
+                } else {
+                    // considering for only high priori ltx
+                    break;
                 }
-            } else {
-                // considering for only high priori ltx
-                break;
             }
         }
-    }
 
-    // check about write
-    if (has_wp) {
-        // check potential read-anti and read area for each write storage
-        bool ret = read_plan::check_potential_read_anti(id, st_set);
-        if (!ret) {
-            // no need to read wait and it can try IWR
-            return false;
-        }
-        // should wait read except write only
+        // check about write
+        if (has_wp) {
+            // check potential read-anti and read area for each write storage
+            bool ret = read_plan::check_potential_read_anti(id, st_set);
+            if (!ret) {
+                // no need to read wait and it can try IWR
+                return false;
+            }
+            // should wait read except write only
 
-        // check write only
-        bool write_only = ti->is_write_only_ltx_now();
-        if (write_only) {
-            ti->set_is_force_backwarding(true);
-            return false;
+            // check write only
+            bool write_only = ti->is_write_only_ltx_now();
+            if (write_only) {
+                ti->set_is_force_backwarding(true);
+                return false;
+            }
+            // not write only and may have high priori read
+            return true;
         }
-        // not write only and may have high priori read
-        return true;
     }
 
     return false;

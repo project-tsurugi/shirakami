@@ -91,11 +91,8 @@ TEST_F(tsurugi_issue232_2, case_11) {
 
     VLOG(10) << "TX1: insert storageA key0 (yellow -> red)";
     ASSERT_OK(insert(t1, stA, "k0", "v0"));
-    // TX3 keeps waiting, because TX1 is not committed and TX1 may read storageB
-    wait_epoch_update();
-    ASSERT_EQ(check_commit(t3), Status::WARN_WAITING_FOR_OTHER_TX);
-    wait_epoch_update();
-    ASSERT_EQ(check_commit(t3), Status::WARN_WAITING_FOR_OTHER_TX);
+    // TX3 waiting bypass, no boudary wait, 
+    // TX2 don't read stB which TX3 write, so no read wait
 
     VLOG(10) << "TX1: commit";
     ASSERT_OK(commit(t1));
