@@ -97,7 +97,7 @@ private:
     /**
      * @brief Parameter of epoch [us]
      */
-    std::size_t epoch_time_{3000}; // NOLINT
+    std::size_t epoch_time_{40000}; // NOLINT
     // ==========
 
     // ==========

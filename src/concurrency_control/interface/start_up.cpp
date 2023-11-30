@@ -49,7 +49,7 @@ void for_output_config(database_options const& options) {
     // about epoch_duration
     LOG(INFO) << log_location_prefix_config
               << "epoch_duration: " << options.get_epoch_time() << ", "
-              << "The duration of epoch. Default is 3,000 [us].";
+              << "The duration of epoch. Default is 40,000 [us].";
     // about waiting_resolver_thrads
     LOG(INFO) << log_location_prefix_config << "waiting_resolver_threads: "
               << options.get_waiting_resolver_threads() << ", "
