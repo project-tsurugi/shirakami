@@ -91,11 +91,11 @@ Status update_body(Token token, Storage storage,
 }
 
 Status update(Token token, Storage storage,
-              const std::string_view key, // NOLINT
-              const std::string_view val) {
+              std::string_view const key, // NOLINT
+              std::string_view const val) {
     shirakami_log_entry << "update, token: " << token
-                        << ", storage: " << storage << ", key: " << key
-                        << ", val: " << val;
+                        << ", storage: " << storage << binstring(key)
+                        << binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = update_body(token, storage, key, val);

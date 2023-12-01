@@ -13,6 +13,7 @@
 #include "index/yakushima/include/scheme.h"
 
 
+#include "shirakami/binary_printer.h"
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -429,9 +430,9 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
-    shirakami_log_entry << "open_scan, token: " << token
-                        << ", storage: " << storage << ", l_key: " << l_key
-                        << ", l_end: " << l_end << ", r_key: " << r_key
+    shirakami_log_entry << "open_scan token: " << token
+                        << " storage: " << storage << binstring(l_key)
+                        << " l_end: " << l_end << binstring(r_key)
                         << ", r_end: " << r_end << ", handle: " << handle
                         << ", max_size: " << max_size;
     auto* ti = static_cast<session*>(token);
@@ -842,7 +843,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                           std::string& key) {
     shirakami_log_entry << "read_key_from_scan, token: " << token
-                        << ", handle: " << handle << ", key: " << key;
+                        << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, true, key);
@@ -855,7 +856,7 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
 Status read_value_from_scan(Token const token, // NOLINT
                             ScanHandle const handle, std::string& value) {
     shirakami_log_entry << "read_value_from_scan, token: " << token
-                        << ", handle: " << handle << ", value: " << value;
+                        << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, false, value);

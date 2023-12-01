@@ -13,6 +13,7 @@
 #include "concurrency_control/interface/include/helper.h"
 #include "database/include/logging.h"
 
+#include "shirakami/binary_printer.h"
 #include "shirakami/interface.h"
 #include "shirakami/logging.h"
 #include "shirakami/storage_options.h"
@@ -103,9 +104,9 @@ Status create_storage_body(std::string_view const key, Storage& storage,
     return Status::OK;
 }
 
-Status create_storage(std::string_view const key, Storage& storage,
+Status create_storage(std::string_view key, Storage& storage,
                       storage_option const& options) {
-    shirakami_log_entry << "create_storage, key: " << key
+    shirakami_log_entry << "create_storage " << binstring(key)
                         << ", storage: " << storage << ", options: " << options;
     auto ret = create_storage_body(key, storage, options);
     shirakami_log_exit << "create_storage, " << ret;
@@ -146,8 +147,8 @@ Status get_storage_body(std::string_view const key, Storage& out) {
     return storage::key_handle_map_get_storage(key, out);
 }
 
-Status get_storage(std::string_view const key, Storage& out) {
-    shirakami_log_entry << "get_storage, key: " << key << ", out: " << out;
+Status get_storage(std::string_view key, Storage& out) {
+    shirakami_log_entry << "get_storage " << binstring(key) << ", out: " << out;
     auto ret = get_storage_body(key, out);
     shirakami_log_exit << "get_storage, " << ret;
     return ret;

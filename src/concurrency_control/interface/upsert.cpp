@@ -12,6 +12,7 @@
 
 #include "index/yakushima/include/interface.h"
 
+#include "shirakami/binary_printer.h"
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -113,10 +114,10 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
     }
 }
 
-Status upsert(Token token, Storage storage, const std::string_view key,
-              const std::string_view val) {
+Status upsert(Token token, Storage storage, std::string_view const key,
+              std::string_view const val) {
     shirakami_log_entry << "upsert, token: " << token << ", storage; "
-                        << storage << ", key: " << key << ", val: " << val;
+                        << storage << binstring(key) << binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = upsert_body(token, storage, key, val);

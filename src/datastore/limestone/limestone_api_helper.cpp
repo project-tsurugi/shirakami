@@ -66,15 +66,16 @@ void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
 // log channel
 
 void add_entry(limestone::api::log_channel* lc,
-               limestone::api::storage_id_type storage_id, std::string_view key,
-               std::string_view val, limestone::api::epoch_t major_version,
+               limestone::api::storage_id_type storage_id,
+               std::string_view const key, std::string_view const val,
+               limestone::api::epoch_t major_version,
                std::uint64_t minor_version) {
     if (lc == nullptr) {
         LOG(ERROR) << log_location_prefix << "unreachable path";
         return;
     }
     shirakami_log_entry << "log_channel::add_entry(): storage_id: "
-                        << storage_id << ", key: " << key << ", val: " << val
+                        << storage_id << binstring(key) << binstring(val)
                         << ", major write version: " << major_version
                         << ", minor write version: " << minor_version;
     lc->add_entry(
@@ -93,7 +94,7 @@ void remove_entry(limestone::api::log_channel* const lc,
         return;
     }
     shirakami_log_entry << "log_channel::remove_entry(): storage_id: "
-                        << storage_id << ", key: " << key
+                        << storage_id << binstring(key)
                         << ", major write version: " << major_version
                         << ", minor write version: " << minor_version;
     lc->remove_entry(

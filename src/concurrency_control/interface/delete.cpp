@@ -12,6 +12,7 @@
 #include "database/include/logging.h"
 #include "index/yakushima/include/interface.h"
 
+#include "shirakami/binary_printer.h"
 #include "shirakami/interface.h"
 #include "shirakami/logging.h"
 
@@ -148,8 +149,8 @@ Status delete_record_body(Token token, Storage storage,
 }
 
 Status delete_record(Token token, Storage storage, const std::string_view key) {
-    shirakami_log_entry << "delete_record, token: " << token
-                        << ", storage: " << storage << ", key: " << key;
+    shirakami_log_entry << "delete_record token: " << token
+                        << " storage: " << storage << binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = delete_record_body(token, storage, key);
