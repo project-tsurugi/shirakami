@@ -431,8 +431,8 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size) {
     shirakami_log_entry << "open_scan token: " << token
-                        << " storage: " << storage << binstring(l_key)
-                        << " l_end: " << l_end << binstring(r_key)
+                        << " storage: " << storage << shirakami_binstring(l_key)
+                        << " l_end: " << l_end << shirakami_binstring(r_key)
                         << ", r_end: " << r_end << ", handle: " << handle
                         << ", max_size: " << max_size;
     auto* ti = static_cast<session*>(token);

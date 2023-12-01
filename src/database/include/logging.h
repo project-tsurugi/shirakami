@@ -21,6 +21,11 @@ namespace shirakami::logging {
     VLOG(log_ex_trace) << std::boolalpha << log_location_prefix                \
                        << "<--" // NOLINT
 
+// receive string_view only
+#define shirakami_binstring(arg)                                               \
+    " " #arg "(len=" << (arg).size() << "):\"" << binary_printer((arg))        \
+                     << "\"" //NOLINT
+
 inline std::atomic<bool> enable_logging_detail_info_{false};
 
 [[maybe_unused]] static bool get_enable_logging_detail_info() {

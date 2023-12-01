@@ -63,7 +63,7 @@ Status exist_key_body(Token const token, Storage const storage, // NOLINT
 Status exist_key(Token const token, Storage const storage, // NOLINT
                  std::string_view const key) {
     shirakami_log_entry << "exist_key, token: " << token
-                        << ", storage: " << storage << binstring(key);
+                        << ", storage: " << storage << shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = exist_key_body(token, storage, key);
@@ -115,7 +115,7 @@ Status search_key_body(Token const token, Storage const storage, // NOLINT
 Status search_key(Token const token, Storage const storage, // NOLINT
                   std::string_view const key, std::string& value) {
     shirakami_log_entry << "search_key, token: " << token
-                        << ", storage: " << storage << binstring(key);
+                        << ", storage: " << storage << shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = search_key_body(token, storage, key, value);

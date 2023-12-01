@@ -117,7 +117,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
 Status upsert(Token token, Storage storage, std::string_view const key,
               std::string_view const val) {
     shirakami_log_entry << "upsert, token: " << token << ", storage; "
-                        << storage << binstring(key) << binstring(val);
+                        << storage << shirakami_binstring(key) << shirakami_binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = upsert_body(token, storage, key, val);

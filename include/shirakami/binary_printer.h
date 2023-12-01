@@ -57,9 +57,4 @@ private:
     std::size_t size_{};
 };
 
-// receive string_view only
-#define binstring(arg)                                                         \
-    " " #arg "(len=" << (arg).size() << "):\"" << binary_printer((arg))        \
-                     << "\"" //NOLINT
-
 } // namespace shirakami
