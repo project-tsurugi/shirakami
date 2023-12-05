@@ -3,6 +3,9 @@
 #include <functional>
 #include <xmmintrin.h>
 
+#include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/session.h"
+
 #include "shirakami/interface.h"
 #include "test_tool.h"
 
@@ -98,15 +101,22 @@ TEST_F(tsurugi_issue438_4_test, simple) {
                         scan_endpoint::INF, shd3));
     std::atomic<Status> cb_rc{};
     std::atomic<bool> was_called{false};
-    auto cb = [&cb_rc,
-               &was_called](Status rs, [[maybe_unused]] reason_code rc,
-                            [[maybe_unused]] durability_marker_type dm) {
+    reason_code rc{};
+    auto cb = [&cb_rc, &was_called,
+               &rc](Status rs, [[maybe_unused]] reason_code rc1,
+                    [[maybe_unused]] durability_marker_type dm) {
         cb_rc.store(rs, std::memory_order_release);
         was_called.store(true, std::memory_order_release);
+        rc = rc1;
     };
-    ASSERT_FALSE(commit(t3, cb)); // expect waiting at once
+    /**
+     * expect waiting at once, but at becoming waiting, tx tries to waiting
+     * bypass and bypass t1, and not wait
+    */
+    ASSERT_TRUE(commit(t3, cb));
     while (!was_called) { _mm_pause(); }
-    ASSERT_OK(cb_rc); // expect success
+    ASSERT_EQ(Status::ERR_CC, cb_rc); // expect error due to rub violation
+    ASSERT_EQ(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION, rc);
     ASSERT_OK(abort(t));
 
     ASSERT_OK(leave(t));

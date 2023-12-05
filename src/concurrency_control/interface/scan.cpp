@@ -672,6 +672,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             ti->read_set_for_ltx().push(rec_ptr);
         }
     };
+    auto register_read_version_max_epoch = [ti](epoch::epoch_t read_epoch) {
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            if (read_epoch > ti->get_read_version_max_epoch()) {
+                ti->set_read_version_max_epoch(read_epoch);
+            }
+        }
+    };
 
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
@@ -807,6 +814,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             if (s_check.get_obj() == f_check.get_obj()) {
                 // success optimistic read latest version
                 read_register_if_ltx(rec_ptr);
+                // check max epoch of read version
+                register_read_version_max_epoch(f_check.get_epoch());
                 if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
                 return Status::OK;
             }
@@ -832,6 +841,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
 
         read_register_if_ltx(rec_ptr);
+        // check max epoch of read version
+        register_read_version_max_epoch(ver->get_tid().get_epoch());
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         return Status::OK;
     }
