@@ -80,35 +80,50 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     std::atomic<Status> cb_rc3{};
     std::atomic<Status> cb_rc4{};
     std::atomic<Status> cb_rc5{};
+    std::atomic<bool> was_called_1{false};
+    std::atomic<bool> was_called_2{false};
+    std::atomic<bool> was_called_3{false};
+    std::atomic<bool> was_called_4{false};
+    std::atomic<bool> was_called_5{false};
     [[maybe_unused]] reason_code rc1{};
     [[maybe_unused]] reason_code rc2{};
     [[maybe_unused]] reason_code rc3{};
     [[maybe_unused]] reason_code rc4{};
     [[maybe_unused]] reason_code rc5{};
-    auto cb1 = [&cb_rc1, &rc1](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb1 = [&cb_rc1, &rc1,
+                &was_called_1](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc1.store(rs, std::memory_order_release);
         rc1 = rc;
+        was_called_1 = true;
     };
-    auto cb2 = [&cb_rc2, &rc2](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb2 = [&cb_rc2, &rc2,
+                &was_called_2](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc2.store(rs, std::memory_order_release);
         rc2 = rc;
+        was_called_2 = true;
     };
-    auto cb3 = [&cb_rc3, &rc3](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb3 = [&cb_rc3, &rc3,
+                &was_called_3](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc3.store(rs, std::memory_order_release);
         rc3 = rc;
+        was_called_3 = true;
     };
-    auto cb4 = [&cb_rc4, &rc4](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb4 = [&cb_rc4, &rc4,
+                &was_called_4](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc4.store(rs, std::memory_order_release);
         rc4 = rc;
+        was_called_4 = true;
     };
-    auto cb5 = [&cb_rc5, &rc5](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb5 = [&cb_rc5, &rc5,
+                &was_called_5](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc5.store(rs, std::memory_order_release);
         rc5 = rc;
+        was_called_5 = true;
     };
 
     // setup
@@ -222,6 +237,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     commit(t1, cb1);
 
     // verify t1
+    if (t1_type == transaction_type::LONG) {
+        while (!was_called_1) { _mm_pause(); }
+    }
     if (t1_can_commit) {
         ASSERT_EQ(cb_rc1, Status::OK);
     } else {
@@ -229,16 +247,28 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     }
 
     // verify t2
+    if (t2_type == transaction_type::LONG) {
+        while (!was_called_2) { _mm_pause(); }
+    }
     ASSERT_EQ(cb_rc2, Status::OK);
 
     // verify t3
+    if (t3_type == transaction_type::LONG) {
+        while (!was_called_3) { _mm_pause(); }
+    }
     ASSERT_EQ(cb_rc3, Status::OK);
 
     // verify t4
+    if (t4_type == transaction_type::LONG) {
+        while (!was_called_4) { _mm_pause(); }
+    }
     ASSERT_EQ(cb_rc4, Status::OK);
 
     // verify t5
     if (!t5_was_finished) {
+        if (t5_type == transaction_type::LONG) {
+            while (!was_called_5) { _mm_pause(); }
+        }
         if (t5_can_commit) {
             ASSERT_EQ(cb_rc5, Status::OK);
         } else {

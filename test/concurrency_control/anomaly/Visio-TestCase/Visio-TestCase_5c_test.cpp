@@ -77,6 +77,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     std::atomic<Status> cb_rc2{};
     std::atomic<Status> cb_rc3{};
     std::atomic<Status> cb_rc4{};
+    std::atomic<bool> was_called_4{false};
     [[maybe_unused]] reason_code rc1{};
     [[maybe_unused]] reason_code rc2{};
     [[maybe_unused]] reason_code rc3{};
@@ -96,10 +97,12 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         cb_rc3.store(rs, std::memory_order_release);
         rc3 = rc;
     };
-    auto cb4 = [&cb_rc4, &rc4](Status rs, [[maybe_unused]] reason_code rc,
+    auto cb4 = [&cb_rc4, &rc4,
+                &was_called_4](Status rs, [[maybe_unused]] reason_code rc,
                                [[maybe_unused]] durability_marker_type dm) {
         cb_rc4.store(rs, std::memory_order_release);
         rc4 = rc;
+        was_called_4 = true;
     };
 
     // setup
@@ -232,6 +235,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
 
     // verify t4
     if (!t4_was_finished) {
+        if (t4_type == transaction_type::LONG) {
+            while (!was_called_4) { _mm_pause(); } // wait for commit
+        }
         if (t4_can_commit) {
             ASSERT_EQ(cb_rc4, Status::OK);
         } else {
