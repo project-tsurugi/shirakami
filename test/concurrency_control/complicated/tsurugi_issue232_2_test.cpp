@@ -166,12 +166,10 @@ TEST_F(tsurugi_issue232_2, case_12) {
         was_called.store(true, std::memory_order_release);
     };
 
-    ASSERT_FALSE(commit(t3, cb)); // NOLINT
-    while (!was_called) { _mm_pause(); }
-    ASSERT_OK(cb_rc);
-
     VLOG(10) << "TX1: commit";
     ASSERT_OK(commit(t1));
+    ASSERT_TRUE(commit(t3, cb)); // NOLINT
+    ASSERT_OK(cb_rc);
 
     ASSERT_OK(leave(t3));
     ASSERT_OK(leave(t1));
