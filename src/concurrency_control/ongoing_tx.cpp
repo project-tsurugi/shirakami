@@ -16,11 +16,21 @@ bool ongoing_tx::exist_id(std::size_t id) {
 
 Status ongoing_tx::waiting_bypass(session* ti) {
     // @pre shared lock to tx_info_
+
+    auto exist_living_wait_for = [](session* target_ti) {
+        auto wait_for{target_ti->extract_wait_for()};
+        for (auto&& elem : tx_info_) {
+            auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
+            auto f_itr = wait_for.find(the_tx_id);
+            if (f_itr != wait_for.end()) { return true; }
+        }
+        return false;
+    };
+
     /**
-     * 現時点で前置候補の LTX群。これらで走行中のものをバイパスする。
+     * 現時点で前置候補の LTX群。これらで走行中のものをルート以外バイパスする。
     */
     auto wait_for{ti->extract_wait_for()};
-
     std::set<std::tuple<std::size_t, session*>> bypass_target{};
     for (auto&& elem : tx_info_) {
         auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
@@ -28,6 +38,13 @@ Status ongoing_tx::waiting_bypass(session* ti) {
         if (f_itr != wait_for.end()) {
             // found
             auto* token = std::get<ongoing_tx::index_session>(elem);
+
+            // check exist living wait for, for not to remove path to root.
+            if (!exist_living_wait_for(token)) {
+                // not bypass for tree root
+                continue;
+            }
+
             bypass_target.insert(std::make_tuple(the_tx_id, token));
             // set valid epoch if need
             if (ti->get_valid_epoch() > token->get_valid_epoch()) {
@@ -168,14 +185,18 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                         wait_for.end()) {
                         // wait_for hit.
                         /**
-                     * boundary wait 確定.
-                     * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
-                     * に対する前置を確定するとともに、x1 が前置する相手に前置する。
-                     * これは待ち確認のたびにパスを一つ短絡化するため、
-                     * get_requested_commit() の確認を噛ませていない。
-                     * */
-                        out_status = waiting_bypass(ti);
-                        return out_status == Status::OK;
+                         * boundary wait 確定.
+                         * waiting by pass: 自分が（前置するかもしれなくて）待つ相手x1
+                         * に対する前置を確定するとともに、x1 が前置する相手に前置する。
+                         * これは待ち確認のたびにパスを一つ短絡化するため、
+                         * get_requested_commit() の確認を噛ませていない。
+                         * https://github.com/project-tsurugi/tsurugi-issues/issues/438#issuecomment-1839876140
+                         * ルートになるまでパスを縮めてはいけない。
+                         */
+                        if (wait_for.size() > 2) {
+                            out_status = waiting_bypass(ti);
+                        }
+                        return true;
                     }
                 } else {
                     // considering for only high priori ltx

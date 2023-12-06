@@ -50,6 +50,8 @@ TEST_F(tsurugi_issue438_4_test, simple) {
     ASSERT_OK(tx_begin({t, transaction_type::SHORT}));
     ASSERT_OK(insert(t, current_batch, "1", "1"));
     ASSERT_OK(commit(t));
+
+    // tx2
     ASSERT_OK(tx_begin({t, transaction_type::LONG, {receipts}}));
     wait_epoch_update();
     ScanHandle shd{};
@@ -63,6 +65,7 @@ TEST_F(tsurugi_issue438_4_test, simple) {
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t, shd));
     ASSERT_OK(close_scan(t, shd));
 
+    // tx3
     Token t2;
     ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
@@ -83,6 +86,7 @@ TEST_F(tsurugi_issue438_4_test, simple) {
     ASSERT_OK(close_scan(t2, shd2));
     ASSERT_OK(commit(t2));
 
+    // tx1
     Token t3;
     ASSERT_OK(enter(t3));
     ASSERT_OK(tx_begin({t3, transaction_type::LONG}));
@@ -93,7 +97,7 @@ TEST_F(tsurugi_issue438_4_test, simple) {
     ASSERT_OK(read_key_from_scan(t3, shd3, buf));
     ASSERT_EQ(buf, "1");
     ASSERT_OK(read_value_from_scan(t3, shd3, buf));
-    ASSERT_EQ(buf, "2");
+    ASSERT_EQ(buf, "2"); // read tx3
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t3, shd3));
     ASSERT_OK(close_scan(t3, shd3));
     ASSERT_EQ(Status::WARN_NOT_FOUND,
@@ -113,11 +117,17 @@ TEST_F(tsurugi_issue438_4_test, simple) {
      * expect waiting at once, but at becoming waiting, tx tries to waiting
      * bypass and bypass t1, and not wait
     */
-    ASSERT_TRUE(commit(t3, cb));
+    ASSERT_FALSE(commit(t3, cb));
+    /**
+     * This needs for t3 aborts but it didn't exist at
+     * https://github.com/project-tsurugi/tsurugi-issues/issues/438#issuecomment-1835644560
+    */
+    ASSERT_OK(insert(t, receipts, "2", "200"));
+    ASSERT_OK(commit(t)); // this needs to release waiting of t3
+    // note: this fits tsurugi issue 5 ex 3 but not fit for trace log
     while (!was_called) { _mm_pause(); }
     ASSERT_EQ(Status::ERR_CC, cb_rc); // expect error due to rub violation
     ASSERT_EQ(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION, rc);
-    ASSERT_OK(abort(t));
 
     ASSERT_OK(leave(t));
     ASSERT_OK(leave(t2));
