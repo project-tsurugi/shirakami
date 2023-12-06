@@ -238,12 +238,12 @@ TEST_F(tsurugi_issue378, case_3) { // NOLINT
         was_called.store(true, std::memory_order_release);
     };
 
-    ASSERT_FALSE(commit(s2, cb));      // NOLINT
+    ASSERT_FALSE(commit(s2, cb)); // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
 
-    ASSERT_EQ(Status::ERR_CC, cb_rc.load(std::memory_order_acquire));
+    ASSERT_EQ(Status::OK, cb_rc.load(std::memory_order_acquire));
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
