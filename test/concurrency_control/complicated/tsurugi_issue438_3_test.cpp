@@ -79,11 +79,9 @@ TEST_F(tsurugi_issue438_3_test, simple) {
         was_called.store(true, std::memory_order_release);
     };
 
-    ASSERT_FALSE(commit(t3, cb)); // NOLINT
-    while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
-    ASSERT_OK(cb_rc);
-
     ASSERT_OK(commit(t1));
+    ASSERT_TRUE(commit(t3, cb)); // NOLINT
+    ASSERT_OK(cb_rc);
 
     ASSERT_OK(leave(t1));
     ASSERT_OK(leave(t2));
