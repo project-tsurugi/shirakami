@@ -23,7 +23,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-Test'Case_9a_test");
+                "anomaly-Visio-TestCase-Visio-Test'Case_10a_test");
         // FLAGS_stderrthreshold = 0;
     }
 
