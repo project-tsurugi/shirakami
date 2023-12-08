@@ -1,5 +1,6 @@
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <xmmintrin.h>
 
@@ -52,6 +53,7 @@ INSTANTIATE_TEST_SUITE_P(book_18_4_bool, book_18_4,
     ::testing::Values(transaction_type::SHORT, transaction_type::LONG));
 
 TEST_P(book_18_4, read_only_anomaly) {
+    using namespace std::chrono;
     transaction_type tx1_type = GetParam();
     Storage stX;
     Storage stY;
@@ -112,21 +114,27 @@ TEST_P(book_18_4, read_only_anomaly) {
     Status r3_rc = search_key(t3, stY, "y", val);
     // case 1: early abort by read
     // case 2: abort at commit(t3)
+    Status t3c_rc;
+    std::atomic_bool t3c_done = false;
+    bool t3c_continue = false;
     if (r3_rc == Status::ERR_CC) {
         VLOG(10) << "   ... ERR_CC";
     } else if (r3_rc == Status::OK) {
         VLOG(10) << "   ... OK";
         VLOG(10) << "c3";
-        Status t3c_rc;
-        std::atomic_bool t3c_done = false;
         commit(t3, [&t3c_done, &t3c_rc](
             Status rc, [[maybe_unused]] reason_code,
             [[maybe_unused]] durability_marker_type) {
             t3c_rc = rc;
             t3c_done = true;
         });
-        while (!t3c_done) { _mm_pause(); }
-        ASSERT_EQ(t3c_rc, Status::ERR_CC);
+        for (auto wait_limit = system_clock::now() + milliseconds(400); !t3c_done && system_clock::now() <= wait_limit; ) { _mm_pause(); }
+        if (t3c_done) {
+            ASSERT_EQ(t3c_rc, Status::ERR_CC);
+        } else {
+            VLOG(10) << "   ... waiting";
+            t3c_continue = true;
+        }
     } else {
         LOG(FATAL) << "unexpected rc:" << r3_rc;
     }
@@ -138,6 +146,11 @@ TEST_P(book_18_4, read_only_anomaly) {
     VLOG(10) << "c2";
     ASSERT_OK(commit(t2));
     ASSERT_OK(leave(t2));
+
+    if (t3c_continue) {
+        while (!t3c_done) { _mm_pause(); }
+        ASSERT_EQ(t3c_rc, Status::ERR_CC);
+    }
 
     while (!t1c_done) { _mm_pause(); }
 
