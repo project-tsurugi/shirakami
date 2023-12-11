@@ -168,17 +168,16 @@ TEST_F(long_insert_upsert_test,                     // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, insert(s1, st, "", "a"));
-    ASSERT_EQ(Status::OK, upsert(s2, st, "", "b")); // forwarding
-    ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::ERR_CC, commit(s2));          // NOLINT
-    // If these is at same epoch, s2 find read info of s1.
+    ASSERT_EQ(Status::OK, upsert(s2, st, "", "b"));
+    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
 
     // verify
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
-    ASSERT_EQ(buf, "a");
+    ASSERT_EQ(buf, "b");
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s1));

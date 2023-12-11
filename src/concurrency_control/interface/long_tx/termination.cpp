@@ -152,7 +152,9 @@ static inline void expose_local_write(
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
-        bool should_backward{ti->get_is_force_backwarding()};
+        bool should_backward{ti->get_is_force_backwarding() ||
+                             ti->get_ltx_storage_read_set().empty()};
+                             // bw can backward including occ bw
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT: {
                 // not accept fallthrough!
@@ -788,8 +790,12 @@ extern Status commit(session* const ti) {
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "start_verify : " << str_tx_id;
 
-    // verify : start
-    rc = verify(ti);
+    // verify not write only : start
+    if (!ti->get_ltx_storage_read_set().empty()) {
+        rc = verify(ti);
+    } else {
+        rc = Status::OK;
+    }
 
     if (rc == Status::ERR_CC) {
         // verfy fail
