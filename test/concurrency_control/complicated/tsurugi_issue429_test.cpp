@@ -3,7 +3,10 @@
 #include <functional>
 #include <xmmintrin.h>
 
+#include "concurrency_control/include/session.h"
+
 #include "shirakami/interface.h"
+
 #include "test_tool.h"
 
 #include "glog/logging.h"
@@ -42,15 +45,17 @@ private:
 // so later occ read may fail.
 
 
-void scan_and_read(Token& t, Storage &st, bool read_key, bool read_value, std::string_view lk, scan_endpoint le, std::string_view rk, scan_endpoint re) {
+void scan_and_read(Token& t, Storage& st, bool read_key, bool read_value,
+                   std::string_view lk, scan_endpoint le, std::string_view rk,
+                   scan_endpoint re) {
     ScanHandle sh;
     auto rc = open_scan(t, st, lk, le, rk, re, sh);
     if (rc == Status::OK) {
-        while (next(t, sh) == Status::OK) {
+        do {
             std::string str;
             if (read_key) { ASSERT_OK(read_key_from_scan(t, sh, str)); }
             if (read_value) { ASSERT_OK(read_value_from_scan(t, sh, str)); }
-        }
+        } while (next(t, sh) == Status::OK);
         ASSERT_OK(close_scan(t, sh));
     } else if (rc == Status::WARN_NOT_FOUND) {
         // nop
@@ -59,12 +64,13 @@ void scan_and_read(Token& t, Storage &st, bool read_key, bool read_value, std::s
     }
 }
 
-void full_scan_and_read(Token& t, Storage &st) {
-    scan_and_read(t, st, true, true, "", scan_endpoint::INF, "", scan_endpoint::INF);
+void full_scan_and_read(Token& t, Storage& st) {
+    scan_and_read(t, st, true, true, "", scan_endpoint::INF, "",
+                  scan_endpoint::INF);
 }
 
 // same API sequence as original scenario in issue429
-TEST_F(tsurugi_issue429, DISABLED_case_1) {
+TEST_F(tsurugi_issue429, case_1) {
     VLOG(10) << "case 1";
     Storage st;
     ASSERT_OK(create_storage("", st));
@@ -76,6 +82,7 @@ TEST_F(tsurugi_issue429, DISABLED_case_1) {
     VLOG(10) << "TX1: begin ltx";
     ASSERT_OK(enter(t1));
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
+    LOG(INFO) << "t1 " << static_cast<session*>(t1)->get_long_tx_id();
     wait_epoch_update();
     VLOG(10) << "TX1: select full";
     full_scan_and_read(t1, st);
@@ -86,20 +93,25 @@ TEST_F(tsurugi_issue429, DISABLED_case_1) {
     VLOG(10) << "TX2: begin ltx";
     ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t2, transaction_type::LONG, {st}}));
+    LOG(INFO) << "t2 " << static_cast<session*>(t2)->get_long_tx_id();
     wait_epoch_update();
     VLOG(10) << "TX2: select B-C";
-    scan_and_read(t2, st, true, true, "B", scan_endpoint::INCLUSIVE, "C", scan_endpoint::INCLUSIVE);
+    scan_and_read(t2, st, true, true, "B", scan_endpoint::INCLUSIVE, "C",
+                  scan_endpoint::INCLUSIVE);
     VLOG(10) << "TX2: upsert D";
     ASSERT_OK(upsert(t2, st, "D", "D2"));
     wait_epoch_update();
     std::atomic_bool t2c_done = false;
     std::atomic<Status> t2c_rc;
     VLOG(10) << "TX2: commit will waiting";
-    ASSERT_EQ(commit(t2, [&t2c_done, &t2c_rc](
-        Status rc, [[maybe_unused]] reason_code reason,
-        [[maybe_unused]] durability_marker_type dm){
-            t2c_rc = rc; t2c_done = true;
-        }), false);
+    ASSERT_EQ(commit(t2,
+                     [&t2c_done,
+                      &t2c_rc](Status rc, [[maybe_unused]] reason_code reason,
+                               [[maybe_unused]] durability_marker_type dm) {
+                         t2c_rc = rc;
+                         t2c_done = true;
+                     }),
+              false);
 
     VLOG(10) << "TX1: commit will ok";
     ASSERT_OK(commit(t1));

@@ -154,7 +154,7 @@ static inline void expose_local_write(
         [[maybe_unused]] bool should_log{true};
         bool should_backward{ti->get_is_force_backwarding() ||
                              ti->get_ltx_storage_read_set().empty()};
-                             // bw can backward including occ bw
+        // bw can backward including occ bw
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT: {
                 // not accept fallthrough!

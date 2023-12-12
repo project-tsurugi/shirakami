@@ -290,11 +290,20 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
     if (!std::get<4>(read_range)) {
         // it was not initialized
         std::get<4>(read_range) = true;
+        std::get<0>(read_range) = l_key;
+        std::get<1>(read_range) = l_end;
+        std::get<2>(read_range) = r_key;
+        std::get<3>(read_range) = r_end;
+    } else {
+        if (l_key < std::get<0>(read_range)) {
+            std::get<0>(read_range) = l_key;
+        }
+        if (l_end == scan_endpoint::INF) { std::get<1>(read_range) = l_end; }
+        if (std::get<2>(read_range) < r_key) {
+            std::get<2>(read_range) = r_key;
+        }
+        if (r_end == scan_endpoint::INF) { std::get<3>(read_range) = r_end; }
     }
-    if (l_key < std::get<0>(read_range)) { std::get<0>(read_range) = l_key; }
-    if (l_end == scan_endpoint::INF) { std::get<1>(read_range) = l_end; }
-    if (std::get<2>(read_range) < r_key) { std::get<2>(read_range) = r_key; }
-    if (r_end == scan_endpoint::INF) { std::get<3>(read_range) = r_end; }
 }
 
 } // namespace shirakami::long_tx
