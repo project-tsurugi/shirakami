@@ -24,8 +24,8 @@ namespace shirakami {
  * than 2^32, or shirakami create storage more than 2^32.
  * Please review your usage.
  */
-extern Status create_storage(std::string_view key, Storage& storage,
-                             storage_option const& options = {}); // NOLINT
+Status create_storage(std::string_view key, Storage& storage,
+                      storage_option const& options = {}); // NOLINT
 
 /**
  * @brief delete existing storage and records under the storage.
@@ -35,7 +35,7 @@ extern Status create_storage(std::string_view key, Storage& storage,
  * the given name.
  * @return Status::ERR_FATAL Some programming error.
  */
-extern Status delete_storage(Storage storage);
+Status delete_storage(Storage storage);
 
 /**
  * @brief Get the storage handle by using key.
@@ -46,14 +46,14 @@ extern Status delete_storage(Storage storage);
  * should be equal or less than 30KB.
  * @return Status::WARN_NOT_FOUND not found.
  */
-extern Status get_storage(std::string_view key, Storage& out);
+Status get_storage(std::string_view key, Storage& out);
 
 /**
  * @brief Get a list of existing storage key.
  * @param[out] out the list of existing storage.
  * @return Status::OK success including out is empty.
  */
-extern Status list_storage(std::vector<std::string>& out);
+Status list_storage(std::vector<std::string>& out);
 
 /**
  * @brief Get storage options.
@@ -66,7 +66,7 @@ extern Status list_storage(std::vector<std::string>& out);
  * @return Status::ERR_FATAL Error about invalid use. It couldn't find storage
  * meta information internally.
  */
-extern Status storage_get_options(Storage storage, storage_option& options);
+Status storage_get_options(Storage storage, storage_option& options);
 
 /**
  * @brief Set storage options.
@@ -77,7 +77,6 @@ extern Status storage_get_options(Storage storage, storage_option& options);
  * @return Status::ERR_FATAL Error about invalid use. It couldn't find storage
  * meta information internally.
  */
-extern Status storage_set_options(Storage storage,
-                                  storage_option const& options);
+Status storage_set_options(Storage storage, storage_option const& options);
 
 } // namespace shirakami

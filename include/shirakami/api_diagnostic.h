@@ -9,6 +9,6 @@ namespace shirakami {
      * transactions by living each LTX.
      * @param out 
      */
-extern void print_diagnostics(std::ostream& out);
+void print_diagnostics(std::ostream& out);
 
 } // namespace shirakami

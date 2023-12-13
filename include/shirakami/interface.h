@@ -34,7 +34,7 @@ namespace shirakami {
  * wait the result.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  */
-extern Status abort(Token token); // NOLINT
+Status abort(Token token); // NOLINT
 
 /**
  * @brief close the scan which was opened at open_scan.
@@ -45,7 +45,7 @@ extern Status abort(Token token); // NOLINT
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
  */
-extern Status close_scan(Token token, ScanHandle handle); // NOLINT
+Status close_scan(Token token, ScanHandle handle); // NOLINT
 
 /**
  * @brief commit function with result notified by callback
@@ -72,12 +72,12 @@ extern Status close_scan(Token token, ScanHandle handle); // NOLINT
  * @return true if calling callback completed by the end of this function call
  * @return false otherwise (`callback` will be called asynchronously)
  */
-extern bool commit(Token token, commit_callback_type callback);
+bool commit(Token token, commit_callback_type callback);
 
 /**
  * @brief old api. it is planed to remove from api.
 */
-extern Status commit(Token token); // NOLINT
+Status commit(Token token); // NOLINT
 
 /**
  * @brief It checks result of the transaction requested commit.
@@ -96,7 +96,7 @@ extern Status commit(Token token); // NOLINT
  * that or calling for not ltx, the result of calling this (finished) 
  * transaction is undefined behavior.
  */
-extern Status check_commit(Token token); // NOLINT
+Status check_commit(Token token); // NOLINT
 
 /**
  * @brief delete the record for the given key
@@ -127,8 +127,8 @@ extern Status check_commit(Token token); // NOLINT
  * @return Status::OK success.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-extern Status delete_record(Token token, Storage storage, // NOLINT
-                            std::string_view key);
+Status delete_record(Token token, Storage storage, // NOLINT
+                     std::string_view key);
 
 /**
  * @brief enter session
@@ -139,7 +139,7 @@ extern Status delete_record(Token token, Storage storage, // NOLINT
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
  */
-extern Status enter(Token& token); // NOLINT
+Status enter(Token& token); // NOLINT
 
 /**
  * @brief Confirm existence of the key in the @a storage.
@@ -161,7 +161,7 @@ extern Status enter(Token& token); // NOLINT
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
  */
-extern Status exist_key(Token token, Storage storage, std::string_view key);
+Status exist_key(Token token, Storage storage, std::string_view key);
 
 /**
  * @brief do delete operations for all records, join core threads, delete the
@@ -177,7 +177,7 @@ extern Status exist_key(Token token, Storage storage, std::string_view key);
  * interface.
  * @return void
  */
-extern void fin(bool force_shut_down_logging = true); // NOLINT
+void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
  * @brief It initializes shirakami's environment.
@@ -192,7 +192,7 @@ extern void fin(bool force_shut_down_logging = true); // NOLINT
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
  * not done anything in this call.
  */
-extern Status init(database_options options = {}); // NOLINT
+Status init(database_options options = {}); // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -218,9 +218,9 @@ extern Status init(database_options options = {}); // NOLINT
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-extern Status insert(Token token, Storage storage,
-                     std::string_view key, // NOLINT
-                     std::string_view val);
+Status insert(Token token, Storage storage,
+              std::string_view key, // NOLINT
+              std::string_view val);
 
 /**
  * @brief leave session
@@ -231,7 +231,7 @@ extern Status insert(Token token, Storage storage,
  * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
  * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  */
-extern Status leave(Token token); // NOLINT
+Status leave(Token token); // NOLINT
 
 /**
  * @brief This function preserve the specified range of masstree. If you use ltx
@@ -262,10 +262,10 @@ extern Status leave(Token token); // NOLINT
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-extern Status open_scan(Token token, Storage storage, std::string_view l_key,
-                        scan_endpoint l_end, std::string_view r_key,
-                        scan_endpoint r_end, ScanHandle& handle,
-                        std::size_t max_size = 0); // NOLINT
+Status open_scan(Token token, Storage storage, std::string_view l_key,
+                 scan_endpoint l_end, std::string_view r_key,
+                 scan_endpoint r_end, ScanHandle& handle,
+                 std::size_t max_size = 0); // NOLINT
 
 /**
  * @brief advance cursor
@@ -279,7 +279,7 @@ extern Status open_scan(Token token, Storage storage, std::string_view l_key,
  * So it can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
-extern Status next(Token token, ScanHandle handle);
+Status next(Token token, ScanHandle handle);
 
 /**
  * @brief This reads the key of record pointed by the cursor.
@@ -301,8 +301,7 @@ extern Status next(Token token, ScanHandle handle);
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  */
-extern Status read_key_from_scan(Token token, ScanHandle handle,
-                                 std::string& key);
+Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
 
 /**
  * @brief This reads the value of record pointed by the cursor.
@@ -324,8 +323,7 @@ extern Status read_key_from_scan(Token token, ScanHandle handle,
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  */
-extern Status read_value_from_scan(Token token, ScanHandle handle,
-                                   std::string& value);
+Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
 
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
@@ -338,9 +336,9 @@ extern Status read_value_from_scan(Token token, ScanHandle handle,
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
  * can't execute it.
  */
-[[maybe_unused]] extern Status
-scannable_total_index_size(Token token, ScanHandle handle,
-                           std::size_t& size); // NOLINT
+[[maybe_unused]] Status scannable_total_index_size(Token token,
+                                                   ScanHandle handle,
+                                                   std::size_t& size); // NOLINT
 
 /**
  * @brief It searches with the given key and return the found tuple.
@@ -365,8 +363,8 @@ scannable_total_index_size(Token token, ScanHandle handle,
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-extern Status search_key(Token token, Storage storage, std::string_view key,
-                         std::string& value); // NOLINT
+Status search_key(Token token, Storage storage, std::string_view key,
+                  std::string& value); // NOLINT
 
 /**
  * @brief Transaction begins.
@@ -389,7 +387,7 @@ extern Status search_key(Token token, Storage storage, std::string_view key,
  * write_preserve and not using long tx mode.
  * @return Status::WARN_INVALID_ARGS User used storages not existed.
  */
-extern Status tx_begin(transaction_options options = {}); // NOLINT
+Status tx_begin(transaction_options options = {}); // NOLINT
 
 /**
  * @brief It updates the record for the given key.
@@ -406,8 +404,8 @@ extern Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::WARN_NOT_FOUND The record is not found.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-extern Status update(Token token, Storage storage, std::string_view key,
-                     std::string_view val); // NOLINT
+Status update(Token token, Storage storage, std::string_view key,
+              std::string_view val); // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -428,8 +426,8 @@ extern Status update(Token token, Storage storage, std::string_view key,
  * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
  * is not found.
  */
-extern Status upsert(Token token, Storage storage, std::string_view key,
-                     std::string_view val); // NOLINT
+Status upsert(Token token, Storage storage, std::string_view key,
+              std::string_view val); // NOLINT
 
 
 //==========

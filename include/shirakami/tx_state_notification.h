@@ -43,6 +43,6 @@ using durability_callback_type = std::function<void(durability_marker_type)>;
  * @return any error otherwise
  */
 
-extern Status register_durability_callback(durability_callback_type cb);
+Status register_durability_callback(durability_callback_type cb);
 
 } // namespace shirakami
