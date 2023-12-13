@@ -82,7 +82,6 @@ TEST_F(tsurugi_issue429, case_1) {
     VLOG(10) << "TX1: begin ltx";
     ASSERT_OK(enter(t1));
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
-    LOG(INFO) << "t1 " << static_cast<session*>(t1)->get_long_tx_id();
     wait_epoch_update();
     VLOG(10) << "TX1: select full";
     full_scan_and_read(t1, st);
@@ -93,7 +92,6 @@ TEST_F(tsurugi_issue429, case_1) {
     VLOG(10) << "TX2: begin ltx";
     ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t2, transaction_type::LONG, {st}}));
-    LOG(INFO) << "t2 " << static_cast<session*>(t2)->get_long_tx_id();
     wait_epoch_update();
     VLOG(10) << "TX2: select B-C";
     scan_and_read(t2, st, true, true, "B", scan_endpoint::INCLUSIVE, "C",
@@ -141,7 +139,7 @@ TEST_F(tsurugi_issue429, case_1) {
     ASSERT_OK(delete_storage(st));
 }
 
-TEST_F(tsurugi_issue429, DISABLED_short_case) {
+TEST_F(tsurugi_issue429, short_case) {
     VLOG(10) << "short case";
     Storage st;
     ASSERT_OK(create_storage("", st));

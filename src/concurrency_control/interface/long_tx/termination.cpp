@@ -30,7 +30,8 @@ namespace shirakami::long_tx {
 static inline void cancel_flag_inserted_records(session* const ti) {
     auto process = [ti](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
-        if (wso.get_op() == OP_TYPE::INSERT) {
+        if (wso.get_op() == OP_TYPE::INSERT ||
+            wso.get_op() == OP_TYPE::UPSERT) {
             auto* rec_ptr = std::get<0>(wse);
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
