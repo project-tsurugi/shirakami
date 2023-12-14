@@ -148,13 +148,13 @@ static inline void expose_local_write(
     compute_tid(ti, ctid);
     committed_id = ctid;
 
-    auto process = [ti](std::pair<Record* const, write_set_obj>& wse,
-                        tid_word ctid) {
+    bool should_backward{ti->is_write_only_ltx_now()};
+    auto process = [ti, should_backward](
+                           std::pair<Record* const, write_set_obj>& wse,
+                           tid_word ctid) {
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
-        bool should_backward{ti->get_is_force_backwarding() ||
-                             ti->get_ltx_storage_read_set().empty()};
         // bw can backward including occ bw
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT: {

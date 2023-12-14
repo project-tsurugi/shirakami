@@ -222,7 +222,6 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
             // check write only
             bool write_only = ti->is_write_only_ltx_now();
             if (write_only) {
-                ti->set_is_force_backwarding(true);
                 return false;
             }
             // not write only and may have high priori read

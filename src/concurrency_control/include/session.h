@@ -167,7 +167,6 @@ public:
           * Clear metadata initialized at check_commit.
           */
         set_requested_commit(false);
-        set_is_force_backwarding(false);
         set_tx_type(transaction_options::transaction_type::LONG);
         get_write_set().set_for_batch(true);
     }
@@ -346,10 +345,6 @@ public:
 
     commit_callback_type get_commit_callback() { return commit_callback_; }
 
-    [[nodiscard]] bool get_is_force_backwarding() const {
-        return is_force_backwarding_.load(std::memory_order_acquire);
-    }
-
     // ========== end: long tx
 
     // ========== stat: result info
@@ -519,10 +514,6 @@ public:
     }
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
-
-    void set_is_force_backwarding(bool const tf) {
-        is_force_backwarding_.store(tf, std::memory_order_release);
-    }
 
     void set_read_version_max_epoch(epoch::epoch_t const ep) {
         read_version_max_epoch_.store(ep, std::memory_order_release);

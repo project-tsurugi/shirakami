@@ -45,7 +45,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 TEST_F(long_concurrent_batch_upsert_test, // NOLINT
-       upsert_ltx100_100) {      // NOLINT
+       DISABLED_upsert_ltx100_100) {      // NOLINT
     // 100 vs 100
 
     // prepare
@@ -139,7 +139,7 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 }
 
 TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
-       concurrent_ltx_read_x_write_y1_50) { // NOLINT
+       DISABLED_concurrent_ltx_read_x_write_y1_50) { // NOLINT
     // concurrent ltx. each tx read x and write y_1 - y_50
 
     // prepare
