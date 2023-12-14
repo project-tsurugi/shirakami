@@ -64,6 +64,7 @@ static inline void compute_tid(session* ti, tid_word& ctid) {
     ctid.set_lock(false);
     ctid.set_absent(false);
     ctid.set_latest(true);
+    ctid.set_by_short(false);
 }
 
 static inline void create_tombstone_if_need(session* const ti,

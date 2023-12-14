@@ -649,6 +649,7 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     commit_tid.set_lock(false);
     commit_tid.set_absent(false);
     commit_tid.set_latest(true);
+    commit_tid.set_by_short(true);
     ti->set_mrc_tid(commit_tid);
 }
 

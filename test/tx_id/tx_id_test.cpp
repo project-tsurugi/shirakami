@@ -2,6 +2,8 @@
 #include <array>
 #include <mutex>
 
+#include "concurrency_control/include/tid.h"
+
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"
@@ -65,6 +67,22 @@ TEST_F(tx_id_test, simple) { // NOLINT
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s1));
+}
+
+TEST_F(tx_id_test, comp) { // NOLINT
+    tid_word ltid{0}, stid{0};
+    // short, ltx. epoch 1, tid0, by_short test
+    ltid.set_by_short(false);
+    stid.set_by_short(true);
+    ASSERT_GT(stid, ltid);
+    // common: tid 0, ltx: epoch 2, occ: epoch 1
+    ltid.set_epoch(2);
+    stid.set_epoch(1);
+    ASSERT_GT(ltid, stid);
+    // common: tid 0, ltx: epoch 1, occ: epoch 2
+    ltid.set_epoch(1);
+    stid.set_epoch(2);
+    ASSERT_GT(stid, ltid);
 }
 
 } // namespace shirakami::testing

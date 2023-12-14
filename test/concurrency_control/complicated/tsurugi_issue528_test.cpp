@@ -44,6 +44,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
     while (!is_ready(readys)) { _mm_pause(); }
 }
 
+
 TEST_F(long_concurrent_batch_upsert_test, // NOLINT
        DISABLED_upsert_ltx100_100) {      // NOLINT
     // 100 vs 100

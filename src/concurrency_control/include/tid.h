@@ -22,8 +22,9 @@ public:
             bool lock_by_gc_ : 1;
             bool latest_ : 1;
             bool absent_ : 1;
-            std::uint64_t tid_ : 28;    // NOLINT
-            epoch::epoch_t epoch_ : 32; // NOLINT
+            std::uint64_t tid_ : 28; // NOLINT
+            bool by_short_ : 1;
+            epoch::epoch_t epoch_ : 31; // NOLINT
         };
     };
 
@@ -90,6 +91,8 @@ public:
         return epoch_;                                                // NOLINT
     }
 
+    [[maybe_unused]] bool get_by_short() const { return by_short_; }
+
     void inc_tid() { this->tid_ = this->tid_ + 1; } // NOLINT
 
     void reset() { obj_ = 0; } // NOLINT
@@ -105,6 +108,8 @@ public:
     void set_lock(const bool lock) { this->lock_ = lock; } // NOLINT
 
     void set_lock_by_gc(const bool lock) { this->lock_by_gc_ = lock; } // NOLINT
+
+    void set_by_short(const bool tf) { by_short_ = tf; }
 
     void set_obj(const uint64_t obj) { this->obj_ = obj; } // NOLINT
 
@@ -132,7 +137,8 @@ private:
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
     out << "lock_:" << tid.get_lock() << ", lock_by_gc:" << tid.get_lock_by_gc()
         << ", latest_:" << tid.get_latest() << ", absent_:" << tid.get_absent()
-        << ", tid_:" << tid.get_tid() << ", epoch_:" << tid.get_epoch();
+        << ", tid_:" << tid.get_tid() << ", by_short_:" << tid.get_by_short()
+        << ", epoch_:" << tid.get_epoch();
     return out;
 }
 
