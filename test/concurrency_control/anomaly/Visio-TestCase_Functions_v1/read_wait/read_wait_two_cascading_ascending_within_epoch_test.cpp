@@ -135,12 +135,9 @@ TEST_F(read_wait_two_cascading_ascending_within_epoch_test, // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
-    auto tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
-    tri = transaction_result_info(s.at(4));
+    auto tri = transaction_result_info(s.at(4));
     ASSERT_EQ((*tri).get_reason_code(),
               reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
     ASSERT_EQ(Status::OK, commit(s.at(5)));
@@ -152,7 +149,7 @@ TEST_F(read_wait_two_cascading_ascending_within_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(5));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));

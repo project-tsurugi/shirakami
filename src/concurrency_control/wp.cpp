@@ -23,37 +23,72 @@ void extract_higher_priori_ltx_info(session* const ti,
                                     wp_meta* const wp_meta_ptr,
                                     wp_meta::wped_type const& wps,
                                     std::string_view const key) {
+    // undefined hit process
+    auto undefined_hit_process = [ti, wp_meta_ptr,
+                                  key](std::size_t against_id) {
+        // get mutex for strand
+        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+
+        /**
+          * If this is the first forwarding against this table, 
+          * initialize read range.
+          */
+        auto& target_set =
+                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        auto& read_range =
+                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        if (target_set.empty() || !std::get<4>(read_range)) {
+            // initialize read range
+            std::get<0>(read_range) = key;
+            std::get<2>(read_range) = key;
+            std::get<4>(read_range) = true;
+        } else {
+            // already initialize, update read range
+            if (key < std::get<0>(read_range)) {
+                std::get<0>(read_range) = key;
+            } else if (key > std::get<2>(read_range)) {
+                std::get<2>(read_range) = key;
+            }
+        }
+        target_set.insert(against_id);
+    };
+
+    // check living wp
     for (auto&& wped : wps) {
         if (wped.second != 0) {
             if (wped.second < ti->get_long_tx_id()) {
                 // this tx decides that wped.second tx may be the forwarding target.
 
-                // get mutex
-                std::lock_guard<std::shared_mutex> lk{
-                        ti->get_mtx_overtaken_ltx_set()};
+                // hit
+                undefined_hit_process(wped.second);
+            }
+        }
+    }
 
-                /**
-                 * If this is the first forwarding against this table, 
-                 * initialize read range.
-                 */
-                auto& target_set =
-                        std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                auto& read_range =
-                        std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                if (target_set.empty() || !std::get<4>(read_range)) {
-                    // initialize read range
-                    std::get<0>(read_range) = key;
-                    std::get<2>(read_range) = key;
-                    std::get<4>(read_range) = true;
-                } else {
-                    // already initialize, update read range
-                    if (key < std::get<0>(read_range)) {
-                        std::get<0>(read_range) = key;
-                    } else if (key > std::get<2>(read_range)) {
-                        std::get<2>(read_range) = key;
-                    }
-                }
-                target_set.insert(wped.second);
+    LOG(INFO) << ti->get_long_tx_id();
+    // check committed wp at my start epoch
+    // todo early abort
+    {
+        std::shared_lock<std::shared_mutex> lk{
+                wp_meta_ptr->get_mtx_wp_result_set()};
+        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
+             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
+             ++wp_result_itr) {
+            auto wp_result_id =
+                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
+            LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
+            auto wp_result_was_committed =
+                    wp::wp_meta::wp_result_elem_extract_was_committed(
+                            (*wp_result_itr));
+            auto wp_result_epoch =
+                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
+            if (ti->get_long_tx_id() > wp_result_id &&
+                wp_result_was_committed &&
+                ti->get_valid_epoch() == wp_result_epoch) {
+                LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
+
+                // hit
+                undefined_hit_process(wp_result_id);
             }
         }
     }
@@ -62,25 +97,52 @@ void extract_higher_priori_ltx_info(session* const ti,
 void extract_higher_priori_ltx_info(session* const ti,
                                     wp_meta* const wp_meta_ptr,
                                     wp_meta::wped_type const& wps) {
+    // undefined hit process
+    auto undefined_hit_process = [ti, wp_meta_ptr](std::size_t against_id) {
+        // get mutex
+        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+
+        /**
+                 * If this is the first forwarding against this table, 
+                 * initialize read range.
+                 */
+        auto& target_set =
+                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        target_set.insert(against_id);
+    };
+
     for (auto&& wped : wps) {
         if (wped.second != 0) {
             if (wped.second < ti->get_long_tx_id()) {
                 // this tx decides that wped.second tx may be the forwarding target.
+                undefined_hit_process(wped.second);
+            }
+        }
+    }
 
-                // get mutex
-                std::lock_guard<std::shared_mutex> lk{
-                        ti->get_mtx_overtaken_ltx_set()};
+    // check committed wp at my start epoch
+    // todo early abort
+    {
+        std::shared_lock<std::shared_mutex> lk{
+                wp_meta_ptr->get_mtx_wp_result_set()};
+        for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
+             wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
+             ++wp_result_itr) {
+            auto wp_result_id =
+                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
+            LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
+            auto wp_result_was_committed =
+                    wp::wp_meta::wp_result_elem_extract_was_committed(
+                            (*wp_result_itr));
+            auto wp_result_epoch =
+                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
+            if (ti->get_long_tx_id() > wp_result_id &&
+                wp_result_was_committed &&
+                ti->get_valid_epoch() == wp_result_epoch) {
+                LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
 
-                /**
-                 * If this is the first forwarding against this table, 
-                 * initialize read range.
-                 */
-                auto& target_set =
-                        std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                auto& read_range =
-                        std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-                std::get<4>(read_range) = false;
-                target_set.insert(wped.second);
+                // hit
+                undefined_hit_process(wp_result_id);
             }
         }
     }

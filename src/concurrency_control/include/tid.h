@@ -91,7 +91,7 @@ public:
         return epoch_;                                                // NOLINT
     }
 
-    [[maybe_unused]] bool get_by_short() const { return by_short_; }
+    [[maybe_unused]] bool get_by_short() const { return by_short_; } // NOLINT
 
     void inc_tid() { this->tid_ = this->tid_ + 1; } // NOLINT
 
@@ -109,7 +109,7 @@ public:
 
     void set_lock_by_gc(const bool lock) { this->lock_by_gc_ = lock; } // NOLINT
 
-    void set_by_short(const bool tf) { by_short_ = tf; }
+    void set_by_short(const bool tf) { by_short_ = tf; } // NOLINT
 
     void set_obj(const uint64_t obj) { this->obj_ = obj; } // NOLINT
 

@@ -283,7 +283,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(2), sta, a, var.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), stz, z, var.at(3)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stx, x, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
 
@@ -298,7 +298,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup

@@ -3,6 +3,8 @@
 
 #include "shirakami/interface.h"
 
+#include "index/yakushima/include/interface.h"
+
 #include "test_tool.h"
 
 #include <glog/logging.h>
@@ -21,7 +23,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue528_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
@@ -46,7 +48,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
 
 
 TEST_F(long_concurrent_batch_upsert_test, // NOLINT
-       DISABLED_upsert_ltx100_100) {      // NOLINT
+       upsert_ltx100_100) {               // NOLINT
     // 100 vs 100
 
     // prepare
@@ -59,6 +61,20 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
     constexpr std::size_t loop_size{10};
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
+
+    Token s{};
+    ASSERT_OK(enter(s));
+#if 0
+    // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
+    // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
+    // 競合が起きるだけ複雑になる。問題の切り分けのために。
+    // prepare initial value
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    for (std::size_t j = 0; j < ops_size; ++j) {
+        ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+    }
+    ASSERT_OK(commit(s));
+#endif
 
     // thread func
     auto process = [st, &readys, &go, ops_size, loop_size](std::size_t th_id) {
@@ -84,8 +100,11 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 
             // ops phase
             for (std::size_t j = 0; j < ops_size; ++j) {
-                ASSERT_OK(upsert(s, st, std::to_string(j),
-                                 std::to_string(th_id)));
+                ASSERT_OK(upsert(
+                        s, st, std::to_string(j),
+                        std::to_string(
+                                static_cast<session*>(s)->get_long_tx_id())));
+                //std::to_string(th_id)));
             }
 
             // commit
@@ -117,30 +136,40 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 
     go.store(true, std::memory_order_release);
 
-    LOG(INFO) << "before join";
     for (auto&& th : thv) { th.join(); }
-    LOG(INFO) << "after join";
 
     // verify
-    Token s{};
-    ASSERT_OK(enter(s));
     ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     std::string all_value{};
+    //std::size_t invalid_ctr{0};
     for (std::size_t i = 0; i < ops_size; ++i) {
         std::string buf{};
         ASSERT_OK(search_key(s, st, std::to_string(i), buf));
+        Record* rec_ptr{};
+        get<Record>(st, std::to_string(i), rec_ptr);
         if (i == 0) {
             all_value = buf;
         } else {
+#if 1
             ASSERT_EQ(all_value, buf);
+#else
+            if (all_value == buf) {
+                LOG(INFO) << std::to_string(i) << ", valid value: " << buf;
+            } else {
+                ++invalid_ctr;
+                LOG(INFO) << std::to_string(i) << ", invalid value: " << buf;
+            }
+#endif
         }
     }
+    //ASSERT_EQ(invalid_ctr, 0);
+
     ASSERT_OK(commit(s));
     ASSERT_OK(leave(s));
 }
 
 TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
-       DISABLED_concurrent_ltx_read_x_write_y1_50) { // NOLINT
+       concurrent_ltx_read_x_write_y1_50) { // NOLINT
     // concurrent ltx. each tx read x and write y_1 - y_50
 
     // prepare

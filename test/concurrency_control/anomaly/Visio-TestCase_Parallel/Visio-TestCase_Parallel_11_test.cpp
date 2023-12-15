@@ -22,7 +22,7 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "anomaly-Visio-TestCase_Parallel-Visio-"
                                   "TestCase_Parallel_11_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {

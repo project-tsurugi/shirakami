@@ -61,6 +61,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
 
 static inline void compute_tid(session* ti, tid_word& ctid) {
     ctid.set_epoch(ti->get_valid_epoch());
+    ctid.set_tid(ti->get_long_tx_id());
     ctid.set_lock(false);
     ctid.set_absent(false);
     ctid.set_latest(true);
@@ -88,7 +89,7 @@ RETRY: // NOLINT
         rec_ptr->get_tidw_ref().lock();
         tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if ((check.get_latest() && check.get_absent()) || !check.get_absent()) {
-            // ok
+            // inserting or normal state
             rec_ptr->get_tidw_ref().unlock();
             return;
         }
@@ -149,14 +150,16 @@ static inline void expose_local_write(
     compute_tid(ti, ctid);
     committed_id = ctid;
 
-    bool should_backward{ti->is_write_only_ltx_now()};
+    //bool should_backward{ti->is_write_only_ltx_now()};
+    bool should_backward{!ti->get_is_forwarding()};
     auto process = [ti, should_backward](
                            std::pair<Record* const, write_set_obj>& wse,
                            tid_word ctid) {
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
-        // bw can backward including occ bw
+    // bw can backward including occ bw
+    RETRY: // NOLINT
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT: {
                 // not accept fallthrough!
@@ -170,6 +173,15 @@ static inline void expose_local_write(
                     (!tid.get_latest() && tid.get_absent())) { // deleted
                     // lock record
                     rec_ptr->get_tidw_ref().lock();
+                    // re-check for upsert
+                    if (wso.get_op() == OP_TYPE::UPSERT) {
+                        tid_word tmp_tid{rec_ptr->get_tidw_ref().get_obj()};
+                        if (!((tid.get_latest() && tid.get_absent()) ||
+                              (!tid.get_latest() && tid.get_absent()))) {
+                            rec_ptr->get_tidw_ref().unlock();
+                            goto RETRY; // NOLINT
+                        }
+                    }
                     // update value
                     std::string vb{};
                     wso.get_value(vb);
@@ -209,18 +221,23 @@ static inline void expose_local_write(
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);
                 } else if (ti->get_valid_epoch() == pre_tid.get_epoch()) {
-                    if (should_backward) {
-                        // non invisible write due to bypass read wait
+                    if (should_backward && !pre_tid.get_by_short() &&
+                        ti->get_long_tx_id() > pre_tid.get_tid()) {
+                        /**
+                         * non invisible write due to 
+                         * 1: write only
+                         * 2: no waiting bypass and no forwarding
+                         * */
                         should_log = true;
                         std::string vb{};
                         wso.get_value(vb);
                         rec_ptr->get_latest()->set_value(vb);
-                        ctid.set_tid(pre_tid.get_tid());
                     } else {
                         // invisible write
                         should_log = false;
-                        //ctid.set_tid(pre_tid.get_tid());
-                        //ctid.set_epoch(pre_tid.get_epoch());
+                        // keep tx id and by_short bit for successor invisible write
+                        ctid.set_tid(pre_tid.get_tid());
+                        ctid.set_by_short(pre_tid.get_by_short());
                     }
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);
@@ -254,17 +271,16 @@ static inline void expose_local_write(
                         }
                         if (tid.get_epoch() == ti->get_valid_epoch()) {
                             // para (partial order) write, normally invisible write
-                            if (should_backward) {
+                            if (should_backward && !tid.get_by_short() &&
+                                ti->get_long_tx_id() > tid.get_tid()) {
                                 // non invisible write due to bypass read wait
-                                should_log = true;
                                 std::string vb{};
                                 wso.get_value(vb);
                                 // set value
                                 ver->set_value(vb);
-                                // set tid
-                                ctid.set_tid(pre_tid.get_tid());
                                 ver->set_tid(ctid);
                             }
+                            // else: omit due to forwarding
                             break;
                         }
                         pre_ver = ver;
@@ -453,7 +469,9 @@ Status verify(session* const ti) {
     {
         // get mutex for overtaken ltx set
         std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        LOG(INFO) << ti->get_long_tx_id();
         for (auto&& oe : ti->get_overtaken_ltx_set()) {
+            LOG(INFO) << ti->get_long_tx_id();
             wp::wp_meta* wp_meta_ptr{oe.first};
             std::lock_guard<std::shared_mutex> lk{
                     wp_meta_ptr->get_mtx_wp_result_set()};
@@ -479,6 +497,7 @@ Status verify(session* const ti) {
                       * the target ltx was commited, so it needs to check.
                       */
                     for (auto&& hid : std::get<0>(oe.second)) {
+                        LOG(INFO) << ti->get_long_tx_id() << ", " << hid;
                         if (wp_result_id == hid) {
                             // check conflict
                             if (!std::get<0>(write_result)) {
@@ -500,6 +519,13 @@ Status verify(session* const ti) {
                                 return Status::OK;
                             };
                             // check range
+                            LOG(INFO) << ti->get_long_tx_id() << ", "
+                                      << std::get<0>(read_range) << ", "
+                                      << std::get<1>(read_range) << ", "
+                                      << std::get<2>(read_range) << ", "
+                                      << std::get<3>(read_range) << ", "
+                                      << std::get<1>(write_result) << ", "
+                                      << std::get<2>(write_result);
                             if (
                                     /**
                                       * read right point < write left point
@@ -519,9 +545,11 @@ Status verify(session* const ti) {
                                 break;
                             }
 
-                            // the itr show overtaken ltx
+                            // hit process, forwarding
+                            // register whether forwarding
+                            ti->set_is_forwarding(true);
                             if (wp_result_epoch < ti->get_valid_epoch()) {
-                                // try forwarding
+                                // need to update epoch
                                 auto rc = hit_process();
                                 if (rc == Status::ERR_CC) { return rc; }
                             }
@@ -555,101 +583,112 @@ Status verify(session* const ti) {
             */
         }
     }
+    LOG(INFO) << ti->get_long_tx_id();
+    if (ti->get_is_forwarding()) {
+        LOG(INFO) << ti->get_long_tx_id();
+        // verify for write set
+        {
+            std::shared_lock<std::shared_mutex> lk{
+                    ti->get_write_set().get_mtx()};
+            for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
+                // check about kvs
+                auto* rec_ptr{wso.first};
+                tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+                if (wso.second.get_op() == OP_TYPE::INSERT) {
+                    // expect the record not existing
+                    if (!(tid.get_latest() && tid.get_absent())) {
+                        // someone interrupt tombstone
+                        ti->set_result(reason_code::KVS_INSERT);
+                        ti->get_result_info().set_key_storage_name(
+                                rec_ptr->get_key_view(),
+                                wso.second.get_storage());
+                        return Status::ERR_CC;
+                    }
+                } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
+                           wso.second.get_op() == OP_TYPE::DELETE) {
+                    // expect the record existing
+                    if (!(tid.get_latest() && !tid.get_absent())) {
+                        if (wso.second.get_op() == OP_TYPE::UPDATE) {
+                            ti->set_result(reason_code::KVS_UPDATE);
+                        } else {
+                            ti->set_result(reason_code::KVS_DELETE);
+                        }
+                        ti->get_result_info().set_key_storage_name(
+                                rec_ptr->get_key_view(),
+                                wso.second.get_storage());
+                        return Status::ERR_CC;
+                    }
+                }
 
-    // verify for write set
-    {
-        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
-        for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
-            // check about kvs
-            auto* rec_ptr{wso.first};
-            tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-            if (wso.second.get_op() == OP_TYPE::INSERT) {
-                // expect the record not existing
-                if (!(tid.get_latest() && tid.get_absent())) {
-                    // someone interrupt tombstone
-                    ti->set_result(reason_code::KVS_INSERT);
+                //==========
+                // about point read
+                // for ltx
+                point_read_by_long* rbp{};
+                rbp = &wso.first->get_point_read_by_long();
+                if (rbp->is_exist(ti)) {
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
+                    ti->set_result(
+                            reason_code::
+                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
                     return Status::ERR_CC;
                 }
-            } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
-                       wso.second.get_op() == OP_TYPE::DELETE) {
-                // expect the record existing
-                if (!(tid.get_latest() && !tid.get_absent())) {
-                    if (wso.second.get_op() == OP_TYPE::UPDATE) {
-                        ti->set_result(reason_code::KVS_UPDATE);
+
+                // for stx
+                if (ti->get_valid_epoch() <=
+                    rec_ptr->get_read_by().get_max_epoch()) {
+                    // this will break commited stx's read
+                    ti->get_result_info().set_key_storage_name(
+                            rec_ptr->get_key_view(), wso.second.get_storage());
+                    ti->set_result(
+                            reason_code::
+                                    CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+                    return Status::ERR_CC;
+                }
+                //==========
+
+                //==========
+                // about range read
+                if (wso.second.get_op() == OP_TYPE::INSERT ||
+                    wso.second.get_op() ==
+                            OP_TYPE::UPSERT || // upsert may cause phantom
+                    wso.second.get_op() == OP_TYPE::DELETE) {
+                    wp::page_set_meta* psm{};
+                    if (Status::OK ==
+                        wp::find_page_set_meta(wso.second.get_storage(), psm)) {
+                        range_read_by_long* rrbp{
+                                psm->get_range_read_by_long_ptr()};
+                        std::string keyb{};
+                        wso.first->get_key(keyb);
+                        auto rb{rrbp->is_exist(ti->get_valid_epoch(),
+                                               ti->get_long_tx_id(), keyb)};
+
+                        // for long
+                        if (rb) {
+                            ti->get_result_info().set_key_storage_name(
+                                    rec_ptr->get_key_view(),
+                                    wso.second.get_storage());
+                            ti->set_result(
+                                    reason_code::CC_LTX_PHANTOM_AVOIDANCE);
+                            return Status::ERR_CC;
+                        }
+
+                        // for short
+                        range_read_by_short* rrbs{
+                                psm->get_range_read_by_short_ptr()};
+                        if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
+                            ti->get_result_info().set_key_storage_name(
+                                    rec_ptr->get_key_view(),
+                                    wso.second.get_storage());
+                            ti->set_result(
+                                    reason_code::CC_LTX_PHANTOM_AVOIDANCE);
+                            return Status::ERR_CC;
+                        }
                     } else {
-                        ti->set_result(reason_code::KVS_DELETE);
+                        LOG(ERROR) << log_location_prefix
+                                   << "Fail to find wp page set meta.";
+                        return Status::ERR_FATAL;
                     }
-                    ti->get_result_info().set_key_storage_name(
-                            rec_ptr->get_key_view(), wso.second.get_storage());
-                    return Status::ERR_CC;
-                }
-            }
-
-            //==========
-            // about point read
-            // for ltx
-            point_read_by_long* rbp{};
-            rbp = &wso.first->get_point_read_by_long();
-            if (rbp->is_exist(ti)) {
-                ti->get_result_info().set_key_storage_name(
-                        rec_ptr->get_key_view(), wso.second.get_storage());
-                ti->set_result(
-                        reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-                return Status::ERR_CC;
-            }
-
-            // for stx
-            if (ti->get_valid_epoch() <=
-                rec_ptr->get_read_by().get_max_epoch()) {
-                // this will break commited stx's read
-                ti->get_result_info().set_key_storage_name(
-                        rec_ptr->get_key_view(), wso.second.get_storage());
-                ti->set_result(
-                        reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-                return Status::ERR_CC;
-            }
-            //==========
-
-            //==========
-            // about range read
-            if (wso.second.get_op() == OP_TYPE::INSERT ||
-                wso.second.get_op() ==
-                        OP_TYPE::UPSERT || // upsert may cause phantom
-                wso.second.get_op() == OP_TYPE::DELETE) {
-                wp::page_set_meta* psm{};
-                if (Status::OK ==
-                    wp::find_page_set_meta(wso.second.get_storage(), psm)) {
-                    range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-                    std::string keyb{};
-                    wso.first->get_key(keyb);
-                    auto rb{rrbp->is_exist(ti->get_valid_epoch(),
-                                           ti->get_long_tx_id(), keyb)};
-
-                    // for long
-                    if (rb) {
-                        ti->get_result_info().set_key_storage_name(
-                                rec_ptr->get_key_view(),
-                                wso.second.get_storage());
-                        ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
-                        return Status::ERR_CC;
-                    }
-
-                    // for short
-                    range_read_by_short* rrbs{
-                            psm->get_range_read_by_short_ptr()};
-                    if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
-                        ti->get_result_info().set_key_storage_name(
-                                rec_ptr->get_key_view(),
-                                wso.second.get_storage());
-                        ti->set_result(reason_code::CC_LTX_PHANTOM_AVOIDANCE);
-                        return Status::ERR_CC;
-                    }
-                } else {
-                    LOG(ERROR) << log_location_prefix
-                               << "Fail to find wp page set meta.";
-                    return Status::ERR_FATAL;
                 }
             }
         }
@@ -879,6 +918,8 @@ extern Status commit(session* const ti) {
         // about transaction state
         process_tx_state(ti, this_dm);
 
+        LOG(INFO) << ti->get_long_tx_id() << " commit "
+                  << ti->get_valid_epoch();
         // call commit callback
         ti->call_commit_callback(rc, {}, this_dm);
 

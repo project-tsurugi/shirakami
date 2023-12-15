@@ -132,16 +132,16 @@ TEST_F(long_insert_update_test,                       // NOLINT
 
     // test
     ASSERT_EQ(Status::WARN_NOT_FOUND, update(s1, st, "", "a"));
-    ASSERT_EQ(Status::OK, insert(s2, st, "", "b")); // forwarding to same epoch
+    ASSERT_EQ(Status::OK, insert(s2, st, "", "b")); //
     ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
-    ASSERT_EQ(Status::ERR_CC, commit(s2));          // NOLINT
-    // s2 found s1's read info of update
+    ASSERT_EQ(Status::OK, commit(s2));          // NOLINT
+    // s2 found s1's read info but backward and success commit
 
     // verify
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
-    ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
+    ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s1));

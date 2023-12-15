@@ -118,10 +118,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     // don't need to wait to commit 2 due to read negative list
     ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
-    auto tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(2))); // epoch false positive
 
     // verify
     ASSERT_EQ(
@@ -132,7 +129,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -168,10 +165,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     // don't need to wait to commit 2 due to read negative list
     ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
-    tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(2))); // epoch false positive
 
     // verify
     ASSERT_EQ(
@@ -182,7 +176,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -225,14 +219,8 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(3), stb, b, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
-    tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3))); // epoch false positive
-    tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(
@@ -245,7 +233,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -289,14 +277,8 @@ TEST_F(read_areas_test, // NOLINT
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), stb, b, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
-    tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3))); // epoch false positive
-    tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(
@@ -309,7 +291,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -326,7 +308,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(2),
                                     transaction_options::transaction_type::LONG,
                                     {sty},
-                                    {{}, {stx}}}));
+                                    {{stx}, {}}}));
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
                                     transaction_options::transaction_type::LONG,
                                     {sty},
@@ -340,11 +322,10 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(1), stz, z, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::OK, search_key(s.at(2), sta, a, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(Status::ERR_READ_AREA_VIOLATION,
+              search_key(s.at(2), sta, a, buf));
     ASSERT_EQ(Status::OK, search_key(s.at(3), sta, a, buf));
     ASSERT_EQ(buf, var.at(0));
-    ASSERT_EQ(Status::OK, upsert(s.at(2), sty, y, var.at(2)));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sty, y, var.at(3)));
     ASSERT_EQ(Status::OK, search_key(s.at(4), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));
@@ -354,14 +335,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(3), stb, b, buf));
     ASSERT_EQ(buf, var.at(0));
     wait_epoch_update();
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // epoch false positive
-    tri = transaction_result_info(s.at(2));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3))); // epoch false positive
-    tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(
@@ -374,7 +348,7 @@ TEST_F(read_areas_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));

@@ -92,6 +92,7 @@ public:
         set_long_tx_id(0);
         set_valid_epoch(0);
         set_was_considering_forwarding_at_once(false);
+        set_is_forwarding(false);
     }
 
     void clear_about_tx_state() {
@@ -319,6 +320,8 @@ public:
         return was_considering_forwarding_at_once_;
     }
 
+    [[nodiscard]] bool get_is_forwarding() const { return is_forwarding_; }
+
     [[nodiscard]] Status get_result_requested_commit() const {
         return result_requested_commit_.load(std::memory_order_acquire);
     }
@@ -505,9 +508,11 @@ public:
         requested_commit_.store(tf, std::memory_order_release);
     }
 
-    void set_was_considering_forwarding_at_once (bool tf) {
+    void set_was_considering_forwarding_at_once(bool tf) {
         was_considering_forwarding_at_once_ = tf;
     }
+
+    void set_is_forwarding(bool const tf) { is_forwarding_ = tf; }
 
     void set_result_requested_commit(Status st) {
         result_requested_commit_.store(st, std::memory_order_release);
@@ -715,6 +720,12 @@ private:
      * for considering read wait
     */
     bool was_considering_forwarding_at_once_{false};
+
+    /**
+     * @brief This is forwarding as ltx
+     * 
+    */
+    bool is_forwarding_{false};
 
     /**
      * @brief The requested transaction commit status which is/was decided 

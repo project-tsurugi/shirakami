@@ -136,6 +136,9 @@ Status search_key(session* ti, Storage const storage,
         return Status::WARN_STORAGE_NOT_FOUND;
     }
 
+    // update local read range
+    long_tx::update_local_read_range(ti, wp_meta_ptr, key);
+
     // wp verify and forwarding
     wp_verify_and_forwarding(ti, wp_meta_ptr, key);
 

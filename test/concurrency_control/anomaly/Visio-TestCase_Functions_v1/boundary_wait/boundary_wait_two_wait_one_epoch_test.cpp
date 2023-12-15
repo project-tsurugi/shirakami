@@ -146,7 +146,7 @@ TEST_F(boundary_wait_two_wait_one_epoch_test, two_wait_one_epoch) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(2));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -237,10 +237,7 @@ TEST_F(boundary_wait_two_wait_one_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, abort(s.at(2)));
     ASSERT_EQ(Status::OK, abort(s.at(3)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
-    auto tri = transaction_result_info(s.at(4));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(
@@ -253,7 +250,7 @@ TEST_F(boundary_wait_two_wait_one_epoch_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(4));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup

@@ -133,10 +133,7 @@ TEST_F(read_wait_two_wait_two_epoch_with_abort_test, // NOLINT
     ASSERT_EQ(Status::OK, abort(s.at(2)));
     auto tri = transaction_result_info(s.at(2));
     ASSERT_EQ((*tri).get_reason_code(), reason_code::USER_ABORT);
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3))); // epoch false positive
-    tri = transaction_result_info(s.at(3));
-    ASSERT_EQ((*tri).get_reason_code(),
-              reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
@@ -150,7 +147,7 @@ TEST_F(read_wait_two_wait_two_epoch_with_abort_test, // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, var.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
-    ASSERT_EQ(buf, var.at(0));
+    ASSERT_EQ(buf, var.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stz, z, buf));
     ASSERT_EQ(buf, var.at(1));
     ASSERT_EQ(Status::OK, commit(s.at(0)));

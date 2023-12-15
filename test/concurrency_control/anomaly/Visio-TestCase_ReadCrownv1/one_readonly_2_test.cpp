@@ -217,13 +217,13 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
     wait_epoch_update();
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
@@ -237,7 +237,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -375,12 +375,12 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK,
               tx_begin({s.at(4), transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, commit(s.at(4)));
@@ -394,7 +394,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -427,12 +427,12 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(
             Status::OK,
             tx_begin({s.at(4), transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::ERR_CC, search_key(s.at(4), sta, a, buf));
     //ASSERT_EQ(buf, v.at(0));
     //ASSERT_EQ(Status::OK, commit(s.at(4)));
@@ -446,7 +446,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
@@ -479,17 +479,17 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, v.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, v.at(2)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(2))); // false positive
+    ASSERT_EQ(Status::OK, commit(s.at(2)));
     ASSERT_EQ(Status::OK,
               tx_begin({s.at(4), transaction_options::transaction_type::LONG}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(4), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(4), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(3), sta, a, v.at(3)));
     ASSERT_EQ(Status::OK, commit(s.at(3)));
-    ASSERT_EQ(Status::OK, commit(s.at(4))); // wait for final boundary of t3
+    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(
@@ -498,7 +498,7 @@ TEST_F(one_readonly_2_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sty, y, buf));
     ASSERT_EQ(buf, v.at(1));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(2));
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));

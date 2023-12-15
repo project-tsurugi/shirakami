@@ -49,6 +49,7 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
+
 // start: one tx
 
 TEST_F(long_delete_insert_test, same_tx_delete_insert) { // NOLINT
@@ -159,9 +160,9 @@ TEST_F(long_delete_insert_test, concurrent_insert_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));
     /**
      * s1 is treated that it executed read operation.
-     * Forwarded s2's delete_record will break s1, so it fails validation.
+     * s1 didn't write, s2 backward and success commit
      */
-    ASSERT_EQ(Status::ERR_CC, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
 
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));
@@ -197,9 +198,9 @@ TEST_F(long_delete_insert_test, concurrent_delete_tx_insert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));
     /**
      * s1 is treated that it executed read operation.
-     * Forwarded s2's insert will break s1, so it fails validation.
+     * s2 backward s1 and success commit
      */
-    ASSERT_EQ(Status::ERR_CC, commit(s2));
+    ASSERT_EQ(Status::OK, commit(s2));
 
     ASSERT_EQ(Status::OK, leave(s2));
     ASSERT_EQ(Status::OK, leave(s1));

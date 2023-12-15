@@ -13,6 +13,7 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/session.h"
 #include "concurrency_control/include/version.h"
 
 #include "shirakami/interface.h"
@@ -368,6 +369,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
                                     transaction_options::transaction_type::LONG,
                                     {stx, stb}}));
+
     resume_epoch();
     wait_epoch_update();
     // start operation test
@@ -459,7 +461,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, v.at(2));
+    ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
@@ -499,7 +501,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s.at(3)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(
@@ -512,7 +514,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
     ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
@@ -622,7 +624,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
@@ -784,7 +786,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(buf, v.at(3));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
@@ -824,7 +826,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stx, x, v.at(4)));
     ASSERT_EQ(Status::OK, upsert(s.at(4), stb, b, v.at(4)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(4)));
+    ASSERT_EQ(Status::OK, commit(s.at(4)));
 
     // verify
     ASSERT_EQ(
@@ -837,9 +839,9 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     ASSERT_EQ(Status::OK, search_key(s.at(0), sta, a, buf));
     ASSERT_EQ(buf, v.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stx, x, buf));
-    ASSERT_EQ(buf, v.at(0));
+    ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, search_key(s.at(0), stb, b, buf));
-    ASSERT_EQ(buf, v.at(1));
+    ASSERT_EQ(buf, v.at(4));
     ASSERT_EQ(Status::OK, commit(s.at(0)));
 
     // cleanup
