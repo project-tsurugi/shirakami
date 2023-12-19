@@ -65,7 +65,6 @@ void extract_higher_priori_ltx_info(session* const ti,
         }
     }
 
-    LOG(INFO) << ti->get_long_tx_id();
     // check committed wp at my start epoch
     // todo early abort
     {
@@ -76,7 +75,6 @@ void extract_higher_priori_ltx_info(session* const ti,
              ++wp_result_itr) {
             auto wp_result_id =
                     wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
             auto wp_result_was_committed =
                     wp::wp_meta::wp_result_elem_extract_was_committed(
                             (*wp_result_itr));
@@ -85,7 +83,6 @@ void extract_higher_priori_ltx_info(session* const ti,
             if (ti->get_long_tx_id() > wp_result_id &&
                 wp_result_was_committed &&
                 ti->get_valid_epoch() == wp_result_epoch) {
-                LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
 
                 // hit
                 undefined_hit_process(wp_result_id);
@@ -130,7 +127,6 @@ void extract_higher_priori_ltx_info(session* const ti,
              ++wp_result_itr) {
             auto wp_result_id =
                     wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
             auto wp_result_was_committed =
                     wp::wp_meta::wp_result_elem_extract_was_committed(
                             (*wp_result_itr));
@@ -139,7 +135,6 @@ void extract_higher_priori_ltx_info(session* const ti,
             if (ti->get_long_tx_id() > wp_result_id &&
                 wp_result_was_committed &&
                 ti->get_valid_epoch() == wp_result_epoch) {
-                LOG(INFO) << ti->get_long_tx_id() << ", " << wp_result_id;
 
                 // hit
                 undefined_hit_process(wp_result_id);

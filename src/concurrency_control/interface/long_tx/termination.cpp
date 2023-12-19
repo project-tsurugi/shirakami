@@ -469,9 +469,7 @@ Status verify(session* const ti) {
     {
         // get mutex for overtaken ltx set
         std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
-        LOG(INFO) << ti->get_long_tx_id();
         for (auto&& oe : ti->get_overtaken_ltx_set()) {
-            LOG(INFO) << ti->get_long_tx_id();
             wp::wp_meta* wp_meta_ptr{oe.first};
             std::lock_guard<std::shared_mutex> lk{
                     wp_meta_ptr->get_mtx_wp_result_set()};
@@ -497,7 +495,6 @@ Status verify(session* const ti) {
                       * the target ltx was commited, so it needs to check.
                       */
                     for (auto&& hid : std::get<0>(oe.second)) {
-                        LOG(INFO) << ti->get_long_tx_id() << ", " << hid;
                         if (wp_result_id == hid) {
                             // check conflict
                             if (!std::get<0>(write_result)) {
@@ -518,14 +515,6 @@ Status verify(session* const ti) {
                                 ti->set_valid_epoch(wp_result_epoch);
                                 return Status::OK;
                             };
-                            // check range
-                            LOG(INFO) << ti->get_long_tx_id() << ", "
-                                      << std::get<0>(read_range) << ", "
-                                      << std::get<1>(read_range) << ", "
-                                      << std::get<2>(read_range) << ", "
-                                      << std::get<3>(read_range) << ", "
-                                      << std::get<1>(write_result) << ", "
-                                      << std::get<2>(write_result);
                             if (
                                     /**
                                       * read right point < write left point
@@ -583,9 +572,7 @@ Status verify(session* const ti) {
             */
         }
     }
-    LOG(INFO) << ti->get_long_tx_id();
     if (ti->get_is_forwarding()) {
-        LOG(INFO) << ti->get_long_tx_id();
         // verify for write set
         {
             std::shared_lock<std::shared_mutex> lk{
@@ -918,8 +905,6 @@ extern Status commit(session* const ti) {
         // about transaction state
         process_tx_state(ti, this_dm);
 
-        LOG(INFO) << ti->get_long_tx_id() << " commit "
-                  << ti->get_valid_epoch();
         // call commit callback
         ti->call_commit_callback(rc, {}, this_dm);
 
