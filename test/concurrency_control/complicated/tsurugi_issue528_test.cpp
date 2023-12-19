@@ -48,23 +48,21 @@ static void wait_for_ready(const std::vector<char>& readys) {
 
 
 TEST_F(long_concurrent_batch_upsert_test, // NOLINT
-       upsert_ltx100_100) {               // NOLINT
-    // 100 vs 100
+       upsert_ltx2th_20ops_val18char) {   // NOLINT
 
     // prepare
     Storage st{};
     ASSERT_OK(create_storage("", st));
 
     // parameter
-    constexpr std::size_t th_num{10};
-    constexpr std::size_t ops_size{100};
-    constexpr std::size_t loop_size{10};
+    constexpr std::size_t th_num{2};
+    constexpr std::size_t ops_size{20};
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
 
     Token s{};
     ASSERT_OK(enter(s));
-#if 0
+#if 1
     // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
     // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
     // 競合が起きるだけ複雑になる。問題の切り分けのために。
@@ -77,7 +75,7 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 #endif
 
     // thread func
-    auto process = [st, &readys, &go, ops_size, loop_size](std::size_t th_id) {
+    auto process = [st, &readys, &go, ops_size](std::size_t th_id) {
         // prepare
         Token s{};
         ASSERT_OK(enter(s));
@@ -87,43 +85,159 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
         // ready
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         // go, tx loop
-        for (std::size_t i = 0; i < loop_size; ++i) {
-            // tx
-            ASSERT_OK(tx_begin({s,
-                                transaction_options::transaction_type::LONG,
-                                {st},
-                                {{}, {st}}}));
-            auto* ti = static_cast<session*>(s);
-            while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
-                _mm_pause();
-            }
-
-            // ops phase
-            for (std::size_t j = 0; j < ops_size; ++j) {
-                ASSERT_OK(upsert(
-                        s, st, std::to_string(j),
-                        std::to_string(
-                                static_cast<session*>(s)->get_long_tx_id())));
-                //std::to_string(th_id)));
-            }
-
-            // commit
-            std::atomic<Status> cb_rc{};
-            std::atomic<bool> was_committed{false};
-            [[maybe_unused]] reason_code rc{};
-            [[maybe_unused]] auto cb =
-                    [&cb_rc, &rc, &was_committed](
-                            Status rs, [[maybe_unused]] reason_code rc_og,
-                            [[maybe_unused]] durability_marker_type dm) {
-                        cb_rc.store(rs, std::memory_order_release);
-                        rc = rc_og;
-                        was_committed = true;
-                    };
-            commit(s, cb);
-            // wait commit
-            while (!was_committed) { _mm_pause(); }
-            ASSERT_OK(cb_rc);
+        // tx
+        ASSERT_OK(tx_begin({s,
+                            transaction_options::transaction_type::LONG,
+                            {st},
+                            {{}, {st}}}));
+        auto* ti = static_cast<session*>(s);
+        while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
+            _mm_pause();
         }
+
+        // ops phase
+        for (std::size_t j = 0; j < ops_size; ++j) {
+            ASSERT_OK(
+                    upsert(s, st, std::to_string(j),
+                           //std::to_string(
+                           // static_cast<session*>(s)->get_long_tx_id())));
+                           std::string(18 - std::to_string(th_id).size(), '0') +
+                                   std::to_string(th_id)));
+        }
+
+        // commit
+        std::atomic<Status> cb_rc{};
+        std::atomic<bool> was_committed{false};
+        [[maybe_unused]] reason_code rc{};
+        [[maybe_unused]] auto cb =
+                [&cb_rc, &rc,
+                 &was_committed](Status rs, [[maybe_unused]] reason_code rc_og,
+                                 [[maybe_unused]] durability_marker_type dm) {
+                    cb_rc.store(rs, std::memory_order_release);
+                    rc = rc_og;
+                    was_committed = true;
+                };
+        commit(s, cb);
+        // wait commit
+        while (!was_committed) { _mm_pause(); }
+        ASSERT_OK(cb_rc);
+        ASSERT_OK(leave(s));
+    };
+
+    // test
+    std::vector<std::thread> thv{};
+    thv.reserve(th_num);
+    for (std::size_t i = 0; i < th_num; ++i) { thv.emplace_back(process, i); }
+
+    wait_for_ready(readys);
+
+    go.store(true, std::memory_order_release);
+
+    for (auto&& th : thv) { th.join(); }
+
+    // verify
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    std::string all_value{};
+    // std::size_t invalid_ctr{0};
+    for (std::size_t i = 0; i < ops_size; ++i) {
+        std::string buf{};
+        ASSERT_OK(search_key(s, st, std::to_string(i), buf));
+        Record* rec_ptr{};
+        get<Record>(st, std::to_string(i), rec_ptr);
+        if (i == 0) {
+            all_value = buf;
+        } else {
+#if 1
+            ASSERT_EQ(all_value, buf);
+#else
+            if (all_value == buf) {
+                LOG(INFO) << std::to_string(i) << ", valid value: " << buf;
+            } else {
+                ++invalid_ctr;
+                LOG(INFO) << std::to_string(i) << ", invalid value: " << buf;
+            }
+#endif
+        }
+    }
+    // ASSERT_EQ(invalid_ctr, 0);
+
+    ASSERT_OK(commit(s));
+    ASSERT_OK(leave(s));
+}
+
+TEST_F(long_concurrent_batch_upsert_test, // NOLINT
+       upsert_ltx10th_100ops) {           // NOLINT
+
+    // prepare
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+
+    // parameter
+    constexpr std::size_t th_num{10};
+    constexpr std::size_t ops_size{100};
+    std::vector<char> readys(th_num);
+    std::atomic<bool> go{false};
+
+    Token s{};
+    ASSERT_OK(enter(s));
+#if 1
+    // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
+    // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
+    // 競合が起きるだけ複雑になる。問題の切り分けのために。
+    // prepare initial value
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    for (std::size_t j = 0; j < ops_size; ++j) {
+        ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+    }
+    ASSERT_OK(commit(s));
+#endif
+
+    // thread func
+    auto process = [st, &readys, &go, ops_size](std::size_t th_id) {
+        // prepare
+        Token s{};
+        ASSERT_OK(enter(s));
+
+        // ready to ready
+        storeRelease(readys.at(th_id), 1);
+        // ready
+        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        // go, tx loop
+        // tx
+        ASSERT_OK(tx_begin({s,
+                            transaction_options::transaction_type::LONG,
+                            {st},
+                            {{}, {st}}}));
+        auto* ti = static_cast<session*>(s);
+        while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
+            _mm_pause();
+        }
+
+        // ops phase
+        for (std::size_t j = 0; j < ops_size; ++j) {
+            ASSERT_OK(upsert(
+                    s, st, std::to_string(j),
+                    std::to_string(
+                            static_cast<session*>(s)->get_long_tx_id())));
+            //std::to_string(th_id)));
+        }
+
+        // commit
+        std::atomic<Status> cb_rc{};
+        std::atomic<bool> was_committed{false};
+        [[maybe_unused]] reason_code rc{};
+        [[maybe_unused]] auto cb =
+                [&cb_rc, &rc,
+                 &was_committed](Status rs, [[maybe_unused]] reason_code rc_og,
+                                 [[maybe_unused]] durability_marker_type dm) {
+                    cb_rc.store(rs, std::memory_order_release);
+                    rc = rc_og;
+                    was_committed = true;
+                };
+        commit(s, cb);
+        // wait commit
+        while (!was_committed) { _mm_pause(); }
+        ASSERT_OK(cb_rc);
         ASSERT_OK(leave(s));
     };
 
@@ -180,7 +294,6 @@ TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
 
     // parameter
     constexpr std::size_t th_num{50};
-    constexpr std::size_t loop_size{100};
     constexpr std::size_t y_size{50};
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
@@ -198,7 +311,7 @@ TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
     ASSERT_OK(commit(s));
 
     // thread func
-    auto process = [st_read, st_write, &readys, &go, loop_size,
+    auto process = [st_read, st_write, &readys, &go,
                     y_size](std::size_t th_id) {
         // prepare
         Token s{};
@@ -209,45 +322,43 @@ TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
         // ready
         while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
         // go, tx loop
-        for (std::size_t i = 0; i < loop_size; ++i) {
-            // tx
-            ASSERT_OK(tx_begin({s,
-                                transaction_options::transaction_type::LONG,
-                                {st_write},
-                                {{st_read}, {st_write}}}));
-            auto* ti = static_cast<session*>(s);
-            while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
-                _mm_pause();
-            }
-
-            // ops phase
-            std::string buf{};
-            ASSERT_OK(search_key(s, st_read, "x", buf));
-            for (std::size_t j = 1; j <= y_size; ++j) {
-                buf = "y_";
-                buf = buf + std::to_string(j);
-                ASSERT_OK(upsert(s, st_write, buf, std::to_string(th_id)));
-            }
-
-            // commit
-            std::atomic<Status> cb_rc{};
-            std::atomic<bool> was_committed{false};
-            [[maybe_unused]] reason_code rc{};
-            [[maybe_unused]] auto cb =
-                    [&cb_rc, &rc, &was_committed](
-                            Status rs, [[maybe_unused]] reason_code rc_og,
-                            [[maybe_unused]] durability_marker_type dm) {
-                        cb_rc.store(rs, std::memory_order_release);
-                        rc = rc_og;
-                        was_committed = true;
-                    };
-            commit(s, cb);
-
-            // wait commit
-            while (!was_committed) { _mm_pause(); }
-
-            ASSERT_OK(cb_rc);
+        // tx
+        ASSERT_OK(tx_begin({s,
+                            transaction_options::transaction_type::LONG,
+                            {st_write},
+                            {{st_read}, {st_write}}}));
+        auto* ti = static_cast<session*>(s);
+        while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
+            _mm_pause();
         }
+
+        // ops phase
+        std::string buf{};
+        ASSERT_OK(search_key(s, st_read, "x", buf));
+        for (std::size_t j = 1; j <= y_size; ++j) {
+            buf = "y_";
+            buf = buf + std::to_string(j);
+            ASSERT_OK(upsert(s, st_write, buf, std::to_string(th_id)));
+        }
+
+        // commit
+        std::atomic<Status> cb_rc{};
+        std::atomic<bool> was_committed{false};
+        [[maybe_unused]] reason_code rc{};
+        [[maybe_unused]] auto cb =
+                [&cb_rc, &rc,
+                 &was_committed](Status rs, [[maybe_unused]] reason_code rc_og,
+                                 [[maybe_unused]] durability_marker_type dm) {
+                    cb_rc.store(rs, std::memory_order_release);
+                    rc = rc_og;
+                    was_committed = true;
+                };
+        commit(s, cb);
+
+        // wait commit
+        while (!was_committed) { _mm_pause(); }
+
+        ASSERT_OK(cb_rc);
 
         // cleanup
         ASSERT_OK(leave(s));
