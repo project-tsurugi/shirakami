@@ -822,13 +822,16 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             /**
               * else: fail to do optimistic read latest version. retry version 
               * function.
-              * It must find readable version because it found latest version as 
-              * readable version at optimistic read so it failed optimistic 
-              * verify but it must find readable version at version list.
+              * It may find null version.
               */
             ver = rec_ptr->get_latest();
-            long_tx::version_function_without_optimistic_check(
+            rc = long_tx::version_function_without_optimistic_check(
                     ti->get_valid_epoch(), ver);
+            if (rc == Status::WARN_NOT_FOUND) {
+                // version list traversed.
+                read_register_if_ltx(rec_ptr);
+                return rc;
+            }
         }
 
         if (!ver->get_tid().get_absent()) {
