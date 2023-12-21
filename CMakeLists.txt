@@ -34,6 +34,10 @@ option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
 option(BUILD_PWAL "Build parallel write ahead logging as logging." ON)
 option(PWAL_ENABLE_READ_LOG "PWAL log read (/ write) informations to verify whether committed schedule is valid." OFF)
 
+# features
+option(ENABLE_WAITING_BYPASS "enable waiting bypass" ON)
+option(WAITING_BYPASS_TO_ROOT "waiting bypass to root" OFF)
+
 # shutdown shortcut
 option(TSURUGI_FAST_SHUTDOWN "enable shortcuts during shutdown process by default" OFF)
 

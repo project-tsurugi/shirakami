@@ -6,6 +6,10 @@
 
 namespace shirakami {
 
+#ifndef WAITING_BYPASS
+#define WAITING_BYPASS 1
+#endif
+
 bool ongoing_tx::exist_id(std::size_t id) {
     std::shared_lock<std::shared_mutex> lk{mtx_};
     for (auto&& elem : tx_info_) {
@@ -39,11 +43,13 @@ Status ongoing_tx::waiting_bypass(session* ti) {
             // found
             auto* token = std::get<ongoing_tx::index_session>(elem);
 
+#ifndef WAITING_BYPASS_TO_ROOT
             // check exist living wait for, for not to remove path to root.
             if (!exist_living_wait_for(token)) {
                 // not bypass for tree root
                 continue;
             }
+#endif
 
             bypass_target.insert(std::make_tuple(the_tx_id, token));
             // set valid epoch if need
@@ -193,10 +199,22 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                          * に対する前置を確定するとともに、x1 が前置する相手に前置する。
                          * これは待ち確認のたびにパスを一つ短絡化するため、
                          * get_requested_commit() の確認を噛ませていない。
+                         */
+                        bool do_waiting_bypass;  // NOLINT
+#if WAITING_BYPASS
+# ifdef WAITING_BYPASS_TO_ROOT
+                        do_waiting_bypass = true;
+# else
+                        /**
                          * https://github.com/project-tsurugi/tsurugi-issues/issues/438#issuecomment-1839876140
                          * ルートになるまでパスを縮めてはいけない。
                          */
-                        if (wait_for.size() > 2) {
+                        do_waiting_bypass = (wait_for.size() > 2);
+# endif
+#else
+                        do_waiting_bypass = false;
+#endif
+                        if (do_waiting_bypass) {
                             out_status = waiting_bypass(ti);
                         }
                         return true;
