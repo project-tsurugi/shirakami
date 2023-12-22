@@ -28,7 +28,8 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(); // NOLINT
+        init({database_options::open_mode::CREATE, "/tmp/tsurugi_issue467_2",
+              3000, false}); // NOLINT
     }
 
     void TearDown() override { fin(); }
@@ -41,44 +42,75 @@ TEST_F(ti467_2_test, // NOLINT
        ng_case) {    // NOLINT
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
 
-    // prepare
-    Storage st{};
-    ASSERT_OK(create_storage("", st));
+    Storage system_st;
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              get_storage("__system_sequences", system_st));
+    ASSERT_OK(create_storage("__system_sequences", system_st));
+    std::vector<std::string> out_vec;
+    ASSERT_OK(list_storage(out_vec));
+    ASSERT_EQ(out_vec.size(), 1);
 
     Token t1{};
-    Token t2{};
     ASSERT_OK(enter(t1));
-    ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
-    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01", "0"));
+    ScanHandle shd{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(t1, system_st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        shd));
     ASSERT_OK(commit(t1));
+    ASSERT_OK(leave(t1));
 
-    // ng test
-    // ltx begin
+    ASSERT_OK(enter(t1));
+    ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
+
+    Storage st{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              get_storage("test", st));
+    ASSERT_OK(create_storage("test", st));
+    ASSERT_EQ(Status::OK,
+              get_storage("test", st));
+
+    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
+                     "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff"));
+    ASSERT_OK(commit(t1));
+    ASSERT_OK(leave(t1));
+
+    ASSERT_OK(enter(t1));
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
-    wait_epoch_update();
+    TxStateHandle thd{};
+    ASSERT_OK(acquire_tx_state_handle(t1, thd));
+    TxState ts{};
+    do {
+        ASSERT_OK(check_tx_state(thd, ts));
+    } while (ts.state_kind() == TxState::StateKind::WAITING_START);
 
     // ltx open scan, read key/value from scan
-    ScanHandle shd{};
     ASSERT_OK(open_scan(t1, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         shd));
     std::string buf{};
     ASSERT_OK(read_key_from_scan(t1, shd, buf));
     ASSERT_EQ(buf, "\x80\x00\x00\x01");
     ASSERT_OK(read_value_from_scan(t1, shd, buf));
-    ASSERT_EQ(buf, "0");
+    ASSERT_EQ(buf, "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff");
     // ltx search key
     ASSERT_OK(search_key(t1, st, "\x80\x00\x00\x01", buf));
-    ASSERT_EQ(buf, "0");
+    ASSERT_EQ(buf, "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff");
     // ltx delete_record, upsert
     ASSERT_OK(delete_record(t1, st, "\x80\x00\x00\x01"));
-    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01", "1"));
+    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
+                     "~\x7f\xff\xff\xff\xff\xff\xff\xf6~\xce\xff\xff\xff\xff"));
     // ltx next, close
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t1, shd));
     ASSERT_OK(close_scan(t1, shd));
 
     // rtx begin
+    Token t2{};
+    ASSERT_OK(enter(t2));
     ASSERT_OK(tx_begin({t2, transaction_type::READ_ONLY}));
+    TxStateHandle thd2{};
+    ASSERT_OK(acquire_tx_state_handle(t2, thd2));
+    TxState ts2{};
+    ASSERT_OK(check_tx_state(thd, ts));
+    ASSERT_EQ(ts.state_kind(), TxState::StateKind::STARTED);
 
     // rtx open scan, it should be ok
     ASSERT_OK(open_scan(t2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
