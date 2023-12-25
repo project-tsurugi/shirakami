@@ -14,6 +14,8 @@
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 
+#include "database/include/logging.h"
+
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"

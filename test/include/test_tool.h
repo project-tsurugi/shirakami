@@ -3,10 +3,13 @@
 #include <xmmintrin.h>
 
 #include "concurrency_control/include/epoch.h"
+#include "database/include/logging.h"
 
 #define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
 
 namespace shirakami {
+
+static inline void init_for_test() { set_is_debug_mode(true); }
 
 static inline void wait_epoch_update() {
     auto ce{epoch::get_global_epoch()};

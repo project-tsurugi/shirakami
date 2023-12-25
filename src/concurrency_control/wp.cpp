@@ -9,6 +9,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
+#include "database/include/logging.h"
+
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"

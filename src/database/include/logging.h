@@ -8,6 +8,23 @@
 
 #include "glog/logging.h"
 
+namespace shirakami {
+
+inline std::atomic<bool> is_debug_mode_{false};
+
+// Shirakami Debug Log
+#define SDL LOG_IF(INFO, get_is_debug_mode())
+
+[[maybe_unused]] static bool get_is_debug_mode() {
+    return is_debug_mode_.load(std::memory_order_acquire);
+}
+
+[[maybe_unused]] static void set_is_debug_mode(bool const tf) {
+    is_debug_mode_.store(tf, std::memory_order_release);
+}
+
+} // namespace shirakami
+
 namespace shirakami::logging {
 
 #define shirakami_log_entry                                                    \

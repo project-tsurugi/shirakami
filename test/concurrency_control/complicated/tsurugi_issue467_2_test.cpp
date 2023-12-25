@@ -29,6 +29,7 @@ public:
     void SetUp() override {
         std::call_once(init_, call_once_f);
         init(); // NOLINT
+        init_for_test();
     }
 
     void TearDown() override { fin(); }
@@ -76,7 +77,7 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(open_scan(t2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         shd)); // may fail
     ASSERT_OK(read_key_from_scan(t2, shd, buf));
-    ASSERT_EQ(buf, "0");
+    ASSERT_EQ(buf, "1");
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t2, shd));
 
     ASSERT_OK(commit(t2));

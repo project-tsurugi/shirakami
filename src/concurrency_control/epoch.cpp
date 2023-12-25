@@ -8,6 +8,8 @@
 #include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
+#include "database/include/logging.h"
+
 #ifdef PWAL
 
 #include "datastore/limestone/include/datastore.h"
@@ -34,54 +36,67 @@ inline void check_epoch_load_and_update_idle_living_tx() {
 inline void compute_and_set_cc_safe_ss_epoch() {
     // compute cc safe ss epoch
     // get read lock and block ending of highest priori ltx
-    std::shared_lock<std::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
-    if (ongoing_tx::get_tx_info().empty()) {
-        // set cc safe ss epoch
-        set_cc_safe_ss_epoch(get_global_epoch() + 1);
-        return;
-    }
-    // exist ltx
     epoch_t result_epoch{0};
-    for (auto& elem : ongoing_tx::get_tx_info()) {
-        auto* ti = std::get<ongoing_tx::index_session>(elem);
-        // acquire read lock about overtaken ltx set
-        std::shared_lock<std::shared_mutex> lk_ols{
-                ti->get_mtx_overtaken_ltx_set()};
-        // check
-        if (ti->get_overtaken_ltx_set().empty()) {
-            // no forwarding
-            if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
-            // else, already initialize for non zero
-            continue;
+    {
+        std::shared_lock<std::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
+
+        if (ongoing_tx::get_tx_info().empty()) {
+            // set cc safe ss epoch
+            set_cc_safe_ss_epoch(get_global_epoch() + 1);
+            return;
         }
-        // exist forwording, compute return epoch
-        for (auto&& oe : ti->get_overtaken_ltx_set()) {
-            wp::wp_meta* wp_meta_ptr{oe.first};
-            // get read lock
-            std::shared_lock<std::shared_mutex> lk{
-                    wp_meta_ptr->get_mtx_wp_result_set()};
-            for (auto&& wp_result_itr =
-                         wp_meta_ptr->get_wp_result_set().begin();
-                 wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
-                 ++wp_result_itr) {
-                // prepare committed information
-                auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(
-                        (*wp_result_itr));
-                auto wp_result_epoch =
-                        wp::wp_meta::wp_result_elem_extract_epoch(
-                                (*wp_result_itr));
-                auto wp_result_was_committed =
-                        wp::wp_meta::wp_result_elem_extract_was_committed(
-                                (*wp_result_itr));
-                if (wp_result_was_committed) {
-                    /**
+        // exist ltx
+        for (auto& elem : ongoing_tx::get_tx_info()) {
+            auto* ti = std::get<ongoing_tx::index_session>(elem);
+            // initialize result_epoch
+            if (result_epoch == 0) {
+                result_epoch = ti->get_valid_epoch();
+            }
+            // acquire read lock about overtaken ltx set
+            {
+                std::shared_lock<std::shared_mutex> lk_ols{
+                        ti->get_mtx_overtaken_ltx_set()};
+                // check
+                if (ti->get_overtaken_ltx_set().empty()) {
+                    // no forwarding
+                    if (ti->get_valid_epoch() < result_epoch) {
+                        result_epoch = ti->get_valid_epoch();
+                    }
+                    // else, already initialize for non zero
+                    continue;
+                }
+                // exist forwording, compute return epoch
+                for (auto&& oe : ti->get_overtaken_ltx_set()) {
+                    wp::wp_meta* wp_meta_ptr{oe.first};
+                    // get read lock
+                    std::shared_lock<std::shared_mutex> lk{
+                            wp_meta_ptr->get_mtx_wp_result_set()};
+                    for (auto&& wp_result_itr =
+                                 wp_meta_ptr->get_wp_result_set().begin();
+                         wp_result_itr !=
+                         wp_meta_ptr->get_wp_result_set().end();
+                         ++wp_result_itr) {
+                        // prepare committed information
+                        auto wp_result_id =
+                                wp::wp_meta::wp_result_elem_extract_id(
+                                        (*wp_result_itr));
+                        auto wp_result_epoch =
+                                wp::wp_meta::wp_result_elem_extract_epoch(
+                                        (*wp_result_itr));
+                        auto wp_result_was_committed = wp::wp_meta::
+                                wp_result_elem_extract_was_committed(
+                                        (*wp_result_itr));
+                        if (wp_result_was_committed) {
+                            /**
                       * the target ltx was commited, so it needs to check.
                       */
-                    for (auto&& hid : std::get<0>(oe.second)) {
-                        if (wp_result_id == hid) {
-                            if (wp_result_epoch < result_epoch) {
-                                result_epoch = wp_result_epoch;
-                                break;
+                            for (auto&& hid : std::get<0>(oe.second)) {
+                                if (wp_result_id == hid) {
+                                    if (wp_result_epoch < result_epoch) {
+                                        result_epoch = wp_result_epoch;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
