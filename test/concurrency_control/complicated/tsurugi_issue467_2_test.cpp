@@ -39,7 +39,54 @@ private:
 };
 
 TEST_F(ti467_2_test, // NOLINT
-       ng_case) {    // NOLINT
+       ng_case1) {   // NOLINT
+    // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867482481
+    // 上記コメントを受けて、下記コメントのものを簡潔化
+    // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
+
+    // create storage
+    Storage st{};
+    ASSERT_OK(create_storage("test", st));
+
+    Token t1{};
+    ASSERT_OK(enter(t1));
+    ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
+    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
+                     "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff"));
+    ASSERT_OK(commit(t1));
+
+    ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
+    wait_epoch_update();
+
+    std::string buf{};
+    // ltx search key
+    ASSERT_OK(search_key(t1, st, "\x80\x00\x00\x01", buf));
+    ASSERT_EQ(buf, "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff");
+    sleep(1);
+
+    // rtx begin
+    Token t2{};
+    ASSERT_OK(enter(t2));
+    ASSERT_OK(tx_begin({t2, transaction_type::READ_ONLY}));
+    wait_epoch_update();
+
+    // rtx open scan, it should be ok
+    ScanHandle shd{};
+    ASSERT_OK(open_scan(t2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        shd)); // may fail
+    ASSERT_OK(read_key_from_scan(t2, shd, buf));
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t2, shd));
+
+    ASSERT_OK(commit(t2));
+    ASSERT_OK(commit(t1));
+
+    // cleanup
+    ASSERT_OK(leave(t1));
+    ASSERT_OK(leave(t2));
+}
+
+TEST_F(ti467_2_test,        // NOLINT
+       ng_case2) { // NOLINT
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
 
     Storage system_st;
@@ -54,8 +101,9 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(enter(t1));
     ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
     ScanHandle shd{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(t1, system_st, "", scan_endpoint::INF, "", scan_endpoint::INF,
-                        shd));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(t1, system_st, "", scan_endpoint::INF, "",
+                        scan_endpoint::INF, shd));
     ASSERT_OK(commit(t1));
     ASSERT_OK(leave(t1));
 
@@ -63,11 +111,9 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
 
     Storage st{};
-    ASSERT_EQ(Status::WARN_NOT_FOUND,
-              get_storage("test", st));
+    ASSERT_EQ(Status::WARN_NOT_FOUND, get_storage("test", st));
     ASSERT_OK(create_storage("test", st));
-    ASSERT_EQ(Status::OK,
-              get_storage("test", st));
+    ASSERT_EQ(Status::OK, get_storage("test", st));
 
     ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
                      "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff"));
@@ -98,6 +144,7 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(delete_record(t1, st, "\x80\x00\x00\x01"));
     ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
                      "~\x7f\xff\xff\xff\xff\xff\xff\xf6~\xce\xff\xff\xff\xff"));
+    sleep(1);
     // ltx next, close
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t1, shd));
     ASSERT_OK(close_scan(t1, shd));
