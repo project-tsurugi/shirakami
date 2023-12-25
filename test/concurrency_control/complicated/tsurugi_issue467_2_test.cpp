@@ -28,8 +28,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init({database_options::open_mode::CREATE, "/tmp/tsurugi_issue467_2",
-              3000, false}); // NOLINT
+        init(); // NOLINT
     }
 
     void TearDown() override { fin(); }
@@ -51,8 +50,7 @@ TEST_F(ti467_2_test, // NOLINT
     Token t1{};
     ASSERT_OK(enter(t1));
     ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
-    ASSERT_OK(upsert(t1, st, "\x80\x00\x00\x01",
-                     "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff"));
+    ASSERT_OK(upsert(t1, st, "1", "0"));
     ASSERT_OK(commit(t1));
 
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
@@ -60,8 +58,8 @@ TEST_F(ti467_2_test, // NOLINT
 
     std::string buf{};
     // ltx search key
-    ASSERT_OK(search_key(t1, st, "\x80\x00\x00\x01", buf));
-    ASSERT_EQ(buf, "~\x7f\xff\xff\xff\xff\xff\xff\xfe~\xce\xff\xff\xff\xff");
+    ASSERT_OK(search_key(t1, st, "1", buf));
+    ASSERT_EQ(buf, "0");
     sleep(1);
 
     // rtx begin
@@ -70,11 +68,15 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(tx_begin({t2, transaction_type::READ_ONLY}));
     wait_epoch_update();
 
+    ASSERT_EQ(static_cast<session*>(t1)->get_valid_epoch(),
+              static_cast<session*>(t2)->get_valid_epoch());
+
     // rtx open scan, it should be ok
     ScanHandle shd{};
     ASSERT_OK(open_scan(t2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                         shd)); // may fail
     ASSERT_OK(read_key_from_scan(t2, shd, buf));
+    ASSERT_EQ(buf, "0");
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(t2, shd));
 
     ASSERT_OK(commit(t2));

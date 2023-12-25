@@ -18,6 +18,8 @@ using epoch_t = std::uint64_t;
 
 static constexpr epoch_t initial_epoch{1};
 
+static constexpr epoch_t initial_cc_safe_ss_epoch{initial_epoch + 1};
+
 static constexpr epoch_t max_epoch{INT64_MAX};
 
 /**
@@ -34,7 +36,8 @@ inline std::atomic<std::size_t> global_epoch_time_us{40 * 1000}; // NOLINT
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
  */
-inline std::atomic<epoch_t> cc_safe_ss_epoch{initial_epoch + 1}; // NOLINT
+inline std::atomic<epoch_t> cc_safe_ss_epoch{// NOLINT
+                                             initial_cc_safe_ss_epoch};
 
 inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 

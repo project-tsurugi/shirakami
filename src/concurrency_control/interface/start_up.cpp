@@ -79,6 +79,7 @@ Status init_body(database_options options) { // NOLINT
      */
     sequence::init();
 
+    // data recovery
 #if defined(PWAL)
     // check args
     std::string log_dir(options.get_log_directory_path());
@@ -147,15 +148,21 @@ Status init_body(database_options options) { // NOLINT
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "startup:end_datastore_ready";
 
+#endif
+
     // epoch adjustment
+#if defined(PWAL)
     auto new_epoch = epoch::initial_epoch;
     if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
         new_epoch = datastore::get_datastore()->last_epoch() + 1;
     }
     epoch::set_global_epoch(new_epoch);
+    epoch::set_cc_safe_ss_epoch(new_epoch + 1);
     // change also datastore's epoch, this must be after ready()
     switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
-
+#else
+    epoch::set_global_epoch(epoch::initial_epoch);
+    epoch::set_cc_safe_ss_epoch(epoch::initial_cc_safe_ss_epoch);
 #endif
 
     // about tx state
