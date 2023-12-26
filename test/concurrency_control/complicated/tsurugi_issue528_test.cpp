@@ -18,7 +18,7 @@ using transaction_type = shirakami::transaction_options::transaction_type;
 
 namespace shirakami::testing {
 
-class long_concurrent_batch_upsert_test : public ::testing::Test {
+class tsurugi_issue528_test : public ::testing::TestWithParam<bool> {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
@@ -47,8 +47,12 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 
-TEST_F(long_concurrent_batch_upsert_test, // NOLINT
-       upsert_ltx2th_20ops_val18char) {   // NOLINT
+INSTANTIATE_TEST_SUITE_P(has_initialization, tsurugi_issue528_test,
+                         ::testing::Values(false, true));
+
+TEST_P(tsurugi_issue528_test,           // NOLINT
+       upsert_ltx2th_20ops_val18char) { // NOLINT
+    bool has_init = GetParam();
 
     // prepare
     Storage st{};
@@ -62,17 +66,17 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 
     Token s{};
     ASSERT_OK(enter(s));
-#if 1
-    // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
-    // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
-    // 競合が起きるだけ複雑になる。問題の切り分けのために。
-    // prepare initial value
-    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
-    for (std::size_t j = 0; j < ops_size; ++j) {
-        ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+    if (has_init) {
+        // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
+        // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
+        // 競合が起きるだけ複雑になる。問題の切り分けのために。
+        // prepare initial value
+        ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+        for (std::size_t j = 0; j < ops_size; ++j) {
+            ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+        }
+        ASSERT_OK(commit(s));
     }
-    ASSERT_OK(commit(s));
-#endif
 
     // thread func
     auto process = [st, &readys, &go, ops_size](std::size_t th_id) {
@@ -165,8 +169,9 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
     ASSERT_OK(leave(s));
 }
 
-TEST_F(long_concurrent_batch_upsert_test, // NOLINT
-       upsert_ltx10th_100ops) {           // NOLINT
+TEST_P(tsurugi_issue528_test,   // NOLINT
+       upsert_ltx10th_100ops) { // NOLINT
+    bool has_init = GetParam();
 
     // prepare
     Storage st{};
@@ -180,17 +185,17 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
 
     Token s{};
     ASSERT_OK(enter(s));
-#if 1
-    // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
-    // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
-    // 競合が起きるだけ複雑になる。問題の切り分けのために。
-    // prepare initial value
-    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
-    for (std::size_t j = 0; j < ops_size; ++j) {
-        ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+    if (has_init) {
+        // 実験中に挿入コミットが発生するか、実験中にupdate相当オンリーになるかの違い。
+        // 最初にコミットしたトランザクションと前後のTxでupsert(insert), upsert(update)
+        // 競合が起きるだけ複雑になる。問題の切り分けのために。
+        // prepare initial value
+        ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+        for (std::size_t j = 0; j < ops_size; ++j) {
+            ASSERT_OK(upsert(s, st, std::to_string(j), "0"));
+        }
+        ASSERT_OK(commit(s));
     }
-    ASSERT_OK(commit(s));
-#endif
 
     // thread func
     auto process = [st, &readys, &go, ops_size](std::size_t th_id) {
@@ -282,7 +287,7 @@ TEST_F(long_concurrent_batch_upsert_test, // NOLINT
     ASSERT_OK(leave(s));
 }
 
-TEST_F(long_concurrent_batch_upsert_test,   // NOLINT
+TEST_F(tsurugi_issue528_test,               // NOLINT
        concurrent_ltx_read_x_write_y1_50) { // NOLINT
     // concurrent ltx. each tx read x and write y_1 - y_50
 

@@ -176,8 +176,9 @@ static inline void expose_local_write(
                     // re-check for upsert
                     if (wso.get_op() == OP_TYPE::UPSERT) {
                         tid_word tmp_tid{rec_ptr->get_tidw_ref().get_obj()};
-                        if (!((tid.get_latest() && tid.get_absent()) ||
-                              (!tid.get_latest() && tid.get_absent()))) {
+                        if (!((tmp_tid.get_latest() && tmp_tid.get_absent()) ||
+                              (!tmp_tid.get_latest() &&
+                               tmp_tid.get_absent()))) {
                             rec_ptr->get_tidw_ref().unlock();
                             goto RETRY; // NOLINT
                         }
