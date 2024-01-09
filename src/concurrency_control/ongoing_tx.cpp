@@ -4,6 +4,8 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 
+#include "database/include/logging.h"
+
 namespace shirakami {
 
 bool ongoing_tx::exist_id(std::size_t id) {
@@ -40,7 +42,8 @@ Status ongoing_tx::waiting_bypass(session* ti) {
             auto* token = std::get<ongoing_tx::index_session>(elem);
 
             // check exist living wait for, for not to remove path to root.
-            if (!optflag_waiting_bypass_to_root_ && !exist_living_wait_for(token)) {
+            if (!optflag_waiting_bypass_to_root_ &&
+                !exist_living_wait_for(token)) {
                 // not bypass for tree root
                 continue;
             }
@@ -197,12 +200,8 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                          * ルートになるまでパスを縮めてはいけない。
                          */
                         bool do_waiting_bypass_here =
-                            // if disabled -> false
-                            !optflag_disable_waiting_bypass_ &&
-                            // if to_root -> true
-                            (optflag_waiting_bypass_to_root_ ||
-                             // check size>2 (not to root)
-                             wait_for.size() > 2);
+                                // if disabled -> false
+                                !optflag_disable_waiting_bypass_;
                         if (do_waiting_bypass_here) {
                             out_status = waiting_bypass(ti);
                         }

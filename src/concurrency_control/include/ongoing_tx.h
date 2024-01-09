@@ -89,6 +89,10 @@ public:
      */
     static void set_optflags();
 
+    static bool get_optflag_disable_waiting_bypass() {
+        return optflag_disable_waiting_bypass_;
+    }
+
 private:
     /**
      * @brief This is mutex for tx_info_;
@@ -107,11 +111,11 @@ private:
     /**
      * @brief enable/disable waiting bypass.
      */
-    static inline bool optflag_disable_waiting_bypass_;  // NOLINT
+    static inline bool optflag_disable_waiting_bypass_; // NOLINT
     /**
      * @brief waiting bypass to root (aggressive optimization).
      */
-    static inline bool optflag_waiting_bypass_to_root_;  // NOLINT
+    static inline bool optflag_waiting_bypass_to_root_; // NOLINT
 };
 
 } // namespace shirakami
