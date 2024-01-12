@@ -1,3 +1,4 @@
+
 #include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
@@ -43,6 +44,7 @@ void point_read_by_long::push(body_elem_type const elem) {
     if (threshold == 0) { threshold = ce; }
 
     // gc
+    // TODO at 559: too erase, threshold must be cc safe ss epoch
     std::size_t erase_count{0};
     for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
         if ((*itr).second < elem.second) {
