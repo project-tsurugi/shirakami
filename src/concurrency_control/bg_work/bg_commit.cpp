@@ -114,8 +114,9 @@ void bg_commit::worker() {
                     !ti->get_requested_commit()) {
                     // not long or not requested commit.
                     LOG(ERROR) << log_location_prefix << "unexpected error. "
-                               << ti->get_tx_type() << ", "
-                               << ti->get_requested_commit();
+                               << ti->get_tx_type() << ", " << std::boolalpha
+                               << ti->get_requested_commit() << ", tx_id:"
+                               << tx_id;
                     return;
                 }
                 used_ids().insert(tx_id);
