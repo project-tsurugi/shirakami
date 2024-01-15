@@ -92,16 +92,6 @@ void bg_commit::worker() {
             token = std::get<1>(*itr);
             tx_id = std::get<0>(*itr);
             ti = static_cast<session*>(token);
-            // check from long
-            if (ti->get_tx_type() !=
-                        transaction_options::transaction_type::LONG ||
-                !ti->get_requested_commit()) {
-                // not long or not requested commit.
-                LOG(ERROR) << log_location_prefix << "unexpected error. "
-                           << ti->get_tx_type() << ", "
-                           << ti->get_requested_commit();
-                return;
-            }
 
             // check conflict between worker
             {
@@ -118,6 +108,16 @@ void bg_commit::worker() {
                     // found
                     continue;
                 } // not found, not currently used and not checked
+                // check from long
+                if (ti->get_tx_type() !=
+                            transaction_options::transaction_type::LONG ||
+                    !ti->get_requested_commit()) {
+                    // not long or not requested commit.
+                    LOG(ERROR) << log_location_prefix << "unexpected error. "
+                               << ti->get_tx_type() << ", "
+                               << ti->get_requested_commit();
+                    return;
+                }
                 used_ids().insert(tx_id);
                 checked_ids.insert(tx_id);
                 break;
