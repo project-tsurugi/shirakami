@@ -41,6 +41,10 @@ public:
         return waiting_resolver_threads_.load(std::memory_order_acquire);
     }
 
+    [[nodiscard]] static std::size_t joined_waiting_resolver_threads() {
+        return joined_waiting_resolver_threads_.load(std::memory_order_acquire);
+    }
+
     // end: getter
 
     // start: setter
@@ -48,8 +52,18 @@ public:
         waiting_resolver_threads_.store(nm, std::memory_order_release);
     }
 
+    static void joined_waiting_resolver_threads(std::size_t nm) {
+        joined_waiting_resolver_threads_.store(nm, std::memory_order_release);
+    }
+
     static void worker_thread_end(bool tf) { worker_thread_end_ = tf; }
     // end: setter
+
+    static bool cas_joined_waiting_resolver_threads(std::size_t& expected,
+                                                    std::size_t desired) {
+        return joined_waiting_resolver_threads_.compare_exchange_weak(
+                expected, desired, std::memory_order_acq_rel);
+    }
 
     static void clear_tx();
 
@@ -65,7 +79,15 @@ private:
     /**
      * @brief The number of threads for resolving waiting list.
     */
-    static inline std::atomic<std::size_t> waiting_resolver_threads_{2};
+    static inline std::atomic<std::size_t> waiting_resolver_threads_{// NOLINT
+                                                                     2};
+
+    /**
+     * @brief The number of joined threads at last running for resolver threads.
+     * This is initialized 0 at init. This can be checked after fin.
+    */
+    static inline std::atomic<std::size_t> // NOLINT
+            joined_waiting_resolver_threads_{};
 
     /**
      * @brief ltx commit verify threads

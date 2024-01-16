@@ -24,6 +24,9 @@ void bg_commit::init(std::size_t waiting_resolver_threads_num) {
     // set waiting resolver threads
     waiting_resolver_threads(waiting_resolver_threads_num);
 
+    // set joined waiting resolver threads
+    joined_waiting_resolver_threads(0);
+
     // invoke thread
     for (std::size_t i = 0; i < waiting_resolver_threads_num; ++i) {
         workers().emplace_back(std::thread(worker));
@@ -43,7 +46,6 @@ void bg_commit::fin() {
      * cleanup container because after next startup, manager thread will 
      * misunderstand.
      */
-
     clear_tx();
 }
 
@@ -115,8 +117,8 @@ void bg_commit::worker() {
                     // not long or not requested commit.
                     LOG(ERROR) << log_location_prefix << "unexpected error. "
                                << ti->get_tx_type() << ", " << std::boolalpha
-                               << ti->get_requested_commit() << ", tx_id:"
-                               << tx_id;
+                               << ti->get_requested_commit()
+                               << ", tx_id:" << tx_id;
                     return;
                 }
                 used_ids().insert(tx_id);
@@ -165,6 +167,15 @@ void bg_commit::worker() {
         */
 
         goto REFIND; // NOLINT
+    }
+
+    // normal termination, update joined_waiting_resolver
+    std::size_t expected{joined_waiting_resolver_threads()};
+    for (;;) {
+        if (cas_joined_waiting_resolver_threads(expected, expected + 1)) {
+            break;
+        }
+        // else: expected was update by actual value
     }
 }
 

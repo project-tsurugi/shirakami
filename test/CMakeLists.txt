@@ -27,6 +27,7 @@ file(GLOB WP_TEST_SOURCES
         "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
         "concurrency_control/anomaly/write_skew/*.cpp"
+        "concurrency_control/bg_work/*.cpp"
         "concurrency_control/complicated/*.cpp"
         "concurrency_control/hybrid/delete_update/*.cpp"
         "concurrency_control/hybrid/insert/*.cpp"
