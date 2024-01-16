@@ -68,7 +68,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build-pwal
-          SHIRAKAMI_DISABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 20
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 20
 
       - name: Verify
         uses: project-tsurugi/tsurugi-annotations-action@v1
