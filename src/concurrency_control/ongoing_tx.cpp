@@ -293,6 +293,8 @@ void ongoing_tx::set_optflags() {
         envstr != nullptr && *envstr != '\0') {
         is_envset = (std::strcmp(envstr, "1") == 0);
     }
+    VLOG(log_debug) << log_location_prefix << "optflag: waiting bypass is "
+                    << (!is_envset ? "enabled" : "disabled");
     optflag_disable_waiting_bypass_ = is_envset;
     // check environ "SHIRAKAMI_WAITING_BYPASS_TO_ROOT"
     is_envset = false;
@@ -301,6 +303,8 @@ void ongoing_tx::set_optflags() {
         is_envset = (std::strcmp(envstr, "1") == 0);
     }
     optflag_waiting_bypass_to_root_ = is_envset;
+    VLOG(log_debug) << log_location_prefix << "optflag: bypass to root "
+                    << (is_envset ? "on" : "off");
 }
 
 } // namespace shirakami
