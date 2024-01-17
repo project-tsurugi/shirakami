@@ -25,7 +25,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "anomaly-Visio-TestCase-Visio-Test'Case_11h_test");
+                "anomaly-Visio-TestCase-Visio-Test'Case_11h_1_test");
         // FLAGS_stderrthreshold = 0;
     }
 
@@ -52,18 +52,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                                 transaction_type::LONG, transaction_type::SHORT,
                                 transaction_type::SHORT, transaction_type::LONG,
                                 false, true, true, true, true,
-                                false), // c30
-                std::make_tuple(transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::LONG, transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, false, true, true, false,
-                                true), // c31
-                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT,
-                                transaction_type::SHORT, transaction_type::LONG,
-                                true, true, true, true, false,
-                                false) // c32
+                                false) // c30
                 ));
 
 TEST_P(Visio_TestCase, test) { // NOLINT
