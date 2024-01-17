@@ -10,6 +10,7 @@ public:
         CREATE = 0x001,
         RESTORE = 0x002,
         CREATE_OR_RESTORE = 0x003,
+        MAINTENANCE = 0x004,
     };
 
     database_options() = default; // NOLINT
@@ -129,6 +130,8 @@ to_string_view(database_options::open_mode value) {
             return "CREATE_OR_RESTORE";
         case database_options::open_mode::RESTORE:
             return "RESTORE";
+        case database_options::open_mode::MAINTENANCE:
+            return "MAINTENANCE";
         default:
             std::abort();
     }

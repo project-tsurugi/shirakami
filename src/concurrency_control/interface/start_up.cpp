@@ -59,28 +59,19 @@ void for_output_config(database_options const& options) {
 }
 
 Status init_body(database_options options) { // NOLINT
-    // set flag
+    // prevent double initialization
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    // log used database options
+    set_used_database_options(options);
+
+    // clear flag
     set_is_shutdowning(false);
 
     // logging config information
     for_output_config(options);
 
-
-    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
-
-    // about logging detail information
-    logging::init(options.get_enable_logging_detail_info());
-
-    // about storage
-    storage::init();
-
-    /**
-     * about sequence. the generator of sequence id is cleared, So if this is 
-     * a start up with recovery, it must also recovery sequence id generator.
-     */
-    sequence::init();
-
-    // data recovery
+    // initialize datastore object
 #if defined(PWAL)
     // check args
     std::string log_dir(options.get_log_directory_path());
@@ -131,88 +122,108 @@ Status init_body(database_options options) { // NOLINT
         }
         datastore::start_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
-    if (options.get_open_mode() != database_options::open_mode::CREATE &&
-        !enable_true_log_nothing) {
-        recover(datastore::get_datastore());
-    }
-    datastore::get_datastore()->add_persistent_callback(
-            epoch::set_datastore_durable_epoch); // should execute before ready()
-    /**
+#endif
+
+    if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
+        // MAINTENANCE mode guarantee fin and get_datastore after init
+        // about logging detail information
+        logging::init(options.get_enable_logging_detail_info());
+
+        // about storage
+        storage::init();
+
+        /**
+     * about sequence. the generator of sequence id is cleared, So if this is 
+     * a start up with recovery, it must also recovery sequence id generator.
+     */
+        sequence::init();
+
+        // data recovery
+#if defined(PWAL)
+        // recover data
+        if (options.get_open_mode() != database_options::open_mode::CREATE &&
+            !enable_true_log_nothing) {
+            recover(datastore::get_datastore());
+        }
+        datastore::get_datastore()->add_persistent_callback(
+                epoch::set_datastore_durable_epoch); // should execute before ready()
+        /**
      * This executes create_channel and pass it to shirakami's executor.
      */
-    datastore::init_about_session_table(log_dir);
+        datastore::init_about_session_table(log_dir);
 
-    // datastore ready
-    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << "startup:start_datastore_ready";
-    ready(datastore::get_datastore());
-    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << "startup:end_datastore_ready";
+        // datastore ready
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "startup:start_datastore_ready";
+        ready(datastore::get_datastore());
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "startup:end_datastore_ready";
 
 #endif
 
-    // epoch adjustment
+        // epoch adjustment
 #if defined(PWAL)
-    auto new_epoch = epoch::initial_epoch;
-    if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
-        new_epoch = datastore::get_datastore()->last_epoch() + 1;
-    }
-    epoch::set_global_epoch(new_epoch);
-    epoch::set_cc_safe_ss_epoch(new_epoch + 1);
-    // change also datastore's epoch, this must be after ready()
-    switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
+        auto new_epoch = epoch::initial_epoch;
+        if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
+            new_epoch = datastore::get_datastore()->last_epoch() + 1;
+        }
+        epoch::set_global_epoch(new_epoch);
+        epoch::set_cc_safe_ss_epoch(new_epoch + 1);
+        // change also datastore's epoch, this must be after ready()
+        switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
 #else
-    epoch::set_global_epoch(epoch::initial_epoch);
-    epoch::set_cc_safe_ss_epoch(epoch::initial_cc_safe_ss_epoch);
+        epoch::set_global_epoch(epoch::initial_epoch);
+        epoch::set_cc_safe_ss_epoch(epoch::initial_cc_safe_ss_epoch);
 #endif
 
-    // about tx state
-    TxState::init();
+        // about tx state
+        TxState::init();
 
-    // about cc
-    session_table::init_session_table();
+        // about cc
+        session_table::init_session_table();
 
-    // about index
-    // pre condition : before wp::init() because wp::init() use yakushima function.
-    yakushima::init();
+        // about index
+        // pre condition : before wp::init() because wp::init() use yakushima function.
+        yakushima::init();
 
-    // about wp
-    auto ret = wp::init();
-    if (ret != Status::OK) { return ret; }
+        // about wp
+        auto ret = wp::init();
+        if (ret != Status::OK) { return ret; }
 
-    // about meta storage
-    storage::init_meta_storage();
+        // about meta storage
+        storage::init_meta_storage();
 
 #ifdef PWAL
-    // recover shirakami from datastore recovered.
-    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << "startup:start_recovery_from_datastore";
-    if (options.get_open_mode() != database_options::open_mode::CREATE &&
-        !enable_true_log_nothing) {
-        datastore::recovery_from_datastore();
+        // recover shirakami from datastore recovered.
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "startup:start_recovery_from_datastore";
+        if (options.get_open_mode() != database_options::open_mode::CREATE &&
+            !enable_true_log_nothing) {
+            datastore::recovery_from_datastore();
+        }
+        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
+                                     << "startup:end_recovery_from_datastore";
+#endif
+
+        // about epoch
+        epoch::init(options.get_epoch_time());
+        garbage::init();
+
+#ifdef PWAL
+        lpwal::init(); // start damon
+#endif
+
+        // about back ground worker about commit
+        bg_work::bg_commit::init(options.get_waiting_resolver_threads());
+
+        //// about thread pool
+        //thread_pool::init();
+
+        // about read area
+        read_plan::init();
+
+        ongoing_tx::set_optflags();
     }
-    VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                 << "startup:end_recovery_from_datastore";
-#endif
-
-    // about epoch
-    epoch::init(options.get_epoch_time());
-    garbage::init();
-
-#ifdef PWAL
-    lpwal::init(); // start damon
-#endif
-
-    // about back ground worker about commit
-    bg_work::bg_commit::init(options.get_waiting_resolver_threads());
-
-    //// about thread pool
-    //thread_pool::init();
-
-    // about read area
-    read_plan::init();
-
-    ongoing_tx::set_optflags();
 
     set_initialized(true); // about init command
     return Status::OK;
