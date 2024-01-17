@@ -32,13 +32,6 @@ jobs:
       - name: Install_Dependencies
         uses: ./.github/actions/install-dependencies
 
-      - name: CMake_Build
-        run: |
-          mkdir -p build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=OFF ..
-          cmake --build . --target all --clean-first
-
       - name: CMake_Build_with_PWAL
         run: |
           mkdir -p build-pwal
@@ -46,15 +39,7 @@ jobs:
           cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
           cmake --build . --target all --clean-first
 
-      - name: CTest
-        env:
-          GTEST_OUTPUT: xml
-          ASAN_OPTIONS: detect_stack_use_after_return=true
-        run: |
-          cd build
-          ctest --verbose --timeout 200 -j 20
-
-      - name: CTest_with_PWAL
+      - name: CTest_total
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
@@ -62,13 +47,30 @@ jobs:
           cd build-pwal
           ctest --verbose --timeout 200 -j 20
 
-      - name: CTest_with_PWAL_without_BYPASS
+      - name: CTest_CC
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build-pwal
-          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 20
+          ctest --verbose --timeout 200 -j 20 -L CC
+
+      - name: CTest_LOGGING
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build-pwal
+          ctest --verbose --timeout 200 -j 20 -L LOGGING
+
+      - name: CTest_WAITING_BYPASS
+        env:
+          GTEST_OUTPUT: xml
+          ASAN_OPTIONS: detect_stack_use_after_return=true
+        run: |
+          cd build-pwal
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
 
       - name: Verify
         uses: project-tsurugi/tsurugi-annotations-action@v1

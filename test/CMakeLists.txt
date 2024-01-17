@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-file(GLOB WP_TEST_SOURCES
+file(GLOB CC_TEST_SOURCES
         "concurrency_control/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase/*.cpp"
         "concurrency_control/anomaly/Visio-TestCase_Functions_v1/boundary_wait/*.cpp"
@@ -111,7 +111,10 @@ file(GLOB WP_TEST_SOURCES
         "transaction_options/*.cpp"
         "tx_id/*.cpp"
         )
-        set(TEST_SOURCES ${TEST_SOURCES} ${WP_TEST_SOURCES})
+
+file (GLOB WAITING_BYPASS_TEST_SOURCES
+      "concurrency_control/waiting_bypass/*.cpp"
+)
 
 if (BUILD_PWAL)
   file (GLOB LOGGING_TEST_SOURCES
@@ -120,8 +123,33 @@ if (BUILD_PWAL)
         "datastore/two_recovery/*.cpp"
         "datastore/three_recovery/*.cpp"
         )
-  set(TEST_SOURCES ${TEST_SOURCES} ${LOGGING_TEST_SOURCES})
 endif()
+
+register_tests(
+        TARGET shirakami
+        DEPENDS
+          shirakami-impl
+          PRIVATE glog::glog
+          PRIVATE ${tbb_prefix}tbb
+          PRIVATE ${tbb_prefix}tbbmalloc
+          PRIVATE ${tbb_prefix}tbbmalloc_proxy
+          PRIVATE yakushima
+        SOURCES ${CC_TEST_SOURCES}
+        TEST_LABELS "CC"
+)
+
+register_tests(
+        TARGET shirakami
+        DEPENDS
+          shirakami-impl
+          PRIVATE glog::glog
+          PRIVATE ${tbb_prefix}tbb
+          PRIVATE ${tbb_prefix}tbbmalloc
+          PRIVATE ${tbb_prefix}tbbmalloc_proxy
+          PRIVATE yakushima
+        SOURCES ${WAITING_BYPASS_TEST_SOURCES}
+        TEST_LABELS "WAITING_BYPASS"
+)
 
 if (BUILD_PWAL)
   register_tests(
@@ -133,18 +161,7 @@ if (BUILD_PWAL)
             PRIVATE ${tbb_prefix}tbbmalloc
             PRIVATE ${tbb_prefix}tbbmalloc_proxy
             PRIVATE yakushima
-          SOURCES ${TEST_SOURCES}
-  )
-else()
-  register_tests(
-          TARGET shirakami
-          DEPENDS
-            shirakami-impl
-            PRIVATE glog::glog
-            PRIVATE ${tbb_prefix}tbb
-            PRIVATE ${tbb_prefix}tbbmalloc
-            PRIVATE ${tbb_prefix}tbbmalloc_proxy
-            PRIVATE yakushima
-          SOURCES ${TEST_SOURCES}
+          SOURCES ${LOGGING_TEST_SOURCES}
+          TEST_LABELS "LOGGING"
   )
 endif()

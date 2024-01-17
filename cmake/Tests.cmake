@@ -16,9 +16,9 @@ function(register_tests)
     include(CMakeParseArguments)
     cmake_parse_arguments(
         TESTS # prefix
-        ""
-        "TARGET;BUILD"
-        "SOURCES;DEPENDS"
+        "" # options
+        "TARGET;BUILD;TEST_LABELS" # one value keywords
+        "SOURCES;DEPENDS" # multi value keywords
         ${ARGN}
     )
     if(NOT DEFINED TESTS_BUILD)
@@ -111,6 +111,7 @@ function(register_tests)
                     add_test(
                         NAME ${test_name}
                         COMMAND ${test_name} --gtest_output=xml:${test_name}_gtest_result.xml)
+                    set_property(TEST ${test_name} PROPERTY LABELS ${TESTS_TEST_LABELS})
                 endif()
             else()
                 set_target_properties(${test_name}
