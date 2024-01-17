@@ -71,12 +71,14 @@ void bg_commit::register_tx(Token token) {
 
 static void append_ts(std::ostream& os, std::chrono::system_clock::time_point& ts, const char *fmt) {
     using namespace std::literals;  // for ""us
-    char buf[64];  // NOLINT
-    std::tm tmbuf;  // NOLINT
+// NOLINTBEGIN
+    char buf[64];
+    std::tm tmbuf;
     std::time_t t = std::chrono::system_clock::to_time_t(ts);
     auto ts_secs = std::chrono::system_clock::from_time_t(t);
     sprintf(buf, ".%06ld", (ts - ts_secs) / 1us);
-    os << std::put_time(::localtime_r(&t, &tmbuf), fmt) << buf;  // NOLINT
+    os << std::put_time(::localtime_r(&t, &tmbuf), fmt) << buf;
+// NOLINTEND
 }
 
 void bg_commit::worker() {
