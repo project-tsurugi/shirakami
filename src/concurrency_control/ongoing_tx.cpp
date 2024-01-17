@@ -4,6 +4,8 @@
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 
+#include "database/include/logging.h"
+
 namespace shirakami {
 
 bool ongoing_tx::exist_id(std::size_t id) {
@@ -40,7 +42,8 @@ Status ongoing_tx::waiting_bypass(session* ti) {
             auto* token = std::get<ongoing_tx::index_session>(elem);
 
             // check exist living wait for, for not to remove path to root.
-            if (!exist_living_wait_for(token)) {
+            if (!optflag_waiting_bypass_to_root_ &&
+                !exist_living_wait_for(token)) {
                 // not bypass for tree root
                 continue;
             }
@@ -196,7 +199,10 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                          * https://github.com/project-tsurugi/tsurugi-issues/issues/438#issuecomment-1839876140
                          * ルートになるまでパスを縮めてはいけない。
                          */
-                        if (wait_for.size() > 2) {
+                        bool do_waiting_bypass_here =
+                                // if disabled -> false
+                                !optflag_disable_waiting_bypass_;
+                        if (do_waiting_bypass_here) {
                             out_status = waiting_bypass(ti);
                         }
                         return true;
@@ -278,6 +284,28 @@ void ongoing_tx::remove_id(std::size_t const id) {
         set_lowest_epoch(lep);
     }
     if (!erased) { LOG(ERROR) << log_location_prefix << "unreachable path."; }
+}
+
+void ongoing_tx::set_optflags() {
+    // check environ "SHIRAKAMI_ENABLE_WAITING_BYPASS"
+    // disabled only if set "SHIRAKAMI_ENABLE_WAITING_BYPASS=0"
+    bool enable_wb = true;
+    if (auto* envstr = std::getenv("SHIRAKAMI_ENABLE_WAITING_BYPASS");
+        envstr != nullptr && *envstr != '\0') {
+        enable_wb = (std::strcmp(envstr, "0") != 0);
+    }
+    VLOG(log_debug) << log_location_prefix << "optflag: waiting bypass is "
+                    << (enable_wb ? "enabled (default)" : "disabled");
+    optflag_disable_waiting_bypass_ = !enable_wb;
+    // check environ "SHIRAKAMI_WAITING_BYPASS_TO_ROOT"
+    bool is_envset = false;
+    if (auto* envstr = std::getenv("SHIRAKAMI_WAITING_BYPASS_TO_ROOT");
+        envstr != nullptr && *envstr != '\0') {
+        is_envset = (std::strcmp(envstr, "1") == 0);
+    }
+    optflag_waiting_bypass_to_root_ = is_envset;
+    VLOG(log_debug) << log_location_prefix << "optflag: bypass to root "
+                    << (is_envset ? "on" : "off");
 }
 
 } // namespace shirakami

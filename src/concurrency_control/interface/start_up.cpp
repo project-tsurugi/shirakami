@@ -13,6 +13,7 @@
 #include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/epoch_internal.h"
+#include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
@@ -210,6 +211,8 @@ Status init_body(database_options options) { // NOLINT
 
     // about read area
     read_plan::init();
+
+    ongoing_tx::set_optflags();
 
     set_initialized(true); // about init command
     return Status::OK;

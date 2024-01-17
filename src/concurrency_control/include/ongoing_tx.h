@@ -84,6 +84,15 @@ public:
     */
     static Status waiting_bypass(session* ti);
 
+    /**
+     * @brief set optimization flags from environ
+     */
+    static void set_optflags();
+
+    static bool get_optflag_disable_waiting_bypass() {
+        return optflag_disable_waiting_bypass_;
+    }
+
 private:
     /**
      * @brief This is mutex for tx_info_;
@@ -99,6 +108,14 @@ private:
      * used by them for read_by gc.
      */
     static inline std::atomic<epoch::epoch_t> lowest_epoch_{0}; // NOLINT
+    /**
+     * @brief enable/disable waiting bypass.
+     */
+    static inline bool optflag_disable_waiting_bypass_; // NOLINT
+    /**
+     * @brief waiting bypass to root (aggressive optimization).
+     */
+    static inline bool optflag_waiting_bypass_to_root_; // NOLINT
 };
 
 } // namespace shirakami
