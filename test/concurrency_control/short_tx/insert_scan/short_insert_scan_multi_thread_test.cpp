@@ -46,7 +46,7 @@ private:
 };
 
 TEST_F(short_insert_scan_multi_thread_test, // NOLINT
-       DISABLED_500_insert_and_full_scan) { // NOLINT
+       500_insert_and_full_scan) { // NOLINT
     // generate keys and table
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
