@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04]
-        test-group: [default, labels]
+        test-group: [default, tl_cc, tl_others] # tl: test label
     runs-on: [self-hosted, docker]
     permissions:
       checks: write
@@ -50,7 +50,7 @@ jobs:
           ctest --verbose --timeout 200 -j 20
 
       - name: CTest_CC
-        if: matrix.test-group == 'labels'
+        if: matrix.test-group == 'tl_cc'
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
@@ -59,7 +59,7 @@ jobs:
           ctest --verbose --timeout 200 -j 20 -L CC
 
       - name: CTest_LOGGING
-        if: matrix.test-group == 'labels'
+        if: matrix.test-group == 'tl_others'
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
@@ -68,7 +68,7 @@ jobs:
           ctest --verbose --timeout 200 -j 20 -L LOGGING
 
       - name: CTest_WAITING_BYPASS
-        if: matrix.test-group == 'labels'
+        if: matrix.test-group == 'tl_others'
         env:
           GTEST_OUTPUT: xml
           ASAN_OPTIONS: detect_stack_use_after_return=true
