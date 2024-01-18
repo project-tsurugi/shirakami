@@ -119,7 +119,7 @@ void update_wp_at_commit(session* const ti, std::set<Storage> const& sts) {
                 itr = ti->get_wp_set().erase(itr);
                 continue;
             }
-            LOG(ERROR) << log_location_prefix << "unexpected code path";
+            LOG(ERROR) << log_location_prefix << "library programming error";
             itr->second->get_wp_lock().unlock();
         }
         ++itr;

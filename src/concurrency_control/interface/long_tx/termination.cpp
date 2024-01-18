@@ -811,7 +811,7 @@ extern Status commit(session* const ti) {
         goto END_COMMIT; // NOLINT
     }
     if (rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unexpected error. " << rc;
+        LOG(ERROR) << log_location_prefix << "library programming error. " << rc;
         return rc;
     }
 
@@ -915,7 +915,7 @@ extern Status commit(session* const ti) {
         // set transaction result
         ti->set_result(reason_code::UNKNOWN);
     } else {
-        LOG(ERROR) << "unexpected code path";
+        LOG(ERROR) << "library programming error.";
     }
 
 END_COMMIT: // NOLINT

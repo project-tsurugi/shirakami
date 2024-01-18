@@ -39,18 +39,18 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(payload);
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unexpected error.";
+        LOG(ERROR) << log_location_prefix << "library programming error.";
     }
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG(ERROR) << log_location_prefix << "library programming error.";
         return;
     }
     if (commit(s) == Status::OK) {
         leave(s);
         return;
     } // else
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG(ERROR) << log_location_prefix << "library programming error";
 }
 
 void remove_storage_metadata(std::string_view key) {
@@ -59,7 +59,7 @@ void remove_storage_metadata(std::string_view key) {
     std::string value{};
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unexpected error.";
+        LOG(ERROR) << log_location_prefix << "library programming error.";
     }
     ret = delete_record(s, storage::meta_storage, key);
     if (ret != Status::OK) {
@@ -73,7 +73,7 @@ void remove_storage_metadata(std::string_view key) {
         leave(s);
         return;
     } // else
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG(ERROR) << log_location_prefix << "library programming error";
 }
 
 Status create_storage_body(std::string_view const key, Storage& storage,
@@ -148,7 +148,8 @@ Status get_storage_body(std::string_view const key, Storage& out) {
 }
 
 Status get_storage(std::string_view key, Storage& out) {
-    shirakami_log_entry << "get_storage " << shirakami_binstring(key) << ", out: " << out;
+    shirakami_log_entry << "get_storage " << shirakami_binstring(key)
+                        << ", out: " << out;
     auto ret = get_storage_body(key, out);
     shirakami_log_exit << "get_storage, " << ret;
     return ret;
@@ -180,7 +181,7 @@ Status storage_get_options_body(Storage storage, storage_option& options) {
     for (;;) {
         ret = tx_begin({s, transaction_options::transaction_type::SHORT});
         if (ret != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "unexpected error.";
+            LOG(ERROR) << log_location_prefix << "library programming error.";
         }
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
@@ -246,7 +247,8 @@ Status storage_set_options_body(Storage storage,
     // store and log information
     ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unexpected error. " << ret;
+        LOG(ERROR) << log_location_prefix << "library programming error. "
+                   << ret;
     }
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
@@ -257,7 +259,7 @@ Status storage_set_options_body(Storage storage,
         leave(s);
         return Status::OK;
     } // else
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG(ERROR) << log_location_prefix << "library programming error.";
     return Status::ERR_FATAL;
 }
 

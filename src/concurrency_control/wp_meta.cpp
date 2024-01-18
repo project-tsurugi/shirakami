@@ -156,7 +156,7 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "unexpected code path";
+    LOG(ERROR) << log_location_prefix << "concurrent program error";
     return Status::WARN_NOT_FOUND;
 }
 

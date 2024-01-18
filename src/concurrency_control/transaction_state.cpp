@@ -105,8 +105,9 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }
 #else
-            // if no logging, it must not be waiting_durable status
-            LOG(ERROR) << log_location_prefix << "unexpected path";
+            LOG(ERROR)
+                    << log_location_prefix
+                    << "if no logging, it must not be waiting_durabule status";
             return Status::ERR_FATAL;
 #endif
         }
@@ -133,8 +134,9 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }
 #else
-            // if no logging, it must not be waiting_durable status
-            LOG(ERROR) << log_location_prefix << "unexpected path";
+            LOG(ERROR)
+                    << log_location_prefix
+                    << "if no logging, it must not be waiting_durable status";
             return Status::ERR_FATAL;
 #endif
         }

@@ -84,7 +84,7 @@ Status leave_body(Token const token) { // NOLINT
                         if (itr.get_tx_type() !=
                             transaction_options::transaction_type::LONG) {
                             LOG(ERROR) << log_location_prefix
-                                       << "unexpected error";
+                                       << "library programming error";
                         }
                         // the ltx commit was submitted, wait result.
                         do {
