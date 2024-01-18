@@ -241,7 +241,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto wps = wp::find_wp(storage);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
-            abort(ti);
+            abort(ti); // todo plus short_tx::?
             ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CC;
@@ -766,10 +766,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // create node set info, maybe phantom (Status::ERR_CC)
         auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
         if (rc == Status::ERR_CC) {
-            short_tx::abort(ti);
             ti->get_result_info().set_storage_name(
                     sh.get_scanned_storage_set().get(handle));
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+            short_tx::abort(ti);
             return Status::ERR_CC;
         } // else: return result about read (rr: read result)
         return rr;
