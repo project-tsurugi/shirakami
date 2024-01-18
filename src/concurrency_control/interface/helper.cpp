@@ -141,6 +141,10 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                                            std::string(rec_ptr->get_key_view());
             }
 
+            if (f_check.get_latest() && f_check.get_absent()) {
+                // inserting locked
+                return Status::WARN_CONCURRENT_INSERT;
+            }
             return Status::WARN_CONCURRENT_UPDATE;
 #else
             if (repeat_num >= PARAM_RETRY_READ) {
@@ -150,6 +154,10 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                             << log_location_prefix_detail_info
                             << "finish wait for locked record. key is " +
                                        std::string(rec_ptr->get_key_view());
+                }
+                if (f_check.get_latest() && f_check.get_absent()) {
+                    // inserting locked
+                    return Status::WARN_CONCURRENT_INSERT;
                 }
                 return Status::WARN_CONCURRENT_UPDATE;
             }

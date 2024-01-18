@@ -12,11 +12,18 @@
 
 #include "atomic_wrapper.h"
 
+// library
+
 #include "shirakami/interface.h"
 
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/tuple_local.h"
 
+// test tool
+
+#include "test_tool.h"
+
+// google
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
@@ -32,6 +39,7 @@ public:
                 "shirakami-test-concurrency_control-short_tx-"
                 "insert_scan-short_insert_scan_multi_thread_test");
         // FLAGS_stderrthreshold = 0;
+        init_for_test();
     }
 
     void SetUp() override {
@@ -46,17 +54,21 @@ private:
 };
 
 TEST_F(short_insert_scan_multi_thread_test, // NOLINT
-       DISABLED_500_insert_and_full_scan) { // NOLINT
+       500_insert_and_full_scan) {          // NOLINT
     // generate keys and table
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
 
+    constexpr std::size_t scan_th_num{1};
+    constexpr std::size_t delta{500};
+    constexpr std::size_t rec_num{5000};
+
     struct S {
-        static void scan_work(Storage st) {
+        static void scan_work(Storage st, std::size_t const rec_num,
+                              std::size_t const delta) {
             // prepare
             Token s{};
             ASSERT_EQ(enter(s), Status::OK);
-
             for (;;) {
                 ScanHandle hd{};
                 ASSERT_EQ(Status::OK,
@@ -65,6 +77,7 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                 auto ret = open_scan(s, st, "", scan_endpoint::INF, "",
                                      scan_endpoint::INF, hd);
                 if (ret != Status::OK) {
+                    if (ret == Status::ERR_CC) { continue; }
                     ASSERT_EQ(Status::OK, abort(s));
                     continue;
                 }
@@ -82,9 +95,8 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                 if (ret == Status::ERR_CC) { continue; }
                 ret = commit(s); // NOLINT
                 if (ret == Status::OK) {
-                    ASSERT_EQ(ct % 500, 0);
-                    //LOG(INFO) << ct;
-                    if (ct == 5000) { break; } // NOLINT
+                    ASSERT_EQ(ct % delta, 0);
+                    if (ct == rec_num) { break; } // NOLINT
                 }
             }
 
@@ -92,13 +104,14 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
             ASSERT_EQ(leave(s), Status::OK);
         }
 
-        static void insert_work(Storage st) {
+        static void insert_work(Storage st, std::size_t const rec_num,
+                                std::size_t const delta) {
             // prepare
             Token s{};
             ASSERT_EQ(enter(s), Status::OK);
 
             std::string k{"12345678"}; // to allocate 8 bites definitely.
-            for (std::size_t i = 1; i <= 5000; ++i) { // NOLINT
+            for (std::size_t i = 1; i <= rec_num; ++i) { // NOLINT
                 auto* ti = static_cast<session*>(s);
                 if (!ti->get_tx_began()) {
                     ASSERT_EQ(Status::OK,
@@ -107,7 +120,7 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
                 }
                 memcpy(k.data(), &i, sizeof(i));
                 ASSERT_EQ(insert(s, st, k, "v"), Status::OK);
-                if (i % 500 == 0) { // NOLINT
+                if (i % delta == 0) { // NOLINT
                     // commit each 500
                     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
                     // if this is enable, you can see commit each 500 record.
@@ -121,12 +134,14 @@ TEST_F(short_insert_scan_multi_thread_test, // NOLINT
         }
     };
 
-    std::array<std::thread, 2> ths{};
-    ths.at(0) = std::thread(S::insert_work, st);
-    ths.at(1) = std::thread(S::scan_work, st);
+    std::vector<std::thread> scan_ths{};
+    for (std::size_t i = 0; i < scan_th_num; ++i) {
+        scan_ths.emplace_back(std::thread(S::scan_work, st, rec_num, delta));
+    }
+    std::thread insert_th = std::thread(S::insert_work, st, rec_num, delta);
 
-    ths.at(0).join();
-    ths.at(1).join();
+    insert_th.join();
+    for (auto&& th : scan_ths) { th.join(); }
 }
 
 } // namespace shirakami::testing
