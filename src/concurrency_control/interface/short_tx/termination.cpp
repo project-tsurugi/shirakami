@@ -152,8 +152,8 @@ Status abort(session* ti) { // NOLINT
     return Status::OK;
 }
 
-Status read_verify(session* ti, Storage const storage, tid_word read_tid,
-                   tid_word check, const Record* const rec_ptr) {
+Status read_verify(session* ti, tid_word read_tid, tid_word check,
+                   const Record* const rec_ptr) {
     if (
             // different tid
             read_tid.get_tid() != check.get_tid() ||
@@ -162,8 +162,6 @@ Status read_verify(session* ti, Storage const storage, tid_word read_tid,
             // locked and it's not own.
             (check.get_lock() &&
              ti->get_write_set().search(rec_ptr) == nullptr)) {
-        ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
-                                                   storage);
         return Status::ERR_CC;
     }
     return Status::OK;
@@ -201,8 +199,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
 
         // verify
         // ==============================
-        if (read_verify(ti, itr.get_storage(), itr.get_tid(), check, rec_ptr) !=
-            Status::OK) {
+        if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
             unlock_write_set(ti);
             ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
                                                        itr.get_storage());
@@ -650,7 +647,7 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     commit_tid.set_absent(false);
     commit_tid.set_latest(true);
     commit_tid.set_by_short(true);
-    
+
     ti->set_mrc_tid(commit_tid);
 }
 
