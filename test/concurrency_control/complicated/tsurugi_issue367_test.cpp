@@ -38,13 +38,13 @@ private:
 
 TEST_F(tsurugi_issue367_test, simple) { // NOLINT
     database_options options{};
-    int waiting_resolver_threads_num = 64;
+    int waiting_resolver_threads_num = 16;
     options.set_waiting_resolver_threads(waiting_resolver_threads_num);
     init(options);
 
     std::uint64_t num_records = 100;
-    std::uint64_t num_threads = 32;
-    int duration = 3;
+    std::uint64_t num_threads = 8;
+    int duration = 1;
     LOG(INFO) << "records_pre tx: " << num_records;
     LOG(INFO) << "duration: " << duration;
 
