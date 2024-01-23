@@ -289,9 +289,10 @@ Status next(Token token, ScanHandle handle);
  * @param[out] key the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
- * inserted. Please wait to finish the concurrent transaction which is 
- * inserting the target page or call abort api call.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
+ * The user can continue the scan with next api or end the transaction with 
+ * abort. If this page is unchanged at the time the transaction is requested to 
+ * commit, this read will not cause a failure.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
@@ -311,9 +312,10 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
  * @param[out] value  the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is concurrently
- * inserted. Please wait to finish the concurrent transaction which is 
- * inserting the target page or call abort api call.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
+ * The user can continue the scan with next api or end the transaction with 
+ * abort. If this page is unchanged at the time the transaction is requested to 
+ * commit, this read will not cause a failure.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
