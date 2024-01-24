@@ -47,7 +47,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 return Status::ERR_CC;
             }
         }
-        ti->get_write_set().push({st, OP_TYPE::INSERT, rec_ptr, val});
+        ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val});
         out_rec_ptr = rec_ptr;
         return Status::OK;
     }
@@ -101,8 +101,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
             tid_word found_tid{};
             rc = try_deleted_to_inserting(storage, key, rec_ptr, found_tid);
             if (rc == Status::OK) {
-                ti->get_write_set().push(
-                        {storage, OP_TYPE::INSERT, rec_ptr, val});
+                ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val});
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
@@ -128,8 +127,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                 // end: make read set
                 // ==========
             } else if (rc == Status::WARN_CONCURRENT_INSERT) {
-                ti->get_write_set().push(
-                        {storage, OP_TYPE::INSERT, rec_ptr, val});
+                ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val});
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }

@@ -72,7 +72,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         }
         if (!rc) {
             // if this was update
-            ti->get_write_set().push({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+            ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
             register_read_if_ltx(ti, wso->get_rec_ptr());
         }
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
@@ -137,7 +137,7 @@ Status delete_record_body(Token token, Storage storage,
             return Status::WARN_NOT_FOUND;
         }
         // prepare write
-        ti->get_write_set().push({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+        ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }

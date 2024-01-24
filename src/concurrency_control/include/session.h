@@ -423,7 +423,7 @@ public:
 
     void push_to_write_set(write_set_obj&& elem) {
         std::lock_guard<std::shared_mutex> lk{mtx_write_set_};
-        write_set_.push(std::move(elem));
+        write_set_.push(this, std::move(elem));
     }
 
     // ========== start: setter

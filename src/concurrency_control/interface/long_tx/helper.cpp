@@ -75,11 +75,17 @@ void preprocess_read_area(transaction_options::read_area& ra) {
     }
 }
 
-void update_wp_at_commit(session* const ti, std::set<Storage> const& sts) {
+void update_wp_at_commit(session* const ti) {
     /**
      * write preserve はTX開始時点に宣言したものよりも実体の方が同じか小さくなる。
      * 小さくできるなら小さくすることで、他Txへの影響を軽減する。
      * */
+    // create storage set
+    std::set<Storage> sts;
+    for (auto&& elem : ti->get_write_set().get_storage_map()) {
+        sts.insert(elem.first);
+    }
+
     for (auto itr = ti->get_wp_set().begin(); itr != ti->get_wp_set().end();) {
         // check the storage is valid yet
         Storage target_st{itr->first};

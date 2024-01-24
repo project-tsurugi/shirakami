@@ -29,7 +29,7 @@ extern Status search_key(session* ti, Storage storage, std::string_view key,
 extern Status tx_begin(session* ti, std::vector<Storage> write_preserve,
                        transaction_options::read_area ra);
 
-extern void update_wp_at_commit(session* ti, std::set<Storage> const& sts);
+extern void update_wp_at_commit(session* ti);
 
 /**
  * @brief version function for long tx.

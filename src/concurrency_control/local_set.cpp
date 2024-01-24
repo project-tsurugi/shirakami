@@ -1,5 +1,8 @@
 
 #include <algorithm>
+#include <utility>
+
+#include "concurrency_control/include/session.h"
 
 #include "include/local_set.h"
 
@@ -27,26 +30,37 @@ Status local_write_set::erase(write_set_obj* wso) {
     return Status::OK;
 }
 
-void local_write_set::get_storage_set(std::set<Storage>& out) {
-    out.clear();
-
-    std::shared_lock<std::shared_mutex> lk{get_mtx()};
-    if (get_for_batch()) {
-        for (auto&& wso : get_ref_cont_for_bt()) {
-            out.insert(wso.second.get_storage());
-        }
-    } else {
-        for (auto&& wso : get_ref_cont_for_occ()) {
-            out.insert(wso.get_storage());
-        }
-    }
-}
-
-void local_write_set::push(write_set_obj&& elem) {
+void local_write_set::push(Token token, write_set_obj&& elem) {
     std::lock_guard<std::shared_mutex> lk{get_mtx()};
 
     if (get_for_batch()) {
-        cont_for_bt_.insert_or_assign(elem.get_rec_ptr(), std::move(elem));
+        cont_for_bt_.insert_or_assign(
+                elem.get_rec_ptr(),
+                write_set_obj(elem.get_storage(), elem.get_op(),
+                              elem.get_rec_ptr(), elem.get_value_view()));
+
+        if (static_cast<session*>(token)->get_tx_type() ==
+            transaction_options::transaction_type::LONG) {
+            // update storage map
+            auto& smap = get_storage_map();
+            // find about storage
+            auto itr = smap.find(elem.get_storage());
+            std::string key{};
+            elem.get_key(key);
+            if (itr == smap.end()) {
+                // not found
+                smap.insert(std::make_pair(elem.get_storage(),
+                                           std::make_tuple(key, key)));
+            } else {
+                // found, check left key
+                if (key < std::get<0>(itr->second)) {
+                    std::get<0>(itr->second) = key;
+                } // check right key
+                if (std::get<1>(itr->second) < key) {
+                    std::get<1>(itr->second) = key;
+                }
+            }
+        }
     } else {
         cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
         if (cont_for_occ_.size() > 100) {            // NOLINT

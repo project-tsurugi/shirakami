@@ -49,7 +49,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 return Status::ERR_CC;
             }
         }
-        ti->get_write_set().push({st, OP_TYPE::UPSERT, rec_ptr, val});
+        ti->push_to_write_set({st, OP_TYPE::UPSERT, rec_ptr, val});
         return Status::OK;
     }
     // fail insert rec_ptr
@@ -103,7 +103,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             }
 
             // prepare update
-            ti->get_write_set().push(
+            ti->push_to_write_set(
                     {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
             return Status::OK;
         }
@@ -117,7 +117,8 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
 Status upsert(Token token, Storage storage, std::string_view const key,
               std::string_view const val) {
     shirakami_log_entry << "upsert, token: " << token << ", storage; "
-                        << storage << shirakami_binstring(key) << shirakami_binstring(val);
+                        << storage << shirakami_binstring(key)
+                        << shirakami_binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = upsert_body(token, storage, key, val);

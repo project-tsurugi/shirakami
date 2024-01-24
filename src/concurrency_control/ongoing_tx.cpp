@@ -170,12 +170,10 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     bool has_wp = !ti->get_wp_set().empty();
     auto wait_for = ti->extract_wait_for();
     // check local write set
-    std::set<Storage> st_set{};
     // create and compaction about storage set
-    ti->get_write_set().get_storage_set(st_set);
     if (!ti->get_requested_commit()) {
         // first request, so update wp
-        long_tx::update_wp_at_commit(ti, st_set);
+        long_tx::update_wp_at_commit(ti);
     }
 
     if (!wait_for.empty()) {
@@ -220,6 +218,12 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
         // wait.
         // check about write
         if (has_wp) {
+            // create storage set
+            std::set<Storage> st_set;
+            for (auto&& elem : ti->get_write_set().get_storage_map()) {
+                st_set.insert(elem.first);
+            }
+
             // check potential read-anti and read area for each write storage
             bool ret = read_plan::check_potential_read_anti(id, st_set);
             if (!ret) {

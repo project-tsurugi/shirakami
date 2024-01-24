@@ -16,6 +16,7 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 
 #include "glog/logging.h"
@@ -157,6 +158,11 @@ public:
     using cont_for_bt_type = std::map<Record*, write_set_obj>;
 
     /**
+     * @brief container for ltx info
+    */
+    using storage_map = std::map<Storage, std::tuple<std::string, std::string>>;
+
+    /**
      * @brief clear containers.
      */
     void clear() {
@@ -177,14 +183,14 @@ public:
     cont_for_occ_type& get_ref_cont_for_occ() { return cont_for_occ_; }
 
     /**
-     * @brief get list of storage about write
+     * @brief get storage set
      * */
-    void get_storage_set(std::set<Storage>& out);
+    storage_map& get_storage_map() { return storage_map_; }
 
     /**
      * @brief push an element to local write set.
      */
-    void push(write_set_obj&& elem);
+    void push(Token token, write_set_obj&& elem);
 
     /**
      * @brief check whether it already executed write operation.
@@ -227,6 +233,12 @@ private:
      * @brief container for short tx.
      */
     cont_for_occ_type cont_for_occ_;
+
+    /**
+     * @brief container for ltx.
+     * @details This is not thread safe
+    */
+    storage_map storage_map_;
 
     std::shared_mutex mtx_;
 };
