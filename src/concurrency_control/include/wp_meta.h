@@ -4,6 +4,7 @@
 
 #include <array>
 #include <bitset>
+#include <map>
 #include <shared_mutex>
 #include <vector>
 
@@ -30,6 +31,12 @@ public:
     using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
     using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
     using wped_used_type = std::bitset<KVS_MAX_PARALLEL_THREADS>;
+    /**
+     * key: tx id
+     * value: whether write, left key, right key
+    */
+    using wp_write_range_type =
+            std::map<std::size_t, std::tuple<std::string, std::string>>;
     /**
      * @brief first is serialization epoch, second is ltx id, third is 
      * was_committed, forth is range of write for truth forwarding.
@@ -72,6 +79,10 @@ public:
     std::shared_mutex& get_mtx_wp_result_set() { return mtx_wp_result_set_; }
 
     wp_result_set_type& get_wp_result_set() { return wp_result_set_; }
+
+    std::shared_mutex& get_mtx_write_range() { return mtx_write_range_; }
+
+    wp_write_range_type& get_write_range() { return write_range_; }
 
     /**
      * @brief check the space of write preserve.
@@ -136,6 +147,24 @@ public:
         return std::get<3>(elem);
     }
 
+    // about write range
+    // ==========
+    /**
+     * @details This is called only once or not called by each tx.
+    */
+    void push_write_range(std::size_t txid, std::string_view left_key,
+                          std::string_view right_key);
+
+    void remove_write_range(std::size_t txid);
+
+    /**
+     * @return true there is a entry
+     * @return false there is not an entry
+    */
+    bool read_write_range(std::size_t txid, std::string_view& out_left_key,
+                          std::string_view& out_right_key);
+    // ==========
+
 private:
     /**
      * @brief write preserve infomation.
@@ -161,6 +190,13 @@ private:
      * 
      */
     std::shared_mutex mtx_wp_result_set_;
+
+    // about write range
+    // ==========
+    std::shared_mutex mtx_write_range_;
+
+    wp_write_range_type write_range_;
+    // ==========
 };
 
 } // namespace shirakami::wp

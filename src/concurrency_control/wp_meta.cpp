@@ -144,6 +144,9 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
     auto ret = remove_wp_without_lock(wp_result_elem_extract_id(elem));
     if (ret == Status::OK) { return ret; }
     wp_lock_.unlock();
+
+    // clear wp write range info
+    remove_write_range(std::get<1>(elem));
     return ret;
 }
 
@@ -158,6 +161,43 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
     }
     LOG(ERROR) << log_location_prefix << "concurrent program error";
     return Status::WARN_NOT_FOUND;
+}
+
+void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
+                               std::string_view right_key) {
+    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
+
+    auto ret_pair = get_write_range().insert(
+            std::make_pair(txid, std::make_tuple(left_key, right_key)));
+    if (!ret_pair.second) {
+        // already exist, not inserted
+        LOG(ERROR) << log_location_prefix
+                   << "programming error. tx do this only once.";
+    }
+}
+
+void wp_meta::remove_write_range(std::size_t const txid) {
+    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
+
+    auto ret_num = get_write_range().erase(txid);
+    if (ret_num != 1) {
+        // can't erase
+        LOG(ERROR) << log_location_prefix
+                   << "programming error. it does once after push_write_range";
+    }
+}
+
+bool wp_meta::read_write_range(std::size_t txid, std::string_view& out_left_key,
+                               std::string_view& out_right_key) {
+    std::shared_lock<std::shared_mutex> lk{get_mtx_write_range()};
+
+    auto ret_itr = get_write_range().find(txid);
+    if (ret_itr == get_write_range().end()) { // not found
+        return false;
+    } // found
+    out_left_key = std::get<0>(ret_itr->second);
+    out_right_key = std::get<1>(ret_itr->second);
+    return true;
 }
 
 } // namespace shirakami::wp

@@ -168,6 +168,7 @@ public:
     void clear() {
         cont_for_occ_.clear();
         cont_for_bt_.clear();
+        storage_map_.clear();
     }
 
     Status erase(write_set_obj* wso);

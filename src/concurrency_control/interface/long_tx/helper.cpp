@@ -109,10 +109,24 @@ void update_wp_at_commit(session* const ti) {
                 break;
             }
         }
-        if (hit_actual) {
+        if (hit_actual) { // hit
+                          // prepare write range info
+            auto wr_itr =
+                    ti->get_write_set().get_storage_map().find(itr->first);
+            if (wr_itr == ti->get_write_set().get_storage_map().end()) {
+                // no hit
+                LOG(ERROR) << log_location_prefix << "programming error";
+            } else { // hit
+                std::string left_key = std::get<0>(wr_itr->second);
+                std::string right_key = std::get<1>(wr_itr->second);
+                // push writerange info
+                itr->second->push_write_range(ti->get_long_tx_id(), left_key,
+                                              right_key);
+            }
+            // inc itr
             ++itr;
             continue;
-        } // else
+        } // no hit
           /**
          * wp したが、実際には書かなかったストレージである。コミット処理前にこれを
          * 取り除く
