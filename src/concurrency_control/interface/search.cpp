@@ -39,7 +39,7 @@ Status exist_key_body(Token const token, Storage const storage, // NOLINT
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, dummy, false);
     } else {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     if (rc <= Status::OK) {
@@ -91,7 +91,7 @@ Status search_key_body(Token const token, Storage const storage, // NOLINT
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::search_key(ti, storage, key, value);
     } else {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     if (rc <= Status::OK) {

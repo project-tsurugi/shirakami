@@ -250,7 +250,7 @@ TEST_F(long_search_test,                                          // NOLINT
             continue;
         }
         if (ret == Status::OK) { break; }
-        LOG(ERROR) << ret;
+        LOG_FIRST_N(ERROR, 1) << ret;
         ASSERT_EQ(true, false);
     }
 

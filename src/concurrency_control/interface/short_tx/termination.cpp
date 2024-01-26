@@ -171,7 +171,7 @@ Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) {
-        LOG(ERROR) << "unreachable path. It strongly suspect that DML and DDL "
+        LOG_FIRST_N(ERROR, 1) << "unreachable path. It strongly suspect that DML and DDL "
                       "are mixed.";
     }
     auto wps{wm->get_wped()};
@@ -244,7 +244,7 @@ RETRY: // NOLINT
         // the key exists and is hooked.
         // point (*1)
         if (wso->get_rec_ptr() != rec_ptr) {
-            LOG(ERROR) << "The record pointer shouldn't be changed from read "
+            LOG_FIRST_N(ERROR, 1) << "The record pointer shouldn't be changed from read "
                           "phase.";
             return Status::ERR_CC;
         }
@@ -440,7 +440,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_KVS;
             }
         } else {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
 
@@ -547,7 +547,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             default: {
-                LOG(ERROR) << log_location_prefix << "impossible code path.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
                 return Status::ERR_FATAL;
             }
         }
@@ -576,7 +576,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 break;
             }
             default: {
-                LOG(ERROR) << log_location_prefix << "unknown operation type.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown operation type.";
                 return Status::ERR_FATAL;
             }
         }
@@ -612,7 +612,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 auto rc = process(&itr.second);
                 if (rc == Status::OK) { continue; }
                 if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-                LOG(ERROR) << log_location_prefix << "impossible code path.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
                 return Status::ERR_FATAL;
             }
         } else {
@@ -620,7 +620,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 auto rc = process(&itr);
                 if (rc == Status::OK) { continue; }
                 if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-                LOG(ERROR) << log_location_prefix << "impossible code path.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
                 return Status::ERR_FATAL;
             }
         }
@@ -730,7 +730,7 @@ extern Status commit(session* const ti) {
     rc = write_phase(ti, ce);
     if (rc != Status::OK) {
         if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
-        LOG(ERROR) << log_location_prefix << "impossible code path.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
         return Status::ERR_FATAL;
     }
 

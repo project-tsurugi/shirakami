@@ -32,7 +32,7 @@ static void process_before_return_not_found(session* const ti,
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "library programming error or"
                           "usage error (mixed dml and ddl?)";
             return;

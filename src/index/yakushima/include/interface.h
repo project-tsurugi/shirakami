@@ -31,7 +31,7 @@ Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
     if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG(ERROR) << log_location_prefix << "yakushima get error.";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima get error.";
     return Status::ERR_FATAL;
 }
 
@@ -100,7 +100,7 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
         return Status::WARN_NOT_FOUND;
     }
     if (rc == yakushima::status::OK) { return Status::OK; }
-    LOG(ERROR) << log_location_prefix << "yakushima scan error " << rc;
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima scan error " << rc;
     return Status::ERR_FATAL;
 }
 

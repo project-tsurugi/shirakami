@@ -70,11 +70,11 @@ Status tx_begin_body(transaction_options options) { // NOLINT
         ti->init_flags_for_rtx_begin();
         auto rc{read_only_tx::tx_begin(ti)};
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << rc << ", unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
             return rc;
         }
     } else {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     // begin success, set begin epoch

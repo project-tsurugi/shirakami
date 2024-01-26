@@ -23,7 +23,7 @@ Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     wp_lock_.unlock();
     return Status::ERR_FATAL;
 }
@@ -65,7 +65,7 @@ Status wp_meta::find_slot(std::size_t& at) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     return Status::WARN_NOT_FOUND;
 }
 
@@ -159,7 +159,7 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
             return Status::OK;
         }
     }
-    LOG(ERROR) << log_location_prefix << "concurrent program error";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "concurrent program error";
     return Status::WARN_NOT_FOUND;
 }
 
@@ -171,7 +171,7 @@ void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
             std::make_pair(txid, std::make_tuple(left_key, right_key)));
     if (!ret_pair.second) {
         // already exist, not inserted
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "programming error. tx do this only once.";
     }
 }
@@ -182,7 +182,7 @@ void wp_meta::remove_write_range(std::size_t const txid) {
     auto ret_num = get_write_range().erase(txid);
     if (ret_num != 1) {
         // can't erase
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "programming error. it does once after push_write_range";
     }
 }

@@ -68,7 +68,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         Record* rec_ptr = wso->get_rec_ptr();
         auto rs = ti->get_write_set().erase(wso);
         if (rs != Status::OK) {
-            LOG(ERROR) << "library programming error. about strand?: " << rs;
+            LOG_FIRST_N(ERROR, 1) << "library programming error. about strand?: " << rs;
         }
         if (!rc) {
             // if this was update
@@ -77,7 +77,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         }
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
-    LOG(ERROR) << log_location_prefix << "unknown code path";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown code path";
     return Status::ERR_FATAL;
 }
 
@@ -94,7 +94,7 @@ static void process_before_return_not_found(session* const ti,
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "unexpected error. library programming error or "
                           "usage error (mixed ddl and dml?)";
             return;
@@ -148,7 +148,7 @@ Status delete_record_body(Token token, Storage storage,
     if (rc == Status::WARN_STORAGE_NOT_FOUND) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG(ERROR) << log_location_prefix << "library programming error: " << rc;
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error: " << rc;
     return Status::ERR_FATAL;
 }
 

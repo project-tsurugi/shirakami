@@ -59,7 +59,7 @@ TEST_F(simple_update, concurrent_updates) { // NOLINT
                 res = search_key(s, storage, k, vb);
             }
             if (res != Status::OK) {
-                LOG(ERROR) << log_location_prefix << "fatal error";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "fatal error";
             }
             ASSERT_NE("", vb);
             v = *reinterpret_cast<std::int64_t*>( // NOLINT

@@ -51,7 +51,7 @@ Status acquire_tx_state_handle_body(Token const token, // NOLINT
             ts.set_kind(TxState::StateKind::STARTED);
         }
     } else {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -105,7 +105,7 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }
 #else
-            LOG(ERROR)
+            LOG_FIRST_N(ERROR, 1)
                     << log_location_prefix
                     << "if no logging, it must not be waiting_durabule status";
             return Status::ERR_FATAL;
@@ -134,7 +134,7 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
                 out.set_kind(TxState::StateKind::DURABLE); // for external
             }
 #else
-            LOG(ERROR)
+            LOG_FIRST_N(ERROR, 1)
                     << log_location_prefix
                     << "if no logging, it must not be waiting_durable status";
             return Status::ERR_FATAL;

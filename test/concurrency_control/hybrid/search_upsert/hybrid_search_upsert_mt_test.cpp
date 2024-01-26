@@ -115,7 +115,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                             ASSERT_EQ(bt, false); // fail only short
                             goto SHORT_TX_RETRY;  // NOLINT
                         } else {
-                            LOG(ERROR)
+                            LOG_FIRST_N(ERROR, 1)
                                     << log_location_prefix << rc << " " << bt;
                         }
                     }

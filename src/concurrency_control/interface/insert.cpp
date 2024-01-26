@@ -120,7 +120,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                     // register read_by_set
                     register_read_if_ltx(ti, rec_ptr);
                 } else {
-                    LOG(ERROR) << log_location_prefix
+                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                << "library programming error";
                     return Status::ERR_FATAL;
                 }

@@ -121,7 +121,7 @@ void epoch_thread_work() {
             // 0: no work to proceed
             if (ptp == 0) { continue; } // no work
             if (ptp < -1) {
-                LOG(ERROR) << log_location_prefix << log_location_prefix
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
                            << "unreachable path.";
                 return;
             }

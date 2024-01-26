@@ -375,7 +375,7 @@ public:
         auto expected = get_operating().load(std::memory_order_acquire);
         for (;;) {
             if (expected == 0) {
-                LOG(ERROR) << log_location_prefix << "programming error.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
                 break;
             }
             auto desired = expected - 1;

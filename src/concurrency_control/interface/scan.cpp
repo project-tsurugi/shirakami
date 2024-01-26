@@ -122,7 +122,7 @@ Status check_not_found(
                     }
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "unreachable path";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -252,7 +252,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr);
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
     // ==========
@@ -262,7 +262,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         wp::page_set_meta* psm{};
         rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
@@ -280,7 +280,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
         if (rc == Status::WARN_NOT_FOUND) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
@@ -292,7 +292,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         }
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -521,7 +521,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                     break;
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "unreachable path";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -787,7 +787,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             return rc;
         }
         if (rc != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
         }
 
@@ -850,7 +850,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::OK;
     }
 
-    LOG(ERROR) << log_location_prefix << "unreachable path";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     return Status::ERR_FATAL;
 }
 

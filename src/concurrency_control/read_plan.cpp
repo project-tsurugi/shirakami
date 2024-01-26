@@ -16,7 +16,7 @@ bool read_plan::check_potential_read_anti(
     std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
     for (auto elem : get_cont()) {
         if (elem.first > tx_id) {
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "container is ordered by tx id and it scan from low "
                           "number. why it missed own and see high priori?";
             return false;
@@ -47,7 +47,7 @@ bool read_plan::check_potential_read_anti(
         }
     }
 
-    LOG(ERROR) << log_location_prefix
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix
                << "container is ordered by tx id and it scan from low "
                   "number. why it missed own and see high priori?";
     return false;

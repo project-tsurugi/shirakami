@@ -110,7 +110,7 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
                 for (;;) {
                     auto rc{search_key(s, st, elem, vb)};
                     if (rc == Status::OK) { break; }
-                    LOG(ERROR) << log_location_prefix << rc;
+                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc;
                 }
 
                 std::size_t v{};
@@ -143,7 +143,7 @@ TEST_F(long_search_upsert_mt_test, batch_rmw) { // NOLINT
             }
             if (rc == Status::OK) { continue; }
             if (rc == Status::ERR_CC) { goto TX_BEGIN; } // NOLINT
-            LOG(ERROR) << log_location_prefix << rc;
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc;
         }
         ASSERT_EQ(leave(s), Status::OK);
     };

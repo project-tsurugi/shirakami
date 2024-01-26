@@ -42,7 +42,7 @@ RETRY:
 
     if (rc == Status::WARN_NOT_FOUND) { return rc; }
     if (rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -75,7 +75,7 @@ RETRY:
 
     // read non-latest version after version function
     if (ver == nullptr) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
     if (!ver->get_tid().get_absent()) {
         if (read_value) { ver->get_value(value); }

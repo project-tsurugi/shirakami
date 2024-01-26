@@ -61,7 +61,7 @@ void sequence::init() {
 Status sequence::generate_sequence_id(SequenceId& id) {
     id = id_generator_ctr().fetch_add(1);
     if (id == sequence::max_sequence_id) {
-        LOG(ERROR) << log_location_prefix << "sequence id depletion";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sequence id depletion";
         return Status::ERR_FATAL;
     }
     return Status::OK;
@@ -115,7 +115,7 @@ Status sequence::sequence_map_check_exist(SequenceId id) {
     } // found
 
     if (found_id_itr->second.empty()) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     } // not empty
 
@@ -153,7 +153,7 @@ Status sequence::sequence_map_push(SequenceId const id,
                 std::make_pair(epoch, std::make_tuple(version, value)));
         if (!ret2.second) {
             // This object must be operated by here.
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "When it tried to manipulate an object inserted into "
                           "map, it was already manipulated by someone else.";
             // maybe lack of mutex control
@@ -228,7 +228,7 @@ Status sequence::sequence_map_update(SequenceId const id,
     // check the sequence object whose id is the arguments of this function.
     auto found_id_itr = sequence::sequence_map().find(id);
     if (found_id_itr == sequence::sequence_map().end()) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     } // found
 
@@ -263,14 +263,14 @@ Status sequence::create_sequence(SequenceId* id) {
     // generate sequence id
     auto ret = sequence::generate_sequence_id(*id);
     if (ret == Status::ERR_FATAL) {
-        LOG(ERROR) << log_location_prefix << "sequence id depletion";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sequence id depletion";
         return ret;
     }
 
     // generate sequence object
     ret = sequence::sequence_map_push(*id);
     if (ret == Status::WARN_ALREADY_EXISTS) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Unexpected behavior. Id is already exist: " << *id;
         return Status::ERR_FATAL;
     }
@@ -295,20 +295,20 @@ Status sequence::create_sequence(SequenceId* id) {
                  sizeof(initial_value));
     ret = tx_begin({token, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "There is no way that short tx will fail to start here. "
                    << ret;
     }
     ret = upsert(token, storage::sequence_storage, key, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "There is no way that upsert will fail to start here: "
                    << ret;
         return Status::ERR_FATAL;
     }
     ret = commit(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "There is no way that 1 upsert only"
                       "stx will fail here";
         return Status::ERR_FATAL;
@@ -317,7 +317,7 @@ Status sequence::create_sequence(SequenceId* id) {
     // cleanup transaction handle
     ret = leave(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "There is no way that leave will fail here";
         return Status::ERR_FATAL;
     }
@@ -352,7 +352,7 @@ Status sequence::read_sequence(SequenceId const id,
     auto ret = sequence::sequence_map_find(id, out);
     if (ret == Status::WARN_NOT_FOUND) { return ret; }
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -380,7 +380,7 @@ Status sequence::delete_sequence(SequenceId const id) {
         return ret;
     }
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -404,18 +404,18 @@ Status sequence::delete_sequence(SequenceId const id) {
                      sizeof(value));
     ret = tx_begin({token, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "there is no way stx begin will fail here. " << ret;
     }
     ret = upsert(token, storage::sequence_storage, key, new_value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "there is no way stx's upsert will fail here";
         return Status::ERR_FATAL;
     }
     ret = commit(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "there is no way commit will fail here.";
         return Status::ERR_FATAL;
     }
@@ -424,7 +424,7 @@ Status sequence::delete_sequence(SequenceId const id) {
     auto epoch = static_cast<session*>(token)->get_mrc_tid().get_epoch();
     ret = sequence::sequence_map_update(id, epoch, version, value);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "there is no way sequence map update will fail here.";
         return Status::ERR_FATAL;
     }
@@ -432,7 +432,7 @@ Status sequence::delete_sequence(SequenceId const id) {
     // cleanup transaction handle
     ret = leave(token);
     if (ret != Status::OK) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "there is no way leave will fail here.";
         return Status::ERR_FATAL;
     }

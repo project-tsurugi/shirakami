@@ -273,7 +273,7 @@ private:
     try {
         boost::filesystem::remove_all(path);
     } catch (boost::filesystem::filesystem_error& ex) {
-        LOG(ERROR) << log_location_prefix << "file system error: " << ex.what()
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "file system error: " << ex.what()
                    << " : " << path;
     }
 }

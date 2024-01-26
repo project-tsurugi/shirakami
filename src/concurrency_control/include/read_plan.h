@@ -56,7 +56,7 @@ public:
             // found
             return itr->second;
         }
-        LOG(ERROR) << log_location_prefix << "may be some error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "may be some error.";
         return {};
     }
 

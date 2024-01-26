@@ -68,7 +68,7 @@ void session::commit_sequence(tid_word ctid) {
             continue;
         }
         if (ret != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             itr = ss.erase(itr);
             continue;
         }
@@ -96,7 +96,7 @@ void session::commit_sequence(tid_word ctid) {
         auto epoch = ctid.get_epoch();
         ret = sequence::sequence_map_update(id, epoch, version, value);
         if (ret != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "unreachable path";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return;
         }
         ++itr;
@@ -128,7 +128,7 @@ std::set<std::size_t> session::extract_wait_for() {
 
 Status session::find_high_priority_short() const {
     if (get_tx_type() == transaction_options::transaction_type::SHORT) {
-        LOG(ERROR) << log_location_prefix << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
 

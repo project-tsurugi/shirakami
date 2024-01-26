@@ -51,7 +51,7 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
     CPU_SET(my_id % local_n_processors, &cpu_set); // NOLINT
 
     if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) {
-        LOG(ERROR);
+        LOG_FIRST_N(ERROR, 1);
         return;
     }
 }
@@ -60,7 +60,7 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
     pid_t pid = syscall(SYS_gettid); // NOLINT
 
     if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) {
-        LOG(ERROR);
+        LOG_FIRST_N(ERROR, 1);
         return;
     }
 }
@@ -70,7 +70,7 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
     cpu_set_t result;
 
     if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) {
-        LOG(ERROR);
+        LOG_FIRST_N(ERROR, 1);
         return result;
     }
 

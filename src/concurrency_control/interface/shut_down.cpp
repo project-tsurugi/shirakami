@@ -167,7 +167,7 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
     // clear flag
     set_initialized(false);
 } catch (std::exception& e) {
-    LOG(ERROR) << log_location_prefix << e.what();
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << e.what();
     return;
 }
 

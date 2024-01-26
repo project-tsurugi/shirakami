@@ -95,7 +95,7 @@ TEST_F(search_update, // NOLINT
 
             cond.wait(lk, [&ready] { return ready == 2; });
         }
-        if (ready != 2) { LOG(ERROR); }
+        if (ready != 2) { LOG_FIRST_N(ERROR, 1); }
 
         LOG(INFO) << "start work";
 
@@ -113,7 +113,7 @@ TEST_F(search_update, // NOLINT
                 if (rc == Status::WARN_NOT_FOUND) {
                     rc = search_key(s, st, k, vb);
                 } else {
-                    LOG(ERROR) << rc;
+                    LOG_FIRST_N(ERROR, 1) << rc;
                 }
             }
             ASSERT_EQ(Status::OK, update(s, st, k, v));

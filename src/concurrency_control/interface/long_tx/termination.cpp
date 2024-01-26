@@ -292,7 +292,7 @@ static inline void expose_local_write(
                 break;
             }
             default: {
-                LOG(ERROR) << log_location_prefix << "unknown operation type.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown operation type.";
                 break;
             }
         }
@@ -322,7 +322,7 @@ static inline void expose_local_write(
                     break;
                 }
                 default: {
-                    LOG(ERROR)
+                    LOG_FIRST_N(ERROR, 1)
                             << log_location_prefix << "unknown operation type.";
                     return Status::ERR_FATAL;
                 }
@@ -379,7 +379,7 @@ static inline void register_wp_result_and_remove_wps(
             // check the ptr was not changed
             (ret == Status::OK &&
              elem.second != target_psm_ptr->get_wp_meta_ptr())) {
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "Error. Suspected mix of DML and DDL";
             continue;
         }
@@ -401,7 +401,7 @@ static inline void register_wp_result_and_remove_wps(
                     std::make_tuple(write_something,
                                     std::string(write_range_left),
                                     std::string(write_range_right)))))) {
-            LOG(ERROR) << "Fail to register wp result and remove wp.";
+            LOG_FIRST_N(ERROR, 1) << "Fail to register wp result and remove wp.";
         }
     }
 }
@@ -673,7 +673,7 @@ Status verify(session* const ti) {
                             return Status::ERR_CC;
                         }
                     } else {
-                        LOG(ERROR) << log_location_prefix
+                        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                    << "Fail to find wp page set meta.";
                         return Status::ERR_FATAL;
                     }
@@ -811,7 +811,7 @@ extern Status commit(session* const ti) {
         goto END_COMMIT; // NOLINT
     }
     if (rc != Status::OK) {
-        LOG(ERROR) << log_location_prefix << "library programming error. " << rc;
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error. " << rc;
         return rc;
     }
 
@@ -915,7 +915,7 @@ extern Status commit(session* const ti) {
         // set transaction result
         ti->set_result(reason_code::UNKNOWN);
     } else {
-        LOG(ERROR) << "library programming error.";
+        LOG_FIRST_N(ERROR, 1) << "library programming error.";
     }
 
 END_COMMIT: // NOLINT
