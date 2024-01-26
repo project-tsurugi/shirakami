@@ -372,9 +372,6 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 nvec_delta = 1;
                 rc = add_ns(1);
                 if (rc == Status::ERR_CC) {
-                    short_tx::abort(ti);
-                    ti->get_result_info().set_storage_name(storage);
-                    ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                     return rc;
                 }
 
@@ -383,9 +380,6 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 nvec_delta = 2;
                 rc = add_ns(2);
                 if (rc == Status::ERR_CC) {
-                    short_tx::abort(ti);
-                    ti->get_result_info().set_storage_name(storage);
-                    ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                     return rc;
                 }
             }
