@@ -161,8 +161,8 @@ public:
      * @return true there is a entry
      * @return false there is not an entry
     */
-    bool read_write_range(std::size_t txid, std::string_view& out_left_key,
-                          std::string_view& out_right_key);
+    bool read_write_range(std::size_t txid, std::string& out_left_key,
+                          std::string& out_right_key);
     // ==========
 
 private:

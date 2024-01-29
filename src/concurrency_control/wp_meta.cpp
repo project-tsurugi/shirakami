@@ -187,8 +187,8 @@ void wp_meta::remove_write_range(std::size_t const txid) {
     }
 }
 
-bool wp_meta::read_write_range(std::size_t txid, std::string_view& out_left_key,
-                               std::string_view& out_right_key) {
+bool wp_meta::read_write_range(std::size_t txid, std::string& out_left_key,
+                               std::string& out_right_key) {
     std::shared_lock<std::shared_mutex> lk{get_mtx_write_range()};
 
     auto ret_itr = get_write_range().find(txid);
