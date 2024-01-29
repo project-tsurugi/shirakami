@@ -99,8 +99,8 @@ enum class Status : std::int32_t {
     WARN_CANCEL_PREVIOUS_UPSERT,
     /**
      * @brief Warning.
-     * @details The transaction failed operation due to concurrent insert 
-     * operation.
+     * @details The transaction found other insert transaction. User can continue
+     * or abort the transaction.
      */
     WARN_CONCURRENT_INSERT,
     /**

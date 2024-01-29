@@ -147,8 +147,10 @@ Status enter(Token& token); // NOLINT
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
- * other's insert.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
+ * The user can continue this transaction or end the transaction with 
+ * abort. If this page is unchanged at the time the transaction is requested to 
+ * commit, this operation will not cause a failure by the insert transaction.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
@@ -207,8 +209,10 @@ Status init(database_options options = {}); // NOLINT
  * exists in db, so this function returned immediately. And it is treated that 
  * the read operation for the record was executed by this operation to depend on
  *  existing the record.
- * @return Status::WARN_CONCURRENT_INSERT This operation is canceled due to 
- * concurrent insert by other tx.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
+ * The user can continue this transaction or end the transaction with 
+ * abort. If this page is unchanged at the time the transaction is requested to 
+ * commit, this operation will not cause a failure by the insert transaction.
  * @return Status::WARN_ILLEGAL_OPERATION You execute insert on read only 
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
@@ -349,8 +353,10 @@ Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT This search was interrupted by 
- * other's insert.
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
+ * The user can continue this transaction or end the transaction with 
+ * abort. If this page is unchanged at the time the transaction is requested to 
+ * commit, this operation will not cause a failure by the insert transaction.
  * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
