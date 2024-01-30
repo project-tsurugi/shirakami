@@ -19,13 +19,15 @@ class session;
 class read_plan {
 public:
     using read_area_type = transaction_options::read_area;
+    using plist_type =
+            std::set<std::tuple<Storage, bool, std::string, std::string>>;
+    using nlist_type = std::set<Storage>;
+
     /**
      * @details std::tuple: read area, whether commit was requested, left of 
      * read range, right of read range
     */
-    using cont_type =
-            std::map<std::size_t, std::tuple<read_area_type, bool, std::string,
-                                             std::string>>;
+    using cont_type = std::map<std::size_t, std::tuple<plist_type, nlist_type>>;
 
     static void clear() {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
@@ -41,9 +43,14 @@ public:
         clear();
     }
 
+    // for tx begin
     static void add_elem(std::size_t const tx_id, read_area_type const& ra) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
-        get_cont()[tx_id] = std::make_tuple(ra, false, "", "");
+        plist_type tmp_plist;
+        for (auto&& elem : ra.get_positive_list()) {
+            tmp_plist.insert(std::make_tuple(elem, false, "", ""));
+        }
+        get_cont()[tx_id] = std::make_tuple(tmp_plist, ra.get_negative_list());
     }
 
     static void remove_elem(std::size_t const tx_id) {
@@ -55,6 +62,8 @@ public:
         }
     }
 
+#if 0
+// todo remove
     static read_area_type get_elem(std::size_t const tx_id) {
         std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
         auto itr = get_cont().find(tx_id);
@@ -65,6 +74,7 @@ public:
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "may be some error.";
         return {};
     }
+#endif
 
     static bool
     check_potential_read_anti(std::size_t tx_id,
