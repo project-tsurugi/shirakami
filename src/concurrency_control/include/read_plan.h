@@ -19,7 +19,13 @@ class session;
 class read_plan {
 public:
     using read_area_type = transaction_options::read_area;
-    using cont_type = std::map<std::size_t, read_area_type>;
+    /**
+     * @details std::tuple: read area, whether commit was requested, left of 
+     * read range, right of read range
+    */
+    using cont_type =
+            std::map<std::size_t, std::tuple<read_area_type, bool, std::string,
+                                             std::string>>;
 
     static void clear() {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
@@ -37,7 +43,7 @@ public:
 
     static void add_elem(std::size_t const tx_id, read_area_type const& ra) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
-        get_cont()[tx_id] = ra;
+        get_cont()[tx_id] = std::make_tuple(ra, false, "", "");
     }
 
     static void remove_elem(std::size_t const tx_id) {
@@ -54,7 +60,7 @@ public:
         auto itr = get_cont().find(tx_id);
         if (itr != get_cont().end()) {
             // found
-            return itr->second;
+            return std::get<0>(itr->second);
         }
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "may be some error.";
         return {};

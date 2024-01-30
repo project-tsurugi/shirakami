@@ -23,8 +23,8 @@ bool read_plan::check_potential_read_anti(
         }
         if (elem.first == tx_id) { return false; }
         // elem is high priori tx
-        auto plist = elem.second.get_positive_list();
-        auto nlist = elem.second.get_negative_list();
+        auto plist = std::get<0>(elem.second).get_positive_list();
+        auto nlist = std::get<0>(elem.second).get_negative_list();
 
         // cond1 empty and empty
         if (plist.empty() && nlist.empty()) {

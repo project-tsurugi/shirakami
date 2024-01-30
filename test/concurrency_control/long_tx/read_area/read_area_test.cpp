@@ -60,8 +60,8 @@ TEST_F(read_area_test, register_same_st) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 1);
     }
 
     // check local worker info
@@ -97,8 +97,8 @@ TEST_F(read_area_test, register_and_remove_posi_only_commit) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 0);
     }
 
     // commit erase above info
@@ -130,8 +130,8 @@ TEST_F(read_area_test, register_and_remove_nega_only_commit) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 0);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 1);
     }
 
     // commit erase above info
@@ -162,8 +162,8 @@ TEST_F(read_area_test, register_and_remove_posi_only_abort) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 0);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 0);
     }
 
     // commit erase above info
@@ -195,8 +195,8 @@ TEST_F(read_area_test, register_and_remove_nega_only_abort) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 0);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 0);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 1);
     }
 
     // commit erase above info
@@ -235,8 +235,8 @@ TEST_F(read_area_test, conflict_positive_negative) { // NOLINT
         std::shared_lock<std::shared_mutex> lk{read_plan::get_mtx_cont()};
         ASSERT_EQ(read_plan::get_cont().size(), 1);
         auto ra = *read_plan::get_cont().begin();
-        ASSERT_EQ(ra.second.get_positive_list().size(), 1);
-        ASSERT_EQ(ra.second.get_negative_list().size(), 2);
+        ASSERT_EQ(std::get<0>(ra.second).get_positive_list().size(), 1);
+        ASSERT_EQ(std::get<0>(ra.second).get_negative_list().size(), 2);
     }
 
     // check local worker info
