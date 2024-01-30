@@ -53,6 +53,13 @@ public:
         get_cont()[tx_id] = std::make_tuple(tmp_plist, ra.get_negative_list());
     }
 
+    // for commit submit
+    static void add_elem(std::size_t const tx_id, plist_type pl,
+                         nlist_type nl) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
+        get_cont()[tx_id] = std::make_tuple(pl, nl);
+    }
+
     static void remove_elem(std::size_t const tx_id) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
         auto itr = get_cont().find(tx_id);
@@ -61,20 +68,6 @@ public:
             get_cont().erase(tx_id);
         }
     }
-
-#if 0
-// todo remove
-    static read_area_type get_elem(std::size_t const tx_id) {
-        std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
-        auto itr = get_cont().find(tx_id);
-        if (itr != get_cont().end()) {
-            // found
-            return std::get<0>(itr->second);
-        }
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "may be some error.";
-        return {};
-    }
-#endif
 
     static bool
     check_potential_read_anti(std::size_t tx_id,
