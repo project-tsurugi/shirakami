@@ -425,7 +425,8 @@ public:
         }
     }
 
-    void insert_to_ltx_storage_read_set(Storage const st, std::string key) {
+    void insert_to_ltx_storage_read_set(Storage const st,
+                                        std::string const& key) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
         // find entry
         auto itr = get_ltx_storage_read_set().find(st);
@@ -441,12 +442,13 @@ public:
             scan_endpoint& now_rpoint = std::get<3>(itr->second);
 
             // check initialize
-            if (now_lkey == "" && now_lpoint == scan_endpoint::EXCLUSIVE &&
-                now_rkey == "" && now_rpoint == scan_endpoint::EXCLUSIVE) {
+            if (now_lkey.empty() && now_lpoint == scan_endpoint::EXCLUSIVE &&
+                now_rkey.empty() && now_rpoint == scan_endpoint::EXCLUSIVE) {
                 now_lkey = key;
                 now_rkey = key;
                 now_lpoint = scan_endpoint::INCLUSIVE;
                 now_rpoint = scan_endpoint::INCLUSIVE;
+                return;
             }
 
             // hit, check left key

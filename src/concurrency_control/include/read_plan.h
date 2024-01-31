@@ -57,8 +57,8 @@ public:
     }
 
     // for commit submit
-    static void add_elem(std::size_t const tx_id, plist_type pl,
-                         nlist_type nl) {
+    static void add_elem(std::size_t const tx_id, plist_type const& pl,
+                         nlist_type const& nl) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
         get_cont()[tx_id] = std::make_tuple(pl, nl);
     }
