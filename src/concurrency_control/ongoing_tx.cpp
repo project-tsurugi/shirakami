@@ -218,14 +218,8 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
         // wait.
         // check about write
         if (has_wp) {
-            // create storage set
-            std::set<Storage> st_set;
-            for (auto&& elem : ti->get_write_set().get_storage_map()) {
-                st_set.insert(elem.first);
-            }
-
             // check potential read-anti and read area for each write storage
-            bool ret = read_plan::check_potential_read_anti(id, st_set);
+            bool ret = read_plan::check_potential_read_anti(id, ti);
             if (!ret) {
                 // no need to read wait and it can try IWR
                 return false;

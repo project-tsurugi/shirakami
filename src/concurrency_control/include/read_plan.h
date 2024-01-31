@@ -72,9 +72,7 @@ public:
         }
     }
 
-    static bool
-    check_potential_read_anti(std::size_t tx_id,
-                              std::set<Storage> const& write_storages);
+    static bool check_potential_read_anti(std::size_t tx_id, Token token);
 
     // getter / setter
     static cont_type& get_cont() { return cont_; }
