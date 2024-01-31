@@ -154,6 +154,7 @@ Status search_key(session* ti, Storage const storage,
         ti->get_range_read_set_for_ltx().insert(std::make_tuple(
                 rrbp, std::string(key), scan_endpoint::INCLUSIVE,
                 std::string(key), scan_endpoint::INCLUSIVE));
+        ti->insert_to_ltx_storage_read_set(storage, std::string(key));
         return Status::OK;
     };
 
@@ -173,6 +174,7 @@ Status search_key(session* ti, Storage const storage,
                 // note: read own upsert don't need to log read info.
                 create_read_set_for_read_info(ti, rec_ptr);
             }
+            ti->insert_to_ltx_storage_read_set(storage, std::string(key));
             return rc;
         }
         if (rc == Status::WARN_NOT_FOUND) { return rc; }
@@ -181,6 +183,7 @@ Status search_key(session* ti, Storage const storage,
     rc = version_traverse_and_read(ti, rec_ptr, value, read_value);
     if (rc == Status::OK) {
         create_read_set_for_read_info(ti, rec_ptr);
+        ti->insert_to_ltx_storage_read_set(storage, std::string(key));
     } else if (rc == Status::WARN_NOT_FOUND) {
         process_at_no_found();
     }

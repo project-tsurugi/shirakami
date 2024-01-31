@@ -292,7 +292,8 @@ static inline void expose_local_write(
                 break;
             }
             default: {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown operation type.";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unknown operation type.";
                 break;
             }
         }
@@ -380,7 +381,7 @@ static inline void register_wp_result_and_remove_wps(
             (ret == Status::OK &&
              elem.second != target_psm_ptr->get_wp_meta_ptr())) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                       << "Error. Suspected mix of DML and DDL";
+                                  << "Error. Suspected mix of DML and DDL";
             continue;
         }
 
@@ -401,7 +402,8 @@ static inline void register_wp_result_and_remove_wps(
                     std::make_tuple(write_something,
                                     std::string(write_range_left),
                                     std::string(write_range_right)))))) {
-            LOG_FIRST_N(ERROR, 1) << "Fail to register wp result and remove wp.";
+            LOG_FIRST_N(ERROR, 1)
+                    << "Fail to register wp result and remove wp.";
         }
     }
 }
@@ -673,8 +675,9 @@ Status verify(session* const ti) {
                             return Status::ERR_CC;
                         }
                     } else {
-                        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                   << "Fail to find wp page set meta.";
+                        LOG_FIRST_N(ERROR, 1)
+                                << log_location_prefix
+                                << "Fail to find wp page set meta.";
                         return Status::ERR_FATAL;
                     }
                 }
@@ -742,8 +745,15 @@ void update_read_area(session* const ti) {
     }
 
     // update
-    read_plan::add_elem(ti->get_long_tx_id(),
-                        {{ti->get_ltx_storage_read_set()}, {}});
+    read_plan::plist_type plist;
+    read_plan::nlist_type nlist;
+    for (auto&& elem : ti->get_ltx_storage_read_set()) {
+        plist.insert(std::make_tuple(elem.first, true, std::get<0>(elem.second),
+                                     std::get<1>(elem.second),
+                                     std::get<2>(elem.second),
+                                     std::get<3>(elem.second)));
+    }
+    read_plan::add_elem(ti->get_long_tx_id(), plist, nlist);
 }
 
 void call_commit_callback(commit_callback_type const& cb, Status sc,
@@ -811,7 +821,8 @@ extern Status commit(session* const ti) {
         goto END_COMMIT; // NOLINT
     }
     if (rc != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error. " << rc;
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error. " << rc;
         return rc;
     }
 

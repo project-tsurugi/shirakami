@@ -19,14 +19,15 @@ class session;
 class read_plan {
 public:
     using read_area_type = transaction_options::read_area;
+    /**
+     * @details std::tuple: storage area, whether commit was requested, left key,
+     * left endpoint, right key, right endpoint.
+    */
     using plist_type =
-            std::set<std::tuple<Storage, bool, std::string, std::string>>;
+            std::set<std::tuple<Storage, bool, std::string, scan_endpoint,
+                                std::string, scan_endpoint>>;
     using nlist_type = std::set<Storage>;
 
-    /**
-     * @details std::tuple: read area, whether commit was requested, left of 
-     * read range, right of read range
-    */
     using cont_type = std::map<std::size_t, std::tuple<plist_type, nlist_type>>;
 
     static void clear() {
@@ -48,7 +49,9 @@ public:
         std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
         plist_type tmp_plist;
         for (auto&& elem : ra.get_positive_list()) {
-            tmp_plist.insert(std::make_tuple(elem, false, "", ""));
+            tmp_plist.insert(std::make_tuple(elem, false, "",
+                                             scan_endpoint::EXCLUSIVE, "",
+                                             scan_endpoint::EXCLUSIVE));
         }
         get_cont()[tx_id] = std::make_tuple(tmp_plist, ra.get_negative_list());
     }

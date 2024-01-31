@@ -122,7 +122,8 @@ Status check_not_found(
                     }
                 }
             } else {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -371,17 +372,13 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             if (scan_res.size() + 1 == nvec.size()) {
                 nvec_delta = 1;
                 rc = add_ns(1);
-                if (rc == Status::ERR_CC) {
-                    return rc;
-                }
+                if (rc == Status::ERR_CC) { return rc; }
 
 
             } else if (scan_res.size() + 2 == nvec.size()) {
                 nvec_delta = 2;
                 rc = add_ns(2);
-                if (rc == Status::ERR_CC) {
-                    return rc;
-                }
+                if (rc == Status::ERR_CC) { return rc; }
             }
         }
     }
@@ -515,7 +512,8 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                     break;
                 }
             } else {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path";
                 return Status::ERR_FATAL;
             }
         } else if (tid.get_latest()) {
@@ -841,6 +839,11 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // check max epoch of read version
         register_read_version_max_epoch(ver->get_tid().get_epoch());
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
+        // ok case
+        std::string key_buf{};
+        rec_ptr->get_key(key_buf);
+        ti->insert_to_ltx_storage_read_set(
+                sh.get_scanned_storage_set().get(handle), key_buf);
         return Status::OK;
     }
 

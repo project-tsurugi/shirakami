@@ -52,7 +52,9 @@ public:
                      std::tuple<std::set<std::size_t>,
                                 std::tuple<std::string, scan_endpoint,
                                            std::string, scan_endpoint, bool>>>;
-    using ltx_storage_read_set_type = std::set<Storage>;
+    using ltx_storage_read_set_type =
+            std::map<Storage, std::tuple<std::string, scan_endpoint,
+                                         std::string, scan_endpoint>>;
     static constexpr std::uint64_t initial_mrc_tid{0};
 
 
@@ -375,7 +377,8 @@ public:
         auto expected = get_operating().load(std::memory_order_acquire);
         for (;;) {
             if (expected == 0) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "programming error.";
                 break;
             }
             auto desired = expected - 1;
@@ -412,7 +415,61 @@ public:
 
     void insert_to_ltx_storage_read_set(Storage const st) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
-        get_ltx_storage_read_set().insert(st);
+        // find entry
+        auto itr = get_ltx_storage_read_set().find(st);
+        if (itr == get_ltx_storage_read_set().end()) {
+            // no hit
+            get_ltx_storage_read_set().insert(std::make_pair(
+                    st, std::make_tuple("", scan_endpoint::EXCLUSIVE, "",
+                                        scan_endpoint::EXCLUSIVE)));
+        }
+    }
+
+    void insert_to_ltx_storage_read_set(Storage const st, std::string key) {
+        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        // find entry
+        auto itr = get_ltx_storage_read_set().find(st);
+        if (itr == get_ltx_storage_read_set().end()) {
+            // no hit
+            get_ltx_storage_read_set().insert(std::make_pair(
+                    st, std::make_tuple(key, scan_endpoint::INCLUSIVE, key,
+                                        scan_endpoint::INCLUSIVE)));
+        } else {
+            std::string& now_lkey = std::get<0>(itr->second);
+            scan_endpoint& now_lpoint = std::get<1>(itr->second);
+            std::string& now_rkey = std::get<2>(itr->second);
+            scan_endpoint& now_rpoint = std::get<3>(itr->second);
+
+            // check initialize
+            if (now_lkey == "" && now_lpoint == scan_endpoint::EXCLUSIVE &&
+                now_rkey == "" && now_rpoint == scan_endpoint::EXCLUSIVE) {
+                now_lkey = key;
+                now_rkey = key;
+                now_lpoint = scan_endpoint::INCLUSIVE;
+                now_rpoint = scan_endpoint::INCLUSIVE;
+            }
+
+            // hit, check left key
+            if (key < now_lkey) {
+                now_lkey = key;
+                if (now_lpoint == scan_endpoint::EXCLUSIVE) {
+                    now_lpoint = scan_endpoint::INCLUSIVE;
+                }
+            }
+            if (key == now_lkey && now_lpoint == scan_endpoint::EXCLUSIVE) {
+                now_lpoint = scan_endpoint::INCLUSIVE;
+            }
+            // check right key
+            if (now_rkey < key) {
+                now_rkey = key;
+                if (now_rpoint == scan_endpoint::EXCLUSIVE) {
+                    now_rpoint = scan_endpoint::INCLUSIVE;
+                }
+            }
+            if (key == now_rkey && now_rpoint == scan_endpoint::EXCLUSIVE) {
+                now_rpoint = scan_endpoint::INCLUSIVE;
+            }
+        }
     }
 
     void push_to_read_set_for_stx(read_set_obj&& elem) {
