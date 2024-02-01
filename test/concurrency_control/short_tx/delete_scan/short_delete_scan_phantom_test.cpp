@@ -82,6 +82,53 @@ TEST_F(short_delete_short_search, delete_cant_cause_phantom) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s2));
 }
 
+TEST_F(short_delete_short_search, delete_cant_cause_phantom_len9) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_EQ(Status::OK, create_storage("", st));
+
+    // adjust timing
+    wait_epoch_update();
+
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(upsert(s, st, "a12345678", ""), Status::OK);
+    ASSERT_EQ(upsert(s, st, "b12345678", ""), Status::OK);
+    ASSERT_EQ(upsert(s, st, "c12345678", ""), Status::OK);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "c12345678"));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    wait_epoch_update();
+
+    // test
+
+    // scan including deleted record (before shirakami GC)
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
+                                    scan_endpoint::INF, hd));
+    // sleep so much considering gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+
+    std::string vb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb)); // XXX: fail
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+    // cleanup
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(short_delete_short_search,             // NOLINT
        delete_cant_cause_node_modification) { // NOLINT
     // prepare
