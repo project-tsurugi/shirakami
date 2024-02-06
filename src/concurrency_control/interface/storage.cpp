@@ -151,7 +151,7 @@ Status get_storage(std::string_view key, Storage& out) {
     shirakami_log_entry << "get_storage " << shirakami_binstring(key)
                         << ", out: " << out;
     auto ret = get_storage_body(key, out);
-    shirakami_log_exit << "get_storage, " << ret;
+    shirakami_log_exit << "get_storage, " << ret << ", " << out;
     return ret;
 }
 
