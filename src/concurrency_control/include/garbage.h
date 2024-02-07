@@ -11,6 +11,8 @@
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/version.h"
 
+#include "database/include/logging.h"
+
 #include "shirakami/storage_options.h"
 
 #include "glog/logging.h"

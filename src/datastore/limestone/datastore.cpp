@@ -47,10 +47,6 @@ void recovery_from_datastore() {
     /**
      * The cursor point the first entry at calling first next(). 
      */
-    yakushima::Token tk{};
-    if (yakushima::enter(tk) != yakushima::status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima enter error.";
-    }
     std::vector<Storage> st_list{};
 
     auto cursor = ss->get_cursor();
@@ -197,11 +193,6 @@ void recovery_from_datastore() {
     // recovery storage meta
     if (!st_list.empty()) { recovery_storage_meta(st_list); }
     // recovery epoch info
-    // TODO
-    if (yakushima::leave(tk) != yakushima::status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-        return;
-    }
 }
 
 void scan_all_and_logging() {

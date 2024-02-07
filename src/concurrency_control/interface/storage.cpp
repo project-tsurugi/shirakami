@@ -39,11 +39,13 @@ void write_storage_metadata(std::string_view key, Storage st,
     value.append(payload);
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error.";
     }
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error.";
         return;
     }
     if (commit(s) == Status::OK) {
@@ -59,14 +61,16 @@ void remove_storage_metadata(std::string_view key) {
     std::string value{};
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error.";
     }
     ret = delete_record(s, storage::meta_storage, key);
     if (ret != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "unreachable path, It can't find the record which must "
-                      "exist.: "
-                   << s << ", " << storage::meta_storage << ", " << key;
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "unreachable path, It can't find the record which must "
+                   "exist.: "
+                << s << ", " << storage::meta_storage << ", " << key;
         return;
     }
     if (commit(s) == Status::OK) {
@@ -181,13 +185,15 @@ Status storage_get_options_body(Storage storage, storage_option& options) {
     for (;;) {
         ret = tx_begin({s, transaction_options::transaction_type::SHORT});
         if (ret != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error.";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << "library programming error.";
         }
         ret = search_key(s, storage::meta_storage, key, value);
         if (ret != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path: " << s
-                       << ", " << storage::meta_storage << ", " << key << ", "
-                       << value << ret;
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << "unreachable path: " << s << ", "
+                    << storage::meta_storage << ", " << key << ", " << value
+                    << ret;
             return Status::ERR_FATAL;
         }
         if (commit(s) == Status::OK) { break; } // NOLINT
@@ -247,8 +253,8 @@ Status storage_set_options_body(Storage storage,
     // store and log information
     ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error. "
-                   << ret;
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error. " << ret;
     }
     ret = upsert(s, storage::meta_storage, key, value);
     if (ret != Status::OK) {
@@ -259,7 +265,8 @@ Status storage_set_options_body(Storage storage,
         leave(s);
         return Status::OK;
     } // else
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error.";
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                          << "library programming error.";
     return Status::ERR_FATAL;
 }
 
@@ -300,12 +307,15 @@ Status storage::register_storage(Storage storage, storage_option options) {
                 storage_view, &page_set_meta_ptr,
                 sizeof(page_set_meta_ptr)); // NOLINT
         if (yakushima::status::OK != rc) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << rc << ", unreachable path";
+            yakushima::leave(ytoken);
             return Status::ERR_FATAL_INDEX;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL_INDEX;
         }
     }
@@ -423,9 +433,10 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "missing error" << std::endl
-                       << " " << page_set_meta_storage << " " << storage
-                       << std::endl;
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << "missing error" << std::endl
+                    << " " << page_set_meta_storage << " " << storage
+                    << std::endl;
             return Status::ERR_FATAL;
         }
         delete reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT
@@ -436,18 +447,21 @@ Status storage::delete_storage(Storage storage) {
                  sizeof(page_set_meta_storage)},
                 storage_view);
         if (yakushima::status::OK != rc) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL;
         }
         rc = yakushima::leave(ytoken);
         if (yakushima::status::OK != rc) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << rc << ", unreachable path";
             return Status::ERR_FATAL;
         }
     }
     auto rc = yakushima::delete_storage(storage_view);
     if (yakushima::status::OK != rc) { // NOLINT
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << rc << ", unreachable path";
         return Status::ERR_FATAL;
     }
 
@@ -459,7 +473,7 @@ Status storage::list_storage(std::vector<Storage>& out) {
     yakushima::list_storages(rec);
     if (rec.empty()) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "There must be wp meta storage at least.";
+                              << "There must be wp meta storage at least.";
         return Status::ERR_FATAL;
     }
     out.clear();

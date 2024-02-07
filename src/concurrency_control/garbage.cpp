@@ -58,8 +58,8 @@ void work_manager() {
         if (min_step_epoch != epoch::max_epoch) {
             // find some living tx
             if (min_step_epoch < epoch::initial_epoch) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
-                           << "epoch error";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                                      << log_location_prefix << "epoch error";
             }
             set_min_step_epoch(min_step_epoch);
         } else {
@@ -89,7 +89,7 @@ version* find_latest_invisible_version_from_batch(
     if (ver == nullptr) {
         // assert. unreachable path
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
-                   << "unreachable path";
+                              << "unreachable path";
     }
     // gathering stats info
     ++average_version_list_size;
@@ -194,10 +194,11 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     rec_ptr->get_key(kb);
     rc = remove(ytk, st, kb);
     if (rc != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "unreachable path: it can't find the record on yakushima,"
-                      "it is unexpected. yakushima return code: "
-                   << rc;
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "unreachable path: it can't find the record on yakushima,"
+                   "it is unexpected. yakushima return code: "
+                << rc;
         return Status::ERR_FATAL;
     }
 
@@ -221,8 +222,9 @@ void unhooking_keys_and_pruning_versions(
         return;
     }
     if (rc == Status::ERR_FATAL) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "unreachable path: it may be programming error.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "unreachable path: it may be programming error.";
         return;
     }
 
@@ -272,7 +274,10 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
-    if (scan_res.empty()) { return; } // empty by current action
+    if (scan_res.empty()) {
+        yakushima::leave(ytk);
+        return;
+    } // empty by current action
     // not empty
 
     // gathering stats info
@@ -405,7 +410,6 @@ void work_cleaner() {
         // sleep
         sleepUs(epoch::get_global_epoch_time_us());
     }
-
     force_release_key_memory();
 }
 
