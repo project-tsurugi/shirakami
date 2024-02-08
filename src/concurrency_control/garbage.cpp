@@ -18,7 +18,11 @@
 
 #include "yakushima/include/kvs.h"
 
+// third_party
+
 #include "glog/logging.h"
+
+#include "nlohmann/json.hpp"
 
 namespace shirakami::garbage {
 
@@ -371,10 +375,11 @@ void release_key_memory() {
 }
 
 void output_gc_stats(stats_info_type const& stats_info) {
-    std::stringstream ss;
-    ss.clear();
-    ss << log_location_prefix_detail_info << "===Stats by GC===" << std::endl
-       << "# storages: " << stats_info.size() << std::endl;
+    //std::stringstream ss;
+    //ss.clear();
+    VLOG(log_info_gc_stats) << log_location_prefix_detail_info
+                            << "===Stats by GC===" << std::endl
+                            << "# storages: " << stats_info.size() << std::endl;
 
     for (const auto& elem : stats_info) {
         std::string str_st_key{};
@@ -382,15 +387,14 @@ void output_gc_stats(stats_info_type const& stats_info) {
          * It may be fail if it executes after delete_storage against it.
         */
         storage::key_handle_map_get_key(std::get<0>(elem), str_st_key);
-        ss << "storage key: " << str_st_key << std::endl
-           << "# entries: " << std::get<1>(elem) << std::endl
-           << "avarage length of version list per entry: " << std::get<2>(elem)
-           << std::endl
-           << "average key size per entry: " << std::get<3>(elem) << std::endl
-           << "average value size per entry: " << std::get<4>(elem)
-           << std::endl;
+        nlohmann::json j;
+        j["storage_key"] = str_st_key;
+        j["num_entries"] = std::get<1>(elem);
+        j["av_len_ver_list_per_entry"] = std::get<2>(elem);
+        j["av_key_size_per_entry"] = std::get<3>(elem);
+        j["av_val_size_per_entry"] = std::get<4>(elem);
+        VLOG(log_info_gc_stats) << log_location_prefix_detail_info << j;
     }
-    VLOG(log_trace) << ss.str();
 }
 
 void work_cleaner() {
