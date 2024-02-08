@@ -374,7 +374,13 @@ void output_gc_stats(stats_info_type const& stats_info) {
        << "# storages: " << stats_info.size() << std::endl;
 
     for (const auto& elem : stats_info) {
-        ss << "# entries: " << std::get<1>(elem) << std::endl
+        std::string str_st_key{};
+        /**
+         * It may be fail if it executes after delete_storage against it.
+        */
+        storage::key_handle_map_get_key(std::get<0>(elem), str_st_key);
+        ss << "storage key: " << str_st_key << std::endl
+           << "# entries: " << std::get<1>(elem) << std::endl
            << "avarage length of version list per entry: " << std::get<2>(elem)
            << std::endl
            << "average key size per entry: " << std::get<3>(elem) << std::endl
