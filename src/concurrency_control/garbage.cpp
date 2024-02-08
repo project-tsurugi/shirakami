@@ -377,9 +377,10 @@ void release_key_memory() {
 void output_gc_stats(stats_info_type const& stats_info) {
     //std::stringstream ss;
     //ss.clear();
+    VLOG(log_info_gc_stats)
+            << log_location_prefix_detail_info << "===Stats by GC===";
     VLOG(log_info_gc_stats) << log_location_prefix_detail_info
-                            << "===Stats by GC===" << std::endl
-                            << "# storages: " << stats_info.size() << std::endl;
+                            << "# storages: " << stats_info.size();
 
     for (const auto& elem : stats_info) {
         std::string str_st_key{};
