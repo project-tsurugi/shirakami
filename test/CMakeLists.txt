@@ -105,10 +105,12 @@ file(GLOB CC_TEST_SOURCES
         "database_options/*.cpp"
         "result/*.cpp"
         "start/*.cpp"
+        "shirakami_issues/*.cpp"
         "shutdown/*.cpp"
         "sequence/*.cpp"
         "storage/*.cpp"
         "transaction_options/*.cpp"
+        "tsurugi_issues/*.cpp"
         "tx_id/*.cpp"
         )
 
