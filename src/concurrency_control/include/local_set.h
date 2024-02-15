@@ -326,6 +326,7 @@ public:
     Status update_node_set(yakushima::node_version64* nvp) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         for (auto&& elem : set_) {
+            // compare node version ptr
             if (std::get<1>(elem) == nvp) {
                 yakushima::node_version64_body nvb = nvp->get_stable_version();
                 if (std::get<0>(elem).get_vinsert_delete() + 1 !=
@@ -402,9 +403,7 @@ public:
         for (auto&& itr : get_set()) {
             auto old_id = std::get<0>(itr);
             auto current_id = std::get<1>(itr)->get_stable_version();
-            if (old_id.get_vinsert_delete() !=
-                        current_id.get_vinsert_delete() ||
-                old_id.get_vsplit() != current_id.get_vsplit()) {
+            if (!comp_ver_for_node_verify(old_id, current_id)) {
                 return Status::ERR_CC;
             }
         }
