@@ -16,6 +16,10 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "database/include/logging.h"
+
+#include "index/yakushima/include/tool.h"
+
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 
@@ -354,15 +358,16 @@ public:
 
         // early validation
         auto cnvp = std::get<1>(elem)->get_stable_version();
-        if (cnvp != std::get<0>(elem)) {
+        if (!comp_ver_for_node_verify(cnvp, std::get<0>(elem))) {
             // looks like phantom
             // check self phantom possibility
             for (auto&& elem_set : set_) {
+                // compare pointer
                 if (std::get<1>(elem_set) == std::get<1>(elem)) {
                     /**
                       * Node versions already added in a previous scan operation.
                       */
-                    if (cnvp == std::get<0>(elem_set)) {
+                    if (comp_ver_for_node_verify(cnvp, std::get<0>(elem_set))) {
                         // the difference due to old self insert.
                         return Status::OK;
                     }
