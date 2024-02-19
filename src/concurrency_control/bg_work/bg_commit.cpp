@@ -61,7 +61,7 @@ void bg_commit::register_tx(Token token) {
     {
         std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
         auto ret = cont_wait_tx().insert(
-                std::make_tuple(ti->get_long_tx_id(), token));
+                std::make_pair(ti->get_long_tx_id(), token));
         if (!ret.second) {
             // already exist
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
@@ -159,7 +159,7 @@ void bg_commit::worker() {
         // erase the tx from cont
         {
             std::lock_guard<std::shared_mutex> lk1{mtx_cont_wait_tx()};
-            cont_wait_tx().erase(std::make_tuple(tx_id, token));
+            cont_wait_tx().erase(tx_id);
         }
         /**
          * used_ids から tx_id 要素を削除して並行スレッドへコミット処理を許容しては
