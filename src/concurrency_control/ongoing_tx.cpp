@@ -203,6 +203,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                         if (do_waiting_bypass_here) {
                             out_status = waiting_bypass(ti);
                         }
+                        ti->set_waiting_long_tx_id(std::get<ongoing_tx::index_id>(elem));
                         return true;
                     }
                 } else {
@@ -212,6 +213,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
             }
         }
     }
+    ti->set_waiting_long_tx_id(0);
 
     if (ti->get_was_considering_forwarding_at_once()) {
         // at least, this tx was considering forwarding so needs to check read

@@ -94,6 +94,7 @@ void bg_commit::worker() {
             token = std::get<1>(*itr);
             tx_id = std::get<0>(*itr);
             ti = static_cast<session*>(token);
+            if (cont_wait_tx().find(ti->get_waiting_long_tx_id()) != cont_wait_tx().end()) { continue; }
 
             // check conflict between worker
             {
