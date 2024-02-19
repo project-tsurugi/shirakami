@@ -14,6 +14,7 @@
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
 

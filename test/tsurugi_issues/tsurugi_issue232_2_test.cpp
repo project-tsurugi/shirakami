@@ -3,6 +3,8 @@
 #include <functional>
 #include <xmmintrin.h>
 
+#include "concurrency_control/include/session.h"
+
 #include "shirakami/interface.h"
 #include "test_tool.h"
 
@@ -91,7 +93,7 @@ TEST_F(tsurugi_issue232_2, case_11) {
 
     VLOG(10) << "TX1: insert storageA key0 (yellow -> red)";
     ASSERT_OK(insert(t1, stA, "k0", "v0"));
-    // TX3 waiting bypass, no boudary wait, 
+    // TX3 waiting bypass, no boudary wait,
     // TX2 don't read stB which TX3 write, so no read wait
 
     VLOG(10) << "TX1: commit";

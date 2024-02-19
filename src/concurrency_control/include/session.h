@@ -908,4 +908,23 @@ private:
             session_table_;                                     // NOLINT
 };
 
+/**
+ * @brief It checks result of the transaction requested commit.
+ * @param[in] token This should be the token which was used for commit api.
+ * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_KVS Error about key value store.
+ * @return Status::OK This transaction was committed.
+ * @return Status::WARN_ILLEGAL_OPERATION The @a token is not long transaction
+ * or didn't request commit.
+ * @return Status::WARN_NOT_BEGIN This transaction was not begun.
+ * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
+ * for finishing commit by other high priority tx. You must execute check_commit 
+ * to check result. If you use other api (ex. data access api), it causes 
+ * undefined behavior. 
+ * @note If this function returns OK or ERR_..., the transaction finished. After
+ * that or calling for not ltx, the result of calling this (finished) 
+ * transaction is undefined behavior.
+ */
+Status check_commit(Token token); // NOLINT
+
 } // namespace shirakami
