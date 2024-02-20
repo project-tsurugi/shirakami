@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "binary_printer.h"
+
 namespace shirakami {
 
 static constexpr std::string_view log_location_prefix = "/:shirakami ";
@@ -14,6 +16,11 @@ static constexpr std::string_view log_location_prefix_detail_info =
 
 static constexpr std::string_view log_location_prefix_timing_event =
         "/:shirakami:timing:"; // +<event_name>
+
+// receive string_view only
+#define shirakami_binstring(arg)                                               \
+    " " #arg "(len=" << (arg).size() << "):\"" << binary_printer((arg))        \
+                     << "\"" //NOLINT
 
 /**
  * @brief logging level constant for errors

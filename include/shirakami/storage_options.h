@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <ostream>
 
+#include "logging.h"
+
 namespace shirakami {
 
 /**
@@ -50,7 +52,7 @@ private:
 inline std::ostream& operator<<(std::ostream& out,
                                 storage_option const& options) {
     out << "storage_option: id: " << std::to_string(options.id())
-        << ", payload: " << options.payload();
+        << ", payload: " << shirakami_binstring(options.payload());
     return out;
 }
 

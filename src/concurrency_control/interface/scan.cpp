@@ -872,8 +872,8 @@ Status read_value_from_scan(Token const token, // NOLINT
     ti->process_before_start_step();
     auto ret = read_from_scan(token, handle, false, value);
     ti->process_before_finish_step();
-    shirakami_log_exit << "read_value_from_scan, Status: " << ret
-                       << ", value: " << value;
+    shirakami_log_exit << "read_value_from_scan, Status: " << ret << ", value: "
+                       << shirakami_binstring(std::string_view(value));
     return ret;
 }
 
