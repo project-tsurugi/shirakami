@@ -53,11 +53,11 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 std::make_tuple(transaction_type::LONG, transaction_type::LONG,
                                 transaction_type::LONG, transaction_type::SHORT,
                                 true, true, true,
-                                false) // c15
-//                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
-//                                transaction_type::LONG, transaction_type::LONG,
-//                                true, true, true,
-//                                false) // c16
+                                false), // c15
+                std::make_tuple(transaction_type::LONG, transaction_type::LONG,
+                                transaction_type::LONG, transaction_type::LONG,
+                                true, true, true,
+                                false) // c16
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
