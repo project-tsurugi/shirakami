@@ -45,6 +45,8 @@ TEST_F(tsurugi_issue152, DISABLED_simple) { // NOLINT
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
 
+    ASSERT_EQ(Status::OK,
+              tx_begin({s1, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s1, st, "a", ""));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
