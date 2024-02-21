@@ -237,8 +237,12 @@ static inline void expose_local_write(
                         // invisible write
                         should_log = false;
                         // keep tx id and by_short bit for successor invisible write
+
                         ctid.set_tid(pre_tid.get_tid());
                         ctid.set_by_short(pre_tid.get_by_short());
+                        // keep entry status (existing, deleted)
+                        ctid.set_latest(pre_tid.get_latest());
+                        ctid.set_absent(pre_tid.get_absent());
                     }
                     // unlock and set ctid
                     rec_ptr->set_tid(ctid);

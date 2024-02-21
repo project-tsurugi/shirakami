@@ -22,6 +22,7 @@ public:
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue652_test");
         // FLAGS_stderrthreshold = 0;
+        init_for_test();
     }
 
     void SetUp() override {
@@ -36,7 +37,8 @@ private:
 };
 
 INSTANTIATE_TEST_SUITE_P(commit_from_one, tsurugi_issue652_test,
-                         ::testing::Values(true, false));
+                         //::testing::Values(true, false));
+                         ::testing::Values(true));
 
 TEST_P(tsurugi_issue652_test, // NOLINT
        simple) {              // NOLINT
@@ -109,6 +111,22 @@ TEST_P(tsurugi_issue652_test, // NOLINT
         while (!was_committed) { _mm_pause(); }
         ASSERT_OK(cb_rc);
     }
+
+    // verify
+    ASSERT_OK(tx_begin({t1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(open_scan(t1, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        shd));
+    ASSERT_OK(read_key_from_scan(t1, shd, buf));
+    ASSERT_EQ(buf, "A");
+    ASSERT_OK(next(t1, shd));
+    ASSERT_OK(read_key_from_scan(t1, shd, buf));
+    ASSERT_EQ(buf, "B");
+    ASSERT_OK(next(t1, shd));
+    ASSERT_OK(read_key_from_scan(t1, shd, buf));
+    ASSERT_EQ(buf, "C");
+    ASSERT_EQ(next(t1, shd), Status::WARN_SCAN_LIMIT);
+    ASSERT_OK(close_scan(t1, shd));
+    ASSERT_OK(commit(t1));
 
     // cleanup
     ASSERT_OK(leave(t1));

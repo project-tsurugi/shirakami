@@ -148,7 +148,7 @@ TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s1, transaction_options::transaction_type::SHORT}));
     std::string buf{};
-    ASSERT_NE(Status::OK, search_key(s1, st, "", buf));
+    ASSERT_OK(search_key(s1, st, "", buf));
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     ASSERT_EQ(Status::OK, leave(s1));
