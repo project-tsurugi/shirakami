@@ -921,14 +921,15 @@ extern Status commit(session* const ti) {
         // about transaction state
         process_tx_state(ti, this_dm);
 
-        // call commit callback
-        ti->call_commit_callback(rc, {}, this_dm);
-
         // clean up
         cleanup_process(ti, true, write_range);
 
         // set transaction result
         ti->set_result(reason_code::UNKNOWN);
+
+        // call commit callback
+        ti->call_commit_callback(rc, {}, this_dm);
+
     } else {
         LOG_FIRST_N(ERROR, 1) << "library programming error.";
     }

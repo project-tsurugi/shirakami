@@ -37,8 +37,7 @@ private:
 };
 
 INSTANTIATE_TEST_SUITE_P(commit_from_one, tsurugi_issue652_test,
-                         //::testing::Values(true, false));
-                         ::testing::Values(true));
+                         ::testing::Values(true, false));
 
 TEST_P(tsurugi_issue652_test, // NOLINT
        simple) {              // NOLINT
