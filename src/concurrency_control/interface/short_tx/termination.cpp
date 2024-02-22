@@ -91,7 +91,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
  * This is called by only abort function
 */
 void change_inserting_records_state(session* const ti) {
-    auto process = [ti](write_set_obj* wso_ptr) {
+    auto process = [](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
@@ -401,7 +401,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                         << log_location_prefix_detail_info
                         << "lock key " + std::string(rec_ptr->get_key_view());
             }
-    
+
             // lock the record
             ++num_locked;
             rec_ptr->get_tidw_ref().lock();
