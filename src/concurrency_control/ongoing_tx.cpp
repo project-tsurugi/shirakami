@@ -213,7 +213,6 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
             }
         }
     }
-    ti->set_waiting_long_tx_id(0);
 
     if (ti->get_was_considering_forwarding_at_once()) {
         // at least, this tx was considering forwarding so needs to check read
@@ -224,18 +223,24 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
             bool ret = read_plan::check_potential_read_anti(id, ti);
             if (!ret) {
                 // no need to read wait and it can try IWR
+                ti->set_waiting_long_tx_id(0); // wait none
                 return false;
             }
             // should wait read except write only
 
             // check write only
             bool write_only = ti->is_write_only_ltx_now();
-            return !write_only;
             // write only true: no need to wait
             // write only false: not write only and may have high priori read
+            if (write_only) {
+                ti->set_waiting_long_tx_id(0); // wait none
+                return false;
+            }
+            return true;
         }
     }
 
+    ti->set_waiting_long_tx_id(0); // wait none
     return false;
 }
 

@@ -13,6 +13,7 @@ namespace shirakami {
 
 bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                           Token token) {
+    auto* ti = static_cast<session*>(token);
     std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
     for (auto elem : get_cont()) {
         if (elem.first > tx_id) {
@@ -30,17 +31,19 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
         // cond1 empty and empty
         if (plist.empty() && nlist.empty()) {
             // it may read all
+            ti->set_waiting_long_tx_id(elem.first);
             return true;
         }
 
         for (auto&& elem :
-             static_cast<session*>(token)->get_write_set().get_storage_map()) {
+             ti->get_write_set().get_storage_map()) {
             // cond3 only nlist
             if (plist.empty()) {
                 // the higher priori ltx is not submitted commit
                 auto itr = nlist.find(elem.first);
                 if (itr == nlist.end()) {
                     // the high priori ltx may read this
+                    ti->set_waiting_long_tx_id(elem.first);
                     return true;
                 }
             }
@@ -55,6 +58,7 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                         // it didn't submit commit
                         if (std::get<0>(p_elem) == elem.first) {
                             // hit
+                            ti->set_waiting_long_tx_id(elem.first);
                             return true;
                         }
                     } else {
@@ -90,6 +94,7 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                          r_lpoint == scan_endpoint::INF) &&
                                         (w_rkey < r_rkey &&
                                          r_rpoint != scan_endpoint::INF))) {
+                                ti->set_waiting_long_tx_id(elem.first);
                                 return true;
                             }
                         }
