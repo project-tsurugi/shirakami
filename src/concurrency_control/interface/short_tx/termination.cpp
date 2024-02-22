@@ -87,6 +87,9 @@ void unlock_records(session* const ti, std::size_t num_locked) {
     }
 }
 
+/**
+ * This is called by only abort function
+*/
 void change_inserting_records_state(session* const ti) {
     auto process = [ti](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
@@ -113,7 +116,8 @@ void change_inserting_records_state(session* const ti) {
                     tid.set_absent(true);
                     tid.set_latest(false);
                     tid.set_lock(false);
-                    tid.set_epoch(ti->get_step_epoch());
+                    tid.set_epoch(check.get_epoch());
+                    tid.set_tid(check.get_tid());
                     rec_ptr->set_tid(tid); // and unlock
                 } else {
                     // some operations interrupt and this is normal state.
