@@ -249,11 +249,14 @@ RETRY: // NOLINT
         // the key exists and is hooked.
         // point (*1)
         if (wso->get_rec_ptr() != rec_ptr) {
-            LOG_FIRST_N(ERROR, 1)
-                    << "The record pointer shouldn't be changed from read "
-                       "phase.";
-            return Status::ERR_CC;
+            /**
+             * case example.
+             * upsert shared newly inserting record, it was aborted by others.
+             * gc unhooked it, and new tx inserted inserting recod.
+            */
+            wso->set_rec_ptr(rec_ptr);
         }
+
         // check ts
         tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
 
@@ -266,6 +269,21 @@ RETRY: // NOLINT
 
         // locking
         rec_ptr->get_tidw_ref().lock();
+
+        /**
+         * recheck hooked yet. maybe unhooked between checking hooking and lock
+        */
+        rc = get<Record>(wso->get_storage(), key, rec_ptr);
+        if (rc == Status::OK) {
+            if (wso->get_rec_ptr() != rec_ptr) {
+                // same case as L253
+                wso->set_rec_ptr(rec_ptr);
+            }
+        } else {
+            // unhooked yet
+            rec_ptr->get_tidw_ref().unlock();
+            goto NO_KEY; // NOLINT
+        }
 
         // detail info
         if (logging::get_enable_logging_detail_info()) {
@@ -311,6 +329,7 @@ RETRY: // NOLINT
             goto RETRY; // NOLINT
         }
     } else {
+    NO_KEY:
         // no key hit
         rec_ptr = new Record(key); // NOLINT
         tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
@@ -352,6 +371,7 @@ RETRY: // NOLINT
                                            std::string(rec_ptr->get_key_view());
             }
 
+            wso->set_rec_ptr(rec_ptr);
             return Status::OK;
         }
         // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -381,7 +401,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                         << log_location_prefix_detail_info
                         << "lock key " + std::string(rec_ptr->get_key_view());
             }
-
+    
             // lock the record
             ++num_locked;
             rec_ptr->get_tidw_ref().lock();
