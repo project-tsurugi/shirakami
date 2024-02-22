@@ -28,8 +28,9 @@ namespace shirakami::garbage {
 
 void init() {
     // output information needed for estimation of memory usage
-    LOG(INFO) << log_location_prefix << "sizeof(Record): " << sizeof(Record)
-              << ", sizeof(version): " << sizeof(version);
+    VLOG(log_info_gc_stats) << log_location_prefix_detail_info
+                           << "sizeof(Record): " << sizeof(Record)
+                           << ", sizeof(version): " << sizeof(version);
     // clear global flags
     set_flag_manager_end(false);
     set_flag_cleaner_end(false);
