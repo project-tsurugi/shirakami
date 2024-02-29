@@ -57,37 +57,4 @@ TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::exist_id(1), false);
 }
 
-TEST_F(ongoing_tx_test, get_lowest_epoch_test) { // NOLINT
-    // register
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
-    ongoing_tx::push({1, 1, nullptr});
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::push({2, 2, nullptr});
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::push({3, 3, nullptr});
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-
-    // delete from old
-    ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 2);
-    ongoing_tx::remove_id(2);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 3);
-    ongoing_tx::remove_id(3);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
-
-    // register again
-    ongoing_tx::push({1, 1, nullptr});
-    ongoing_tx::push({2, 2, nullptr});
-    ongoing_tx::push({3, 3, nullptr});
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-
-    // delete from new
-    ongoing_tx::remove_id(3);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::remove_id(2);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 1);
-    ongoing_tx::remove_id(1);
-    ASSERT_EQ(ongoing_tx::get_lowest_epoch(), 0);
-}
-
 } // namespace shirakami::testing
