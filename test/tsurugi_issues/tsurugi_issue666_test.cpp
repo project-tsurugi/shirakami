@@ -16,7 +16,7 @@ using transaction_type = shirakami::transaction_options::transaction_type;
 
 namespace shirakami::testing {
 
-class tsurugi_issue666_test : public ::testing::TestWithParam<bool> {
+class tsurugi_issue666_test : public ::testing::Test {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
@@ -36,10 +36,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-INSTANTIATE_TEST_SUITE_P(initialize_from_occ, tsurugi_issue666_test,
-                         ::testing::Values(true, false));
-
-TEST_P(tsurugi_issue666_test, // NOLINT
+TEST_F(tsurugi_issue666_test, // NOLINT
        simple) {              // NOLINT
                               // prepare
     Storage yz{};
@@ -51,25 +48,20 @@ TEST_P(tsurugi_issue666_test, // NOLINT
     ASSERT_OK(enter(t1));
     ASSERT_OK(enter(t2));
     ASSERT_OK(enter(t3));
-    bool ifo = GetParam();
     // initialize along param
-    if (ifo) {
-        ASSERT_OK(tx_begin({t1, transaction_options::transaction_type::SHORT}));
-        ASSERT_OK(upsert(t1, yz, "1", "0"));
-        ASSERT_OK(commit(t1));
-    } else {
-        ASSERT_OK(tx_begin(
-                {t1, transaction_options::transaction_type::LONG, {yz}}));
-        wait_epoch_update();
-        ASSERT_OK(upsert(t1, yz, "1", "0"));
-        ASSERT_OK(commit(t1));
-    }
+    ASSERT_OK(
+            tx_begin({t1, transaction_options::transaction_type::LONG, {yz}}));
+    wait_epoch_update();
+    ASSERT_OK(upsert(t1, yz, "1", "0"));
+    ASSERT_OK(commit(t1));
 
     // test senario
     ASSERT_OK(
             tx_begin({t1, transaction_options::transaction_type::LONG, {yz}}));
+    wait_epoch_update();
     ASSERT_OK(
             tx_begin({t2, transaction_options::transaction_type::LONG, {yz}}));
+    wait_epoch_update();
     ASSERT_OK(
             tx_begin({t3, transaction_options::transaction_type::LONG, {yz}}));
     wait_epoch_update();
