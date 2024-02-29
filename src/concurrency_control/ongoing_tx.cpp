@@ -203,6 +203,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
                         if (do_waiting_bypass_here) {
                             out_status = waiting_bypass(ti);
                         }
+                        ti->set_waiting_long_tx_id(std::get<ongoing_tx::index_id>(elem));
                         return true;
                     }
                 } else {
@@ -222,18 +223,24 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
             bool ret = read_plan::check_potential_read_anti(id, ti);
             if (!ret) {
                 // no need to read wait and it can try IWR
+                ti->set_waiting_long_tx_id(0); // wait none
                 return false;
             }
             // should wait read except write only
 
             // check write only
             bool write_only = ti->is_write_only_ltx_now();
-            return !write_only;
             // write only true: no need to wait
             // write only false: not write only and may have high priori read
+            if (write_only) {
+                ti->set_waiting_long_tx_id(0); // wait none
+                return false;
+            }
+            return true;
         }
     }
 
+    ti->set_waiting_long_tx_id(0); // wait none
     return false;
 }
 

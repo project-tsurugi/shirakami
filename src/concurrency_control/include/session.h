@@ -92,6 +92,7 @@ public:
     void clear_about_long_tx_metadata() {
         set_read_version_max_epoch(0);
         set_long_tx_id(0);
+        set_waiting_long_tx_id(0);
         set_valid_epoch(0);
         set_was_considering_forwarding_at_once(false);
         set_is_forwarding(false);
@@ -329,6 +330,8 @@ public:
     }
 
     [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
+
+    [[nodiscard]] std::size_t get_waiting_long_tx_id() const { return waiting_long_tx_id_; }
 
     overtaken_ltx_set_type& get_overtaken_ltx_set() {
         return overtaken_ltx_set_;
@@ -579,6 +582,8 @@ public:
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
+    void set_waiting_long_tx_id(std::size_t id) { waiting_long_tx_id_ = id; }
+
     void set_read_version_max_epoch(epoch::epoch_t const ep) {
         read_version_max_epoch_.store(ep, std::memory_order_release);
     }
@@ -802,6 +807,11 @@ private:
      * @brief long tx id.
      */
     std::size_t long_tx_id_{};
+
+    /**
+     * @brief waiting ltx id
+     */
+    std::size_t waiting_long_tx_id_{};
 
     /**
      * @brief The ltx set which this transaction overtook.
