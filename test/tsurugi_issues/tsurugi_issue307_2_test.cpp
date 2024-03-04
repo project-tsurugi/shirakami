@@ -91,7 +91,7 @@ TEST_F(tsurugi_issue307_2, DISABLED_ongoing_tx_must_be_ordered) { // NOLINT
 
     // check1: ongoing_tx::tx_info_ must be ordered (if ill-ordered, bug)
     {
-        std::unique_lock<std::shared_mutex> lk(ongoing_tx::get_mtx());
+        boost::unique_lock<boost::shared_mutex> lk(ongoing_tx::get_mtx());
         if (ongoing_tx::get_tx_info().size() == 2) { // check order if no empty
             auto& txi1 = ongoing_tx::get_tx_info()[0];
             auto& txi2 = ongoing_tx::get_tx_info()[1];

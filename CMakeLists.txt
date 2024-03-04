@@ -48,7 +48,7 @@ endif()
 find_package(yakushima REQUIRED)
 
 find_package(Boost
-        COMPONENTS filesystem)
+        COMPONENTS filesystem thread)
 find_package(Doxygen)
 find_package(TBB
   COMPONENTS tbb tbbmalloc tbbmalloc_proxy
