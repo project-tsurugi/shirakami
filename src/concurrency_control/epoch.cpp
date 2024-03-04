@@ -38,7 +38,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
     // get read lock and block ending of highest priori ltx
     epoch_t result_epoch{0};
     {
-        std::shared_lock<std::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
+        boost::shared_lock<boost::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
 
         if (ongoing_tx::get_tx_info().empty()) {
             // set cc safe ss epoch

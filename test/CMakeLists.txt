@@ -131,6 +131,7 @@ register_tests(
         TARGET shirakami
         DEPENDS
           shirakami-impl
+          PRIVATE Boost::thread
           PRIVATE glog::glog
           PRIVATE ${tbb_prefix}tbb
           PRIVATE ${tbb_prefix}tbbmalloc
@@ -144,6 +145,7 @@ register_tests(
         TARGET shirakami
         DEPENDS
           shirakami-impl
+          PRIVATE Boost::thread
           PRIVATE glog::glog
           PRIVATE ${tbb_prefix}tbb
           PRIVATE ${tbb_prefix}tbbmalloc
@@ -158,6 +160,7 @@ if (BUILD_PWAL)
           TARGET shirakami
           DEPENDS
             shirakami-impl
+            PRIVATE Boost::thread
             PRIVATE glog::glog
             PRIVATE ${tbb_prefix}tbb
             PRIVATE ${tbb_prefix}tbbmalloc

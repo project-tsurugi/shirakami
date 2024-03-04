@@ -9,7 +9,7 @@
 namespace shirakami {
 
 bool ongoing_tx::exist_id(std::size_t id) {
-    std::shared_lock<std::shared_mutex> lk{mtx_};
+    boost::shared_lock<boost::shared_mutex> lk{mtx_};
     for (auto&& elem : tx_info_) {
         if (std::get<ongoing_tx::index_id>(elem) == id) { return true; }
     }
@@ -181,7 +181,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
 
         // check boundary wait
         {
-            std::shared_lock<std::shared_mutex> lk{mtx_};
+            boost::shared_lock<boost::shared_mutex> lk{mtx_};
             for (auto&& elem : tx_info_) {
                 // check overwrites
                 if (std::get<ongoing_tx::index_id>(elem) < id) {
@@ -238,7 +238,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
 }
 
 void ongoing_tx::push(tx_info_elem_type const ti) {
-    std::lock_guard<std::shared_mutex> lk{mtx_};
+    boost::lock_guard<boost::shared_mutex> lk{mtx_};
     if (tx_info_.empty()) {
         set_lowest_epoch(std::get<ongoing_tx::index_epoch>(ti));
     }
@@ -253,7 +253,7 @@ void ongoing_tx::push_bringing_lock(tx_info_elem_type const ti) {
 }
 
 void ongoing_tx::remove_id(std::size_t const id) {
-    std::lock_guard<std::shared_mutex> lk{mtx_};
+    boost::lock_guard<boost::shared_mutex> lk{mtx_};
     epoch::epoch_t lep{0};
     bool first{true};
     bool erased{false};
