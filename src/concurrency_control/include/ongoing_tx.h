@@ -7,7 +7,8 @@
 #include <atomic>
 #include <mutex>
 #include <set>
-#include <shared_mutex>
+
+#include <boost/thread/shared_mutex.hpp>
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
@@ -48,7 +49,7 @@ public:
      * @brief Get the mtx object
      * @return std::shared_mutex& 
      */
-    static std::shared_mutex& get_mtx() { return mtx_; }
+    static boost::shared_mutex& get_mtx() { return mtx_; }
 
     /**
      * @brief Get the tx info object
@@ -84,7 +85,7 @@ private:
     /**
      * @brief This is mutex for tx_info_;
      */
-    static inline std::shared_mutex mtx_; // NOLINT
+    static inline boost::shared_mutex mtx_; // NOLINT
     /**
      * @brief register info of running long tx's epoch and id.
      */
