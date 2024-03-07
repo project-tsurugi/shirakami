@@ -691,17 +691,17 @@ void process_tx_state(session* ti,
 }
 
 extern Status commit(session* const ti) {
-    // write lock phase
-    /**
-     * HACK: it must refactor at abort process code (write lock, read wp verify
-     * , node verify)
-    */
-    tid_word commit_tid{};
-    auto rc{write_lock(ti, commit_tid)};
-    if (rc != Status::OK) {
+    auto abort_and_call_ccb = [ti](Status rc) {
         short_tx::abort(ti);
         ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
                                  0);
+    };
+
+    // write lock phase
+    tid_word commit_tid{};
+    auto rc{write_lock(ti, commit_tid)};
+    if (rc != Status::OK) {
+        abort_and_call_ccb(rc);
         return rc;
     }
 
@@ -711,9 +711,7 @@ extern Status commit(session* const ti) {
     rc = read_wp_verify(ti, ce, commit_tid);
     if (rc != Status::OK) {
         unlock_write_set(ti);
-        short_tx::abort(ti);
-        ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
-                                 0);
+        abort_and_call_ccb(rc);
         return rc;
     }
 
@@ -721,10 +719,8 @@ extern Status commit(session* const ti) {
     rc = ti->get_node_set().node_verify();
     if (rc != Status::OK) {
         unlock_write_set(ti);
-        short_tx::abort(ti);
         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-        ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
-                                 0);
+        abort_and_call_ccb(rc);
         return rc;
     }
 
