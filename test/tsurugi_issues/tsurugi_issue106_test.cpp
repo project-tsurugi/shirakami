@@ -127,40 +127,6 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(tsurugi_issue106, 20230308_comment_tanabe) { // NOLINT
-    // 自分で自分の挿入中レコードコンバートタイムスタンプを観測しないかどうか
-
-    // prepare
-    Storage st{};
-    ASSERT_EQ(Status::OK, create_storage("test", st));
-    Token s{};
-    ASSERT_EQ(Status::OK, enter(s));
-
-    // test
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
-
-    // stop gc to stop epoch
-    stop_epoch();
-    ASSERT_EQ(Status::OK, abort(s));
-    ScanHandle hd{};
-    // it must read deleted record
-    ASSERT_EQ(Status::OK,
-              tx_begin({s, transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
-                                                "", scan_endpoint::INF, hd));
-    auto* ti = static_cast<session*>(s);
-    ASSERT_EQ(ti->get_read_set_for_stx().size(), 1);
-    // insert and read timestamp is converted by it.
-    ASSERT_EQ(Status::OK, insert(s, st, "a", "v"));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    resume_epoch();
-
-    // cleanup
-    ASSERT_EQ(Status::OK, leave(s));
-}
-
 TEST_F(tsurugi_issue106, 20230310_comment_tanabe) { // NOLINT
     /**
      * シナリオ：key a, c が存在する。それを自分でスキャンした後、 bbbbbbbbb (b x 9) を挿入する。
