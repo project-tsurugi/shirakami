@@ -307,59 +307,56 @@ RETRY: // NOLINT
         rec_ptr->set_tid(check);
 
         return Status::OK;
-    } else {
+    } 
     NO_KEY:
-        // no key hit
-        rec_ptr = new Record(key); // NOLINT
-        tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-        tid.set_latest(true);
-        tid.set_absent(true);
-        tid.set_lock(true);
+    // no key hit
+    rec_ptr = new Record(key); // NOLINT
+    tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
+    tid.set_latest(true);
+    tid.set_absent(true);
+    tid.set_lock(true);
+
+    // detail info
+    if (logging::get_enable_logging_detail_info()) {
+        VLOG(log_trace) << log_location_prefix_detail_info
+                        << "inserting locked record, key " +
+                                   std::string(rec_ptr->get_key_view());
+    }
+
+    rec_ptr->set_tid(tid);
+    yakushima::node_version64* nvp{};
+    if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
+                                             wso->get_storage(), key,
+                                             rec_ptr, nvp)) {
+        Status check_node_set_res{ti->update_node_set(nvp)};
+        if (check_node_set_res == Status::ERR_CC) {
+            /**
+              * This This transaction is confirmed to be aborted 
+              * because the previous scan was destroyed by an insert
+              * by another transaction.
+              */
+            ti->get_result_info().set_reason_code(
+                    reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+            ti->get_result_info().set_key_storage_name(key,
+                                                       wso->get_storage());
+            return Status::ERR_CC;
+        }
+        // success inserting
 
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             VLOG(log_trace) << log_location_prefix_detail_info
-                            << "inserting locked record, key " +
+                            << "inserted locking key " +
                                        std::string(rec_ptr->get_key_view());
         }
 
-        rec_ptr->set_tid(tid);
-        yakushima::node_version64* nvp{};
-        if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
-                                                 wso->get_storage(), key,
-                                                 rec_ptr, nvp)) {
-            Status check_node_set_res{ti->update_node_set(nvp)};
-            if (check_node_set_res == Status::ERR_CC) {
-                /**
-                  * This This transaction is confirmed to be aborted 
-                  * because the previous scan was destroyed by an insert
-                  * by another transaction.
-                  */
-                ti->get_result_info().set_reason_code(
-                        reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-                ti->get_result_info().set_key_storage_name(key,
-                                                           wso->get_storage());
-                return Status::ERR_CC;
-            }
-            // success inserting
-
-            // detail info
-            if (logging::get_enable_logging_detail_info()) {
-                VLOG(log_trace) << log_location_prefix_detail_info
-                                << "inserted locking key " +
-                                           std::string(rec_ptr->get_key_view());
-            }
-
-            wso->set_rec_ptr(rec_ptr);
-            return Status::OK;
-        }
-        // else insert_result == Status::WARN_ALREADY_EXISTS
-        // so retry from index access
-        delete rec_ptr; // NOLINT
-        goto RETRY;     // NOLINT
+        wso->set_rec_ptr(rec_ptr);
+        return Status::OK;
     }
-
-    return Status::OK; // todo
+    // else insert_result == Status::WARN_ALREADY_EXISTS
+    // so retry from index access
+    delete rec_ptr; // NOLINT
+    goto RETRY;     // NOLINT
 }
 
 Status write_lock(session* ti, tid_word& commit_tid) {
