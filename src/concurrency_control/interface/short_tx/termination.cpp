@@ -285,6 +285,8 @@ RETRY: // NOLINT
             goto NO_KEY; // NOLINT
         }
 
+        // locked and it is hooked yet
+
         // detail info
         if (logging::get_enable_logging_detail_info()) {
             VLOG(log_trace)
@@ -304,33 +306,7 @@ RETRY: // NOLINT
         check.set_latest(true);
         rec_ptr->set_tid(check);
 
-        // check it is hooked yet
-        /**
-         * OPTIMIZE: It may not need this recheck.
-        */
-        auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
-        auto cleanup_old_process = [wso](tid_word check) {
-            check.set_latest(false);
-            check.set_absent(true);
-            check.set_lock(false);
-            wso->get_rec_ptr()->set_tid(check);
-        };
-        if (rc == Status::OK) {
-            // some key hit
-            if (wso->get_rec_ptr() == rec_ptr) {
-                // success converting deleted to inserted
-                return Status::OK;
-            }
-            // converting record is unhooked by gc
-            cleanup_old_process(check);
-            goto RETRY; // NOLINT
-        } else {
-            // no key hit
-            // point (*2)
-            // gced in range from point (*1) to point (*2)
-            cleanup_old_process(check);
-            goto RETRY; // NOLINT
-        }
+        return Status::OK;
     } else {
     NO_KEY:
         // no key hit
