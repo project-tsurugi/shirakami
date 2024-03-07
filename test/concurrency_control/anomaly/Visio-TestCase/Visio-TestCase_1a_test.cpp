@@ -19,8 +19,9 @@ class Visio_TestCase
                          transaction_type, bool, bool, bool, bool>> {
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-"
-                                  "anomaly-Visio-TestCase-Visio-TestCase_1a_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-"
+                "anomaly-Visio-TestCase-Visio-TestCase_1a_test");
         // FLAGS_stderrthreshold = 0;
     }
 

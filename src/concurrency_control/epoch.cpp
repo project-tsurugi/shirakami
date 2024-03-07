@@ -49,9 +49,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
         for (auto& elem : ongoing_tx::get_tx_info()) {
             auto* ti = std::get<ongoing_tx::index_session>(elem);
             // initialize result_epoch
-            if (result_epoch == 0) {
-                result_epoch = ti->get_valid_epoch();
-            }
+            if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
             // acquire read lock about overtaken ltx set
             {
                 std::shared_lock<std::shared_mutex> lk_ols{
@@ -121,8 +119,9 @@ void epoch_thread_work() {
             // 0: no work to proceed
             if (ptp == 0) { continue; } // no work
             if (ptp < -1) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
-                           << "unreachable path.";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << log_location_prefix
+                        << "unreachable path.";
                 return;
             }
             // change epoch

@@ -83,7 +83,7 @@ TEST_F(tsurugi_issue382, simple) { // NOLINT
         was_called.store(true, std::memory_order_release);
     };
 
-    ASSERT_FALSE(commit(s2, cb)); // NOLINT
+    ASSERT_FALSE(commit(s2, cb));      // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }

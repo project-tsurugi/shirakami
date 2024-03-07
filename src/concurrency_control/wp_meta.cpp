@@ -172,7 +172,7 @@ void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
     if (!ret_pair.second) {
         // already exist, not inserted
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "programming error. tx do this only once.";
+                              << "programming error. tx do this only once.";
     }
 }
 
@@ -182,8 +182,9 @@ void wp_meta::remove_write_range(std::size_t const txid) {
     auto ret_num = get_write_range().erase(txid);
     if (ret_num != 1) {
         // can't erase
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "programming error. it does once after push_write_range";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "programming error. it does once after push_write_range";
     }
 }
 

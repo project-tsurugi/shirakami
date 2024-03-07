@@ -36,7 +36,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
-                                   // trading read operator at case_2
+                                       // trading read operator at case_2
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -71,7 +71,7 @@ TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
         was_called.store(true, std::memory_order_release);
     };
 
-    ASSERT_FALSE(commit(s2, cb)); // NOLINT
+    ASSERT_FALSE(commit(s2, cb));      // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
     while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
@@ -84,7 +84,7 @@ TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1_3, case_4) { // NOLINT
-                                   // tx1 point read, tx2 range read
+                                       // tx1 point read, tx2 range read
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

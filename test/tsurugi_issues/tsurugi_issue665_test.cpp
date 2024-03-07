@@ -133,8 +133,8 @@ TEST_P(tsurugi_issue665_test, // NOLINT
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
     std::atomic<std::size_t> total_commit_ct{0};
-    auto process = [st1, st2, final_rec_num, &readys, &go,
-                    &total_commit_ct, write](std::size_t th_id) {
+    auto process = [st1, st2, final_rec_num, &readys, &go, &total_commit_ct,
+                    write](std::size_t th_id) {
         std::size_t ct_abort{0};
         std::size_t ct_commit{0};
         // prepare

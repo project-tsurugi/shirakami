@@ -36,7 +36,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1_2, case_2) { // NOLINT
-                                   // t1 do point read at case_2
+                                       // t1 do point read at case_2
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -62,7 +62,7 @@ TEST_F(tsurugi_issue378_1_2, case_2) { // NOLINT
                                                 "", scan_endpoint::INF, hd2));
     ASSERT_EQ(Status::OK, insert(s2, st, "1", "100"));
 
-    ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
+    ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
 
     // cleanup
@@ -71,7 +71,7 @@ TEST_F(tsurugi_issue378_1_2, case_2) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1_2, case_2_rev) { // NOLINT
-                                       // t1 do point read at case_2
+                                           // t1 do point read at case_2
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

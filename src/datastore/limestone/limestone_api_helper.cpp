@@ -75,7 +75,8 @@ void add_entry(limestone::api::log_channel* lc,
         return;
     }
     shirakami_log_entry << "log_channel::add_entry(): storage_id: "
-                        << storage_id << shirakami_binstring(key) << shirakami_binstring(val)
+                        << storage_id << shirakami_binstring(key)
+                        << shirakami_binstring(val)
                         << ", major write version: " << major_version
                         << ", minor write version: " << minor_version;
     lc->add_entry(

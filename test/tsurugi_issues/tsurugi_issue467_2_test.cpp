@@ -88,8 +88,8 @@ TEST_F(ti467_2_test, // NOLINT
     ASSERT_OK(leave(t2));
 }
 
-TEST_F(ti467_2_test,        // NOLINT
-       ng_case2) { // NOLINT
+TEST_F(ti467_2_test, // NOLINT
+       ng_case2) {   // NOLINT
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
 
     Storage system_st;

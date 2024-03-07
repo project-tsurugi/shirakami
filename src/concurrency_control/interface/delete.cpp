@@ -68,7 +68,8 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         Record* rec_ptr = wso->get_rec_ptr();
         auto rs = ti->get_write_set().erase(wso);
         if (rs != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << "library programming error. about strand?: " << rs;
+            LOG_FIRST_N(ERROR, 1)
+                    << "library programming error. about strand?: " << rs;
         }
         if (!rc) {
             // if this was update
@@ -94,9 +95,10 @@ static void process_before_return_not_found(session* const ti,
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                       << "unexpected error. library programming error or "
-                          "usage error (mixed ddl and dml?)";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix
+                    << "unexpected error. library programming error or "
+                       "usage error (mixed ddl and dml?)";
             return;
         }
         // get range read  by info
@@ -148,7 +150,8 @@ Status delete_record_body(Token token, Storage storage,
     if (rc == Status::WARN_STORAGE_NOT_FOUND) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error: " << rc;
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                          << "library programming error: " << rc;
     return Status::ERR_FATAL;
 }
 

@@ -184,7 +184,7 @@ Status local_sequence_set::push(SequenceId const id,
             set().insert(std::make_pair(id, std::make_tuple(version, value)));
     if (!ret.second) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "unreachable path. maybe mixed some access.";
+                              << "unreachable path. maybe mixed some access.";
         return Status::ERR_FATAL;
     }
     return Status::OK;

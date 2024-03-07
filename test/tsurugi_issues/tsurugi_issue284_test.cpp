@@ -119,8 +119,8 @@ TEST_F(tsurugi_issue284, 20230525_comment_ban) { // NOLINT
                 ASSERT_OK(read_value_from_scan(s, scanh, val));
                 VLOG(40) << "key:<" << key << "> value:<" << val << ">";
                 if (val != common_val) {
-                    LOG_FIRST_N(ERROR, 1) << "try:" << i << " key:<" << key << "> value:<"
-                               << val << ">";
+                    LOG_FIRST_N(ERROR, 1) << "try:" << i << " key:<" << key
+                                          << "> value:<" << val << ">";
                 }
             } while (next(s, scanh) == Status::OK);
             ASSERT_OK(leave(s));

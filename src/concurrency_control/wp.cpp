@@ -152,7 +152,8 @@ Status fin() {
     Storage storage = get_page_set_meta_storage();
     auto rc = delete_storage(storage);
     if (Status::OK != rc) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << "unreachable path.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << rc << "unreachable path.";
         return Status::ERR_FATAL;
     }
     set_page_set_meta_storage(initial_page_set_meta_storage);
@@ -200,8 +201,9 @@ Status find_wp_meta(Storage st, wp_meta*& ret) {
 wp_meta::wped_type find_wp(Storage const storage) {
     wp_meta* target_wp_meta{};
     if (find_wp_meta(storage, target_wp_meta) != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "There is no metadata that should be there.: " << storage;
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "There is no metadata that should be there.: " << storage;
     }
 
     return target_wp_meta->get_wped();
@@ -212,7 +214,8 @@ Status init() {
 
     if (auto rc{storage::register_storage(storage::wp_meta_storage)};
         rc != Status::OK) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc << ", unreachable path.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << rc << ", unreachable path.";
     }
     set_page_set_meta_storage(storage::wp_meta_storage);
     set_initialized(true);
@@ -246,7 +249,8 @@ Status write_preserve(Token token, std::vector<Storage> storage,
         auto cleanup_process = [ti, long_tx_id]() {
             for (auto&& elem : ti->get_wp_set()) {
                 if (Status::OK != elem.second->remove_wp(long_tx_id)) {
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+                    LOG_FIRST_N(ERROR, 1)
+                            << log_location_prefix << "unreachable path";
                     return;
                 }
             }

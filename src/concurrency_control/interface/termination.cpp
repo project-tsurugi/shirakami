@@ -111,7 +111,8 @@ Status commit_body(Token const token,                    // NOLINT
         // set about diagnostics. it must commit
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
     } else {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error";
         return Status::ERR_FATAL;
     }
 

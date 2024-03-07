@@ -62,7 +62,8 @@ void assert_before_unlock(session* const ti) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "tx began at leave";
     }
     if (ti->get_operating().load(std::memory_order_acquire) != 0) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "operating is not zero at leave";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "operating is not zero at leave";
     }
 }
 
@@ -83,8 +84,9 @@ Status leave_body(Token const token) { // NOLINT
                         // check truly from ltx
                         if (itr.get_tx_type() !=
                             transaction_options::transaction_type::LONG) {
-                            LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                       << "library programming error";
+                            LOG_FIRST_N(ERROR, 1)
+                                    << log_location_prefix
+                                    << "library programming error";
                         }
                         // the ltx commit was submitted, wait result.
                         do {

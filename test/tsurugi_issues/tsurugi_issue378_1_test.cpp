@@ -71,7 +71,7 @@ TEST_F(tsurugi_issue378_1, case_1) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1, case_1_rev) { // NOLINT
-                                       // commit ordre is reverse of case 1
+                                         // commit ordre is reverse of case 1
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

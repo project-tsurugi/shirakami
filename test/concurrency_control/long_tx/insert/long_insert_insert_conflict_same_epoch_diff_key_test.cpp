@@ -180,10 +180,12 @@ TEST_F(long_insert_insert_conflict_same_epoch_diff_key_test, // NOLINT
     ASSERT_EQ(Status::OK, enter(s1));
     ASSERT_EQ(Status::OK, enter(s2));
     stop_epoch();
-    ASSERT_EQ(tx_begin({s1, transaction_options::transaction_type::LONG, {st1}}),
-              Status::OK);
-    ASSERT_EQ(tx_begin({s2, transaction_options::transaction_type::LONG, {st2}}),
-              Status::OK);
+    ASSERT_EQ(
+            tx_begin({s1, transaction_options::transaction_type::LONG, {st1}}),
+            Status::OK);
+    ASSERT_EQ(
+            tx_begin({s2, transaction_options::transaction_type::LONG, {st2}}),
+            Status::OK);
     resume_epoch();
     wait_epoch_update();
 

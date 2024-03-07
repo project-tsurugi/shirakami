@@ -96,7 +96,7 @@ void update_wp_at_commit(session* const ti) {
             (ret == Status::OK &&
              itr->second != target_psm_ptr->get_wp_meta_ptr())) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                       << "Error. Suspected mix of DML and DDL";
+                                  << "Error. Suspected mix of DML and DDL";
             ++itr;
             continue;
         }
@@ -115,7 +115,8 @@ void update_wp_at_commit(session* const ti) {
                     ti->get_write_set().get_storage_map().find(itr->first);
             if (wr_itr == ti->get_write_set().get_storage_map().end()) {
                 // no hit
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "programming error";
             } else { // hit
                 std::string left_key = std::get<0>(wr_itr->second);
                 std::string right_key = std::get<1>(wr_itr->second);
@@ -139,7 +140,8 @@ void update_wp_at_commit(session* const ti) {
                 itr = ti->get_wp_set().erase(itr);
                 continue;
             }
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << "library programming error";
             itr->second->get_wp_lock().unlock();
         }
         ++itr;
@@ -169,8 +171,9 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     wp::long_tx::set_counter(long_tx_id + 1);
 
     if (long_tx_id >= pow(2, 63)) { // NOLINT
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                   << "long tx id depletion. limit of specification.";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
+                << "long tx id depletion. limit of specification.";
         return Status::ERR_FATAL;
     }
     ti->set_long_tx_id(long_tx_id);

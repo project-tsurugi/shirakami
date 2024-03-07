@@ -18,8 +18,8 @@ namespace shirakami {
     for (auto&& elem : storage_list) {
         if (elem != wp::get_page_set_meta_storage()) {
             if (delete_storage(elem) != Status::OK) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "try delete_storage("
-                           << elem << ")";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                                      << "try delete_storage(" << elem << ")";
                 return Status::ERR_FATAL;
             }
         }

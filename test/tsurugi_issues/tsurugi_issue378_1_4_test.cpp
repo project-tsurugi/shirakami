@@ -36,7 +36,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1_4, case_5) { // NOLINT
-                                   // tx1 point read, tx2 range read
+                                       // tx1 point read, tx2 range read
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

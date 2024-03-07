@@ -270,7 +270,9 @@ void ongoing_tx::remove_id(std::size_t const id) {
             ++it;
         }
     }
-    if (!erased) { LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path."; }
+    if (!erased) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path.";
+    }
 }
 
 void ongoing_tx::set_optflags() {

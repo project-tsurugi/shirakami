@@ -121,7 +121,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                     register_read_if_ltx(ti, rec_ptr);
                 } else {
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "library programming error";
+                                          << "library programming error";
                     return Status::ERR_FATAL;
                 }
                 // end: make read set

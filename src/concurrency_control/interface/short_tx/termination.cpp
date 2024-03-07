@@ -307,8 +307,8 @@ RETRY: // NOLINT
         rec_ptr->set_tid(check);
 
         return Status::OK;
-    } 
-    NO_KEY:
+    }
+NO_KEY:
     // no key hit
     rec_ptr = new Record(key); // NOLINT
     tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
@@ -326,8 +326,8 @@ RETRY: // NOLINT
     rec_ptr->set_tid(tid);
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
-                                             wso->get_storage(), key,
-                                             rec_ptr, nvp)) {
+                                             wso->get_storage(), key, rec_ptr,
+                                             nvp)) {
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_CC) {
             /**
@@ -337,8 +337,7 @@ RETRY: // NOLINT
               */
             ti->get_result_info().set_reason_code(
                     reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-            ti->get_result_info().set_key_storage_name(key,
-                                                       wso->get_storage());
+            ti->get_result_info().set_key_storage_name(key, wso->get_storage());
             return Status::ERR_CC;
         }
         // success inserting

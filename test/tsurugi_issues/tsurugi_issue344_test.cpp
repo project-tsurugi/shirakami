@@ -92,10 +92,8 @@ TEST_F(tsurugi_issue344, from_jogasaki_sql_test) { // NOLINT
     ASSERT_OK(read_sequence(sid, &sver, &sval));
     ASSERT_OK(create_sequence(&sid));
     ASSERT_OK(read_sequence(sid, &sver, &sval));
-    ASSERT_OK(upsert(t1, st_system, "2",
-                     "~\x7f\xff\xff\xff\xff\xff\xff\xfd"));
-    ASSERT_OK(upsert(t1, st_system, "1",
-                     "~\x7f\xff\xff\xff\xff\xff\xff\xfe"));
+    ASSERT_OK(upsert(t1, st_system, "2", "~\x7f\xff\xff\xff\xff\xff\xff\xfd"));
+    ASSERT_OK(upsert(t1, st_system, "1", "~\x7f\xff\xff\xff\xff\xff\xff\xfe"));
     ASSERT_OK(commit(t1));
     ASSERT_OK(leave(t1));
 
@@ -133,8 +131,7 @@ TEST_F(tsurugi_issue344, from_jogasaki_sql_test) { // NOLINT
               st_t2, st_t20, st_tdecimals, st_tsecondary, st_tsecondary_i1,
               st_tseq0, st_tseq1, st_ttemporals, st_system}}));
     wait_epoch_update();
-    ASSERT_OK(insert(t1, st_t10, "3",
-                     "~?\xc1\xff\xff\xff\xff\xff\xff"));
+    ASSERT_OK(insert(t1, st_t10, "3", "~?\xc1\xff\xff\xff\xff\xff\xff"));
     ASSERT_OK(commit(t1));
     ASSERT_OK(leave(t1));
 
@@ -146,8 +143,7 @@ TEST_F(tsurugi_issue344, from_jogasaki_sql_test) { // NOLINT
               st_t2, st_t20, st_tdecimals, st_tsecondary, st_tsecondary_i1,
               st_tseq0, st_tseq1, st_ttemporals, st_system}}));
     wait_epoch_update();
-    ASSERT_OK(insert(t1, st_t10, "4",
-                     "~?\xbb\xff\xff\xff\xff\xff\xff"));
+    ASSERT_OK(insert(t1, st_t10, "4", "~?\xbb\xff\xff\xff\xff\xff\xff"));
     ASSERT_OK(commit(t1));
     ASSERT_OK(leave(t1));
 
@@ -159,8 +155,7 @@ TEST_F(tsurugi_issue344, from_jogasaki_sql_test) { // NOLINT
               st_t2, st_t20, st_tdecimals, st_tsecondary, st_tsecondary_i1,
               st_tseq0, st_tseq1, st_ttemporals, st_system}}));
     wait_epoch_update();
-    ASSERT_OK(insert(t1, st_t10, "5",
-                     "~?\xb6\xff\xff\xff\xff\xff\xff"));
+    ASSERT_OK(insert(t1, st_t10, "5", "~?\xb6\xff\xff\xff\xff\xff\xff"));
     ASSERT_OK(commit(t1));
     ASSERT_OK(leave(t1));
 

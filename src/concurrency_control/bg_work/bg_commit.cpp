@@ -53,7 +53,8 @@ void bg_commit::register_tx(Token token) {
     auto* ti = static_cast<session*>(token);
     // check from long
     if (ti->get_tx_type() != transaction_options::transaction_type::LONG) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error";
         return;
     }
 
@@ -64,7 +65,8 @@ void bg_commit::register_tx(Token token) {
                 std::make_tuple(ti->get_long_tx_id(), token));
         if (!ret.second) {
             // already exist
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << "library programming error";
         }
     }
 }
@@ -78,7 +80,7 @@ void bg_commit::worker() {
         std::size_t tx_id{};
         session* ti{};
     // find process tx
-    REFIND: // NOLINT
+    REFIND : // NOLINT
     {
         std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
         // if cont empty then clear used_ids
@@ -115,11 +117,12 @@ void bg_commit::worker() {
                             transaction_options::transaction_type::LONG ||
                     !ti->get_requested_commit()) {
                     // not long or not requested commit.
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "library programming error. "
-                               << ti->get_tx_type() << ", " << std::boolalpha
-                               << ti->get_requested_commit()
-                               << ", tx_id:" << tx_id;
+                    LOG_FIRST_N(ERROR, 1)
+                            << log_location_prefix
+                            << "library programming error. "
+                            << ti->get_tx_type() << ", " << std::boolalpha
+                            << ti->get_requested_commit()
+                            << ", tx_id:" << tx_id;
                     return;
                 }
                 used_ids().insert(tx_id);

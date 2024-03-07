@@ -45,7 +45,7 @@ TEST_F(tsurugi_issue256, 20230412_comment_ban) { // NOLINT
     ASSERT_OK(create_storage("A", st));
     ::sleepUs(100 * 1000); // NOLINT
     ASSERT_OK(delete_storage(st));
-    ::sleepUs(100 * 1000);               // NOLINT
+    ::sleepUs(100 * 1000);              // NOLINT
     ASSERT_OK(create_storage("B", st)); // heap-use-after-free
 }
 

@@ -65,8 +65,8 @@ TEST_F(short_upsert_two_thread_test,           // NOLINT
             auto ret =
                     tx_begin({s, transaction_options::transaction_type::SHORT});
             if (ret != Status::OK) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error. "
-                           << ret;
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unexpected error. " << ret;
             }
             for (std::size_t i = 0; i < ary_size; i++) {
                 std::size_t buf{};

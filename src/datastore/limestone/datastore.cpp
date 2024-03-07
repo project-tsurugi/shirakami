@@ -89,7 +89,7 @@ void recovery_from_datastore() {
                 if (yakushima::status::OK != rc) {
                     // can't put
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "unreachable path: " << rc;
+                                          << "unreachable path: " << rc;
                 }
                 // cleanup
                 leave(token);
@@ -101,7 +101,8 @@ void recovery_from_datastore() {
             Storage st2{};
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path";
                 return;
             }
             memcpy(&st2, val.data(), sizeof(st2));
@@ -132,7 +133,7 @@ void recovery_from_datastore() {
                     Status::OK) {
                     // Does DML create key handle map entry?
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "library programming error.";
+                                          << "library programming error.";
                     return;
                 }
             } else {
@@ -146,7 +147,7 @@ void recovery_from_datastore() {
                      * but it can't register_storage.
                      */
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "library programming error";
+                                          << "library programming error";
                     return;
                 }
                 if (storage::key_handle_map_push_storage(key, st2) !=
@@ -157,7 +158,7 @@ void recovery_from_datastore() {
                      * succeeded but it can't create entry of this map.
                      */
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                               << "library programming error";
+                                          << "library programming error";
                     return;
                 }
                 put_data(storage::meta_storage, key, new_value);
@@ -175,8 +176,8 @@ void recovery_from_datastore() {
                    sizeof(version));
             auto ret = sequence::sequence_map_push(id, 0, version, value);
             if (ret != Status::OK) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                           << "library programming error";
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "library programming error";
                 return;
             }
         } else {

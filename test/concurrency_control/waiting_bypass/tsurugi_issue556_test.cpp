@@ -55,7 +55,7 @@ TEST_F(tsurugi_issue556_test, test) { // NOLINT
      * wp st1
     */
     ASSERT_OK(enter(s1));
-     /**
+    /**
       * read st1,2, wp st2, finally no conflict with s1, but bypassed by s3
      */
     ASSERT_OK(enter(s2));
@@ -124,7 +124,7 @@ TEST_F(tsurugi_issue556_test, test) { // NOLINT
          * if no waiting bypass, 3 didn't conflict 2. 3 conflict 1 but 3 don't
          * break 1's read.
         */
-       ASSERT_OK(cb_rc); 
+        ASSERT_OK(cb_rc);
     } else {
         LOG(INFO) << "enabled wb";
         /**
@@ -132,7 +132,7 @@ TEST_F(tsurugi_issue556_test, test) { // NOLINT
          * but 3 don't break 1's read. however, bypassed 3's write break 2's 
          * read (st2, "0"). so 3 fail.
         */
-       ASSERT_EQ(cb_rc, Status::ERR_CC); 
+        ASSERT_EQ(cb_rc, Status::ERR_CC);
     }
 
     ASSERT_OK(leave(s1));
