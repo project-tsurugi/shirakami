@@ -26,7 +26,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue665_test");
-        FLAGS_stderrthreshold = 0;
+        // FLAGS_stderrthreshold = 0;
         init_for_test();
     }
 
@@ -121,24 +121,25 @@ TEST_P(tsurugi_issue665_test, // NOLINT
     }
     ASSERT_OK(commit(t));
 
+    // prepare write operator
+    std::function<Status(Token, Storage, std::string_view, std::string_view)>
+            write;
+    if (GetParam()) {
+        write = insert;
+    } else {
+        write = upsert;
+    }
+
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
     std::atomic<std::size_t> total_commit_ct{0};
     auto process = [st1, st2, final_rec_num, &readys, &go,
-                    &total_commit_ct](std::size_t th_id) {
+                    &total_commit_ct, write](std::size_t th_id) {
         std::size_t ct_abort{0};
         std::size_t ct_commit{0};
         // prepare
         Token t{};
         ASSERT_OK(enter(t));
-        std::function<Status(Token, Storage, std::string_view,
-                             std::string_view)>
-                write;
-        if (GetParam()) {
-            write = insert;
-        } else {
-            write = upsert;
-        }
 
         // ready to ready
         storeRelease(readys.at(th_id), 1);
@@ -166,10 +167,25 @@ TEST_P(tsurugi_issue665_test, // NOLINT
             ASSERT_OK(rc);
 
             // write st1, st2
-            ASSERT_OK(write(t, st1, std::to_string(count + 1),
-                            std::to_string(count + 1)));
-            ASSERT_OK(write(t, st2, std::to_string(count + 1),
-                            std::to_string(count + 1)));
+            rc = write(t, st1, std::to_string(count + 1),
+                       std::to_string(count + 1));
+            ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS || rc == Status::OK ||
+                        rc == Status::ERR_CC);
+            if (rc == Status::WARN_ALREADY_EXISTS) { abort(t); }
+            if (rc == Status::ERR_CC || rc == Status::WARN_ALREADY_EXISTS) {
+                continue;
+            }
+            ASSERT_OK(rc);
+            rc = write(t, st2, std::to_string(count + 1),
+                       std::to_string(count + 1));
+            ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS || rc == Status::OK ||
+                        rc == Status::ERR_CC);
+            if (rc == Status::WARN_ALREADY_EXISTS) { abort(t); }
+            if (rc == Status::ERR_CC || rc == Status::WARN_ALREADY_EXISTS) {
+                continue;
+            }
+            ASSERT_OK(rc);
+
             // commit
             rc = commit(t);
             if (rc == Status::OK) {

@@ -97,7 +97,7 @@ void change_inserting_records_state(session* const ti) {
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
-            if (check.get_latest() && check.get_absent()) {
+            if (check.get_latest() && check.get_absent()) { // inserting state
                 rec_ptr->get_tidw_ref().lock();
                 check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
 
@@ -238,7 +238,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     return Status::OK;
 }
 
-Status upsert_process_at_write_lock(session* ti, write_set_obj* wso) {
+Status sert_process_at_write_lock(session* ti, write_set_obj* wso) {
     // check key exists yet
     std::string key{};
     wso->get_rec_ptr()->get_key(key);
@@ -305,6 +305,9 @@ RETRY: // NOLINT
         rec_ptr->set_tid(check);
 
         // check it is hooked yet
+        /**
+         * OPTIMIZE: It may not need this recheck.
+        */
         auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
         auto cleanup_old_process = [wso](tid_word check) {
             check.set_latest(false);
@@ -394,39 +397,28 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             if (num_locked > 0) { unlock_records(ti, num_locked); }
             short_tx::abort(ti);
         };
-        if (wso_ptr->get_op() == OP_TYPE::INSERT) {
-            // detail info
-            if (logging::get_enable_logging_detail_info()) {
-                VLOG(log_trace)
-                        << log_location_prefix_detail_info
-                        << "lock key " + std::string(rec_ptr->get_key_view());
-            }
-
-            // lock the record
-            ++num_locked;
-            rec_ptr->get_tidw_ref().lock();
-
-            // detail info
-            if (logging::get_enable_logging_detail_info()) {
-                VLOG(log_trace)
-                        << log_location_prefix_detail_info
-                        << "locked key " + std::string(rec_ptr->get_key_view());
-            }
-
-            tid_word tid{rec_ptr->get_tidw_ref()};
-            if (tid.get_latest() && !tid.get_absent()) {
-                // the record is existing record (not inserting, deleted)
-                abort_process();
-                ti->get_result_info().set_reason_code(reason_code::KVS_INSERT);
-                ti->get_result_info().set_key_storage_name(
-                        rec_ptr->get_key_view(), wso_ptr->get_storage());
-                return Status::ERR_KVS;
-            }
-        } else if (wso_ptr->get_op() == OP_TYPE::UPSERT) {
-            auto rc = upsert_process_at_write_lock(ti, wso_ptr);
+        if (wso_ptr->get_op() == OP_TYPE::INSERT ||
+            wso_ptr->get_op() == OP_TYPE::UPSERT) {
+            // about sert common process
+            auto rc = sert_process_at_write_lock(ti, wso_ptr);
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
                 ++num_locked;
+
+                // about insert process
+                if (wso_ptr->get_op() == OP_TYPE::INSERT) {
+                    tid_word tid{rec_ptr->get_tidw_ref()};
+                    if (tid.get_latest() && !tid.get_absent()) {
+                        // the record is existing record (not inserting, deleted)
+                        abort_process();
+                        ti->get_result_info().set_reason_code(
+                                reason_code::KVS_INSERT);
+                        ti->get_result_info().set_key_storage_name(
+                                rec_ptr->get_key_view(),
+                                wso_ptr->get_storage());
+                        return Status::ERR_KVS;
+                    }
+                }
                 return Status::OK;
             }
             if (rc == Status::ERR_CC) {
@@ -724,6 +716,10 @@ void process_tx_state(session* ti,
 
 extern Status commit(session* const ti) {
     // write lock phase
+    /**
+     * HACK: it must refactor at abort process code (write lock, read wp verify
+     * , node verify)
+    */
     tid_word commit_tid{};
     auto rc{write_lock(ti, commit_tid)};
     if (rc != Status::OK) {
