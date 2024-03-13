@@ -333,7 +333,7 @@ public:
                     nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
-                std::get<0>(elem) = nvb; // update
+                std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
                   * note : discussion.
                   * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.

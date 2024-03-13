@@ -16,7 +16,7 @@ using transaction_type = shirakami::transaction_options::transaction_type;
 
 namespace shirakami::testing {
 
-class tsurugi_issue672_test : public ::testing::Test {
+class tsurugi_issue672_test : public ::testing::TestWithParam<bool> {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
@@ -36,9 +36,21 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(tsurugi_issue672_test, // NOLINT
-       simple) {              // NOLINT
-                              // prepare
+INSTANTIATE_TEST_SUITE_P(insert_interior_from_border, tsurugi_issue672_test,
+                         ::testing::Values(true, false));
+
+TEST_P(tsurugi_issue672_test,         // NOLINT
+       insert_interior_from_border) { // NOLINT
+    // prepare
+    std::size_t entry_size{0};
+    if (GetParam()) {
+        // insert interior from border
+        entry_size = 16;
+    } else {
+        // insert interior from interor
+        entry_size = 15 * 16 + 1;
+    }
+
     Storage st{};
     ASSERT_OK(create_storage("tab", st));
 
@@ -50,10 +62,8 @@ TEST_F(tsurugi_issue672_test, // NOLINT
                                                 "", scan_endpoint::INF, shd));
 
     std::string common_prefix(8, '0');
-    LOG(INFO) << common_prefix << ", size " << common_prefix.size();
-    for (std::size_t i = 0; i < 16; ++i) {
+    for (std::size_t i = 0; i < entry_size; ++i) {
         std::string key = common_prefix + std::to_string(i);
-        LOG(INFO) << key;
         ASSERT_OK(insert(t1, st, key, "0"));
     }
 
