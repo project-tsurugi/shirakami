@@ -47,6 +47,8 @@ if (BUILD_PWAL)
 endif()
 find_package(yakushima REQUIRED)
 
+option(BUILD_ONLY_WD_BENCH "Build only working directory about bench for dev" OFF)
+
 find_package(Boost
         COMPONENTS filesystem)
 find_package(Doxygen)
