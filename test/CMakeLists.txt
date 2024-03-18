@@ -12,119 +12,125 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-file(GLOB CC_TEST_SOURCES
-        "concurrency_control/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/boundary_wait/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/cascading_wait/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/false_positive/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/multi_boundary/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_wait/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_and_boundary_wait/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_areas/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_Parallel/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
-        "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
-        "concurrency_control/anomaly/write_skew/*.cpp"
-        "concurrency_control/bg_work/*.cpp"
-        "concurrency_control/complicated/*.cpp"
-        "concurrency_control/hybrid/delete_update/*.cpp"
-        "concurrency_control/hybrid/insert/*.cpp"
-        "concurrency_control/hybrid/search_wp/*.cpp"
-        "concurrency_control/hybrid/scan_wp/*.cpp"
-        "concurrency_control/hybrid/scan_upsert/*.cpp"
-        "concurrency_control/hybrid/search_upsert/*.cpp"
-        "concurrency_control/long_tx/*.cpp"
-        "concurrency_control/long_tx/delete/*.cpp"
-        "concurrency_control/long_tx/diagnostic/*.cpp"
-        "concurrency_control/long_tx/delete_insert/*.cpp"
-        "concurrency_control/long_tx/delete_insert_scan/*.cpp"
-        "concurrency_control/long_tx/delete_scan/*.cpp"
-        "concurrency_control/long_tx/delete_search/*.cpp"
-        "concurrency_control/long_tx/delete_update/*.cpp"
-        "concurrency_control/long_tx/delete_upsert/*.cpp"
-        "concurrency_control/long_tx/insert/*.cpp"
-        "concurrency_control/long_tx/insert_search/*.cpp"
-        "concurrency_control/long_tx/insert_scan/*.cpp"
-        "concurrency_control/long_tx/insert_update/*.cpp"
-        "concurrency_control/long_tx/insert_upsert/*.cpp"
-        "concurrency_control/long_tx/helper/*.cpp"
-        "concurrency_control/long_tx/read_area/*.cpp"
-        "concurrency_control/long_tx/search/*.cpp"
-        "concurrency_control/long_tx/scan/*.cpp"
-        "concurrency_control/long_tx/scan/open_scan/*.cpp"
-        "concurrency_control/long_tx/scan/next/*.cpp"
-        "concurrency_control/long_tx/scan_upsert/*.cpp"
-        "concurrency_control/long_tx/scan_wp/*.cpp"
-        "concurrency_control/long_tx/search_update/*.cpp"
-        "concurrency_control/long_tx/search_upsert/*.cpp"
-        "concurrency_control/long_tx/update/*.cpp"
-        "concurrency_control/long_tx/upsert/*.cpp"
-        "concurrency_control/long_tx/termination/*.cpp"
-        "concurrency_control/long_tx/tx_state/*.cpp"
-        "concurrency_control/long_tx/wp_basic/*.cpp"
-        "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
-        "concurrency_control/read_only_tx/*.cpp"
-        "concurrency_control/read_only_tx/search/*.cpp"
-        "concurrency_control/read_only_tx/scan/*.cpp"
-        "concurrency_control/read_only_tx/scan/open_scan/*.cpp"
-        "concurrency_control/read_only_tx/scan/next/*.cpp"
-        "concurrency_control/read_only_tx/tx_state/*.cpp"
-        "concurrency_control/short_tx/*.cpp"
-        "concurrency_control/short_tx/delete/*.cpp"
-        "concurrency_control/short_tx/delete_insert/*.cpp"
-        "concurrency_control/short_tx/delete_insert_scan/*.cpp"
-        "concurrency_control/short_tx/delete_insert_search/*.cpp"
-        "concurrency_control/short_tx/delete_insert_search_upsert/*.cpp"
-        "concurrency_control/short_tx/delete_insert_search_upsert_scan/*.cpp"
-        "concurrency_control/short_tx/delete_scan/*.cpp"
-        "concurrency_control/short_tx/delete_scan_upsert/*.cpp"
-        "concurrency_control/short_tx/delete_search/*.cpp"
-        "concurrency_control/short_tx/delete_update/*.cpp"
-        "concurrency_control/short_tx/delete_upsert/*.cpp"
-        "concurrency_control/short_tx/helper/*.cpp"
-        "concurrency_control/short_tx/insert/*.cpp"
-        "concurrency_control/short_tx/insert_update/*.cpp"
-        "concurrency_control/short_tx/insert_upsert/*.cpp"
-        "concurrency_control/short_tx/insert_scan/*.cpp"
-        "concurrency_control/short_tx/insert_search/*.cpp"
-        "concurrency_control/short_tx/upsert/*.cpp"
-        "concurrency_control/short_tx/update/*.cpp"
-        "concurrency_control/short_tx/scan/*.cpp"
-        "concurrency_control/short_tx/scan/next/*.cpp"
-        "concurrency_control/short_tx/scan/open_scan/*.cpp"
-        "concurrency_control/short_tx/scan_upsert/*.cpp"
-        "concurrency_control/short_tx/search/*.cpp"
-        "concurrency_control/short_tx/search_update/*.cpp"
-        "concurrency_control/short_tx/search_upsert/*.cpp"
-        "concurrency_control/short_tx/search_upsert/multi_thread/*.cpp"
-        "concurrency_control/short_tx/storage/*.cpp"
-        "concurrency_control/short_tx/termination/*.cpp"
-        "concurrency_control/short_tx/tx_state/*.cpp"
-        "database_options/*.cpp"
-        "result/*.cpp"
-        "start/*.cpp"
-        "shirakami_issues/*.cpp"
-        "shutdown/*.cpp"
-        "sequence/*.cpp"
-        "storage/*.cpp"
-        "transaction_options/*.cpp"
-        "tsurugi_issues/*.cpp"
-        "tx_id/*.cpp"
+if (BUILD_ONLY_WD_TESTS)
+  message("Build only working directory about tests.")
+  file(GLOB CC_TEST_SOURCES
+        "wd/*.cpp"
         )
-
-file (GLOB WAITING_BYPASS_TEST_SOURCES
-      "concurrency_control/waiting_bypass/*.cpp"
-)
-
-if (BUILD_PWAL)
-  file (GLOB LOGGING_TEST_SOURCES
-        "datastore/*.cpp"
-        "datastore/single_recovery/*.cpp"
-        "datastore/two_recovery/*.cpp"
-        "datastore/three_recovery/*.cpp"
-        )
+else ()
+  file(GLOB CC_TEST_SOURCES
+          "concurrency_control/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/boundary_wait/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/cascading_wait/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/false_positive/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/multi_boundary/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_wait/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_and_boundary_wait/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Functions_v1/read_areas/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_Parallel/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
+          "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
+          "concurrency_control/anomaly/write_skew/*.cpp"
+          "concurrency_control/bg_work/*.cpp"
+          "concurrency_control/complicated/*.cpp"
+          "concurrency_control/hybrid/delete_update/*.cpp"
+          "concurrency_control/hybrid/insert/*.cpp"
+          "concurrency_control/hybrid/search_wp/*.cpp"
+          "concurrency_control/hybrid/scan_wp/*.cpp"
+          "concurrency_control/hybrid/scan_upsert/*.cpp"
+          "concurrency_control/hybrid/search_upsert/*.cpp"
+          "concurrency_control/long_tx/*.cpp"
+          "concurrency_control/long_tx/delete/*.cpp"
+          "concurrency_control/long_tx/diagnostic/*.cpp"
+          "concurrency_control/long_tx/delete_insert/*.cpp"
+          "concurrency_control/long_tx/delete_insert_scan/*.cpp"
+          "concurrency_control/long_tx/delete_scan/*.cpp"
+          "concurrency_control/long_tx/delete_search/*.cpp"
+          "concurrency_control/long_tx/delete_update/*.cpp"
+          "concurrency_control/long_tx/delete_upsert/*.cpp"
+          "concurrency_control/long_tx/insert/*.cpp"
+          "concurrency_control/long_tx/insert_search/*.cpp"
+          "concurrency_control/long_tx/insert_scan/*.cpp"
+          "concurrency_control/long_tx/insert_update/*.cpp"
+          "concurrency_control/long_tx/insert_upsert/*.cpp"
+          "concurrency_control/long_tx/helper/*.cpp"
+          "concurrency_control/long_tx/read_area/*.cpp"
+          "concurrency_control/long_tx/search/*.cpp"
+          "concurrency_control/long_tx/scan/*.cpp"
+          "concurrency_control/long_tx/scan/open_scan/*.cpp"
+          "concurrency_control/long_tx/scan/next/*.cpp"
+          "concurrency_control/long_tx/scan_upsert/*.cpp"
+          "concurrency_control/long_tx/scan_wp/*.cpp"
+          "concurrency_control/long_tx/search_update/*.cpp"
+          "concurrency_control/long_tx/search_upsert/*.cpp"
+          "concurrency_control/long_tx/update/*.cpp"
+          "concurrency_control/long_tx/upsert/*.cpp"
+          "concurrency_control/long_tx/termination/*.cpp"
+          "concurrency_control/long_tx/tx_state/*.cpp"
+          "concurrency_control/long_tx/wp_basic/*.cpp"
+          "concurrency_control/long_tx_or_hybrid/interface/upsert/*.cpp"
+          "concurrency_control/read_only_tx/*.cpp"
+          "concurrency_control/read_only_tx/search/*.cpp"
+          "concurrency_control/read_only_tx/scan/*.cpp"
+          "concurrency_control/read_only_tx/scan/open_scan/*.cpp"
+          "concurrency_control/read_only_tx/scan/next/*.cpp"
+          "concurrency_control/read_only_tx/tx_state/*.cpp"
+          "concurrency_control/short_tx/*.cpp"
+          "concurrency_control/short_tx/delete/*.cpp"
+          "concurrency_control/short_tx/delete_insert/*.cpp"
+          "concurrency_control/short_tx/delete_insert_scan/*.cpp"
+          "concurrency_control/short_tx/delete_insert_search/*.cpp"
+          "concurrency_control/short_tx/delete_insert_search_upsert/*.cpp"
+          "concurrency_control/short_tx/delete_insert_search_upsert_scan/*.cpp"
+          "concurrency_control/short_tx/delete_scan/*.cpp"
+          "concurrency_control/short_tx/delete_scan_upsert/*.cpp"
+          "concurrency_control/short_tx/delete_search/*.cpp"
+          "concurrency_control/short_tx/delete_update/*.cpp"
+          "concurrency_control/short_tx/delete_upsert/*.cpp"
+          "concurrency_control/short_tx/helper/*.cpp"
+          "concurrency_control/short_tx/insert/*.cpp"
+          "concurrency_control/short_tx/insert_update/*.cpp"
+          "concurrency_control/short_tx/insert_upsert/*.cpp"
+          "concurrency_control/short_tx/insert_scan/*.cpp"
+          "concurrency_control/short_tx/insert_search/*.cpp"
+          "concurrency_control/short_tx/upsert/*.cpp"
+          "concurrency_control/short_tx/update/*.cpp"
+          "concurrency_control/short_tx/scan/*.cpp"
+          "concurrency_control/short_tx/scan/next/*.cpp"
+          "concurrency_control/short_tx/scan/open_scan/*.cpp"
+          "concurrency_control/short_tx/scan_upsert/*.cpp"
+          "concurrency_control/short_tx/search/*.cpp"
+          "concurrency_control/short_tx/search_update/*.cpp"
+          "concurrency_control/short_tx/search_upsert/*.cpp"
+          "concurrency_control/short_tx/search_upsert/multi_thread/*.cpp"
+          "concurrency_control/short_tx/storage/*.cpp"
+          "concurrency_control/short_tx/termination/*.cpp"
+          "concurrency_control/short_tx/tx_state/*.cpp"
+          "database_options/*.cpp"
+          "result/*.cpp"
+          "start/*.cpp"
+          "shirakami_issues/*.cpp"
+          "shutdown/*.cpp"
+          "sequence/*.cpp"
+          "storage/*.cpp"
+          "transaction_options/*.cpp"
+          "tsurugi_issues/*.cpp"
+          "tx_id/*.cpp"
+          )
+  
+  file (GLOB WAITING_BYPASS_TEST_SOURCES
+        "concurrency_control/waiting_bypass/*.cpp"
+  )
+  
+  if (BUILD_PWAL)
+    file (GLOB LOGGING_TEST_SOURCES
+          "datastore/*.cpp"
+          "datastore/single_recovery/*.cpp"
+          "datastore/two_recovery/*.cpp"
+          "datastore/three_recovery/*.cpp"
+          )
+  endif()
 endif()
 
 register_tests(
@@ -139,21 +145,9 @@ register_tests(
         SOURCES ${CC_TEST_SOURCES}
         TEST_LABELS "CC"
 )
-
-register_tests(
-        TARGET shirakami
-        DEPENDS
-          shirakami-impl
-          PRIVATE glog::glog
-          PRIVATE ${tbb_prefix}tbb
-          PRIVATE ${tbb_prefix}tbbmalloc
-          PRIVATE ${tbb_prefix}tbbmalloc_proxy
-          PRIVATE yakushima
-        SOURCES ${WAITING_BYPASS_TEST_SOURCES}
-        TEST_LABELS "WAITING_BYPASS"
-)
-
-if (BUILD_PWAL)
+  
+if (BUILD_ONLY_WD_TESTS)
+else ()
   register_tests(
           TARGET shirakami
           DEPENDS
@@ -163,7 +157,22 @@ if (BUILD_PWAL)
             PRIVATE ${tbb_prefix}tbbmalloc
             PRIVATE ${tbb_prefix}tbbmalloc_proxy
             PRIVATE yakushima
-          SOURCES ${LOGGING_TEST_SOURCES}
-          TEST_LABELS "LOGGING"
+          SOURCES ${WAITING_BYPASS_TEST_SOURCES}
+          TEST_LABELS "WAITING_BYPASS"
   )
-endif()
+  
+  if (BUILD_PWAL)
+    register_tests(
+            TARGET shirakami
+            DEPENDS
+              shirakami-impl
+              PRIVATE glog::glog
+              PRIVATE ${tbb_prefix}tbb
+              PRIVATE ${tbb_prefix}tbbmalloc
+              PRIVATE ${tbb_prefix}tbbmalloc_proxy
+              PRIVATE yakushima
+            SOURCES ${LOGGING_TEST_SOURCES}
+            TEST_LABELS "LOGGING"
+    )
+  endif()
+endif ()
