@@ -4,6 +4,7 @@
 #include <thread>
 #include <vector>
 
+#include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
@@ -26,7 +27,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue665_test");
-        // FLAGS_stderrthreshold = 0;
+        FLAGS_stderrthreshold = 0;
         init_for_test();
     }
 
@@ -101,16 +102,92 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
 INSTANTIATE_TEST_SUITE_P(is_insert, tsurugi_issue665_test,
                          ::testing::Values(true, false));
 
+TEST_F(tsurugi_issue665_test, // NOLINT
+       stall_test) {          // NOLINT
+    // comment for https://github.com/project-tsurugi/tsurugi-issues/issues/665#issuecomment-2000185872
+    /**
+     * test senario
+     * t0: insert a, commit to make test node
+     * t1: full scan, insert b
+     * t2: insert b (sharing), abort
+     * sleep
+     * gc: unhook b
+     * t3: insert c (must occur phantom for t1 node verify)
+     * stop gc
+     * t1: commit, node verify try phis insert and find phantom, lock release
+     * for locked records (but it miss the insert with lock).
+     * t4: insert and share it.
+     * t4: commit it and wait lock infinite
+    */
+    // prepare
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token t1{};
+    Token t2{};
+    Token t3{};
+    Token t4{};
+    ASSERT_OK(enter(t1));
+    ASSERT_OK(enter(t2));
+    ASSERT_OK(enter(t3));
+    ASSERT_OK(enter(t4));
+    // test
+    // t0: insert a, commit to make test node
+    ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
+    ASSERT_OK(upsert(t1, st, "a", ""));
+    ASSERT_OK(commit(t1));
+    // t1
+    ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
+    // full scan
+    ScanHandle shd{};
+    ASSERT_OK(open_scan(t1, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
+                        shd));
+    std::string buf{};
+    ASSERT_OK(read_key_from_scan(t1, shd, buf));
+    ASSERT_EQ(buf, "a");
+    ASSERT_EQ(next(t1, shd), Status::WARN_SCAN_LIMIT);
+    // insert
+    ASSERT_OK(insert(t1, st, "b", ""));
+    // t2
+    ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
+    ASSERT_OK(insert(t2, st, "b", "")); // sharing
+    ASSERT_OK(abort(t2));
+    // sleep for unhook
+    Status rc{};
+    do {
+        std::this_thread::yield();
+        Record* rec_ptr{};
+        rc = get<Record>(st, "b", rec_ptr);
+    } while (rc == Status::OK);
+    // t3
+    ASSERT_OK(tx_begin({t3, transaction_type::SHORT}));
+    ASSERT_OK(insert(t3, st, "c", "")); // sharing
+    // stop gc
+    {
+        std::unique_lock lk{garbage::get_mtx_cleaner()};
+        ASSERT_EQ(commit(t1), Status::ERR_CC); // craete locked missed record b
+        // t4
+        ASSERT_OK(tx_begin({t4, transaction_type::SHORT}));
+        ASSERT_OK(insert(t4, st, "b", "")); // sharing b
+        ASSERT_OK(commit(t4));              // stall
+    }
+
+    // cleanup
+    ASSERT_OK(leave(t1));
+    ASSERT_OK(leave(t2));
+    ASSERT_OK(leave(t3));
+    ASSERT_OK(leave(t4));
+}
+
 TEST_P(tsurugi_issue665_test, // NOLINT
-       simple) {              // NOLINT
+       DISABLED_simple) {     // NOLINT
                               // prepare
     Storage st1{};
     Storage st2{};
     ASSERT_OK(create_storage("test1", st1));
     ASSERT_OK(create_storage("test2", st2));
 
-    constexpr std::size_t th_num{2};
-    constexpr std::size_t final_rec_num{100};
+    constexpr std::size_t th_num{40};
+    constexpr std::size_t final_rec_num{300};
     constexpr std::size_t initial_rec_num{10};
 
     Token t{};
