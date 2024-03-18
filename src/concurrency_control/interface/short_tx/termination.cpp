@@ -328,6 +328,7 @@ NO_KEY:
     if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
                                              wso->get_storage(), key, rec_ptr,
                                              nvp)) {
+        wso->set_rec_ptr(rec_ptr);
         Status check_node_set_res{ti->update_node_set(nvp)};
         if (check_node_set_res == Status::ERR_CC) {
             /**
@@ -349,7 +350,6 @@ NO_KEY:
                                        std::string(rec_ptr->get_key_view());
         }
 
-        wso->set_rec_ptr(rec_ptr);
         return Status::OK;
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
@@ -373,9 +373,12 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
             // about sert common process
             auto rc = sert_process_at_write_lock(ti, wso_ptr);
+            ++num_locked;
+            /**
+             * NOTE: sert_process_at_write_lock must have locked the record
+            */
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
-                ++num_locked;
 
                 // about insert process
                 if (wso_ptr->get_op() == OP_TYPE::INSERT) {
