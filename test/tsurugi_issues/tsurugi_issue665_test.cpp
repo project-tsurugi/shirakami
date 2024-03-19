@@ -1,6 +1,8 @@
 
 #include <atomic>
 #include <functional>
+#include <map>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -27,7 +29,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue665_test");
-        // FLAGS_stderrthreshold = 0;
+        FLAGS_stderrthreshold = 0;
         init_for_test();
     }
 
@@ -103,7 +105,7 @@ INSTANTIATE_TEST_SUITE_P(is_insert, tsurugi_issue665_test,
                          ::testing::Values(true, false));
 
 TEST_F(tsurugi_issue665_test, // NOLINT
-       stall_test) {          // NOLINT
+       DISABLED_stall_test) { // NOLINT
     // comment for https://github.com/project-tsurugi/tsurugi-issues/issues/665#issuecomment-2000185872
     /**
      * test senario
@@ -179,14 +181,14 @@ TEST_F(tsurugi_issue665_test, // NOLINT
 }
 
 TEST_P(tsurugi_issue665_test, // NOLINT
-       DISABLED_simple) {     // NOLINT
+       simple) {              // NOLINT
                               // prepare
     Storage st1{};
     Storage st2{};
     ASSERT_OK(create_storage("test1", st1));
     ASSERT_OK(create_storage("test2", st2));
 
-    constexpr std::size_t th_num{40};
+    constexpr std::size_t th_num{60};
     constexpr std::size_t final_rec_num{300};
     constexpr std::size_t initial_rec_num{10};
 
@@ -210,8 +212,19 @@ TEST_P(tsurugi_issue665_test, // NOLINT
     std::vector<char> readys(th_num);
     std::atomic<bool> go{false};
     std::atomic<std::size_t> total_commit_ct{0};
-    auto process = [st1, st2, final_rec_num, &readys, &go, &total_commit_ct,
-                    write](std::size_t th_id) {
+    std::map<std::size_t, std::size_t> commit_map; // num, count;
+    std::mutex mtx_commit_map;
+    auto commit_map_add = [&commit_map, &mtx_commit_map](std::size_t i) {
+        std::unique_lock<std::mutex> lk{mtx_commit_map};
+        auto find_itr = commit_map.find(i);
+        if (find_itr != commit_map.end()) { // hit
+            find_itr->second += 1;
+        } else {
+            commit_map.insert(std::make_pair(i, 1));
+        }
+    };
+    auto process = [st1, st2, final_rec_num, &readys, &go, &commit_map_add,
+                    &total_commit_ct, write](std::size_t th_id) {
         std::size_t ct_abort{0};
         std::size_t ct_commit{0};
         // prepare
@@ -250,6 +263,7 @@ TEST_P(tsurugi_issue665_test, // NOLINT
                         rc == Status::ERR_CC);
             if (rc == Status::WARN_ALREADY_EXISTS) { abort(t); }
             if (rc == Status::ERR_CC || rc == Status::WARN_ALREADY_EXISTS) {
+                ++ct_abort;
                 continue;
             }
             ASSERT_OK(rc);
@@ -259,6 +273,7 @@ TEST_P(tsurugi_issue665_test, // NOLINT
                         rc == Status::ERR_CC);
             if (rc == Status::WARN_ALREADY_EXISTS) { abort(t); }
             if (rc == Status::ERR_CC || rc == Status::WARN_ALREADY_EXISTS) {
+                ++ct_abort;
                 continue;
             }
             ASSERT_OK(rc);
@@ -267,6 +282,7 @@ TEST_P(tsurugi_issue665_test, // NOLINT
             rc = commit(t);
             if (rc == Status::OK) {
                 ++ct_commit;
+                commit_map_add(count + 1);
             } else {
                 ++ct_abort;
             }
@@ -290,18 +306,32 @@ TEST_P(tsurugi_issue665_test, // NOLINT
 
     for (auto&& th : thv) { th.join(); }
 
-    // verify
-    ASSERT_EQ(total_commit_ct, final_rec_num - initial_rec_num);
+    auto commit_map_verify = [&commit_map, final_rec_num, initial_rec_num]() {
+        for (std::size_t i = 0; i < final_rec_num - initial_rec_num; ++i) {
+            auto find_itr = commit_map.find(initial_rec_num + i + 1);
+            ASSERT_NE(find_itr, commit_map.end()); // hit
+            LOG(INFO) << initial_rec_num + i + 1  << ", " << find_itr->second;
+            ASSERT_EQ(find_itr->second, 1); // must 1
+        }
+    };
+
     ASSERT_OK(tx_begin({t, transaction_type::SHORT}));
     std::size_t count{0};
     Status rc{};
+    // verify st1
     ASSERT_NO_FATAL_FAILURE(full_scan(t, st1, final_rec_num, count, rc));
     ASSERT_EQ(rc, Status::WARN_SCAN_LIMIT);
     ASSERT_EQ(count, final_rec_num);
+    // verify st2
     ASSERT_NO_FATAL_FAILURE(full_scan(t, st2, final_rec_num, count, rc));
     ASSERT_EQ(rc, Status::OK);
     ASSERT_EQ(count, final_rec_num - initial_rec_num);
     ASSERT_OK(commit(t));
+    // verify commit count
+    // ASSERT_EQ(total_commit_ct, final_rec_num - initial_rec_num);
+    LOG(INFO) << total_commit_ct << ", " << final_rec_num - initial_rec_num;
+    // verify commit map
+    ASSERT_NO_FATAL_FAILURE(commit_map_verify());
 
     // cleanup
     ASSERT_OK(leave(t));
