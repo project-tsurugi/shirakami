@@ -267,6 +267,7 @@ RETRY: // NOLINT
                     << "lock key " + std::string(rec_ptr->get_key_view());
         }
 
+RE_LOCK: // NOLINT
         // locking
         rec_ptr->get_tidw_ref().lock();
 
@@ -277,11 +278,13 @@ RETRY: // NOLINT
         if (rc == Status::OK) {
             if (wso->get_rec_ptr() != rec_ptr) {
                 // same case as L253
+                wso->get_rec_ptr()->unlock();
                 wso->set_rec_ptr(rec_ptr);
+                goto RE_LOCK; // NOLINT
             }
         } else {
             // unhooked yet
-            rec_ptr->get_tidw_ref().unlock();
+            wso->get_rec_ptr()->unlock();
             goto NO_KEY; // NOLINT
         }
 
@@ -298,7 +301,6 @@ RETRY: // NOLINT
         if ((check.get_latest() && check.get_absent()) || // inserting state
             (!check.get_absent())                         // normal state
         ) {
-            // inserting state
             return Status::OK;
         }
         // it is deleted state
