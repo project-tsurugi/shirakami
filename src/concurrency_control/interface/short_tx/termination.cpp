@@ -255,11 +255,10 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     return Status::OK;
 }
 
-Status sert_process_at_write_lock(session* ti, write_set_obj* wso) {
+Status sert_process_at_write_lock(write_set_obj* wso) {
     // check key exists yet
     std::string key{};
     wso->get_rec_ptr()->get_key(key);
-RETRY: // NOLINT
     Record* rec_ptr{};
     auto rc = get<Record>(wso->get_storage(), key, rec_ptr);
     if (rc == Status::OK) {
@@ -267,11 +266,11 @@ RETRY: // NOLINT
         // point (*1)
         if (wso->get_rec_ptr() != rec_ptr) {
             /**
-             * case example.
-             * upsert shared newly inserting record, it was aborted by others.
-             * gc unhooked it, and new tx inserted inserting recod.
+             * if insert, it already incremented shared tombstone count.
+             * if upsert, it cant be unhooked.
             */
-            wso->set_rec_ptr(rec_ptr);
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+            wso->set_rec_ptr(rec_ptr); // for fail safe
         }
 
         // check ts
@@ -294,15 +293,17 @@ RETRY: // NOLINT
         rc = get<Record>(wso->get_storage(), key, rec_ptr);
         if (rc == Status::OK) {
             if (wso->get_rec_ptr() != rec_ptr) {
-                // same case as L253
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path";
+                // for fail safe
                 wso->get_rec_ptr()->unlock();
                 wso->set_rec_ptr(rec_ptr);
                 goto RE_LOCK; // NOLINT
             }
         } else {
-            // unhooked yet
-            wso->get_rec_ptr()->unlock();
-            goto NO_KEY; // NOLINT
+            // already unhooked
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+            return Status::ERR_CC; // for fail safe
         }
 
         // locked and it is hooked yet
@@ -327,54 +328,8 @@ RETRY: // NOLINT
 
         return Status::OK;
     }
-NO_KEY:
-    // no key hit
-    rec_ptr = new Record(key); // NOLINT
-    tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-    tid.set_latest(true);
-    tid.set_absent(true);
-    tid.set_lock(true);
-
-    // detail info
-    if (logging::get_enable_logging_detail_info()) {
-        VLOG(log_trace) << log_location_prefix_detail_info
-                        << "inserting locked record, key " +
-                                   std::string(rec_ptr->get_key_view());
-    }
-
-    rec_ptr->set_tid(tid);
-    yakushima::node_version64* nvp{};
-    if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
-                                             wso->get_storage(), key, rec_ptr,
-                                             nvp)) {
-        wso->set_rec_ptr(rec_ptr);
-        Status check_node_set_res{ti->update_node_set(nvp)};
-        if (check_node_set_res == Status::ERR_CC) {
-            /**
-              * This This transaction is confirmed to be aborted 
-              * because the previous scan was destroyed by an insert
-              * by another transaction.
-              */
-            ti->get_result_info().set_reason_code(
-                    reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-            ti->get_result_info().set_key_storage_name(key, wso->get_storage());
-            return Status::ERR_CC;
-        }
-        // success inserting
-
-        // detail info
-        if (logging::get_enable_logging_detail_info()) {
-            VLOG(log_trace) << log_location_prefix_detail_info
-                            << "inserted locking key " +
-                                       std::string(rec_ptr->get_key_view());
-        }
-
-        return Status::OK;
-    }
-    // else insert_result == Status::WARN_ALREADY_EXISTS
-    // so retry from index access
-    delete rec_ptr; // NOLINT
-    goto RETRY;     // NOLINT
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+    return Status::ERR_CC; // for fail safe
 }
 
 Status write_lock(session* ti, tid_word& commit_tid) {
@@ -391,7 +346,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
             // about sert common process
-            auto rc = sert_process_at_write_lock(ti, wso_ptr);
+            auto rc = sert_process_at_write_lock(wso_ptr);
             ++num_locked;
             /**
              * NOTE: sert_process_at_write_lock must have locked the record
