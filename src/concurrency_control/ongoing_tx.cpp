@@ -277,14 +277,23 @@ void ongoing_tx::remove_id(std::size_t const id) {
 
 void ongoing_tx::set_optflags() {
     // check environ "SHIRAKAMI_ENABLE_WAITING_BYPASS"
-    // disabled only if set "SHIRAKAMI_ENABLE_WAITING_BYPASS=0"
-    bool enable_wb = true;
+    constexpr bool enable_wb_default = false;
+    bool enable_wb = enable_wb_default;
     if (auto* envstr = std::getenv("SHIRAKAMI_ENABLE_WAITING_BYPASS");
         envstr != nullptr && *envstr != '\0') {
-        enable_wb = (std::strcmp(envstr, "0") != 0);
+        if (std::strcmp(envstr, "1") == 0) {
+            enable_wb = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            enable_wb = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_ENABLE_WAITING_BYPASS; using default value";
+        }
     }
     VLOG(log_debug) << log_location_prefix << "optflag: waiting bypass is "
-                    << (enable_wb ? "enabled (default)" : "disabled");
+                    << (enable_wb ? "enabled" : "disabled")
+                    << (enable_wb == enable_wb_default ? " (default)" : "");
     optflag_disable_waiting_bypass_ = !enable_wb;
     // check environ "SHIRAKAMI_WAITING_BYPASS_TO_ROOT"
     bool is_envset = false;
