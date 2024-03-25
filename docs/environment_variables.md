@@ -8,7 +8,7 @@ Shirakami コードから参照する環境変数の説明
 
 * `SHIRAKAMI_ENABLE_WAITING_BYPASS`
   * waiting bypass 実行に関するフラグ。実行するかしないかを選択する。
-  * デフォルト動作は waiting bypass を実行する。
+  * デフォルト動作は waiting bypass を実行しない。
     * 未指定時、空文字列指定時には、デフォルト動作をする。
     * `SHIRAKAMI_ENABLE_WAITING_BYPASS=0` とすると、waiting bypass を実行しない。
     * `SHIRAKAMI_ENABLE_WAITING_BYPASS=1` とすると、waiting bypass を実行する。

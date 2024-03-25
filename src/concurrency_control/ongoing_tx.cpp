@@ -277,7 +277,7 @@ void ongoing_tx::remove_id(std::size_t const id) {
 
 void ongoing_tx::set_optflags() {
     // check environ "SHIRAKAMI_ENABLE_WAITING_BYPASS"
-    constexpr bool enable_wb_default = true;
+    constexpr bool enable_wb_default = false;
     bool enable_wb = enable_wb_default;
     if (auto* envstr = std::getenv("SHIRAKAMI_ENABLE_WAITING_BYPASS");
         envstr != nullptr && *envstr != '\0') {
