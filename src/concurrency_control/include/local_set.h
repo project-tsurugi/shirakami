@@ -75,6 +75,17 @@ public:
         }
     }
 
+    // for upsert / insert
+    write_set_obj(Storage const storage, OP_TYPE const op,
+                  Record* const rec_ptr, std::string_view const val,
+                  bool const inc_tombstone)
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
+          inc_tombstone_(inc_tombstone) {
+        if (op == OP_TYPE::DELETE) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+        }
+    }
+
     // for delete
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr)
@@ -119,6 +130,8 @@ public:
 
     std::string_view get_value_view() { return val_; }
 
+    [[nodiscard]] bool get_inc_tombstone() const { return inc_tombstone_; }
+
     void set_op(OP_TYPE op) { op_ = op; }
 
     void set_rec_ptr(Record* rec_ptr) { rec_ptr_ = rec_ptr; }
@@ -128,6 +141,8 @@ public:
      * @details It is for twice update in the same transaction.
      */
     void set_val(std::string_view const val) { val_ = val; }
+
+    void set_inc_tombstone(bool tf) { inc_tombstone_ = tf; }
 
 private:
     /**
@@ -148,6 +163,12 @@ private:
      * @brief Update cache for update.
      */
     std::string val_{}; // value for update
+    /**
+     * @brief For tombstone
+     * @attention This must be thread safe, but not. todo at strand. For simple,
+     * we want to use std::atomic<bool> but some overload to reduce copy forbid it.
+    */
+    bool inc_tombstone_{false};
 };
 
 class local_write_set {

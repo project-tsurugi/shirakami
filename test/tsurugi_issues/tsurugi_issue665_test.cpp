@@ -103,14 +103,14 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
 
 INSTANTIATE_TEST_SUITE_P(is_insert, tsurugi_issue665_test,
                          ::testing::Values(true)); // success
-                         // ::testing::Values(false)); // fail
-                         // ::testing::Values(false, false)); // fail
-                         // ::testing::Values(true, false)); // fail
-                         // ::testing::Values(false, true)); // fail
-                         // ::testing::Values(true, true)); // success
+// ::testing::Values(false)); // fail
+// ::testing::Values(false, false)); // fail
+// ::testing::Values(true, false)); // fail
+// ::testing::Values(false, true)); // fail
+// ::testing::Values(true, true)); // success
 
 TEST_F(tsurugi_issue665_test, // NOLINT
-       stall_test) { // NOLINT
+       stall_test) {          // NOLINT
     // comment for https://github.com/project-tsurugi/tsurugi-issues/issues/665#issuecomment-2000185872
     /**
      * test senario
@@ -158,13 +158,20 @@ TEST_F(tsurugi_issue665_test, // NOLINT
     ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
     ASSERT_OK(insert(t2, st, "b", "")); // sharing
     ASSERT_OK(abort(t2));
-    // sleep for unhook
+#if 1
+    // check for not unhook
+    sleep(1);
+    Record* rec_ptr{};
+    ASSERT_OK(get<Record>(st, "b", rec_ptr));
+#else
+    // check for not unhook
     Status rc{};
     do {
         std::this_thread::yield();
         Record* rec_ptr{};
         rc = get<Record>(st, "b", rec_ptr);
     } while (rc == Status::OK);
+#endif
     // t3
     ASSERT_OK(tx_begin({t3, transaction_type::SHORT}));
     ASSERT_OK(insert(t3, st, "c", "")); // sharing

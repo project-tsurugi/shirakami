@@ -101,11 +101,20 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
                 // the rec_ptr is gced.
                 goto INSERT_PROCESS; // NOLINT
             }
-
-            // prepare update
-            ti->push_to_write_set(
-                    {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
-            return Status::OK;
+            if (rc == Status::OK) { // sharing tombstone
+                // prepare insert / upsert with tombstone count
+                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val,
+                                       true}); // NOLINT
+                return Status::OK;
+            }
+            if (rc == Status::WARN_ALREADY_EXISTS) {
+                // prepare update
+                ti->push_to_write_set(
+                        {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+                return Status::OK;
+            }
+            if (rc == Status::WARN_CONCURRENT_INSERT) { continue; } // else
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path.";
         }
 
     INSERT_PROCESS:

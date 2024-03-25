@@ -70,6 +70,10 @@ public:
 
     point_read_by_long& get_point_read_by_long() { return point_read_by_long_; }
 
+    std::atomic<std::size_t>& get_shared_tombstone_count() {
+        return shared_tombstone_count_;
+    }
+
     // end: getter
     void lock() { tidw_.lock(); }
 
@@ -116,6 +120,11 @@ private:
      */
     point_read_by_long point_read_by_long_{};
     // ==========
+
+    /**
+     * @brief The count about shared tombstone.
+    */
+    std::atomic<std::size_t> shared_tombstone_count_{0};
 };
 
 } // namespace shirakami

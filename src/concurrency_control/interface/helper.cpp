@@ -209,42 +209,44 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
     found_tid = check;
 
     // point 1: pre-check
-    if (check.get_latest() && check.get_absent()) {
-        // Someone is inserting the record.
-        return Status::WARN_CONCURRENT_INSERT;
-    }
     if (!check.get_absent()) {
         // not inserting, and it exists
         return Status::WARN_ALREADY_EXISTS;
     }
-    // The page was deleted at point 1.
 
     // lock
     rec_ptr->get_tidw_ref().lock();
 
     // check: it can reach in index(i.e. not GCed)
     Record* found_rec_ptr{};
-    if (Status::WARN_NOT_FOUND == get<Record>(st, key, found_rec_ptr) ||
-        rec_ptr != found_rec_ptr) {
+    if (Status::WARN_NOT_FOUND == get<Record>(st, key, found_rec_ptr)) {
         rec_ptr->get_tidw_ref().unlock();
         return Status::WARN_NOT_FOUND;
+    } // found
+    if (rec_ptr != found_rec_ptr) {
+        rec_ptr->get_tidw_ref().unlock();
+        return Status::WARN_CONCURRENT_INSERT;
     }
 
     // point 2: main check with lock
     tid_word tid{rec_ptr->get_tidw_ref()};
-    if (tid.get_absent() && !tid.get_latest()) {
-        // success, the record is deleted
-        tid.set_latest(true);
-        rec_ptr->set_tid(tid);
-        rec_ptr->get_tidw_ref().unlock();
-        return Status::OK;
-    }
-    /**
+    if (!tid.get_absent() && tid.get_latest()) {
+        /**
       * The deleted page was changed to living page by someone between 
       * point 1 and point 2.
       */
+        rec_ptr->get_tidw_ref().unlock();
+        return Status::WARN_ALREADY_EXISTS;
+    }
+    if (tid.get_absent() && !tid.get_latest()) { // deleted
+        // success, the record is deleted
+        tid.set_latest(true);
+        rec_ptr->set_tid(tid);
+    }
+    // and inserting state
+    ++rec_ptr->get_shared_tombstone_count();
     rec_ptr->get_tidw_ref().unlock();
-    return Status::WARN_ALREADY_EXISTS;
+    return Status::OK;
 }
 
 #ifndef PWAL

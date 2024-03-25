@@ -95,6 +95,16 @@ void change_inserting_records_state(session* const ti) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
+            // about tombstone count
+            if (wso_ptr->get_inc_tombstone()) { // did inc
+                if (rec_ptr->get_shared_tombstone_count() == 0) {
+                    LOG_FIRST_N(ERROR, 1)
+                            << log_location_prefix << "unreachable path.";
+                } else {
+                    --rec_ptr->get_shared_tombstone_count();
+                }
+            }
+
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
             if (check.get_latest() && check.get_absent()) { // inserting state
@@ -107,6 +117,12 @@ void change_inserting_records_state(session* const ti) {
                             << log_location_prefix_detail_info
                             << "unlock key " +
                                        std::string(rec_ptr->get_key_view());
+                }
+
+                // consider sharing tombstone
+                if (rec_ptr->get_shared_tombstone_count() > 0) {
+                    rec_ptr->get_tidw_ref().unlock();
+                    return;
                 }
 
                 // main-check
@@ -176,6 +192,7 @@ Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix
                 << "unreachable path. It strongly suspect that DML and DDL "
                    "are mixed.";
     }
@@ -267,7 +284,7 @@ RETRY: // NOLINT
                     << "lock key " + std::string(rec_ptr->get_key_view());
         }
 
-RE_LOCK: // NOLINT
+    RE_LOCK: // NOLINT
         // locking
         rec_ptr->get_tidw_ref().lock();
 
@@ -470,6 +487,17 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
+                // about tombstone count
+                if (wso_ptr->get_inc_tombstone()) {
+                    auto* rec_ptr = wso_ptr->get_rec_ptr();
+                    if (rec_ptr->get_shared_tombstone_count() == 0) {
+                        LOG_FIRST_N(ERROR, 1)
+                                << log_location_prefix << "unreachable path.";
+                    } else {
+                        --rec_ptr->get_shared_tombstone_count();
+                    }
+                }
+
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (old_tid.get_latest() && old_tid.get_absent()) {
                     // set value
@@ -477,7 +505,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     wso_ptr->get_value(vb);
                     wso_ptr->get_rec_ptr()->set_value(vb);
 
-                    // set timestamp
+                    // set timestamp and unlock
                     wso_ptr->get_rec_ptr()->set_tid(update_tid);
                     break;
                 }
@@ -486,8 +514,15 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
             case OP_TYPE::DELETE: {
                 if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    update_tid.set_absent(true);
-                    update_tid.set_latest(false);
+                    if (wso_ptr->get_rec_ptr()->get_shared_tombstone_count() ==
+                        0) {
+                        update_tid.set_absent(true);
+                        update_tid.set_latest(false);
+                    } else {
+                        // consider for sharing tombstone by insert, block gc
+                        update_tid.set_absent(true);
+                        update_tid.set_latest(true);
+                    }
                 }
                 [[fallthrough]];
             }

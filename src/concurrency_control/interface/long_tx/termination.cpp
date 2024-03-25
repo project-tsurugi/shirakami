@@ -33,6 +33,17 @@ static inline void cancel_flag_inserted_records(session* const ti) {
         if (wso.get_op() == OP_TYPE::INSERT ||
             wso.get_op() == OP_TYPE::UPSERT) {
             auto* rec_ptr = std::get<0>(wse);
+
+            // about tombstone count
+            if (wso.get_inc_tombstone()) {
+                if (rec_ptr->get_shared_tombstone_count() == 0) {
+                    LOG_FIRST_N(ERROR, 1)
+                            << log_location_prefix << "unreachable path.";
+                } else {
+                    --rec_ptr->get_shared_tombstone_count();
+                }
+            }
+
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
             if (check.get_latest() && check.get_absent()) {
@@ -168,6 +179,17 @@ static inline void expose_local_write(
                 [[fallthrough]];
             }
             case OP_TYPE::INSERT: {
+                // about tombstone count
+                if (wso.get_inc_tombstone()) {
+                    auto* rec_ptr = wso.get_rec_ptr();
+                    if (rec_ptr->get_shared_tombstone_count() == 0) {
+                        LOG_FIRST_N(ERROR, 1)
+                                << log_location_prefix << "unreachable path.";
+                    } else {
+                        --rec_ptr->get_shared_tombstone_count();
+                    }
+                }
+
                 tid_word tid{rec_ptr->get_tidw_ref().get_obj()};
                 if ((tid.get_latest() && tid.get_absent()) ||  // inserting
                     (!tid.get_latest() && tid.get_absent())) { // deleted
@@ -195,8 +217,13 @@ static inline void expose_local_write(
             }
             case OP_TYPE::DELETE: {
                 if (wso.get_op() == OP_TYPE::DELETE) { // for fallthrough
-                    ctid.set_latest(false);
-                    ctid.set_absent(true);
+                    if (rec_ptr->get_shared_tombstone_count() == 0) {
+                        ctid.set_latest(false);
+                        ctid.set_absent(true);
+                    } else { // consider for sharing tombstone by insert, block gc
+                        ctid.set_latest(true);
+                        ctid.set_absent(true);
+                    }
                 }
                 [[fallthrough]];
             }

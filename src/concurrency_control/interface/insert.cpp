@@ -22,6 +22,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     Record*& out_rec_ptr) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
+    rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
     yakushima::node_version64* nvp{};
     if (yakushima::status::OK ==
@@ -47,7 +48,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 return Status::ERR_CC;
             }
         }
-        ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val});
+        ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val, true});
         out_rec_ptr = rec_ptr;
         return Status::OK;
     }
@@ -100,11 +101,13 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
 
             tid_word found_tid{};
             rc = try_deleted_to_inserting(storage, key, rec_ptr, found_tid);
-            if (rc == Status::OK) {
-                ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val});
+            if (rc == Status::OK) { // ok already count up tombstone count
+                ti->push_to_write_set(
+                        {storage, OP_TYPE::INSERT, rec_ptr, val, true});
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
+            if (rc == Status::WARN_CONCURRENT_INSERT) { continue; }
             if (rc == Status::WARN_NOT_FOUND) {
                 // the rec_ptr is gced;
                 goto INSERT_PROCESS; // NOLINT
@@ -126,15 +129,11 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                 }
                 // end: make read set
                 // ==========
-            } else if (rc == Status::WARN_CONCURRENT_INSERT) {
-                ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val});
-                register_read_if_ltx(ti, rec_ptr);
-                return Status::OK;
             }
             return rc;
         }
 
-    INSERT_PROCESS:
+    INSERT_PROCESS: // NOLINT
         auto rc{insert_process(ti, storage, key, val, rec_ptr)};
         if (rc == Status::OK) {
             register_read_if_ltx(ti, rec_ptr);
