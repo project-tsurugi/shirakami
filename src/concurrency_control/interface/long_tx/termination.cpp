@@ -79,81 +79,6 @@ static inline void compute_tid(session* ti, tid_word& ctid) {
     ctid.set_by_short(false);
 }
 
-static inline void create_tombstone_if_need(session* const ti,
-                                            write_set_obj& wso) {
-    std::string key{};
-    wso.get_rec_ptr()->get_key(key);
-RETRY: // NOLINT
-    Record* rec_ptr{};
-    auto rc = get<Record>(wso.get_storage(), key, rec_ptr);
-    if (rc == Status::OK) {
-        // hit in index
-        if (wso.get_rec_ptr() != rec_ptr) { wso.set_rec_ptr(rec_ptr); }
-        /**
-          * not change from read phase
-          * In ltx view, No tx interrupt this. GC thread may interrupt.
-          * Because high priori tx is 
-          * nothing. In other words, this commit waited for high priori txs.
-          * so it don't need lock record.
-          * check ts
-          */
-        rec_ptr->get_tidw_ref().lock();
-        tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-        if ((check.get_latest() && check.get_absent()) || !check.get_absent()) {
-            // inserting or normal state
-            rec_ptr->get_tidw_ref().unlock();
-            return;
-        }
-        // it is deleted state, change it to inserting state.
-        check.set_latest(true);
-        rec_ptr->set_tid(check);
-        // check it is hooked yet
-        auto rc = get<Record>(wso.get_storage(), key, rec_ptr);
-        auto cleanup_old_process = [&wso](tid_word check) {
-            check.set_latest(false);
-            check.set_absent(true);
-            check.set_lock(false);
-            wso.get_rec_ptr()->set_tid(check);
-        };
-        if (rc == Status::OK) {
-            // some key hit
-            if (wso.get_rec_ptr() == rec_ptr) {
-                // success converting deleted to inserted
-                rec_ptr->get_tidw_ref().unlock();
-                return;
-            }
-            // converting record was unhooked by gc
-            cleanup_old_process(check);
-            goto RETRY; // NOLINT
-        } else {
-            // no key hit
-            // gc interrupted
-            cleanup_old_process(check);
-            goto RETRY; // NOLINT
-        }
-    } else {
-        // no key hit
-        rec_ptr = new Record(key); // NOLINT
-        tid_word tid = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-        tid.set_latest(true);
-        tid.set_absent(true);
-        tid.set_lock(true);
-        rec_ptr->set_tid(tid);
-        yakushima::node_version64* nvp{};
-        if (yakushima::status::OK == put<Record>(ti->get_yakushima_token(),
-                                                 wso.get_storage(), key,
-                                                 rec_ptr, nvp)) {
-            // success inserting
-            wso.set_rec_ptr(rec_ptr);
-            return;
-        }
-        // else insert_result == Status::WARN_ALREADY_EXISTS
-        // so retry from index access
-        delete rec_ptr; // NOLINT
-        goto RETRY;     // NOLINT
-    }
-}
-
 static inline void expose_local_write(
         session* ti, tid_word& committed_id,
         std::map<Storage, std::tuple<std::string, std::string>>& write_range) {
@@ -172,12 +97,7 @@ static inline void expose_local_write(
     // bw can backward including occ bw
     RETRY: // NOLINT
         switch (wso.get_op()) {
-            case OP_TYPE::UPSERT: {
-                // not accept fallthrough!
-                // create tombstone if need.
-                create_tombstone_if_need(ti, wso);
-                [[fallthrough]];
-            }
+            case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
                 // about tombstone count
                 if (wso.get_inc_tombstone()) {
