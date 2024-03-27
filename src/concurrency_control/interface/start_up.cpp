@@ -57,6 +57,8 @@ void for_output_config(database_options const& options) {
                  "commit. Default is 2.";
 }
 
+bool session::flag_ltx_verify_gc_threshold_is_old = false;
+
 Status init_body(database_options options) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
@@ -69,6 +71,21 @@ Status init_body(database_options options) { // NOLINT
 
     // logging config information
     for_output_config(options);
+
+    // for tsurugi issue #686
+    {
+        bool old = false;
+        // check environ "SHIRAKAMI_OLD_LTX_VERIFY_GC"
+        if (auto* envstr = std::getenv("SHIRAKAMI_OLD_LTX_VERIFY_GC");
+            envstr != nullptr && *envstr != '\0') {
+            old = (std::strcmp(envstr, "1") == 0);
+        }
+        session::flag_ltx_verify_gc_threshold_is_old = old;
+        VLOG(log_debug)
+                << log_location_prefix << "LTX verify GC threshold is "
+                << (old ? "old (ongoing_tx::get_lowest_epoch)"
+                        : "new (epoch::get_cc_safe_ss_epoch)");
+    }
 
     // initialize datastore object
 #if defined(PWAL)
