@@ -430,7 +430,8 @@ void register_read_by(session* const ti) {
 
 Status verify(session* const ti) {
     // forwarding verify
-    auto gc_threshold = epoch::get_cc_safe_ss_epoch();
+    auto gc_threshold = session::flag_ltx_verify_gc_threshold_is_old
+            ? ongoing_tx::get_lowest_epoch() : epoch::get_cc_safe_ss_epoch();
     {
         // get mutex for overtaken ltx set
         std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};

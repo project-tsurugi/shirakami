@@ -55,6 +55,7 @@ public:
             std::map<Storage, std::tuple<std::string, scan_endpoint,
                                          std::string, scan_endpoint>>;
     static constexpr std::uint64_t initial_mrc_tid{0};
+    static bool flag_ltx_verify_gc_threshold_is_old;
 
 
     /**
