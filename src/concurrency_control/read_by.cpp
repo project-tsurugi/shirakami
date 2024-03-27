@@ -40,7 +40,7 @@ void point_read_by_long::push(body_elem_type const elem) {
 
     // prepare
     const auto ce = epoch::get_global_epoch();
-    auto threshold = epoch::get_cc_safe_ss_epoch();
+    auto threshold = ongoing_tx::get_lowest_epoch();
     if (threshold == 0) { threshold = ce; }
 
     // gc
@@ -129,7 +129,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
 
     // prepare
     const auto ce = epoch::get_global_epoch();
-    auto gc_threshold = epoch::get_cc_safe_ss_epoch();
+    auto gc_threshold = ongoing_tx::get_lowest_epoch();
     if (gc_threshold == 0) { gc_threshold = ce; }
     std::size_t tx_id = std::get<range_read_by_long::index_tx_id>(elem);
 

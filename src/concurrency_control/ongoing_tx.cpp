@@ -239,10 +239,16 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
 
 void ongoing_tx::push(tx_info_elem_type const ti) {
     std::lock_guard<std::shared_mutex> lk{mtx_};
+    if (tx_info_.empty()) {
+        set_lowest_epoch(std::get<ongoing_tx::index_epoch>(ti));
+    }
     tx_info_.emplace_back(ti);
 }
 
 void ongoing_tx::push_bringing_lock(tx_info_elem_type const ti) {
+    if (tx_info_.empty()) {
+        set_lowest_epoch(std::get<ongoing_tx::index_epoch>(ti));
+    }
     tx_info_.emplace_back(ti);
 }
 
@@ -269,6 +275,11 @@ void ongoing_tx::remove_id(std::size_t const id) {
 
             ++it;
         }
+    }
+    if (tx_info_.empty()) {
+        set_lowest_epoch(0);
+    } else {
+        set_lowest_epoch(lep);
     }
     if (!erased) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path.";
