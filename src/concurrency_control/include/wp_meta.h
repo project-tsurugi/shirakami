@@ -130,20 +130,20 @@ public:
     }
 
     static epoch::epoch_t
-    wp_result_elem_extract_epoch(wp_result_elem_type elem) {
+    wp_result_elem_extract_epoch(const wp_result_elem_type& elem) {
         return std::get<0>(elem);
     }
 
-    static std::size_t wp_result_elem_extract_id(wp_result_elem_type elem) {
+    static std::size_t wp_result_elem_extract_id(const wp_result_elem_type& elem) {
         return std::get<1>(elem);
     }
 
-    static bool wp_result_elem_extract_was_committed(wp_result_elem_type elem) {
+    static bool wp_result_elem_extract_was_committed(const wp_result_elem_type& elem) {
         return std::get<2>(elem);
     }
 
-    static std::tuple<bool, std::string, std::string>
-    wp_result_elem_extract_write_result(wp_result_elem_type elem) {
+    static const std::tuple<bool, std::string, std::string>&
+    wp_result_elem_extract_write_result(const wp_result_elem_type& elem) {
         return std::get<3>(elem);
     }
 
