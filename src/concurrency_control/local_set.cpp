@@ -43,7 +43,8 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
             cont_for_bt_.insert_or_assign(
                     elem.get_rec_ptr(),
                     write_set_obj(elem.get_storage(), elem.get_op(),
-                                  elem.get_rec_ptr(), elem.get_value_view()));
+                                  elem.get_rec_ptr(), elem.get_value_view(),
+                                  elem.get_inc_tombstone()));
         }
 
         if (static_cast<session*>(token)->get_tx_type() ==
