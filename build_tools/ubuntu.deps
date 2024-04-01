@@ -1,7 +1,6 @@
 build-essential
 ccache
-clang-tidy-8
-clang-tidy-10
+clang-tidy
 cmake
 doxygen
 gcovr
