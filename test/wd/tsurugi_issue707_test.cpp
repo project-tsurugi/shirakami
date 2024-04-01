@@ -103,11 +103,11 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
 
 INSTANTIATE_TEST_SUITE_P(is_insert, tsurugi_issue707_test,
                          ::testing::Values(true)); // success
-// ::testing::Values(false)); // fail
-// ::testing::Values(false, false)); // fail
-// ::testing::Values(true, false)); // fail
-// ::testing::Values(false, true)); // fail
-// ::testing::Values(true, true)); // success
+// ::testing::Values(false));
+// ::testing::Values(false, false));
+// ::testing::Values(true, false));
+// ::testing::Values(false, true));
+// ::testing::Values(true, true));
 
 TEST_P(tsurugi_issue707_test, // NOLINT
        simple) {              // NOLINT
@@ -124,7 +124,7 @@ TEST_P(tsurugi_issue707_test, // NOLINT
     Token t{};
     ASSERT_OK(enter(t));
     ASSERT_OK(tx_begin({t, transaction_type::SHORT}));
-    for (std::size_t i = 0; i < initial_rec_num; ++i) {
+    for (std::size_t i = 1; i <= initial_rec_num; ++i) {
         ASSERT_OK(upsert(t, st1, std::to_string(i), std::to_string(i)));
     }
     ASSERT_OK(commit(t));
@@ -311,6 +311,30 @@ TEST_P(tsurugi_issue707_test, // NOLINT
     LOG(INFO) << total_commit_ct << ", " << final_rec_num - initial_rec_num;
     // verify commit map
     ASSERT_NO_FATAL_FAILURE(commit_map_verify());
+
+    // verify shared tombstone count
+    auto verify_shared_tombstone_count = [st1, st2, final_rec_num,
+                                          initial_rec_num]() {
+        for (std::size_t i = 1; i <= final_rec_num; ++i) {
+            if (i <= initial_rec_num) {
+                Record* rec_ptr{};
+                // check st1 for yes
+                ASSERT_OK(get<Record>(st1, std::to_string(i), rec_ptr));
+                ASSERT_EQ(rec_ptr->get_shared_tombstone_count(), 0);
+                // check st2 for no
+                auto rc = get<Record>(st2, std::to_string(i), rec_ptr);
+                ASSERT_NE(rc, Status::OK);
+            } else {
+                // check st1 and st2
+                Record* rec_ptr{};
+                ASSERT_OK(get<Record>(st1, std::to_string(i), rec_ptr));
+                ASSERT_EQ(rec_ptr->get_shared_tombstone_count(), 0);
+                ASSERT_OK(get<Record>(st2, std::to_string(i), rec_ptr));
+                ASSERT_EQ(rec_ptr->get_shared_tombstone_count(), 0);
+            }
+        }
+    };
+    ASSERT_NO_FATAL_FAILURE(verify_shared_tombstone_count());
 
     // cleanup
     ASSERT_OK(leave(t));
