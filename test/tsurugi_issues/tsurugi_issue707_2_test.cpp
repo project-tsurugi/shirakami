@@ -51,6 +51,7 @@ TEST_F(tsurugi_issue707_2_test, // NOLINT
      * test senario
      * t1: insert a as tombstone
      * epoch update
+     * epoch update (need 2 wait)
      * t2: insert a as sharing tombstone
      * t1: abort
      * wait for unhook
@@ -66,12 +67,10 @@ TEST_F(tsurugi_issue707_2_test, // NOLINT
     ASSERT_OK(enter(t2));
     // test
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st}}));
-    LOG(INFO) << static_cast<session*>(t1)->get_begin_epoch();
     wait_epoch_update();
     wait_epoch_update();
     ASSERT_OK(upsert(t1, st, "a", ""));
     ASSERT_OK(tx_begin({t2, transaction_type::LONG, {st}}));
-    LOG(INFO) << static_cast<session*>(t2)->get_begin_epoch();
     wait_epoch_update();
     ASSERT_OK(upsert(t2, st, "a", ""));
     ASSERT_OK(abort(t1));

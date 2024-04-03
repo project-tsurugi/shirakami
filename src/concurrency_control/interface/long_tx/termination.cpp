@@ -28,7 +28,7 @@ namespace shirakami::long_tx {
 // ==============================
 // static inline functions for this source
 static inline void cancel_flag_inserted_records(session* const ti) {
-    auto process = [ti](std::pair<Record* const, write_set_obj>& wse) {
+    auto process = [](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT ||
             wso.get_op() == OP_TYPE::UPSERT) {
@@ -44,6 +44,12 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                 }
             }
 
+            // consider sharing tombstone
+            if (rec_ptr->get_shared_tombstone_count() > 0) {
+                rec_ptr->get_tidw_ref().unlock();
+                return;
+            }
+
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
             if (check.get_latest() && check.get_absent()) {
@@ -55,7 +61,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                     tid.set_absent(true);
                     tid.set_latest(false);
                     tid.set_lock(false);
-                    tid.set_epoch(ti->get_valid_epoch());
+                    tid.set_epoch(check.get_epoch());
                     rec_ptr->set_tid(tid); // and unlock
                 } else {
                     rec_ptr->get_tidw_ref().unlock();
