@@ -285,12 +285,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             return Status::ERR_FATAL;
         }
         range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
-        {
-            // take write lock
-            std::lock_guard<std::shared_mutex> lk{
-                    ti->get_mtx_range_read_by_short_set()};
-            ti->get_range_read_by_short_set().insert(rrbs);
-        }
+        ti->push_to_range_read_by_short_set(rrbs);
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";

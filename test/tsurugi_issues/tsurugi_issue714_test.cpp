@@ -64,21 +64,27 @@ TEST_F(tsurugi_issue714_test, // NOLINT
     ASSERT_OK(enter(t3));
 
     // test
+    // t1
     ASSERT_OK(tx_begin({t1, transaction_type::LONG, {st_b}}));
     ltx_begin_wait(t1);
     std::string buf{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(t1, st_a, "1", buf));
     ASSERT_OK(insert(t1, st_b, "1", ""));
 
+    // t2
     ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(t2, st_c, "1", buf));
     ASSERT_OK(insert(t2, st_a, "1", ""));
     ASSERT_OK(commit(t2));
+    // t1 < t2
 
+    // t3
     ASSERT_OK(tx_begin({t3, transaction_type::LONG, {st_c}}));
     ltx_begin_wait(t3);
     ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(t3, st_b, "1", buf));
+    // t3 < t1 < t2
     ASSERT_OK(insert(t3, st_c, "1", ""));
+    // t3 write c will break committed t2 read c *1
     std::atomic<Status> cb_rc3{};
     std::atomic<bool> was_committed3{false};
     reason_code rc3{};
@@ -97,8 +103,9 @@ TEST_F(tsurugi_issue714_test, // NOLINT
         std::this_thread::yield();
     }
 
+    // t3 commit find *1
     ASSERT_EQ(cb_rc3, Status::ERR_CC);
-    ASSERT_EQ(rc3, reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
+    ASSERT_EQ(rc3, reason_code::CC_LTX_PHANTOM_AVOIDANCE);
 
     // cleanup
     ASSERT_OK(leave(t1));

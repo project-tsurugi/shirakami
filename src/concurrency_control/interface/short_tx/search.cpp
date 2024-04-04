@@ -43,7 +43,18 @@ Status search_key(session* ti, Storage const storage,
     // index access
     Record* rec_ptr{};
     rc = get<Record>(storage, key, rec_ptr);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) {
+        // read protection for low priori ltx
+        wp::page_set_meta* psm{};
+        auto rc_fpsm{wp::find_page_set_meta(storage, psm)};
+        if (rc_fpsm == Status::WARN_NOT_FOUND) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+            return Status::ERR_FATAL;
+        }
+        range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
+        ti->push_to_range_read_by_short_set(rrbs);
+        return rc;
+    }
 
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT

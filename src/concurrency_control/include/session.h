@@ -407,6 +407,13 @@ public:
         get_range_read_by_short_set().clear();
     }
 
+    void push_to_range_read_by_short_set(range_read_by_short* rrbs) {
+        // take write lock
+        std::lock_guard<std::shared_mutex> lk{
+                get_mtx_range_read_by_short_set()};
+        get_range_read_by_short_set().insert(rrbs);
+    }
+
     void clear_read_set_for_stx() {
         // take write lock
         std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};

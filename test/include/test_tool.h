@@ -5,6 +5,10 @@
 #include "concurrency_control/include/epoch.h"
 #include "database/include/logging.h"
 
+// shirakami/include/
+#include "shirakami/interface.h"
+#include "shirakami/transaction_state.h"
+
 #include "gtest/gtest.h"
 
 #define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
