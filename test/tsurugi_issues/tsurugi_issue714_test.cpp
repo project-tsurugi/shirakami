@@ -99,9 +99,7 @@ TEST_F(tsurugi_issue714_test, // NOLINT
 
     ASSERT_OK(commit(t1));
 
-    while (!was_committed3) {
-        std::this_thread::yield();
-    }
+    while (!was_committed3) { std::this_thread::yield(); }
 
     // t3 commit find *1
     ASSERT_EQ(cb_rc3, Status::ERR_CC);
@@ -111,6 +109,29 @@ TEST_F(tsurugi_issue714_test, // NOLINT
     ASSERT_OK(leave(t1));
     ASSERT_OK(leave(t2));
     ASSERT_OK(leave(t3));
+}
+
+TEST_F(tsurugi_issue714_test, DISABLED_shortx) { // NOLINT
+    // prepare
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token t1{};
+    Token t2{};
+    ASSERT_OK(enter(t1));
+    ASSERT_OK(enter(t2));
+    
+    // test
+    ASSERT_OK(tx_begin({t1, transaction_type::SHORT}));
+    ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
+    std::string buf{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND, search_key(t1, st, "a", buf));
+    ASSERT_OK(insert(t2, st, "a", ""));
+    ASSERT_OK(commit(t2));
+    ASSERT_EQ(Status::ERR_CC, commit(t1));
+
+    // cleanup
+    ASSERT_OK(leave(t1));
+    ASSERT_OK(leave(t2));
 }
 
 } // namespace shirakami::testing
