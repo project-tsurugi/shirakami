@@ -55,7 +55,8 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                 rec_ptr->get_tidw_ref().lock();
                 check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
                 // main-check
-                if (check.get_latest() && check.get_absent()) {
+                if (check.get_latest() && check.get_absent() &&
+                    rec_ptr->get_shared_tombstone_count() == 0) {
                     tid_word tid{};
                     tid.set_absent(true);
                     tid.set_latest(false);
