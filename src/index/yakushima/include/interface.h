@@ -15,17 +15,27 @@
 namespace shirakami {
 
 template<class Record>
-Status get(Storage st, std::string_view const key, Record*& rec_ptr) {
+Status get(Storage st, std::string_view const key, Record*& rec_ptr,
+           std::pair<yakushima::node_version64_body,                // NOLINT
+                     yakushima::node_version64*>* checked_version = // NOLINT
+           nullptr) {                                               // NOLINT
     std::pair<Record**, std::size_t> out{};
     auto rc{yakushima::get<Record*>({reinterpret_cast<char*>(&st), // NOLINT
                                      sizeof(st)},
-                                    key, out)};
+                                    key, out, checked_version)};
     if (rc == yakushima::status::OK) {
         rec_ptr = reinterpret_cast<Record*>(out.first); // NOLINT
         // by inline optimization
         return Status::OK;
     }
     if (rc == yakushima::status::WARN_NOT_EXIST) {
+        // assertion
+        if (checked_version != nullptr) {
+            if (checked_version->second == nullptr) {
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "precondition fail.";
+            }
+        }
         return Status::WARN_NOT_FOUND;
     }
     if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {

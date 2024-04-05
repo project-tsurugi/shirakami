@@ -42,8 +42,19 @@ Status search_key(session* ti, Storage const storage,
 
     // index access
     Record* rec_ptr{};
-    rc = get<Record>(storage, key, rec_ptr);
+    std::pair<yakushima::node_version64_body, yakushima::node_version64*>
+            checked_version{};
+    rc = get<Record>(storage, key, rec_ptr, &checked_version);
     if (rc != Status::OK) {
+        // read protection for concurrent occ
+        auto rc_ns = ti->get_node_set().emplace_back(checked_version);
+        if (rc_ns == Status::ERR_CC) {
+            short_tx::abort(ti);
+            ti->get_result_info().set_storage_name(storage);
+            ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+            return Status::ERR_CC;
+        }
+
         // read protection for low priori ltx
         wp::page_set_meta* psm{};
         auto rc_fpsm{wp::find_page_set_meta(storage, psm)};
