@@ -21,6 +21,8 @@
 
 #include "yakushima/include/kvs.h"
 
+#include "test_tool.h"
+
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
@@ -60,17 +62,6 @@ TEST_F(insert_short_long_tx_test, longs_insert_after_shorts_insert) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(tx_begin({s2}), Status::OK);
-
-    auto wait_epoch_update = []() {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce == epoch::get_global_epoch()) {
-                _mm_pause();
-            } else {
-                break;
-            }
-        }
-    };
     wait_epoch_update();
 
     ASSERT_EQ(insert(s2, st, k, v), Status::WARN_CONFLICT_ON_WRITE_PRESERVE);
@@ -96,17 +87,6 @@ TEST_F(insert_short_long_tx_test, shorts_insert_after_longs_insert) { // NOLINT
     Token s2{};
     ASSERT_EQ(Status::OK, enter(s2));
     ASSERT_EQ(tx_begin({s2}), Status::OK); // NOLINT
-
-    auto wait_epoch_update = []() {
-        epoch::epoch_t ce{epoch::get_global_epoch()};
-        for (;;) {
-            if (ce == epoch::get_global_epoch()) {
-                _mm_pause();
-            } else {
-                break;
-            }
-        }
-    };
     wait_epoch_update();
 
     ASSERT_EQ(insert(s1, st, k, v), Status::OK);

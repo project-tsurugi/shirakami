@@ -46,17 +46,6 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
-
 TEST_F(short_scan_long_upsert_test, short_scan_find_valid_wp) { // NOLINT
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);

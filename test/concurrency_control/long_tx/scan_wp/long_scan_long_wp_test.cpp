@@ -15,6 +15,8 @@
 
 #include "shirakami/interface.h"
 
+#include "test_tool.h"
+
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
@@ -41,17 +43,6 @@ public:
 private:
     static inline std::once_flag init_; // NOLINT
 };
-
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce == epoch::get_global_epoch()) {
-            _mm_pause();
-        } else {
-            break;
-        }
-    }
-}
 
 TEST_F(long_scan_long_wp_test, reading_higher_priority_wp) { // NOLINT
     // prepare data and test search on higher priority WP (causing WARN_PREMATURE)

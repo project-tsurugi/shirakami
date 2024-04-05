@@ -45,14 +45,6 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-inline void wait_epoch_update() {
-    epoch::epoch_t ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
-
 TEST_F(search_session, read_version_epoch_ascending_order) { // NOLINT
     // prepare test
     Storage st{};

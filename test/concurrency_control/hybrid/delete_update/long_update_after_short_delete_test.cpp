@@ -9,6 +9,8 @@
 
 #include "shirakami/interface.h"
 
+#include "test_tool.h"
+
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
@@ -35,14 +37,6 @@ public:
 private:
     static inline std::once_flag init_; // NOLINT
 };
-
-inline void wait_epoch_update() {
-    auto ce{epoch::get_global_epoch()};
-    for (;;) {
-        if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
-    }
-}
 
 TEST_F(long_update_after_short_delete, independent_tx) { // NOLINT
     Storage st{};
