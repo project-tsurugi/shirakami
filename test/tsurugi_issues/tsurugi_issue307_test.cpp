@@ -15,7 +15,7 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-#define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
+
 
 using namespace shirakami;
 

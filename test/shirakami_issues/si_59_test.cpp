@@ -18,7 +18,7 @@
 
 using namespace shirakami;
 
-#define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
+
 
 namespace shirakami::testing {
 

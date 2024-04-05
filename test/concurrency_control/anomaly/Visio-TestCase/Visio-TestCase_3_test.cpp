@@ -12,8 +12,6 @@
 using namespace shirakami;
 using transaction_type = shirakami::transaction_options::transaction_type;
 
-#define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
-
 namespace shirakami::testing {
 
 class Visio_TestCase : public ::testing::TestWithParam<

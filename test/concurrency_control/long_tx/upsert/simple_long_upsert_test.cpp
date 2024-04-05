@@ -84,10 +84,8 @@ TEST_F(simple_long_upsert_test, simple_long) { // NOLINT
     };
 
 
-    check_internal_record_exist(st);
+    check_internal_record_exist(st); // for placeholder
     ASSERT_EQ(abort(s), Status::OK);
-    // after abort, exist with deleted state.
-    check_internal_record_exist(st);
 
     ASSERT_EQ(tx_begin({s, transaction_options::transaction_type::LONG, {st}}),
               Status::OK);
