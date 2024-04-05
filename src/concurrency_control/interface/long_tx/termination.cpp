@@ -46,7 +46,6 @@ static inline void cancel_flag_inserted_records(session* const ti) {
 
             // consider sharing tombstone
             if (rec_ptr->get_shared_tombstone_count() > 0) {
-                rec_ptr->get_tidw_ref().unlock();
                 return;
             }
 
