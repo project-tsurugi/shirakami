@@ -97,12 +97,14 @@ void change_inserting_records_state(session* const ti) {
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
             // about tombstone count
             if (wso_ptr->get_inc_tombstone()) { // did inc
+                rec_ptr->get_tidw_ref().lock();
                 if (rec_ptr->get_shared_tombstone_count() == 0) {
                     LOG_FIRST_N(ERROR, 1)
                             << log_location_prefix << "unreachable path.";
                 } else {
                     --rec_ptr->get_shared_tombstone_count();
                 }
+                rec_ptr->get_tidw_ref().unlock();
             }
 
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
@@ -448,6 +450,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 // about tombstone count
                 if (wso_ptr->get_inc_tombstone()) {
                     auto* rec_ptr = wso_ptr->get_rec_ptr();
+                    // already locked tid
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         LOG_FIRST_N(ERROR, 1)
                                 << log_location_prefix << "unreachable path.";

@@ -36,12 +36,14 @@ static inline void cancel_flag_inserted_records(session* const ti) {
 
             // about tombstone count
             if (wso.get_inc_tombstone()) {
+                rec_ptr->get_tidw_ref().lock();
                 if (rec_ptr->get_shared_tombstone_count() == 0) {
                     LOG_FIRST_N(ERROR, 1)
                             << log_location_prefix << "unreachable path.";
                 } else {
                     --rec_ptr->get_shared_tombstone_count();
                 }
+                rec_ptr->get_tidw_ref().unlock();
             }
 
             // consider sharing tombstone
@@ -108,12 +110,14 @@ static inline void expose_local_write(
                 // about tombstone count
                 if (wso.get_inc_tombstone()) {
                     auto* rec_ptr = wso.get_rec_ptr();
+                    rec_ptr->get_tidw_ref().lock();
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         LOG_FIRST_N(ERROR, 1)
                                 << log_location_prefix << "unreachable path.";
                     } else {
                         --rec_ptr->get_shared_tombstone_count();
                     }
+                    rec_ptr->get_tidw_ref().unlock();
                 }
 
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
