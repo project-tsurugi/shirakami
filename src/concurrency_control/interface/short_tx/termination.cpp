@@ -107,7 +107,10 @@ void change_inserting_records_state(session* const ti) {
 
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
-            if (check.get_latest() && check.get_absent()) { // inserting state
+            auto check_cd = [&check]() {
+                return check.get_latest() && check.get_absent();
+            };
+            if (check_cd()) { // inserting state
                 rec_ptr->get_tidw_ref().lock();
                 check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
 
@@ -126,7 +129,7 @@ void change_inserting_records_state(session* const ti) {
                 }
 
                 // main-check
-                if (check.get_latest() && check.get_absent()) {
+                if (check_cd()) {
                     // inserting yet
                     tid_word tid{};
                     tid.set_absent(true);
