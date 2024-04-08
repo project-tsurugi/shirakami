@@ -45,18 +45,19 @@ static inline void cancel_flag_inserted_records(session* const ti) {
             }
 
             // consider sharing tombstone
-            if (rec_ptr->get_shared_tombstone_count() > 0) {
-                return;
-            }
+            if (rec_ptr->get_shared_tombstone_count() > 0) { return; }
 
             tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
             // pre-check
-            if (check.get_latest() && check.get_absent()) {
+            auto check_cd = [&check, rec_ptr]() {
+                return check.get_latest() && check.get_absent() &&
+                       rec_ptr->get_shared_tombstone_count() == 0;
+            };
+            if (check_cd()) {
                 rec_ptr->get_tidw_ref().lock();
-                check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
-                // main-check
-                if (check.get_latest() && check.get_absent() &&
-                    rec_ptr->get_shared_tombstone_count() == 0) {
+                check = loadAcquire(
+                        rec_ptr->get_tidw_ref().get_obj()); // reload
+                if (check_cd()) {                           // main-check
                     tid_word tid{};
                     tid.set_absent(true);
                     tid.set_latest(false);
@@ -100,7 +101,7 @@ static inline void expose_local_write(
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
-    // bw can backward including occ bw
+        // bw can backward including occ bw
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -115,15 +116,18 @@ static inline void expose_local_write(
                     }
                 }
 
-                tid_word tid{rec_ptr->get_tidw_ref().get_obj()};
-                if ((tid.get_latest() && tid.get_absent()) ||  // inserting
-                    (!tid.get_latest() && tid.get_absent())) { // deleted
+                tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
+                auto check_cd = [&tid]() {
+                    return (tid.get_latest() &&
+                            tid.get_absent()) ||                    // inserting
+                           (!tid.get_latest() && tid.get_absent()); // deleted
+                };
+                if (check_cd()) {
                     // lock record
                     rec_ptr->get_tidw_ref().lock();
-                    tid_word tmp_tid{rec_ptr->get_tidw_ref().get_obj()};
-                    // re-check
-                    if (((tmp_tid.get_latest() && tmp_tid.get_absent()) ||
-                         (!tmp_tid.get_latest() && tmp_tid.get_absent()))) {
+                    tid = loadAcquire(
+                            rec_ptr->get_tidw_ref().get_obj()); // reload
+                    if (check_cd()) {                           // re-check
                         // update value
                         std::string vb{};
                         wso.get_value(vb);
