@@ -46,7 +46,6 @@ static inline void cancel_flag_inserted_records(session* const ti) {
 
             // consider sharing tombstone
             if (rec_ptr->get_shared_tombstone_count() > 0) {
-                rec_ptr->get_tidw_ref().unlock();
                 return;
             }
 
@@ -56,7 +55,8 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                 rec_ptr->get_tidw_ref().lock();
                 check = loadAcquire(rec_ptr->get_tidw_ref().get_obj());
                 // main-check
-                if (check.get_latest() && check.get_absent()) {
+                if (check.get_latest() && check.get_absent() &&
+                    rec_ptr->get_shared_tombstone_count() == 0) {
                     tid_word tid{};
                     tid.set_absent(true);
                     tid.set_latest(false);
@@ -101,7 +101,6 @@ static inline void expose_local_write(
         auto&& wso = std::get<1>(wse);
         [[maybe_unused]] bool should_log{true};
     // bw can backward including occ bw
-    RETRY: // NOLINT
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -121,23 +120,19 @@ static inline void expose_local_write(
                     (!tid.get_latest() && tid.get_absent())) { // deleted
                     // lock record
                     rec_ptr->get_tidw_ref().lock();
-                    // re-check for upsert
-                    if (wso.get_op() == OP_TYPE::UPSERT) {
-                        tid_word tmp_tid{rec_ptr->get_tidw_ref().get_obj()};
-                        if (!((tmp_tid.get_latest() && tmp_tid.get_absent()) ||
-                              (!tmp_tid.get_latest() &&
-                               tmp_tid.get_absent()))) {
-                            rec_ptr->get_tidw_ref().unlock();
-                            goto RETRY; // NOLINT
-                        }
+                    tid_word tmp_tid{rec_ptr->get_tidw_ref().get_obj()};
+                    // re-check
+                    if (((tmp_tid.get_latest() && tmp_tid.get_absent()) ||
+                         (!tmp_tid.get_latest() && tmp_tid.get_absent()))) {
+                        // update value
+                        std::string vb{};
+                        wso.get_value(vb);
+                        rec_ptr->get_latest()->set_value(vb);
+                        // unlock and set ctid
+                        rec_ptr->set_tid(ctid);
+                        break;
                     }
-                    // update value
-                    std::string vb{};
-                    wso.get_value(vb);
-                    rec_ptr->get_latest()->set_value(vb);
-                    // unlock and set ctid
-                    rec_ptr->set_tid(ctid);
-                    break;
+                    rec_ptr->get_tidw_ref().unlock();
                 }
                 [[fallthrough]]; // upsert is update
             }
