@@ -134,6 +134,8 @@ public:
 private:
 };
 
+static_assert(std::is_nothrow_move_constructible_v<tid_word>);
+
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
     out << "lock_:" << tid.get_lock() << ", lock_by_gc:" << tid.get_lock_by_gc()
         << ", latest_:" << tid.get_latest() << ", absent_:" << tid.get_absent()

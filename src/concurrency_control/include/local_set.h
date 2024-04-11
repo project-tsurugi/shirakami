@@ -64,6 +64,8 @@ private:
     tid_word tid_{};
 };
 
+static_assert(std::is_nothrow_move_constructible_v<read_set_obj>);
+
 class write_set_obj { // NOLINT
 public:
     // for update / upsert / insert
