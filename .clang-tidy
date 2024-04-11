@@ -22,7 +22,6 @@ hicpp-*,\
 -hicpp-braces-around-statements,\
 -hicpp-named-parameter,\
 -hicpp-no-array-decay,\
--hicpp-noexcept-move,\
 llvm-*,\
 -llvm-include-order,\
 -llvm-header-guard,\
@@ -32,7 +31,6 @@ misc-*,\
 modernize-*,\
 -modernize-use-trailing-return-type,\
 performance-*,\
--performance-noexcept-move-constructor,\
 readability-*,\
 -readability-braces-around-statements,\
 -readability-function-cognitive-complexity,\
