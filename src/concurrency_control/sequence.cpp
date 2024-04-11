@@ -146,11 +146,11 @@ Status sequence::sequence_map_push(SequenceId const id,
                                    SequenceValue const value) {
     // push
     sequence::value_type new_val{};
-    auto ret = sequence::sequence_map().insert(std::make_pair(id, new_val));
+    auto ret = sequence::sequence_map().emplace(id, new_val);
     if (ret.second) {
         // insert success
-        auto ret2 = ret.first->second.insert(
-                std::make_pair(epoch, std::make_tuple(version, value)));
+        auto ret2 = ret.first->second.emplace(
+                epoch, std::make_tuple(version, value));
         if (!ret2.second) {
             // This object must be operated by here.
             LOG_FIRST_N(ERROR, 1)
@@ -240,7 +240,7 @@ Status sequence::sequence_map_update(SequenceId const id,
     std::get<1>(new_tuple) = value;
     if (found_ob_itr == found_id_itr->second.end()) {
         // not found
-        found_id_itr->second.insert(std::make_pair(epoch, new_tuple));
+        found_id_itr->second.emplace(epoch, new_tuple);
     } else {
         // found
         found_ob_itr->second = new_tuple;

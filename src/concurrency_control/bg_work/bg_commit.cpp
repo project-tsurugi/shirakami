@@ -61,8 +61,7 @@ void bg_commit::register_tx(Token token) {
     // lock for container
     {
         std::lock_guard<std::shared_mutex> lk_{mtx_cont_wait_tx()};
-        auto ret = cont_wait_tx().insert(
-                std::make_pair(ti->get_long_tx_id(), token));
+        auto ret = cont_wait_tx().emplace(ti->get_long_tx_id(), token);
         if (!ret.second) {
             // already exist
             LOG_FIRST_N(ERROR, 1)
