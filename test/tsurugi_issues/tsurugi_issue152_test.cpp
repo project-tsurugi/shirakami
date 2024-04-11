@@ -37,7 +37,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(tsurugi_issue152, DISABLED_simple) { // NOLINT
+TEST_F(tsurugi_issue152, simple) { // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s1{};
@@ -61,8 +61,8 @@ TEST_F(tsurugi_issue152, DISABLED_simple) { // NOLINT
     // do forwarding
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s2, st, "a", buf));
-    // If tx is read only that it is read write mode at tx begin, not need to wait.
-    ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
+    // t2 wait for boundary wait
+    ASSERT_EQ(Status::WARN_WAITING_FOR_OTHER_TX, commit(s2)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s1));
