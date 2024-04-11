@@ -112,7 +112,7 @@ TEST_F(tsurugi_issue714_test, // NOLINT
 }
 
 TEST_F(tsurugi_issue714_test, // NOLINT
-       DISABLED_range_read) {          // NOLINT
+       range_read) {          // NOLINT
     /**
      * issue senario, no where (full scan)
     */
@@ -139,6 +139,7 @@ TEST_F(tsurugi_issue714_test, // NOLINT
     ASSERT_EQ(Status::WARN_NOT_FOUND,
               open_scan(t1, st_a, "", scan_endpoint::INF, "",
                         scan_endpoint::INF, shd));
+    ASSERT_OK(insert(t1, st_b, "1", ""));
 
     // t2
     ASSERT_OK(tx_begin({t2, transaction_type::SHORT}));
