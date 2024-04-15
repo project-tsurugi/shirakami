@@ -107,38 +107,41 @@ inline void compute_and_set_cc_safe_ss_epoch() {
     set_cc_safe_ss_epoch(result_epoch);
 }
 
+void change_epoch() {
+    {
+        // coordination with ltx
+        auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
+        auto ptp{epoch::get_perm_to_proc()};
+        // -1: ptp invalid
+        // 0: no work to proceed
+        if (ptp == 0) { return; } // no work
+        if (ptp < -1) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
+                                  << "unreachable path.";
+            return;
+        }
+        // change epoch
+        auto new_epoch{get_global_epoch() + 1};
+        set_global_epoch(new_epoch);
+        compute_and_set_cc_safe_ss_epoch();
+#ifdef PWAL
+        // change also datastore's epoch
+        switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
+#endif
+        // compute for debug tools
+        if (ptp > 0) {
+            // ptp allow epoch inclement
+            epoch::set_perm_to_proc(ptp - 1);
+        }
+        // dtor : release wp_mutex
+    }
+}
+
 void epoch_thread_work() {
     while (!get_epoch_thread_end()) {
         sleepUs(epoch::get_global_epoch_time_us());
-        {
-            // coordination with ltx
-            auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
-            std::unique_lock<std::mutex> lk{get_ep_mtx()};
-            auto ptp{epoch::get_perm_to_proc()};
-            // -1: ptp invalid
-            // 0: no work to proceed
-            if (ptp == 0) { continue; } // no work
-            if (ptp < -1) {
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << log_location_prefix
-                        << "unreachable path.";
-                return;
-            }
-            // change epoch
-            auto new_epoch{get_global_epoch() + 1};
-            set_global_epoch(new_epoch);
-            compute_and_set_cc_safe_ss_epoch();
-#ifdef PWAL
-            // change also datastore's epoch
-            switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
-#endif
-            // compute for debug tools
-            if (ptp > 0) {
-                // ptp allow epoch inclement
-                epoch::set_perm_to_proc(ptp - 1);
-            }
-            // dtor : release wp_mutex
-        }
+        std::unique_lock<std::mutex> lk{get_ep_mtx()};
+        change_epoch();
         check_epoch_load_and_update_idle_living_tx();
     }
 }
