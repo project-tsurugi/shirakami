@@ -132,11 +132,12 @@ public:
     void commit_sequence(tid_word ctid);
 
     /**
-     * @brief extract wait_for from overtaken_ltx_set_.
+     * @brief return calculated wait_for from overtaken_ltx_set_.
      * 
      * @return std::set<std::size_t> 
      */
-    std::set<std::size_t> extract_wait_for();
+    [[nodiscard]] const std::set<std::size_t>& get_wait_for() const { return wait_for_; }
+    std::set<std::size_t>& get_wait_for() { return wait_for_; }
 
     /**
      * @brief long tx find high priority short.
@@ -398,6 +399,7 @@ public:
     void clear_overtaken_ltx_set() {
         std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
         overtaken_ltx_set_.clear();
+        wait_for_.clear();
     }
 
     void clear_range_read_by_short_set() {
@@ -814,6 +816,8 @@ private:
      * @brief The ltx set which this transaction overtook.
      */
     overtaken_ltx_set_type overtaken_ltx_set_;
+
+    std::set<std::size_t> wait_for_;
 
     /**
      * @brief The shared mutex about overtaken_ltx_set_.

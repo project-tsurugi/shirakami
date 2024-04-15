@@ -20,7 +20,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     // @pre shared lock to tx_info_
 
     auto exist_living_wait_for = [](session* target_ti) {
-        auto wait_for{target_ti->extract_wait_for()};
+        const auto& wait_for{target_ti->get_wait_for()};
         for (auto&& elem : tx_info_) {
             auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
             auto f_itr = wait_for.find(the_tx_id);
@@ -32,7 +32,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     /**
      * 現時点で前置候補の LTX群。これらで走行中のものをルート以外バイパスする。
     */
-    auto wait_for{ti->extract_wait_for()};
+    const auto& wait_for{ti->get_wait_for()};
     std::set<std::tuple<std::size_t, session*>> bypass_target{};
     for (auto&& elem : tx_info_) {
         auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
@@ -79,15 +79,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
             // find bypass
             std::set<std::size_t> erase_targets;
             for (auto&& bt_itr : bypass_target) {
-                auto find_itr = overtaken_ltx_ids.find(std::get<0>(bt_itr));
-                if (find_itr != overtaken_ltx_ids.end()) {
-                    // found, bypass
-                    erase_targets.insert(std::get<0>(bt_itr));
-                }
-            }
-            // erase by erase_targets
-            for (auto&& erase_elem : erase_targets) {
-                overtaken_ltx_ids.erase(erase_elem);
+                overtaken_ltx_ids.erase(std::get<0>(bt_itr));
             }
 
             // if it is empty, clear the element
@@ -97,6 +89,9 @@ Status ongoing_tx::waiting_bypass(session* ti) {
                 // increment itr
                 ++ols_itr;
             }
+        }
+        for (auto&& bt_itr : bypass_target) {
+            ti->get_wait_for().erase(std::get<0>(bt_itr));
         }
     }
 
@@ -131,6 +126,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
                                     std::get<0>(ols_elem.second);
                             for (auto id : merge_source_ids) {
                                 ols_ids.insert(id);
+                                ti->get_wait_for().insert(id);
                             }
                             // merge read range, about left endpoint
                             std::string left_end_source =
@@ -168,7 +164,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
     out_status = Status::OK; // initialize arg
     std::size_t id = ti->get_long_tx_id();
     bool has_wp = !ti->get_wp_set().empty();
-    auto wait_for = ti->extract_wait_for();
+    const auto& wait_for = ti->get_wait_for();
     // check local write set
     // create and compaction about storage set
     if (!ti->get_requested_commit()) {

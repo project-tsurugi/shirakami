@@ -110,22 +110,6 @@ void session::commit_sequence(tid_word ctid) {
 #endif
 }
 
-std::set<std::size_t> session::extract_wait_for() {
-    // extract wait for
-    std::set<std::size_t> wait_for;
-    {
-        // get read lock
-        std::shared_lock<std::shared_mutex> lk{
-                this->get_mtx_overtaken_ltx_set()};
-        for (auto&& each_pair : get_overtaken_ltx_set()) {
-            for (auto&& each_id : std::get<0>(each_pair.second)) {
-                wait_for.insert(each_id);
-            }
-        }
-    }
-    return wait_for;
-}
-
 Status session::find_high_priority_short() const {
     if (get_tx_type() == transaction_options::transaction_type::SHORT) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";

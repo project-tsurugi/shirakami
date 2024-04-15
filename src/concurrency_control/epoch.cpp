@@ -88,13 +88,10 @@ inline void compute_and_set_cc_safe_ss_epoch() {
                             /**
                       * the target ltx was commited, so it needs to check.
                       */
-                            for (auto&& hid : std::get<0>(oe.second)) {
-                                if (wp_result_id == hid) {
+                            if (ti->get_wait_for().find(wp_result_id) != std::end(ti->get_wait_for())) {
                                     if (wp_result_epoch < result_epoch) {
                                         result_epoch = wp_result_epoch;
-                                        break;
                                     }
-                                }
                             }
                         }
                     }

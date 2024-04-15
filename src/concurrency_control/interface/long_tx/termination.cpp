@@ -457,8 +457,7 @@ Status verify(session* const ti) {
                     /**
                       * the target ltx was commited, so it needs to check.
                       */
-                    for (auto&& hid : std::get<0>(oe.second)) {
-                        if (wp_result_id == hid) {
+                    if (ti->get_wait_for().find(wp_result_id) != std::end(ti->get_wait_for())) {
                             // check conflict
                             if (!std::get<0>(write_result)) {
                                 // the ltx didn't write.
@@ -507,7 +506,6 @@ Status verify(session* const ti) {
                             }
                             // verify success
                             break;
-                        }
                     }
                 }
 
@@ -734,7 +732,7 @@ extern Status commit(session* const ti) {
     // detail info
     if (logging::get_enable_logging_detail_info()) {
         // extract wait for
-        auto wait_for = ti->extract_wait_for();
+        const auto& wait_for = ti->get_wait_for();
         std::string wait_for_str{};
         for (auto elem : wait_for) {
             wait_for_str.append(std::to_string(elem) + ", ");

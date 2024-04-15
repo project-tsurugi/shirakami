@@ -53,6 +53,7 @@ void extract_higher_priori_ltx_info(session* const ti,
             }
         }
         target_set.insert(against_id);
+        ti->get_wait_for().insert(against_id);
     };
 
     // check living wp
@@ -108,6 +109,7 @@ void extract_higher_priori_ltx_info(session* const ti,
         auto& target_set =
                 std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
         target_set.insert(against_id);
+        ti->get_wait_for().insert(against_id);
     };
 
     for (auto&& wped : wps) {
