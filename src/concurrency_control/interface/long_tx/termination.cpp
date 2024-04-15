@@ -94,6 +94,7 @@ static inline void expose_local_write(
     tid_word ctid{};
     compute_tid(ti, ctid);
     committed_id = ctid;
+    LOG(INFO) << committed_id;
 
     //bool should_backward{ti->is_write_only_ltx_now()};
     bool should_backward{!ti->get_is_forwarding()};

@@ -15,6 +15,8 @@ namespace shirakami {
 
 class tid_word { // NOLINT
 public:
+    static const std::size_t bit_size_epoch = 31;
+
     union { // NOLINT
         uint64_t obj_;
         struct {
@@ -24,7 +26,7 @@ public:
             bool absent_ : 1;
             std::uint64_t tid_ : 28; // NOLINT
             bool by_short_ : 1;
-            epoch::epoch_t epoch_ : 31; // NOLINT
+            epoch::epoch_t epoch_ : bit_size_epoch; // NOLINT
         };
     };
 
