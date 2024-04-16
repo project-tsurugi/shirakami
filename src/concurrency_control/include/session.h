@@ -30,7 +30,6 @@
 #include "shirakami/scheme.h"
 #include "shirakami/transaction_options.h"
 #include "shirakami/transaction_state.h"
-#include "shirakami/tuple.h"
 
 #include "yakushima/include/kvs.h"
 

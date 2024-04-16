@@ -28,8 +28,6 @@
 
 #include "random.h"
 
-#include "concurrency_control/include/tuple_local.h"
-
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"

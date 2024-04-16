@@ -4,7 +4,6 @@
 
 #include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
 #include "glog/logging.h"

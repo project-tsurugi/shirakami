@@ -4,7 +4,6 @@
 #include <mutex>
 #include <thread>
 
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
 #if defined(RECOVERY)

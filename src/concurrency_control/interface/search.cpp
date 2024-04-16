@@ -4,7 +4,6 @@
 
 #include "concurrency_control/include/helper.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"

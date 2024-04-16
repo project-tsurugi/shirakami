@@ -5,7 +5,6 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/local_set.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"

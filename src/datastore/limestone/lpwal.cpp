@@ -7,7 +7,6 @@
 #include "concurrency_control/include/lpwal.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h" // for size
 
 #include "storage.h"
 

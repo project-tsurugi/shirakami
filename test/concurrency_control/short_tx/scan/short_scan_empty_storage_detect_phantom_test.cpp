@@ -2,8 +2,6 @@
 #include <bitset>
 #include <mutex>
 
-#include "concurrency_control/include/tuple_local.h"
-
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -48,7 +46,6 @@ TEST_F(short_scan_empty_storage_detect_phantom_test, // NOLINT
     // test
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
-    std::vector<const Tuple*> records{};
     ScanHandle hd{};
     ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF,
                                                 "", scan_endpoint::INF, hd));

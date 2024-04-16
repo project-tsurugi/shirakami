@@ -4,7 +4,6 @@
 #include "shirakami/api_tx_id.h"
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "database/include/logging.h"
 
 namespace shirakami {

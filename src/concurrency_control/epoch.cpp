@@ -5,7 +5,6 @@
 #include "concurrency_control/include/epoch_internal.h"
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/wp.h"
 
 #include "database/include/logging.h"

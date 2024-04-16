@@ -2,8 +2,6 @@
 #include <bitset>
 #include <mutex>
 
-#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
-
 #include "shirakami/interface.h"
 
 #include "gtest/gtest.h"

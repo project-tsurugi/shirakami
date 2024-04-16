@@ -2,7 +2,6 @@
 #include "atomic_wrapper.h"
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/interface/include/helper.h"
 
 #include "database/include/logging.h"
