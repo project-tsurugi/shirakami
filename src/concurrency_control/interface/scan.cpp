@@ -378,9 +378,15 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         }
     }
 
+    // for hit, register left end point info as already read
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
+    }
+
     // Cache a pointer to record.
     auto& sh = ti->get_scan_handle();
     {
+        // lock for strand
         std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         std::get<scan_handler::scan_cache_storage_pos>(
                 sh.get_scan_cache()[handle]) = storage;
@@ -394,21 +400,17 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                              std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
                              std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
         }
+
+        // increment for head skipped records
+        // may need mutex for strand
+        std::size_t& scan_index =
+                ti->get_scan_handle().get_scan_cache_itr()[handle];
+        scan_index += head_skip_rec_n;
+
+        sh.get_scanned_storage_set().set(handle, storage);
+        sh.set_r_key(r_key);
+        sh.set_r_end(r_end);
     }
-
-    // increment for head skipped records
-    std::size_t& scan_index =
-            ti->get_scan_handle().get_scan_cache_itr()[handle];
-    scan_index += head_skip_rec_n;
-
-    // for hit, register left end point info as already read
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
-    }
-
-    sh.get_scanned_storage_set().set(handle, storage);
-    sh.set_r_key(r_key);
-    sh.set_r_end(r_end);
     return fin_process(ti, Status::OK);
 }
 
