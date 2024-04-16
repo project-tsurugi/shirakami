@@ -24,6 +24,12 @@
 
 namespace shirakami::long_tx {
 
+void set_read_version_max_epoch_if_need(session* ti, epoch::epoch_t ep) {
+    if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+        ti->set_read_version_max_epoch(ep);
+    }
+}
+
 /**
  * @return Status::WARN_NOT_FOUND
  * @return Status::OK
@@ -58,7 +64,7 @@ RETRY:
             // check max epoch of read version
             auto read_epoch{f_check.get_epoch()};
             if (read_epoch > ti->get_read_version_max_epoch()) {
-                ti->set_read_version_max_epoch(read_epoch);
+                set_read_version_max_epoch_if_need(ti, read_epoch);
             }
             if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
             return Status::OK;
@@ -83,7 +89,7 @@ RETRY:
     // check max epoch of read version
     auto read_epoch{ver->get_tid().get_epoch()};
     if (read_epoch > ti->get_read_version_max_epoch()) {
-        ti->set_read_version_max_epoch(read_epoch);
+        set_read_version_max_epoch_if_need(ti, read_epoch);
     }
     return Status::OK;
 }
