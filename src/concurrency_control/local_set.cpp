@@ -57,8 +57,7 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
             elem.get_key(key);
             if (itr == smap.end()) {
                 // not found
-                smap.insert(std::make_pair(elem.get_storage(),
-                                           std::make_tuple(key, key)));
+                smap.emplace(elem.get_storage(), std::make_tuple(key, key));
             } else {
                 // found, check left key
                 if (key < std::get<0>(itr->second)) {
@@ -181,8 +180,7 @@ Status local_sequence_set::push(SequenceId const id,
         } // new value is smaller than old ones
         return Status::WARN_ALREADY_EXISTS;
     } // not found
-    auto ret =
-            set().insert(std::make_pair(id, std::make_tuple(version, value)));
+    auto ret = set().emplace(id, std::make_tuple(version, value));
     if (!ret.second) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
                               << "unreachable path. maybe mixed some access.";

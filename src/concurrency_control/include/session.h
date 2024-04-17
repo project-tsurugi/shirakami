@@ -426,9 +426,9 @@ public:
         auto itr = get_ltx_storage_read_set().find(st);
         if (itr == get_ltx_storage_read_set().end()) {
             // no hit
-            get_ltx_storage_read_set().insert(std::make_pair(
+            get_ltx_storage_read_set().emplace(
                     st, std::make_tuple("", scan_endpoint::EXCLUSIVE, "",
-                                        scan_endpoint::EXCLUSIVE)));
+                                        scan_endpoint::EXCLUSIVE));
         }
     }
 
@@ -439,9 +439,9 @@ public:
         auto itr = get_ltx_storage_read_set().find(st);
         if (itr == get_ltx_storage_read_set().end()) {
             // no hit
-            get_ltx_storage_read_set().insert(std::make_pair(
+            get_ltx_storage_read_set().emplace(
                     st, std::make_tuple(key, scan_endpoint::INCLUSIVE, key,
-                                        scan_endpoint::INCLUSIVE)));
+                                        scan_endpoint::INCLUSIVE));
         } else {
             std::string& now_lkey = std::get<0>(itr->second);
             scan_endpoint& now_lpoint = std::get<1>(itr->second);
