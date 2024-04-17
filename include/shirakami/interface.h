@@ -18,7 +18,6 @@
 #include "storage_options.h"
 #include "transaction_options.h"
 #include "transaction_state.h"
-#include "tuple.h"
 #include "tx_state_notification.h"
 
 namespace shirakami {

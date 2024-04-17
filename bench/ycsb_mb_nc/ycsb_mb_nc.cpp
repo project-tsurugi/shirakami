@@ -34,8 +34,6 @@
 #include "cpu.h"
 #include "gflags/gflags.h"
 
-#include "concurrency_control/include/tuple_local.h"
-
 #include "shirakami/interface.h"
 
 #include "boost/filesystem.hpp"

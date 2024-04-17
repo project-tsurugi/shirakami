@@ -7,7 +7,6 @@
 #include "concurrency_control/include/version.h"
 
 #include "shirakami/scheme.h"
-#include "shirakami/tuple.h"
 
 namespace shirakami::long_tx {
 

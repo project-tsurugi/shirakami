@@ -2,8 +2,6 @@
 #include <bitset>
 #include <mutex>
 
-#include "concurrency_control/include/tuple_local.h"
-
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
@@ -47,7 +45,6 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
-    std::vector<const Tuple*> records{};
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, end,
                                     scan_endpoint::EXCLUSIVE, hd));

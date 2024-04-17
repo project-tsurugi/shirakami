@@ -3,7 +3,6 @@
 #include <thread>
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 
 // test/include
 #include "test_tool.h"

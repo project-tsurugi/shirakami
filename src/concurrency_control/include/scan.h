@@ -26,6 +26,7 @@ public:
     }
 
     void clear(ScanHandle const hd) {
+        // for strand
         std::lock_guard<std::shared_mutex> lk{get_mtx()};
         map_.erase(hd);
     }
@@ -60,6 +61,7 @@ public:
 
     void clear() {
         {
+            // for strand
             std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
             get_scan_cache_itr().clear();
@@ -70,6 +72,7 @@ public:
     Status clear(ScanHandle hd) {
         // about scan cache
         {
+            // for strand
             std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             auto itr = get_scan_cache().find(hd);
             if (itr == get_scan_cache().end()) {

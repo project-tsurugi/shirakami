@@ -48,7 +48,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
                 continue;
             }
 
-            bypass_target.insert(std::make_tuple(the_tx_id, token));
+            bypass_target.emplace(the_tx_id, token);
             // set valid epoch if need
             if (ti->get_valid_epoch() > token->get_valid_epoch()) {
                 // update valid epoch and check rub violation

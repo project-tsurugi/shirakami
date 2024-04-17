@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 
 #include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
 
 #include "shirakami/interface.h"
 

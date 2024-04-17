@@ -15,7 +15,6 @@
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/record.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "concurrency_control/include/version.h"
 
 #include "index/yakushima/include/interface.h"

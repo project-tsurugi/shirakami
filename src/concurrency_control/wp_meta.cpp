@@ -167,8 +167,8 @@ void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
                                std::string_view right_key) {
     std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
 
-    auto ret_pair = get_write_range().insert(
-            std::make_pair(txid, std::make_tuple(left_key, right_key)));
+    auto ret_pair = get_write_range().emplace(
+            txid, std::make_tuple(left_key, right_key));
     if (!ret_pair.second) {
         // already exist, not inserted
         LOG_FIRST_N(ERROR, 1) << log_location_prefix

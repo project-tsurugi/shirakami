@@ -34,8 +34,6 @@
 #include "compiler.h"
 #include "cpu.h"
 
-#include "concurrency_control/include/tuple_local.h"
-
 #include "shirakami/interface.h"
 
 #include "boost/filesystem.hpp"

@@ -8,7 +8,6 @@
 #include "memory.h"
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/interface.h"
 

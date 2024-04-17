@@ -33,7 +33,7 @@ public:
     } // NOLINT : clang-tidy order to initialize other member, but
     // it occurs compile error.
     tid_word(const uint64_t obj) { obj_ = obj; } // NOLINT : the same as above.
-    tid_word(const tid_word& right)              // NOLINT
+    tid_word(const tid_word& right) noexcept     // NOLINT
         : obj_(right.get_obj()) {}               // NOLINT : the same as above.
 
     tid_word& operator=(const tid_word& right) { // NOLINT
@@ -133,6 +133,8 @@ public:
 
 private:
 };
+
+static_assert(std::is_nothrow_move_constructible_v<tid_word>);
 
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
     out << "lock_:" << tid.get_lock() << ", lock_by_gc:" << tid.get_lock_by_gc()

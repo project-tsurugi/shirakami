@@ -11,7 +11,6 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 
 #include "shirakami/scheme.h"
 

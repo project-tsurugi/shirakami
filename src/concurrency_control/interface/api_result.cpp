@@ -2,7 +2,6 @@
 #include <memory>
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 #include "database/include/logging.h"
 
 #include "shirakami/api_result.h"

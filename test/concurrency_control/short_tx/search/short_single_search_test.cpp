@@ -4,8 +4,6 @@
 
 #include "gtest/gtest.h"
 
-#include "concurrency_control/include/tuple_local.h" // sizeof(Tuple)
-
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"

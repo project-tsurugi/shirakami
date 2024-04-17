@@ -17,7 +17,6 @@
 #include "shirakami/interface.h"
 
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/tuple_local.h"
 
 // test tool
 
