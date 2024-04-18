@@ -1,22 +1,24 @@
 
-#include <xmmintrin.h>
-
+#include <emmintrin.h>
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <climits>
 #include <mutex>
-#include <random>
 #include <thread>
 #include <vector>
+#include <cstring>
+#include <ostream>
+#include <string>
+#include <string_view>
 
 #include "atomic_wrapper.h"
-
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 namespace shirakami::testing {
 

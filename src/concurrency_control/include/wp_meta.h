@@ -1,11 +1,14 @@
 #pragma once
 
-#include <xmmintrin.h>
-
 #include <array>
 #include <bitset>
+#include <cstddef>
 #include <map>
 #include <shared_mutex>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "cpu.h"
@@ -14,8 +17,6 @@
 #include "concurrency_control/include/wp_lock.h"
 
 #include "shirakami/scheme.h"
-
-#include "glog/logging.h"
 
 namespace shirakami::wp {
 
@@ -134,11 +135,13 @@ public:
         return std::get<0>(elem);
     }
 
-    static std::size_t wp_result_elem_extract_id(const wp_result_elem_type& elem) {
+    static std::size_t
+    wp_result_elem_extract_id(const wp_result_elem_type& elem) {
         return std::get<1>(elem);
     }
 
-    static bool wp_result_elem_extract_was_committed(const wp_result_elem_type& elem) {
+    static bool
+    wp_result_elem_extract_was_committed(const wp_result_elem_type& elem) {
         return std::get<2>(elem);
     }
 

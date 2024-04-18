@@ -1,14 +1,16 @@
 
-#include <array>
 #include <mutex>
+#include <string>
 
 #include "concurrency_control/include/tid.h"
-
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "atomic_wrapper.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/api_tx_id.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 namespace shirakami::testing {
 

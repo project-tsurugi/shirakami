@@ -2,21 +2,18 @@
  * @file sequence_test.cpp
  */
 
-#include <xmmintrin.h>
-
-#include "sequence.h"
-
-#ifdef PWAL
-
-#include "concurrency_control/include/lpwal.h"
-
-#endif
+#include <emmintrin.h>
+#include <memory>
+#include <mutex>
 
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "concurrency_control/include/epoch.h"
+#include "shirakami/api_sequence.h"
+#include "shirakami/binary_printer.h"
+#include "shirakami/scheme.h"
+#include "shirakami/transaction_options.h"
 
 namespace shirakami::testing {
 

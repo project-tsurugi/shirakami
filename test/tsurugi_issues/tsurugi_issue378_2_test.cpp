@@ -1,13 +1,22 @@
 
+#include <emmintrin.h>
 #include <atomic>
-#include <functional>
-#include <xmmintrin.h>
+#include <mutex>
+#include <ostream>
+#include <string>
+#include <string_view>
 
 #include "shirakami/interface.h"
 #include "test_tool.h"
-
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/result_info.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
+#include "shirakami/tx_state_notification.h"
 
 using namespace shirakami;
 using transaction_type = shirakami::transaction_options::transaction_type;

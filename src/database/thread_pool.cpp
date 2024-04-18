@@ -1,9 +1,13 @@
 
-#include <xmmintrin.h>
+#include <emmintrin.h>
+#include <glog/logging.h>
+#include <cstddef>
 
 #include "database/include/thread_pool.h"
+#include "concurrent_queue.h"
 
 namespace shirakami {
+class thread_task;
 
 void do_task([[maybe_unused]] thread_task* const out_task) {
     // todo task

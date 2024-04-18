@@ -1,12 +1,16 @@
 
-#include <bitset>
+#include <glog/logging.h>
 #include <mutex>
-
-#include "concurrency_control/include/epoch.h"
+#include <string>
 
 #include "gtest/gtest.h"
-
 #include "shirakami/interface.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/binary_printer.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;

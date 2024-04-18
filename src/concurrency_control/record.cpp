@@ -1,5 +1,13 @@
 
+#include <emmintrin.h>
+#include <stdint.h>
+#include <atomic>
+#include <string_view>
+
 #include "concurrency_control/include/record.h"
+#include "concurrency_control/include/version.h"
+#include "atomic_wrapper.h"
+#include "concurrency_control/include/tid.h"
 
 namespace shirakami {
 

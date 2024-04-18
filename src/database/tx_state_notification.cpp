@@ -1,13 +1,13 @@
 
 #include "database/include/tx_state_notification.h"
+
+#include <glog/logging.h>
+#include <functional>
+#include <ostream>
+
 #include "concurrency_control/include/epoch.h"
 #include "database/include/logging.h"
-
-#ifdef PWAL
-
-#include "concurrency_control/include/lpwal.h"
-
-#endif
+#include "shirakami/scheme.h"
 
 namespace shirakami {
 

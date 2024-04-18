@@ -1,16 +1,21 @@
 
-#include <xmmintrin.h>
-
+#include <emmintrin.h>
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <cstddef>
+#include <ostream>
+#include <string>
 
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 using namespace shirakami;
 

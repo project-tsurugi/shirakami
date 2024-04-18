@@ -1,11 +1,12 @@
+#include <stdint.h>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <cstddef>
 
 // shirakami-impl interface library
 #include "memory.h"
 #include "result.h"
-
 #include "concurrency_control/include/epoch.h"
 
 namespace shirakami {

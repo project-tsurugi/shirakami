@@ -1,6 +1,8 @@
+#include <stdint.h>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <cstddef>
 
 // shirakami-impl interface library
 #include "memory.h"

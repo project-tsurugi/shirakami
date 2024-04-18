@@ -1,12 +1,24 @@
 
+#include <emmintrin.h>
+#include <unistd.h>
 #include <atomic>
-#include <functional>
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <ostream>
+#include <string>
 
 #include "shirakami/interface.h"
 #include "test_tool.h"
-
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/result_info.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
+#include "shirakami/tx_state_notification.h"
 
 
 using namespace shirakami;

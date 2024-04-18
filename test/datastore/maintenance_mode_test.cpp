@@ -1,10 +1,15 @@
 
-#include "shirakami/interface.h"
-
-#include "test_tool.h"
-
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <memory>
+#include <mutex>
+
+#include "shirakami/interface.h"
+#include "test_tool.h"
+#include "gtest/gtest.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/database_options.h"
+#include "shirakami/transaction_options.h"
 
 
 using namespace shirakami;

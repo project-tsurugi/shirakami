@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-#include <xmmintrin.h>
-
 #include <algorithm>
 #include <map>
 #include <unordered_map>
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
+#include <random>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "atomic_wrapper.h"
-#include "clock.h"
-#include "compiler.h"
 #include "cpu.h"
-#include "random.h"
 #include "tsc.h"
-
 #include "shirakami/logging.h"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 

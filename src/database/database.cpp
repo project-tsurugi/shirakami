@@ -1,11 +1,16 @@
 
-#include "storage.h"
+#include <glog/logging.h>
+#include <ostream>
+#include <string_view>
+#include <vector>
 
+#include "storage.h"
 #include "concurrency_control/include/wp.h"
 #include "database/include/database.h"
-#include "database/include/logging.h"
-
-#include "shirakami/interface.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/logging.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 namespace shirakami {
 

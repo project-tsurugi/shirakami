@@ -1,8 +1,14 @@
 
+#include <ostream>
+#include <string>
+#include <string_view>
+
 #include "storage.h"
 
 #include "shirakami/logging.h"
 #include "shirakami/result_info.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 #include "glog/logging.h"
 

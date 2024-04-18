@@ -1,9 +1,14 @@
 
-#include <mutex>
+#include <string.h>
+#include <string>
 
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 namespace shirakami::testing {
 

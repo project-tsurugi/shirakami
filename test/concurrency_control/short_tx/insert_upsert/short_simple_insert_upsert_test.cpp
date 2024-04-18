@@ -1,17 +1,15 @@
 
-#include <array>
-#include <bitset>
 #include <mutex>
-#include <thread>
+#include <string>
 
 #include "compiler.h"
-#include "memory.h"
-
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 
 namespace shirakami::testing {

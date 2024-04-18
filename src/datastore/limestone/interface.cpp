@@ -1,7 +1,9 @@
 
+#include <glog/logging.h>
+#include <ostream>
+
 #include "database/include/logging.h"
 #include "datastore/limestone/include/datastore.h"
-
 #include "shirakami/interface.h"
 
 namespace shirakami {

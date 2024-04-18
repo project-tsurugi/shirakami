@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-#include <xmmintrin.h>
-
+#include <emmintrin.h>
+#include <stdint.h>
 #include <thread>
+#include <cstddef>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 // shirakami/bench
 #include "../include/gen_key.h"
-
 // shirakami/bench/ycsb_ol_bt_nc
 #include "declare_gflags.h"
 #include "storage.h"
-
 // shirakami-impl interface library
 #include "random.h"
-
 #include "shirakami/interface.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/logging.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 using namespace shirakami;
 

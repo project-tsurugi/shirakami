@@ -5,8 +5,12 @@
 
 #pragma once
 
+#include <atomic>
+#include <cstddef>
 #include <mutex>
 #include <shared_mutex>
+#include <stdint.h>
+#include <string>
 #include <string_view>
 
 #include "concurrency_control/include/read_by.h"
@@ -15,8 +19,6 @@
 #include "atomic_wrapper.h"
 #include "cpu.h"
 #include "version.h"
-
-#include "glog/logging.h"
 
 namespace shirakami {
 

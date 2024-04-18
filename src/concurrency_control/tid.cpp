@@ -3,10 +3,13 @@
  * @details implement about tid.
  */
 
-#include "include/tid.h"
-
+#include <emmintrin.h>
+#include <stdint.h>
 #include <bitset>
 #include <iostream>
+
+#include "include/tid.h"
+#include "atomic_wrapper.h"
 
 namespace shirakami {
 

@@ -1,12 +1,11 @@
 
-#include <array>
 #include <mutex>
-
-#include "shirakami/interface.h"
+#include <memory>
 
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/transaction_options.h"
 
 namespace shirakami::testing {
 

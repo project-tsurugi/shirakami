@@ -1,17 +1,15 @@
 
 #include <iostream>
 #include <vector>
+#include <atomic>
+#include <cstdio>
+#include <string_view>
 
 #include "declare_gflags.h"
-#include "param.h"
 #include "simple_result.h"
-
 #include "memory.h"
-
 #include "concurrency_control/include/garbage.h"
-
 #include "shirakami/logging.h"
-
 #include "glog/logging.h"
 
 using namespace shirakami;

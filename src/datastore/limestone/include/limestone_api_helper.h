@@ -1,16 +1,16 @@
 #pragma once
 
-#include "limestone/api/datastore.h"
-#include "limestone/api/snapshot.h"
+#include <memory>
+#include <stdint.h>
+#include <string_view>
 
 #include "concurrency_control/include/epoch.h"
-#include "database/include/logging.h"
 
-#include "shirakami/logging.h"
+#include "limestone/api/snapshot.h"
+#include "limestone/api/storage_id_type.h"
+#include <limestone/api/write_version_type.h>
 
 #include "boost/filesystem/path.hpp"
-
-#include "glog/logging.h"
 
 namespace shirakami {
 

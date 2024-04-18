@@ -1,15 +1,16 @@
 
-#include <xmmintrin.h>
-
+#include <emmintrin.h>
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <algorithm>
+#include <cstddef>
 
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/scheme.h"
 
 namespace shirakami::testing {
 

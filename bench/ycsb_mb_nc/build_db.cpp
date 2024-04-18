@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
+#include <stdint.h>
 #include <string>
+#include <cstddef>
+#include <thread>
+#include <vector>
 
 // shirakami/bench
 #include "build_db.h"
 #include "gen_key.h"
-
-// shirakami-impl interface library
-#include "clock.h"
 #include "random.h"
-
 #include "shirakami/interface.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
 
 namespace shirakami {
 

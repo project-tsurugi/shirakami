@@ -1,9 +1,18 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <mutex>
+#include <string>
+#include <tuple>
 
 #include "shirakami/interface.h"
 #include "test_tool.h"
+#include "gtest/gtest.h"
+#include "shirakami/api_diagnostic.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 
 using namespace shirakami;

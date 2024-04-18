@@ -1,13 +1,11 @@
 
+#include <stdio.h>
 #include <iostream>
-#include <vector>
+#include <string_view>
 
 #include "declare_gflags.h"
-
 #include "memory.h"
-
 #include "shirakami/logging.h"
-
 #include "glog/logging.h"
 
 using namespace shirakami;

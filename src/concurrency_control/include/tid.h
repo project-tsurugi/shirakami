@@ -6,7 +6,9 @@
 #pragma once
 
 #include <cstdint>
-#include <xmmintrin.h>
+
+#include <ostream>
+#include <type_traits>
 
 #include "atomic_wrapper.h"
 #include "epoch.h"

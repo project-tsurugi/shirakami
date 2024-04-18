@@ -1,16 +1,13 @@
 
-#include <array>
 #include <mutex>
+#include <memory>
 
 #include "concurrency_control/include/epoch.h"
-
-#include "database/include/logging.h"
-
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/binary_printer.h"
+#include "shirakami/database_options.h"
 
 namespace shirakami::testing {
 

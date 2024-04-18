@@ -1,15 +1,18 @@
 
+#include <unistd.h>
 #include <mutex>
-#include <thread>
+#include <string>
 
 // test/include
 #include "test_tool.h"
-
 #include "shirakami/interface.h"
-
 #include "gtest/gtest.h"
-
 #include "glog/logging.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/binary_printer.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 using namespace shirakami;
 

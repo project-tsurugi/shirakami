@@ -1,18 +1,14 @@
 
-#include <xmmintrin.h>
-
-#include <bitset>
-#include <future>
 #include <mutex>
-
-#include "test_tool.h"
-
-#include "concurrency_control/include/epoch.h"
+#include <memory>
 
 #include "shirakami/interface.h"
-
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include "shirakami/api_storage.h"
+#include "shirakami/scheme.h"
+#include "shirakami/storage_options.h"
+#include "shirakami/transaction_options.h"
 
 namespace shirakami::testing {
 
