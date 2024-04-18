@@ -9,6 +9,7 @@ file(GLOB CC_SOURCES
 "concurrency_control/interface/*.cpp"
 "concurrency_control/interface/long_tx/*.cpp"
 "concurrency_control/interface/read_only_tx/*.cpp"
+"concurrency_control/interface/scan/*.cpp"
 "concurrency_control/interface/short_tx/*.cpp"
 )
 set(SOURCES ${SOURCES} ${CC_SOURCES})
