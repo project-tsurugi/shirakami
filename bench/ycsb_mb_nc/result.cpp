@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 #include <cmath>
 #include <iomanip>
 #include <iostream>

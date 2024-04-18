@@ -1,7 +1,7 @@
 
-#include <emmintrin.h>
-#include <stdint.h>
 #include <atomic>
+#include <cstdint>
+#include <emmintrin.h>
 
 #include "concurrency_control/include/wp_lock.h"
 

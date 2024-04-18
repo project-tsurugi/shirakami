@@ -1,5 +1,5 @@
 #include <cxxabi.h>
-#include <stdint.h>
+#include <cstdint>
 #include <future>
 #include <thread>
 #include <chrono>

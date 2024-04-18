@@ -6,7 +6,7 @@
 #include <limestone/api/snapshot.h>
 #include <limestone/api/storage_id_type.h>
 #include <limestone/api/write_version_type.h>
-#include <stdint.h>
+#include <cstdint>
 #include <ostream>
 #include <memory>
 #include <string_view>

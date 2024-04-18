@@ -4,7 +4,7 @@
  */
 
 #include <emmintrin.h>
-#include <stdint.h>
+#include <cstdint>
 #include <bitset>
 #include <iostream>
 

@@ -1,6 +1,6 @@
 
 #include <emmintrin.h>
-#include <stdint.h>
+#include <cstdint>
 #include <atomic>
 #include <string_view>
 

@@ -15,7 +15,7 @@
  */
 
 #include <emmintrin.h>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <thread>
 #include <cstddef>

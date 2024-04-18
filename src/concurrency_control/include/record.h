@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <mutex>
 #include <shared_mutex>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <string_view>
 

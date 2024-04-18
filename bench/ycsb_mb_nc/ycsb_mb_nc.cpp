@@ -15,8 +15,8 @@
  */
 
 #include <emmintrin.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <unistd.h>
 #include <cstring>
 #include <exception>

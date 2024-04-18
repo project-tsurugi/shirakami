@@ -1,6 +1,6 @@
 
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 #include <string_view>

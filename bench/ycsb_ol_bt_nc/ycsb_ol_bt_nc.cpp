@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include <assert.h>
+#include <cassert>
 #include <emmintrin.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
