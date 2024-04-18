@@ -51,6 +51,8 @@ Available options:
 * `-DTSURUGI_FAST_SHUTDOWN=ON`
    * Enable the shutdown process shortcut by default (default: `OFF` )
 * For debugging only
+  + `-DENABLE_INCLUDE_WHAT_YOU_USE`
+    - Enable include-what-you-use (default: `OFF`)
   + `-DENABLE_SANITIZER=OFF`
     - Disable sanitizers (requires `-DCMAKE_BUILD_TYPE=Debug` )
 

@@ -72,6 +72,7 @@ include(CMakePackageConfigHelpers)
 include(CompileOptions)
 include(InstallOptions)
 include(Tests)
+include(IncludeWhatYouUse)
 
 add_library(api INTERFACE)
 

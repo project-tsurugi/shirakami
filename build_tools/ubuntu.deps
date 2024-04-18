@@ -1,11 +1,13 @@
 build-essential
 ccache
 clang-tidy
+clang-tidy13
 cmake
 doxygen
 gcovr
 git
 gnuplot
+iwyu
 libboost-dev
 libboost-filesystem-dev
 libbz2-dev
