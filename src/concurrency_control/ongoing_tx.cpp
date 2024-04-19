@@ -20,7 +20,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     // @pre shared lock to tx_info_
 
     auto exist_living_wait_for = [](session* target_ti) {
-        const auto& wait_for{target_ti->get_wait_for()};
+        auto wait_for{target_ti->copyof_wait_for()};
         for (auto&& elem : tx_info_) {
             auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
             auto f_itr = wait_for.find(the_tx_id);

@@ -132,9 +132,20 @@ public:
     void commit_sequence(tid_word ctid);
 
     /**
-     * @brief return calculated wait_for from overtaken_ltx_set_.
-     * 
+     * @brief return copy of calculated wait_for from overtaken_ltx_set_.
+     *
      * @return std::set<std::size_t> 
+     */
+    [[nodiscard]] std::set<std::size_t> copyof_wait_for() {
+        std::shared_lock<std::shared_mutex> lk{mtx_overtaken_ltx_set_};
+        return wait_for_;
+    }
+
+    /**
+     * @brief return reference of calculated wait_for from overtaken_ltx_set_.
+     * @pre got mtx_overtaken_ltx_set_
+     *
+     * @return std::set<std::size_t>&
      */
     [[nodiscard]] const std::set<std::size_t>& get_wait_for() const { return wait_for_; }
     std::set<std::size_t>& get_wait_for() { return wait_for_; }
