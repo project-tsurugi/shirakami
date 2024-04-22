@@ -32,7 +32,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     auto register_read_version_max_epoch = [ti](epoch::epoch_t read_epoch) {
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
             if (read_epoch > ti->get_read_version_max_epoch()) {
-                ti->set_read_version_max_epoch(read_epoch);
+                ti->set_read_version_max_epoch_if_need(read_epoch);
             }
         }
     };

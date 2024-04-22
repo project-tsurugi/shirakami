@@ -595,6 +595,22 @@ public:
         read_version_max_epoch_.store(ep, std::memory_order_release);
     }
 
+    void set_read_version_max_epoch_if_need(epoch::epoch_t const ep) {
+        for (;;) {
+            auto expected =
+                    read_version_max_epoch_.load(std::memory_order_acquire);
+            if (expected < ep) { // try cas
+                if (read_version_max_epoch_.compare_exchange_weak(
+                            expected, ep, std::memory_order_release,
+                            std::memory_order_acquire)) {
+                    break;
+                }
+            } else { //  no need
+                return;
+            }
+        }
+    }
+
     void set_valid_epoch(epoch::epoch_t ep) {
         valid_epoch_.store(ep, std::memory_order_release);
     }
