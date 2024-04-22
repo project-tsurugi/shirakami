@@ -86,20 +86,23 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     /**
       * Check read-own-write
       */
-    const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
-    if (inws != nullptr) {
-        if (inws->get_op() == OP_TYPE::DELETE) {
+    if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+        const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+        if (inws != nullptr) {
+            if (inws->get_op() == OP_TYPE::DELETE) {
+                read_register_if_ltx(rec_ptr);
+                return Status::WARN_NOT_FOUND;
+            }
+            if (key_read) {
+                inws->get_key(buf);
+            } else {
+                std::shared_lock<std::shared_mutex> lk{
+                        rec_ptr->get_mtx_value()};
+                inws->get_value(buf);
+            }
             read_register_if_ltx(rec_ptr);
-            return Status::WARN_NOT_FOUND;
+            return Status::OK;
         }
-        if (key_read) {
-            inws->get_key(buf);
-        } else {
-            std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
-            inws->get_value(buf);
-        }
-        read_register_if_ltx(rec_ptr);
-        return Status::OK;
     }
     // ==========
 
