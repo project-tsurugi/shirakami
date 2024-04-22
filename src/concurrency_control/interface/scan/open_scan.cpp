@@ -224,7 +224,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto wps = wp::find_wp(storage);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
-            abort(ti); // todo plus short_tx::?
+            short_tx::abort(ti);
             ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CC;
@@ -407,8 +407,12 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                         << ", max_size: " << max_size;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end,
-                              handle, max_size);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle,
+                             max_size);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "open_scan, Status: " << ret;
     return ret;

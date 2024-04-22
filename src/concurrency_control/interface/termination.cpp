@@ -20,9 +20,6 @@ Status abort_body(Token token) { // NOLINT
     // set result info
     ti->set_result(reason_code::USER_ABORT);
 
-    // set about diagnostics
-    ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
-
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::abort(ti);
@@ -50,7 +47,11 @@ Status abort(Token token) { // NOLINT
     shirakami_log_entry << "abort, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = abort_body(token);
+    Status ret{};
+    { // for strand
+        std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = abort_body(token);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "abort, Status: " << ret;
     return ret;
@@ -122,7 +123,11 @@ Status commit(Token const token) { // NOLINT
     shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = commit_body(token);
+    Status ret{};
+    { // for strand
+        std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = commit_body(token);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "commit, Status: " << ret;
     return ret;
@@ -132,7 +137,11 @@ bool commit(Token token, commit_callback_type callback) { // NOLINT
     shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = commit_body(token, std::move(callback));
+    Status ret{};
+    { // for strand
+        std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = commit_body(token, std::move(callback));
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "commit, bool: "
                        << (ret != Status::WARN_WAITING_FOR_OTHER_TX);

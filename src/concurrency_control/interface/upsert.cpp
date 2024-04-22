@@ -18,6 +18,17 @@
 
 namespace shirakami {
 
+void abort_update(session* ti) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        short_tx::abort(ti);
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
+        long_tx::abort(ti);
+    } else {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path.";
+    }
+}
+
 static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
                                     const std::string_view val) {
@@ -41,7 +52,7 @@ static inline Status insert_process(session* const ti, Storage st,
                          * because the previous scan was destroyed by an insert
                          * by another transaction.
                          */
-                abort(ti);
+                abort_update(ti);
                 ti->get_result_info().set_reason_code(
                         reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                 ti->get_result_info().set_key_storage_name(key, st);

@@ -230,7 +230,13 @@ public:
 
     std::atomic<std::size_t>& get_operating() { return operating_; }
 
+    // ========== start: strand
+
+    std::shared_mutex& get_mtx_state_da_term() { return mtx_state_da_term_; }
+
     std::mutex& get_mtx_termination() { return mtx_termination_; }
+
+    // ========== end: strand
 
     std::shared_mutex& get_mtx_ltx_storage_read_set() {
         return mtx_ltx_storage_read_set_;
@@ -744,12 +750,20 @@ private:
      */
     std::atomic<std::size_t> operating_{0};
 
+    // ========== start: strand
+
+    /**
+     * @brief For mutex between data access and termination
+    */
+    std::shared_mutex mtx_state_da_term_{};
+
     /**
      * @brief It uses for strand thread. All data access api can run concurrently
      *  and the state of termination is confused. So that use this mutex for 
      * termination and find consistency.
     */
     std::mutex mtx_termination_{};
+    // ========== end: strand
 
     // ========== start: tx state
 

@@ -225,7 +225,11 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = read_from_scan(token, handle, true, key);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = read_from_scan(token, handle, true, key);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "read_key_from_scan, Status: " << ret
                        << ", key: " << key;
@@ -238,7 +242,11 @@ Status read_value_from_scan(Token const token, // NOLINT
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = read_from_scan(token, handle, false, value);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = read_from_scan(token, handle, false, value);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "read_value_from_scan, Status: " << ret << ", value: "
                        << shirakami_binstring(std::string_view(value));

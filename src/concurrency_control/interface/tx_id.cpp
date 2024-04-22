@@ -56,4 +56,4 @@ Status get_tx_id(Token token, std::string& tx_id) {
     return ret;
 }
 
-} // namespace shirakami
+} // namespace shlong_tx.

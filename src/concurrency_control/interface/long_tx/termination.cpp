@@ -386,6 +386,9 @@ static inline void cleanup_process(
 // ==============================
 // functions declared at header
 Status abort(session* const ti) { // NOLINT
+    // about tx state
+    ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
+
     cancel_flag_inserted_records(ti);
 
     // about tx state
@@ -774,7 +777,7 @@ extern Status commit(session* const ti) {
         // log debug timing event
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "start_abort : " << str_tx_id;
-        abort(ti);
+        long_tx::abort(ti);
         ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
                                  0);
         goto END_COMMIT; // NOLINT
@@ -801,7 +804,7 @@ extern Status commit(session* const ti) {
         // log debug timing event
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "start_abort : " << str_tx_id;
-        abort(ti);
+        long_tx::abort(ti);
         // log debug timing event
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "end_abort : " << str_tx_id;

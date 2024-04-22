@@ -3,6 +3,8 @@
 
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/interface/include/helper.h"
+#include "concurrency_control/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/interface/short_tx/include/short_tx.h"
 
 #include "database/include/logging.h"
 
@@ -15,6 +17,17 @@
 
 namespace shirakami {
 
+void abort_insert(session* const ti) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        short_tx::abort(ti);
+    } else if (ti->get_tx_type() ==
+               transaction_options::transaction_type::LONG) {
+        long_tx::abort(ti);
+    } else {
+        LOG_FIRST_N(ERROR, 1)
+                << log_location_prefix << "library programming error";
+    }
+}
 static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
                                     const std::string_view val,
@@ -40,7 +53,7 @@ static inline Status insert_process(session* const ti, Storage st,
                   * because the previous scan was destroyed by an insert
                   * by another transaction.
                   */
-                abort(ti);
+                abort_insert(ti);
                 ti->get_result_info().set_reason_code(
                         reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                 ti->get_result_info().set_key_storage_name(key, st);

@@ -65,7 +65,11 @@ Status exist_key(Token const token, Storage const storage, // NOLINT
                         << ", storage: " << storage << shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = exist_key_body(token, storage, key);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = exist_key_body(token, storage, key);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "exist_key, Status: " << ret;
     return ret;
@@ -117,7 +121,11 @@ Status search_key(Token const token, Storage const storage, // NOLINT
                         << ", storage: " << storage << shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = search_key_body(token, storage, key, value);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        ret = search_key_body(token, storage, key, value);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "search_key, Status: " << ret;
     return ret;
