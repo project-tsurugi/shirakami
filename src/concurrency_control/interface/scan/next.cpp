@@ -59,15 +59,19 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
 
-        // check local write set
-        const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
-        if (inws != nullptr) {
-            /**
+        write_set_obj* inws{};
+        if (ti->get_tx_type() !=
+            transaction_options::transaction_type::READ_ONLY) {
+            // check local write set
+            inws = ti->get_write_set().search(rec_ptr);
+            if (inws != nullptr) {
+                /**
              * If it exists and it is not delete operation, read from scan api 
              * call should be able to read the record.
              */
-            if (inws->get_op() == OP_TYPE::DELETE) { continue; }
-            break;
+                if (inws->get_op() == OP_TYPE::DELETE) { continue; }
+                break;
+            }
         }
         // not in local write set
 
@@ -176,6 +180,9 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
+/**
+ * @pre This is called by only long tx mode
+*/
 void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
                                      ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
