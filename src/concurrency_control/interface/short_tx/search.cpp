@@ -49,6 +49,7 @@ Status search_key(session* ti, Storage const storage,
         auto rc_ns = ti->get_node_set().emplace_back(checked_version);
         if (rc_ns == Status::ERR_CC) {
             short_tx::abort(ti);
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             return Status::ERR_CC;

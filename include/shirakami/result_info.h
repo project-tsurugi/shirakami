@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <mutex>
 #include <string>
 #include <string_view>
 
@@ -124,17 +125,23 @@ public:
 
     // start: getter / setter
 
-    [[nodiscard]] reason_code get_reason_code() const { return reason_code_; }
+    [[nodiscard]] reason_code get_reason_code() {
+        return reason_code_;
+    }
 
-    [[nodiscard]] bool get_has_key_info() const { return has_key_info_; }
+    [[nodiscard]] bool get_has_key_info() {
+        return has_key_info_;
+    }
 
-    [[nodiscard]] std::string_view get_key() const { return key_; }
+    [[nodiscard]] std::string_view get_key() {
+        return key_;
+    }
 
-    [[nodiscard]] bool get_has_storage_name_info() const {
+    [[nodiscard]] bool get_has_storage_name_info() {
         return has_storage_name_info_;
     }
 
-    [[nodiscard]] std::string_view get_storage_name() const {
+    [[nodiscard]] std::string_view get_storage_name() {
         return storage_name_;
     }
 
@@ -143,14 +150,18 @@ public:
         reason_code_ = rc;
     }
 
-    void set_has_key_info(bool tf) { has_key_info_ = tf; }
+    void set_has_key_info(bool tf) {
+        has_key_info_ = tf;
+    }
 
     void set_key(std::string_view key) {
         set_has_key_info(true);
         key_ = key;
     }
 
-    void set_has_storage_name_info(bool tf) { has_storage_name_info_ = tf; }
+    void set_has_storage_name_info(bool tf) {
+        has_storage_name_info_ = tf;
+    }
 
     void set_storage_name(std::string_view name) {
         set_has_storage_name_info(true);
@@ -189,7 +200,7 @@ private:
     std::string storage_name_{};
 };
 
-inline std::ostream& operator<<(std::ostream& out, result_info const& info) {
+inline std::ostream& operator<<(std::ostream& out, result_info& info) {
     out << "reason_code:" << info.get_reason_code();
 
     // output storage name info

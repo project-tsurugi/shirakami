@@ -550,6 +550,8 @@ Status verify(session* const ti) {
                     // expect the record not existing
                     if (!(tid.get_latest() && tid.get_absent())) {
                         // someone interrupt tombstone
+                        std::unique_lock<std::mutex> lk{
+                                ti->get_mtx_result_info()};
                         ti->set_result(reason_code::KVS_INSERT);
                         ti->get_result_info().set_key_storage_name(
                                 rec_ptr->get_key_view(),
@@ -565,6 +567,8 @@ Status verify(session* const ti) {
                         } else {
                             ti->set_result(reason_code::KVS_DELETE);
                         }
+                        std::unique_lock<std::mutex> lk{
+                                ti->get_mtx_result_info()};
                         ti->get_result_info().set_key_storage_name(
                                 rec_ptr->get_key_view(),
                                 wso.second.get_storage());
@@ -578,6 +582,7 @@ Status verify(session* const ti) {
                 point_read_by_long* rbp{};
                 rbp = &wso.first->get_point_read_by_long();
                 if (rbp->is_exist(ti)) {
+                    std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(
@@ -590,6 +595,7 @@ Status verify(session* const ti) {
                 if (ti->get_valid_epoch() <=
                     rec_ptr->get_read_by().get_max_epoch()) {
                     // this will break commited stx's read
+                    std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.second.get_storage());
                     ti->set_result(
@@ -617,6 +623,8 @@ Status verify(session* const ti) {
 
                         // for long
                         if (rb) {
+                            std::unique_lock<std::mutex> lk{
+                                    ti->get_mtx_result_info()};
                             ti->get_result_info().set_key_storage_name(
                                     rec_ptr->get_key_view(),
                                     wso.second.get_storage());
@@ -629,6 +637,8 @@ Status verify(session* const ti) {
                         range_read_by_short* rrbs{
                                 psm->get_range_read_by_short_ptr()};
                         if (ti->get_valid_epoch() <= rrbs->get_max_epoch()) {
+                            std::unique_lock<std::mutex> lk{
+                                    ti->get_mtx_result_info()};
                             ti->get_result_info().set_key_storage_name(
                                     rec_ptr->get_key_view(),
                                     wso.second.get_storage());
@@ -673,6 +683,7 @@ Status verify_kvs_error(session* const ti) {
              */
                 if (!(tid.get_latest() && tid.get_absent())) {
                     // someone interrupt tombstone
+                    std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                     ti->set_result(reason_code::KVS_INSERT);
                     ti->get_result_info().set_key_storage_name(
                             rec_ptr->get_key_view(), wso.get_storage());

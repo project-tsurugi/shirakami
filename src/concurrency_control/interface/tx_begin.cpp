@@ -45,7 +45,10 @@ Status tx_begin_body(transaction_options options) { // NOLINT
     if (ti->get_tx_began()) { return Status::WARN_ALREADY_BEGIN; }
 
     // clear abort result info
-    ti->get_result_info().clear();
+    {
+        std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+        ti->get_result_info().clear();
+    }
 
     // this tx is not began.
     transaction_options::transaction_type tx_type =

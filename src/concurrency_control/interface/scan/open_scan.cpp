@@ -199,6 +199,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto rs = long_tx::check_read_area(ti, storage);
         if (rs == Status::ERR_READ_AREA_VIOLATION) {
             long_tx::abort(ti);
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
             return rs;
@@ -225,6 +226,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
         if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
             short_tx::abort(ti);
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(storage);
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CC;
@@ -339,6 +341,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                     auto rc = ti->get_node_set().emplace_back(nvec.at(i));
                     if (rc == Status::ERR_CC) {
                         short_tx::abort(ti);
+                        std::unique_lock<std::mutex> lk{
+                                ti->get_mtx_result_info()};
                         ti->get_result_info().set_storage_name(storage);
                         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                         return Status::ERR_CC;

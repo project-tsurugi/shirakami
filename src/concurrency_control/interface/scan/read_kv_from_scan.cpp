@@ -126,6 +126,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // create node set info, maybe phantom (Status::ERR_CC)
         auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
         if (rc == Status::ERR_CC) {
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(
                     sh.get_scanned_storage_set().get(handle));
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);

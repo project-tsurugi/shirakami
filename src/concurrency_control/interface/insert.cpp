@@ -54,6 +54,7 @@ static inline Status insert_process(session* const ti, Storage st,
                   * by another transaction.
                   */
                 abort_insert(ti);
+                std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                 ti->get_result_info().set_reason_code(
                         reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                 ti->get_result_info().set_key_storage_name(key, st);

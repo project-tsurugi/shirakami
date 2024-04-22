@@ -227,6 +227,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
         // ==============================
         if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
             unlock_write_set(ti);
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
                                                        itr.get_storage());
             ti->set_result(reason_code::CC_OCC_READ_VERIFY);
@@ -364,6 +365,8 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                     if (tid.get_latest() && !tid.get_absent()) {
                         // the record is existing record (not inserting, deleted)
                         abort_process();
+                        std::unique_lock<std::mutex> lk{
+                                ti->get_mtx_result_info()};
                         ti->get_result_info().set_reason_code(
                                 reason_code::KVS_INSERT);
                         ti->get_result_info().set_key_storage_name(
@@ -406,6 +409,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
                     ti->set_result(reason_code::KVS_DELETE);
                 }
+                std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso_ptr->get_storage());
                 return Status::ERR_KVS;

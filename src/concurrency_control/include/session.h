@@ -236,6 +236,8 @@ public:
 
     std::mutex& get_mtx_termination() { return mtx_termination_; }
 
+    std::mutex& get_mtx_result_info() { return mtx_result_info_; }
+
     // ========== end: strand
 
     std::shared_mutex& get_mtx_ltx_storage_read_set() {
@@ -779,6 +781,11 @@ private:
      * termination and find consistency.
     */
     std::mutex mtx_termination_{};
+
+    /**
+     * @brief mutex for update result_info
+    */
+    std::mutex mtx_result_info_{};
     // ========== end: strand
 
     // ========== start: tx state
