@@ -50,6 +50,8 @@ Status abort(Token token) { // NOLINT
     Status ret{};
     { // for strand
         std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // abort_body check warn not begin
         ret = abort_body(token);
     }
     ti->process_before_finish_step();
@@ -126,6 +128,8 @@ Status commit(Token const token) { // NOLINT
     Status ret{};
     { // for strand
         std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // commit_body check warn not begin
         ret = commit_body(token);
     }
     ti->process_before_finish_step();
@@ -140,6 +144,8 @@ bool commit(Token token, commit_callback_type callback) { // NOLINT
     Status ret{};
     { // for strand
         std::lock_guard<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // commit_body check warn not begin
         ret = commit_body(token, std::move(callback));
     }
     ti->process_before_finish_step();

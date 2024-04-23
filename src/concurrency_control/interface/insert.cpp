@@ -164,7 +164,13 @@ Status insert(Token const token, Storage const storage, // NOLINT
                         << shirakami_binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = insert_body(token, storage, key, val);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // insert_body check warn not begin
+        ret = insert_body(token, storage, key, val);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "insert, Status: " << ret;
     return ret;

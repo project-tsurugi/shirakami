@@ -159,7 +159,13 @@ Status delete_record(Token token, Storage storage, const std::string_view key) {
                         << " storage: " << storage << shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = delete_record_body(token, storage, key);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // delete record body check warn not begin for strand
+        ret = delete_record_body(token, storage, key);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "delete_record, Status: " << ret;
     return ret;

@@ -99,7 +99,13 @@ Status update(Token token, Storage storage,
                         << shirakami_binstring(val);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = update_body(token, storage, key, val);
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // update_body check termation by concurrent strand
+        ret = update_body(token, storage, key, val);
+    }
     ti->process_before_finish_step();
     shirakami_log_exit << "update, Status: " << ret;
     return ret;

@@ -124,6 +124,8 @@ Status search_key(Token const token, Storage const storage, // NOLINT
     Status ret{};
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+
+        // search_key_body check warn not begin by concurrent strand
         ret = search_key_body(token, storage, key, value);
     }
     ti->process_before_finish_step();
