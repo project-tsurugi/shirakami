@@ -129,7 +129,7 @@ public:
         return reason_code_;
     }
 
-    [[nodiscard]] bool get_has_key_info() {
+    [[nodiscard]] bool get_has_key_info() const {
         return has_key_info_;
     }
 
@@ -137,7 +137,7 @@ public:
         return key_;
     }
 
-    [[nodiscard]] bool get_has_storage_name_info() {
+    [[nodiscard]] bool get_has_storage_name_info() const {
         return has_storage_name_info_;
     }
 
