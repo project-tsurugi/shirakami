@@ -376,8 +376,9 @@ public:
     // ========== end: getter
 
     void process_before_start_step() {
-        get_operating()++;
+        // make sure that step_epoch is set when operating becomes 0 to 1
         set_step_epoch(epoch::get_global_epoch());
+        get_operating()++;
     }
 
     void process_before_finish_step() {
