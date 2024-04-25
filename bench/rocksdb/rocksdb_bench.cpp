@@ -136,13 +136,13 @@ static void load_flags() {
     if (FLAGS_thread >= 1) {
         std::cout << "FLAGS_thread : " << FLAGS_thread << std::endl;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Number of threads must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         std::cout << "FLAGS_duration : " << FLAGS_duration << std::endl;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     std::cout << "Fin load_flags()" << std::endl;
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) { // NOLINT
     set_rocksdb_options(options);
     auto s = DB::Open(options, FLAGS_rocksdb_path, &db);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "rocksdb's error code "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "rocksdb's error code "
                    << s.code();
     }
 
@@ -200,12 +200,12 @@ void bench_insert_process(std::uint64_t insert_end,
     rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "rocksdb's error code "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "rocksdb's error code "
                    << s.code();
     }
     ++insert_cursor;
     if (insert_cursor == insert_end) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Happen round-trip problem by too long experiment time.";
     }
 }
@@ -227,11 +227,11 @@ void bench_batch_insert_process(std::uint64_t insert_end,
     }
     Status s = db->Write(WriteOptions(), &batch);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "rocksdb's error code "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "rocksdb's error code "
                    << s.code();
     }
     if (insert_cursor == insert_end) {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Happen round-trip problem by too long experiment time.";
     }
 }
@@ -245,7 +245,7 @@ void bench_update_process(std::uint64_t write_start, Xoroshiro128Plus& rnd) {
     rocksdb::Slice rval{val.data(), val.size()};
     auto s = db->Put(WriteOptions(), rkey, rval);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "rocksdb's error code "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "rocksdb's error code "
                    << s.code();
     }
 }
@@ -267,7 +267,7 @@ void bench_batch_update_process(std::uint64_t write_start,
     }
     Status s = db->Write(WriteOptions(), &batch);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "rocksdb's error code "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "rocksdb's error code "
                    << s.code();
     }
 }
@@ -279,9 +279,9 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum,
     // Path to where we will write the SST file
     Status s = sst_file_writer.Open(FLAGS_bt4_sst_path);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "can't open sst file.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "can't open sst file.";
     } else if (sst_file_writer.FileSize() != 0) {
-        LOG(ERROR) << log_location_prefix << "error : file size is "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "error : file size is "
                    << sst_file_writer.FileSize();
     }
 
@@ -291,12 +291,12 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum,
     for (auto&& elem : bt_4_cont) {
         s = sst_file_writer.Put(elem, elem);
         if (!s.ok()) {
-            LOG(ERROR) << log_location_prefix
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix
                        << "Error while adding key: " << elem;
         }
         ++sum;
         if (sum == bt_4_cont.size()) {
-            LOG(ERROR) << log_location_prefix << "lack of preserve. "
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lack of preserve. "
                        << bt_4_cont.size();
         }
         if (loadAcquire(quit)) break;
@@ -307,7 +307,7 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum,
     std::uint64_t begin_ts{rdtscp()};
     s = sst_file_writer.Finish();
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "Error while finishing file. "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "Error while finishing file. "
                    << s.getState();
     }
     std::uint64_t end_ts{rdtscp()};
@@ -319,7 +319,7 @@ void bench_create_ingest_sst(std::size_t const thid, std::uint64_t& sum,
     begin_ts = rdtscp();
     s = db->IngestExternalFile({FLAGS_bt4_sst_path}, ifo);
     if (!s.ok()) {
-        LOG(ERROR) << log_location_prefix << "Error while ingesting file "
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "Error while ingesting file "
                    << s.getState();
     }
     end_ts = rdtscp();

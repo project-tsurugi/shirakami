@@ -55,22 +55,22 @@ void brock_insert(Storage st, size_t start, size_t end) {
     }
 
     auto rc{tx_begin({token})};                                        // NOLINT
-    if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; } // NOLINT
+    if (rc != Status::OK) { LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc; } // NOLINT
 
     std::size_t ctr{0};
     for (uint64_t i = start; i <= end; ++i) {
         rc = upsert(token, st, make_key(FLAGS_key_len, i),
                     std::string(FLAGS_val_len, '0'));
-        if (rc != Status::OK) { LOG(ERROR) << log_location_prefix << rc; }
+        if (rc != Status::OK) { LOG_FIRST_N(ERROR, 1) << log_location_prefix << rc; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             rc = commit(token);
-            if (rc != Status::OK) { LOG(ERROR); }
+            if (rc != Status::OK) { LOG_FIRST_N(ERROR, 1); }
             ctr = 0;
         }
     }
     rc = commit(token);
-    if (rc != Status::OK) { LOG(ERROR); }
+    if (rc != Status::OK) { LOG_FIRST_N(ERROR, 1); }
     leave(token);
 }
 
@@ -95,7 +95,7 @@ void init_db_ol() {
         Storage st{};
         auto ret{create_storage("", st)};
         if (ret != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "fail create_storage.";
         }
         get_ol_storages().emplace_back(st);
 
@@ -114,7 +114,7 @@ void init_db_bt() {
         Storage st{};
         auto ret{create_storage("", st)};
         if (ret != Status::OK) {
-            LOG(ERROR) << log_location_prefix << "fail create_storage.";
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "fail create_storage.";
         }
         get_bt_storages().emplace_back(st);
 

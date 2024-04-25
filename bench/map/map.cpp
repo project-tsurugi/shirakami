@@ -48,7 +48,7 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         LOG(INFO) << "FLAGS_cpumhz : " << FLAGS_cpumhz;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "CPU MHz of execution environment. It is used measuring "
                       "some time. It must be larger than 0.";
     }

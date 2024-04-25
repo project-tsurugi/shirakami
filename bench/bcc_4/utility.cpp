@@ -19,13 +19,13 @@ void check_flags() {
     if (FLAGS_d >= 1) {
         printf("FLAGS_d:\t%zu\n", FLAGS_d); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (0 <= FLAGS_cr && FLAGS_cr <= 100) { // NOLINT
         std::cout << "FLAGS_cr:\t" << FLAGS_cr << std::endl;
     } else {
-        LOG(ERROR);
+        LOG_FIRST_N(ERROR, 1);
     }
     printf("Fin check_flags()\n"); // NOLINT
 }

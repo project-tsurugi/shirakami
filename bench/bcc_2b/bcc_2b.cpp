@@ -145,7 +145,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     if (!is_ol && rc == Status::WARN_PREMATURE) {
                         goto RETRY; // NOLINT
                     }
-                    if (rc == Status::WARN_NOT_FOUND) { LOG(ERROR); }
+                    if (rc == Status::WARN_NOT_FOUND) { LOG_FIRST_N(ERROR, 1); }
                     if (rc == Status::OK || rc == Status::ERR_CC) { break; }
                 }
             } else if (itr.get_type() == OP_TYPE::UPDATE) {
@@ -156,7 +156,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,
                     goto RETRY; // NOLINT
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "unkown operation";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unkown operation";
             }
             if (rc == Status::ERR_CC) {
                 ++ct_abort;
@@ -209,7 +209,7 @@ void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        LOG(ERROR) << log_location_prefix << "sleep error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sleep error.";
     }
 #endif
     storeRelease(quit, true);

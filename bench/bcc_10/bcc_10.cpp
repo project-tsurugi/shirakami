@@ -94,10 +94,10 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             if (tx_begin({token, // NOLINT
                           transaction_options::transaction_type::READ_ONLY}) !=
                 Status::OK) {
-                LOG(ERROR);
+                LOG_FIRST_N(ERROR, 1);
             }
         } else {
-            if (tx_begin({token}) != Status::OK) { LOG(ERROR); } // NOLINT
+            if (tx_begin({token}) != Status::OK) { LOG_FIRST_N(ERROR, 1); } // NOLINT
         }
 
         // wait if read only tx
@@ -114,11 +114,11 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 std::string vb{};
                 auto rc{search_key(token, get_st(), itr.get_key(), vb)};
                 if (rc != Status::OK) {
-                    LOG(ERROR)
+                    LOG_FIRST_N(ERROR, 1)
                             << log_location_prefix << "ec: " << rc << std::endl;
                 }
             } else {
-                LOG(ERROR) << log_location_prefix << "unkown operation";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unkown operation";
             }
         }
 
@@ -126,7 +126,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         if (rc == Status::OK) {
             ++ct_commit;
         } else {
-            LOG(ERROR);
+            LOG_FIRST_N(ERROR, 1);
         }
     }
 
@@ -151,7 +151,7 @@ void invoke_leader() {
     storeRelease(start, true);
 
     if (sleep(FLAGS_d) != 0) {
-        LOG(ERROR) << log_location_prefix << "sleep error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sleep error.";
     }
 
     storeRelease(quit, true);

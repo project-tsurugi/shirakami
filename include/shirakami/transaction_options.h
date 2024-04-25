@@ -159,6 +159,10 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
         case transaction_options::transaction_type::READ_ONLY:
             return "READ_ONLY"sv; // NOLINT
     }
+    /**
+     * LOG_FIRST_N マクロは下記エラーによって利用できない。
+     * error: ‘occurrences_162’ declared ‘static’ in ‘constexpr’ function
+    */
     LOG(ERROR) << log_location_prefix << log_location_prefix
                << "unknown transaction type";
     return ""sv;

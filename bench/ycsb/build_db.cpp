@@ -47,10 +47,10 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
     Xoroshiro128Plus rnd;
     Token token{};
     auto ret = enter(token);
-    if (ret != Status::OK) { LOG(ERROR) << ret; }
+    if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
 
     ret = tx_begin({token}); // NOLINT
-    if (ret != Status::OK) { LOG(ERROR) << ret; }
+    if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
 
     std::size_t ctr{0};
     auto* ti = static_cast<session*>(token);
@@ -58,7 +58,7 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
         if (!ti->get_tx_began()) {
             ret = tx_begin(
                     {token, transaction_options::transaction_type::SHORT});
-            if (ret != Status::OK) { LOG(ERROR); }
+            if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1); }
         }
         if (get_use_separate_storage()) {
             ret = insert(token, pbd_storage, make_key(key_length, i),
@@ -67,16 +67,16 @@ void parallel_build_db(const std::size_t start, const std::size_t end,
             ret = insert(token, storage, make_key(key_length, i),
                          std::string(value_length, '0'));
         }
-        if (ret != Status::OK) { LOG(ERROR) << ret; }
+        if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
         ++ctr;
         if (ctr > 10) { // NOLINT
             ret = commit(token);
-            if (ret != Status::OK) { LOG(ERROR) << ret; }
+            if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
             ctr = 0;
         }
     }
     if (ctr != 0) { ret = commit(token); }
-    if (ret != Status::OK) { LOG(ERROR) << ret; }
+    if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
     leave(token);
 }
 

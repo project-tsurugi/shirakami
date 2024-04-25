@@ -92,7 +92,7 @@ static void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        LOG(ERROR) << log_location_prefix << "sleep error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sleep error.";
     }
 #endif
     storeRelease(quit, true);
@@ -115,14 +115,14 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "CPU MHz of execution environment. It is used measuring "
                       "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (FLAGS_key_length > 0) {
@@ -131,41 +131,41 @@ static void load_flags() {
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Number of operations in a transaction must be larger "
                       "than 0.";
     }
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        LOG(ERROR)
+        LOG_FIRST_N(ERROR, 1)
                 << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Rate of reads in a transaction must be in the range 0 "
                       "to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Number of threads must be larger than 0.";
     }
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Length of val must be larger than 0.";
     }
 
@@ -241,7 +241,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                                   itr.get_key(),
                                   std::string(FLAGS_val_length, '0'));
             } else {
-                LOG(ERROR) << log_location_prefix << "error.";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "error.";
             }
         }
         if (commit(token) == Status::OK) { // NOLINT

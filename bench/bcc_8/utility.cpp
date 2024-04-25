@@ -17,7 +17,7 @@ void check_flags() {
     if (FLAGS_d >= 1) {
         printf("FLAGS_d :\t%zu\n", FLAGS_d); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     std::cout << "FLAGS_skew:\t" << FLAGS_skew << std::endl;

@@ -18,14 +18,14 @@ void check_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "CPU MHz of execution environment. It is used measuring "
                       "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (FLAGS_key_len > 0) {
@@ -34,7 +34,7 @@ void check_flags() {
     if (FLAGS_val_len > 1) {
         printf("FLAGS_val_len : %zu\n", FLAGS_val_len); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Length of val must be larger than 0.";
     }
     std::cout << "FLAGS_rec : " << FLAGS_rec << std::endl;
@@ -44,20 +44,20 @@ void check_flags() {
     if (FLAGS_ol_rratio >= 0 && FLAGS_ol_rratio <= 100) {   // NOLINT
         printf("FLAGS_ol_rratio : %zu\n", FLAGS_ol_rratio); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Rate of reads in a transaction must be in the range 0 "
                       "to 100.";
     }
     if (FLAGS_ol_wp_rratio >= 0 && FLAGS_ol_wp_rratio <= 100) { // NOLINT
         std::cout << "FLAGS_ol_wp_rratio:\t" << FLAGS_ol_wp_rratio << std::endl;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "This is must be in the range 0 to 100.";
     }
     if (FLAGS_ol_skew >= 0 && FLAGS_ol_skew < 1) {
         std::cout << "FLAGS_ol_skew:\t" << FLAGS_ol_skew << std::endl;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }
@@ -68,14 +68,14 @@ void check_flags() {
     if (FLAGS_bt_rratio >= 0 && FLAGS_bt_rratio <= 100) {   // NOLINT
         printf("FLAGS_bt_rratio : %zu\n", FLAGS_bt_rratio); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Rate of reads in a transaction must be in the range 0 "
                       "to 100.";
     }
     if (FLAGS_bt_skew >= 0 && FLAGS_bt_skew < 1) {
         std::cout << "FLAGS_bt_skew:\t" << FLAGS_bt_skew << std::endl;
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }

@@ -105,7 +105,7 @@ static void invoke_leader() {
     }
 #else
     if (sleep(FLAGS_duration) != 0) {
-        LOG(ERROR) << log_location_prefix << "sleep error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sleep error.";
     }
 #endif
     quit.store(true, std::memory_order_release);
@@ -114,7 +114,7 @@ static void invoke_leader() {
 
     // cleanup
     ret = leave(token);
-    if (ret != Status::OK) { LOG(ERROR) << ret; }
+    if (ret != Status::OK) { LOG_FIRST_N(ERROR, 1) << ret; }
 
     res.addLocalAllResult(res);
     // output result
@@ -131,14 +131,14 @@ static void load_flags() {
     if (FLAGS_cpumhz > 1) {
         printf("FLAGS_cpumhz : %zu\n", FLAGS_cpumhz); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "CPU MHz of execution environment. It is used measuring "
                       "some time. It must be larger than 0.";
     }
     if (FLAGS_duration >= 1) {
         printf("FLAGS_duration : %zu\n", FLAGS_duration); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Duration of benchmark in seconds must be larger than 0.";
     }
     if (FLAGS_key_length > 0) {
@@ -147,7 +147,7 @@ static void load_flags() {
     if (FLAGS_ops >= 1) {
         printf("FLAGS_ops : %zu\n", FLAGS_ops); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Number of operations in a transaction must be larger "
                       "than 0.";
     }
@@ -156,7 +156,7 @@ static void load_flags() {
     printf("FLAGS_ops_read_type : %s\n", // NOLINT
            FLAGS_ops_read_type.data());  // NOLINT
     if (FLAGS_ops_read_type != "point" && FLAGS_ops_read_type != "range") {
-        LOG(ERROR) << log_location_prefix << "Invalid type of read operation.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "Invalid type of read operation.";
     }
 
     // ops_write_typea
@@ -164,27 +164,27 @@ static void load_flags() {
            FLAGS_ops_write_type.data());  // NOLINT
     if (FLAGS_ops_write_type != "update" && FLAGS_ops_write_type != "insert" &&
         FLAGS_ops_write_type != "readmodifywrite") {
-        LOG(ERROR) << log_location_prefix << "Invalid type of write operation.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "Invalid type of write operation.";
     }
 
     if (FLAGS_record > 1) {
         printf("FLAGS_record : %zu\n", FLAGS_record); // NOLINT
     } else {
-        LOG(ERROR)
+        LOG_FIRST_N(ERROR, 1)
                 << "Number of database records(tuples) must be large than 0.";
     }
     constexpr std::size_t thousand = 100;
     if (FLAGS_rratio >= 0 && FLAGS_rratio <= thousand) {
         printf("FLAGS_rratio : %zu\n", FLAGS_rratio); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Rate of reads in a transaction must be in the range 0 "
                       "to 100.";
     }
     if (FLAGS_skew >= 0 && FLAGS_skew < 1) {
         printf("FLAGS_skew : %f\n", FLAGS_skew); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Access skew of transaction must be in the range 0 to "
                       "0.999... .";
     }
@@ -194,21 +194,21 @@ static void load_flags() {
            FLAGS_transaction_type.data());  // NOLINT
     if (FLAGS_transaction_type != "short" && FLAGS_transaction_type != "long" &&
         FLAGS_transaction_type != "read_only") {
-        LOG(ERROR) << log_location_prefix << "Invalid type of transaction.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "Invalid type of transaction.";
     }
 
     // about thread
     if (FLAGS_thread >= 1) {
         printf("FLAGS_thread : %zu\n", FLAGS_thread); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Number of threads must be larger than 0.";
     }
 
     if (FLAGS_val_length > 1) {
         printf("FLAGS_val_length : %zu\n", FLAGS_val_length); // NOLINT
     } else {
-        LOG(ERROR) << log_location_prefix
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
                    << "Length of val must be larger than 0.";
     }
 

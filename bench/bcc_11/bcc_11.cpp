@@ -94,7 +94,7 @@ void invoke_leader() {
     std::thread th(worker, std::ref(quit));
 
     if (sleep(FLAGS_d) != 0) {
-        LOG(ERROR) << log_location_prefix << "sleep error.";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "sleep error.";
     }
 
     // send signal
