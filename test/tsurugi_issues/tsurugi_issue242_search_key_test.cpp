@@ -61,7 +61,8 @@ INSTANTIATE_TEST_SUITE_P(tx_mode, tsurugi_issue242_search_key_test,
 
 TEST_P(tsurugi_issue242_search_key_test, // NOLINT
        search_key) {                     // NOLINT
-                                         // prepare
+    // prepare
+    LOG(INFO) << "test about " << GetParam();
     Storage st{};
     ASSERT_OK(create_storage("", st));
 
