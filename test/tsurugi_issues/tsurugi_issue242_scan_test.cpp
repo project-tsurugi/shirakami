@@ -24,13 +24,13 @@ using transaction_type = shirakami::transaction_options::transaction_type;
 
 namespace shirakami::testing {
 
-class tsurugi_issue242_read_key_value_from_scan_test
+class tsurugi_issue242_scan_test
     : public ::testing::TestWithParam<std::tuple<transaction_type, bool>> {
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-"
-                "complicated-tsurugi_issue242_read_key_value_from_scan_test");
+                "complicated-tsurugi_issue242_scan_test");
         // FLAGS_stderrthreshold = 0;
         init_for_test();
     }
@@ -56,17 +56,18 @@ static void wait_for_ready(const std::vector<char>& readys) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-        is_key, tsurugi_issue242_read_key_value_from_scan_test,
+        is_key, tsurugi_issue242_scan_test,
         ::testing::Values(std::make_tuple(transaction_type::READ_ONLY, true),
                           std::make_tuple(transaction_type::READ_ONLY, false),
                           std::make_tuple(transaction_type::LONG, true),
                           std::make_tuple(transaction_type::LONG,
                                           false))); // success
 
-TEST_P(tsurugi_issue242_read_key_value_from_scan_test, // NOLINT
+TEST_P(tsurugi_issue242_scan_test, // NOLINT
        scan) {                                         // NOLINT
                                                        /**
-        * シングルスレッドで open_scan, マルチスレッドで read key/value from scan
+        * シングルスレッドで open_scan, read key/value from scan するタスクを
+        * マルチスレッド
        */
     // prepare
     LOG(INFO) << "test about " << std::get<0>(GetParam()) << ", is_key, "
