@@ -22,7 +22,6 @@ namespace shirakami {
 inline Status find_open_scan_slot(session* const ti, // NOLINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
-    std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
     for (ScanHandle i = 0;; ++i) {
         auto itr = sh.get_scan_cache().find(i);
         if (itr == sh.get_scan_cache().end()) {
@@ -212,10 +211,6 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         return Status::WARN_STORAGE_NOT_FOUND;
     }
 
-    // find slot to log scan result.
-    auto rc = find_open_scan_slot(ti, handle);
-    if (rc != Status::OK) { return rc; }
-
     // ==========
     // wp verify section
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
@@ -245,7 +240,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     // check read information
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         wp::page_set_meta* psm{};
-        rc = wp::find_page_set_meta(storage, psm);
+        auto rc = wp::find_page_set_meta(storage, psm);
         if (rc != Status::OK) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             return Status::ERR_FATAL;
@@ -293,7 +288,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             nvec;
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec);
+    auto rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res,
+                   &nvec);
     if (rc != Status::OK) {
         update_local_read_range_if_ltx();
         return rc;
@@ -374,6 +370,11 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     {
         // lock for strand
         std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+
+        // find slot to log scan result.
+        auto rc = find_open_scan_slot(ti, handle);
+        if (rc != Status::OK) { return rc; }
+
         std::get<scan_handler::scan_cache_storage_pos>(
                 sh.get_scan_cache()[handle]) = storage;
         auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
