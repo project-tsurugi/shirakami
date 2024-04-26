@@ -24,11 +24,13 @@ using transaction_type = shirakami::transaction_options::transaction_type;
 
 namespace shirakami::testing {
 
-class tsurugi_issue242_update_test : public ::testing::Test {
+class tsurugi_issue242_update_or_upsert_test
+    : public ::testing::TestWithParam<bool> {
 public:
     static void call_once_f() {
-        google::InitGoogleLogging("shirakami-test-concurrency_control-"
-                                  "complicated-tsurugi_issue242_update_test");
+        google::InitGoogleLogging(
+                "shirakami-test-concurrency_control-"
+                "complicated-tsurugi_issue242_update_or_upsert_test");
         // FLAGS_stderrthreshold = 0;
         init_for_test();
     }
@@ -53,10 +55,13 @@ static void wait_for_ready(const std::vector<char>& readys) {
     while (!is_ready(readys)) { _mm_pause(); }
 }
 
-TEST_F(tsurugi_issue242_update_test, // NOLINT
-       update) {                     // NOLINT
-                                     /**
-        * マルチスレッドで scan-update
+INSTANTIATE_TEST_SUITE_P(is_update, tsurugi_issue242_update_or_upsert_test,
+                         ::testing::Values(true, false)); // success
+
+TEST_P(tsurugi_issue242_update_or_upsert_test, // NOLINT
+       update_or_upsert) {                     // NOLINT
+                                               /**
+        * マルチスレッドで scan-update_or_upsert
        */
     // prepare
     Storage st{};
@@ -122,7 +127,11 @@ TEST_F(tsurugi_issue242_update_test, // NOLINT
         do {
             std::string buf{};
             ASSERT_OK(read_key_from_scan(t, shd, buf));
-            ASSERT_OK(update(t, st, buf, buf + "u"));
+            if (GetParam()) {
+                ASSERT_OK(update(t, st, buf, buf + "u"));
+            } else {
+                ASSERT_OK(upsert(t, st, buf, buf + "u"));
+            }
             ++read_num;
         } while (next(t, shd) == Status::OK);
         ASSERT_EQ(read_num, each_th_rec_num);
