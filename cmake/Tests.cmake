@@ -69,10 +69,8 @@ function(register_tests)
                     PRIVATE ${PROJECT_SOURCE_DIR}/third_party/msgpack-c/include
                     PRIVATE ${PROJECT_SOURCE_DIR}/third_party/spdlog/include
                     )
-
             if(TARGET ${TESTS_TARGET})
                 if((fname MATCHES "clock_test") OR
-                (fname MATCHES "error_test") OR
                 (fname MATCHES "logger_test") OR
                 (fname MATCHES "memory_test") OR
                 (fname MATCHES "scheme_test") OR
