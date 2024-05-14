@@ -124,4 +124,17 @@ static inline Status remove(yakushima::Token tk, Storage st,
     return Status::OK;
 }
 
+/**
+ * @brief change the version of yakushima node
+ * @param st the storage
+ * @param key the key
+ * @return Status::OK success.
+ */
+static inline Status touch(Storage st, std::string_view key) {
+    auto rc{yakushima::touch(
+            {reinterpret_cast<char*>(&st), sizeof(st)}, key)}; // NOLINT
+    if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
+    return Status::OK;
+}
+
 } // namespace shirakami
