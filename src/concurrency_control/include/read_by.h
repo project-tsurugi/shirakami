@@ -110,8 +110,6 @@ public:
 
 private:
     std::atomic<epoch::epoch_t> max_epoch_{0};
-
-    std::mutex mtx_;
 };
 
 class range_read_by_short {
@@ -139,8 +137,6 @@ public:
 private:
     // firstly, it express range by 0 or 1.
     std::atomic<epoch::epoch_t> max_epoch_{0};
-
-    std::mutex mtx_;
 };
 
 } // namespace shirakami
