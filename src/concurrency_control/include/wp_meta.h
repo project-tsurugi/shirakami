@@ -55,8 +55,6 @@ public:
         for (auto&& elem : wped_) { elem = {0, 0}; }
     }
 
-    Status change_wp_epoch(std::size_t id, epoch::epoch_t target);
-
     void display();
 
     void init();

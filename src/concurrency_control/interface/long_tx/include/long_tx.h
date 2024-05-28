@@ -16,8 +16,6 @@ extern Status check_commit(Token token);
 
 extern Status check_read_area(session* ti, Storage st);
 
-extern Status change_wp_epoch(session* ti, epoch::epoch_t target);
-
 extern Status check_wait_for_preceding_bt(session* ti);
 
 extern Status commit(session* ti);

@@ -30,20 +30,6 @@ bool wp_meta::empty(const wp_meta::wped_type& wped) {
             });
 }
 
-Status wp_meta::change_wp_epoch(std::size_t id, epoch::epoch_t target) {
-    wp_lock_.lock();
-    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
-        if (wped_.at(i).second == id) {
-            set_wped(i, {target, id});
-            wp_lock_.unlock();
-            return Status::OK;
-        }
-    }
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-    wp_lock_.unlock();
-    return Status::ERR_FATAL;
-}
-
 void wp_meta::display() {
     for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
         if (get_wped_used().test(i)) {

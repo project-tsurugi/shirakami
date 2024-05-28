@@ -13,17 +13,6 @@
 
 namespace shirakami::long_tx {
 
-Status change_wp_epoch(session* const ti, epoch::epoch_t const target) {
-    for (auto&& elem : ti->get_wp_set()) {
-        auto rc{elem.second->change_wp_epoch(ti->get_long_tx_id(), target)};
-        if (rc != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-            return rc;
-        }
-    }
-    return Status::OK;
-}
-
 Status check_read_area_body(session* ti, Storage const st) {
     auto ra = ti->get_read_area();
     auto plist = ra.get_positive_list();
