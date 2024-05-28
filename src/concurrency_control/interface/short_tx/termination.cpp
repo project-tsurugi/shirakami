@@ -469,6 +469,12 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     wso_ptr->get_value(vb);
                     wso_ptr->get_rec_ptr()->set_value(vb);
 
+                    if (increment_node_version(wso_ptr->get_rec_ptr()->get_storage(),
+                                               wso_ptr->get_rec_ptr()->get_key_view()) !=
+                        Status::OK) {
+                        LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                                              << "library programming error";
+                    }
                     // set timestamp and unlock
                     wso_ptr->get_rec_ptr()->set_tid(update_tid);
                     break;

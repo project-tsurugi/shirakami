@@ -33,7 +33,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view val,
                                     Record*& out_rec_ptr) {
     Record* rec_ptr{};
-    rec_ptr = new Record(key); // NOLINT
+    rec_ptr = new Record(st, key); // NOLINT
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
     yakushima::node_version64* nvp{};

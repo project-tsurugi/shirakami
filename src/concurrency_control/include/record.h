@@ -32,9 +32,9 @@ public:
      * @brief ctor.
      * @details This is used for creating page with value at recovery logic.
      */
-    Record(std::string_view key, std::string_view val);
+    Record(Storage st, std::string_view key, std::string_view val);
 
-    explicit Record(std::string_view key);
+    explicit Record(Storage st, std::string_view key);
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
         latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
@@ -46,6 +46,8 @@ public:
     [[nodiscard]] std::string* get_key_ptr() { return &key_; }
 
     [[nodiscard]] std::string_view get_key_view() const { return key_; }
+
+    [[nodiscard]] Storage get_storage() const { return storage_; }
 
     [[nodiscard]] version* get_latest() const {
         return latest_.load(std::memory_order_acquire);
@@ -107,6 +109,8 @@ private:
     std::atomic<version*> latest_{nullptr};
 
     std::string key_{};
+
+    Storage storage_{};
 
     std::shared_mutex mtx_value_{};
 

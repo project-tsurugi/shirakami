@@ -243,10 +243,6 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
     }
-    if (Status::OK != increment_node_version(st, key)) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                              << "library programming error";
-    }
     // and inserting state
     ++rec_ptr->get_shared_tombstone_count();
     rec_ptr->get_tidw_ref().unlock();

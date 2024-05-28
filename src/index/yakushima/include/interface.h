@@ -58,7 +58,7 @@ yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
 template<class Record>
 yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
                       std::string_view val) {
-    Record* rec_ptr = new Record(key, val); // NOLINT
+    Record* rec_ptr = new Record(st, key, val); // NOLINT
     rec_ptr->reset_ts();
     yakushima::node_version64* nvp{};
     auto rc{put<Record>(tk, st, key, rec_ptr, nvp)};
