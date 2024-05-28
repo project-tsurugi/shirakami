@@ -51,8 +51,6 @@ public:
         return latest_.load(std::memory_order_acquire);
     }
 
-    std::mutex& get_lk_for_gc() { return lk_for_gc_; }
-
     point_read_by_short& get_read_by() { return read_by_; }
 
     [[nodiscard]] tid_word get_stable_tidw();
@@ -113,8 +111,6 @@ private:
     std::shared_mutex mtx_value_{};
 
     point_read_by_short read_by_{};
-
-    std::mutex lk_for_gc_{};
 
     // read information about long transaction
     /**
