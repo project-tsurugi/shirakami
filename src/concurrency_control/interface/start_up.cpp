@@ -162,6 +162,7 @@ Status init_body(database_options options) { // NOLINT
 
         // epoch adjustment
 #if defined(PWAL)
+        epoch::set_datastore_durable_epoch(datastore::get_datastore()->last_epoch());
         auto new_epoch = epoch::initial_epoch;
         if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
             new_epoch = datastore::get_datastore()->last_epoch() + 1;
