@@ -688,6 +688,8 @@ private:
 
     /**
      * @brief mutex for @a ltx_storage_read_set_.
+     * mutex for data access phase. it doesn't need to mutex for commit phase
+     * because commit phase is isolated from data access phase by mutex.
     */
     std::shared_mutex mtx_ltx_storage_read_set_{};
 
@@ -723,7 +725,9 @@ private:
     local_write_set write_set_{};
 
     /**
-     * @brief mutex for local write set.
+     * @brief mutex for local write set. It is for concurrent access by strand
+     * at read phase so it doesn't need for termination phase due to mutex for
+     * termination.
     */
     std::shared_mutex mtx_write_set_;
 
