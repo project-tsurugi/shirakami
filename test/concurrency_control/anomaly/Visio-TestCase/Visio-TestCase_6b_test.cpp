@@ -239,6 +239,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         } else {
             ASSERT_EQ(cb_rc2, Status::ERR_CC);
         }
+    } else {
+        // early abort
+        ASSERT_FALSE(t2_can_commit);
     }
 
     // verify t3
@@ -261,6 +264,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         } else {
             ASSERT_EQ(cb_rc4, Status::ERR_CC);
         }
+    } else {
+        // early abort
+        ASSERT_FALSE(t4_can_commit);
     }
 
     // cleanup

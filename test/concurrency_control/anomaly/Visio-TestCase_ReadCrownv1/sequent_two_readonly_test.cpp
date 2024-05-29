@@ -149,7 +149,7 @@ TEST_F(sequent_two_readonly_test, all) { // NOLINT
     // cleanup
     init_db();
 
-    // ltx5
+    // ltx4_succ_omit
     // llllx
     stop_epoch();
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),

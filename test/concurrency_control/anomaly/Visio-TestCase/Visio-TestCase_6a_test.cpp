@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 std::make_tuple(transaction_type::SHORT, transaction_type::LONG,
                                 transaction_type::SHORT,
                                 transaction_type::SHORT, true, true, true,
-                                true) // c4
+                                false) // c4
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
@@ -221,6 +221,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         } else {
             ASSERT_EQ(cb_rc2, Status::ERR_CC);
         }
+    } else {
+        // early abort
+        ASSERT_FALSE(t2_can_commit);
     }
 
     // verify t3
@@ -237,6 +240,9 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
         } else {
             ASSERT_EQ(cb_rc4, Status::ERR_CC);
         }
+    } else {
+        // early abort
+        ASSERT_FALSE(t4_can_commit);
     }
 
     // cleanup
