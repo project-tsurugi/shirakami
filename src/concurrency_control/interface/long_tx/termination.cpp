@@ -668,33 +668,6 @@ Status check_wait_for_preceding_bt(session* const ti) {
     return rc;
 }
 
-Status verify_kvs_error(session* const ti) {
-    {
-        std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
-        for (auto&& wse : ti->get_write_set().get_ref_cont_for_bt()) {
-            auto&& wso = std::get<1>(wse);
-            if (wso.get_op() == OP_TYPE::INSERT) {
-                // verify insert
-                Record* rec_ptr{wso.get_rec_ptr()};
-                tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-                /**
-             * It doesn't need lock. Because tx ordered before this is nothing 
-             * in this timing.
-             */
-                if (!(tid.get_latest() && tid.get_absent())) {
-                    // someone interrupt tombstone
-                    std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
-                    ti->set_result(reason_code::KVS_INSERT);
-                    ti->get_result_info().set_key_storage_name(
-                            rec_ptr->get_key_view(), wso.get_storage());
-                    return Status::ERR_KVS;
-                }
-            }
-        }
-    }
-    return Status::OK;
-}
-
 void process_tx_state(session* ti,
                       [[maybe_unused]] epoch::epoch_t durable_epoch) {
     if (ti->get_has_current_tx_state_handle()) {
