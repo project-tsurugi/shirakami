@@ -412,6 +412,7 @@ void work_cleaner() {
         {
             std::unique_lock lk{get_mtx_cleaner()};
             unhooking_keys_and_pruning_versions(stats_info);
+            if (get_flag_cleaner_end()) { break; }
             release_key_memory();
         }
 
