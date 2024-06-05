@@ -44,7 +44,7 @@ Status acquire_tx_state_handle_body(Token const token, // NOLINT
                 // wait staging
                 ti->get_valid_epoch() > epoch::get_global_epoch() ||
                 // wait high priori short
-                ti->find_high_priority_short() == Status::WARN_PREMATURE) {
+                ti->find_high_priority_short(true) == Status::WARN_PREMATURE) {
             ts.set_kind(TxState::StateKind::WAITING_START);
         } else {
             ts.set_kind(TxState::StateKind::STARTED);
@@ -118,7 +118,7 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
         if (ts.state_kind() == TxState::StateKind::WAITING_START) {
             // check high priori stx
             auto* ti = static_cast<session*>(ts.get_token());
-            if (ti->find_high_priority_short() != Status::WARN_PREMATURE) {
+            if (ti->find_high_priority_short(true) != Status::WARN_PREMATURE) {
                 ts.set_kind(TxState::StateKind::STARTED);  // for internal
                 out.set_kind(TxState::StateKind::STARTED); // for external
             }                                              // else : premature
