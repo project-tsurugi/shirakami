@@ -105,7 +105,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
         return Status::WARN_PREMATURE;
     }
     // wait for high priority some tx
-    if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
+    if (ti->find_high_priority_short(false) == Status::WARN_PREMATURE) {
         return Status::WARN_PREMATURE;
     }
     // check for read area invalidation

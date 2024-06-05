@@ -125,7 +125,7 @@ std::set<std::size_t> session::extract_wait_for() {
     return wait_for;
 }
 
-Status session::find_high_priority_short() const {
+Status session::find_high_priority_short(bool for_check) const {
     if (get_tx_type() == transaction_options::transaction_type::SHORT) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
@@ -148,15 +148,18 @@ Status session::find_high_priority_short() const {
                 // transaction order
                 itr.get_step_epoch() < get_valid_epoch()) {
             // logging
-            std::string str_ltx_id{};
-            std::string str_stx_id{};
-            get_tx_id(static_cast<Token>(const_cast<session*>(this)),
-                      str_ltx_id);
-            get_tx_id(static_cast<Token>(const_cast<session*>(&itr)),
-                      str_stx_id);
-            VLOG(log_info) << log_location_prefix
-                           << "ltx warn premature by short tx, ltx id: "
-                           << str_ltx_id << ", stx id: " << str_stx_id;
+            if (VLOG_IS_ON(for_check ? log_debug : log_error)) {
+                std::string str_ltx_id{};
+                std::string str_stx_id{};
+                get_tx_id(static_cast<Token>(const_cast<session*>(this)),
+                          str_ltx_id);
+                get_tx_id(static_cast<Token>(const_cast<session*>(&itr)),
+                          str_stx_id);
+                LOG(INFO) << log_location_prefix
+                          << "ltx warn premature by short tx, ltx id: "
+                          << str_ltx_id << ", stx id: " << str_stx_id;
+
+            }
             return Status::WARN_PREMATURE;
         }
     }

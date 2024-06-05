@@ -191,7 +191,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             return Status::WARN_PREMATURE;
         }
         // check high priori tx
-        if (ti->find_high_priority_short() == Status::WARN_PREMATURE) {
+        if (ti->find_high_priority_short(false) == Status::WARN_PREMATURE) {
             return Status::WARN_PREMATURE;
         }
         // check for read area invalidation

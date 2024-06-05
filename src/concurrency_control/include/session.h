@@ -139,12 +139,13 @@ public:
 
     /**
      * @brief long tx find high priority short.
+     * @param for_check true if only status check (with lower log level).
      * @pre This is called by long tx.
      * @return Status::OK success
      * @return Status::WARN_PREMATURE There is a high priority short tx.
      * @return Status::ERR_FATAL programming error.
      */
-    [[nodiscard]] Status find_high_priority_short() const;
+    [[nodiscard]] Status find_high_priority_short(bool for_check) const;
 
     /**
      * @brief Find wp about @a st from wp set.
