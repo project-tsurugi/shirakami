@@ -85,8 +85,8 @@ inline void compute_and_set_cc_safe_ss_epoch() {
                                         (*wp_result_itr));
                         if (wp_result_was_committed) {
                             /**
-                      * the target ltx was commited, so it needs to check.
-                      */
+                             * the target ltx was commited, so it needs to check.
+                             */
                             for (auto&& hid : std::get<0>(oe.second)) {
                                 if (wp_result_id == hid) {
                                     if (wp_result_epoch < result_epoch) {

@@ -48,10 +48,10 @@ static inline Status insert_process(session* const ti, Storage st,
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**
-                         * This This transaction is confirmed to be aborted 
-                         * because the previous scan was destroyed by an insert
-                         * by another transaction.
-                         */
+                 * This This transaction is confirmed to be aborted 
+                 * because the previous scan was destroyed by an insert
+                 * by another transaction.
+                 */
                 abort_update(ti);
                 std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                 ti->get_result_info().set_reason_code(

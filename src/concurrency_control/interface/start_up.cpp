@@ -132,9 +132,9 @@ Status init_body(database_options options) { // NOLINT
         storage::init();
 
         /**
-     * about sequence. the generator of sequence id is cleared, So if this is 
-     * a start up with recovery, it must also recovery sequence id generator.
-     */
+         * about sequence. the generator of sequence id is cleared, So if this is 
+         * a start up with recovery, it must also recovery sequence id generator.
+         */
         sequence::init();
 
         // data recovery
@@ -147,8 +147,8 @@ Status init_body(database_options options) { // NOLINT
         datastore::get_datastore()->add_persistent_callback(
                 epoch::set_datastore_durable_epoch); // should execute before ready()
         /**
-     * This executes create_channel and pass it to shirakami's executor.
-     */
+         * This executes create_channel and pass it to shirakami's executor.
+         */
         datastore::init_about_session_table(log_dir);
 
         // datastore ready
