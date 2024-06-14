@@ -23,10 +23,10 @@ static void process_before_return_not_found(session* const ti,
                                             std::string_view const key) {
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         /**
-             * Normally, read information is stored at page, but the page is not
-             * found. So it stores at table level information as range, 
-             * key <= range <= key.
-             */
+         * Normally, read information is stored at page, but the page is not
+         * found. So it stores at table level information as range, 
+         * key <= range <= key.
+         */
         // get page set meta info
         wp::page_set_meta* psm{};
         auto rc = wp::find_page_set_meta(storage, psm);

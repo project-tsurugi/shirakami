@@ -79,61 +79,61 @@ void bg_commit::worker() {
         session* ti{};
     // find process tx
     REFIND : // NOLINT
-    {
-        std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
-        // if cont empty then clear used_ids
-        if (cont_wait_tx().empty()) {
-            {
-                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
-                if (!used_ids().empty()) { used_ids().clear(); }
-            }
-            continue;
-        }
-        auto itr = cont_wait_tx().begin();
-        for (; itr != cont_wait_tx().end(); ++itr) {
-            token = std::get<1>(*itr);
-            tx_id = std::get<0>(*itr);
-            ti = static_cast<session*>(token);
-
-            // check conflict between worker
-            {
-                std::unique_lock<std::mutex> lk2{mtx_used_ids()};
-                // find by the id
-                auto find_itr = used_ids().find(tx_id);
-                if (find_itr != used_ids().end()) {
-                    // found
-                    continue;
-                } // not found, not currently used
-                // check already checked
-                auto checked_itr = checked_ids.find(tx_id);
-                if (checked_itr != checked_ids.end()) {
-                    // found
-                    continue;
-                } // not found, not currently used and not checked
-                // check from long
-                if (ti->get_tx_type() !=
-                            transaction_options::transaction_type::LONG ||
-                    !ti->get_requested_commit()) {
-                    // not long or not requested commit.
-                    LOG_FIRST_N(ERROR, 1)
-                            << log_location_prefix
-                            << "library programming error. "
-                            << ti->get_tx_type() << ", " << std::boolalpha
-                            << ti->get_requested_commit()
-                            << ", tx_id:" << tx_id;
-                    return;
+        {
+            std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
+            // if cont empty then clear used_ids
+            if (cont_wait_tx().empty()) {
+                {
+                    std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                    if (!used_ids().empty()) { used_ids().clear(); }
                 }
-                used_ids().insert(tx_id);
-                checked_ids.insert(tx_id);
-                break;
+                continue;
+            }
+            auto itr = cont_wait_tx().begin();
+            for (; itr != cont_wait_tx().end(); ++itr) {
+                token = std::get<1>(*itr);
+                tx_id = std::get<0>(*itr);
+                ti = static_cast<session*>(token);
+
+                // check conflict between worker
+                {
+                    std::unique_lock<std::mutex> lk2{mtx_used_ids()};
+                    // find by the id
+                    auto find_itr = used_ids().find(tx_id);
+                    if (find_itr != used_ids().end()) {
+                        // found
+                        continue;
+                    } // not found, not currently used
+                    // check already checked
+                    auto checked_itr = checked_ids.find(tx_id);
+                    if (checked_itr != checked_ids.end()) {
+                        // found
+                        continue;
+                    } // not found, not currently used and not checked
+                    // check from long
+                    if (ti->get_tx_type() !=
+                                transaction_options::transaction_type::LONG ||
+                        !ti->get_requested_commit()) {
+                        // not long or not requested commit.
+                        LOG_FIRST_N(ERROR, 1)
+                                << log_location_prefix
+                                << "library programming error. "
+                                << ti->get_tx_type() << ", " << std::boolalpha
+                                << ti->get_requested_commit()
+                                << ", tx_id:" << tx_id;
+                        return;
+                    }
+                    used_ids().insert(tx_id);
+                    checked_ids.insert(tx_id);
+                    break;
+                }
+            }
+            if (itr == cont_wait_tx().end()) {
+                // reached last
+                checked_ids.clear();
+                continue;
             }
         }
-        if (itr == cont_wait_tx().end()) {
-            // reached last
-            checked_ids.clear();
-            continue;
-        }
-    }
 
         // process
         // try commit

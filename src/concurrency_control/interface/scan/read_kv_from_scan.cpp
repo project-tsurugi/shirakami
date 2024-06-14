@@ -49,8 +49,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         // ==========
         /**
-     * Check whether the handle is valid.
-     */
+         * Check whether the handle is valid.
+         */
         if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
             return Status::WARN_INVALID_HANDLE;
         }

@@ -67,10 +67,10 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
         database_options::open_mode::MAINTENANCE) {
 
         /**
-     * about back ground worker about commit
-     * background worker about commit may access global data (object), so it 
-     * must execute before cleanup environment.
-     */
+         * about back ground worker about commit
+         * background worker about commit may access global data (object), so it 
+         * must execute before cleanup environment.
+         */
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "shutdown:start_bg_commit";
         bg_work::bg_commit::fin();
