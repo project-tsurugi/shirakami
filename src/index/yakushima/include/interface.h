@@ -124,6 +124,7 @@ static inline Status remove(yakushima::Token tk, Storage st,
     return Status::OK;
 }
 
+#if 0
 /**
  * @brief change the version of yakushima node
  * @param st the storage
@@ -133,6 +134,28 @@ static inline Status remove(yakushima::Token tk, Storage st,
 static inline Status touch(Storage st, std::string_view key) {
     auto rc{yakushima::touch(
             {reinterpret_cast<char*>(&st), sizeof(st)}, key)}; // NOLINT
+    if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
+    return Status::OK;
+}
+#endif
+
+/**
+ * @brief change the yakushima node version by putting the same value
+ * @param st the storage
+ * @param key the key
+ * @param value the value, must use the value gotten from yakushima just before.
+ * @return Status::OK success.
+ */
+template<class Record>
+static inline Status change_node_version(Storage st, std::string_view key, Record* value) {
+    yakushima::Token tk{};
+    // yakushima::Token tk is used only if yakushima value is not inlined.
+    // Here, value is always pointer (inlined type), so tk is never used...
+    if constexpr (!yakushima::is_inlinable<Record*>()) { yakushima::enter(tk); }
+    auto rc{yakushima::put<Record*>(
+            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            key, &value)};
+    if constexpr (!yakushima::is_inlinable<Record*>()) { yakushima::leave(tk); }
     if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
     return Status::OK;
 }

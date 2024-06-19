@@ -243,7 +243,8 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
     }
-    if (Status::OK != touch(st, key)) {
+    // assume: yakushima node that points to locked Record is never modified
+    if (Status::OK != change_node_version<Record>(st, key, rec_ptr)) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
                               << "library programming error";
     }
