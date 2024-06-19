@@ -130,8 +130,8 @@ static inline Status remove(yakushima::Token tk, Storage st,
  * @param key the key
  * @return Status::OK success.
  */
-static inline Status touch(Storage st, std::string_view key) {
-    auto rc{yakushima::touch(
+static inline Status increment_node_version(Storage st, std::string_view key) {
+    auto rc{yakushima::increment_version(
             {reinterpret_cast<char*>(&st), sizeof(st)}, key)}; // NOLINT
     if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
     return Status::OK;

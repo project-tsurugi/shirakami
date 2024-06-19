@@ -243,7 +243,7 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
         tid.set_latest(true);
         rec_ptr->set_tid(tid);
     }
-    if (Status::OK != touch(st, key)) {
+    if (Status::OK != increment_node_version(st, key)) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix
                               << "library programming error";
     }
