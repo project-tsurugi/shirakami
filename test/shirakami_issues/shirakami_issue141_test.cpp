@@ -38,7 +38,7 @@ private:
 // 5. OCC1: commit
 // 6. either commit must fail
 
-TEST_F(shirakami_issue141, DISABLED_not_serializable_2occ) {
+TEST_F(shirakami_issue141, not_serializable_2occ) {
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s1{};
