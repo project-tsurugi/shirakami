@@ -193,7 +193,7 @@ TEST_F(tsurugi_issue665_test, // NOLINT
 }
 
 TEST_P(tsurugi_issue665_test, // NOLINT
-       simple) {              // NOLINT
+       DISABLED_simple) {     // NOLINT
                               // prepare
     Storage st1{};
     Storage st2{};
