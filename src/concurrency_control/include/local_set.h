@@ -348,6 +348,7 @@ public:
 
     Status update_node_set(yakushima::node_version64* nvp) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        bool found = false;
         for (auto&& elem : set_) {
             // compare node version ptr
             if (std::get<1>(elem) == nvp) {
@@ -356,6 +357,7 @@ public:
                     nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
+                found = true;
                 std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
                  * note : discussion.
@@ -366,7 +368,7 @@ public:
                  */
             }
         }
-        return Status::OK;
+        return found ? Status::OK : Status::WARN_NOT_FOUND;
     }
 
     Status emplace_back(std::pair<yakushima::node_version64_body,

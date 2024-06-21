@@ -34,6 +34,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     Record*& out_rec_ptr) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
+    tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
     yakushima::node_version64* nvp{};
@@ -59,6 +60,10 @@ static inline Status insert_process(session* const ti, Storage st,
                         reason_code::CC_OCC_PHANTOM_AVOIDANCE);
                 ti->get_result_info().set_key_storage_name(key, st);
                 return Status::ERR_CC;
+            }
+            if (check_node_set_res == Status::OK) {
+                // newly created Record on previously read node; add to read set
+                ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
         }
         ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val, true});
