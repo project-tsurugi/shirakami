@@ -21,7 +21,7 @@ namespace shirakami {
  * @return true canceled
  * @return false not canceled
 */
-inline bool cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
+inline bool cancel_insert_if_tomb_stone(Record* rec_ptr, [[maybe_unused]] epoch::epoch_t e) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
