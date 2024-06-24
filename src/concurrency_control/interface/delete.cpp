@@ -25,9 +25,7 @@ inline bool cancel_insert_if_tomb_stone(Record* rec_ptr, epoch::epoch_t e) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
-        tid_word delete_tid{};
-        delete_tid.set_epoch(e);
-        delete_tid.set_absent(true);
+        tid_word delete_tid{check};
         delete_tid.set_latest(false);
         delete_tid.set_lock(false);
         storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
