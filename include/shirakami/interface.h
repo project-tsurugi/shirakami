@@ -358,9 +358,9 @@ Status search_key(Token token, Storage storage, std::string_view key,
 
 /**
  * @brief Transaction begins.
- * @attention This function basically does not have to be called. 
- * Because it is called automatically internally using {token used for api, 
- * transaction_type::SHORT, {}}.
+ * @attention This function must be called before requesting any other operation 
+ * for the new transaction. Otherwise, Status::WARN_NOT_BEGIN will be returned 
+ * for those requests.
  * @details To determine the GC-capable epoch, determine the epoch at the start 
  * of the transaction. 
  * @param[in] options Transaction options. There are token got from enter 
