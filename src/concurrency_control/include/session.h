@@ -863,7 +863,8 @@ private:
     std::shared_mutex mtx_overtaken_ltx_set_;
 
     /**
-     * @brief read write batch executes write preserve preserve.
+     * @brief the temporary serialization epoch for ltx. 
+     * @details at the end of successful commit processing, this is the serialization epoch.
      */
     std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
 
