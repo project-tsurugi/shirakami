@@ -24,9 +24,11 @@ public:
             bool lock_by_gc_ : 1;
             bool latest_ : 1;
             bool absent_ : 1;
-            std::uint64_t tid_ : 60;
+            int : 8; // reserved
+            std::uint64_t tid_ : 52;
             bool by_short_ : 1;
-            epoch::epoch_t epoch_ : 63;
+            int : 11; // reserved
+            epoch::epoch_t epoch_ : 52;
         };
     };
 
