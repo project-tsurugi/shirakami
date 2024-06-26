@@ -19,7 +19,7 @@ class alignas(CACHE_LINE_SIZE) thread_pool {
 public:
     /**
      * @brief init thread pool
-    */
+     */
     static void init(std::size_t thread_pool_size = 10) { // NOLINT
         // set thread pool size
         set_thread_pool_size(thread_pool_size);
@@ -38,7 +38,7 @@ public:
 
     /**
      * @brief shutdown thread pool
-    */
+     */
     static void fin() {
         // set flag
         set_running(false);
@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief worker thread of thread pool.
-    */
+     */
     static void worker(std::size_t worker_id);
 
     static void push_task_queue(thread_task* tt) { task_queue_.push(tt); }
@@ -83,22 +83,22 @@ private:
 
     /**
      * @brief # of threads of thread pool.
-    */
+     */
     static inline std::size_t thread_pool_size_{}; // NOLINT
 
     /**
      * @brief whether thread pool runs
-    */
+     */
     static inline std::atomic<bool> running_{false}; // NOLINT
 
     /**
      * @brief threads of thread pool
-    */
+     */
     static inline std::unique_ptr<std::thread[]> threads_; // NOLINT
 
     /**
      * @brief task container
-    */
+     */
     static inline concurrent_queue<thread_task*> task_queue_; // NOLINT
 };
 

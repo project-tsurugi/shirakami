@@ -73,7 +73,7 @@ void work_manager() {
             /**
              * above loop didn't find living tx. at least, befor_loop epoch is
              * minimum step epoch.
-            */
+             */
             set_min_step_epoch(before_loop);
         }
         // computing about ltx
@@ -358,9 +358,9 @@ void release_key_memory() {
     std::size_t erase_count{0};
     for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
         /**
-          * If me changed from unhooking, all tx which existed at unhooking must
-          * have finished.
-          */
+         * If me changed from unhooking, all tx which existed at unhooking must
+         * have finished.
+         */
         if ((*itr).second < me) {
             delete (*itr).first; // NOLINT
             ++erase_count;
@@ -386,7 +386,7 @@ void output_gc_stats(stats_info_type const& stats_info) {
         std::string str_st_key{};
         /**
          * It may be fail if it executes after delete_storage against it.
-        */
+         */
         storage::key_handle_map_get_key(std::get<0>(elem), str_st_key);
         nlohmann::json j;
         j["storage_key"] = str_st_key;
@@ -404,7 +404,7 @@ void work_cleaner() {
         /**
          * Storage, number of entry in the storage, average length of version,
          * average length of key, average length of value
-         **/
+         */
         stats_info_type stats_info;
         stats_info.clear();
 

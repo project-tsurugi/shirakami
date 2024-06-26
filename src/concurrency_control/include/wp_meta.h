@@ -35,7 +35,7 @@ public:
     /**
      * key: tx id
      * value: whether write, left key, right key
-    */
+     */
     using wp_write_range_type =
             std::map<std::size_t, std::tuple<std::string, std::string>>;
     /**
@@ -152,7 +152,7 @@ public:
     // ==========
     /**
      * @details This is called only once or not called by each tx.
-    */
+     */
     void push_write_range(std::size_t txid, std::string_view left_key,
                           std::string_view right_key);
 
@@ -161,7 +161,7 @@ public:
     /**
      * @return true there is a entry
      * @return false there is not an entry
-    */
+     */
     bool read_write_range(std::size_t txid, std::string& out_left_key,
                           std::string& out_right_key);
     // ==========

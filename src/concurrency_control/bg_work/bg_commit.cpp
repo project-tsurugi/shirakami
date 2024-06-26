@@ -141,15 +141,15 @@ void bg_commit::worker() {
         // check result
         if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
             /**
-              * Basically (without read area function), lower priority
-              * than this transaction wait for the result of this
-              * transaction.
-              */
+             * Basically (without read area function), lower priority
+             * than this transaction wait for the result of this
+             * transaction.
+             */
             {
                 /**
                  * concurrent thread へコミット処理を許容する。checked_ids によって
                  * 自身は次の周回まで繰り返してトライすることは無い。
-                */
+                 */
                 std::unique_lock<std::mutex> lk2{mtx_used_ids()};
                 used_ids().erase(tx_id);
             }
@@ -166,7 +166,7 @@ void bg_commit::worker() {
          * used_ids から tx_id 要素を削除して並行スレッドへコミット処理を許容しては
          * ならない。なぜならコミット処理が同一TXに対して重複してエラーになる。待ち
          * リストが空になったら安全に used_ids をクリアする。
-        */
+         */
 
         goto REFIND; // NOLINT
     }

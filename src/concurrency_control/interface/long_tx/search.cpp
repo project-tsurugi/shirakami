@@ -32,7 +32,7 @@ void set_read_version_max_epoch_if_need(session* ti, epoch::epoch_t ep) {
 /**
  * @return Status::WARN_NOT_FOUND
  * @return Status::OK
-*/
+ */
 extern Status version_traverse_and_read(session* const ti,
                                         Record* const rec_ptr,
                                         std::string& value,

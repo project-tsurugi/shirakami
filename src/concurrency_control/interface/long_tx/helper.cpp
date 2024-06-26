@@ -67,7 +67,7 @@ void update_wp_at_commit(session* const ti) {
     /**
      * write preserve はTX開始時点に宣言したものよりも実体の方が同じか小さくなる。
      * 小さくできるなら小さくすることで、他Txへの影響を軽減する。
-     * */
+     */
     // create storage set
     std::set<Storage> sts;
     for (auto&& elem : ti->get_write_set().get_storage_map()) {
@@ -116,10 +116,10 @@ void update_wp_at_commit(session* const ti) {
             ++itr;
             continue;
         } // no hit
-          /**
+        /**
          * wp したが、実際には書かなかったストレージである。コミット処理前にこれを
          * 取り除く
-        */
+         */
         {
             itr->second->get_wp_lock().lock();
             ret = itr->second->remove_wp_without_lock(ti->get_long_tx_id());

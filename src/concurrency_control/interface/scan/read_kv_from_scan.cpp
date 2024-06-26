@@ -84,8 +84,8 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     }
 
     /**
-      * Check read-own-write
-      */
+     * Check read-own-write
+     */
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
         if (inws != nullptr) {
@@ -181,10 +181,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 return Status::OK;
             }
             /**
-              * else: fail to do optimistic read latest version. retry version
-              * function.
-              * It may find null version.
-              */
+             * else: fail to do optimistic read latest version. retry version
+             * function.
+             * It may find null version.
+             */
             ver = rec_ptr->get_latest();
             rc = long_tx::version_function_without_optimistic_check(
                     ti->get_valid_epoch(), ver);

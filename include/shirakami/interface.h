@@ -75,7 +75,7 @@ bool commit(Token token, commit_callback_type callback);
 
 /**
  * @brief old api. it is planed to remove from api.
-*/
+ */
 Status commit(Token token); // NOLINT
 
 /**

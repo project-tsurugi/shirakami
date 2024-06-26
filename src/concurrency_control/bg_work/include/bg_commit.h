@@ -78,31 +78,31 @@ public:
 private:
     /**
      * @brief The number of threads for resolving waiting list.
-    */
+     */
     static inline std::atomic<std::size_t> waiting_resolver_threads_{// NOLINT
                                                                      2};
 
     /**
      * @brief The number of joined threads at last running for resolver threads.
      * This is initialized 0 at init. This can be checked after fin.
-    */
+     */
     static inline std::atomic<std::size_t> // NOLINT
             joined_waiting_resolver_threads_{};
 
     /**
      * @brief ltx commit verify threads
-    */
+     */
     static inline worker_cont_type worker_threads_; // NOLINT
 
     /**
      * @brief This is a list what transaction do it be processed now by @a
      * worker_threads_ to prevent conflict.
-     * */
+     */
     static inline used_ids_type used_ids_; // NOLINT
 
     /**
      * @brief mutex for @a used_ids_
-    */
+     */
     static inline std::mutex mtx_used_ids_; // NOLINT
 
     /**

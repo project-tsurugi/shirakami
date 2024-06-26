@@ -88,7 +88,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
 
 /**
  * This is called by only abort function
-*/
+ */
 void change_inserting_records_state(session* const ti) {
     auto process = [](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
@@ -273,7 +273,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
             /**
              * if insert, it already incremented shared tombstone count.
              * if upsert, it cant be unhooked.
-            */
+             */
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
             wso->set_rec_ptr(rec_ptr); // for fail safe
         }
@@ -294,7 +294,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
 
         /**
          * recheck hooked yet. maybe unhooked between checking hooking and lock
-        */
+         */
         rc = get<Record>(wso->get_storage(), key, rec_ptr);
         if (rc == Status::OK) {
             if (wso->get_rec_ptr() != rec_ptr) {
@@ -355,7 +355,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
             ++num_locked;
             /**
              * NOTE: sert_process_at_write_lock must have locked the record
-            */
+             */
             if (rc == Status::OK) {
                 // may change op type, so should do continue explicitly.
 

@@ -38,7 +38,7 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
  * This is for some creating for this tx and consider other concurrent strand
  * thread. If that failed, this cleanup local effect, respect the result and
  * return;
-*/
+ */
 Status fin_process(session* const ti, Status const this_result) {
     if (this_result <= Status::OK) {
         // It is not error by this strand thread, check termination
@@ -126,7 +126,7 @@ Status check_not_found(
 
             /**
              * first version must be inserting page or deleted page
-            */
+             */
             version* ver = rec_ptr->get_latest();
             for (;;) {
                 ver = ver->get_next();
@@ -247,12 +247,12 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         }
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
         /**
-          * register read_by_set
-          * todo: enhancement:
-          * The range is modified according to the execution of
-          * read_from_scan, and the range is fixed and registered at the end of
-          * the transaction.
-          */
+         * register read_by_set
+         * todo: enhancement:
+         * The range is modified according to the execution of
+         * read_from_scan, and the range is fixed and registered at the end of
+         * the transaction.
+         */
         ti->get_range_read_set_for_ltx().insert(std::make_tuple(
                 rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
     } else if (ti->get_tx_type() ==

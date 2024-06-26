@@ -19,17 +19,17 @@ public:
         /**
          * @brief It is optimized for long transaction which its abort rate is
          * over 99.9 % when it executes by short mode.
-        */
+         */
         LONG,
         /**
          * @brief It is optimized for few contention workload.
-        */
+         */
         SHORT,
         /**
          * @brief It is optmized for read only transaction. It reads slightly
          * old safe snapshot without verify. It is also LTX and it must wait 1
          * epoch to start at least.
-        */
+         */
         READ_ONLY,
     };
 
@@ -162,7 +162,7 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
     /**
      * LOG_FIRST_N マクロは下記エラーによって利用できない。
      * error: ‘occurrences_162’ declared ‘static’ in ‘constexpr’ function
-    */
+     */
     LOG(ERROR) << log_location_prefix << log_location_prefix
                << "unknown transaction type";
     return ""sv;

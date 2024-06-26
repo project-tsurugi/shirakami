@@ -38,23 +38,23 @@ public:
      */
     enum class StateKind : std::int64_t {
         /**
-          * @brief This status means the transaction is unknown status.
-          */
+         * @brief This status means the transaction is unknown status.
+         */
         UNKNOWN = 0,
         /**
-          * @brief This status means the transaction was started and waits for
-          * own epoch.
-          */
+         * @brief This status means the transaction was started and waits for
+         * own epoch.
+         */
         WAITING_START,
         /**
-          * @brief This status means the transaction was begun.
-          */
+         * @brief This status means the transaction was begun.
+         */
         STARTED,
         /**
-          * @brief This status means the transaction was begun and is waited
-          * for commit api call or must wait for a while because it can not
-          * execute this validation due to other preceding long transactions.
-          */
+         * @brief This status means the transaction was begun and is waited
+         * for commit api call or must wait for a while because it can not
+         * execute this validation due to other preceding long transactions.
+         */
         WAITING_CC_COMMIT,
         /**
          * @brief This status means that the transaction was aborted by api
@@ -62,15 +62,15 @@ public:
          */
         ABORTED,
         /**
-          * @brief This status means the transaction was committed from
-          * viewpoint of concurrency control and waits flushing its logs by
-          * logging protocol.
-          */
+         * @brief This status means the transaction was committed from
+         * viewpoint of concurrency control and waits flushing its logs by
+         * logging protocol.
+         */
         WAITING_DURABLE,
         /**
-          * @brief This status means the transaction was committed from
-          * viewpoint of concurrency control and logging protocol.
-          */
+         * @brief This status means the transaction was committed from
+         * viewpoint of concurrency control and logging protocol.
+         */
         DURABLE
     };
 

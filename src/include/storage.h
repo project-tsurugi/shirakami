@@ -35,7 +35,7 @@ public:
     /**
      * @brief Identifier for internal development to express no read for read
      * positive list
-    */
+     */
     static constexpr Storage dummy_storage{UINT64_MAX - 4};
 
     static void fin();

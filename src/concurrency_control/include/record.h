@@ -121,7 +121,7 @@ private:
 
     /**
      * @brief The count about shared tombstone.
-    */
+     */
     std::atomic<std::size_t> shared_tombstone_count_{0};
 };
 

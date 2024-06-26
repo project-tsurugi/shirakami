@@ -140,7 +140,7 @@ enum class Status : std::int32_t {
      * @brief Warning.
      * @details The limits of number of concurrent open_scan without close_scan
      * at the tx.
-    */
+     */
     WARN_MAX_OPEN_SCAN,
     /**
      * @brief Warning

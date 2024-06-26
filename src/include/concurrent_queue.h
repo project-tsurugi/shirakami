@@ -22,7 +22,7 @@ public:
 
     /**
      * @brief if it successes to pop, return true, else return false.
-    */
+     */
     bool try_pop(T& result) { return queue.try_pop(result); }
 
 private:

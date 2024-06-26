@@ -21,9 +21,9 @@ namespace shirakami {
 class ongoing_tx {
 public:
     /**
-      * @brief tx_info_elem_type. first is epoch, second is batch id.
-      *
-      */
+     * @brief tx_info_elem_type. first is epoch, second is batch id.
+     *
+     */
     using tx_info_elem_type = std::tuple<epoch::epoch_t, std::size_t, session*>;
     static constexpr std::size_t index_epoch = 0;
     static constexpr std::size_t index_id = 1;
@@ -67,7 +67,7 @@ public:
      * @param[in] ti bypassing transaction info
      * @return Status::OK success to check wait
      * @return Status::ERR_CC early validation and read upper bound violation
-    */
+     */
     static Status waiting_bypass(session* ti);
 
     /**

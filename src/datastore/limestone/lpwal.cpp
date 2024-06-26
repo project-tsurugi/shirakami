@@ -24,8 +24,8 @@
 namespace shirakami::lpwal {
 
 /**
-  * @brief It executes log_channel_.add_entry for entire logs_.
-  */
+ * @brief It executes log_channel_.add_entry for entire logs_.
+ */
 void add_entry_from_logs(handler& handle) {
     // send logs to datastore
     for (auto&& log_elem : handle.get_logs()) {

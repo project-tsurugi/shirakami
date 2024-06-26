@@ -39,7 +39,7 @@ static constexpr std::int32_t log_info = 30;
 
 /**
  * @brief logging level constant for stats information about gc
-*/
+ */
 static constexpr std::int32_t log_info_gc_stats = 33;
 
 /**
@@ -60,7 +60,7 @@ static constexpr std::int32_t log_trace = 50;
 
 /**
  * @brief logging level constant for excessive traces
-*/
+ */
 static constexpr std::int32_t log_ex_trace = 100;
 
 } // namespace shirakami

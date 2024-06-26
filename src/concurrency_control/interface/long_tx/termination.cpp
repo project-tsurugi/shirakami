@@ -183,7 +183,7 @@ static inline void expose_local_write(
                          * non invisible write due to
                          * 1: write only
                          * 2: no waiting bypass and no forwarding
-                         * */
+                         */
                         should_log = true;
                         std::string vb{};
                         wso.get_value(vb);
@@ -457,8 +457,8 @@ Status verify(session* const ti) {
                                 (*wp_result_itr));
                 if (wp_result_was_committed) {
                     /**
-                      * the target ltx was commited, so it needs to check.
-                      */
+                     * the target ltx was commited, so it needs to check.
+                     */
                     for (auto&& hid : std::get<0>(oe.second)) {
                         if (wp_result_id == hid) {
                             // check conflict
@@ -482,15 +482,15 @@ Status verify(session* const ti) {
                             };
                             if (
                                     /**
-                                      * read right point < write left point
-                                      */
+                                     * read right point < write left point
+                                     */
                                     (std::get<2>(read_range) <
                                              std::get<1>(write_result) &&
                                      std::get<3>(read_range) !=
                                              scan_endpoint::INF) ||
                                     /**
-                                      * write right point < read left point
-                                      */
+                                     * write right point < read left point
+                                     */
                                     (std::get<2>(write_result) <
                                              std::get<0>(read_range) &&
                                      std::get<1>(read_range) !=
@@ -534,7 +534,7 @@ Status verify(session* const ti) {
              * wp result set から見つからないということは、相手は wp 宣言をしたが
              * 実際には書かなくて wp が縮退されたということ。そのままスルーしてよい。
              * イテレートは拡張 for ループの方で実施される。
-            */
+             */
         }
     }
     if (ti->get_is_forwarding()) {
@@ -821,11 +821,11 @@ extern Status commit(session* const ti) {
 
         tid_word ctid{};
         /**
-          * For registering write preserve result.
-          * Null (string "") may be used for pkey, but the range expressed two string
-          * don't know the endpoint is nothing or null key.
-          * So it needs boolean.
-          */
+         * For registering write preserve result.
+         * Null (string "") may be used for pkey, but the range expressed two string
+         * don't know the endpoint is nothing or null key.
+         * So it needs boolean.
+         */
         std::map<Storage, std::tuple<std::string, std::string>> write_range;
         expose_local_write(ti, ctid, write_range);
 
@@ -854,9 +854,9 @@ extern Status commit(session* const ti) {
 
         // todo enhancement
         /**
-          * Sort by wp and then globalize the local write set.
-          * Eliminate wp from those that have been globalized in wp units.
-          */
+         * Sort by wp and then globalize the local write set.
+         * Eliminate wp from those that have been globalized in wp units.
+         */
 
         auto this_dm = epoch::get_global_epoch();
 

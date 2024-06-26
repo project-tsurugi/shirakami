@@ -12,7 +12,7 @@ namespace shirakami {
  * @brief compare yakushima version about vinsert_delete and vsplit.
  * @return true same
  * @return false different
-*/
+ */
 static inline bool
 comp_ver_for_node_verify(yakushima::node_version64_body const left,
                          yakushima::node_version64_body const right) {

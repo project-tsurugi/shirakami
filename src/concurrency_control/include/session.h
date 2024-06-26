@@ -59,7 +59,7 @@ public:
 
     /**
      * @brief call commit callback and clear the callback stored
-    */
+     */
     void call_commit_callback(Status sc, reason_code rc,
                               durability_marker_type dm) {
         // get callback
@@ -166,9 +166,9 @@ public:
     void init_flags_for_ltx_begin() {
         init_flags_for_tx_begin();
         /**
-          * It may be called without check_commit for the ltx.
-          * Clear metadata initialized at check_commit.
-          */
+         * It may be called without check_commit for the ltx.
+         * Clear metadata initialized at check_commit.
+         */
         set_requested_commit(false);
         set_tx_type(transaction_options::transaction_type::LONG);
         get_write_set().set_for_batch(true);
@@ -685,21 +685,21 @@ private:
      * @brief for optimization for read area
      * @details ltx mode log where they read the storage and update read area
      * at commit phase.
-    */
+     */
     ltx_storage_read_set_type ltx_storage_read_set_{};
 
     /**
      * @brief mutex for @a ltx_storage_read_set_.
      * mutex for data access phase. it doesn't need to mutex for commit phase
      * because commit phase is isolated from data access phase by mutex.
-    */
+     */
     std::shared_mutex mtx_ltx_storage_read_set_{};
 
     range_read_set_for_ltx range_read_set_for_ltx_{};
 
     /**
      * mutex for range_read_by_short_set_
-    */
+     */
     std::shared_mutex mtx_range_read_by_short_set_;
 
     range_read_by_short_set_type range_read_by_short_set_{};
@@ -718,7 +718,7 @@ private:
 
     /**
      * @brief mutex for local read set for stx.
-    */
+     */
     std::shared_mutex mtx_read_set_for_stx_;
 
     /**
@@ -730,7 +730,7 @@ private:
      * @brief mutex for local write set. It is for concurrent access by strand
      * at read phase so it doesn't need for termination phase due to mutex for
      * termination.
-    */
+     */
     std::shared_mutex mtx_write_set_;
 
     /**
@@ -778,19 +778,19 @@ private:
 
     /**
      * @brief For mutex between data access and termination
-    */
+     */
     std::shared_mutex mtx_state_da_term_{};
 
     /**
      * @brief It uses for strand thread. All data access api can run concurrently
      *  and the state of termination is confused. So that use this mutex for
      * termination and find consistency.
-    */
+     */
     std::mutex mtx_termination_{};
 
     /**
      * @brief mutex for update result_info
-    */
+     */
     std::mutex mtx_result_info_{};
     // ========== end: strand
 
@@ -826,13 +826,13 @@ private:
     /**
      * @brief whether this tx was considering forwarding at once. This is used
      * for considering read wait
-    */
+     */
     bool was_considering_forwarding_at_once_{false};
 
     /**
      * @brief This is forwarding as ltx
      *
-    */
+     */
     bool is_forwarding_{false};
 
     /**
@@ -844,7 +844,7 @@ private:
 
     /**
      * @brief Whether this tx is forced to backward due to protocol logic.
-    */
+     */
     std::atomic<bool> is_force_backwarding_{false};
 
     /**
@@ -889,7 +889,7 @@ private:
 
     /**
      * @brief Memory for waiting ltx
-    */
+     */
     commit_callback_type commit_callback_{};
 
     // ========== end: long tx
@@ -944,16 +944,16 @@ public:
 
 private:
     /**
-      * @brief The table holding session information.
-      * @details There are situations where you want to check table information
-      * and register / delete entries in the table exclusively. When using
-      * exclusive lock, contention between readers is useless. When the reader
-      * writer lock is used, the cache is frequently polluted by increasing or
-      * decreasing the reference count. Therefore, lock-free exclusive
-      * arbitration is performed for fixed-length tables.
-      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number
-      * of sessions.
-      */
+     * @brief The table holding session information.
+     * @details There are situations where you want to check table information
+     * and register / delete entries in the table exclusively. When using
+     * exclusive lock, contention between readers is useless. When the reader
+     * writer lock is used, the cache is frequently polluted by increasing or
+     * decreasing the reference count. Therefore, lock-free exclusive
+     * arbitration is performed for fixed-length tables.
+     * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number
+     * of sessions.
+     */
     static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
             session_table_;                                     // NOLINT
 };

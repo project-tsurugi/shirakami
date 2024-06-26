@@ -67,8 +67,8 @@ using stats_info_type =
 
 // statistical data
 /**
-  * @brief Record the number of gc versions.
-  */
+ * @brief Record the number of gc versions.
+ */
 [[maybe_unused]] inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
 

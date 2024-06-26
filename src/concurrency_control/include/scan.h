@@ -43,7 +43,7 @@ private:
 
     /**
      * @brief mutex for scanned storage set
-    */
+     */
     std::shared_mutex mtx_{};
 };
 
@@ -132,7 +132,7 @@ private:
 
     /**
      * @brief mutex for scan cache
-    */
+     */
     std::shared_mutex mtx_scan_cache_{};
 
     /**
@@ -147,7 +147,7 @@ private:
      * @brief range of right endpoint for ltx
      * @details if user read to right endpoint till scan limit, shirakami needs
      * to know this information to log range info.
-    */
+     */
     std::string r_key_{};
 
     scan_endpoint r_end_{};

@@ -169,7 +169,7 @@ private:
      * @brief For tombstone
      * @attention This must be thread safe, but not. todo at strand. For simple,
      * we want to use std::atomic<bool> but some overload to reduce copy forbid it.
-    */
+     */
     bool inc_tombstone_{false};
 };
 
@@ -186,7 +186,7 @@ public:
 
     /**
      * @brief container for ltx info
-    */
+     */
     using storage_map = std::map<Storage, std::tuple<std::string, std::string>>;
 
     /**
@@ -212,7 +212,7 @@ public:
 
     /**
      * @brief get storage set
-     * */
+     */
     storage_map& get_storage_map() { return storage_map_; }
 
     /**
@@ -265,7 +265,7 @@ private:
     /**
      * @brief container for ltx.
      * @details This is not thread safe
-    */
+     */
     storage_map storage_map_;
 
     std::shared_mutex mtx_;
@@ -358,12 +358,12 @@ public:
                 }
                 std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
-                  * note : discussion.
-                  * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
-                  * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
-                  * Even if you find a match, you have to search for everything because there may be other matches.
-                  * If you do not allow duplication, the situation is the opposite.
-                  */
+                 * note : discussion.
+                 * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
+                 * Because scan doesn't have to do a match search, just add it to the end of node set. insert gets hard.
+                 * Even if you find a match, you have to search for everything because there may be other matches.
+                 * If you do not allow duplication, the situation is the opposite.
+                 */
             }
         }
         return Status::OK;
@@ -389,8 +389,8 @@ public:
                 // compare pointer
                 if (std::get<1>(elem_set) == std::get<1>(elem)) {
                     /**
-                      * Node versions already added in a previous scan operation.
-                      */
+                     * Node versions already added in a previous scan operation.
+                     */
                     if (comp_ver_for_node_verify(cnvp, std::get<0>(elem_set))) {
                         // the difference due to old self insert.
                         return Status::OK;
@@ -446,7 +446,7 @@ private:
 
     /**
      * @brief mutex for local node set
-    */
+     */
     std::shared_mutex mtx_set_;
 };
 

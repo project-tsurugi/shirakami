@@ -31,7 +31,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
 
     /**
      * 現時点で前置候補の LTX群。これらで走行中のものをルート以外バイパスする。
-    */
+     */
     auto wait_for{ti->extract_wait_for()};
     std::set<std::tuple<std::size_t, session*>> bypass_target{};
     for (auto&& elem : tx_info_) {

@@ -22,7 +22,7 @@ public:
     /**
      * @details std::tuple: storage area, whether commit was requested, left key,
      * left endpoint, right key, right endpoint.
-    */
+     */
     using plist_type =
             std::set<std::tuple<Storage, bool, std::string, scan_endpoint,
                                 std::string, scan_endpoint>>;
@@ -87,7 +87,7 @@ private:
 
     /**
      * @brief container for read area
-    */
+     */
     static inline cont_type cont_; // NOLINT
 };
 
