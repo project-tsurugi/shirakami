@@ -18,15 +18,17 @@ namespace shirakami {
 class tid_word { // NOLINT
 public:
     union { // NOLINT
-        uint64_t obj_;
+        __uint128_t obj_;
         struct {
             bool lock_ : 1;
             bool lock_by_gc_ : 1;
             bool latest_ : 1;
             bool absent_ : 1;
-            std::uint64_t tid_ : 28; // NOLINT
+            int : 8; // reserved
+            std::uint64_t tid_ : 52;
             bool by_short_ : 1;
-            epoch::epoch_t epoch_ : 31; // NOLINT
+            int : 11; // reserved
+            epoch::epoch_t epoch_ : 52;
         };
     };
 
@@ -34,7 +36,7 @@ public:
         : obj_(0) {
     } // NOLINT : clang-tidy order to initialize other member, but
     // it occurs compile error.
-    tid_word(const uint64_t obj) { obj_ = obj; } // NOLINT : the same as above.
+    tid_word(const __uint128_t obj) { obj_ = obj; } // NOLINT : the same as above.
     tid_word(const tid_word& right) noexcept     // NOLINT
         : obj_(right.get_obj()) {}               // NOLINT : the same as above.
 
@@ -61,9 +63,9 @@ public:
 
     bool empty() { return obj_ == 0; } // NOLINT
 
-    uint64_t& get_obj() { return obj_; } // NOLINT
+    __uint128_t& get_obj() { return obj_; } // NOLINT
 
-    const uint64_t& get_obj() const { return obj_; } // NOLINT
+    const __uint128_t& get_obj() const { return obj_; } // NOLINT
 
     bool get_lock() { return lock_; } // NOLINT
 
@@ -113,7 +115,7 @@ public:
 
     void set_by_short(const bool tf) { by_short_ = tf; } // NOLINT
 
-    void set_obj(const uint64_t obj) { this->obj_ = obj; } // NOLINT
+    void set_obj(const __uint128_t obj) { this->obj_ = obj; } // NOLINT
 
     [[maybe_unused]] void set_tid(const uint64_t tid) {
         this->tid_ = tid; // NOLINT
@@ -136,6 +138,7 @@ public:
 private:
 };
 
+static_assert(sizeof(tid_word) == sizeof(tid_word{}.obj_)); // NOLINT(*-union-access)
 static_assert(std::is_nothrow_move_constructible_v<tid_word>);
 
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT
