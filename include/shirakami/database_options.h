@@ -111,7 +111,7 @@ private:
     // detail information
     /**
      * @brief Whether it enables logging detail information.
-     * 
+     *
      */
     bool enable_logging_detail_info_{false};
 

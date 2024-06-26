@@ -18,9 +18,9 @@ public:
 private:
     /**
      * @brief lock object
-     * @details One bit indicates the presence or absence of a lock. 
+     * @details One bit indicates the presence or absence of a lock.
      * The rest represents the number of past locks.
-     * The target object loaded while loading the unlocked object twice can be 
+     * The target object loaded while loading the unlocked object twice can be
      * regarded as atomically loaded.
      */
     std::atomic<std::uint64_t> obj{0};

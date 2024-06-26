@@ -56,7 +56,7 @@ TEST_F(sequence_test, basic) { // NOLINT
         ASSERT_EQ(Status::WARN_ALREADY_EXISTS,
                   update_sequence(token, id, version, value));
         /**
-          * because it executed same operation (especially same 
+          * because it executed same operation (especially same
           * version) by same arguments.
           */
         ASSERT_EQ(Status::OK, commit(token));

@@ -95,7 +95,7 @@ private:
     static inline worker_cont_type worker_threads_; // NOLINT
 
     /**
-     * @brief This is a list what transaction do it be processed now by @a 
+     * @brief This is a list what transaction do it be processed now by @a
      * worker_threads_ to prevent conflict.
      * */
     static inline used_ids_type used_ids_; // NOLINT
@@ -107,13 +107,13 @@ private:
 
     /**
      * @brief Flag used for signal to start or stop worker thread.
-     * 
+     *
      */
     static inline bool worker_thread_end_; // NOLINT
 
     /**
      * @brief mutex for cont_wait_tx
-     * 
+     *
      */
     static inline std::shared_mutex mtx_cont_wait_tx_; // NOLINT
 

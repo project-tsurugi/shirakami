@@ -42,7 +42,7 @@ void bg_commit::fin() {
     workers().clear();
 
     /**
-     * cleanup container because after next startup, manager thread will 
+     * cleanup container because after next startup, manager thread will
      * misunderstand.
      */
     clear_tx();
@@ -141,8 +141,8 @@ void bg_commit::worker() {
         // check result
         if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
             /**
-              * Basically (without read area function), lower priority 
-              * than this transaction wait for the result of this 
+              * Basically (without read area function), lower priority
+              * than this transaction wait for the result of this
               * transaction.
               */
             {

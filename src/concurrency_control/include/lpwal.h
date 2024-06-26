@@ -4,9 +4,9 @@
  * @brief pwal header for limestone
  * @version 0.1
  * @date 2022-05-26
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #pragma once
@@ -32,13 +32,13 @@ namespace shirakami::lpwal {
 
 /**
  * @brief log directory pointed at initialize.
- * 
+ *
  */
 [[maybe_unused]] inline std::string log_dir_{""}; // NOLINT
 
 /**
  * @brief Whether log_dir is pointed at initialize.
- * 
+ *
  */
 [[maybe_unused]] inline bool log_dir_pointed_{false}; // NOLINT
 
@@ -49,7 +49,7 @@ namespace shirakami::lpwal {
 
 /**
  * @brief This thread is collecting each worker's log.
- * 
+ *
  */
 [[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
 
@@ -78,7 +78,7 @@ public:
 private:
     /**
      * @brief For PITR and major write version
-     * 
+     *
      */
     major_write_version_type major_write_version_;
 
@@ -224,15 +224,15 @@ private:
 };
 
 /**
- * @brief flushing log. 1: begin log_channel, 2: add_entry, 
+ * @brief flushing log. 1: begin log_channel, 2: add_entry,
  * 3: end log_channel
  */
 [[maybe_unused]] extern void flush_log(Token token);
 
 /**
  * @brief Set the log dir object
- * 
- * @param log_dir 
+ *
+ * @param log_dir
  */
 [[maybe_unused]] static void set_log_dir(std::string_view const log_dir) {
     log_dir_ = log_dir;
@@ -240,15 +240,15 @@ private:
 
 /**
  * @brief Get the log dir object
- * 
- * @return std::string_view 
+ *
+ * @return std::string_view
  */
 [[maybe_unused]] static std::string_view get_log_dir() { return log_dir_; }
 
 /**
  * @brief Set the log dir pointed object
- * 
- * @param tf 
+ *
+ * @param tf
  */
 [[maybe_unused]] static void set_log_dir_pointed(bool const tf) {
     log_dir_pointed_ = tf;
@@ -256,9 +256,9 @@ private:
 
 /**
  * @brief Get the log dir pointed object
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
 [[maybe_unused]] static bool get_log_dir_pointed() { return log_dir_pointed_; }
 
@@ -296,7 +296,7 @@ extern void init();
 
 /**
  * @brief join daemon thread which was started at init().
- * 
+ *
  */
 extern void fin();
 

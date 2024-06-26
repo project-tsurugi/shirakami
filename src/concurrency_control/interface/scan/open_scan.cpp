@@ -35,8 +35,8 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
 }
 
 /**
- * This is for some creating for this tx and consider other concurrent strand 
- * thread. If that failed, this cleanup local effect, respect the result and 
+ * This is for some creating for this tx and consider other concurrent strand
+ * thread. If that failed, this cleanup local effect, respect the result and
  * return;
 */
 Status fin_process(session* const ti, Status const this_result) {
@@ -61,12 +61,12 @@ Status fin_process(session* const ti, Status const this_result) {
 }
 
 /**
- * @brief 
- * 
- * @param ti 
+ * @brief
+ *
+ * @param ti
  * @param st
- * @param scan_res 
- * @param head_skip_rec_n 
+ * @param scan_res
+ * @param head_skip_rec_n
  * @return Status::OK
  * @return Status::WARN_NOT_FOUND
  */
@@ -248,9 +248,9 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
         /**
           * register read_by_set
-          * todo: enhancement: 
-          * The range is modified according to the execution of 
-          * read_from_scan, and the range is fixed and registered at the end of 
+          * todo: enhancement:
+          * The range is modified according to the execution of
+          * read_from_scan, and the range is fixed and registered at the end of
           * the transaction.
           */
         ti->get_range_read_set_for_ltx().insert(std::make_tuple(
@@ -303,7 +303,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
     if (rc != Status::OK) {
         /**
-         * The fact must be guaranteed by isolation. So it can get node version 
+         * The fact must be guaranteed by isolation. So it can get node version
          * and it must check about phantom at commit phase.
          */
         {
@@ -325,8 +325,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     /**
-     * You must ensure that new elements are not interrupted in the range at 
-     * the node that did not retrieve the element but scanned it when masstree 
+     * You must ensure that new elements are not interrupted in the range at
+     * the node that did not retrieve the element but scanned it when masstree
      * scanned it.
      */
     std::size_t nvec_delta{0};

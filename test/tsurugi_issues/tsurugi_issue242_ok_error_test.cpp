@@ -50,7 +50,7 @@ TEST_F(tsurugi_issue242_ok_error_test, // NOLINT
         * シナリオ
         * (first thread) strand a: point read for readable page
         * (second thread) strand b: read area violation
-        * 
+        *
        */
     // prepare
 

@@ -58,15 +58,15 @@ do
       exit 1
     fi
     rm $result
-  
+
     echo "#ops num, avg-cops, min-cops, max-cops, avg-ar, min-ar, max-ar, avg-camiss, min-camiss, max-camiss, avg-maxrss, min-maxrss, max-maxrss, avg-cpr-global-version, min-cpr-global-version, max-cpr-global-version" >> $result
     echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio" >> $result
-    
+
     for ((long_tx_ops=1; long_tx_ops<=10000; long_tx_ops*=10))
     do
       echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio"
       echo "Ops $long_tx_ops"
-      
+
       sumTH=0
       sumAR=0
       sumCA=0
@@ -77,7 +77,7 @@ do
       maxCA=0
       maxMAXRSS=0
       maxCGV=0
-      minTH=0 
+      minTH=0
       minAR=0
       minCA=0
       minMAXRSS=0
@@ -86,7 +86,7 @@ do
       do
         date
         sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -record $record -skew $skew -thread $thread -val_length $val_length -include_long_tx $include_long_tx -long_tx_ops $long_tx_ops -long_tx_rratio $long_tx_rratio > exp.txt
-      
+
         tmpTH=`grep throughput ./exp.txt | grep -v long | awk '{print $2}'`
         tmpAR=`grep abort_rate ./exp.txt | grep -v long | awk '{print $2}'`
         tmpCA=`grep cache-misses ./ana.txt | awk '{print $4}'`
@@ -98,7 +98,7 @@ do
         sumMAXRSS=`echo "$sumMAXRSS + $tmpMAXRSS" | bc`
         sumCGV=`echo "$sumCGV + $tmpCGV" | bc`
         echo "tmpTH: $tmpTH, tmpAR: $tmpAR, tmpCA: $tmpCA"
-      
+
         if test $i -eq 1 ; then
           maxTH=$tmpTH
           maxAR=$tmpAR
@@ -111,7 +111,7 @@ do
           minMAXRSS=$tmpMAXRSS
           minCGV=$tmpCGV
         fi
-      
+
         flag=`echo "$tmpTH > $maxTH" | bc`
         if test $flag -eq 1 ; then
           maxTH=$tmpTH
@@ -133,7 +133,7 @@ do
           maxCGV=$tmpCGV
         fi
 
-      
+
         flag=`echo "$tmpTH < $minTH" | bc`
         if test $flag -eq 1 ; then
           minTH=$tmpTH

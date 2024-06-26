@@ -22,7 +22,7 @@ constexpr static TxStateHandle undefined_handle = 0;
 /**
  * @brief Transaction status
  * @details A mechanism for monitoring various states of a running transaction.
- * @attention Monitoring the status will degrade the performance, so keep it 
+ * @attention Monitoring the status will degrade the performance, so keep it
  * to the minimum necessary.
  */
 class TxState final {
@@ -33,7 +33,7 @@ public:
 
     /**
      * @brief A various states of a running transaction.
-     * @details Details of state transition is discribed at 
+     * @details Details of state transition is discribed at
      * shirakami/docs/transaction_state.md
      */
     enum class StateKind : std::int64_t {
@@ -42,7 +42,7 @@ public:
           */
         UNKNOWN = 0,
         /**
-          * @brief This status means the transaction was started and waits for 
+          * @brief This status means the transaction was started and waits for
           * own epoch.
           */
         WAITING_START,
@@ -51,24 +51,24 @@ public:
           */
         STARTED,
         /**
-          * @brief This status means the transaction was begun and is waited 
-          * for commit api call or must wait for a while because it can not 
+          * @brief This status means the transaction was begun and is waited
+          * for commit api call or must wait for a while because it can not
           * execute this validation due to other preceding long transactions.
           */
         WAITING_CC_COMMIT,
         /**
-         * @brief This status means that the transaction was aborted by api 
+         * @brief This status means that the transaction was aborted by api
          * call.
          */
         ABORTED,
         /**
-          * @brief This status means the transaction was committed from 
-          * viewpoint of concurrency control and waits flushing its logs by 
+          * @brief This status means the transaction was committed from
+          * viewpoint of concurrency control and waits flushing its logs by
           * logging protocol.
           */
         WAITING_DURABLE,
         /**
-          * @brief This status means the transaction was committed from 
+          * @brief This status means the transaction was committed from
           * viewpoint of concurrency control and logging protocol.
           */
         DURABLE
@@ -204,7 +204,7 @@ private:
     StateKind kind_{StateKind::UNKNOWN};
     /**
      * @brief serial epoch info
-     * @details @a serial_epoch_ shows long tx's epoch. It is used for long tx 
+     * @details @a serial_epoch_ shows long tx's epoch. It is used for long tx
      * only.
      */
     epoch_t serial_epoch_{0};
@@ -216,9 +216,9 @@ private:
     epoch_t durable_epoch_{0};
     /**
      * @brief session info
-     * @details 1: When it releases handle, the tx which has the handle can't find 
-     * that actions. So the tx may execute updating status object bia its 
-     * infomation. Then, it occurs heap-use-after-free etc... So it needs 
+     * @details 1: When it releases handle, the tx which has the handle can't find
+     * that actions. So the tx may execute updating status object bia its
+     * infomation. Then, it occurs heap-use-after-free etc... So it needs
      * interaction between status object and session.
      * 2: There is a case which it needs long tx's id.
      */
@@ -258,7 +258,7 @@ inline constexpr std::string_view to_string_view(TxState::StateKind value) {
 
 /**
  * @brief appends enum label into the given stream.
- * @param out the target stream 
+ * @param out the target stream
  * @param value the source enum value
  * @return std::ostream&  the target stream
  */

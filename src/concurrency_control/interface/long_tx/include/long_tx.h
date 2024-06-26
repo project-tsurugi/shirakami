@@ -33,8 +33,8 @@ extern void update_wp_at_commit(session* ti);
  * @param[in] rec pointer to record.
  * @param[in] ep long tx's epoch.
  * @param[out] ver the target version.
- * @param[out] is_latest @a ver is 
- * @param[out] f_check if this function select latest version, it is the 
+ * @param[out] is_latest @a ver is
+ * @param[out] f_check if this function select latest version, it is the
  * tid_word when optimistic selection.
  * @return Status::OK success.
  * @return Status::WARN_NOT_FOUND the target version is not found.
@@ -49,7 +49,7 @@ extern Status version_function_with_optimistic_check(Record* rec,
 /**
  * @brief version function for long tx.
  * @param[in] ep long tx's epoch.
- * @param[in,out] ver in: the start point version of version traverse. out: the 
+ * @param[in,out] ver in: the start point version of version traverse. out: the
  * target version to read.
  * @return Status::OK success.
  * @return Status::WARN_NOT_FOUND the target version is not found.
@@ -62,9 +62,9 @@ extern Status version_traverse_and_read(session* ti, Record* rec_ptr,
                                         std::string& value, bool read_value);
 
 /**
- * @brief 
- * 
- * @param[in] ti 
+ * @brief
+ *
+ * @param[in] ti
  * @param[in] wp_meta_ptr
  * @param[in] read_keyread information about key.
  */

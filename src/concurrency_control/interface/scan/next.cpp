@@ -66,7 +66,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             inws = ti->get_write_set().search(rec_ptr);
             if (inws != nullptr) {
                 /**
-                 * If it exists and it is not delete operation, read from scan api 
+                 * If it exists and it is not delete operation, read from scan api
                  * call should be able to read the record.
                  */
                 if (inws->get_op() == OP_TYPE::DELETE) { continue; }

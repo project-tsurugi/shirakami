@@ -137,7 +137,7 @@ private:
 
     /**
      * @brief scanned storage set.
-     * @details As a result of being scanned, the pointer to the record 
+     * @details As a result of being scanned, the pointer to the record
      * is retained. However, it does not retain the scanned storage information
      * . Without it, you will have problems generating read sets.
      */

@@ -39,7 +39,7 @@ public:
     using wp_write_range_type =
             std::map<std::size_t, std::tuple<std::string, std::string>>;
     /**
-     * @brief first is serialization epoch, second is ltx id, third is 
+     * @brief first is serialization epoch, second is ltx id, third is
      * was_committed, forth is range of write for truth forwarding.
      */
     using wp_result_elem_type =
@@ -65,7 +65,7 @@ public:
 
     /**
      * @brief Get the wped_used_ object
-     * @return std::bitset<KVS_MAX_PARALLEL_THREADS>& 
+     * @return std::bitset<KVS_MAX_PARALLEL_THREADS>&
      */
     wped_used_type& get_wped_used() { return wped_used_; }
 
@@ -85,7 +85,7 @@ public:
 
     /**
      * @brief check the space of write preserve.
-     * @param[out] at If this function returns Status::OK, the value of @a at 
+     * @param[out] at If this function returns Status::OK, the value of @a at
      * shows empty slot.
      * @return Status::OK success.
      * @return Status::WARN_NOT_FOUND fail.
@@ -169,8 +169,8 @@ public:
 private:
     /**
      * @brief write preserve infomation.
-     * @details first of each vector's element is epoch which is the valid 
-     * point of wp. second of those is the long tx's id. 
+     * @details first of each vector's element is epoch which is the valid
+     * point of wp. second of those is the long tx's id.
      */
     wped_type wped_;
 
@@ -188,7 +188,7 @@ private:
 
     /**
      * @brief mutex for @a wp_result_set_;
-     * 
+     *
      */
     std::shared_mutex mtx_wp_result_set_;
 

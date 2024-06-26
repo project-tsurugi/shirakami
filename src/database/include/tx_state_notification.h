@@ -13,7 +13,7 @@ inline std::mutex mtx_durability_callbacks{};
 
 /**
  * @brief Registration of durability_callback.
- * @details At the time of registering the callback function, call the callback 
+ * @details At the time of registering the callback function, call the callback
  * function once at the persistence boundary in shirakami.
 */
 extern void add_durability_callbacks(durability_callback_type& dc);

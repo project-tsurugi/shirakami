@@ -79,14 +79,14 @@ yakushima::status put(Storage st, std::string_view key, std::string_view val) {
 
 /**
  * @brief Scan using yakushima.
- * @param st 
- * @param l_key 
- * @param l_end 
- * @param r_key 
- * @param r_end 
- * @param max_size 
- * @param scan_res 
- * @param nvec 
+ * @param st
+ * @param l_key
+ * @param l_end
+ * @param r_key
+ * @param r_end
+ * @param max_size
+ * @param scan_res
+ * @param nvec
  * @return Status::OK It found some records.
  * @return Status::WARN_NOT_FOUND It found no records.
  * @return Status::WARN_STORAGE_NOT_FOUND It didn't find the @a st.

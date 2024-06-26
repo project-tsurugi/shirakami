@@ -232,7 +232,7 @@ Status try_deleted_to_inserting(Storage st, std::string_view key,
     tid_word tid{rec_ptr->get_tidw_ref()};
     if (!tid.get_absent() && tid.get_latest()) {
         /**
-      * The deleted page was changed to living page by someone between 
+      * The deleted page was changed to living page by someone between
       * point 1 and point 2.
       */
         rec_ptr->get_tidw_ref().unlock();

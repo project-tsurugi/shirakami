@@ -210,7 +210,7 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
     for (;;) {
         if (f_check.get_lock()) {
             /**
-             * not inserting records and the owner may be escape the value 
+             * not inserting records and the owner may be escape the value
              * which is the target for this tx.
              */
             _mm_pause();

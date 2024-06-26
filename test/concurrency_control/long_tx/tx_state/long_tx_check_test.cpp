@@ -172,7 +172,7 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     }
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     /**
-         * If epoch does not change from commit, this status must be 
+         * If epoch does not change from commit, this status must be
          * WAITING_DURABLE
          */
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);

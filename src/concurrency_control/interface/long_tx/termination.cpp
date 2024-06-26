@@ -180,7 +180,7 @@ static inline void expose_local_write(
                     if (should_backward && !pre_tid.get_by_short() &&
                         ti->get_long_tx_id() > pre_tid.get_tid()) {
                         /**
-                         * non invisible write due to 
+                         * non invisible write due to
                          * 1: write only
                          * 2: no waiting bypass and no forwarding
                          * */
@@ -737,7 +737,7 @@ extern Status commit(session* const ti) {
                     << "ltx start to check wait";
 
     /**
-     * WP2: If it is possible to prepend the order, it waits for a transaction 
+     * WP2: If it is possible to prepend the order, it waits for a transaction
      * with a higher priority than itself to finish the operation.
      */
     // check wait
@@ -854,7 +854,7 @@ extern Status commit(session* const ti) {
 
         // todo enhancement
         /**
-          * Sort by wp and then globalize the local write set. 
+          * Sort by wp and then globalize the local write set.
           * Eliminate wp from those that have been globalized in wp units.
           */
 

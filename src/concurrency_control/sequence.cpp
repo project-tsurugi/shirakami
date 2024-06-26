@@ -251,8 +251,8 @@ Status sequence::sequence_map_update(SequenceId const id,
 Status sequence::create_sequence(SequenceId* id) {
     /**
      * acquire write lock.
-     * Unless the updating and logging of the sequence map are combined into a 
-     * critical section, the timestamp ordering of updates and logging can be 
+     * Unless the updating and logging of the sequence map are combined into a
+     * critical section, the timestamp ordering of updates and logging can be
      * confused with other concurrent operations.
      */
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
@@ -367,8 +367,8 @@ Status sequence::read_sequence(SequenceId const id,
 Status sequence::delete_sequence(SequenceId const id) {
     /**
      * acquire write lock.
-     * Unless the updating and logging of the sequence map are combined into a 
-     * critical section, the timestamp ordering of updates and logging can be 
+     * Unless the updating and logging of the sequence map are combined into a
+     * critical section, the timestamp ordering of updates and logging can be
      * confused with other concurrent operations.
      */
     std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};

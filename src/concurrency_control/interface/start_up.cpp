@@ -132,7 +132,7 @@ Status init_body(database_options options) { // NOLINT
         storage::init();
 
         /**
-         * about sequence. the generator of sequence id is cleared, So if this is 
+         * about sequence. the generator of sequence id is cleared, So if this is
          * a start up with recovery, it must also recovery sequence id generator.
          */
         sequence::init();

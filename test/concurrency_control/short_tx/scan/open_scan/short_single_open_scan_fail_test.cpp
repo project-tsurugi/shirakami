@@ -85,9 +85,9 @@ TEST_F(open_scan_fail_test,             // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
     /**
-     * It's index scan find s2's inserting record only, but it is not be able 
+     * It's index scan find s2's inserting record only, but it is not be able
      * to read immediately. So it should returns WARN_NOT_FOUND.
-     * 
+     *
      */
 
     ASSERT_EQ(Status::OK, commit(s2));

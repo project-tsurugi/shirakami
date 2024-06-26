@@ -26,10 +26,10 @@ namespace shirakami {
  * @brief transactional termination command about abort.
  * @details It is user abort, does cleaning for local set/cache, and try gc.
  * @param[in] token the token retrieved by enter()
- * @pre it did enter -> ... -> (tx_begin ->) some transactional operations 
+ * @pre it did enter -> ... -> (tx_begin ->) some transactional operations
  * (update / insert / upsert / search / delete) or no operation.
  * @return Status::OK success.
- * @return Status::WARN_ILLEGAL_OPERATION After submitting commit, you must 
+ * @return Status::WARN_ILLEGAL_OPERATION After submitting commit, you must
  * wait the result.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  */
@@ -41,7 +41,7 @@ Status abort(Token token); // NOLINT
  * @param[in] handle identify the specific scan which was opened at open_scan.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE The @b handle is invalid.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it
  * can't execute it.
  */
 Status close_scan(Token token, ScanHandle handle); // NOLINT
@@ -49,10 +49,10 @@ Status close_scan(Token token, ScanHandle handle); // NOLINT
 /**
  * @brief commit function with result notified by callback
  * @param token the target transaction control handle retrieved with enter().
- * @param callback the callback function invoked when (pre-)commit completes. 
- * It's called exactly once. If this function returns false, caller must keep 
- * the `callback` safely callable until its call, including not only the 
- * successful commit but the case when transaction is aborted for some reason, 
+ * @param callback the callback function invoked when (pre-)commit completes.
+ * It's called exactly once. If this function returns false, caller must keep
+ * the `callback` safely callable until its call, including not only the
+ * successful commit but the case when transaction is aborted for some reason,
  * e.g. error with commit validation, or database is suddenly closed, etc.
  * After the callback invocation, the callback object passed as `callback`
  * parameter will be quickly destroyed.
@@ -62,10 +62,10 @@ Status close_scan(Token token, ScanHandle handle); // NOLINT
  *   - Status::ERR_KVS Error about key value store.
  *   - Status::OK success
  *   - Status::WARN_NOT_BEGIN This transaction was not begun.
- *   - Status::WARN_PREMATURE The long transaction must wait until the changing 
+ *   - Status::WARN_PREMATURE The long transaction must wait until the changing
  * epoch to query some operation.
- * On successful commit completion (i.e. Status::OK is passed) 
- * durability_marker_type is available. Otherwise (and abort occurs on commit 
+ * On successful commit completion (i.e. Status::OK is passed)
+ * durability_marker_type is available. Otherwise (and abort occurs on commit
  * try,) reason_code is available to indicate the abort reason.
  *
  * @return true if calling callback completed by the end of this function call
@@ -85,24 +85,24 @@ Status commit(Token token); // NOLINT
  * @param[in] key the key of the record for deletion
  * @pre it already executed enter.
  * @post nothing. This function never do abort.
- * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely 
+ * @return Status::WARN_CANCEL_PREVIOUS_INSERT This delete operation merely
  * canceled an previous insert.
- * @return Status::WARN_CANCEL_PREVIOUS_UPSERT This delete operation merely 
+ * @return Status::WARN_CANCEL_PREVIOUS_UPSERT This delete operation merely
  * canceled an previous upsert.
- * @return Status::WARN_CONFLICT_ON_WRITE_PRESERVE This function can't execute 
+ * @return Status::WARN_CONFLICT_ON_WRITE_PRESERVE This function can't execute
  * because this tx is short tx and found write preserve of long tx.
- * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute delete_record on read only
  * mode. So this operation was canceled.
- * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in 
+ * @return Status::WARN_INVALID_HANDLE It is caused by executing this operation in
  * read only mode.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_BEGIN The transaction is not began. 
+ * @return Status::WARN_NOT_BEGIN The transaction is not began.
  * @return Status::WARN_NOT_FOUND The target page is not found or deleted.
- * @return Status::WARN_PREMATURE The long transaction must wait until the 
+ * @return Status::WARN_PREMATURE The long transaction must wait until the
  * changing epoch to query some operation.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
- * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
+ * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::OK success.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
@@ -113,7 +113,7 @@ Status delete_record(Token token, Storage storage, // NOLINT
 /**
  * @brief enter session
  * @param[out] token output parameter to return the token
- * @pre Maximum degree of parallelism of this function without leave is the size of 
+ * @pre Maximum degree of parallelism of this function without leave is the size of
  * session_table_, KVS_MAX_PARALLEL_THREADS.
  * @post When it ends this session, do leave(Token token).
  * @return Status::OK
@@ -127,18 +127,18 @@ Status enter(Token& token); // NOLINT
  * @param[in] storage input parameter about the storage.
  * @param[in] key input parameter about the key.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
- * The user can continue this transaction or end the transaction with 
- * abort. If this page is unchanged at the time the transaction is requested to 
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted.
+ * The user can continue this transaction or end the transaction with
+ * abort. If this page is unchanged at the time the transaction is requested to
  * commit, this operation will not cause a failure by the insert transaction.
- * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you
  * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
- * for no transactions to be located in an order older than the order in which 
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait
+ * for no transactions to be located in an order older than the order in which
  * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
@@ -149,13 +149,13 @@ Status exist_key(Token token, Storage storage, std::string_view key);
  * @brief do delete operations for all records, join core threads, delete the
  * remaining garbage (heap) objects, and do remaining work.
  * @pre It already did init() and invoked core threads.
- * @param[in] force_shut_down_logging If true, interrupt logging and shut down. 
+ * @param[in] force_shut_down_logging If true, interrupt logging and shut down.
  * Otherwise wait for the end of logging.
- * @details It do delete operations for all records. init() did invoking core 
- * threads detached. 
+ * @details It do delete operations for all records. init() did invoking core
+ * threads detached.
  * So it should join those threads.
  * This function serves that joining after doing those delete operations.
- * Then, it delete the remaining garbage (heap) object by using private 
+ * Then, it delete the remaining garbage (heap) object by using private
  * interface.
  * @return void
  */
@@ -163,15 +163,15 @@ void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
  * @brief It initializes shirakami's environment.
- * @details When it starts or restarts this system, in other words, database, 
+ * @details When it starts or restarts this system, in other words, database,
  * it must be executed first or after fin command.
- * If you don't be explicit log directory path by @a options, shirakami makes 
- * and uses temporally directory whose the directory name was named by using 
- * phrases: shirakami, process id, and value of timestamp counter. For example, 
+ * If you don't be explicit log directory path by @a options, shirakami makes
+ * and uses temporally directory whose the directory name was named by using
+ * phrases: shirakami, process id, and value of timestamp counter. For example,
  * shirakami-111-222.
  * @param[in] options Options about open mode and logging.
  * @return Status::OK
- * @return Status::WARN_ALREADY_INIT Since it have already called int, it have 
+ * @return Status::WARN_ALREADY_INIT Since it have already called int, it have
  * not done anything in this call.
  */
 Status init(database_options options = {}); // NOLINT
@@ -185,21 +185,21 @@ Status init(database_options options = {}); // NOLINT
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success. If this tx executed delete operation, this insert
  * change the operation into update operation which updates using @a val.
- * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key 
- * exists in db, so this function returned immediately. And it is treated that 
+ * @return Status::WARN_ALREADY_EXISTS The records whose key is the same as @b key
+ * exists in db, so this function returned immediately. And it is treated that
  * the read operation for the record was executed by this operation to depend on
  *  existing the record.
- * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
- * The user can continue this transaction or end the transaction with 
- * abort. If this page is unchanged at the time the transaction is requested to 
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted.
+ * The user can continue this transaction or end the transaction with
+ * abort. If this page is unchanged at the time the transaction is requested to
  * commit, this operation will not cause a failure by the insert transaction.
- * @return Status::WARN_ILLEGAL_OPERATION You execute insert on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute insert on read only
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
- * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
+ * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
@@ -230,19 +230,19 @@ Status leave(Token token); // NOLINT
  * @param[in] r_end whether including the right end key for this range.
  * @param[out] handle the handle to identify scanned result. This handle will be
  * deleted at abort function or close_scan command.
- * @param[in] max_size Default is 0. If this argument is 0, it will not use 
+ * @param[in] max_size Default is 0. If this argument is 0, it will not use
  * this argument. This argument limits the number of results.
- * @attention This scan limits range which is specified by @b l_key, @b l_end, 
+ * @attention This scan limits range which is specified by @b l_key, @b l_end,
  * @b r_key, and @b r_end.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of 
+ * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of
  * concurrent open_scan without close_scan.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
- * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
+ * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But
  * the fact that nothing was read is guaranteed by isolation.
- * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait
  * for some high priority transactions.
  * @return Status::WARN_STORAGE_NOT_FOUND The storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
@@ -255,13 +255,13 @@ Status open_scan(Token token, Storage storage, std::string_view l_key,
 
 /**
  * @brief advance cursor
- * @details This function advances the cursor by one in the range opened by 
+ * @details This function advances the cursor by one in the range opened by
  * open_scan. It skips deleted record.
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE @a handle is invalid.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
  * So it can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  */
@@ -269,21 +269,21 @@ Status next(Token token, ScanHandle handle);
 
 /**
  * @brief This reads the key of record pointed by the cursor.
- * 
+ *
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] key the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
- * The user can continue the scan with next api or end the transaction with 
- * abort. If this page is unchanged at the time the transaction is requested to 
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted.
+ * The user can continue the scan with next api or end the transaction with
+ * abort. If this page is unchanged at the time the transaction is requested to
  * commit, this read will not cause a failure.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it
  * can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
@@ -292,21 +292,21 @@ Status read_key_from_scan(Token token, ScanHandle handle, std::string& key);
 
 /**
  * @brief This reads the value of record pointed by the cursor.
- * 
+ *
  * @param[in] token the token retrieved by enter()
  * @param[in] handle identify the specific open_scan.
  * @param[out] value  the result of this function.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
- * The user can continue the scan with next api or end the transaction with 
- * abort. If this page is unchanged at the time the transaction is requested to 
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted.
+ * The user can continue the scan with next api or end the transaction with
+ * abort. If this page is unchanged at the time the transaction is requested to
  * commit, this read will not cause a failure.
  * @return Status::WARN_CONCURRENT_UPDATE The target page is concurrently
  * updated. Please wait to finish the concurrent transaction which is updating
  * the target page or call abort api call.
  * @return Status::WARN_INVALID_HANDLE @b handle is invalid.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it
  * can't execute it.
  * @return Status::WARN_SCAN_LIMIT The cursor already reached endpoint of scan.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
@@ -316,12 +316,12 @@ Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
 /**
  * @brief This function checks the size resulted at open_scan with the @b handle.
  * @param[in] token the token retrieved by enter()
- * @param[in] handle the handle to identify scanned result. This handle will be deleted 
+ * @param[in] handle the handle to identify scanned result. This handle will be deleted
  * at abort function.
  * @param[out] size the size resulted at open_scan with the @a handle .
  * @return Status::OK success.
  * @return Status::WARN_INVALID_HANDLE The @a handle is invalid.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it
  * can't execute it.
  */
 [[maybe_unused]] Status scannable_total_index_size(Token token,
@@ -335,19 +335,19 @@ Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
  * @param[in] key the search key
  * @param[out] value output parameter to pass the found Tuple pointer.
  * @return Status::OK success.
- * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted. 
- * The user can continue this transaction or end the transaction with 
- * abort. If this page is unchanged at the time the transaction is requested to 
+ * @return Status::WARN_CONCURRENT_INSERT The target page is being inserted.
+ * The user can continue this transaction or end the transaction with
+ * abort. If this page is unchanged at the time the transaction is requested to
  * commit, this operation will not cause a failure by the insert transaction.
- * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record 
+ * @return Status::WARN_CONCURRENT_UPDATE This search found the locked record
  * by other updater, and it could not complete search.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
- * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
+ * @return Status::WARN_NOT_FOUND no corresponding record in masstree. If you
  * have problem by WARN_NOT_FOUND, you should do abort.
- * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait 
- * for no transactions to be located in an order older than the order in which 
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait
+ * for no transactions to be located in an order older than the order in which
  * this transaction is located.
  * @return Status::WARN_STORAGE_NOT_FOUND @a storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
@@ -358,22 +358,22 @@ Status search_key(Token token, Storage storage, std::string_view key,
 
 /**
  * @brief Transaction begins.
- * @attention This function must be called before requesting any other operation 
- * for the new transaction. Otherwise, Status::WARN_NOT_BEGIN will be returned 
+ * @attention This function must be called before requesting any other operation
+ * for the new transaction. Otherwise, Status::WARN_NOT_BEGIN will be returned
  * for those requests.
- * @details To determine the GC-capable epoch, determine the epoch at the start 
- * of the transaction. 
- * @param[in] options Transaction options. There are token got from enter 
- * command, options.transaction_type_ SHORT or LONG or READ_ONLY, 
- * options.write_preserve_ for ltx, and options.read_area_ for improving ltx 
- * performance. Default{} is token_:{}, transaction_type_:{SHORT}, 
+ * @details To determine the GC-capable epoch, determine the epoch at the start
+ * of the transaction.
+ * @param[in] options Transaction options. There are token got from enter
+ * command, options.transaction_type_ SHORT or LONG or READ_ONLY,
+ * options.write_preserve_ for ltx, and options.read_area_ for improving ltx
+ * performance. Default{} is token_:{}, transaction_type_:{SHORT},
  * write_preserve_:{}, read_area_:{}.
- * @attention If you specify read_only is true, you can not execute 
+ * @attention If you specify read_only is true, you can not execute
  * transactional write operation in this transaction.
  * @return Status::OK Success.
- * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without 
+ * @return Status::WARN_ALREADY_BEGIN When it uses multiple tx_begin without
  * termination command, this is returned.
- * @return Status::WARN_ILLEGAL_OPERATION You executed this command using @a 
+ * @return Status::WARN_ILLEGAL_OPERATION You executed this command using @a
  * write_preserve and not using long tx mode.
  * @return Status::WARN_INVALID_ARGS User used storages not existed.
  */
@@ -386,13 +386,13 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
  * @return Status::OK Success.
- * @return Status::WARN_ILLEGAL_OPERATION You execute update on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute update on read only
  * mode. So this operation was canceled.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
  * @return Status::WARN_NOT_FOUND The record is not found.
- * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
+ * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
@@ -408,16 +408,16 @@ Status update(Token token, Storage storage, std::string_view key,
  * @param[in] val the value of the upserted record
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success
- * @return Status::WARN_ILLEGAL_OPERATION You execute upsert on read only 
+ * @return Status::WARN_ILLEGAL_OPERATION You execute upsert on read only
  * mode. So this operation was canceled.
- * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not 
+ * @return Status::WARN_INVALID_ARGS You tried to write to an area that was not
  * wp in batch mode.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
- * @return Status::WARN_NOT_BEGIN The transaction was not begun. 
- * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation 
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
+ * @return Status::WARN_STORAGE_NOT_FOUND The target storage of this operation
  * is not found.
- * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because 
+ * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because
  * this tx is long tx and didn't execute wp for @a storage.
  */
 Status upsert(Token token, Storage storage, std::string_view key,
@@ -431,20 +431,20 @@ Status upsert(Token token, Storage storage, std::string_view key,
 
 /**
  * @brief acquire transaction state handle.
- * @param[in] token The token of the transaction pointed to by the handle you 
+ * @param[in] token The token of the transaction pointed to by the handle you
  * want to acquire.
  * @param[out] handle The acquired handle.
- * @attention acquire_tx_state_handle and release_tx_state_handle should be 
- * called together. If you call one side more than other side, warning will 
+ * @attention acquire_tx_state_handle and release_tx_state_handle should be
+ * called together. If you call one side more than other side, warning will
  * be returned.
  * @pre The transaction linked @a token already executed @a tx_begin api.
  * @post Call release_tx_state_handle using @a handle.
  * @return Status::OK success.
  * @return Status::WARN_ALREADY_EXISTS This api was already called for this tx.
  * It updates @a handle by existing one.
- * @return Status::WARN_NOT_BEGIN The tx linked this session is not begun. So 
+ * @return Status::WARN_NOT_BEGIN The tx linked this session is not begun. So
  * it can't acquire state handle.
- * @return Status::WARN_INVALID_ARGS If you call this api with using invalid 
+ * @return Status::WARN_INVALID_ARGS If you call this api with using invalid
  * @a token, this call returns this status.
  */
 Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
@@ -452,11 +452,11 @@ Status acquire_tx_state_handle(Token token, TxStateHandle& handle);
 /**
  * @brief release transaction state handle.
  * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
- * @attention acquire_tx_state_handle and release_tx_state_handle should be 
- * called together. If you call one side more than other side, warning will 
+ * @attention acquire_tx_state_handle and release_tx_state_handle should be
+ * called together. If you call one side more than other side, warning will
  * be returned.
  * @return Status::OK success.
- * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid 
+ * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid
  * handle @a handle, this call returns this status.
  */
 Status release_tx_state_handle(TxStateHandle handle);
@@ -466,7 +466,7 @@ Status release_tx_state_handle(TxStateHandle handle);
  * @param[in] handle The acquired handle by @a acquire_tx_state_handle.
  * @param[out] out The acquired status by this call.
  * @return Status::OK success.
- * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid 
+ * @return Status::WARN_INVALID_HANDLE If you call this api with using invalid
  * handle @a handle, this call returns this status.
  */
 Status check_tx_state(TxStateHandle handle, TxState& out);
@@ -476,7 +476,7 @@ Status check_tx_state(TxStateHandle handle, TxState& out);
  * @pre This must be called between tx begin and termination (commit/abort).
  * If you don't save this rule, it is undefined behavior.
  * @param[in] token The token of the transaction.
- * @param[out] out whether the ltx has highest priority. If this is true, the 
+ * @param[out] out whether the ltx has highest priority. If this is true, the
  * transaction has highest priority.
  * @return Status::OK success.
  * @return Status::WARN_NOT_BEGIN The transaction is not began.
@@ -491,7 +491,7 @@ Status check_ltx_is_highest_priority(Token token, bool& out);
 
 /**
  * @brief Get the datastore object which is used by shirakami engine.
- * @return void* 
+ * @return void*
  */
 void* get_datastore();
 

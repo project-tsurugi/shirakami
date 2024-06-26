@@ -46,7 +46,7 @@ private:
 
 TEST_F(long_scan_upsert_test, reading_higher_priority_wp) { // NOLINT
     /**
-     * prepare data and test search on higher priority WP 
+     * prepare data and test search on higher priority WP
      * (causing WARN_PREMATURE)
      */
     Storage st{};

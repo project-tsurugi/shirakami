@@ -118,11 +118,11 @@ else ()
           "tsurugi_issues/*.cpp"
           "tx_id/*.cpp"
           )
-  
+
   file (GLOB WAITING_BYPASS_TEST_SOURCES
         "concurrency_control/waiting_bypass/*.cpp"
   )
-  
+
   if (BUILD_PWAL)
     file (GLOB LOGGING_TEST_SOURCES
           "datastore/*.cpp"
@@ -145,7 +145,7 @@ register_tests(
         SOURCES ${CC_TEST_SOURCES}
         TEST_LABELS "CC"
 )
-  
+
 if (BUILD_ONLY_WD_TESTS)
 else ()
   register_tests(
@@ -160,7 +160,7 @@ else ()
           SOURCES ${WAITING_BYPASS_TEST_SOURCES}
           TEST_LABELS "WAITING_BYPASS"
   )
-  
+
   if (BUILD_PWAL)
     register_tests(
             TARGET shirakami

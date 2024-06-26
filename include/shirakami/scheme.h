@@ -60,7 +60,7 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
  * OK is success return code.
  * WARN_... is no problem for extra progressing due to work but last command
  * was canceled.
- * ERR_... is problem for extra progressing so it was executed abort command 
+ * ERR_... is problem for extra progressing so it was executed abort command
  * internally.
  * INTERNAL_BEGIN is a boundary between public status and internal status.
  * INTERNAL_WARN .. is return code for internal implements.
@@ -69,20 +69,20 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
 enum class Status : std::int32_t {
     /**
      * @brief Warning.
-     * @details When it uses multiple tx_begin without termination command, 
+     * @details When it uses multiple tx_begin without termination command,
      * this is returned.
      */
     WARN_ALREADY_BEGIN = -1000,
     /**
      * @brief Warning.
-     * @details The transaction tried to insert, but failed due to concurrent 
+     * @details The transaction tried to insert, but failed due to concurrent
      * insert.
      */
     WARN_ALREADY_EXISTS,
     /**
      * @brief Warning.
-     * @details When init function is called more than twice without fin, this 
-     * status code is returned. This is for blocking invalid multiple 
+     * @details When init function is called more than twice without fin, this
+     * status code is returned. This is for blocking invalid multiple
      * initialization.
      */
     WARN_ALREADY_INIT,
@@ -106,7 +106,7 @@ enum class Status : std::int32_t {
     WARN_CONCURRENT_INSERT,
     /**
      * @brief Warning.
-     * @details The transaction failed operation due to concurrent update 
+     * @details The transaction failed operation due to concurrent update
      * operation.
      */
     WARN_CONCURRENT_UPDATE,
@@ -117,7 +117,7 @@ enum class Status : std::int32_t {
     WARN_CONFLICT_ON_WRITE_PRESERVE,
     /**
      * @brief Warning.
-     * @details This means that you executed an illegal operation. For example, 
+     * @details This means that you executed an illegal operation. For example,
      * invalid combinations about arguments.
      */
     WARN_ILLEGAL_OPERATION,
@@ -138,13 +138,13 @@ enum class Status : std::int32_t {
     WARN_INVALID_KEY_LENGTH,
     /**
      * @brief Warning.
-     * @details The limits of number of concurrent open_scan without close_scan 
+     * @details The limits of number of concurrent open_scan without close_scan
      * at the tx.
     */
     WARN_MAX_OPEN_SCAN,
     /**
      * @brief Warning
-     * @details The status that the user calls api which needs tx_begin and 
+     * @details The status that the user calls api which needs tx_begin and
      * some operations.
      */
     WARN_NOT_BEGIN,
@@ -155,27 +155,27 @@ enum class Status : std::int32_t {
     WARN_NOT_FOUND,
     /**
      * @brief Warning
-     * @details 
+     * @details
      * @a leave : If the session is already ended. @n
      */
     WARN_NOT_IN_A_SESSION,
     /**
      * @brief Warning
-     * @details If it calls fin function without init, 
+     * @details If it calls fin function without init,
      * this status is returned.
      */
     WARN_NOT_INIT,
     /**
      * @brief Warning
-     * @details When a long tx mode's transaction tries to start 
-     * an operation, the status is returned if it is not yet 
+     * @details When a long tx mode's transaction tries to start
+     * an operation, the status is returned if it is not yet
      * time to start.
      */
     WARN_PREMATURE,
     /**
      * @brief Warning
      * @details
-     * @a open_scan : The scan could find some records but could not preserve 
+     * @a open_scan : The scan could find some records but could not preserve
      * result due to capacity limitation. @n
      * @a read_from_scan : It have read all records in range of open_scan. @n
      */
@@ -197,7 +197,7 @@ enum class Status : std::int32_t {
     WARN_WAITING_FOR_OTHER_TX,
     /**
      * @brief Warning
-     * @details If the long mode transaction tries to write to some area 
+     * @details If the long mode transaction tries to write to some area
      * without wp, this code will be returned.
      */
     WARN_WRITE_WITHOUT_WP,
@@ -230,7 +230,7 @@ enum class Status : std::int32_t {
     ERR_KVS,
     /**
      * @brief Error
-     * @details The error shows the long transaction execute read for the 
+     * @details The error shows the long transaction execute read for the
      * storage included read negative list.
      */
     ERR_READ_AREA_VIOLATION,

@@ -33,7 +33,7 @@ public:
     static constexpr Storage sequence_storage{UINT64_MAX - 3};
 
     /**
-     * @brief Identifier for internal development to express no read for read 
+     * @brief Identifier for internal development to express no read for read
      * positive list
     */
     static constexpr Storage dummy_storage{UINT64_MAX - 4};
@@ -69,8 +69,8 @@ public:
     }
 
     /**
-     * @brief 
-     * @pre The caller of this func already got write lock about 
+     * @brief
+     * @pre The caller of this func already got write lock about
      * mtx_key_handle_map_.
      * @param[in] st The target handle
      * @param[out] out The binary string of the target handle
@@ -149,8 +149,8 @@ public:
 
     /**
      * @brief Create a storage object
-     * @param[in] storage 
-     * @param[in] options 
+     * @param[in] storage
+     * @param[in] options
      * @return Status::OK success.
      */
     static Status register_storage(Storage storage,
@@ -188,7 +188,7 @@ public:
 
     /**
      * @brief Get list of storage key
-     * @param[out] out 
+     * @param[out] out
      * @return Status::OK success including out is empty.
      */
     static Status list_storage(std::vector<std::string>& out) {
@@ -213,7 +213,7 @@ private:
 
     /**
      * @brief key handle map
-     * @details key is storage's key given by outside. value is storage id 
+     * @details key is storage's key given by outside. value is storage id
      * given by internally.
      */
     static inline std::unordered_map<std::string, Storage> // NOLINT

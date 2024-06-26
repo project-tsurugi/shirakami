@@ -22,7 +22,7 @@ class ongoing_tx {
 public:
     /**
       * @brief tx_info_elem_type. first is epoch, second is batch id.
-      * 
+      *
       */
     using tx_info_elem_type = std::tuple<epoch::epoch_t, std::size_t, session*>;
     static constexpr std::size_t index_epoch = 0;
@@ -33,8 +33,8 @@ public:
     static bool exist_id(std::size_t id);
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param[in] ti This tx's session information.
      * @param[out] Status::OK success to check wait
      * @param[out] Status::ERR_CC early validation and read upper bound violation
@@ -45,14 +45,14 @@ public:
 
     /**
      * @brief Get the mtx object
-     * @return std::shared_mutex& 
+     * @return std::shared_mutex&
      */
     static std::shared_mutex& get_mtx() { return mtx_; }
 
     /**
      * @brief Get the tx info object
      * @details for developping. not use for core codes.
-     * @return tx_info_type& 
+     * @return tx_info_type&
      */
     static tx_info_type& get_tx_info() { return tx_info_; }
 

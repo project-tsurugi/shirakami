@@ -59,22 +59,22 @@ do
       exit 1
     fi
     rm $result
-  
+
     echo "#tuple num, avg-tps, min-tps, max-tps, avg-ar, min-ar, max-ar, avg-camiss, min-camiss, max-camiss" >> $result
     echo "#sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -ops $ops -record $record -rratio $rratio -skew $skew -thread $thread -val_length $val_length" >> $result
-    
+
     for ((thread=28; thread<=112; thread+=28))
     do
       echo "sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -ops $ops -record $record -rratio $rratio -skew $skew -thread $thread -val_length $val_length"
       echo "Thread number $thread"
-      
+
       sumTH=0
       sumAR=0
       sumCA=0
       maxTH=0
       maxAR=0
       maxCA=0
-      minTH=0 
+      minTH=0
       minAR=0
       minCA=0
       for ((i = 1; i <= epoch; ++i))
@@ -83,7 +83,7 @@ do
       date
           sudo perf stat -e cache-misses,cache-references -o ana.txt numactl --interleave=all ./bench/ycsb -cpumhz $cpumhz -duration $duration -key_length $key_length -ops $ops -record $record -rratio $rratio -skew $skew -thread $thread -val_length $val_length > exp.txt
         fi
-      
+
         tmpTH=`grep throughput ./exp.txt | awk '{print $2}'`
         tmpAR=`grep abort_rate ./exp.txt | awk '{print $2}'`
         tmpCA=`grep cache-misses ./ana.txt | awk '{print $4}'`
@@ -91,7 +91,7 @@ do
         sumAR=`echo "scale=4; $sumAR + $tmpAR" | bc | xargs printf %.4f`
         sumCA=`echo "$sumCA + $tmpCA" | bc`
         echo "tmpTH: $tmpTH, tmpAR: $tmpAR, tmpCA: $tmpCA"
-      
+
         if test $i -eq 1 ; then
           maxTH=$tmpTH
           maxAR=$tmpAR
@@ -100,7 +100,7 @@ do
           minAR=$tmpAR
           minCA=$tmpCA
         fi
-      
+
         flag=`echo "$tmpTH > $maxTH" | bc`
         if test $flag -eq 1 ; then
           maxTH=$tmpTH
@@ -113,7 +113,7 @@ do
         if test $flag -eq 1 ; then
           maxCA=$tmpCA
         fi
-      
+
         flag=`echo "$tmpTH < $minTH" | bc`
         if test $flag -eq 1 ; then
           minTH=$tmpTH

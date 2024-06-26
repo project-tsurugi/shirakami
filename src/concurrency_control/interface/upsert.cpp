@@ -48,7 +48,7 @@ static inline Status insert_process(session* const ti, Storage st,
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**
-                 * This This transaction is confirmed to be aborted 
+                 * This This transaction is confirmed to be aborted
                  * because the previous scan was destroyed by an insert
                  * by another transaction.
                  */
@@ -101,9 +101,9 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             }
 
             /**
-             * If the target record has been deleted, change it to insert. 
-             * The key needs to be present for later read own writes since the 
-             * scan operation is performed on an existing key and may look up 
+             * If the target record has been deleted, change it to insert.
+             * The key needs to be present for later read own writes since the
+             * scan operation is performed on an existing key and may look up
              * the local write set with that key.
              */
             tid_word dummy_tid{};

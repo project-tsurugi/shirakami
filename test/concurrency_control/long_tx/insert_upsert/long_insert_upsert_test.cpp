@@ -131,7 +131,7 @@ TEST_F(long_insert_upsert_test, concurrent_upsert_tx_insert_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));             // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2));         // NOLINT
                                                    /**
-     * If write insert is at same epoch and insert is new in the order, the 
+     * If write insert is at same epoch and insert is new in the order, the
      * last state is insertd.
      */
 
@@ -208,7 +208,7 @@ TEST_F(long_insert_upsert_test,                     // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));              // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));              // NOLINT
                                                     /**
-     * If these is at different epoch, s2 didn't do forwarding and didn't find 
+     * If these is at different epoch, s2 didn't do forwarding and didn't find
      * read info..
      */
 

@@ -41,8 +41,8 @@ public:
     using read_set_for_stx_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     /**
-     * map <key, value>: key is table info. value is tuple information: 
-     * overtaken ltxs, read information compressed to range information, 
+     * map <key, value>: key is table info. value is tuple information:
+     * overtaken ltxs, read information compressed to range information,
      * 1: left key, 2: left point info, 3: right key, 4: right point info, 5:
      * whether it is initialize.
      */
@@ -132,8 +132,8 @@ public:
 
     /**
      * @brief extract wait_for from overtaken_ltx_set_.
-     * 
-     * @return std::set<std::size_t> 
+     *
+     * @return std::set<std::size_t>
      */
     std::set<std::size_t> extract_wait_for();
 
@@ -761,15 +761,15 @@ private:
     scan_handler scan_handle_;
 
     /**
-     * @brief This variable shows whether this session (transaction (tx)) is processing 
+     * @brief This variable shows whether this session (transaction (tx)) is processing
      * public api now.
      * @details Process from public api of tx update @a valid_epoch_.
      * But that is not update when public api of tx is not called.
-     * So if public api of tx is not called for a long time, 
-     * @a valid_epoch_ is also not updated. And if @a valid_epoch_ is not 
-     * update for a long time, long tx can not find to be able to start 
+     * So if public api of tx is not called for a long time,
+     * @a valid_epoch_ is also not updated. And if @a valid_epoch_ is not
+     * update for a long time, long tx can not find to be able to start
      * process because the short tx may be serialized before the long tx.
-     * To resolve that situation, it use this variable for background thread 
+     * To resolve that situation, it use this variable for background thread
      * to update @a valid_epoch_  automatically.
      */
     std::atomic<std::size_t> operating_{0};
@@ -783,7 +783,7 @@ private:
 
     /**
      * @brief It uses for strand thread. All data access api can run concurrently
-     *  and the state of termination is confused. So that use this mutex for 
+     *  and the state of termination is confused. So that use this mutex for
      * termination and find consistency.
     */
     std::mutex mtx_termination_{};
@@ -831,12 +831,12 @@ private:
 
     /**
      * @brief This is forwarding as ltx
-     * 
+     *
     */
     bool is_forwarding_{false};
 
     /**
-     * @brief The requested transaction commit status which is/was decided 
+     * @brief The requested transaction commit status which is/was decided
      * shirakami manager.
      * @note It may be accessed by user and shirakami background worker.
      */
@@ -863,24 +863,24 @@ private:
     std::shared_mutex mtx_overtaken_ltx_set_;
 
     /**
-     * @brief the temporary serialization epoch for ltx. 
+     * @brief the temporary serialization epoch for ltx.
      * @details at the end of successful commit processing, this is the serialization epoch.
      */
     std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
 
     /**
      * @brief local wp set.
-     * @details If this session processes long transaction in a long tx mode and 
-     * executes transactional write operations, it is for checking whether the 
-     * target of the operation was write preserved properly by use this 
+     * @details If this session processes long transaction in a long tx mode and
+     * executes transactional write operations, it is for checking whether the
+     * target of the operation was write preserved properly by use this
      * infomation.
      */
     wp_set_type wp_set_{};
 
     /**
-     * @brief The max (created) epoch in the versions which was read by this 
+     * @brief The max (created) epoch in the versions which was read by this
      * long tx.
-     * @details When a transaction attempts a preamble, it checks this value 
+     * @details When a transaction attempts a preamble, it checks this value
      * to determine if it is breaking its boundaries.
      */
     std::atomic<epoch::epoch_t> read_version_max_epoch_{};
@@ -945,13 +945,13 @@ public:
 private:
     /**
       * @brief The table holding session information.
-      * @details There are situations where you want to check table information 
-      * and register / delete entries in the table exclusively. When using 
-      * exclusive lock, contention between readers is useless. When the reader 
-      * writer lock is used, the cache is frequently polluted by increasing or 
-      * decreasing the reference count. Therefore, lock-free exclusive 
+      * @details There are situations where you want to check table information
+      * and register / delete entries in the table exclusively. When using
+      * exclusive lock, contention between readers is useless. When the reader
+      * writer lock is used, the cache is frequently polluted by increasing or
+      * decreasing the reference count. Therefore, lock-free exclusive
       * arbitration is performed for fixed-length tables.
-      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number 
+      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number
       * of sessions.
       */
     static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
@@ -967,12 +967,12 @@ private:
  * @return Status::WARN_ILLEGAL_OPERATION The @a token is not long transaction
  * or didn't request commit.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
- * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait 
- * for finishing commit by other high priority tx. You must execute check_commit 
- * to check result. If you use other api (ex. data access api), it causes 
- * undefined behavior. 
+ * @return Status::WARN_WAITING_FOR_OTHER_TX The long transaction needs wait
+ * for finishing commit by other high priority tx. You must execute check_commit
+ * to check result. If you use other api (ex. data access api), it causes
+ * undefined behavior.
  * @note If this function returns OK or ERR_..., the transaction finished. After
- * that or calling for not ltx, the result of calling this (finished) 
+ * that or calling for not ltx, the result of calling this (finished)
  * transaction is undefined behavior.
  */
 Status check_commit(Token token); // NOLINT

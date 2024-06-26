@@ -21,7 +21,7 @@ namespace shirakami {
 class sequence {
 public:
     /**
-     * @details epoch::epoch_t is durable epoch, std::tuple<SequenceVersion, 
+     * @details epoch::epoch_t is durable epoch, std::tuple<SequenceVersion,
      * SequenceValue> is the pair information of that.
      */
     using value_type = std::map<epoch::epoch_t,
@@ -75,36 +75,36 @@ public:
     // connect public api
     /**
      * @brief Create a sequence object
-     * @param[out] id 
-     * @return Status 
+     * @param[out] id
+     * @return Status
      */
     static Status create_sequence(SequenceId* id);
 
     /**
      * @brief It updates sequence object.
-     * @param[in] token 
-     * @param[in] id 
-     * @param[in] version 
-     * @param[in] value 
-     * @return Status 
+     * @param[in] token
+     * @param[in] id
+     * @param[in] version
+     * @param[in] value
+     * @return Status
      */
     static Status update_sequence(Token token, SequenceId id,
                                   SequenceVersion version, SequenceValue value);
 
     /**
      * @brief It reads sequence object.
-     * @param[in] id 
-     * @param[out] version 
-     * @param[out] value 
-     * @return Status 
+     * @param[in] id
+     * @param[out] version
+     * @param[out] value
+     * @return Status
      */
     static Status read_sequence(SequenceId id, SequenceVersion* version,
                                 SequenceValue* value);
 
     /**
      * @brief It deletes sequence object.
-     * @param[in] id 
-     * @return Status 
+     * @param[in] id
+     * @return Status
      */
     static Status delete_sequence(SequenceId id);
 

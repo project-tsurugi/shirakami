@@ -45,7 +45,7 @@ private:
     type_session_id session_id_;
 
     /**
-     * @brief The lower information made by session id and tx counter of the 
+     * @brief The lower information made by session id and tx counter of the
      * session.
      */
     type_lower_info lower_info_;

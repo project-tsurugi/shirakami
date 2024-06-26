@@ -140,7 +140,7 @@ TEST_F(long_delete_upsert_test, concurrent_upsert_tx_delete_tx) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));    // NOLINT
     ASSERT_EQ(Status::OK, commit(s2));    // NOLINT
                                           /**
-     * If write delete is at same epoch and delete is new in the order, the 
+     * If write delete is at same epoch and delete is new in the order, the
      * last state is deleted.
      */
 

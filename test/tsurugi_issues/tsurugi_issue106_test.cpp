@@ -43,9 +43,9 @@ TEST_F(tsurugi_issue106, simple1) { // NOLINT
     /**
      * Tx1. delete all. scan and delete but the workload is known as no record
      * exist.
-     * 
+     *
      * Tx2. Insert some key twice. The second see already exist and do user abort.
-     * 
+     *
      * Tx3. full scan and commit.
      */
     Storage st{};

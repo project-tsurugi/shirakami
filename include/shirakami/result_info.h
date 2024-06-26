@@ -20,17 +20,17 @@ enum class reason_code : std::int32_t {
      */
     UNKNOWN,
     /**
-     * @brief You tried to delete a nonexistent record. If the record remains 
+     * @brief You tried to delete a nonexistent record. If the record remains
      * non-existent, delete operations on that record will continue to fail.
      */
     KVS_DELETE,
     /**
-     * @brief You tried to insert on a key that already exists. If that key 
+     * @brief You tried to insert on a key that already exists. If that key
      * continues to exist, your insert operation will continue to fail.
      */
     KVS_INSERT,
     /**
-     * @brief You tried to update a record with a nonexistent key. If the 
+     * @brief You tried to update a record with a nonexistent key. If the
      * record remains non-existent, your update operation will continue to fail.
      */
     KVS_UPDATE,
@@ -43,8 +43,8 @@ enum class reason_code : std::int32_t {
      */
     CC_LTX_READ_AREA_VIOLATION,
     /**
-     * @brief The low priority ltx found high priority ltx's write preserve, 
-     * and tried forwarding at commit phase but the forwarding break old own 
+     * @brief The low priority ltx found high priority ltx's write preserve,
+     * and tried forwarding at commit phase but the forwarding break old own
      * read.
      */
     CC_LTX_READ_UPPER_BOUND_VIOLATION,
@@ -187,9 +187,9 @@ private:
     bool has_storage_name_info_{false};
 
     /**
-     * @brief The reason key. reason_code::KVS_DELETE, KVS_INSERT, KVS_UPDATE, 
-     * CC_LTX_PHANTOM_AVOIDANCE, CC_LTX_WRITE_COMMITTED_READ_PROTECTION, 
-     * (partial) CC_OCC_PHANTOM_AVOIDANCE, CC_OCC_READ_VERIFY log this 
+     * @brief The reason key. reason_code::KVS_DELETE, KVS_INSERT, KVS_UPDATE,
+     * CC_LTX_PHANTOM_AVOIDANCE, CC_LTX_WRITE_COMMITTED_READ_PROTECTION,
+     * (partial) CC_OCC_PHANTOM_AVOIDANCE, CC_OCC_READ_VERIFY log this
      * information.
      */
     std::string key_{};

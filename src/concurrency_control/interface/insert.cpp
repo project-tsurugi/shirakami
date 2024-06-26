@@ -49,7 +49,7 @@ static inline Status insert_process(session* const ti, Storage st,
             Status check_node_set_res{ti->update_node_set(nvp)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**
-                  * This This transaction is confirmed to be aborted 
+                  * This This transaction is confirmed to be aborted
                   * because the previous scan was destroyed by an insert
                   * by another transaction.
                   */

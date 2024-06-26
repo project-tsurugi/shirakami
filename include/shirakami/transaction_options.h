@@ -17,7 +17,7 @@ public:
 
     enum class transaction_type : std::int32_t {
         /**
-         * @brief It is optimized for long transaction which its abort rate is 
+         * @brief It is optimized for long transaction which its abort rate is
          * over 99.9 % when it executes by short mode.
         */
         LONG,
@@ -26,7 +26,7 @@ public:
         */
         SHORT,
         /**
-         * @brief It is optmized for read only transaction. It reads slightly 
+         * @brief It is optmized for read only transaction. It reads slightly
          * old safe snapshot without verify. It is also LTX and it must wait 1
          * epoch to start at least.
         */
@@ -118,14 +118,14 @@ private:
     /**
      * @brief Transaction type. There are three types: SHORT, LONG, READ_ONLY.
      * @details
-     * In SHORT, the transaction is executed as an occ transaction, and an occ 
+     * In SHORT, the transaction is executed as an occ transaction, and an occ
      * transaction is suitable for short transaction.
      * In LONG, the transaction is executed as yatsumine protocol being treated
-     * better than SHORT. Occ transactions is weak for contentions. If long 
-     * transaction is executed as occ protocol, the transaction is hard to win 
-     * conflict resolutions. In the case, You can use LONG(yatsumine) for the 
+     * better than SHORT. Occ transactions is weak for contentions. If long
+     * transaction is executed as occ protocol, the transaction is hard to win
+     * conflict resolutions. In the case, You can use LONG(yatsumine) for the
      * long transaction.
-     * In READ_ONLY, the transaction is executed as some old transaction(*1), 
+     * In READ_ONLY, the transaction is executed as some old transaction(*1),
      * and it can success definitely due to (*1).
      */
     transaction_type transaction_type_{transaction_type::SHORT};
@@ -139,10 +139,10 @@ private:
 
     /**
      * @brief read area
-     * @details The storage list information that the area which may be read by 
+     * @details The storage list information that the area which may be read by
      * this tx and the list that the area which must not be read by this tx.
      * This information is used for optimizations.
-     * If you begins transaction with this information, empty positive / 
+     * If you begins transaction with this information, empty positive /
      * negative list is invalid(i.e. not used).
      */
     read_area read_area_{};

@@ -307,7 +307,7 @@ private:
 
 /**
  * @brief It is used for registering read information.
- * 
+ *
  */
 class local_read_set_for_ltx {
 public:

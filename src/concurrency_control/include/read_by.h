@@ -1,12 +1,12 @@
 /**
  * @file read_by.h
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2022-01-20
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #pragma once
@@ -29,14 +29,14 @@ public:
 
     /**
      * @brief get equal epoch's read_by
-     * @param[in] token 
+     * @param[in] token
      * @return body_elem_type
      */
     bool is_exist(Token token);
 
     /**
      * @brief push element and gc.
-     * @param[in] elem 
+     * @param[in] elem
      */
     void push(body_elem_type elem);
 
@@ -59,7 +59,7 @@ class range_read_by_long {
 public:
     /**
      * body element type
-     * 0: long tx's epoch. 1: long tx's id. 2: left key. 3: left 
+     * 0: long tx's epoch. 1: long tx's id. 2: left key. 3: left
      * endpoint property. 4: right key. 5: right endpoint property.
      */
     static constexpr std::size_t index_epoch = 0;
@@ -77,7 +77,7 @@ public:
 
     /**
      * @brief push element and gc.
-     * @param[in] elem 
+     * @param[in] elem
      */
     void push(body_elem_type const& elem);
 
@@ -90,9 +90,9 @@ class point_read_by_short {
 public:
     /**
      * @brief Get the partial elements
-     * @param epoch 
-     * @return true found  
-     * @return false not found  
+     * @param epoch
+     * @return true found
+     * @return false not found
      */
     bool find(epoch::epoch_t epoch);
 
@@ -116,9 +116,9 @@ class range_read_by_short {
 public:
     /**
      * @brief Get the partial elements
-     * @param epoch 
-     * @return true found  
-     * @return false not found  
+     * @param epoch
+     * @return true found
+     * @return false not found
      */
     bool find(epoch::epoch_t epoch);
 

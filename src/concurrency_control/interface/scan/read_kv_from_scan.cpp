@@ -181,7 +181,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 return Status::OK;
             }
             /**
-              * else: fail to do optimistic read latest version. retry version 
+              * else: fail to do optimistic read latest version. retry version
               * function.
               * It may find null version.
               */

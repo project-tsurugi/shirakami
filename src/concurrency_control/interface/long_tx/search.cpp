@@ -69,9 +69,9 @@ RETRY:
             return Status::OK;
         }
         /**
-         * else: fail to do optimistic read latest version. retry version 
+         * else: fail to do optimistic read latest version. retry version
          * function.
-         * The latest version may be the version which this tx should read, 
+         * The latest version may be the version which this tx should read,
          * so this tx must wait unlocking because it may read invalid state with
          * locking.
          */

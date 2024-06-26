@@ -5,9 +5,9 @@
 namespace shirakami {
 /**
      * @brief It prints diagnostics about transaction execute engine about below.
-     * transaction state for all running tx. number of running tx. Waited 
+     * transaction state for all running tx. number of running tx. Waited
      * transactions by living each LTX.
-     * @param out 
+     * @param out
      */
 void print_diagnostics(std::ostream& out);
 

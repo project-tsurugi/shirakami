@@ -142,7 +142,7 @@ Status session::find_high_priority_short(bool for_check) const {
                 itr.get_tx_began() &&
                 /**
                  * If operating false and this ltx can start in the viewpoint
-                 * of epoch, stx after this operation must be serialized after 
+                 * of epoch, stx after this operation must be serialized after
                  * this ltx.
                  */
                 // transaction order

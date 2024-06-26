@@ -77,10 +77,10 @@ Status tx_begin(session* const ti) {
             /**
              * No ltx case:
              * If this set from cc_safe_ss_epoch, next epoch update, epoch
-             * manager may check this tx as oldest ltx and not update 
+             * manager may check this tx as oldest ltx and not update
              * cc_safe_ss_epoch. If this is chain, cc_safe_ss_epoch will not be
              * updated.
-             * 
+             *
              */
             ti->set_valid_epoch(ep);
         } else {

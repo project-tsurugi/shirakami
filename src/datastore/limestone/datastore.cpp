@@ -44,7 +44,7 @@ void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
 
     /**
-     * The cursor point the first entry at calling first next(). 
+     * The cursor point the first entry at calling first next().
      */
     std::vector<Storage> st_list{};
 
@@ -122,9 +122,9 @@ void recovery_from_datastore() {
             auto ret = shirakami::storage::exist_storage(st2);
             if (ret == Status::OK) {
                 /**
-                 * There must be normal entry for st2 and it was already 
+                 * There must be normal entry for st2 and it was already
                  * processed.
-                 * Try to create in-memory entry about storage info and update 
+                 * Try to create in-memory entry about storage info and update
                  * key_handle_map.
                  */
                 put_data(storage::meta_storage, key, new_value);
@@ -141,7 +141,7 @@ void recovery_from_datastore() {
                                                                 {id, payload});
                 if (ret != Status::OK) {
                     /**
-                     * This process was done because 
+                     * This process was done because
                      * shirakami::storage::exist_storage(st2) said not exist,
                      * but it can't register_storage.
                      */
@@ -152,8 +152,8 @@ void recovery_from_datastore() {
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     /**
-                     * This process was done because 
-                     * shirakami::register_storage(st2, {id, payload}) was 
+                     * This process was done because
+                     * shirakami::register_storage(st2, {id, payload}) was
                      * succeeded but it can't create entry of this map.
                      */
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix

@@ -32,14 +32,14 @@ inline Storage storage{}; // NOLINT
 
 /**
  * @brief For ycsb_mb_nc.cpp
- * @details If this is true, All worker threads access separate storage. 
+ * @details If this is true, All worker threads access separate storage.
  * Therefore, there is no conflict.
  */
 inline bool use_separate_storage{false}; // NOLINT
 
 /**
  * @brief For ycsb_mb_nc.cpp
- * @details If this is true, All worker threads access separate storage. 
+ * @details If this is true, All worker threads access separate storage.
  * Therefore, there is no conflict.
  */
 alignas(CACHE_LINE_SIZE) inline std::vector< // NOLINT

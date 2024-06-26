@@ -31,7 +31,7 @@ void extract_higher_priori_ltx_info(session* const ti,
         std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
         /**
-          * If this is the first forwarding against this table, 
+          * If this is the first forwarding against this table,
           * initialize read range.
           */
         auto& target_set =
@@ -101,7 +101,7 @@ void extract_higher_priori_ltx_info(session* const ti,
         std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
         /**
-         * If this is the first forwarding against this table, 
+         * If this is the first forwarding against this table,
          * initialize read range.
          */
         auto& target_set =

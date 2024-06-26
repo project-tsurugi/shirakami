@@ -132,10 +132,10 @@ Status check_unhooking_key_state(tid_word check) {
 
 /**
  * @brief check timestamp of the key whether it can unhook.
- * 
- * @param[in] check 
+ *
+ * @param[in] check
  * @return Status::OK it can unhook from the point of view of timestamp.
- * @return Status::INTERNAL_WARN_PREMATURE it can't unhook from the point of 
+ * @return Status::INTERNAL_WARN_PREMATURE it can't unhook from the point of
  * view of timestamp.
  */
 inline Status check_unhooking_key_ts(tid_word check) {
@@ -150,12 +150,12 @@ inline Status check_unhooking_key_ts(tid_word check) {
 }
 
 /**
- * @brief check whether it can unhook the key. If check was passed, it 
+ * @brief check whether it can unhook the key. If check was passed, it
  * executes unhooking.
- * @param[in] st 
- * @param[in] rec_ptr 
+ * @param[in] st
+ * @param[in] rec_ptr
  * @return Status::OK unhooked key
- * @return Status::INTERNAL_WARN_CONCURRENT_INSERT the key is inserted 
+ * @return Status::INTERNAL_WARN_CONCURRENT_INSERT the key is inserted
  * concurrently.
  * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
  */

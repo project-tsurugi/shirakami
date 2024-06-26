@@ -13,7 +13,7 @@ namespace shirakami {
 
 /**
  * @brief operation type for log entry
- * 
+ *
  */
 enum class log_operation : std::uint32_t {
     UNKNOWN = 0U,
@@ -85,7 +85,7 @@ struct log_record {
 
     /**
      * @brief operation type for log record entry.
-     * 
+     *
      */
     log_operation operation_{}; // NOLINT
 
@@ -96,19 +96,19 @@ struct log_record {
 
     /**
      * @brief value part of the log record
-     * 
+     *
      */
     std::string_view value_{}; // NOLINT
 
     /**
      * @brief major version of the log record
-     * 
+     *
      */
     std::uint64_t major_version_{}; // NOLINT
 
     /**
      * @brief minor version of the log record
-     * 
+     *
      */
     std::uint64_t minor_version_{}; // NOLINT
 

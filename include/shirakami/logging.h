@@ -44,7 +44,7 @@ static constexpr std::int32_t log_info_gc_stats = 33;
 
 /**
  * @brief logging level constant for debug timing event information.
- * 
+ *
  */
 static constexpr std::int32_t log_debug_timing_event = 35;
 

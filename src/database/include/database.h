@@ -27,8 +27,8 @@ set_used_database_options(database_options const& dos) {
 
 /**
  * @brief Delete the all records in all tables.
- * @pre This function is called by a single thread and doesn't allow concurrent 
- * processing by other threads. 
+ * @pre This function is called by a single thread and doesn't allow concurrent
+ * processing by other threads.
  * This is not transactional operation.
  * @return Status::OK success
  */

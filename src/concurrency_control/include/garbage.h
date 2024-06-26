@@ -26,7 +26,7 @@ using stats_info_type =
 //================================================================================
 /**
  * @brief executor of garbage collection for versions and index.
- * @details Perform version pruning of GC based on the timestamp determined 
+ * @details Perform version pruning of GC based on the timestamp determined
  * by the manager.
  */
 [[maybe_unused]] inline std::thread cleaner; // NOLINT
@@ -75,7 +75,7 @@ using stats_info_type =
 // container for gc
 /**
  * @brief container of records which was unhooked from index.
- * First of elements is pointer to record. Second of elements is global epoch 
+ * First of elements is pointer to record. Second of elements is global epoch
  * of unhooking.
  */
 [[maybe_unused]] inline std::vector< // NOLINT
@@ -130,13 +130,13 @@ get_container_rec() {
 // timestamps
 //================================================================================
 /**
- * @brief The minimum epoch in which a valid transitional step has been 
+ * @brief The minimum epoch in which a valid transitional step has been
  * performed on all worker threads.
  */
 inline std::atomic<epoch::epoch_t> min_step_epoch_{epoch::initial_epoch};
 
 /**
- * @brief The minimum epoch of a batch transaction running on all worker 
+ * @brief The minimum epoch of a batch transaction running on all worker
  * threads.
  */
 inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
