@@ -49,7 +49,7 @@ target_link_libraries(shirakami
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Threads::Threads
         PRIVATE yakushima
-        PUBLIC atomic
+        PRIVATE atomic
         )
 
 if (BUILD_PWAL)

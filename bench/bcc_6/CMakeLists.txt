@@ -18,6 +18,7 @@ target_link_libraries(bcc_6
         PRIVATE ${tbb_prefix}tbbmalloc_proxy
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
+        PRIVATE atomic
         )
 
 target_include_directories(bcc_6
