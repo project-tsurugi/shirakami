@@ -142,6 +142,7 @@ register_tests(
           PRIVATE ${tbb_prefix}tbbmalloc
           PRIVATE ${tbb_prefix}tbbmalloc_proxy
           PRIVATE yakushima
+          PRIVATE atomic
         SOURCES ${CC_TEST_SOURCES}
         TEST_LABELS "CC"
 )
@@ -157,6 +158,7 @@ else ()
             PRIVATE ${tbb_prefix}tbbmalloc
             PRIVATE ${tbb_prefix}tbbmalloc_proxy
             PRIVATE yakushima
+            PRIVATE atomic
           SOURCES ${WAITING_BYPASS_TEST_SOURCES}
           TEST_LABELS "WAITING_BYPASS"
   )
@@ -171,6 +173,7 @@ else ()
               PRIVATE ${tbb_prefix}tbbmalloc
               PRIVATE ${tbb_prefix}tbbmalloc_proxy
               PRIVATE yakushima
+              PRIVATE atomic
             SOURCES ${LOGGING_TEST_SOURCES}
             TEST_LABELS "LOGGING"
     )

@@ -18,6 +18,7 @@ target_link_libraries(bcc_11
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
         PRIVATE yakushima
+        PRIVATE atomic
         )
 
 if (BUILD_PWAL)

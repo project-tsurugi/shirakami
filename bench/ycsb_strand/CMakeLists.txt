@@ -19,6 +19,7 @@ target_link_libraries(ycsb_strand
         PRIVATE Boost::filesystem
         PRIVATE Threads::Threads
         PRIVATE yakushima
+        PRIVATE atomic
         )
 
 if (BUILD_PWAL)
