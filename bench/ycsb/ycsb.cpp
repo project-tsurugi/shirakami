@@ -63,6 +63,7 @@ DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
 DEFINE_string(transaction_type, "short", "type of transaction.");      // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
+DEFINE_uint64(random_seed, 0, "random seed.");
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
@@ -197,6 +198,12 @@ static void load_flags() {
                    << "Length of val must be larger than 0.";
     }
 
+    if (!gflags::GetCommandLineFlagInfoOrDie("random_seed").is_default) {
+        printf("FLAGS_random_seed : %zu\n", FLAGS_random_seed); // NOLINT
+    } else {
+        printf("FLAGS_random_seed : (unset)\n"); // NOLINT
+    }
+
     printf("Fin load_flags()\n"); // NOLINT
 }
 
@@ -234,6 +241,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     // init work
 
     Xoroshiro128Plus rnd;
+    if (!gflags::GetCommandLineFlagInfoOrDie("random_seed").is_default) {
+        rnd.seed(FLAGS_random_seed + thid);
+    }
     FastZipf zipf(&rnd, FLAGS_skew, FLAGS_record);
     std::reference_wrapper<Result> myres = std::ref(res[thid]);
 

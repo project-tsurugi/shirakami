@@ -26,6 +26,11 @@ public:
         s.at(1) = splitMix64(s.at(0));
     }
 
+    void seed(std::uint64_t seed) {
+        s.at(0) = seed;
+        s.at(1) = splitMix64(seed);
+    }
+
     static uint64_t splitMix64(std::uint64_t seed) {    // NOLINT
         std::uint64_t z = (seed += 0x9e3779b97f4a7c15); // NOLINT
         z = (z ^ (z >> 30U)) * 0xbf58476d1ce4e5b9;      // NOLINT
