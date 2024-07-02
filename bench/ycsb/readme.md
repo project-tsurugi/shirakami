@@ -64,6 +64,9 @@ cd [/path/to/release_build]/bench/ycsb
 - `-val_length`
   - byte size of val.
   - default : `4`
+- `-random_seed`
+  - seed for the internal prng
+  - default : (using random value from another random number generator)
 
 ### Example
 - YCSB-A
