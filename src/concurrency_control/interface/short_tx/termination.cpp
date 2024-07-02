@@ -764,17 +764,6 @@ extern Status commit(session* const ti) {
     // This must be after cc commit and before log process
     ti->commit_sequence(ti->get_mrc_tid());
 
-    // flush log if need
-#if defined(PWAL)
-    auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
-    // think the wal buffer is empty due to background thread's work
-    if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
-        oldest_log_epoch != epoch::get_global_epoch()) {
-        // should flush
-        shirakami::lpwal::flush_log(static_cast<void*>(ti));
-    }
-#endif
-
     auto this_dm = epoch::get_global_epoch();
 #if defined(PWAL)
     {
@@ -794,6 +783,18 @@ extern Status commit(session* const ti) {
     ti->set_result(reason_code::UNKNOWN);
 
     ti->call_commit_callback(rc, {}, this_dm);
+
+    // flush log if need
+#if defined(PWAL)
+    auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
+    // think the wal buffer is empty due to background thread's work
+    if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
+        oldest_log_epoch != epoch::get_global_epoch()) {
+        // should flush
+        shirakami::lpwal::flush_log(static_cast<void*>(ti));
+    }
+#endif
+
     return Status::OK;
 }
 
