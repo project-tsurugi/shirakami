@@ -21,7 +21,7 @@ namespace shirakami {
  * @return true canceled
  * @return false not canceled
  */
-inline bool cancel_insert_if_tomb_stone(Record* rec_ptr, [[maybe_unused]] epoch::epoch_t e) {
+inline bool cancel_insert_if_tomb_stone(Record* rec_ptr) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
@@ -43,7 +43,7 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
-        cancel_insert_if_tomb_stone(wso->get_rec_ptr(), ti->get_step_epoch());
+        cancel_insert_if_tomb_stone(wso->get_rec_ptr());
         ti->get_write_set().erase(wso);
         // insert operation already registered read non-existence for ltx
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
@@ -58,8 +58,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
-        [[maybe_unused]] auto rc = cancel_insert_if_tomb_stone(
-                wso->get_rec_ptr(), ti->get_step_epoch());
+        auto rc = cancel_insert_if_tomb_stone(wso->get_rec_ptr());
         // escape info
         Storage st = wso->get_storage();
         Record* rec_ptr = wso->get_rec_ptr();
