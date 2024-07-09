@@ -70,7 +70,7 @@ Status commit_body(Token const token,                    // NOLINT
     }
 
     // log callback
-    ti->set_commit_callback(callback); // NOLINT
+    ti->set_commit_callback(std::move(callback)); // NOLINT
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
