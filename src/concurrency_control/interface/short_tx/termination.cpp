@@ -177,7 +177,7 @@ Status abort(session* ti) { // NOLINT
 }
 
 Status read_verify(session* ti, tid_word read_tid, tid_word check,
-                   const Record* const rec_ptr) {
+                   const Record* const rec_ptr, Storage storage) {
     if (
             // different tid
             read_tid.get_tid() != check.get_tid() ||
@@ -187,6 +187,18 @@ Status read_verify(session* ti, tid_word read_tid, tid_word check,
             (check.get_lock() &&
              ti->get_write_set().search(rec_ptr) == nullptr)) {
         return Status::ERR_CC;
+    }
+    // supplementary check for absent record
+    if (check.get_absent()) {
+        // Record GC may unhook the record pointed from local read sets.
+        // If unhooked, rec_ptr in read set points to the Record in garbage::container_rec,
+        // and not detect newly inserted alive record on yakushima.
+        Record* rec_ptr2{};
+        auto rc = get<Record>(storage, rec_ptr->get_key_view(), rec_ptr2);
+        if (rc == Status::OK && rec_ptr2 != rec_ptr) {
+            // another record is inserted at the same location (key) on yakushima
+            return Status::ERR_CC;
+        }
     }
     return Status::OK;
 }
@@ -225,7 +237,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
 
         // verify
         // ==============================
-        if (read_verify(ti, itr.get_tid(), check, rec_ptr) != Status::OK) {
+        if (read_verify(ti, itr.get_tid(), check, rec_ptr, itr.get_storage()) != Status::OK) {
             unlock_write_set(ti);
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_key_storage_name(rec_ptr->get_key_view(),
