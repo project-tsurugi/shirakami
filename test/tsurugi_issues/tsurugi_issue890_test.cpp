@@ -37,11 +37,20 @@ private:
 };
 
 TEST_F(tsurugi_issue890_test, guard_write_set) {
+    // expect
     // OCC1: upsert A 1                  -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
     // RecGC: never unhook A before commit/abort OCC1
     // OCC1: commit                      -> OK
+
+    // actual (with bug):
+    // OCC1: upsert A 1                  -> OK
+    // OCC2: insert A 2                  -> OK
+    // OCC2: abort                       -> OK
+    // RecGC: unhook A                                <- bug
+    // OCC1: commit -> ERR_CC, LOG "unreachable path" <- wrong
+
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s1{};
@@ -62,7 +71,49 @@ TEST_F(tsurugi_issue890_test, guard_write_set) {
     wait_epoch_update();
     // placeholder should not be unhooked
 
-    // check by (rec_ptr form y::get("a")) == OCC1->write_set[0].rec_ptr
+    // check unhooked: by (rec_ptr form y::get("a")) == OCC1->write_set[0].rec_ptr
+    Record* rec_ptr{};
+    EXPECT_EQ(get<Record>(st, "a", rec_ptr), Status::OK);
+    auto& s1_ws = ((session*)s1)->get_write_set().get_ref_cont_for_occ();
+    ASSERT_EQ(s1_ws.size(), 1);
+    EXPECT_EQ(rec_ptr, s1_ws.at(0).get_rec_ptr());
+
+    EXPECT_EQ(commit(s1), Status::OK);
+
+    ASSERT_OK(leave(s1));
+    ASSERT_OK(leave(s2));
+}
+
+TEST_F(tsurugi_issue890_test, guard_write_set_case2) {
+    // scenario like above test (guard_write_set), works well before ti#890 fix
+    // expect
+    // OCC1: insert A 1                  -> OK
+    // OCC2: upsert A 2                  -> OK
+    // OCC2: abort                       -> OK
+    // RecGC: never unhook A before commit/abort OCC1
+    // OCC1: commit                      -> OK
+
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_OK(enter(s1));
+    ASSERT_OK(enter(s2));
+
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s1, st, "a", "s1"));
+
+    ASSERT_OK(tx_begin({s2, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s2, st, "a", "s2"));
+    ASSERT_OK(abort(s2));
+
+    // wait gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+    // placeholder should not be unhooked
+
+    // check unhooked: by (rec_ptr form y::get("a")) == OCC1->write_set[0].rec_ptr
     Record* rec_ptr{};
     EXPECT_EQ(get<Record>(st, "a", rec_ptr), Status::OK);
     auto& s1_ws = ((session*)s1)->get_write_set().get_ref_cont_for_occ();
@@ -76,48 +127,23 @@ TEST_F(tsurugi_issue890_test, guard_write_set) {
 }
 
 // regression test
-TEST_F(tsurugi_issue890_test, unhooked_recptr_in_wso) {
-    // OCC1: upsert A 1                  -> OK
+TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
+    // expect
+    // OCC1: upsert A 11                 -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
-    // RecGC: unhook A                                <- bug
-    // OCC1: commit -> ERR_CC, LOG "unreachable path" <- wrong
-    Storage st{};
-    ASSERT_OK(create_storage("", st));
-    Token s1{};
-    Token s2{};
-    ASSERT_OK(enter(s1));
-    ASSERT_OK(enter(s2));
+    // RecGC: never unhook A before commit/abort OCC1
+    // OCC1: upsert A 12                 -> OK
+    //       local write set "A" is overwritten
+    // OCC1: commit                      -> OK
 
-    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
-    ASSERT_OK(upsert(s1, st, "a", "s1"));
-
-    ASSERT_OK(tx_begin({s2, transaction_options::transaction_type::SHORT}));
-    ASSERT_OK(insert(s2, st, "a", "s2"));
-    ASSERT_OK(abort(s2));
-
-    // wait gc
-    wait_epoch_update();
-    wait_epoch_update();
-    wait_epoch_update();
-    // placeholder should not be unhooked
-    // but (by bug ti#890), s1 write set "a" Record is unhooked
-
-    // commit fail if write set record is unhooked
-    EXPECT_EQ(commit(s1), Status::OK);  // should be OK
-
-    ASSERT_OK(leave(s1));
-    ASSERT_OK(leave(s2));
-}
-
-// regression test
-TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
+    // actual (with bug):
     // OCC1: upsert A 11                 -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
     // RecGC: unhook A                                <- bug
     // OCC1: upsert A 12                 -> OK
-    //               write set of OCC1 was broken     <- bug
+    //       local write set "A" is duplicated        <- bug
     // OCC1: commit -> dead lock                      <- bug
     Storage st{};
     ASSERT_OK(create_storage("", st));
@@ -145,7 +171,57 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
     EXPECT_EQ(((session*)s1)->get_write_set().get_ref_cont_for_occ().size(), 1);
     // but (by bug): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, UPSERT "s1-2"} ]
 
-    EXPECT_EQ(commit(s1), Status::OK);  // but (by bug): dead lock here by ti#890
+    EXPECT_EQ(commit(s1), Status::OK);
+
+    ASSERT_OK(leave(s1));
+    ASSERT_OK(leave(s2));
+}
+
+TEST_F(tsurugi_issue890_test, two_wso_of_same_key_case2) {
+    // scenario like above test (two_wso_of_same_key)
+    // expect
+    // OCC1: upsert A 11                 -> OK
+    // OCC2: insert A 2                  -> OK
+    // OCC2: abort                       -> OK
+    // RecGC: never unhook A before commit/abort OCC1
+    // OCC1: insert A 12                 -> WARN_ALREADY_EXISTS
+    // OCC1: commit                      -> OK
+
+    // actual (with bug):
+    // OCC1: upsert A 1                  -> OK
+    // OCC2: insert A 2                  -> OK
+    // OCC2: abort                       -> OK
+    // RecGC: unhook A                                <- bug
+    // OCC1: insert A 12                 -> OK        <- wrong
+    //       local write set "A" is duplicated        <- bug
+    // OCC1: commit -> dead lock                      <- bug
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_OK(enter(s1));
+    ASSERT_OK(enter(s2));
+
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s1, st, "a", "s1-1"));
+
+    ASSERT_OK(tx_begin({s2, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s2, st, "a", "s2"));
+    ASSERT_OK(abort(s2));
+
+    // wait gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+    // placeholder should not be unhooked
+    // but (by bug ti#890), s1 write set "a" Record is unhooked
+
+    // add write set of same key
+    EXPECT_EQ(insert(s1, st, "a", "s1-2"), Status::WARN_ALREADY_EXISTS);
+    EXPECT_EQ(((session*)s1)->get_write_set().get_ref_cont_for_occ().size(), 1);
+    // but (by bug): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, INSERT "s1-2"} ]
+
+    EXPECT_EQ(commit(s1), Status::OK);
 
     ASSERT_OK(leave(s1));
     ASSERT_OK(leave(s2));
