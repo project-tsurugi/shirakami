@@ -55,7 +55,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
     }
     if (wso->get_op() == OP_TYPE::DELETE) {
         // delete operation already registered read for ltx
-        return Status::OK;
+        return Status::WARN_NOT_FOUND;
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
         auto rc = cancel_insert_if_tomb_stone(wso->get_rec_ptr());
