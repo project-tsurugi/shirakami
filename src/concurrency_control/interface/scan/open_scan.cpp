@@ -99,6 +99,7 @@ Status check_not_found(
                     ver = ver->get_next();
                     if (ver == nullptr) { break; }
                     if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                        if (ver->get_tid().get_absent()) { break; }
                         return Status::OK;
                     }
                 }
@@ -132,6 +133,7 @@ Status check_not_found(
                 ver = ver->get_next();
                 if (ver == nullptr) { break; }
                 if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                    if (ver->get_tid().get_absent()) { break; }
                     return Status::OK;
                 }
             }
@@ -156,6 +158,7 @@ Status check_not_found(
                         if (ver == nullptr) { break; }
                         if (ver->get_tid().get_epoch() <
                             ti->get_valid_epoch()) {
+                            if (ver->get_tid().get_absent()) { break; }
                             return Status::OK;
                         }
                     }

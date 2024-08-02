@@ -90,7 +90,7 @@ RETRY:
     if (read_epoch > ti->get_read_version_max_epoch()) {
         set_read_version_max_epoch_if_need(ti, read_epoch);
     }
-    return Status::OK;
+    return ver->get_tid().get_absent() ? Status::WARN_NOT_FOUND : Status::OK;
 }
 
 static void create_read_set_for_read_info(session* const ti,
