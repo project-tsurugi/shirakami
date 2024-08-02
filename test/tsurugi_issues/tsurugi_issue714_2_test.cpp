@@ -100,4 +100,49 @@ TEST_F(tsurugi_issue714_2_test, must_detect_the_change_of_tombstone) {
     ASSERT_OK(leave(s2));
 }
 
+TEST_F(tsurugi_issue714_2_test, reading_tombstone_not_interrupted_by_recgc) {
+    // read tombstone and no one modified this
+
+    // Setup: make tombstone at "A"
+    // expect
+    // OCC1: read "A"     -> NOT_FOUND
+    // RecGC: may run
+    // OCC1: commit       -> OK
+
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s1{};
+    ASSERT_OK(enter(s1));
+
+    // stop gc
+    std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
+
+    // setup
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s1, st, "0", "0"));
+    ASSERT_OK(insert(s1, st, "a", "0"));
+    ASSERT_OK(commit(s1));
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(delete_record(s1, st, "a"));
+    ASSERT_OK(commit(s1));
+    wait_epoch_update();  // wait next epoch after delete
+    // setup done
+
+    std::string str;
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(search_key(s1, st, "a", str), Status::WARN_NOT_FOUND);
+
+    // start gc
+    lk.unlock();
+
+    // wait gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+
+    EXPECT_EQ(commit(s1), Status::OK);
+
+    ASSERT_OK(leave(s1));
+}
+
 } // namespace shirakami::testing
