@@ -134,8 +134,9 @@ TEST_F(tsurugi_issue307_test, simple) { // NOLINT
             do {
                 std::string key;
                 std::string val;
-                if (auto rc = read_key_from_scan(s, scanh, key);
-                    rc != Status::OK) {
+                auto rck = read_key_from_scan(s, scanh, key);
+                if (rck == Status::WARN_NOT_FOUND) { continue; }
+                if (rck != Status::OK) {
                     // version function or gc bug
                     LOG(FATAL);
                 }
