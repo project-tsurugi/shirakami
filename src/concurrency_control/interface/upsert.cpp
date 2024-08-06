@@ -35,6 +35,8 @@ static inline Status insert_process(session* const ti, Storage st,
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
     tid_word tid{rec_ptr->get_tidw()};
+    rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
+
     yakushima::node_version64* nvp{};
     // create tombstone
     if (yakushima::status::OK ==
@@ -65,7 +67,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
         }
-        ti->push_to_write_set({st, OP_TYPE::UPSERT, rec_ptr, val});
+        ti->push_to_write_set({st, OP_TYPE::UPSERT, rec_ptr, val, true});
         return Status::OK;
     }
     // fail insert rec_ptr
