@@ -44,7 +44,7 @@ TEST_F(tsurugi_issue890_test, guard_write_set) {
     // RecGC: never unhook A before commit/abort OCC1
     // OCC1: commit                      -> OK
 
-    // actual (with bug):
+    // before ti#890 fix
     // OCC1: upsert A 1                  -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
@@ -137,7 +137,7 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
     //       local write set "A" is overwritten
     // OCC1: commit                      -> OK
 
-    // actual (with bug):
+    // before ti#890 fix
     // OCC1: upsert A 11                 -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
@@ -145,6 +145,7 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
     // OCC1: upsert A 12                 -> OK
     //       local write set "A" is duplicated        <- bug
     // OCC1: commit -> dead lock                      <- bug
+
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s1{};
@@ -164,12 +165,11 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
     wait_epoch_update();
     wait_epoch_update();
     // placeholder should not be unhooked
-    // but (by bug ti#890), s1 write set "a" Record is unhooked
 
     // add write set of same key
     ASSERT_OK(upsert(s1, st, "a", "s1-2"));
     EXPECT_EQ(((session*)s1)->get_write_set().get_ref_cont_for_occ().size(), 1);
-    // but (by bug): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, UPSERT "s1-2"} ]
+    // (before ti#890 fix): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, UPSERT "s1-2"} ]
 
     EXPECT_EQ(commit(s1), Status::OK);
 
@@ -177,6 +177,7 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key) {
     ASSERT_OK(leave(s2));
 }
 
+// regression test
 TEST_F(tsurugi_issue890_test, two_wso_of_same_key_case2) {
     // scenario like above test (two_wso_of_same_key)
     // expect
@@ -187,14 +188,15 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key_case2) {
     // OCC1: insert A 12                 -> WARN_ALREADY_EXISTS
     // OCC1: commit                      -> OK
 
-    // actual (with bug):
-    // OCC1: upsert A 1                  -> OK
+    // before ti#890 fix
+    // OCC1: upsert A 11                 -> OK
     // OCC2: insert A 2                  -> OK
     // OCC2: abort                       -> OK
     // RecGC: unhook A                                <- bug
     // OCC1: insert A 12                 -> OK        <- wrong
     //       local write set "A" is duplicated        <- bug
     // OCC1: commit -> dead lock                      <- bug
+
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s1{};
@@ -214,12 +216,11 @@ TEST_F(tsurugi_issue890_test, two_wso_of_same_key_case2) {
     wait_epoch_update();
     wait_epoch_update();
     // placeholder should not be unhooked
-    // but (by bug ti#890), s1 write set "a" Record is unhooked
 
     // add write set of same key
     EXPECT_EQ(insert(s1, st, "a", "s1-2"), Status::WARN_ALREADY_EXISTS);
     EXPECT_EQ(((session*)s1)->get_write_set().get_ref_cont_for_occ().size(), 1);
-    // but (by bug): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, INSERT "s1-2"} ]
+    // (before ti#890 fix): write_set (vector) [ {"a", old_rec_ptr, UPSERT "s1-1"}, {"a", new_rec_ptr, INSERT "s1-2"} ]
 
     EXPECT_EQ(commit(s1), Status::OK);
 
