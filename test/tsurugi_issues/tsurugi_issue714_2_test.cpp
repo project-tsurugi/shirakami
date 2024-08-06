@@ -145,4 +145,107 @@ TEST_F(tsurugi_issue714_2_test, reading_tombstone_not_interrupted_by_recgc) {
     ASSERT_OK(leave(s1));
 }
 
+TEST_F(tsurugi_issue714_2_test, another_tx_placeholder_is_also_absent) {
+    // before OCC2 commit, there is a placeholder record,
+    // placeholder is also absent record, so OCC1 commit is OK.
+
+    // Setup: make tombstone at "A"
+
+    // expect
+    // OCC1: read "A"     -> NOT_FOUND
+    // RecGC: run
+    // OCC2: insert "A" 2 -> OK
+    // OCC1: commit       -> OK
+    // OCC2: commit       -> OK
+
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s1{};
+    Token s2{};
+    ASSERT_OK(enter(s1));
+    ASSERT_OK(enter(s2));
+
+    // stop gc
+    std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
+
+    // setup
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s1, st, "0", "0"));
+    ASSERT_OK(insert(s1, st, "a", "0"));
+    ASSERT_OK(commit(s1));
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(delete_record(s1, st, "a"));
+    ASSERT_OK(commit(s1));
+    wait_epoch_update();  // wait next epoch after delete
+    // setup done
+
+    std::string str;
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(search_key(s1, st, "a", str), Status::WARN_NOT_FOUND);
+
+    // start gc
+    lk.unlock();
+
+    // wait gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+
+    ASSERT_OK(tx_begin({s2, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s2, st, "a", "2"));
+    EXPECT_EQ(commit(s1), Status::OK);
+    EXPECT_EQ(commit(s2), Status::OK);
+
+    ASSERT_OK(leave(s1));
+    ASSERT_OK(leave(s2));
+}
+
+TEST_F(tsurugi_issue714_2_test, self_placeholder_is_also_absent) {
+    // self-placed placeholder (inserting Record) is also absent record, so OCC1 commit is OK.
+
+    // Setup: make tombstone at "A"
+
+    // expect
+    // OCC1: read "A"     -> NOT_FOUND
+    // RecGC: run
+    // OCC1: insert "A" 1 -> OK
+    // OCC1: commit       -> OK
+
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s1{};
+    ASSERT_OK(enter(s1));
+
+    // stop gc
+    std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
+
+    // setup
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s1, st, "0", "0"));
+    ASSERT_OK(insert(s1, st, "a", "0"));
+    ASSERT_OK(commit(s1));
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(delete_record(s1, st, "a"));
+    ASSERT_OK(commit(s1));
+    wait_epoch_update();  // wait next epoch after delete
+    // setup done
+
+    std::string str;
+    ASSERT_OK(tx_begin({s1, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(search_key(s1, st, "a", str), Status::WARN_NOT_FOUND);
+
+    // start gc
+    lk.unlock();
+
+    // wait gc
+    wait_epoch_update();
+    wait_epoch_update();
+    wait_epoch_update();
+
+    ASSERT_OK(insert(s1, st, "a", "1"));
+    EXPECT_EQ(commit(s1), Status::OK);
+
+    ASSERT_OK(leave(s1));
+}
+
 } // namespace shirakami::testing

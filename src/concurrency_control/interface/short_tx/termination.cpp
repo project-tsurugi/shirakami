@@ -197,6 +197,14 @@ Status read_verify(session* ti, tid_word read_tid, tid_word check,
         auto rc = get<Record>(storage, rec_ptr->get_key_view(), rec_ptr2);
         if (rc == Status::OK && rec_ptr2 != rec_ptr) {
             // another record is inserted at the same location (key) on yakushima
+
+            // allow if rec_ptr2 is inserting record
+            tid_word check2{};
+            std::string unused{};
+            auto rr = read_record(rec_ptr2, check2, unused, false);
+            if (rr == Status::WARN_CONCURRENT_INSERT) { return Status::OK; }
+
+            // the record is modified
             return Status::ERR_CC;
         }
     }
