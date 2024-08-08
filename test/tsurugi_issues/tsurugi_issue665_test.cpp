@@ -96,6 +96,7 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
             return;
         }
     }
+    if (rc == Status::ERR_CC) { ret = Status::ERR_CC; return; }
     // at least it can read ("0","0")
     LOG(FATAL) << rc;
     return;
