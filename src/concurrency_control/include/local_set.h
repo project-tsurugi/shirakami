@@ -349,6 +349,7 @@ public:
     Status update_node_set(yakushima::node_version64* nvp) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         bool found = false;
+VLOG(10) << "uns " << nvp;
         for (auto&& elem : set_) {
             // compare node version ptr
             if (std::get<1>(elem) == nvp) {
@@ -359,6 +360,7 @@ public:
                 }
                 found = true;
                 std::get<0>(elem) = nvb; // update vinsert_delete
+VLOG(10) << "uns found, " << nvp << " set{" << nvb << "}";
                 /**
                  * note : discussion.
                  * Currently, node sets can have duplicate elements. If you allow duplicates, scanning will be easier.
@@ -368,22 +370,26 @@ public:
                  */
             }
         }
+VLOG(10) << "uns found:" << found;
         return found ? Status::OK : Status::WARN_NOT_FOUND;
     }
 
     Status emplace_back(std::pair<yakushima::node_version64_body,
                                   yakushima::node_version64*>
                                 elem) {
+VLOG(10) << "eb " << std::get<1>(elem) << " saved{" << std::get<0>(elem) << "}";
         // take write lock
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         // engineering optimization, shrink nvec size.
         if (!get_set().empty() &&       // not empty
             get_set().back() == elem) { // last elem is same
+VLOG(10) << "eb OK: dup last";
             return Status::OK;          // skip registering.
         }
 
         // early validation
         auto cnvp = std::get<1>(elem)->get_stable_version();
+VLOG(10) << "eb comp current{" << cnvp << "}" << " saved{" << std::get<0>(elem) << "}";
         if (!comp_ver_for_node_verify(cnvp, std::get<0>(elem))) {
             // looks like phantom
             // check self phantom possibility
@@ -395,17 +401,21 @@ public:
                      */
                     if (comp_ver_for_node_verify(cnvp, std::get<0>(elem_set))) {
                         // the difference due to old self insert.
+VLOG(10) << "eb OK: self phantom hit:" << std::get<1>(elem_set) << " {" << std::get<0>(elem_set) << "}";
                         return Status::OK;
                     }
                     // the difference include other tx's insert
+VLOG(10) << "eb ERR_CC: other phantom hit:" << std::get<1>(elem_set) << " {" << std::get<0>(elem_set) << "}";
                     return Status::ERR_CC;
                 }
             }
             // phantom due to other tx's insert
+VLOG(10) << "eb ERR_CC: other 2";
             return Status::ERR_CC;
         }
 
         get_set().emplace_back(elem);
+VLOG(10) << "eb OK: new";
         return Status::OK;
     }
 
