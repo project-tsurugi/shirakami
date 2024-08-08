@@ -299,6 +299,20 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
     // not empty of targeting records
 
+{
+    std::stringstream ss{};
+    ss << "scan_res";
+    for (auto&& s : scan_res) {
+        ss << " <";
+        ss << std::get<0>(s);
+        ss << ">";
+    }
+    ss << "\nnvec[" << nvec.size() << "]";
+    for (auto&& s : nvec) {
+        ss << "\n " << std::get<1>(s) << " {" << std::get<0>(s) << "}";
+    }
+    VLOG(10) << ss.str();
+}
     std::size_t head_skip_rec_n{};
     /**
      * skip leading unreadable records.
