@@ -348,31 +348,22 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
      */
     std::size_t nvec_delta{0};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        for (auto&& elem : nvec) {
+            auto rc_ns = ti->get_node_set().emplace_back(elem);
+            if (rc_ns == Status::ERR_CC) {
+                short_tx::abort(ti);
+                std::unique_lock<std::mutex> lk{
+                        ti->get_mtx_result_info()};
+                ti->get_result_info().set_storage_name(storage);
+                ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                return Status::ERR_CC;
+            }
+        }
         if (scan_res.size() < nvec.size()) {
-            auto add_ns = [&ti, &nvec, storage](std::size_t n) {
-                for (std::size_t i = 0; i < n; ++i) {
-                    auto rc = ti->get_node_set().emplace_back(nvec.at(i));
-                    if (rc == Status::ERR_CC) {
-                        short_tx::abort(ti);
-                        std::unique_lock<std::mutex> lk{
-                                ti->get_mtx_result_info()};
-                        ti->get_result_info().set_storage_name(storage);
-                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
-                        return Status::ERR_CC;
-                    }
-                }
-                return Status::OK;
-            };
             if (scan_res.size() + 1 == nvec.size()) {
                 nvec_delta = 1;
-                rc = add_ns(1);
-                if (rc == Status::ERR_CC) { return rc; }
-
-
             } else if (scan_res.size() + 2 == nvec.size()) {
                 nvec_delta = 2;
-                rc = add_ns(2);
-                if (rc == Status::ERR_CC) { return rc; }
             }
         }
     }
