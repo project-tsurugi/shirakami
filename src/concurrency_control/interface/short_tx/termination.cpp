@@ -483,7 +483,9 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 }
 
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
-                if (old_tid.get_latest() && old_tid.get_absent()) {
+                if (old_tid.get_latest() && old_tid.get_absent() &&
+                    // DELETE'd Record (not-absent -> deleted) has non-zero epoch/tid
+                    old_tid.get_epoch() == 0 && old_tid.get_tid() == 0) {
                     // set value
                     std::string vb{};
                     wso_ptr->get_value(vb);
