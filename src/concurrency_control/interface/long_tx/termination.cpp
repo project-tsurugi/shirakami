@@ -121,9 +121,9 @@ static inline void expose_local_write(
 
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
                 auto check_cd = [&tid]() {
-                    return (tid.get_latest() &&
-                            tid.get_absent()) ||                    // inserting
-                           (!tid.get_latest() && tid.get_absent()); // deleted
+                    return tid.get_absent() && // inserting or deleted
+                           // DELETE'd Record (not-absent -> deleted) has non-zero epoch/tid
+                           tid.get_epoch() == 0 && tid.get_tid() == 0;
                 };
                 if (check_cd()) {
                     // lock record

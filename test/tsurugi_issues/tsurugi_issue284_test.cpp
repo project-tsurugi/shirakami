@@ -114,8 +114,10 @@ TEST_F(tsurugi_issue284, 20230525_comment_ban) { // NOLINT
             do {
                 std::string key;
                 std::string val;
-                ASSERT_OK(read_key_from_scan(s, scanh, key));
-                ASSERT_OK(read_value_from_scan(s, scanh, val));
+                auto rc = read_key_from_scan(s, scanh, key);
+                if (rc == Status::WARN_NOT_FOUND) { continue; }
+                EXPECT_EQ(rc, Status::OK);
+                EXPECT_EQ(read_value_from_scan(s, scanh, val), Status::OK);
                 VLOG(40) << "key:<" << key << "> value:<" << val << ">";
                 if (val != common_val) {
                     LOG_FIRST_N(ERROR, 1) << "try:" << i << " key:<" << key
