@@ -12,9 +12,12 @@
 #pragma once
 
 #include <atomic>
+#include <map>
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
+#include <boost/icl/interval.hpp>
+#include <boost/icl/interval_set.hpp>
 
 #include "concurrency_control/include/epoch.h"
 
@@ -55,6 +58,29 @@ private:
     body_type body_;
 };
 
+class stringInf {
+public:
+    // stringInf(stringInf&& obj) : inf_(obj.inf_), str_(std::move(obj.str_)) { }
+    // stringInf(const stringInf& obj) : inf_(obj.inf_), str_(obj.str_) { }
+
+    stringInf(std::string_view key) : inf_(0), str_(key) { }
+    stringInf(std::string key) : inf_(0), str_(key) { }
+    explicit stringInf(int inf) : inf_(inf) { }
+    stringInf() : inf_(0) { }
+
+    friend bool operator<(const stringInf& a, const stringInf& b) {
+        if (a.inf_ != b.inf_) { return a.inf_ < b.inf_; }
+        return a.str_ < b.str_;
+    }
+    friend bool operator==(const stringInf& a, const stringInf& b) {
+        return a.inf_ == b.inf_ && a.str_ == b.str_;
+    }
+
+private:
+    int inf_;
+    std::string str_;
+};
+
 class range_read_by_long {
 public:
     /**
@@ -71,7 +97,8 @@ public:
     using body_elem_type =
             std::tuple<epoch::epoch_t, std::size_t, std::string, scan_endpoint,
                        std::string, scan_endpoint>;
-    using body_type = std::vector<body_elem_type>;
+    // epoch -> ltx_id -> interval
+    using body_type = std::map<std::size_t, std::map<std::size_t, boost::icl::interval_set<stringInf>>>;
 
     bool is_exist(epoch::epoch_t ep, std::size_t ltx_id, std::string_view key);
 
