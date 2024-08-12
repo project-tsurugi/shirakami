@@ -86,40 +86,12 @@ bool range_read_by_long::is_exist(epoch::epoch_t const ep,
                                   std::size_t const ltx_id,
                                   std::string_view const key) {
     std::unique_lock<std::mutex> lk(mtx_);
-    for (auto&& elem : body_) {
-        if (ltx_id > std::get<range_read_by_long::index_tx_id>(elem)) {
+    for (auto&& elem : body_[ep]) {
+        if (ltx_id > elem.first) {
             // check against higher priori ltxs
-            if (std::get<range_read_by_long::index_epoch>(elem) == ep) {
-                // check the key is right from left point
-                if (std::get<range_read_by_long::index_l_ep>(elem) ==
-                            scan_endpoint::INF || // inf
-                    std::get<range_read_by_long::index_l_key>(elem) <
-                            key || // right
-                    (std::get<range_read_by_long::index_l_key>(elem) == key &&
-                     std::get<range_read_by_long::index_l_ep>(elem) ==
-                             scan_endpoint::INCLUSIVE) // same
-                ) {
-                    // check the key is left from right point
-                    if (std::get<range_read_by_long::index_r_ep>(elem) ==
-                                scan_endpoint::INF || // inf
-                        std::get<range_read_by_long::index_r_key>(elem) >
-                                key || // left
-                        (std::get<range_read_by_long::index_r_key>(elem) ==
-                                 key &&
-                         std::get<range_read_by_long::index_r_ep>(elem) ==
-                                 scan_endpoint::INCLUSIVE) // same
-                    ) {
-                        return true;
-                    }
-                }
-            }
-            if (std::get<range_read_by_long::index_epoch>(elem) > ep) {
-                // no more due to invariant
-                break;
-            }
+            if (elem.second.find(key) != elem.second.end()) { return true; }
         }
     }
-
     return false;
 }
 
@@ -134,33 +106,27 @@ void range_read_by_long::push(body_elem_type const& elem) {
     std::size_t tx_id = std::get<range_read_by_long::index_tx_id>(elem);
 
     // gc
-    std::size_t erase_count{0};
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
-        if (std::get<range_read_by_long::index_tx_id>(*itr) < tx_id) {
-            // high priori
-            if (std::get<range_read_by_long::index_epoch>(*itr) <
-                gc_threshold) {
-                // gc
-                ++itr;
-                ++erase_count;
-                continue;
-            }
-            // can't gc
+    // scan (high priori and epoch < threshold) from front for erase
+    for (auto itr = body_.begin(); itr != body_.end();) {
+        if (itr->first < gc_threshold) {
+            itr = body_.erase(itr);
+        } else {
             break;
         }
-        /**
-         * Now, there is a case the ltx can commit ahead of high priori ltx.
-         */
-        break;
-    }
-
-    // erase in bulk
-    if (erase_count > 0) {
-        body_.erase(body_.begin(), body_.begin() + erase_count); // NOLINT
     }
 
     // push info
-    body_.emplace_back(elem);
+    using boost::icl::interval_bounds;
+    auto l_ep = std::get<range_read_by_long::index_l_ep>(elem);
+    auto r_ep = std::get<range_read_by_long::index_r_ep>(elem);
+    stringInf left{l_ep == scan_endpoint::INF ? stringInf(-1) : stringInf(std::get<range_read_by_long::index_l_key>(elem))};
+    stringInf right{r_ep == scan_endpoint::INF ? stringInf(1) : stringInf(std::get<range_read_by_long::index_r_key>(elem))};
+    bool l_open = l_ep == scan_endpoint::EXCLUSIVE;
+    bool r_open = r_ep == scan_endpoint::EXCLUSIVE;
+    auto bounds = l_open ? (r_open ? interval_bounds::open() : interval_bounds::left_open())
+                         : (r_open ? interval_bounds::right_open() : interval_bounds::closed());
+    auto interval = boost::icl::construct<boost::icl::continuous_interval<stringInf>>(left, right, bounds);
+    body_[std::get<range_read_by_long::index_epoch>(elem)][tx_id].add(interval);
 }
 
 bool point_read_by_short::find(epoch::epoch_t const epoch) {
