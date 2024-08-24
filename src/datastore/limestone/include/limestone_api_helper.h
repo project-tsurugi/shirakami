@@ -41,6 +41,16 @@ void remove_entry(limestone::api::log_channel* lc,
                   std::string_view key, limestone::api::epoch_t major_version,
                   std::uint64_t minor_version);
 
+void add_storage(limestone::api::log_channel* lc,
+                 limestone::api::storage_id_type storage_id,
+                 limestone::api::epoch_t major_version,
+                 std::uint64_t minor_version);
+
+void remove_storage(limestone::api::log_channel* lc,
+                    limestone::api::storage_id_type storage_id,
+                    limestone::api::epoch_t major_version,
+                    std::uint64_t minor_version);
+
 void begin_session(limestone::api::log_channel* lc);
 
 void end_session(limestone::api::log_channel* lc);

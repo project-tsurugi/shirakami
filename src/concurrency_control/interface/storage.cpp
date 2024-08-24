@@ -48,13 +48,22 @@ void write_storage_metadata(std::string_view key, Storage st,
         return;
     }
     if (commit(s) == Status::OK) {
+#ifdef PWAL
+        auto* ti = static_cast<session*>(s);
+        // reuse mrc_tid of previous commit to calculate the write-version
+        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // NOLINT
+        {
+            std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
+            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::ADD_STORAGE, wv, st, {}, {}));
+        }
+#endif
         leave(s);
         return;
     } // else
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
 }
 
-void remove_storage_metadata(std::string_view key) {
+void remove_storage_metadata(std::string_view key, Storage st) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
@@ -73,6 +82,17 @@ void remove_storage_metadata(std::string_view key) {
         return;
     }
     if (commit(s) == Status::OK) {
+#ifdef PWAL
+        auto* ti = static_cast<session*>(s);
+        // reuse mrc_tid of previous commit to calculate the write-version
+        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // NOLINT
+        // note: this write-version is calculated without reading any Records in this storage,
+        // so it may be smaller than that of concurrent transactions writing this storage.
+        {
+            std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
+            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::REMOVE_STORAGE, wv, st, {}, {}));
+        }
+#endif
         leave(s);
         return;
     } // else
@@ -131,7 +151,7 @@ Status delete_storage_body(Storage const storage) {
             return Status::ERR_FATAL;
         }
 
-        if (!get_is_shutdowning()) { remove_storage_metadata(key); }
+        if (!get_is_shutdowning()) { remove_storage_metadata(key, storage); }
     }
     return Status::OK;
 }
