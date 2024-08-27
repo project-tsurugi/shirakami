@@ -114,6 +114,7 @@ else ()
           "shutdown/*.cpp"
           "sequence/*.cpp"
           "storage/*.cpp"
+          "tid_word/*.cpp"
           "transaction_options/*.cpp"
           "tsurugi_issues/*.cpp"
           "tx_id/*.cpp"
