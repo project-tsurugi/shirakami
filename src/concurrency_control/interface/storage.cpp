@@ -63,7 +63,7 @@ void write_storage_metadata(std::string_view key, Storage st,
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
 }
 
-void remove_storage_metadata(std::string_view key, Storage st) {
+void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};

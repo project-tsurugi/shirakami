@@ -36,6 +36,7 @@ private:
 };
 
 TEST_F(tsurugi_issue923_test, make_lpwal_log) {
+#ifdef PWAL
     // very fragile test: no way to fully control wal flush timing
 
     // wait lpwal background worker flushing all
@@ -84,6 +85,9 @@ TEST_F(tsurugi_issue923_test, make_lpwal_log) {
     EXPECT_EQ(cnt[log_operation::DELETE], 1);
     EXPECT_EQ(cnt[log_operation::REMOVE_STORAGE], 1);
     EXPECT_EQ(cnt_all, 2);
+#else
+    GTEST_SKIP();
+#endif
 }
 
 } // namespace shirakami::testing
