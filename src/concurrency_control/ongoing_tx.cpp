@@ -78,11 +78,11 @@ Status ongoing_tx::waiting_bypass(session* ti) {
             auto& overtaken_ltx_ids = std::get<0>(ols_itr->second);
             // find bypass
             std::set<std::size_t> erase_targets;
-            for (auto&& bt_itr : bypass_target) {
-                auto find_itr = overtaken_ltx_ids.find(std::get<0>(bt_itr));
+            for (auto&& bt : bypass_target) {
+                auto find_itr = overtaken_ltx_ids.find(std::get<0>(bt));
                 if (find_itr != overtaken_ltx_ids.end()) {
                     // found, bypass
-                    erase_targets.insert(std::get<0>(bt_itr));
+                    erase_targets.insert(std::get<0>(bt));
                 }
             }
             // erase by erase_targets
@@ -104,12 +104,12 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     for (auto&& elem : tx_info_) {
         auto the_tx_id = std::get<ongoing_tx::index_id>(elem);
         // find from bypass targets
-        for (auto&& bt_itr : bypass_target) {
-            auto bypass_id = std::get<0>(bt_itr);
+        for (auto&& bt : bypass_target) {
+            auto bypass_id = std::get<0>(bt);
             if (bypass_id == the_tx_id) {
                 // hit, register
                 {
-                    auto* bypass_token = std::get<1>(bt_itr);
+                    auto* bypass_token = std::get<1>(bt);
                     // get mutex for overtaken ltx set
                     std::lock_guard<std::shared_mutex> lk{
                             ti->get_mtx_overtaken_ltx_set()};
