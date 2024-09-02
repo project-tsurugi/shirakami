@@ -32,11 +32,11 @@ public:
         };
     };
 
-    tid_word() // NOLINT
+    constexpr tid_word() // NOLINT
         : obj_(0) {
     } // NOLINT : clang-tidy order to initialize other member, but
     // it occurs compile error.
-    tid_word(const __uint128_t obj) { obj_ = obj; } // NOLINT : the same as above.
+    constexpr tid_word(const __uint128_t obj) : obj_(obj) { } // NOLINT : the same as above.
     tid_word(const tid_word& right) noexcept     // NOLINT
         : obj_(right.get_obj()) {}               // NOLINT : the same as above.
 
@@ -138,7 +138,7 @@ public:
 private:
 };
 
-static_assert(sizeof(tid_word) == sizeof(tid_word{}.obj_)); // NOLINT(*-union-access)
+static_assert(sizeof(tid_word) == sizeof(tid_word::obj_)); // NOLINT(*-union-access)
 static_assert(std::is_nothrow_move_constructible_v<tid_word>);
 
 inline std::ostream& operator<<(std::ostream& out, tid_word tid) { // NOLINT

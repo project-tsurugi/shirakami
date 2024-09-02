@@ -54,7 +54,7 @@ public:
     using ltx_storage_read_set_type =
             std::map<Storage, std::tuple<std::string, scan_endpoint,
                                          std::string, scan_endpoint>>;
-    static constexpr std::uint64_t initial_mrc_tid{0};
+    static constexpr decltype(tid_word::obj_) initial_mrc_tid{0};
 
     /**
      * @brief 1 bit lock flag + 63 bits epoch.
