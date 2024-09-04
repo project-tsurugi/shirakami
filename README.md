@@ -4,7 +4,7 @@
 
 * CMake `>= 3.10`
 * C++ Compiler `>= C++17`
-* Build related libraries - on Ubuntu, you can install with following command. 
+* Build related libraries - on Ubuntu, you can install with following command.
 Please check in advance whether ubuntu.deps is correct.:
 
 ```sh
@@ -44,8 +44,6 @@ Available options:
    * Create static libraries instead of shared libraries
 * `-DCMAKE_PREFIX_PATH=<installation directory>`
    * Indicate prerequiste installation directory (ex. yakushima)
-* `-DFORCE_INSTALL_RPATH=ON`
-   * Force set RPATH for non-default library paths
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON`
    * Use formatting for source files
 * `-DTSURUGI_FAST_SHUTDOWN=ON`
@@ -105,7 +103,7 @@ Available options:
       succeeds in an environment with low contention. Because, as a result,
       the probability of aborting is small.
 
-## Install 
+## Install
 
 ```sh
 ninja install
