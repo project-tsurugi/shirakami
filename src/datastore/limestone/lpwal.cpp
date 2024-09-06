@@ -109,6 +109,14 @@ void fin() {
     set_stopping(false);
 }
 
+void handler::begin_session() {
+    shirakami::begin_session(log_channel_ptr_);
+}
+
+void handler::end_session() {
+    shirakami::end_session(log_channel_ptr_);
+}
+
 void flush_log(Token token) {
     auto* ti = static_cast<session*>(token);
     auto& handle = ti->get_lpwal_handle();
@@ -116,9 +124,9 @@ void flush_log(Token token) {
     if (handle.get_mtx_logs().try_lock()) {
         // flush log if exist
         if (!handle.get_logs().empty()) {
-            begin_session(handle.get_log_channel_ptr());
+            handle.begin_session();
             add_entry_from_logs(handle);
-            end_session(handle.get_log_channel_ptr());
+            handle.end_session();
         }
 
         handle.get_mtx_logs().unlock();
@@ -127,10 +135,12 @@ void flush_log(Token token) {
 
 void flush_remaining_log() {
     for (auto&& es : session_table::get_session_table()) {
-        if (!es.get_lpwal_handle().get_logs().empty()) {
-            begin_session(es.get_lpwal_handle().get_log_channel_ptr());
-            add_entry_from_logs(es.get_lpwal_handle());
-            end_session(es.get_lpwal_handle().get_log_channel_ptr());
+        auto& handle = es.get_lpwal_handle();
+        std::unique_lock lk{handle.get_mtx_logs()};
+        if (!handle.get_logs().empty()) {
+            handle.begin_session();
+            add_entry_from_logs(handle);
+            handle.end_session();
         }
     }
 }

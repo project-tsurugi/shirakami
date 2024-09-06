@@ -196,6 +196,16 @@ public:
 
     void set_worker_number(std::size_t wn) { worker_number_ = wn; }
 
+    /**
+     * @pre take mtx of logs
+     */
+    void begin_session();
+
+    /**
+     * @pre take mtx of logs
+     */
+    void end_session();
+
 private:
     /**
      * @brief worker thread number used for logging callback.
