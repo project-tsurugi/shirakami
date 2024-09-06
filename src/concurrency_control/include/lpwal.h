@@ -168,12 +168,21 @@ public:
         return worker_number_;
     }
 
+    [[nodiscard]] bool get_begun_session() const {
+        return begun_session_;
+    }
+
+    [[nodiscard]] epoch::epoch_t get_durable_epoch() const {
+        return durable_epoch_;
+    }
+
     /**
      * @pre take mtx of logs
      */
     void push_log(log_record const& log) {
         if (logs_.empty()) {
             set_min_log_epoch(log.get_wv().get_major_write_version());
+            begin_session();
         }
         logs_.emplace_back(log);
     }
@@ -182,6 +191,7 @@ public:
         worker_number_ = 0;
         min_log_epoch_ = 0;
         logs_.clear();
+        begun_session_ = false;
         // this can't due to concurrent programming
         // log_channel_ptr_ = nullptr;
     }
@@ -218,7 +228,7 @@ private:
     std::atomic<epoch::epoch_t> min_log_epoch_{0};
 
     /**
-     * @brief mutex for logs_
+     * @brief mutex for logs_ and begun_session_ and durable_epoch_
      */
     std::mutex mtx_logs_;
 
@@ -226,6 +236,10 @@ private:
      * @brief log records
      */
     logs_type logs_{};
+
+    // invariant: logs_.empty() == !begun_session_
+    bool begun_session_{false};
+    epoch::epoch_t durable_epoch_{};
 
     /**
      * @brief log channel

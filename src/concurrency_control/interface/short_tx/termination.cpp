@@ -776,6 +776,13 @@ extern Status commit(session* const ti) {
 #endif
 
     auto this_dm = epoch::get_global_epoch();
+#if defined(PWAL)
+    {
+        auto& handle = ti->get_lpwal_handle();
+        std::unique_lock lk{handle.get_mtx_logs()};
+        if (handle.get_begun_session()) { this_dm = handle.get_durable_epoch(); }
+    }
+#endif
 
     // about tx state
     process_tx_state(ti, this_dm);

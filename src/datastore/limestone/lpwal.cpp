@@ -110,11 +110,20 @@ void fin() {
 }
 
 void handler::begin_session() {
+    // assert begun_session_ = false
     shirakami::begin_session(log_channel_ptr_);
+    // TODO: global epoch is approximate value for durable epoch, but is guaranteed to be >= real durable epoch.
+    // if the exact value becomes available, change this to use that.
+    // eg. if limestone::log_chanell::begin_session returns the exact value in the future,
+    //     or shirakami controls the timing of begin_session/switch_epoch
+    durable_epoch_ = epoch::get_global_epoch();
+    begun_session_ = true;
 }
 
 void handler::end_session() {
+    // assert begun_session_ = true
     shirakami::end_session(log_channel_ptr_);
+    begun_session_ = false;
 }
 
 void flush_log(Token token) {
@@ -124,8 +133,17 @@ void flush_log(Token token) {
     if (handle.get_mtx_logs().try_lock()) {
         // flush log if exist
         if (!handle.get_logs().empty()) {
-            handle.begin_session();
+            if (!handle.get_begun_session()) {
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                                      << ": session should be begun here";
+                handle.begin_session();
+            }
             add_entry_from_logs(handle);
+            handle.end_session();
+        }
+        if (handle.get_begun_session()) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                                  << ": session should not be begun here";
             handle.end_session();
         }
 
@@ -138,8 +156,17 @@ void flush_remaining_log() {
         auto& handle = es.get_lpwal_handle();
         std::unique_lock lk{handle.get_mtx_logs()};
         if (!handle.get_logs().empty()) {
-            handle.begin_session();
+            if (!handle.get_begun_session()) {
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                                      << ": session should be begun here";
+                handle.begin_session();
+            }
             add_entry_from_logs(handle);
+            handle.end_session();
+        }
+        if (handle.get_begun_session()) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                                  << ": session should not be begun here";
             handle.end_session();
         }
     }
