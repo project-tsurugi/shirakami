@@ -117,7 +117,8 @@ public:
             out = val_;
             return;
         }
-        if (get_op() == OP_TYPE::DELETE) { return; }
+        if (get_op() == OP_TYPE::DELETE || get_op() == OP_TYPE::DELSERT ||
+            get_op() == OP_TYPE::TOMBSTONE) { return; }
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
 
