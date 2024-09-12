@@ -149,7 +149,9 @@ static inline void expose_local_write(
                 }
                 [[fallthrough]]; // upsert is update
             }
-            case OP_TYPE::DELETE: {
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
                 if (wso.get_op().is_wso_to_absent()) { // for fallthrough
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         ctid.set_latest(false);
@@ -283,7 +285,9 @@ static inline void expose_local_write(
                     lo = log_operation::UPSERT;
                     break;
                 }
-                case OP_TYPE::DELETE: {
+                case OP_TYPE::DELETE:
+                case OP_TYPE::DELSERT:
+                case OP_TYPE::TOMBSTONE: {
                     lo = log_operation::DELETE;
                     break;
                 }
