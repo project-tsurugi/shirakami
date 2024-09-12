@@ -358,35 +358,34 @@ enum class OP_TYPE : std::int32_t {
     UPSERT,
 };
 
-inline constexpr std::string_view to_string_view( // NOLINT
-        const OP_TYPE op) noexcept {
+inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
     using namespace std::string_view_literals;
     switch (op) {
         case OP_TYPE::ABORT:
-            return "ABORT"sv; // NOLINT
+            return "ABORT"sv;
         case OP_TYPE::BEGIN:
-            return "BEGIN"sv; // NOLINT
+            return "BEGIN"sv;
         case OP_TYPE::COMMIT:
-            return "COMMIT"sv; // NOLINT
+            return "COMMIT"sv;
         case OP_TYPE::DELETE:
-            return "DELETE"sv; // NOLINT
+            return "DELETE"sv;
         case OP_TYPE::INSERT:
-            return "INSERT"sv; // NOLINT
+            return "INSERT"sv;
         case OP_TYPE::NONE:
-            return "NONE"sv; // NOLINT
+            return "NONE"sv;
         case OP_TYPE::SCAN:
-            return "SCAN"sv; // NOLINT
+            return "SCAN"sv;
         case OP_TYPE::SEARCH:
-            return "SEARCH"sv; // NOLINT
+            return "SEARCH"sv;
         case OP_TYPE::UPDATE:
-            return "UPDATE"sv; // NOLINT
+            return "UPDATE"sv;
         case OP_TYPE::UPSERT:
-            return "UPSERT"sv; // NOLINT
+            return "UPSERT"sv;
     }
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) {
     return out << to_string_view(op);
 }
 
