@@ -115,7 +115,7 @@ static Status insert_body(
                     return Status::WARN_ALREADY_EXISTS;
                 }
                 if (in_ws->get_op().is_wso_to_absent()) {
-                    in_ws->set_op(OP_TYPE::UPDATE);
+                    in_ws->set_op(in_ws->get_op().of_wso_to_alive());
                     in_ws->set_val(val); // TODO: need mutex for write strand
                     in_ws->set_lobs(std::move(lobs)); // likewise
                     return Status::OK;

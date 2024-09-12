@@ -96,12 +96,14 @@ enum class Status : std::int32_t { // NOLINT
      * @brief Warning.
      * @details The transaction executed delete operation for the page which
      * it executed insert operation for the page.
+     * @deprecated delete_record no longer cancels previous insert
      */
     WARN_CANCEL_PREVIOUS_INSERT,
     /**
      * @brief Warning.
      * @details The transaction executed delete operation for the page which
      * it executed upsert operation for the page.
+     * @deprecated delete_record no longer cancels previous upsert
      */
     WARN_CANCEL_PREVIOUS_UPSERT,
     /**
