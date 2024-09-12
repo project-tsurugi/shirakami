@@ -115,6 +115,16 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                     in_ws->set_val(val);
                     return Status::OK;
                 }
+                if (in_ws->get_op() == OP_TYPE::DELSERT) {
+                    in_ws->set_op(OP_TYPE::UPSERT);
+                    in_ws->set_val(val);
+                    return Status::OK;
+                }
+                if (in_ws->get_op() == OP_TYPE::TOMBSTONE) {
+                    in_ws->set_op(OP_TYPE::INSERT);
+                    in_ws->set_val(val);
+                    return Status::OK;
+                }
             }
 
             tid_word found_tid{};

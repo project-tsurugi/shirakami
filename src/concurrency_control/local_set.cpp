@@ -34,7 +34,7 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
     std::lock_guard<std::shared_mutex> lk{get_mtx()};
 
     if (get_for_batch()) {
-        if (elem.get_op() == OP_TYPE::DELETE) {
+        if (elem.get_op() == OP_TYPE::DELETE || elem.get_op() == OP_TYPE::DELSERT || elem.get_op() == OP_TYPE::TOMBSTONE) {
             cont_for_bt_.insert_or_assign(elem.get_rec_ptr(),
                                           write_set_obj(elem.get_storage(),
                                                         elem.get_op(),
