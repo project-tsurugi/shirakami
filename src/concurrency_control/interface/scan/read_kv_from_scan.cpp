@@ -77,7 +77,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
         if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::DELETE) {
+            if (inws->get_op() == OP_TYPE::DELETE || inws->get_op() == OP_TYPE::DELSERT || inws->get_op() == OP_TYPE::TOMBSTONE) {
                 read_register_if_ltx(rec_ptr);
                 return Status::WARN_NOT_FOUND;
             }
