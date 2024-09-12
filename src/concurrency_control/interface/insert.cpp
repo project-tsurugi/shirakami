@@ -116,12 +116,10 @@ static Status insert_body(
                     in_ws->get_op() == OP_TYPE::UPSERT) {
                     return Status::WARN_ALREADY_EXISTS;
                 }
-                if (in_ws->get_op() == OP_TYPE::DELETE) {
-                    in_ws->set_op(OP_TYPE::UPDATE);
-                    in_ws->set_val(val);
-                    in_ws->set_lobs(std::move(lobs));
-                    return Status::OK;
-                }
+                in_ws->set_op(in_ws->get_op().of_wso_to_alive());
+                in_ws->set_val(val);
+                in_ws->set_lobs(std::move(lobs));
+                return Status::OK;
             }
 
             tid_word found_tid{};

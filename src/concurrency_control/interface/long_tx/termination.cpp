@@ -149,8 +149,10 @@ static inline void expose_local_write(
                 }
                 [[fallthrough]]; // upsert is update
             }
-            case OP_TYPE::DELETE: {
-                if (wso.get_op() == OP_TYPE::DELETE) { // for fallthrough
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
+                if (wso.get_op() == OP_TYPE::DELETE || wso.get_op() == OP_TYPE::DELSERT || wso.get_op() == OP_TYPE::TOMBSTONE) { // for fallthrough
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         ctid.set_latest(false);
                         ctid.set_absent(true);
@@ -169,7 +171,7 @@ static inline void expose_local_write(
                 if (ti->get_valid_epoch() > pre_tid.get_epoch()) {
                     // case: first of list
                     std::string vb{};
-                    if (wso.get_op() != OP_TYPE::DELETE) { wso.get_value(vb); }
+                    if (!(wso.get_op() == OP_TYPE::DELETE || wso.get_op() == OP_TYPE::DELSERT || wso.get_op() == OP_TYPE::TOMBSTONE)) { wso.get_value(vb); }
                     version* new_v{new version( // NOLINT
                             vb, rec_ptr->get_latest())};
                     // prepare tid for old version
@@ -212,7 +214,7 @@ static inline void expose_local_write(
                     auto version_creation = [&wso, ctid](version* pre_ver,
                                                          version* ver) {
                         std::string vb{};
-                        if (wso.get_op() != OP_TYPE::DELETE) {
+                        if (!(wso.get_op() == OP_TYPE::DELETE || wso.get_op() == OP_TYPE::DELSERT || wso.get_op() == OP_TYPE::TOMBSTONE)) {
                             // load payload if not delete.
                             wso.get_value(vb);
                         }
@@ -283,7 +285,9 @@ static inline void expose_local_write(
                     lo = log_operation::UPSERT;
                     break;
                 }
-                case OP_TYPE::DELETE: {
+                case OP_TYPE::DELETE:
+                case OP_TYPE::DELSERT:
+                case OP_TYPE::TOMBSTONE: {
                     lo = log_operation::DELETE;
                     break;
                 }
@@ -553,7 +557,8 @@ static Status verify(session* const ti) {
                 // check about kvs
                 auto* rec_ptr{wso.first};
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-                if (wso.second.get_op() == OP_TYPE::INSERT) {
+                if (wso.second.get_op() == OP_TYPE::INSERT ||
+                    wso.second.get_op() == OP_TYPE::TOMBSTONE) {
                     // expect the record not existing
                     if (!(tid.get_latest() && tid.get_absent())) {
                         // someone interrupt tombstone

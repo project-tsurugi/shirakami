@@ -506,8 +506,10 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 [[fallthrough]];
                 // upsert is update
             }
-            case OP_TYPE::DELETE: {
-                if (wso_ptr->get_op() == OP_TYPE::DELETE) {
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
+                if (wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE) {
                     if (wso_ptr->get_rec_ptr()->get_shared_tombstone_count() ==
                         0) {
                         update_tid.set_absent(true);
@@ -527,7 +529,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                     // append new version
                     // gen new version
                     std::string vb{};
-                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                    if (!(wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE)) {
                         wso_ptr->get_value(vb);
                     }
                     version* new_v{
@@ -543,7 +545,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                    if (!(wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE)) {
                         std::string vb{};
                         wso_ptr->get_value(vb);
                         wso_ptr->get_rec_ptr()->set_value(vb);
@@ -594,7 +596,9 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 lo = log_operation::UPSERT;
                 break;
             }
-            case OP_TYPE::DELETE: {
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
                 lo = log_operation::DELETE;
                 break;
             }
