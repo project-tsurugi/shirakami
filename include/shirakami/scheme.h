@@ -42,16 +42,16 @@ inline constexpr std::string_view to_string_view(scan_endpoint ep) noexcept {
     using namespace std::string_view_literals;
     switch (ep) {
         case scan_endpoint::EXCLUSIVE:
-            return "EXCLUSIVE"sv; //NOLINT
+            return "EXCLUSIVE"sv;
         case scan_endpoint::INCLUSIVE:
-            return "INCLUSIVE"sv; //NOLINT
+            return "INCLUSIVE"sv;
         case scan_endpoint::INF:
-            return "INF"sv; //NOLINT
+            return "INF"sv;
     }
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) {
     return out << to_string_view(op);
 }
 
@@ -258,90 +258,88 @@ enum class Status : std::int32_t { // NOLINT
     INTERNAL_WARN_PREMATURE,
 };
 
-inline constexpr std::string_view to_string_view( // NOLINT
-        const Status value) noexcept {
+inline constexpr std::string_view to_string_view(const Status value) noexcept {
     using namespace std::string_view_literals;
     switch (value) {
         case Status::WARN_ALREADY_BEGIN:
-            return "WARN_ALREADY_BEGIN"sv; // NOLINT
+            return "WARN_ALREADY_BEGIN"sv;
         case Status::WARN_ALREADY_EXISTS:
-            return "WARN_ALREADY_EXISTS"sv; // NOLINT
+            return "WARN_ALREADY_EXISTS"sv;
         case Status::WARN_ALREADY_INIT:
-            return "WARN_ALREADY_INIT"sv; // NOLINT
+            return "WARN_ALREADY_INIT"sv;
         case Status::WARN_CANCEL_PREVIOUS_INSERT:
-            return "WARN_CANCEL_PREVIOUS_INSERT"sv; // NOLINT
+            return "WARN_CANCEL_PREVIOUS_INSERT"sv;
         case Status::WARN_CANCEL_PREVIOUS_UPSERT:
-            return "WARN_CANCEL_PREVIOUS_UPSERT"sv; // NOLINT
+            return "WARN_CANCEL_PREVIOUS_UPSERT"sv;
         case Status::WARN_CONCURRENT_INSERT:
-            return "WARN_CONCURRENT_INSERT"sv; // NOLINT
+            return "WARN_CONCURRENT_INSERT"sv;
         case Status::WARN_CONCURRENT_UPDATE:
-            return "WARN_CONCURRENT_UPDATE"sv; // NOLINT
+            return "WARN_CONCURRENT_UPDATE"sv;
         case Status::WARN_CONFLICT_ON_WRITE_PRESERVE:
-            return "WARN_CONFLICT_ON_WRITE_PRESERVE"sv; // NOLINT
+            return "WARN_CONFLICT_ON_WRITE_PRESERVE"sv;
         case Status::WARN_ILLEGAL_OPERATION:
-            return "WARN_ILLEGAL_OPERATION"sv; // NOLINT
+            return "WARN_ILLEGAL_OPERATION"sv;
         case Status::WARN_INVALID_ARGS:
-            return "WARN_INVALID_ARGS"sv; // NOLINT
+            return "WARN_INVALID_ARGS"sv;
         case Status::WARN_INVALID_HANDLE:
-            return "WARN_INVALID_HANDLE"sv; // NOLINT
+            return "WARN_INVALID_HANDLE"sv;
         case Status::WARN_INVALID_KEY_LENGTH:
-            return "WARN_INVALID_KEY_LENGTH"sv; // NOLINT
+            return "WARN_INVALID_KEY_LENGTH"sv;
         case Status::WARN_MAX_OPEN_SCAN:
-            return "WARN_MAX_OPEN_SCAN"sv; // NOLINT
+            return "WARN_MAX_OPEN_SCAN"sv;
         case Status::WARN_NOT_BEGIN:
-            return "WARN_NOT_BEGIN"sv; // NOLINT
+            return "WARN_NOT_BEGIN"sv;
         case Status::WARN_NOT_FOUND:
-            return "WARN_NOT_FOUND"sv; // NOLINT
+            return "WARN_NOT_FOUND"sv;
         case Status::WARN_NOT_IN_A_SESSION:
-            return "WARN_NOT_IN_A_SESSION"sv; // NOLINT
+            return "WARN_NOT_IN_A_SESSION"sv;
         case Status::WARN_NOT_INIT:
-            return "WARN_NOT_INIT"sv; // NOLINT
+            return "WARN_NOT_INIT"sv;
         case Status::WARN_PREMATURE:
-            return "WARN_PREMATURE"sv; // NOLINT
+            return "WARN_PREMATURE"sv;
         case Status::WARN_SCAN_LIMIT:
-            return "WARN_SCAN_LIMIT"sv; // NOLINT
+            return "WARN_SCAN_LIMIT"sv;
         case Status::WARN_STORAGE_ID_DEPLETION:
-            return "WARN_STORAGE_ID_DEPLETION"sv; // NOLINT
+            return "WARN_STORAGE_ID_DEPLETION"sv;
         case Status::WARN_STORAGE_NOT_FOUND:
-            return "WARN_STORAGE_NOT_FOUND"sv; // NOLINT
+            return "WARN_STORAGE_NOT_FOUND"sv;
         case Status::WARN_WAITING_FOR_OTHER_TX:
-            return "WARN_WAITING_FOR_OTHER_TX"sv; // NOLINT
+            return "WARN_WAITING_FOR_OTHER_TX"sv;
         case Status::WARN_WRITE_WITHOUT_WP:
-            return "WARN_WRITE_WITHOUT_WP"sv; // NOLINT
+            return "WARN_WRITE_WITHOUT_WP"sv;
         case Status::OK:
-            return "OK"sv; // NOLINT
+            return "OK"sv;
         case Status::ERR_CC:
-            return "ERR_CC"sv; // NOLINT
+            return "ERR_CC"sv;
         case Status::ERR_READ_AREA_VIOLATION:
-            return "ERR_READ_AREA_VIOLATION"sv; // NOLINT
+            return "ERR_READ_AREA_VIOLATION"sv;
         case Status::ERR_FATAL:
-            return "ERR_FATAL"sv; // NOLINT
+            return "ERR_FATAL"sv;
         case Status::ERR_FATAL_INDEX:
-            return "ERR_FATAL_INDEX"sv; // NOLINT
+            return "ERR_FATAL_INDEX"sv;
         case Status::ERR_INVALID_CONFIGURATION:
-            return "ERR_INVALID_CONFIGURATION"sv; // NOLINT
+            return "ERR_INVALID_CONFIGURATION"sv;
         case Status::ERR_KVS:
-            return "ERR_KVS"sv; // NOLINT
+            return "ERR_KVS"sv;
         case Status::ERR_NOT_IMPLEMENTED:
-            return "ERR_NOT_IMPLEMENTED"sv; // NOLINT
+            return "ERR_NOT_IMPLEMENTED"sv;
         case Status::ERR_SESSION_LIMIT:
-            return "ERR_SESSION_LIMIT"sv; // NOLINT
+            return "ERR_SESSION_LIMIT"sv;
         case Status::INTERNAL_BEGIN:
-            return "INTERNAL_BEGIN"sv; // NOLINT
+            return "INTERNAL_BEGIN"sv;
         case Status::INTERNAL_WARN_NOT_DELETED:
-            return "INTERNAL_WARN_NOT_DELETED"sv; // NOLINT
+            return "INTERNAL_WARN_NOT_DELETED"sv;
         case Status::INTERNAL_WARN_NOT_FOUND:
-            return "INTERNAL_WARN_NOT_FOUND"sv; // NOLINT
+            return "INTERNAL_WARN_NOT_FOUND"sv;
         case Status::INTERNAL_WARN_CONCURRENT_INSERT:
-            return "INTERNAL_WARN_CONCURRENT_INSERT"sv; // NOLINT
+            return "INTERNAL_WARN_CONCURRENT_INSERT"sv;
         case Status::INTERNAL_WARN_PREMATURE:
-            return "INTERNAL_WARN_PREMATURE"sv; // NOLINT
+            return "INTERNAL_WARN_PREMATURE"sv;
     }
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out,
-                                const Status value) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, const Status value) {
     return out << to_string_view(value);
 }
 
@@ -358,35 +356,34 @@ enum class OP_TYPE : std::int32_t {
     UPSERT,
 };
 
-inline constexpr std::string_view to_string_view( // NOLINT
-        const OP_TYPE op) noexcept {
+inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
     using namespace std::string_view_literals;
     switch (op) {
         case OP_TYPE::ABORT:
-            return "ABORT"sv; // NOLINT
+            return "ABORT"sv;
         case OP_TYPE::BEGIN:
-            return "BEGIN"sv; // NOLINT
+            return "BEGIN"sv;
         case OP_TYPE::COMMIT:
-            return "COMMIT"sv; // NOLINT
+            return "COMMIT"sv;
         case OP_TYPE::DELETE:
-            return "DELETE"sv; // NOLINT
+            return "DELETE"sv;
         case OP_TYPE::INSERT:
-            return "INSERT"sv; // NOLINT
+            return "INSERT"sv;
         case OP_TYPE::NONE:
-            return "NONE"sv; // NOLINT
+            return "NONE"sv;
         case OP_TYPE::SCAN:
-            return "SCAN"sv; // NOLINT
+            return "SCAN"sv;
         case OP_TYPE::SEARCH:
-            return "SEARCH"sv; // NOLINT
+            return "SEARCH"sv;
         case OP_TYPE::UPDATE:
-            return "UPDATE"sv; // NOLINT
+            return "UPDATE"sv;
         case OP_TYPE::UPSERT:
-            return "UPSERT"sv; // NOLINT
+            return "UPSERT"sv;
     }
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) {
     return out << to_string_view(op);
 }
 
