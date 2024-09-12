@@ -23,7 +23,7 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-static inline Status process_after_write(session* ti, write_set_obj* wso) {
+static inline Status process_after_write(write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         wso->set_op(OP_TYPE::TOMBSTONE);
         // insert operation already registered read non-existence for ltx
@@ -96,7 +96,7 @@ static Status delete_record_body(Token token, Storage storage,
     if (Status::OK == rc) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) { return process_after_write(ti, in_ws); }
+        if (in_ws != nullptr) { return process_after_write(in_ws); }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
