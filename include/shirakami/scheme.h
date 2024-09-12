@@ -350,10 +350,12 @@ enum class OP_TYPE : std::int32_t {
     BEGIN,
     COMMIT,
     DELETE,
+    DELSERT,
     INSERT,
     NONE,
     SCAN,
     SEARCH,
+    TOMBSTONE,
     UPDATE,
     UPSERT,
 };
@@ -369,6 +371,8 @@ inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
             return "COMMIT"sv;
         case OP_TYPE::DELETE:
             return "DELETE"sv;
+        case OP_TYPE::DELSERT:
+            return "DELSERT"sv;
         case OP_TYPE::INSERT:
             return "INSERT"sv;
         case OP_TYPE::NONE:
@@ -377,6 +381,8 @@ inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
             return "SCAN"sv;
         case OP_TYPE::SEARCH:
             return "SEARCH"sv;
+        case OP_TYPE::TOMBSTONE:
+            return "TOMBSTONE"sv;
         case OP_TYPE::UPDATE:
             return "UPDATE"sv;
         case OP_TYPE::UPSERT:
