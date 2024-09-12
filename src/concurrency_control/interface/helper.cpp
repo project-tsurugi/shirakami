@@ -59,7 +59,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
             // can't write without wp.
             return Status::WARN_WRITE_WITHOUT_WP;
         }
-        if (op != OP_TYPE::UPSERT) {
+        if (op != OP_TYPE::UPSERT && op != OP_TYPE::DELSERT) {
             // check for read area invalidation
             auto rs = long_tx::check_read_area(ti, st);
             if (rs == Status::ERR_READ_AREA_VIOLATION) {
@@ -79,7 +79,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         // check wp
         auto wps{wm->get_wped()};
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
+        if (find_min_ep != 0 && op != OP_TYPE::UPSERT && op != OP_TYPE::DELSERT) {
             // exist valid wp
             //ti->get_result_info().set_reason_code(
             //        reason_code::CC_OCC_WP_VERIFY);

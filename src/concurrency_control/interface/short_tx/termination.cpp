@@ -1,4 +1,6 @@
 
+#include <optional>
+
 #include "atomic_wrapper.h"
 #include "storage.h"
 
@@ -409,7 +411,9 @@ static Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_CC;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPDATE ||
-                   wso_ptr->get_op() == OP_TYPE::DELETE) {
+                   wso_ptr->get_op() == OP_TYPE::DELETE ||
+                   wso_ptr->get_op() == OP_TYPE::DELSERT ||
+                   wso_ptr->get_op() == OP_TYPE::TOMBSTONE) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 VLOG(log_trace)
@@ -429,13 +433,21 @@ static Status write_lock(session* ti, tid_word& commit_tid) {
 
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++num_locked;
+            std::optional<reason_code> error_kvs{};
             if (rec_ptr->get_tidw_ref().get_absent()) {
-                abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->set_result(reason_code::KVS_UPDATE);
+                    error_kvs = reason_code::KVS_UPDATE;
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    ti->set_result(reason_code::KVS_DELETE);
+                    error_kvs = reason_code::KVS_DELETE;
                 }
+            } else {
+                if (wso_ptr->get_op() == OP_TYPE::TOMBSTONE && rec_ptr->get_tidw().get_latest()) {
+                    error_kvs = reason_code::KVS_INSERT;
+                }
+            }
+            if (error_kvs.has_value()) {
+                abort_process();
+                ti->set_result(error_kvs.value());
                 std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso_ptr->get_storage());
@@ -506,8 +518,10 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 [[fallthrough]];
                 // upsert is update
             }
-            case OP_TYPE::DELETE: {
-                if (wso_ptr->get_op() == OP_TYPE::DELETE) {
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
+                if (wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE) {
                     if (wso_ptr->get_rec_ptr()->get_shared_tombstone_count() ==
                         0) {
                         update_tid.set_absent(true);
@@ -527,7 +541,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                     // append new version
                     // gen new version
                     std::string vb{};
-                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                    if (!(wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE)) {
                         wso_ptr->get_value(vb);
                     }
                     version* new_v{
@@ -543,7 +557,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                     rec_ptr->set_latest(new_v);
                 } else {
                     // update existing version
-                    if (wso_ptr->get_op() != OP_TYPE::DELETE) {
+                    if (!(wso_ptr->get_op() == OP_TYPE::DELETE || wso_ptr->get_op() == OP_TYPE::DELSERT || wso_ptr->get_op() == OP_TYPE::TOMBSTONE)) {
                         std::string vb{};
                         wso_ptr->get_value(vb);
                         wso_ptr->get_rec_ptr()->set_value(vb);
@@ -594,7 +608,9 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 lo = log_operation::UPSERT;
                 break;
             }
-            case OP_TYPE::DELETE: {
+            case OP_TYPE::DELETE:
+            case OP_TYPE::DELSERT:
+            case OP_TYPE::TOMBSTONE: {
                 lo = log_operation::DELETE;
                 break;
             }

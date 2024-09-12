@@ -73,7 +73,7 @@ static Status update_body(
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
         if (in_ws != nullptr) {
-            if (in_ws->get_op() == OP_TYPE::DELETE) {
+            if (in_ws->get_op() == OP_TYPE::DELETE || in_ws->get_op() == OP_TYPE::DELSERT || in_ws->get_op() == OP_TYPE::TOMBSTONE) {
                 return Status::WARN_NOT_FOUND;
             }
             in_ws->set_val(val);

@@ -58,7 +58,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                  * If it exists and it is not delete operation, read from scan api
                  * call should be able to read the record.
                  */
-                if (inws->get_op() == OP_TYPE::DELETE) { continue; }
+                if (inws->get_op() == OP_TYPE::DELETE || inws->get_op() == OP_TYPE::DELSERT || inws->get_op() == OP_TYPE::TOMBSTONE) { continue; }
                 break;
             }
         }
