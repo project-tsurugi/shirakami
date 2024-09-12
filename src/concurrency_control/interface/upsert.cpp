@@ -108,10 +108,12 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             if (in_ws != nullptr) {
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
-                    in_ws->set_val(val);
-                } else {
-                    in_ws->set_val(val);
+                } else if (in_ws->get_op() == OP_TYPE::DELSERT) {
+                    in_ws->set_op(OP_TYPE::UPSERT);
+                } else if (in_ws->get_op() == OP_TYPE::TOMBSTONE) {
+                    in_ws->set_op(OP_TYPE::INSERT);
                 }
+                in_ws->set_val(val);
                 in_ws->set_lobs(std::move(lobs));
                 return Status::OK;
             }

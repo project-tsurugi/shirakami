@@ -17,24 +17,6 @@
 
 namespace shirakami {
 
-/**
- * @return true canceled
- * @return false not canceled
- */
-inline bool cancel_insert_if_tomb_stone(Record* rec_ptr) {
-    rec_ptr->get_tidw_ref().lock();
-    tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-    if (check.get_absent() && check.get_latest()) {
-        tid_word delete_tid{check};
-        delete_tid.set_latest(false);
-        delete_tid.set_lock(false);
-        storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
-        return true;
-    }
-    rec_ptr->get_tidw_ref().unlock();
-    return false;
-}
-
 static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         ti->read_set_for_ltx().push(rec_ptr);
@@ -43,12 +25,9 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
-        cancel_insert_if_tomb_stone(wso->get_rec_ptr());
-        Storage st = wso->get_storage();
-        ti->get_write_set().erase(wso);
-        garbage::set_dirty(st);
+        wso->set_op(OP_TYPE::TOMBSTONE);
         // insert operation already registered read non-existence for ltx
-        return Status::WARN_CANCEL_PREVIOUS_INSERT;
+        return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
         wso->set_op(OP_TYPE::DELETE);
@@ -60,22 +39,9 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         return Status::WARN_NOT_FOUND;
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
-        auto rc = cancel_insert_if_tomb_stone(wso->get_rec_ptr());
-        // escape info
-        Storage st = wso->get_storage();
-        Record* rec_ptr = wso->get_rec_ptr();
-        auto rs = ti->get_write_set().erase(wso);
-        if (rs != Status::OK) {
-            LOG_FIRST_N(ERROR, 1)
-                    << "library programming error. about strand?: " << rs;
-        }
-        if (!rc) {
-            // if this was update
-            ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
-            register_read_if_ltx(ti, wso->get_rec_ptr());
-        }
-        garbage::set_dirty(st);
-        return Status::WARN_CANCEL_PREVIOUS_UPSERT;
+        wso->set_op(OP_TYPE::DELSERT);
+        // delete operation reads upsert'ed record in wso, so no need to register read
+        return Status::OK;
     }
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown code path";
     return Status::ERR_FATAL;
