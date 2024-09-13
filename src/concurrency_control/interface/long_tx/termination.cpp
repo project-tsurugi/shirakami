@@ -109,22 +109,22 @@ static inline void expose_local_write(
         dirty.insert(wso.get_storage());
         [[maybe_unused]] bool should_log{true};
         // bw can backward including occ bw
+
+        // about tombstone count
+        if (wso.get_inc_tombstone()) {
+            auto* rec_ptr = wso.get_rec_ptr();
+            rec_ptr->get_tidw_ref().lock();
+            if (rec_ptr->get_shared_tombstone_count() == 0) {
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path.";
+            } else {
+                --rec_ptr->get_shared_tombstone_count();
+            }
+            rec_ptr->get_tidw_ref().unlock();
+        }
         switch (wso.get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
-                // about tombstone count
-                if (wso.get_inc_tombstone()) {
-                    auto* rec_ptr = wso.get_rec_ptr();
-                    rec_ptr->get_tidw_ref().lock();
-                    if (rec_ptr->get_shared_tombstone_count() == 0) {
-                        LOG_FIRST_N(ERROR, 1)
-                                << log_location_prefix << "unreachable path.";
-                    } else {
-                        --rec_ptr->get_shared_tombstone_count();
-                    }
-                    rec_ptr->get_tidw_ref().unlock();
-                }
-
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
                 auto check_cd = [&tid]() {
                     return tid.get_absent() && // inserting or deleted
