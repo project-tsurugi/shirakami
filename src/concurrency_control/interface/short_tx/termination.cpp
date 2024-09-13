@@ -487,21 +487,21 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                         << "\", value: \""
                         << binary_printer(wso_ptr->get_value_view()) << "\"";
         dirty.insert(wso_ptr->get_storage());
+        // about tombstone count
+        if (wso_ptr->get_inc_tombstone()) {
+            auto* rec_ptr = wso_ptr->get_rec_ptr();
+            // already locked tid
+            if (rec_ptr->get_shared_tombstone_count() == 0) {
+                LOG_FIRST_N(ERROR, 1)
+                        << log_location_prefix << "unreachable path.";
+            } else {
+                --rec_ptr->get_shared_tombstone_count();
+            }
+        }
+
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
-                // about tombstone count
-                if (wso_ptr->get_inc_tombstone()) {
-                    auto* rec_ptr = wso_ptr->get_rec_ptr();
-                    // already locked tid
-                    if (rec_ptr->get_shared_tombstone_count() == 0) {
-                        LOG_FIRST_N(ERROR, 1)
-                                << log_location_prefix << "unreachable path.";
-                    } else {
-                        --rec_ptr->get_shared_tombstone_count();
-                    }
-                }
-
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (old_tid.get_latest() && old_tid.get_absent() &&
                     // DELETE'd Record (not-absent -> deleted) has non-zero epoch/tid
