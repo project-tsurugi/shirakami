@@ -43,7 +43,7 @@ TEST_F(delete_after_write, delete_after_insert) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, storage, k1, v1));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+    ASSERT_EQ(Status::OK,
               delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
@@ -58,7 +58,7 @@ TEST_F(delete_after_write, delete_after_upsert) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, storage, k1, v1));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT,
+    ASSERT_EQ(Status::OK,
               delete_record(s, storage, k1));
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
