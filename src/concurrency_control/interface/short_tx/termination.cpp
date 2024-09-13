@@ -1,4 +1,6 @@
 
+#include <optional>
+
 #include "atomic_wrapper.h"
 #include "storage.h"
 
@@ -402,7 +404,9 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                 return Status::ERR_CC;
             }
         } else if (wso_ptr->get_op() == OP_TYPE::UPDATE ||
-                   wso_ptr->get_op() == OP_TYPE::DELETE) {
+                   wso_ptr->get_op() == OP_TYPE::DELETE ||
+                   wso_ptr->get_op() == OP_TYPE::DELSERT ||
+                   wso_ptr->get_op() == OP_TYPE::TOMBSTONE) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
                 VLOG(log_trace)
@@ -422,13 +426,19 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 
             commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
             ++num_locked;
+            std::optional<reason_code> error_kvs{};
             if (rec_ptr->get_tidw_ref().get_absent()) {
-                abort_process();
                 if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
-                    ti->set_result(reason_code::KVS_UPDATE);
+                    error_kvs = reason_code::KVS_UPDATE;
                 } else if (wso_ptr->get_op() == OP_TYPE::DELETE) {
-                    ti->set_result(reason_code::KVS_DELETE);
+                    error_kvs = reason_code::KVS_DELETE;
                 }
+            } else if (wso_ptr->get_op() == OP_TYPE::TOMBSTONE && rec_ptr->get_tidw().get_latest() && !rec_ptr->get_tidw().get_absent()) {
+                error_kvs = reason_code::KVS_INSERT;
+            }
+            if (error_kvs.has_value()) {
+                abort_process();
+                ti->set_result(error_kvs.value());
                 std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
                 ti->get_result_info().set_key_storage_name(
                         rec_ptr->get_key_view(), wso_ptr->get_storage());
