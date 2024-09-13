@@ -89,7 +89,7 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify
@@ -112,7 +112,7 @@ TEST_F(short_delete_insert_same_tx_test, insert_delete_insert) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, insert(s, st, k, v));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 }
