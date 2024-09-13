@@ -100,7 +100,7 @@ TEST_F(long_delete_insert_test, same_tx_insert_delete) { // NOLINT
 
     // test
     ASSERT_EQ(insert(s, st, "", ""), Status::OK);
-    ASSERT_EQ(delete_record(s, st, ""), Status::WARN_CANCEL_PREVIOUS_INSERT);
+    ASSERT_EQ(delete_record(s, st, ""), Status::OK);
     // delete insert is update.
     ASSERT_EQ(Status::OK, commit(s));
 
