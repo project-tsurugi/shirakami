@@ -58,7 +58,7 @@ TEST_F(short_delete_insert_search_upsert_scan, // NOLINT
     std::string vb{}; // NOLINT
     ASSERT_EQ(Status::OK, search_key(s, storage, k, vb));
     ASSERT_EQ(vb, v);
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT,
+    ASSERT_EQ(Status::OK,
               delete_record(s, storage, k));
     ASSERT_EQ(Status::OK, upsert(s, storage, k, v));
 
