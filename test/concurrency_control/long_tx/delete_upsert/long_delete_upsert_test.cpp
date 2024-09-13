@@ -63,7 +63,7 @@ TEST_F(long_delete_upsert_test, same_tx_upsert_delete) { // NOLINT
 
     // test
     ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT, delete_record(s, st, ""));
+    ASSERT_EQ(Status::OK, delete_record(s, st, ""));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // verify

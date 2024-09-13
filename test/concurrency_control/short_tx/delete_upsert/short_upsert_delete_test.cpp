@@ -52,7 +52,7 @@ TEST_F(upsert_delete, simple) { // NOLINT
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, upsert(s, st, k, "v2"));
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_UPSERT, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, commit(s));
 
     // verify

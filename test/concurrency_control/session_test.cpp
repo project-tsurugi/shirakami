@@ -72,7 +72,7 @@ TEST_F(session_test, member_short_expose_ongoing_target_epoch_after_each_api) { 
     wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, upsert(s, st, "k", ""));
     wait_change_short_expose_ongoing_target_epoch();
-    ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, "k"));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "k"));
     wait_change_short_expose_ongoing_target_epoch();
     std::string sb{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", sb));
