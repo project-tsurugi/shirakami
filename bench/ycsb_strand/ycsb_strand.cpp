@@ -385,7 +385,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
                 if (quit.load(std::memory_order_acquire)) { return; }
             }
             // initialize mutex
-            waiting_start_th.store(0, std::memory_order_acquire);
+            waiting_start_th.store(0, std::memory_order_release);
             // thread except leader fin operation
             fin_strand_th++;
         } else {
