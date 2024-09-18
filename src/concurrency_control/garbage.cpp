@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <sstream>
 #include <xmmintrin.h>
 
@@ -358,9 +359,7 @@ void force_release_key_memory() {
 void release_key_memory() {
     auto& cont = garbage::get_container_rec();
     // compute minimum epoch
-    auto me = garbage::get_min_step_epoch() < garbage::get_min_batch_epoch()
-                      ? garbage::get_min_step_epoch()
-                      : garbage::get_min_batch_epoch();
+    auto me = std::min(garbage::get_min_step_epoch(), garbage::get_min_batch_epoch());
     std::size_t erase_count{0};
     for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
         /**
