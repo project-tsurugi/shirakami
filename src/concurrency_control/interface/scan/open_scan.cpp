@@ -72,12 +72,12 @@ Status fin_process(session* const ti, Status const this_result) {
  */
 Status check_not_found(
         session* ti, Storage st,
-        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+        std::vector<Record**>& scan_res,
         std::size_t& head_skip_rec_n) {
     head_skip_rec_n = 0;
     bool once_not_skip{false};
     for (auto& elem : scan_res) {
-        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
+        Record* rec_ptr{reinterpret_cast<Record*>(elem)}; // NOLINT
         // by inline optimization
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
@@ -284,8 +284,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     };
 
     // scan for index
-    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
-    constexpr std::size_t index_rec_ptr{1};
+    std::vector<Record**> scan_res;
     std::vector<std::pair<yakushima::node_version64_body,
                           yakushima::node_version64*>>
             nvec;
@@ -385,7 +384,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
             vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
-                                     std::get<index_rec_ptr>(scan_res.at(i))),
+                                     scan_res.at(i)),
                              // by inline optimization
                              std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
                              std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));

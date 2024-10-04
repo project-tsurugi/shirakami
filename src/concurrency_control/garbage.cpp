@@ -284,7 +284,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     // full scan
     yakushima::Token ytk{};
     while (yakushima::enter(ytk) != yakushima::status::OK) { _mm_pause(); }
-    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    std::vector<Record**> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
     if (scan_res.empty()) {
@@ -307,7 +307,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     };
 
     for (auto&& sr : scan_res) {
-        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
+        Record* rec_ptr = reinterpret_cast<Record*>(sr); // NOLINT
 
         // gathering stats info
         average_key_size += rec_ptr->get_key_view().size();
