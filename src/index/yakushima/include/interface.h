@@ -115,6 +115,54 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
     return Status::ERR_FATAL;
 }
 
+[[maybe_unused]] static inline Status
+scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
+     std::string_view const r_key, scan_endpoint const r_end,
+     std::size_t const max_size,
+     std::vector<std::tuple<std::string, Record**>>& scan_res,
+     std::vector<std::pair<yakushima::node_version64_body,
+                           yakushima::node_version64*>>* nvec) {
+    auto rc{yakushima::scan(
+            {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            l_key, parse_scan_endpoint(l_end), r_key,
+            parse_scan_endpoint(r_end), scan_res, nvec, max_size)};
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_NOT_EXIST ||
+        rc == yakushima::status::OK_ROOT_IS_NULL) {
+        return Status::WARN_NOT_FOUND;
+    }
+    if (rc == yakushima::status::OK) { return Status::OK; }
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima scan error "
+                          << rc;
+    return Status::ERR_FATAL;
+}
+
+[[maybe_unused]] static inline Status
+scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
+     std::string_view const r_key, scan_endpoint const r_end,
+     std::size_t const max_size,
+     std::vector<Record**>& scan_res,
+     std::vector<std::pair<yakushima::node_version64_body,
+                           yakushima::node_version64*>>* nvec) {
+    auto rc{yakushima::scan(
+            {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            l_key, parse_scan_endpoint(l_end), r_key,
+            parse_scan_endpoint(r_end), scan_res, nvec, max_size)};
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_NOT_EXIST ||
+        rc == yakushima::status::OK_ROOT_IS_NULL) {
+        return Status::WARN_NOT_FOUND;
+    }
+    if (rc == yakushima::status::OK) { return Status::OK; }
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima scan error "
+                          << rc;
+    return Status::ERR_FATAL;
+}
+
 static inline Status remove(yakushima::Token tk, Storage st,
                             std::string_view key) {
     auto rc{yakushima::remove(

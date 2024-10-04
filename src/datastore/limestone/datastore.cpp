@@ -203,7 +203,7 @@ void scan_all_and_logging() {
     // logging for all storage
     for (auto&& each_st : st_list) {
         // scan for index
-        std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+        std::vector<std::tuple<std::string, Record**>> scan_res;
         std::vector<std::pair<yakushima::node_version64_body,
                               yakushima::node_version64*>>
                 nvec;
