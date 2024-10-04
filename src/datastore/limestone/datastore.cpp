@@ -203,7 +203,7 @@ void scan_all_and_logging() {
     // logging for all storage
     for (auto&& each_st : st_list) {
         // scan for index
-        std::vector<std::tuple<std::string, Record**>> scan_res;
+        std::vector<Record**> scan_res;
         std::vector<std::pair<yakushima::node_version64_body,
                               yakushima::node_version64*>>
                 nvec;
@@ -213,7 +213,7 @@ void scan_all_and_logging() {
             // It found some records
             for (auto&& each_rec : scan_res) {
                 Record* rec_ptr{reinterpret_cast<Record*>( // NOLINT
-                        std::get<1>(each_rec))};
+                        each_rec)};
                 // get key val info.
                 std::string key{};
                 rec_ptr->get_key(key);
