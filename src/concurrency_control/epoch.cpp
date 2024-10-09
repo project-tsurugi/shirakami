@@ -39,13 +39,22 @@ inline void compute_and_set_cc_safe_ss_epoch() {
     {
         std::shared_lock<std::shared_mutex> lk_ongo{ongoing_tx::get_mtx()};
 
-        if (ongoing_tx::get_tx_info().empty()) {
+        // ongoing_tx::tx_info may contain RTX, so remove RTX here
+        ongoing_tx::tx_info_type ongoing_ltx{};
+        ongoing_ltx.reserve(ongoing_tx::get_tx_info().size());
+        std::copy_if(ongoing_tx::get_tx_info().begin(), ongoing_tx::get_tx_info().end(),
+                     std::back_inserter(ongoing_ltx),
+                     [](const auto& elem){
+                             return std::get<ongoing_tx::index_session>(elem)->get_tx_type() !=
+                                     transaction_options::transaction_type::READ_ONLY;});
+
+        if (ongoing_ltx.empty()) {
             // set cc safe ss epoch
             set_cc_safe_ss_epoch(get_global_epoch() + 1);
             return;
         }
         // exist ltx
-        for (auto& elem : ongoing_tx::get_tx_info()) {
+        for (auto& elem : ongoing_ltx) {
             auto* ti = std::get<ongoing_tx::index_session>(elem);
             // initialize result_epoch
             if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
