@@ -42,16 +42,14 @@ TEST_F(tsurugi_issue1001_test, second_rtx_should_read_newer_ss) {
 
     // expect
     // RTX1: begin                       -> OK
-    // OCC:  insert B 2                  -> OK
-    // OCC:  commit                      -> OK
+    // OCC:  begin, insert B 2, commit   -> OK
     // wait
     // RTX2: begin, full scan, commit    -> OK, reads A and B
     // RTX1: commit                      -> OK
 
     // before ti#1001 fix
     // RTX1: begin                       -> OK
-    // OCC:  insert B 2                  -> OK
-    // OCC:  commit                      -> OK
+    // OCC:  begin, insert B 2, commit   -> OK
     // wait
     // RTX2: begin, full scan, commit    -> OK, reads only A  <- wrong
     // RTX1: commit                      -> OK
