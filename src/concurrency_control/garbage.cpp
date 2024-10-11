@@ -59,7 +59,13 @@ void work_manager() {
             if (se.get_visible() && se.get_tx_began()) {
                 min_step_epoch = std::min(min_step_epoch, se.get_begin_epoch());
                 auto ve = se.get_valid_epoch();
-                if (ve != 0) { valid_epoch = ve; }
+                if (ve != 0) {
+                    if (valid_epoch == 0) {
+                        valid_epoch = ve;
+                    } else {
+                        valid_epoch = std::min(valid_epoch, ve);
+                    }
+                }
             }
         }
         if (min_step_epoch != epoch::max_epoch) {
