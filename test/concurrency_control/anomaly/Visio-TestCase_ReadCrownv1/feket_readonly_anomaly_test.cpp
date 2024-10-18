@@ -4,9 +4,6 @@
 #include <array>
 #include <atomic>
 #include <mutex>
-#include <string_view>
-#include <thread>
-#include <vector>
 
 #include "atomic_wrapper.h"
 #include "test_tool.h"
@@ -28,7 +25,7 @@ namespace shirakami::testing {
 
 using namespace shirakami;
 
-class feket_readonly_anomaly_test : public ::testing::Test { // NOLINT
+class feket_readonly_anomaly_test : public ::testing::TestWithParam<transaction_options::transaction_type> {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-anomaly-"
@@ -47,7 +44,11 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(feket_readonly_anomaly_test, all) { // NOLINT
+INSTANTIATE_TEST_SUITE_P(t3_type, feket_readonly_anomaly_test,
+                         ::testing::Values(transaction_options::transaction_type::LONG,
+                                           transaction_options::transaction_type::READ_ONLY));
+
+TEST_P(feket_readonly_anomaly_test, all) { // NOLINT
                                            // create table
     // ==========
     // prepare
@@ -81,6 +82,13 @@ TEST_F(feket_readonly_anomaly_test, all) { // NOLINT
     // note: o is occ, l is ltx, x is omit
     // anomaly
     // lol
+    // safe_read
+    // lol (last ltx is read only; ie. rtx)
+    auto t3_type = GetParam();
+    auto [t3_read_v, t3_commit_rc] = t3_type == transaction_options::transaction_type::LONG
+            ? std::make_tuple(var.at(2), Status::ERR_CC)
+            : std::make_tuple(var.at(0), Status::OK);
+
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
                                     {sty}}));
@@ -96,16 +104,15 @@ TEST_F(feket_readonly_anomaly_test, all) { // NOLINT
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, upsert(s.at(2), stx, x, var.at(2)));
     ASSERT_EQ(Status::OK, commit(s.at(2)));
-    ASSERT_EQ(Status::OK,
-              tx_begin({s.at(3), transaction_options::transaction_type::LONG}));
+    ASSERT_EQ(Status::OK, tx_begin({s.at(3), t3_type}));
     wait_epoch_update();
     ASSERT_EQ(Status::OK, search_key(s.at(3), sty, y, buf));
     ASSERT_EQ(buf, var.at(0));
     ASSERT_EQ(Status::OK, search_key(s.at(3), stx, x, buf));
-    ASSERT_EQ(buf, var.at(2));
+    ASSERT_EQ(buf, t3_read_v);
     ASSERT_EQ(Status::OK, upsert(s.at(1), sty, y, var.at(1)));
     ASSERT_EQ(Status::OK, commit(s.at(1)));
-    ASSERT_EQ(Status::ERR_CC, commit(s.at(3)));
+    ASSERT_EQ(t3_commit_rc, commit(s.at(3)));
 
     // verify
     ASSERT_EQ(
