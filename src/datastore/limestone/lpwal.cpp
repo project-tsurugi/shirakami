@@ -74,8 +74,8 @@ void add_entry_from_logs(handler& handle) {
     handle.set_min_log_epoch(0);
 }
 
-void daemon_work() {
-    for (;;) {
+void daemon_work(std::size_t n) {
+    while(!stop_) {
         // sleep epoch time
         sleepUs(epoch::get_global_epoch_time_us());
 
@@ -84,10 +84,9 @@ void daemon_work() {
 
 
         // do work
-        for (auto&& es : session_table::get_session_table()) {
-            // flush work
-            flush_log(&es);
-        }
+        auto &es = session_table::get_session_table().at(n);
+        // flush work
+        flush_log(&es);
     }
 }
 
@@ -95,7 +94,9 @@ void init() {
     // initialize "some" global variables
     set_stopping(false);
     // start damon thread
-    daemon_thread_ = std::thread(daemon_work);
+    for (std::size_t n = 0; n < session_table::get_session_table().size(); n++) {
+        daemon_thread_.emplace_back(std::thread(daemon_work, n));
+    }
 }
 
 void fin() {
@@ -103,7 +104,10 @@ void fin() {
     set_stopping(true);
 
     // join damon thread
-    daemon_thread_.join();
+    stop_ = true;
+    for (auto &&e: daemon_thread_) {
+        e.join();
+    }
 
     // clean up signal
     set_stopping(false);

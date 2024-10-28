@@ -51,7 +51,9 @@ namespace shirakami::lpwal {
  * @brief This thread is collecting each worker's log.
  *
  */
-[[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
+[[maybe_unused]] inline std::vector<std::thread> daemon_thread_; // NOLINT
+
+[[maybe_unused]] inline bool stop_{}; // NOLINT
 
 class write_version_type {
 public:
