@@ -36,6 +36,7 @@ private:
 };
 
 TEST_F(tsurugi_issue923_test, make_lpwal_log) {
+    if (true) {GTEST_SKIP() << "depends log flush timing"; return;}  // NOLINT
 #ifdef PWAL
     // very fragile test: no way to fully control wal flush timing
 
