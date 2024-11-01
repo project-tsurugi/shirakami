@@ -19,3 +19,10 @@ Shirakami コードから参照する環境変数の説明
     * 未指定時、空文字列指定時には、デフォルト動作をする。
     * `SHIRAKAMI_WAITING_BYPASS_TO_ROOT=0` とすると root を追い越さないモードで実行する。
     * `SHIRAKAMI_WAITING_BYPASS_TO_ROOT=1` とすると root を追い越すモードで実行する。
+
+* `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING`
+  * OCC での epoch 単位のトランザクションログバッファリング動作に関するフラグ。バッファするかしないかを選択する。
+  * デフォルト動作はバッファしない。
+    * 未指定時、空文字列指定時には、デフォルト動作をする。
+    * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=0` とすると、バッファしない。
+    * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=1` とすると、バッファする。

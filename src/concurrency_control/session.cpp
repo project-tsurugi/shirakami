@@ -178,6 +178,29 @@ void session::set_result(reason_code rc) {
     get_result_info().set_reason_code(rc);
 }
 
+void session::set_envflags() {
+#ifdef PWAL
+    // check environ "SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING"
+    bool enable_occ_epoch_buff = false;
+    if (auto* envstr = std::getenv("SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            enable_occ_epoch_buff = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            enable_occ_epoch_buff = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING; using default value";
+        }
+    }
+    optflag_occ_epoch_buffering = enable_occ_epoch_buff;
+
+    VLOG(log_debug) << log_location_prefix << "optflag: OCC epoch buffering "
+                    << (enable_occ_epoch_buff ? "on" : "off");
+#endif
+}
+
 // ========== end: result info
 
 } // namespace shirakami

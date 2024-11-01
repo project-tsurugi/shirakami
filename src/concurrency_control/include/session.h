@@ -367,6 +367,7 @@ public:
     // ========== start: logging
 #if defined(PWAL)
     lpwal::handler& get_lpwal_handle() { return lpwal_handle_; }
+    static inline bool optflag_occ_epoch_buffering{false};
 #endif
     // ========== end: logging
 
@@ -640,6 +641,8 @@ public:
     }
 
     // ========== end: node set
+
+    static void set_envflags();
 
 private:
     /**

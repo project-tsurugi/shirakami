@@ -222,6 +222,7 @@ Status init_body(database_options options) { // NOLINT
         // about read area
         read_plan::init();
 
+        session::set_envflags();
         ongoing_tx::set_optflags();
     }
 
