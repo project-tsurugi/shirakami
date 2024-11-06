@@ -395,6 +395,10 @@ Status write_lock(session* ti, tid_word& commit_tid) {
                         return Status::ERR_KVS;
                     }
                 }
+                // check Record version to update
+                if (!rec_ptr->get_tidw_ref().get_absent()) {
+                    commit_tid = std::max(commit_tid, rec_ptr->get_tidw_ref());
+                }
                 return Status::OK;
             }
             if (rc == Status::ERR_CC) {
