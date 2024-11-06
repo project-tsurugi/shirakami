@@ -133,27 +133,30 @@ void handler::end_session() {
     begun_session_ = false;
 }
 
+// @pre take mtx of logs
+void flush_log_and_end_session_if_exists(lpwal::handler& handle) {
+    if (!handle.get_logs().empty()) {
+        if (!handle.get_begun_session()) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                                  << ": session should be begun here";
+            handle.begin_session();
+        }
+        add_entry_from_logs(handle);
+        handle.end_session();
+    }
+    if (handle.get_begun_session()) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
+                              << ": session should not be begun here";
+        handle.end_session();
+    }
+}
+
 void flush_log(Token token) {
     auto* ti = static_cast<session*>(token);
     auto& handle = ti->get_lpwal_handle();
     // this is called worker or daemon, so use try_lock
     if (handle.get_mtx_logs().try_lock()) {
-        // flush log if exist
-        if (!handle.get_logs().empty()) {
-            if (!handle.get_begun_session()) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
-                                      << ": session should be begun here";
-                handle.begin_session();
-            }
-            add_entry_from_logs(handle);
-            handle.end_session();
-        }
-        if (handle.get_begun_session()) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
-                                  << ": session should not be begun here";
-            handle.end_session();
-        }
-
+        flush_log_and_end_session_if_exists(handle);
         handle.get_mtx_logs().unlock();
     }
 }
@@ -162,20 +165,7 @@ void flush_remaining_log() {
     for (auto&& es : session_table::get_session_table()) {
         auto& handle = es.get_lpwal_handle();
         std::unique_lock lk{handle.get_mtx_logs()};
-        if (!handle.get_logs().empty()) {
-            if (!handle.get_begun_session()) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
-                                      << ": session should be begun here";
-                handle.begin_session();
-            }
-            add_entry_from_logs(handle);
-            handle.end_session();
-        }
-        if (handle.get_begun_session()) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()
-                                  << ": session should not be begun here";
-            handle.end_session();
-        }
+        flush_log_and_end_session_if_exists(handle);
     }
 }
 
