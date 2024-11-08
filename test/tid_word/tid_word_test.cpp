@@ -78,4 +78,31 @@ TEST_F(tid_word_test, tid_keeps_ordered) {
     }
 }
 
+TEST_F(tid_word_test, tid_is_stronger_than_lock) {
+    tid_word t1{}, t2{};
+    t1.set_tid(1);
+    t1.set_lock(true);
+    t2.set_tid(2);
+    t2.set_lock(false);
+    EXPECT_LT(t1, t2);
+}
+
+TEST_F(tid_word_test, tid_is_stronger_than_absent) {
+    tid_word t1{}, t2{};
+    t1.set_tid(1);
+    t1.set_absent(true);
+    t2.set_tid(2);
+    t2.set_absent(false);
+    EXPECT_LT(t1, t2);
+}
+
+TEST_F(tid_word_test, absent_is_stronger_than_lock) {
+    tid_word t1{}, t2{};
+    t1.set_lock(true);
+    t1.set_absent(false);
+    t2.set_lock(false);
+    t2.set_absent(true);
+    EXPECT_LT(t1, t2);
+}
+
 } // namespace shirakami::testing
