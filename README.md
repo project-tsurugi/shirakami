@@ -17,7 +17,7 @@ sudo apt update -y && sudo apt install -y $(cat build_tools/ubuntu.deps)
 ## Dockerfile
 
 ```dockerfile
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 RUN apt update -y && apt install -y $(cat build_tools/ubuntu.deps)
 ```
