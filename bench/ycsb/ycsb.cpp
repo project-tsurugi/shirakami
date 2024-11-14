@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2019 tsurugi project.
+ * Copyright 2019-2024 tsurugi project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
 DEFINE_string(transaction_type, "short", "type of transaction.");      // NOLINT
 DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
 DEFINE_uint64(random_seed, 0, "random seed.");
+DEFINE_uint64(epoch_duration, 0, "epoch duration in microseconds");
 
 static bool isReady(const std::vector<char>& readys); // NOLINT
 static void waitForReady(const std::vector<char>& readys);
@@ -204,6 +205,12 @@ static void load_flags() {
         printf("FLAGS_random_seed : (unset)\n"); // NOLINT
     }
 
+    if (!gflags::GetCommandLineFlagInfoOrDie("epoch_duration").is_default) {
+        printf("FLAGS_epoch_duration : %zu\n", FLAGS_epoch_duration); // NOLINT
+    } else {
+        printf("FLAGS_epoch_duration : (unset)\n"); // NOLINT
+    }
+
     printf("Fin load_flags()\n"); // NOLINT
 }
 
@@ -215,7 +222,12 @@ int main(int argc, char* argv[]) try { // NOLINT
     FLAGS_stderrthreshold = 0; // to display info log
     load_flags();
 
-    init(); // NOLINT
+    database_options opt{};
+    if (!gflags::GetCommandLineFlagInfoOrDie("epoch_duration").is_default) {
+        opt.set_epoch_time(FLAGS_epoch_duration);
+    }
+
+    init(opt); // NOLINT
     LOG(INFO) << "start build_db";
     build_db(FLAGS_record, FLAGS_key_length, FLAGS_val_length, FLAGS_thread);
     LOG(INFO) << "start invoke_leader";
