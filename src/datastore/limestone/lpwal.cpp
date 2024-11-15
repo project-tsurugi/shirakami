@@ -85,8 +85,15 @@ void daemon_work() {
 
         // do work
         for (auto&& es : session_table::get_session_table()) {
+            // FIXME: use durable epoch instead of min_log_epoch (this is write version)
+            // copied from short_tx::commit
             // flush work
-            flush_log(&es);
+            auto oldest_log_epoch{es.get_lpwal_handle().get_min_log_epoch()};
+            if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
+                oldest_log_epoch != epoch::get_global_epoch()) {
+                // should flush
+                flush_log(&es);
+            }
         }
     }
 }
