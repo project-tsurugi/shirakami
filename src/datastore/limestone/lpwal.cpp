@@ -98,11 +98,16 @@ void daemon_work() {
     }
 }
 
+static constexpr int thread_num = 2;
+
 void init() {
     // initialize "some" global variables
     set_stopping(false);
+    daemon_threads_.reserve(thread_num);
     // start damon thread
-    daemon_thread_ = std::thread(daemon_work);
+    for (int i = 0; i < thread_num; i++) {
+        daemon_threads_.emplace_back(daemon_work);
+    }
 }
 
 void fin() {
@@ -110,7 +115,11 @@ void fin() {
     set_stopping(true);
 
     // join damon thread
-    daemon_thread_.join();
+    for (auto &&t : daemon_threads_) {
+        t.join();
+    }
+
+    daemon_threads_.clear();
 
     // clean up signal
     set_stopping(false);

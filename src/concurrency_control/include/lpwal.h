@@ -48,10 +48,10 @@ namespace shirakami::lpwal {
 [[maybe_unused]] inline std::atomic<bool> stopping_{false}; // NOLINT
 
 /**
- * @brief This thread is collecting each worker's log.
+ * @brief These threads are collecting each worker's log.
  *
  */
-[[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
+[[maybe_unused]] inline std::vector<std::thread> daemon_threads_; // NOLINT
 
 class write_version_type {
 public:
