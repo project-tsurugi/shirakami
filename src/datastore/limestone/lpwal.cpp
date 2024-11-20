@@ -1,4 +1,5 @@
 
+#include <charconv>
 #include <cmath>
 
 #include "clock.h"
@@ -98,14 +99,32 @@ void daemon_work() {
     }
 }
 
-static constexpr int thread_num = 2;
+static int optflag_lpwal_thread_num = 1;
+
+static void set_envflags() {
+#ifdef PWAL
+    // check environ "SHIRAKAMI_LPWAL_WORKER_NUM"
+    if (auto* envstr = std::getenv("SHIRAKAMI_LPWAL_WORKER_NUM");
+        envstr != nullptr && *envstr != '\0') {
+        decltype(optflag_lpwal_thread_num) num{};
+        const char *envstr_tail = envstr + strlen(envstr);  // NOLINT(*-pointer-arithmetic)
+        if (auto [ptr, ec] = std::from_chars(envstr, envstr_tail, num); ec != std::errc{}) {
+            optflag_lpwal_thread_num = num;
+        } else {
+            VLOG(log_debug) << log_location_prefix << "invalid value is set for SHIRAKAMI_LPWAL_WORKER_NUM; using default value";
+        }
+    }
+    VLOG(log_debug) << log_location_prefix << "optflag: lpwal worker num " << optflag_lpwal_thread_num;
+#endif
+}
 
 void init() {
     // initialize "some" global variables
+    set_envflags();
     set_stopping(false);
-    daemon_threads_.reserve(thread_num);
+    daemon_threads_.reserve(optflag_lpwal_thread_num);
     // start damon thread
-    for (int i = 0; i < thread_num; i++) {
+    for (int i = 0; i < optflag_lpwal_thread_num; i++) {
         daemon_threads_.emplace_back(daemon_work);
     }
 }

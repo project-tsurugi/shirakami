@@ -26,3 +26,8 @@ Shirakami コードから参照する環境変数の説明
     * 未指定時、空文字列指定時には、デフォルト動作をする。
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=0` とすると、バッファしない。
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=1` とすると、バッファする。
+
+* `SHIRAKAMI_LPWAL_WORKER_NUM`
+  * lpwal flush worker daemon に関するフラグ。スレッド数を10進数値で指定する。
+  * デフォルト値は1。
+    * 未指定時、空文字列指定時には、デフォルト動作をする。
