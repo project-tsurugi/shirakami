@@ -108,7 +108,7 @@ static void set_envflags() {
         envstr != nullptr && *envstr != '\0') {
         decltype(optflag_lpwal_thread_num) num{};
         const char *envstr_tail = envstr + strlen(envstr);  // NOLINT(*-pointer-arithmetic)
-        if (auto [ptr, ec] = std::from_chars(envstr, envstr_tail, num); ec != std::errc{}) {
+        if (auto [ptr, ec] = std::from_chars(envstr, envstr_tail, num); ec == std::errc{} && num > 0) {
             optflag_lpwal_thread_num = num;
         } else {
             VLOG(log_debug) << log_location_prefix << "invalid value is set for SHIRAKAMI_LPWAL_WORKER_NUM; using default value";
