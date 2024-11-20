@@ -15,6 +15,7 @@
 #include <mutex>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 
