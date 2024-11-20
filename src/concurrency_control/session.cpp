@@ -198,6 +198,25 @@ void session::set_envflags() {
 
     VLOG(log_debug) << log_location_prefix << "optflag: OCC epoch buffering "
                     << (enable_occ_epoch_buff ? "on" : "off");
+
+    // check environ "SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG"
+    bool flush_bg = false;
+    if (auto* envstr = std::getenv("SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            flush_bg = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            flush_bg = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG; using default value";
+        }
+    }
+    optflag_never_flush_in_commit = flush_bg;
+
+    VLOG(log_debug) << log_location_prefix << "optflag: always log flushing in the background "
+                    << (optflag_never_flush_in_commit ? "on" : "off");
 #endif
 }
 

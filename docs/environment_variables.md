@@ -27,6 +27,13 @@ Shirakami コードから参照する環境変数の説明
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=0` とすると、バッファしない。
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=1` とすると、バッファする。
 
+* `SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG`
+  * lpwal log flush に関するフラグ。すべて flush worker daemon に任せるかどうかを選択する。
+  * デフォルト動作はすべて flush worker daemon に任せず、 `commit()` 中にも条件によって実行する。
+    * 未指定時、空文字列指定時には、デフォルト動作をする。
+    * `SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG=0` とすると、すべて flush worker daemon に任せず、 `commit()` 中にも条件によって実行する。
+    * `SHIRAKAMI_ALWAYS_LOG_FLUSH_IN_BG=1` とすると、すべて flush worker daemon に任せる。
+
 * `SHIRAKAMI_LPWAL_WORKER_NUM`
   * lpwal flush worker daemon に関するフラグ。スレッド数を10進数値で指定する。
   * デフォルト値は1。

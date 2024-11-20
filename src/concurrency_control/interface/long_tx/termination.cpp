@@ -870,11 +870,16 @@ extern Status commit(session* const ti) {
                                      << "start_process_logging : " << str_tx_id;
 
 #if defined(PWAL)
-        auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
-        // think the wal buffer is empty due to background thread's work
-        if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
-            oldest_log_epoch != epoch::get_global_epoch()) {
-            // should flush
+        bool do_flush{};
+        if (session::optflag_never_flush_in_commit) {
+            do_flush = false;
+        } else {
+            auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
+            // think the wal buffer is empty due to background thread's work
+            do_flush = (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
+                        oldest_log_epoch != epoch::get_global_epoch());
+        }
+        if (do_flush) {
             shirakami::lpwal::flush_log(static_cast<void*>(ti));
         }
 #endif

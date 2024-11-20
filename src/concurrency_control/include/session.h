@@ -368,6 +368,7 @@ public:
 #if defined(PWAL)
     lpwal::handler& get_lpwal_handle() { return lpwal_handle_; }
     static inline bool optflag_occ_epoch_buffering{false};
+    static inline bool optflag_never_flush_in_commit{false};
 #endif
     // ========== end: logging
 
