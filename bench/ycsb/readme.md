@@ -67,6 +67,9 @@ cd [/path/to/release_build]/bench/ycsb
 - `-random_seed`
   - seed for the internal prng
   - default : (using random value from another random number generator)
+- `-epoch_duration`
+  - epoch duration in microseconds
+  - default : (using shirakami default)
 
 ### Example
 - YCSB-A
