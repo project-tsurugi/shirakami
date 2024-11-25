@@ -570,8 +570,7 @@ Status verify(session* const ti) {
                                 wso.second.get_storage());
                         return Status::ERR_CC;
                     }
-                } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
-                           wso.second.get_op() == OP_TYPE::DELETE) {
+                } else if (wso.second.get_op().is_wso_from_alive()) {
                     // expect the record existing
                     if (!(tid.get_latest() && !tid.get_absent())) {
                         // XXX: OP might be combined, so the type of first op can loss
