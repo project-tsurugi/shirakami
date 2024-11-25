@@ -499,9 +499,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
 
-        switch (wso_ptr->get_op()) {
-            case OP_TYPE::UPSERT:
-            case OP_TYPE::INSERT: {
+        if (wso_ptr->get_op() == OP_TYPE::UPSERT || wso_ptr->get_op() == OP_TYPE::INSERT) {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (old_tid.get_latest() && old_tid.get_absent() &&
                     // DELETE'd Record (not-absent -> deleted) has non-zero epoch/tid
@@ -513,15 +511,10 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
 
                     // set timestamp and unlock
                     wso_ptr->get_rec_ptr()->set_tid(update_tid);
-                    break;
+                } else {
+                    goto update_case; // NOLINT
                 }
-                [[fallthrough]];
-                // upsert is update
-            }
-            case OP_TYPE::DELETE:
-            case OP_TYPE::DELSERT:
-            case OP_TYPE::TOMBSTONE: {
-                if (wso_ptr->get_op().is_wso_to_absent()) {
+        } else if (wso_ptr->get_op().is_wso_to_absent()) {
                     if (wso_ptr->get_rec_ptr()->get_shared_tombstone_count() ==
                         0) {
                         update_tid.set_absent(true);
@@ -531,10 +524,9 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                         update_tid.set_absent(true);
                         update_tid.set_latest(true);
                     }
-                }
-                [[fallthrough]];
-            }
-            case OP_TYPE::UPDATE: {
+                    goto update_case; // NOLINT
+        } else if (wso_ptr->get_op() == OP_TYPE::UPDATE) {
+            update_case:
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
                 if (ce > old_tid.get_epoch()) {
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
@@ -580,13 +572,10 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                             << "unlocked key " << wso_ptr->get_rec_ptr()->get_key_view();
                 }
 
-                break;
-            }
-            default: {
+        } else {
                 LOG_FIRST_N(ERROR, 1)
                         << log_location_prefix << "impossible code path.";
                 return Status::ERR_FATAL;
-            }
         }
 #ifdef PWAL
         // add log records to local wal buffer
