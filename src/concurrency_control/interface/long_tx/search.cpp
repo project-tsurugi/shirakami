@@ -123,8 +123,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
 
 static Status hit_local_write_set(write_set_obj* const in_ws, Record* rec_ptr,
                                   std::string& value, bool const read_value) {
-    if (in_ws->get_op() == OP_TYPE::DELETE || in_ws->get_op() == OP_TYPE::DELSERT ||
-        in_ws->get_op() == OP_TYPE::TOMBSTONE) { return Status::WARN_NOT_FOUND; }
+    if (in_ws->get_op().is_wso_to_absent()) { return Status::WARN_NOT_FOUND; }
     if (read_value) {
         std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
         in_ws->get_value(value);
@@ -176,8 +175,9 @@ Status search_key(session* ti, Storage const storage,
     if (in_ws != nullptr) {
         rc = hit_local_write_set(in_ws, rec_ptr, value, read_value);
         if (rc == Status::OK) {
-            if (in_ws->get_op() != OP_TYPE::UPSERT && in_ws->get_op() != OP_TYPE::DELSERT) {
+            if (!in_ws->get_op().is_wso_from_any()) {
                 // note: read own upsert don't need to log read info.
+                // XXX: if there is wso of non-from_any type; already logged read at prevoius operation
                 create_read_set_for_read_info(ti, rec_ptr);
             }
             ti->insert_to_ltx_storage_read_set(storage, std::string(key));
