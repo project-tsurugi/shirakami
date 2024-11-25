@@ -123,9 +123,7 @@ static inline void expose_local_write(
             }
             rec_ptr->get_tidw_ref().unlock();
         }
-        switch (wso.get_op()) {
-            case OP_TYPE::UPSERT:
-            case OP_TYPE::INSERT: {
+        if (wso.get_op() == OP_TYPE::UPSERT || wso.get_op() == OP_TYPE::INSERT) {
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
                 auto check_cd = [&tid]() {
                     return tid.get_absent() && // inserting or deleted
@@ -144,16 +142,14 @@ static inline void expose_local_write(
                         rec_ptr->get_latest()->set_value(vb);
                         // unlock and set ctid
                         rec_ptr->set_tid(ctid);
-                        break;
-                    }
+                    } else {
                     rec_ptr->get_tidw_ref().unlock();
+                goto update_case; // NOLINT
+                    }
+                } else {
+                goto update_case; // NOLINT
                 }
-                [[fallthrough]]; // upsert is update
-            }
-            case OP_TYPE::DELETE:
-            case OP_TYPE::DELSERT:
-            case OP_TYPE::TOMBSTONE: {
-                if (wso.get_op().is_wso_to_absent()) { // for fallthrough
+        } else if (wso.get_op().is_wso_to_absent()) {
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         ctid.set_latest(false);
                         ctid.set_absent(true);
@@ -161,10 +157,9 @@ static inline void expose_local_write(
                         ctid.set_latest(true);
                         ctid.set_absent(true);
                     }
-                }
-                [[fallthrough]];
-            }
-            case OP_TYPE::UPDATE: {
+                goto update_case; // NOLINT
+        } else if (wso.get_op() == OP_TYPE::UPDATE) {
+            update_case:
                 // lock record
                 rec_ptr->get_tidw_ref().lock();
                 tid_word pre_tid{rec_ptr->get_tidw_ref().get_obj()};
@@ -257,13 +252,9 @@ static inline void expose_local_write(
                     }
                     rec_ptr->get_tidw_ref().unlock();
                 }
-                break;
-            }
-            default: {
+        } else {
                 LOG_FIRST_N(ERROR, 1)
                         << log_location_prefix << "unknown operation type.";
-                break;
-            }
         }
 #ifdef PWAL
         if (should_log) {
