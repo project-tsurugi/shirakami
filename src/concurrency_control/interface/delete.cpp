@@ -104,7 +104,7 @@ static Status delete_record_body(Token token, Storage storage,
             return Status::WARN_NOT_FOUND;
         }
         // prepare write
-        ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+        ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr, false});
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }
