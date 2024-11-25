@@ -139,7 +139,7 @@ static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
              * If it exists and it is not delete operation, read from scan api
              * call should be able to read the record.
              */
-            if (inws->get_op() == OP_TYPE::DELETE || inws->get_op() == OP_TYPE::DELSERT || inws->get_op() == OP_TYPE::TOMBSTONE) { return Status::INTERNAL_WARN_NOT_FOUND; }
+            if (inws->get_op().is_wso_to_absent()) { return Status::INTERNAL_WARN_NOT_FOUND; }
             return Status::OK;
         }
     }

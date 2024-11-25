@@ -111,9 +111,7 @@ static Status insert_body(
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)};
             if (in_ws != nullptr) {
-                if (in_ws->get_op() == OP_TYPE::INSERT ||
-                    in_ws->get_op() == OP_TYPE::UPDATE ||
-                    in_ws->get_op() == OP_TYPE::UPSERT) {
+                if (in_ws->get_op().is_wso_to_alive()) {
                     return Status::WARN_ALREADY_EXISTS;
                 }
                 if (in_ws->get_op() == OP_TYPE::DELETE) {

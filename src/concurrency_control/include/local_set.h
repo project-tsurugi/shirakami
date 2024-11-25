@@ -74,7 +74,7 @@ public:
                   bool const inc_tombstone, std::vector<blob_id_type>&& lobs)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
           inc_tombstone_(inc_tombstone), lobs_(std::move(lobs)) {
-        if (op == OP_TYPE::DELETE) {
+        if (op.is_wso_to_absent()) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         }
     }
@@ -112,13 +112,11 @@ public:
     [[nodiscard]] Storage get_storage() const { return storage_; }
 
     void get_value(std::string& out) const {
-        if (get_op() == OP_TYPE::INSERT || get_op() == OP_TYPE::UPSERT ||
-            get_op() == OP_TYPE::UPDATE) {
+        if (get_op().is_wso_to_alive()) {
             out = val_;
             return;
         }
-        if (get_op() == OP_TYPE::DELETE || get_op() == OP_TYPE::DELSERT ||
-            get_op() == OP_TYPE::TOMBSTONE) { return; }
+        if (get_op().is_wso_to_absent()) { return; }
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
 

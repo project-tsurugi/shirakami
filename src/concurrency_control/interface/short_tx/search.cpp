@@ -70,7 +70,7 @@ Status search_key(session* ti, Storage const storage,
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (in_ws != nullptr) {
-        if (in_ws->get_op() == OP_TYPE::DELETE || in_ws->get_op() == OP_TYPE::DELSERT || in_ws->get_op() == OP_TYPE::TOMBSTONE) {
+        if (in_ws->get_op().is_wso_to_absent()) {
             return Status::WARN_NOT_FOUND;
         }
         if (read_value) {
