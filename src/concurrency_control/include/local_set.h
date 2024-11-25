@@ -88,11 +88,11 @@ public:
         }
     }
 
-    // for delete
+    // for wso_to_absent
     write_set_obj(Storage const storage, OP_TYPE const op,
-                  Record* const rec_ptr)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr) {
-        if (op != OP_TYPE::DELETE) {
+                  Record* const rec_ptr, bool const inc_tombstone = false) // NOLINT(*-default-arguments-*)
+        : storage_(storage), op_(op), rec_ptr_(rec_ptr), inc_tombstone_(inc_tombstone) {
+        if (get_op().is_wso_to_alive()) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         }
     }
