@@ -175,8 +175,9 @@ Status search_key(session* ti, Storage const storage,
     if (in_ws != nullptr) {
         rc = hit_local_write_set(in_ws, rec_ptr, value, read_value);
         if (rc == Status::OK) {
-            if (in_ws->get_op() != OP_TYPE::UPSERT) {
+            if (!in_ws->get_op().is_wso_from_any()) {
                 // note: read own upsert don't need to log read info.
+                // XXX: if there is wso of non-from_any type; already logged read at prevoius operation
                 create_read_set_for_read_info(ti, rec_ptr);
             }
             ti->insert_to_ltx_storage_read_set(storage, std::string(key));
