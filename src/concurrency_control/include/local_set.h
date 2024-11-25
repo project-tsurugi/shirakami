@@ -68,16 +68,7 @@ static_assert(std::is_nothrow_move_constructible_v<read_set_obj>);
 
 class write_set_obj { // NOLINT
 public:
-    // for update / upsert / insert
-    write_set_obj(Storage const storage, OP_TYPE const op,
-                  Record* const rec_ptr, std::string_view const val)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {
-        if (op.is_wso_to_absent()) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-        }
-    }
-
-    // for upsert / insert
+    // for wso_to_alive (update / upsert / insert)
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr, std::string_view const val,
                   bool const inc_tombstone)
@@ -90,7 +81,7 @@ public:
 
     // for wso_to_absent
     write_set_obj(Storage const storage, OP_TYPE const op,
-                  Record* const rec_ptr, bool const inc_tombstone = false) // NOLINT(*-default-arguments-*)
+                  Record* const rec_ptr, bool const inc_tombstone)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), inc_tombstone_(inc_tombstone) {
         if (get_op().is_wso_to_alive()) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
