@@ -104,69 +104,6 @@ void local_write_set::sort_if_ol() {
     std::sort(cont_for_occ_.begin(), cont_for_occ_.end());
 }
 
-void local_write_set::unlock() {
-    auto process = [](Record* rec_ptr) {
-        // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-        tid_word expected{};
-        tid_word desired{};
-        expected = loadAcquire(rec_ptr->get_tidw_ref().obj_); // NOLINT
-        desired = expected;
-        desired.set_lock(false);
-        storeRelease(rec_ptr->get_tidw_ref().obj_, desired.obj_); // NOLINT
-    };
-
-    if (get_for_batch()) {
-        for (auto&& elem : get_ref_cont_for_bt()) {
-            write_set_obj* we_ptr = &std::get<1>(elem);
-            if (we_ptr->get_op() == OP_TYPE::INSERT) continue;
-            process(we_ptr->get_rec_ptr());
-        }
-    } else {
-        for (auto&& elem : get_ref_cont_for_occ()) {
-            write_set_obj* we_ptr = &elem;
-            if (we_ptr->get_op() == OP_TYPE::INSERT) continue;
-            process(we_ptr->get_rec_ptr());
-        }
-    }
-}
-
-void local_write_set::unlock(std::size_t num) {
-    auto process = [](write_set_obj* we_ptr) {
-        tid_word expected{};
-        tid_word desired{};
-        expected = loadAcquire(
-                we_ptr->get_rec_ptr()->get_tidw_ref().get_obj()); // NOLINT
-        desired = expected;
-        desired.set_lock(false);
-        storeRelease(we_ptr->get_rec_ptr()->get_tidw_ref().get_obj(),
-                     desired.get_obj()); // NOLINT
-    };
-    std::size_t ctr{0};
-    if (get_for_batch()) {
-        auto& cont = get_ref_cont_for_bt();
-        for (auto&& elem : cont) {
-            if (num == ctr) return;
-            write_set_obj* we_ptr = &std::get<1>(elem);
-            if (we_ptr->get_op() != OP_TYPE::INSERT) {
-                // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-                process(we_ptr);
-            }
-            ++ctr;
-        }
-    } else {
-        auto& cont = get_ref_cont_for_occ();
-        for (auto&& elem : cont) {
-            if (num == ctr) return;
-            write_set_obj* we_ptr = &elem;
-            if (we_ptr->get_op() != OP_TYPE::INSERT) {
-                // inserted record's lock will be released at remove_inserted_records_of_write_set_from_masstree function.
-                process(we_ptr);
-            }
-            ++ctr;
-        }
-    }
-}
-
 Status local_sequence_set::push(SequenceId const id,
                                 SequenceVersion const version,
                                 SequenceValue const value) {
