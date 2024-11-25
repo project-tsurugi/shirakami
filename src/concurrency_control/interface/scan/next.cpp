@@ -96,6 +96,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         } else if (tid.get_latest()) {
             // inserting page
             // check read own inserting
+            // XXX: why check inws again??
             if (inws != nullptr) {
                 if (inws->get_op() == OP_TYPE::INSERT) { break; }
             }
