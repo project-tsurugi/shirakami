@@ -395,7 +395,7 @@ public:
     return (op & WSO_TO_MASK) == WSO_TO_ALIVE;
 }
 
-inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
+[[nodiscard]] inline constexpr std::string_view to_string_view() const noexcept {
     using namespace std::string_view_literals;
     switch (op) {
         case OP_TYPE::ABORT:
@@ -425,9 +425,10 @@ inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
     }
     std::abort();
 }
+};
 
 inline std::ostream& operator<<(std::ostream& out, const OP_TYPE op) {
-    return out << to_string_view(op);
+    return out << op.to_string_view();
 }
 
 } // namespace shirakami
