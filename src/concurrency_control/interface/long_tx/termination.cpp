@@ -64,6 +64,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                     tid.set_latest(false);
                     tid.set_lock(false);
                     tid.set_epoch(check.get_epoch());
+                    // XXX: need restore tid (minor write vesion)??
                     rec_ptr->set_tid(tid); // and unlock
                 } else {
                     rec_ptr->get_tidw_ref().unlock();
@@ -566,6 +567,7 @@ Status verify(session* const ti) {
                            wso.second.get_op() == OP_TYPE::DELETE) {
                     // expect the record existing
                     if (!(tid.get_latest() && !tid.get_absent())) {
+                        // XXX: OP might be combined, so the type of first op can loss
                         if (wso.second.get_op() == OP_TYPE::UPDATE) {
                             ti->set_result(reason_code::KVS_UPDATE);
                         } else {
@@ -615,6 +617,7 @@ Status verify(session* const ti) {
                     wso.second.get_op() ==
                             OP_TYPE::UPSERT || // upsert may cause phantom
                     wso.second.get_op() == OP_TYPE::DELETE) {
+                    // XXX: why DELETE? this is wso to absent, so cause no phantom
                     wp::page_set_meta* psm{};
                     if (Status::OK ==
                         wp::find_page_set_meta(wso.second.get_storage(), psm)) {
