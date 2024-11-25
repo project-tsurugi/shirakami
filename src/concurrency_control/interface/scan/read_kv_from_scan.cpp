@@ -95,8 +95,8 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
         if (inws != nullptr) {
-            if (inws->get_op() == OP_TYPE::DELETE) {
-                read_register_if_ltx(rec_ptr);
+            if (inws->get_op().is_wso_to_absent()) {
+                read_register_if_ltx(rec_ptr); // why need this? already registered on previous OP
                 return Status::WARN_NOT_FOUND;
             }
             if (key_read) {

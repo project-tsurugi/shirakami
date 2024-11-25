@@ -150,7 +150,7 @@ static inline void expose_local_write(
                 [[fallthrough]]; // upsert is update
             }
             case OP_TYPE::DELETE: {
-                if (wso.get_op() == OP_TYPE::DELETE) { // for fallthrough
+                if (wso.get_op().is_wso_to_absent()) { // for fallthrough
                     if (rec_ptr->get_shared_tombstone_count() == 0) {
                         ctid.set_latest(false);
                         ctid.set_absent(true);
@@ -169,7 +169,7 @@ static inline void expose_local_write(
                 if (ti->get_valid_epoch() > pre_tid.get_epoch()) {
                     // case: first of list
                     std::string vb{};
-                    if (wso.get_op() != OP_TYPE::DELETE) { wso.get_value(vb); }
+                    if (wso.get_op().is_wso_to_alive()) { wso.get_value(vb); }
                     version* new_v{new version( // NOLINT
                             vb, rec_ptr->get_latest())};
                     // prepare tid for old version
@@ -212,7 +212,7 @@ static inline void expose_local_write(
                     auto version_creation = [&wso, ctid](version* pre_ver,
                                                          version* ver) {
                         std::string vb{};
-                        if (wso.get_op() != OP_TYPE::DELETE) {
+                        if (wso.get_op().is_wso_to_alive()) {
                             // load payload if not delete.
                             wso.get_value(vb);
                         }
@@ -526,7 +526,7 @@ static Status verify(session* const ti) {
                 // check about kvs
                 auto* rec_ptr{wso.first};
                 tid_word tid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
-                if (wso.second.get_op() == OP_TYPE::INSERT) {
+                if (wso.second.get_op().is_wso_from_absent()) {
                     // expect the record not existing
                     if (!(tid.get_latest() && tid.get_absent())) {
                         // someone interrupt tombstone
@@ -538,8 +538,7 @@ static Status verify(session* const ti) {
                                 wso.second.get_storage());
                         return Status::ERR_CC;
                     }
-                } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
-                           wso.second.get_op() == OP_TYPE::DELETE) {
+                } else if (wso.second.get_op().is_wso_from_alive()) {
                     // expect the record existing
                     if (bool alive = (tid.get_latest() && !tid.get_absent()); !alive) {
                         if (wso.second.get_op() == OP_TYPE::UPDATE) {
