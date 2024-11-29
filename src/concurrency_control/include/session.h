@@ -610,6 +610,11 @@ public:
                 expected, desired, std::memory_order_release, std::memory_order_acquire);
     }
 
+    // for initializing
+    void set_short_expose_ongoing_status(std::uint64_t es) {
+        short_expose_ongoing_status_.store(es);
+    }
+
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
     void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
