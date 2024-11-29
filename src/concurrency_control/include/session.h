@@ -294,6 +294,18 @@ public:
         return step_epoch_.load(std::memory_order_acquire);
     }
 
+    [[nodiscard]] std::uint64_t get_short_expose_ongoing_status() const {
+        return short_expose_ongoing_status_.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] epoch::epoch_t get_short_expose_ongoing_epoch() const {
+        return (short_expose_ongoing_status_.load(std::memory_order_acquire)) & ~(1UL << 63U);
+    }
+
+    [[nodiscard]] bool get_short_expose_ongoing_lock() const {
+        return ((short_expose_ongoing_status_.load(std::memory_order_acquire)) & (1UL << 63U)) != 0;
+    }
+
     /**
      * @brief getter of @a valid_epoch_
      */
@@ -567,6 +579,42 @@ public:
         step_epoch_.store(e, std::memory_order_release);
     }
 
+    void lock_short_expose_ongoing() {
+        // ASSERTION
+        if (get_short_expose_ongoing_lock()) {
+            // locked by anyone
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
+        }
+
+        short_expose_ongoing_status_.fetch_or(1UL << 63U, std::memory_order_acq_rel);
+    }
+
+    void unlock_short_expose_ongoing_and_refresh_epoch() {
+        auto e = epoch::get_global_epoch();
+        // ASSERTION
+        auto old = get_short_expose_ongoing_status();
+        if ((old & (1UL << 63U)) == 0) {
+            // unlocked by anyone
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
+        }
+        if ((old & ~(1UL << 63U)) > e) {
+            // rewind
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                                  << " epoch back from " << (old & ~(1UL << 63U)) << " to " << e;
+        }
+
+        short_expose_ongoing_status_.store(e | (0UL << 63U), std::memory_order_release);
+    }
+
+    bool cas_short_expose_ongoing_status(std::uint64_t& expected, std::uint64_t desired) {
+        return short_expose_ongoing_status_.compare_exchange_weak(
+                expected, desired, std::memory_order_release, std::memory_order_acquire);
+    }
+
+    void clear_short_expose_ongoing_status() {
+        short_expose_ongoing_status_.store(0UL);
+    }
+
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
     void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
@@ -747,6 +795,12 @@ private:
      * lock-free coordination for multi-threads.
      */
     std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
+
+    /**
+     * @brief check value for detecting whether short_tx commit expose operation is ongoing.
+     * @attention assuming 63 bits are enough size for real epoch; see tid_word
+     */
+    std::atomic<std::uint64_t> short_expose_ongoing_status_{0UL};
 
     /**
      * @brief token about yakushima.
