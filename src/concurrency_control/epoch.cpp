@@ -32,6 +32,41 @@ inline void check_epoch_load_and_update_idle_living_tx() {
     }
 }
 
+inline void check_short_expose_ongoing_status(const epoch_t ce) {
+    //epoch_t min_short_expose_ongoing_epoch{1UL << 63U};
+    for (auto&& itr : session_table::get_session_table()) {
+        // update short_expose_ongoing_status
+        std::uint64_t es = itr.get_short_expose_ongoing_status();
+        if ((es & (1UL << 63U)) == 0) {
+            std::uint64_t desired = ce; // lock=0, epoch=ce
+            while (true) {
+                if (itr.cas_short_expose_ongoing_status(es, desired)) {
+                    break; // success
+                }
+                // locked -> no need to retry
+                if ((es & (1UL << 63U)) != 0) {
+                    break;
+                }
+
+                // locked and expose-done and unlocked (and updated epoch to bigger value) in this short time
+                // -> retry, but very very rare
+            }
+        }
+        if ((es & (1UL << 63U)) != 0) {
+            if (VLOG_IS_ON(log_debug)) {
+                std::string str_stx_id{};
+                if (get_tx_id(static_cast<Token>(&itr), str_stx_id) == Status::OK) {
+                    LOG(INFO) << log_location_prefix << "ongoing expose detected. id: " << str_stx_id;
+                } else {
+                    // can display address, but not good for security
+                    LOG(INFO) << log_location_prefix << "ongoing expose detected. id: unknown";
+                }
+            }
+        }
+        //min_short_expose_ongoing_epoch = std::min(min_short_expose_ongoing_epoch, es & (~(1UL << 63U)));
+    }
+}
+
 inline void compute_and_set_cc_safe_ss_epoch() {
     // compute cc safe ss epoch
     // get read lock and block ending of highest priori ltx
@@ -135,6 +170,7 @@ void epoch_thread_work() {
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
+            check_short_expose_ongoing_status(new_epoch);
             compute_and_set_cc_safe_ss_epoch();
 #ifdef PWAL
             // change also datastore's epoch

@@ -132,29 +132,23 @@ Status session::find_high_priority_short(bool for_check) const {
     }
 
     for (auto&& itr : session_table::get_session_table()) {
-        if (
-                // already enter
-                itr.get_visible() &&
-                // short tx
-                itr.get_tx_type() ==
-                        transaction_options::transaction_type::SHORT &&
-                (itr.get_operating().load(std::memory_order_acquire) != 0) &&
-                itr.get_tx_began() &&
-                /**
-                 * If operating false and this ltx can start in the viewpoint
-                 * of epoch, stx after this operation must be serialized after
-                 * this ltx.
-                 */
-                // transaction order
-                itr.get_step_epoch() < get_valid_epoch()) {
+        if (itr.get_short_expose_ongoing_epoch() < get_valid_epoch()) {
             // logging
             if (VLOG_IS_ON(for_check ? log_debug : log_error)) {
                 std::string str_ltx_id{};
                 std::string str_stx_id{};
                 get_tx_id(static_cast<Token>(const_cast<session*>(this)),
                           str_ltx_id);
-                get_tx_id(static_cast<Token>(const_cast<session*>(&itr)),
-                          str_stx_id);
+                if (get_tx_id(static_cast<Token>(&itr), str_stx_id) != Status::OK) {
+                    // looked transient status during epoch switching
+                    str_stx_id = "(unknown)";
+                }
+                if (itr.get_tx_type() != transaction_options::transaction_type::SHORT) {
+                    // looked transient status during epoch switching
+                    std::ostringstream ss;
+                    ss << "(" << itr.get_tx_type() << ") " << str_stx_id;
+                    str_stx_id = ss.str();
+                }
                 LOG(INFO) << log_location_prefix
                           << "ltx warn premature by short tx, ltx id: "
                           << str_ltx_id << ", stx id: " << str_stx_id;
