@@ -131,6 +131,9 @@ Status session::find_high_priority_short(bool for_check) const {
         return Status::ERR_FATAL;
     }
 
+    // lock for waiting epoch updating
+    std::unique_lock<std::mutex> lk(wp::get_wp_mutex());
+
     for (auto&& itr : session_table::get_session_table()) {
         if (itr.get_short_expose_ongoing_epoch() < get_valid_epoch()) {
             // logging
