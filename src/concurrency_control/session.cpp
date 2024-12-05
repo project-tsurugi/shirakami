@@ -130,10 +130,16 @@ Status session::find_high_priority_short(bool for_check) const {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
+    if (epoch::get_min_epoch_occ_potentially_write() >= get_valid_epoch()) {
+        return Status::OK;
+    }
 
     // this is a lock to exclude updating of global epoch
     std::unique_lock<std::mutex> lk(wp::get_wp_mutex());
     // XXX: this lock is essentially unnecessary, only for compatibility; fix tests first.
+    if (epoch::get_min_epoch_occ_potentially_write() >= get_valid_epoch()) { // maybe wait to lock, so check again
+        return Status::OK;
+    }
 
     for (auto&& itr : session_table::get_session_table()) {
         if (itr.get_short_expose_ongoing_status().get_target_epoch() < get_valid_epoch()) {

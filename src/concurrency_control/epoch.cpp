@@ -33,7 +33,7 @@ inline void check_epoch_load_and_update_idle_living_tx() {
 }
 
 inline void check_short_expose_ongoing_status(const epoch_t ce) {
-    //epoch_t min_short_expose_ongoing_epoch{session::lock_and_epoch_t::UINT63_MASK};
+    epoch_t min_short_expose_ongoing_target_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
         // update short_expose_ongoing_status
         auto es = itr.get_short_expose_ongoing_status();
@@ -63,8 +63,18 @@ inline void check_short_expose_ongoing_status(const epoch_t ce) {
                 }
             }
         }
-        //min_short_expose_ongoing_epoch = std::min(min_short_expose_ongoing_epoch, es.get_target_epoch());
+        min_short_expose_ongoing_target_epoch = std::min(min_short_expose_ongoing_target_epoch, es.get_target_epoch());
     }
+
+    // ASSERTION
+    auto old = get_min_epoch_occ_potentially_write();
+    if (old > min_short_expose_ongoing_target_epoch) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                              << " min_epoch_occ_potentially_write back from "
+                              << old << " to " << min_short_expose_ongoing_target_epoch;
+    }
+
+    set_min_epoch_occ_potentially_write(min_short_expose_ongoing_target_epoch);
 }
 
 inline void compute_and_set_cc_safe_ss_epoch() {
