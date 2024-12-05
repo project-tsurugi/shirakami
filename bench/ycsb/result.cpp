@@ -19,10 +19,11 @@ void Result::displayAbortRate() const {
     if (total_abort_counts_ == 0) {
         std::cout << "abort_rate:\t0" << std::endl;
     } else {
+        constexpr int prec = 8;
         long double ave_rate =
                 static_cast<double>(total_abort_counts_) /
                 static_cast<double>(total_commit_counts_ + total_abort_counts_);
-        std::cout << std::fixed << std::setprecision(8) << "abort_rate:\t"
+        std::cout << std::fixed << std::setprecision(prec) << "abort_rate:\t"
                   << ave_rate << std::endl;
     }
 }
