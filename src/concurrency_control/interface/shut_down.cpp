@@ -159,8 +159,9 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
         // about read area
         read_plan::fin();
 
+        // clear for reusing shirakami
         for (auto&& itr : session_table::get_session_table()) {
-            itr.set_short_expose_ongoing_status(0);
+            itr.clear_short_expose_ongoing_status();
         }
     }
 

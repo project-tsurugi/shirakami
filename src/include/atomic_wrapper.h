@@ -68,4 +68,12 @@ static bool compareExchange(T& m, T& before, T2 after) {              // NOLINT
                                        __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
 }
 
+/**
+ * @brief atomic acq-rel fetch_or.
+ */
+template<typename T, typename T2>
+[[maybe_unused]] static void fetchOr(T* ptr, T2 val) {
+    __atomic_fetch_or(ptr, (T) val, __ATOMIC_ACQ_REL); // NOLINT
+}
+
 } // namespace shirakami

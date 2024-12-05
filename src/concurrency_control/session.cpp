@@ -131,11 +131,12 @@ Status session::find_high_priority_short(bool for_check) const {
         return Status::ERR_FATAL;
     }
 
-    // lock for waiting epoch updating
+    // this is a lock to exclude updating of global epoch
     std::unique_lock<std::mutex> lk(wp::get_wp_mutex());
+    // XXX: this lock is essentially unnecessary, only for compatibility; fix tests first.
 
     for (auto&& itr : session_table::get_session_table()) {
-        if (itr.get_short_expose_ongoing_epoch() < get_valid_epoch()) {
+        if (itr.get_short_expose_ongoing_status().get_target_epoch() < get_valid_epoch()) {
             // logging
             if (VLOG_IS_ON(for_check ? log_debug : log_error)) {
                 std::string str_ltx_id{};
