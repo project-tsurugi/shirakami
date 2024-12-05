@@ -349,7 +349,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                     if (loadAcquire(quit)) {
                         // for fast exit if it is over exp time.
                         // for scan loop
-                        goto ABORTED;
+                        goto ABORT_WITHOUT_COUNT;
                     }
                 } while (ret != Status::WARN_SCAN_LIMIT);
                 ret = close_scan(token, hd);
@@ -358,7 +358,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             if (loadAcquire(quit)) {
                 // for fast exit if it is over exp time.
                 // for operation loop
-                goto ABORTED;
+                goto ABORT_WITHOUT_COUNT;
             }
         }
 
@@ -372,6 +372,10 @@ void worker(const std::size_t thid, char& ready, const bool& start,
                 if (loadAcquire(quit)) {
                     // for fast exit if it is over exp time.
                     // for waiting commit
+
+                    // should goto ABORT_WITHOUT_COUNT,
+                    // but aborting after commit request is not stable
+                    // so leave the transaction as it is.
                     return;
                 }
             } while (ret == Status::WARN_WAITING_FOR_OTHER_TX);
@@ -379,8 +383,9 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         if (ret == Status::OK) { // NOLINT
             ++myres.get().get_local_commit_counts();
         } else {
-        ABORTED: // NOLINT
+    ABORTED: // NOLINT
             ++myres.get().get_local_abort_counts();
+    ABORT_WITHOUT_COUNT: // NOLINT
             abort(token);
         }
     }
