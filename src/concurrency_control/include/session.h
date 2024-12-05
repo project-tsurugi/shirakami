@@ -56,6 +56,32 @@ public:
                                          std::string, scan_endpoint>>;
     static constexpr std::uint64_t initial_mrc_tid{0};
 
+    /**
+     * @brief 1 bit lock flag + 63 bits epoch.
+     * @attention assuming 63 bits are enough size for real epoch; see tid_word
+     */
+    class lock_and_epoch_t {
+    public:
+        static const std::uint64_t BIT_MASK = 1UL << 63U;
+        static constexpr std::uint64_t UINT63_MASK = (1UL << 63U) - 1U;
+        [[nodiscard]] bool get_lock() const noexcept {
+            return (value_ & BIT_MASK) != 0;
+        }
+        [[nodiscard]] epoch::epoch_t get_target_epoch() const noexcept {
+            return value_ & UINT63_MASK;
+        }
+        [[nodiscard]] std::uint64_t& get_value_ref() noexcept {
+            return value_;
+        }
+
+        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {}; // NOLINT
+        lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {};
+        operator std::uint64_t() const noexcept { return value_; } // NOLINT
+
+    private:
+        std::uint64_t value_{};
+    };
+
 
     /**
      * @brief call commit callback and clear the callback stored
@@ -294,16 +320,8 @@ public:
         return step_epoch_.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] std::uint64_t get_short_expose_ongoing_status() const {
+    [[nodiscard]] lock_and_epoch_t get_short_expose_ongoing_status() const {
         return short_expose_ongoing_status_.load(std::memory_order_acquire);
-    }
-
-    [[nodiscard]] epoch::epoch_t get_short_expose_ongoing_epoch() const {
-        return (short_expose_ongoing_status_.load(std::memory_order_acquire)) & ~(1UL << 63U);
-    }
-
-    [[nodiscard]] bool get_short_expose_ongoing_lock() const {
-        return ((short_expose_ongoing_status_.load(std::memory_order_acquire)) & (1UL << 63U)) != 0;
     }
 
     /**
@@ -581,34 +599,34 @@ public:
 
     void lock_short_expose_ongoing() {
         // ASSERTION
-        if (get_short_expose_ongoing_lock()) {
+        if (get_short_expose_ongoing_status().get_lock()) {
             // locked by anyone
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
         }
 
-        short_expose_ongoing_status_.fetch_or(1UL << 63U, std::memory_order_acq_rel);
+        short_expose_ongoing_status_.fetch_or(lock_and_epoch_t{true, 0}, std::memory_order_acq_rel);
     }
 
     void unlock_short_expose_ongoing_and_refresh_epoch() {
         auto e = epoch::get_global_epoch();
         // ASSERTION
         auto old = get_short_expose_ongoing_status();
-        if ((old & (1UL << 63U)) == 0) {
+        if (!old.get_lock()) {
             // unlocked by anyone
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
         }
-        if ((old & ~(1UL << 63U)) > e) {
+        if (old.get_target_epoch() > e) {
             // rewind
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
-                                  << " epoch back from " << (old & ~(1UL << 63U)) << " to " << e;
+                                  << " epoch back from " << old.get_target_epoch() << " to " << e;
         }
 
-        short_expose_ongoing_status_.store(e | (0UL << 63U), std::memory_order_release);
+        short_expose_ongoing_status_.store(lock_and_epoch_t{false, e}, std::memory_order_release);
     }
 
-    bool cas_short_expose_ongoing_status(std::uint64_t& expected, std::uint64_t desired) {
+    bool cas_short_expose_ongoing_status(lock_and_epoch_t& expected, lock_and_epoch_t desired) {
         return short_expose_ongoing_status_.compare_exchange_weak(
-                expected, desired, std::memory_order_release, std::memory_order_acquire);
+                expected.get_value_ref(), desired, std::memory_order_release, std::memory_order_acquire);
     }
 
     void clear_short_expose_ongoing_status() {
@@ -798,7 +816,8 @@ private:
 
     /**
      * @brief check value for detecting whether short_tx commit expose operation is ongoing.
-     * @attention assuming 63 bits are enough size for real epoch; see tid_word
+     * @attention the type should be std::atomic\<lock_and_epoch_t\>, but fetch_or method cannot be used
+     * for std::atomic\<custom 64-bit size class\>, so std::atomic\<std::uint64_t\> is used instead.
      */
     std::atomic<std::uint64_t> short_expose_ongoing_status_{0UL};
 

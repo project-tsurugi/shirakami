@@ -33,18 +33,18 @@ inline void check_epoch_load_and_update_idle_living_tx() {
 }
 
 inline void check_short_expose_ongoing_status(const epoch_t ce) {
-    //epoch_t min_short_expose_ongoing_epoch{1UL << 63U};
+    //epoch_t min_short_expose_ongoing_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
         // update short_expose_ongoing_status
-        std::uint64_t es = itr.get_short_expose_ongoing_status();
-        if ((es & (1UL << 63U)) == 0) {
-            std::uint64_t desired = ce; // lock=0, epoch=ce
+        auto es = itr.get_short_expose_ongoing_status();
+        if (!es.get_lock()) {
+            session::lock_and_epoch_t desired{false, ce};
             while (true) {
                 if (itr.cas_short_expose_ongoing_status(es, desired)) {
                     break; // success
                 }
                 // locked -> no need to retry
-                if ((es & (1UL << 63U)) != 0) {
+                if (es.get_lock()) {
                     break;
                 }
 
@@ -52,7 +52,7 @@ inline void check_short_expose_ongoing_status(const epoch_t ce) {
                 // -> retry, but very very rare
             }
         }
-        if ((es & (1UL << 63U)) != 0) {
+        if (es.get_lock()) {
             if (VLOG_IS_ON(log_debug)) {
                 std::string str_stx_id{};
                 if (get_tx_id(static_cast<Token>(&itr), str_stx_id) == Status::OK) {
@@ -63,7 +63,7 @@ inline void check_short_expose_ongoing_status(const epoch_t ce) {
                 }
             }
         }
-        //min_short_expose_ongoing_epoch = std::min(min_short_expose_ongoing_epoch, es & (~(1UL << 63U)));
+        //min_short_expose_ongoing_epoch = std::min(min_short_expose_ongoing_epoch, es.get_target_epoch());
     }
 }
 
