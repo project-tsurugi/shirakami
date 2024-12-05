@@ -22,7 +22,7 @@ void Result::displayAbortRate() const {
         long double ave_rate =
                 static_cast<double>(total_abort_counts_) /
                 static_cast<double>(total_commit_counts_ + total_abort_counts_);
-        std::cout << std::fixed << std::setprecision(4) << "abort_rate:\t"
+        std::cout << std::fixed << std::setprecision(8) << "abort_rate:\t"
                   << ave_rate << std::endl;
     }
 }
