@@ -96,7 +96,11 @@ TEST_F(tsurugi_issue242_ok_error_test, // NOLINT
                 rc = search_key(t, st, "", buf);
                 if (rc == Status::OK) { ++ok_num; }
             } while (rc == Status::OK);
-            ASSERT_EQ(rc, Status::ERR_CC);
+            //ASSERT_EQ(rc, Status::ERR_CC);
+            // at aborted early by th-id 1,
+            // if th-id 0 is in search_key, search_key returns ERR_CC (intended to test),
+            // but th-id 0 is not in search_key, next search_key returns WARN_NOT_BEGIN.
+            ASSERT_TRUE(rc == Status::ERR_CC || rc == Status::WARN_NOT_BEGIN) << " rc:" << rc;
         } else {
             // th id 1
             std::string buf{};
