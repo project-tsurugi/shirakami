@@ -11,6 +11,32 @@
 
 namespace shirakami {
 
+/**
+ * @brief RAII holder to save and restore the format flags of an ostream.
+ */
+class FmtHolder {
+public:
+    FmtHolder() = delete;
+    FmtHolder(const FmtHolder&) = delete;
+    FmtHolder& operator=(const FmtHolder&) = delete;
+    FmtHolder(FmtHolder&&) = delete;
+    FmtHolder& operator=(FmtHolder&&) = delete;
+
+    explicit FmtHolder(std::ostream& ref) :
+        ref_(ref)
+    {
+        init_.copyfmt(ref);
+    }
+
+    ~FmtHolder() {
+        ref_.copyfmt(init_);
+    }
+
+private:
+    std::ostream& ref_;
+    std::ios init_{nullptr};
+};
+
 void Result::displayAbortCounts() const {
     std::cout << "abort_counts_:\t" << total_abort_counts_ << std::endl;
 }
@@ -23,6 +49,7 @@ void Result::displayAbortRate() const {
         long double ave_rate =
                 static_cast<double>(total_abort_counts_) /
                 static_cast<double>(total_commit_counts_ + total_abort_counts_);
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(prec) << "abort_rate:\t"
                   << ave_rate << std::endl;
     }
@@ -44,6 +71,8 @@ void Result::displayTps(size_t extime) const {
         long double result{static_cast<long double>(total_commit_counts_) /
                            extime};
         constexpr std::uint64_t ns_sec = 1000000000;
+        FmtHolder fmt{std::cout};
+        std::cout << std::fixed << std::setprecision(4);
         std::cout << "latency[ns]:\t" << ns_sec / result << std::endl;
         std::cout << "throughput[tps]:\t" << result << std::endl;
     }
@@ -55,6 +84,7 @@ void Result::displayAbortByOperationRate() const {
                            static_cast<long double>(total_abort_counts_);
         std::cout << "abort_by_operation:\t" << total_abort_by_operation_
                   << std::endl;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "abort_by_operation_rate:\t" << rate << std::endl;
     }
@@ -66,6 +96,7 @@ void Result::displayAbortByValidationRate() const {
                            static_cast<double>(total_abort_counts_);
         std::cout << "abort_by_validation:\t" << total_abort_by_validation_
                   << std::endl;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "abort_by_validation_rate:\t" << rate << std::endl;
     }
@@ -81,6 +112,7 @@ void Result::displayCommitLatencyRate(
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "commit_latency_rate:\t" << rate << std::endl;
     }
@@ -95,6 +127,7 @@ void Result::displayBackoffLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "backoff_latency_rate:\t" << rate << std::endl;
     }
@@ -102,6 +135,7 @@ void Result::displayBackoffLatencyRate(size_t clocks_per_us, size_t extime,
 
 void Result::displayEarlyAbortRate() const {
     if (total_early_aborts_ != 0U) {
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4) << "early_abort_rate:\t"
                   << static_cast<long double>(total_early_aborts_) /
                              static_cast<long double>(total_abort_counts_)
@@ -130,6 +164,7 @@ void Result::displayGCLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4) << "gc_latency_rate:\t"
                   << rate << std::endl;
     }
@@ -160,6 +195,7 @@ void Result::displayMakeProcedureLatencyRate(size_t clocks_per_us,
                 (static_cast<long double>(clocks_per_us) * powl(ten, six) *
                  static_cast<long double>(extime)) /
                 thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "make_procedure_latency_rate:\t" << rate << std::endl;
     }
@@ -210,6 +246,7 @@ void Result::displayOtherWorkLatencyRate(size_t clocks_per_us, size_t extime,
                     thread_num;
     }
 
+    FmtHolder fmt{std::cout};
     std::cout << std::fixed << std::setprecision(4)
               << "other_work_latency_rate:\t" << (1.0 - sum_rate) << std::endl;
 }
@@ -226,6 +263,7 @@ void Result::displayRatioOfPreemptiveAbortToTotalAbort() const {
         long double rate =
                 static_cast<double>(total_preemptive_aborts_counts_) /
                 static_cast<double>(total_abort_counts_);
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "ratio_of_preemptive_abort_to_total_abort:\t" << rate
                   << std::endl;
@@ -241,6 +279,7 @@ void Result::displayReadLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "read_latency_rate:\t" << rate << std::endl;
     }
@@ -251,6 +290,7 @@ void Result::displayRtsupdRate() const {
         long double rate = static_cast<double>(total_rtsupd_) /
                            (static_cast<double>(total_rtsupd_) +
                             static_cast<double>(total_rtsupd_chances_));
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4) << "rtsupd_rate:\t"
                   << rate << std::endl;
     }
@@ -306,6 +346,7 @@ void Result::displayValiLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "vali_latency_rate:\t" << rate << std::endl;
     }
@@ -318,6 +359,7 @@ void Result::displayValidationFailureByTidRate() const {
                 static_cast<double>(total_abort_by_validation_);
         std::cout << "validation_failure_by_tid:\t"
                   << total_validation_failure_by_tid_ << std::endl;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "validation_failure_by_tid_rate:\t" << rate << std::endl;
     }
@@ -330,6 +372,7 @@ void Result::displayValidationFailureByWritelockRate() const {
                 static_cast<double>(total_abort_by_validation_);
         std::cout << "validation_failure_by_writelock:\t"
                   << total_validation_failure_by_writelock_ << std::endl;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "validation_failure_by_writelock_rate:\t" << rate
                   << std::endl;
@@ -357,6 +400,7 @@ void Result::displayWriteLatencyRate(size_t clocks_per_us, size_t extime,
                            (static_cast<long double>(clocks_per_us) *
                             powl(ten, six) * static_cast<long double>(extime)) /
                            thread_num;
+        FmtHolder fmt{std::cout};
         std::cout << std::fixed << std::setprecision(4)
                   << "write_latency_rate:\t" << rate << std::endl;
     }
