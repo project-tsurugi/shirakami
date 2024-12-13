@@ -226,15 +226,11 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     shirakami_log_entry << "next, token: " << token << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = next_body(token, handle);
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
-            ret == Status::WARN_SCAN_LIMIT) {
-            // register right end point info
-            check_ltx_scan_range_rp_and_log(token, handle);
-        }
+    auto ret = next_body(token, handle);
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
+        ret == Status::WARN_SCAN_LIMIT) {
+        // register right end point info
+        check_ltx_scan_range_rp_and_log(token, handle);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "next, Status: " << ret;

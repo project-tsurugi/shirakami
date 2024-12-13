@@ -30,11 +30,7 @@ Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = close_scan_body(token, handle);
-    }
+    auto ret = close_scan_body(token, handle);
     ti->process_before_finish_step();
     shirakami_log_exit << "close_scan, Status: " << ret;
     return ret;

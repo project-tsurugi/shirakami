@@ -50,11 +50,7 @@ Status scannable_total_index_size(Token const token, // NOLINT
                         << ", size: " << size;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = scannable_total_index_size_body(token, handle, size);
-    }
+    auto ret = scannable_total_index_size_body(token, handle, size);
     ti->process_before_finish_step();
     shirakami_log_exit << "scannable_total_index_size, Status: " << ret
                        << ", size: " << size;

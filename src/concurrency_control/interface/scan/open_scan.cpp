@@ -415,12 +415,7 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                         << ", max_size: " << max_size;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle,
-                             max_size);
-    }
+    auto ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle, max_size);
     ti->process_before_finish_step();
     shirakami_log_exit << "open_scan, Status: " << ret;
     return ret;
