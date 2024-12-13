@@ -45,13 +45,11 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     yakushima::node_version64* nv_ptr{};
     yakushima::node_version64_body nv{};
     {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         // ==========
         /**
          * Check whether the handle is valid.
          */
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.get_scan_cache().find(handle) == nullptr) {
             return Status::WARN_INVALID_HANDLE;
         }
         // ==========

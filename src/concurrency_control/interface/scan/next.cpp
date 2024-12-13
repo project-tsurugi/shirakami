@@ -27,34 +27,29 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     /**
      * Check whether the handle is valid.
      */
-    {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            return Status::WARN_INVALID_HANDLE;
-        }
+    if (sh.get_scan_cache().find(handle) == nullptr) {
+        return Status::WARN_INVALID_HANDLE;
     }
     // valid handle
 
+    std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+    auto& sc = sh.get_scan_cache()[handle];
     // increment cursor
     for (;;) {
         Record* rec_ptr{};
         {
-            // take read lock
-            std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-            std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
             ++scan_index;
 
             // check range of cursor
             if (std::get<scan_handler::scan_cache_vec_pos>(
-                        sh.get_scan_cache()[handle])
+                        sc)
                         .size() <= scan_index) {
                 return Status::WARN_SCAN_LIMIT;
             }
 
             // check target record
             auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                    sh.get_scan_cache()[handle]);
+                    sc);
             auto itr = scan_buf.begin() + scan_index; // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
@@ -191,9 +186,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
      * Check whether the handle is valid.
      */
     {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.get_scan_cache().find(handle) == nullptr) {
             return;
         }
     }

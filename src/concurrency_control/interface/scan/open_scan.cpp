@@ -23,11 +23,8 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
     for (ScanHandle i = 0;; ++i) {
-        auto itr = sh.get_scan_cache().find(i);
-        if (itr == sh.get_scan_cache().end()) {
+        if(sh.get_scan_cache().create(i)) {
             out = i;
-            // clear cursor info
-            sh.get_scan_cache_itr()[i] = 0;
             return Status::OK;
         }
     }
@@ -371,17 +368,13 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     // Cache a pointer to record.
     auto& sh = ti->get_scan_handle();
     {
-        // lock for strand
-        std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-
         // find slot to log scan result.
         auto rc = find_open_scan_slot(ti, handle);
         if (rc != Status::OK) { return rc; }
+        auto& sc = sh.get_scan_cache()[handle];
 
-        std::get<scan_handler::scan_cache_storage_pos>(
-                sh.get_scan_cache()[handle]) = storage;
-        auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
+        std::get<scan_handler::scan_cache_storage_pos>(sc) = storage;
+        auto& vec = std::get<scan_handler::scan_cache_vec_pos>(sc);
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
             vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
@@ -398,8 +391,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         scan_index += head_skip_rec_n;
 
         sh.get_scanned_storage_set().set(handle, storage);
-        sh.set_r_key(r_key);
-        sh.set_r_end(r_end);
+        sh.set_r_key(r_key);  //FIXME
+        sh.set_r_end(r_end);  //FIXME
     }
     return fin_process(ti, Status::OK);
 }
