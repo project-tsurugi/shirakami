@@ -173,7 +173,8 @@ Status check_not_found(
 Status open_scan_body(Token const token, Storage storage, // NOLINT
                       const std::string_view l_key, const scan_endpoint l_end,
                       const std::string_view r_key, const scan_endpoint r_end,
-                      ScanHandle& handle, std::size_t const max_size) {
+                      ScanHandle& handle, std::size_t const max_size,
+                      bool right_to_left) {
     // check constraint: key
     auto ret = check_constraint_key_length(l_key);
     if (ret != Status::OK) { return ret; }
@@ -292,7 +293,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
     auto rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res,
-                   &nvec);
+                   &nvec, right_to_left);
     if (rc != Status::OK) {
         update_local_read_range_if_ltx();
         return rc;
@@ -407,19 +408,20 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
 Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
-                 ScanHandle& handle, std::size_t const max_size) {
+                 ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
     shirakami_log_entry << "open_scan token: " << token
                         << " storage: " << storage << shirakami_binstring(l_key)
                         << " l_end: " << l_end << shirakami_binstring(r_key)
                         << ", r_end: " << r_end << ", handle: " << handle
-                        << ", max_size: " << max_size;
+                        << ", max_size: " << max_size
+                        << ", right_to_left: " << right_to_left;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
         ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle,
-                             max_size);
+                             max_size, right_to_left);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "open_scan, Status: " << ret;

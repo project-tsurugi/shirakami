@@ -97,11 +97,12 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
      std::size_t const max_size,
      std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
      std::vector<std::pair<yakushima::node_version64_body,
-                           yakushima::node_version64*>>* nvec) {
+                           yakushima::node_version64*>>* nvec,
+                           bool right_to_left) {
     auto rc{yakushima::scan(
             {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
             l_key, parse_scan_endpoint(l_end), r_key,
-            parse_scan_endpoint(r_end), scan_res, nvec, max_size)};
+            parse_scan_endpoint(r_end), scan_res, nvec, max_size, right_to_left)};
     if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }

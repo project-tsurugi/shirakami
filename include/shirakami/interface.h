@@ -234,6 +234,13 @@ Status leave(Token token); // NOLINT
  * this argument. This argument limits the number of results.
  * @attention This scan limits range which is specified by @b l_key, @b l_end,
  * @b r_key, and @b r_end.
+ * @warning current implementation of `max_size` discards placeholder/tombstone records after fetching `max_size`
+ * records from yakushima, so it's possible that the actual number of records fetched is less than `max_size` even
+ * though there are plenty of records.
+ * @param[in] right_to_left if true, the scan starts from right end to left. Otherwise, left end to rigth.
+ * When this is set to true, current implementation has following limitation: 1. `max_size` must be set to 1
+ * so that at most one entry is hit and returned as scan result 2. r_end must be scan_endpoint::INF so that the scan
+ * is performed from unbounded right end. Status::ERR_FATAL is returned if these conditions are not met.
  * @return Status::OK success.
  * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
  * should be equal or less than 30KB.
@@ -251,7 +258,8 @@ Status leave(Token token); // NOLINT
 Status open_scan(Token token, Storage storage, std::string_view l_key,
                  scan_endpoint l_end, std::string_view r_key,
                  scan_endpoint r_end, ScanHandle& handle,
-                 std::size_t max_size = 0); // NOLINT
+                 std::size_t max_size = 0,    // NOLINT
+                 bool right_to_left = false); // NOLINT
 
 /**
  * @brief advance cursor
