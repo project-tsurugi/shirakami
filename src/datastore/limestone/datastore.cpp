@@ -208,7 +208,7 @@ void scan_all_and_logging() {
                               yakushima::node_version64*>>
                 nvec;
         auto rc = scan(each_st, "", scan_endpoint::INF, "", scan_endpoint::INF,
-                       0, scan_res, &nvec);
+                       0, scan_res, &nvec, false);
         if (rc == Status::OK) {
             // It found some records
             for (auto&& each_rec : scan_res) {
