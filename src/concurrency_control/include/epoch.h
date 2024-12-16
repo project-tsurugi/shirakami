@@ -105,6 +105,18 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
     min_epoch_occ_potentially_write.store(ep, std::memory_order_release);
 }
 
+// update if min_epoch_occ_potentially_write is less than ep
+[[maybe_unused]] static void advance_min_epoch_occ_potentially_write(const epoch_t ep) {
+    auto expected = min_epoch_occ_potentially_write.load(std::memory_order_acquire);
+    while (true) {
+        if (expected >= ep) { break; } // someone updated to greater value
+        if (min_epoch_occ_potentially_write.compare_exchange_weak(
+                    expected, ep, std::memory_order_release, std::memory_order_acquire)) {
+            return; // success
+        }
+    }
+}
+
 // For DEBUG and TEST
 //==========
 using ptp_body_type = int;

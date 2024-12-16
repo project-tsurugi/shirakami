@@ -141,8 +141,10 @@ Status session::find_high_priority_short(bool for_check) const {
         return Status::OK;
     }
 
+    epoch::epoch_t min_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
-        if (itr.get_short_expose_ongoing_status().get_target_epoch() < get_valid_epoch()) {
+        auto es = itr.get_short_expose_ongoing_status();
+        if (es.get_target_epoch() < get_valid_epoch()) {
             // logging
             if (VLOG_IS_ON(for_check ? log_debug : log_error)) {
                 std::string str_ltx_id{};
@@ -166,7 +168,12 @@ Status session::find_high_priority_short(bool for_check) const {
             }
             return Status::WARN_PREMATURE;
         }
+        min_epoch = std::min(min_epoch, es.get_target_epoch());
     }
+    // at here, min_epoch >= valid_epoch.
+    // and at entry, min_epoch_occ_potentially_write < valid_epoch.
+    // so try to update min_epoch_occ_potentially_write value by min_epoch
+    epoch::advance_min_epoch_occ_potentially_write(min_epoch);
     return Status::OK;
 }
 
