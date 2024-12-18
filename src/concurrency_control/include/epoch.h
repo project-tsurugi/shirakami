@@ -40,9 +40,10 @@ inline std::atomic<epoch_t> cc_safe_ss_epoch{// NOLINT
                                              initial_cc_safe_ss_epoch};
 
 /**
- * @brief minimum epoch that OCC might pottentially write to.
+ * @brief minimum epoch that OCC might potentially write to.
+ * @details this is the cache value of min(session::short_expose_ongoing_status.target_epoch).
  */
-inline std::atomic<epoch_t> min_epoch_occ_potentially_write{initial_epoch};
+inline std::atomic<epoch_t> min_epoch_occ_potentially_write{0};
 
 inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 

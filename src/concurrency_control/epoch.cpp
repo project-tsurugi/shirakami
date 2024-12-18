@@ -32,7 +32,7 @@ inline void check_epoch_load_and_update_idle_living_tx() {
     }
 }
 
-inline void check_short_expose_ongoing_status(const epoch_t ce) {
+inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
     epoch_t min_short_expose_ongoing_target_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
         // update short_expose_ongoing_status
@@ -180,7 +180,7 @@ void epoch_thread_work() {
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
-            check_short_expose_ongoing_status(new_epoch);
+            refresh_short_expose_ongoing_status(new_epoch);
             compute_and_set_cc_safe_ss_epoch();
 #ifdef PWAL
             // change also datastore's epoch

@@ -62,7 +62,7 @@ public:
      */
     class lock_and_epoch_t {
     public:
-        static const std::uint64_t BIT_MASK = 1UL << 63U;
+        static constexpr std::uint64_t BIT_MASK = 1UL << 63U;
         static constexpr std::uint64_t UINT63_MASK = (1UL << 63U) - 1U;
         [[nodiscard]] bool get_lock() const noexcept {
             return (value_ & BIT_MASK) != 0;
@@ -74,8 +74,8 @@ public:
             return value_;
         }
 
-        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {}; // NOLINT
-        lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {};
+        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // NOLINT
+        lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {}
         operator std::uint64_t() const noexcept { return value_; } // NOLINT
 
     private:
