@@ -32,6 +32,51 @@ inline void check_epoch_load_and_update_idle_living_tx() {
     }
 }
 
+inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
+    epoch_t min_short_expose_ongoing_target_epoch{session::lock_and_epoch_t::UINT63_MASK};
+    for (auto&& itr : session_table::get_session_table()) {
+        // update short_expose_ongoing_status
+        auto es = itr.get_short_expose_ongoing_status();
+        if (!es.get_lock()) {
+            session::lock_and_epoch_t desired{false, ce};
+            while (true) {
+                if (itr.cas_short_expose_ongoing_status(es, desired)) {
+                    break; // success
+                }
+                // locked -> no need to retry
+                if (es.get_lock()) {
+                    break;
+                }
+
+                // locked and expose-done and unlocked (and updated epoch to bigger value) in this short time
+                // -> retry, but very very rare
+            }
+        }
+        if (es.get_lock()) {
+            if (VLOG_IS_ON(log_debug)) {
+                std::string str_stx_id{};
+                if (get_tx_id(static_cast<Token>(&itr), str_stx_id) == Status::OK) {
+                    LOG(INFO) << log_location_prefix << "ongoing expose detected. id: " << str_stx_id;
+                } else {
+                    // can display address, but not good for security
+                    LOG(INFO) << log_location_prefix << "ongoing expose detected. id: unknown";
+                }
+            }
+        }
+        min_short_expose_ongoing_target_epoch = std::min(min_short_expose_ongoing_target_epoch, es.get_target_epoch());
+    }
+
+    // ASSERTION
+    auto old = get_min_epoch_occ_potentially_write();
+    if (old > min_short_expose_ongoing_target_epoch) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                              << " min_epoch_occ_potentially_write back from "
+                              << old << " to " << min_short_expose_ongoing_target_epoch;
+    }
+
+    set_min_epoch_occ_potentially_write(min_short_expose_ongoing_target_epoch);
+}
+
 inline void compute_and_set_cc_safe_ss_epoch() {
     // compute cc safe ss epoch
     // get read lock and block ending of highest priori ltx
@@ -135,6 +180,7 @@ void epoch_thread_work() {
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
+            refresh_short_expose_ongoing_status(new_epoch);
             compute_and_set_cc_safe_ss_epoch();
 #ifdef PWAL
             // change also datastore's epoch

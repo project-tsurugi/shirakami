@@ -731,12 +731,16 @@ extern Status commit(session* const ti) {
         return rc;
     }
 
+    // lock before get global epoch (for Record epoch)
+    ti->lock_short_expose_ongoing();
+
     epoch::epoch_t ce{epoch::get_global_epoch()};
 
     // read wp verify
     rc = read_wp_verify(ti, ce, commit_tid);
     if (rc != Status::OK) {
         unlock_write_set(ti);
+        ti->unlock_short_expose_ongoing_and_refresh_epoch();
         abort_and_call_ccb(rc);
         return rc;
     }
@@ -746,6 +750,7 @@ extern Status commit(session* const ti) {
     if (rc != Status::OK) {
         unlock_write_set(ti);
         ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+        ti->unlock_short_expose_ongoing_and_refresh_epoch();
         abort_and_call_ccb(rc);
         return rc;
     }
@@ -755,6 +760,7 @@ extern Status commit(session* const ti) {
     // write phase
     rc = write_phase(ti, ce);
     if (rc != Status::OK) {
+        ti->unlock_short_expose_ongoing_and_refresh_epoch();
         if (rc == Status::ERR_FATAL) { return Status::ERR_FATAL; }
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
         return Status::ERR_FATAL;
@@ -767,6 +773,7 @@ extern Status commit(session* const ti) {
     // sequence process
     // This must be after cc commit and before log process
     ti->commit_sequence(ti->get_mrc_tid());
+    ti->unlock_short_expose_ongoing_and_refresh_epoch();
 
     auto this_dm = epoch::get_global_epoch();
 #if defined(PWAL)

@@ -39,6 +39,12 @@ inline std::atomic<std::size_t> global_epoch_time_us{40 * 1000}; // NOLINT
 inline std::atomic<epoch_t> cc_safe_ss_epoch{// NOLINT
                                              initial_cc_safe_ss_epoch};
 
+/**
+ * @brief minimum epoch that OCC might potentially write to.
+ * @details this is the cache value of min(session::short_expose_ongoing_status.target_epoch).
+ */
+inline std::atomic<epoch_t> min_epoch_occ_potentially_write{0};
+
 inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] inline std::thread epoch_thread; // NOLINT
@@ -69,6 +75,10 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
     return cc_safe_ss_epoch.load(std::memory_order_acquire);
 }
 
+[[maybe_unused]] static epoch_t get_min_epoch_occ_potentially_write() { // NOLINT
+    return min_epoch_occ_potentially_write.load(std::memory_order_acquire);
+}
+
 [[maybe_unused]] static void join_epoch_thread() { epoch_thread.join(); }
 
 [[maybe_unused]] static void set_epoch_thread_end(const bool tf) {
@@ -90,6 +100,22 @@ inline std::atomic<epoch_t> datastore_durable_epoch{0}; // NOLINT
 
 [[maybe_unused]] static void set_cc_safe_ss_epoch(const epoch_t ep) {
     cc_safe_ss_epoch.store(ep, std::memory_order_release);
+}
+
+[[maybe_unused]] static void set_min_epoch_occ_potentially_write(const epoch_t ep) {
+    min_epoch_occ_potentially_write.store(ep, std::memory_order_release);
+}
+
+// update if min_epoch_occ_potentially_write is less than ep
+[[maybe_unused]] static void advance_min_epoch_occ_potentially_write(const epoch_t ep) {
+    auto expected = min_epoch_occ_potentially_write.load(std::memory_order_acquire);
+    while (true) {
+        if (expected >= ep) { break; } // someone updated to greater value
+        if (min_epoch_occ_potentially_write.compare_exchange_weak(
+                    expected, ep, std::memory_order_release, std::memory_order_acquire)) {
+            return; // success
+        }
+    }
 }
 
 // For DEBUG and TEST

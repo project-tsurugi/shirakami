@@ -48,6 +48,7 @@ void session_table::init_session_table() {
         itr.get_lpwal_handle().init();
         itr.get_lpwal_handle().set_worker_number(worker_number);
 #endif
+        itr.clear_short_expose_ongoing_status();
         ++worker_number;
     }
 }

@@ -56,6 +56,32 @@ public:
                                          std::string, scan_endpoint>>;
     static constexpr std::uint64_t initial_mrc_tid{0};
 
+    /**
+     * @brief 1 bit lock flag + 63 bits epoch.
+     * @attention assuming 63 bits are enough size for real epoch; see tid_word
+     */
+    class lock_and_epoch_t {
+    public:
+        static constexpr std::uint64_t BIT_MASK = 1UL << 63U;
+        static constexpr std::uint64_t UINT63_MASK = (1UL << 63U) - 1U;
+        [[nodiscard]] bool get_lock() const noexcept {
+            return (value_ & BIT_MASK) != 0;
+        }
+        [[nodiscard]] epoch::epoch_t get_target_epoch() const noexcept {
+            return value_ & UINT63_MASK;
+        }
+        [[nodiscard]] std::uint64_t& get_value_ref() noexcept {
+            return value_;
+        }
+
+        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // NOLINT
+        lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {}
+        operator std::uint64_t() const noexcept { return value_; } // NOLINT
+
+    private:
+        std::uint64_t value_{};
+    };
+
 
     /**
      * @brief call commit callback and clear the callback stored
@@ -292,6 +318,10 @@ public:
 
     [[nodiscard]] epoch::epoch_t get_step_epoch() const {
         return step_epoch_.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] lock_and_epoch_t get_short_expose_ongoing_status() const {
+        return short_expose_ongoing_status_.load(std::memory_order_acquire);
     }
 
     /**
@@ -567,6 +597,42 @@ public:
         step_epoch_.store(e, std::memory_order_release);
     }
 
+    void lock_short_expose_ongoing() {
+        // ASSERTION
+        if (get_short_expose_ongoing_status().get_lock()) {
+            // locked by anyone
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
+        }
+
+        short_expose_ongoing_status_.fetch_or(lock_and_epoch_t{true, 0}, std::memory_order_acq_rel);
+    }
+
+    void unlock_short_expose_ongoing_and_refresh_epoch() {
+        auto e = epoch::get_global_epoch();
+        // ASSERTION
+        auto old = get_short_expose_ongoing_status();
+        if (!old.get_lock()) {
+            // unlocked by anyone
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error.";
+        }
+        if (old.get_target_epoch() > e) {
+            // rewind
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                                  << " epoch back from " << old.get_target_epoch() << " to " << e;
+        }
+
+        short_expose_ongoing_status_.store(lock_and_epoch_t{false, e}, std::memory_order_release);
+    }
+
+    bool cas_short_expose_ongoing_status(lock_and_epoch_t& expected, lock_and_epoch_t desired) {
+        return short_expose_ongoing_status_.compare_exchange_weak(
+                expected.get_value_ref(), desired, std::memory_order_release, std::memory_order_acquire);
+    }
+
+    void clear_short_expose_ongoing_status() {
+        short_expose_ongoing_status_.store(0UL);
+    }
+
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
     void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
@@ -747,6 +813,13 @@ private:
      * lock-free coordination for multi-threads.
      */
     std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
+
+    /**
+     * @brief check value for detecting whether short_tx commit expose operation is ongoing.
+     * @attention the type should be std::atomic\<lock_and_epoch_t\>, but fetch_or method cannot be used
+     * for std::atomic\<custom 64-bit size class\>, so std::atomic\<std::uint64_t\> is used instead.
+     */
+    std::atomic<std::uint64_t> short_expose_ongoing_status_{0UL};
 
     /**
      * @brief token about yakushima.

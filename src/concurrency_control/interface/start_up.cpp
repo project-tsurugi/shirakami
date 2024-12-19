@@ -169,6 +169,7 @@ Status init_body(database_options options) { // NOLINT
         }
         epoch::set_global_epoch(new_epoch);
         epoch::set_cc_safe_ss_epoch(new_epoch + 1);
+        epoch::set_min_epoch_occ_potentially_write(0);
         // change also datastore's epoch, this must be after ready()
         switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
 #else
