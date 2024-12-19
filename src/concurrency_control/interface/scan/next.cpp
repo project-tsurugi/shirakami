@@ -27,34 +27,26 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     /**
      * Check whether the handle is valid.
      */
-    {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            return Status::WARN_INVALID_HANDLE;
-        }
+    scan_cache* sc{};
+    if ((sc = sh.get_scan_cache().find(handle)) == nullptr) {
+        return Status::WARN_INVALID_HANDLE;
     }
     // valid handle
 
+    std::size_t& scan_index = sc->scan_index();
     // increment cursor
     for (;;) {
         Record* rec_ptr{};
         {
-            // take read lock
-            std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-            std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
             ++scan_index;
 
             // check range of cursor
-            if (std::get<scan_handler::scan_cache_vec_pos>(
-                        sh.get_scan_cache()[handle])
-                        .size() <= scan_index) {
+            if (sc->get_records().size() <= scan_index) {
                 return Status::WARN_SCAN_LIMIT;
             }
 
             // check target record
-            auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                    sh.get_scan_cache()[handle]);
+            auto& scan_buf = sc->get_records();
             auto itr = scan_buf.begin() + scan_index; // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
@@ -146,10 +138,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 /**
                  * short mode must read deleted record and verify, so add read set
                  */
-                auto& sh = ti->get_scan_handle();
-                ti->push_to_read_set_for_stx(
-                        {sh.get_scanned_storage_set().get(handle), rec_ptr,
-                         tid});
+                ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
@@ -190,20 +179,16 @@ void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
     /**
      * Check whether the handle is valid.
      */
-    {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            return;
-        }
+    scan_cache* sc{};
+    if ((sc = sh.get_scan_cache().find(handle)) == nullptr) {
+        return;
     }
     // valid handle
 
     // log full scan
     // get storage info
     wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
-                         wp_meta_ptr) != Status::OK) {
+    if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
         // todo special case. interrupt DDL
         return;
     }
@@ -212,11 +197,11 @@ void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
 
         auto& read_range =
                 std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        if (std::get<2>(read_range) < sh.get_r_key()) {
-            std::get<2>(read_range) = sh.get_r_key();
+        if (std::get<2>(read_range) < sc->get_r_key()) {
+            std::get<2>(read_range) = sc->get_r_key();
         }
         // conside only inf
-        if (sh.get_r_end() == scan_endpoint::INF) {
+        if (sc->get_r_end() == scan_endpoint::INF) {
             std::get<3>(read_range) = scan_endpoint::INF;
         }
     }
