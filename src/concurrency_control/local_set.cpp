@@ -30,31 +30,10 @@ Status local_write_set::erase(write_set_obj* wso) {
     return Status::OK;
 }
 
-void local_write_set::push(Token token, write_set_obj&& elem) {
+void local_write_set::push(Token, write_set_obj&& elem) {
     std::lock_guard<std::shared_mutex> lk{get_mtx()};
 
     if (get_for_batch()) {
-        if (static_cast<session*>(token)->get_tx_type() ==
-            transaction_options::transaction_type::LONG) {
-            // update storage map
-            auto& smap = get_storage_map();
-            // find about storage
-            auto itr = smap.find(elem.get_storage());
-            std::string key{};
-            elem.get_key(key);
-            if (itr == smap.end()) {
-                // not found
-                smap.emplace(elem.get_storage(), std::make_tuple(key, key));
-            } else {
-                // found, check left key
-                if (key < std::get<0>(itr->second)) {
-                    std::get<0>(itr->second) = key;
-                } // check right key
-                if (std::get<1>(itr->second) < key) {
-                    std::get<1>(itr->second) = key;
-                }
-            }
-        }
         auto* rec_ptr = elem.get_rec_ptr();
         cont_for_bt_.insert_or_assign(rec_ptr, std::move(elem));
     } else {

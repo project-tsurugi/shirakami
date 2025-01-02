@@ -72,8 +72,6 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 break;
             }
             if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) { break; }
                 version* ver = rec_ptr->get_latest();
@@ -138,8 +136,6 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
@@ -166,43 +162,6 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     return Status::OK;
 }
 
-/**
- * @pre This is called by only long tx mode
- */
-static void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
-    auto* ti = static_cast<session*>(token);
-    auto* sc = static_cast<scan_cache_obj*>(handle);
-    auto& sh = ti->get_scan_handle();
-    /**
-     * Check whether the handle is valid.
-     */
-    if (sh.check_valid_scan_handle(sc) != Status::OK) {
-        return;
-    }
-    // valid handle
-
-    // log full scan
-    // get storage info
-    wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
-        // todo special case. interrupt DDL
-        return;
-    }
-    {
-        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
-
-        auto& read_range =
-                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        if (std::get<2>(read_range) < sc->get_r_key()) {
-            std::get<2>(read_range) = sc->get_r_key();
-        }
-        // conside only inf
-        if (sc->get_r_end() == scan_endpoint::INF) {
-            std::get<3>(read_range) = scan_endpoint::INF;
-        }
-    }
-}
-
 Status next(Token const token, ScanHandle const handle) { // NOLINT
     shirakami_log_entry << "next, token: " << token << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
@@ -212,11 +171,6 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
         if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
         ret = next_body(token, handle);
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
-            ret == Status::WARN_SCAN_LIMIT) {
-            // register right end point info
-            check_ltx_scan_range_rp_and_log(token, handle);
-        }
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "next, Status: " << ret;

@@ -20,9 +20,6 @@ namespace shirakami {
 static void abort_insert(session* const ti) {
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         short_tx::abort(ti);
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        long_tx::abort(ti);
     } else {
         LOG_FIRST_N(ERROR, 1)
                 << log_location_prefix << "library programming error";
@@ -77,12 +74,6 @@ static inline Status insert_process(session* const ti, Storage st,
     return Status::WARN_CONCURRENT_INSERT;
 }
 
-static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        ti->read_set_for_ltx().push(rec_ptr);
-    }
-}
-
 static Status insert_body(
         Token const token, Storage const storage, // NOLINT
         const std::string_view key, const std::string_view val,
@@ -128,7 +119,6 @@ static Status insert_body(
             rc = try_deleted_to_inserting(storage, key, rec_ptr, found_tid);
             if (rc == Status::OK) { // ok already count up tombstone count
                 ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val, true, std::move(lobs)});
-                register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; }
@@ -142,10 +132,6 @@ static Status insert_body(
                 if (ti->get_tx_type() ==
                     transaction_options::transaction_type::SHORT) {
                     ti->push_to_read_set_for_stx({storage, rec_ptr, found_tid});
-                } else if (ti->get_tx_type() ==
-                           transaction_options::transaction_type::LONG) {
-                    // register read_by_set
-                    register_read_if_ltx(ti, rec_ptr);
                 } else {
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                           << "library programming error";
@@ -160,7 +146,6 @@ static Status insert_body(
     INSERT_PROCESS: // NOLINT
         auto rc{insert_process(ti, storage, key, val, rec_ptr, lobs)};
         if (rc == Status::OK) {
-            register_read_if_ltx(ti, rec_ptr);
             return Status::OK;
         }
         if (rc == Status::ERR_CC) { return rc; }

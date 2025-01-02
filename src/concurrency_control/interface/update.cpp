@@ -12,36 +12,12 @@
 
 namespace shirakami {
 
-static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        ti->read_set_for_ltx().push(rec_ptr);
-    }
-}
-
 static void process_before_return_not_found(session* const ti,
                                             Storage const storage,
                                             std::string_view const key) {
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        /**
-         * Normally, read information is stored at page, but the page is not
-         * found. So it stores at table level information as range,
-         * key <= range <= key.
-         */
-        // get page set meta info
-        wp::page_set_meta* psm{};
-        auto rc = wp::find_page_set_meta(storage, psm);
-        if (rc != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                  << "library programming error or"
-                                     "usage error (mixed dml and ddl?)";
-            return;
-        }
-        // get range read  by info
-        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
-                rrbp, std::string(key), scan_endpoint::INCLUSIVE,
-                std::string(key), scan_endpoint::INCLUSIVE));
-    }
+    (void)ti;
+    (void)storage;
+    (void)key;
 }
 
 static Status update_body(
@@ -90,7 +66,6 @@ static Status update_body(
 
         // prepare write
         ti->push_to_write_set({storage, OP_TYPE::UPDATE, rec_ptr, val, false, std::move(lobs)});
-        register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }
     process_before_return_not_found(ti, storage, key);

@@ -42,10 +42,7 @@ static Status tx_begin_body(transaction_options options) { // NOLINT
     transaction_options::write_preserve_type write_preserve =
             options.get_write_preserve();
     if (!write_preserve.empty()) {
-        if (tx_type != transaction_options::transaction_type::LONG) {
-            // The only ltx can use write preserve.
-            return Status::WARN_ILLEGAL_OPERATION;
-        }
+        return Status::WARN_ILLEGAL_OPERATION;
     }
     if (tx_type == transaction_options::transaction_type::LONG) {
         return Status::ERR_NOT_IMPLEMENTED;

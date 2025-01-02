@@ -204,30 +204,9 @@ public:
         get_write_set().set_for_batch(false);
     }
 
-    void init_flags_for_ltx_begin() {
-        init_flags_for_tx_begin();
-        /**
-         * It may be called without check_commit for the ltx.
-         * Clear metadata initialized at check_commit.
-         */
-        set_requested_commit(false);
-        set_tx_type(transaction_options::transaction_type::LONG);
-        get_write_set().set_for_batch(true);
-    }
-
     void init_flags_for_rtx_begin() {
         init_flags_for_tx_begin();
         set_tx_type(transaction_options::transaction_type::READ_ONLY);
-    }
-
-    [[nodiscard]] bool is_write_only_ltx_now() {
-        std::shared_lock<std::shared_mutex> lk_point_read{
-                read_set_for_ltx().get_mtx_set()};
-        std::shared_lock<std::shared_mutex> lk_range_read{
-                get_range_read_set_for_ltx().get_mtx_set()};
-        return get_tx_type() == transaction_options::transaction_type::LONG &&
-               read_set_for_ltx().set().empty() &&
-               get_range_read_set_for_ltx().get_set().empty();
     }
 
     // ========== start: getter
@@ -367,35 +346,11 @@ public:
         return requested_commit_.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] bool get_was_considering_forwarding_at_once() const {
-        return was_considering_forwarding_at_once_;
-    }
-
-    [[nodiscard]] bool get_is_forwarding() const { return is_forwarding_; }
-
-    [[nodiscard]] Status get_result_requested_commit() const {
-        return result_requested_commit_.load(std::memory_order_acquire);
-    }
-
     [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
-
-    overtaken_ltx_set_type& get_overtaken_ltx_set() {
-        return overtaken_ltx_set_;
-    }
-
-    std::shared_mutex& get_mtx_overtaken_ltx_set() {
-        return mtx_overtaken_ltx_set_;
-    }
-
-    wp_set_type& get_wp_set() { return wp_set_; }
-
-    [[nodiscard]] const wp_set_type& get_wp_set() const { return wp_set_; }
 
     [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
         return read_version_max_epoch_.load(std::memory_order_acquire);
     }
-
-    local_read_set_for_ltx& read_set_for_ltx() { return read_set_for_ltx_; }
 
     commit_callback_type get_commit_callback() { return commit_callback_; }
 
@@ -427,11 +382,6 @@ public:
     void clear_ltx_storage_read_set() {
         std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
         get_ltx_storage_read_set().clear();
-    }
-
-    void clear_overtaken_ltx_set() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
-        overtaken_ltx_set_.clear();
     }
 
     void clear_range_read_by_short_set() {

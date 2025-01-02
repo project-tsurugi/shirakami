@@ -24,16 +24,6 @@ static Status abort_body(Token token) { // NOLINT
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         rc = short_tx::abort(ti);
     } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        if (ti->get_requested_commit()) {
-            /**
-             * It was already requested.
-             * So user must use check_commit function to check result.
-             */
-            return Status::WARN_ILLEGAL_OPERATION;
-        }
-        rc = long_tx::abort(ti);
-    } else if (ti->get_tx_type() ==
                transaction_options::transaction_type::READ_ONLY) {
         rc = read_only_tx::abort(ti);
     } else {
@@ -81,29 +71,6 @@ static Status commit_body(Token const token,                    // NOLINT
         if (rc == Status::OK) {
             ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
         } else {
-            ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
-        }
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        // for long tx
-        if (ti->get_requested_commit()) {
-            /**
-             * It was already requested.
-             * So user must use check_commit function to check result.
-             */
-            return Status::WARN_WAITING_FOR_OTHER_TX;
-        }
-        rc = long_tx::commit(ti);
-
-        // set about diagnostics
-        if (rc == Status::OK) {
-            // committed
-            ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_DURABLE);
-        } else if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-            // waited
-            ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_CC_COMMIT);
-        } else {
-            // aborted
             ti->set_diag_tx_state_kind(TxState::StateKind::ABORTED);
         }
     } else if (ti->get_tx_type() ==

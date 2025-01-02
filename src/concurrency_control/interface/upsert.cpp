@@ -21,9 +21,6 @@ namespace shirakami {
 static void abort_update(session* ti) {
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         short_tx::abort(ti);
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        long_tx::abort(ti);
     } else {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path.";
     }

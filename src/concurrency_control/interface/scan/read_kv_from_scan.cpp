@@ -23,20 +23,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                              std::string& buf) {
     auto* ti = static_cast<session*>(token);
 
-    // for register point read information.
-    auto read_register_if_ltx = [ti](Record* rec_ptr) {
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            ti->read_set_for_ltx().push(rec_ptr);
-        }
-    };
-    auto register_read_version_max_epoch = [ti](epoch::epoch_t read_epoch) {
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            if (read_epoch > ti->get_read_version_max_epoch()) {
-                ti->set_read_version_max_epoch_if_need(read_epoch);
-            }
-        }
-    };
-
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     auto* sc = static_cast<scan_cache_obj*>(handle);
@@ -58,19 +44,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
 
-    // log read range info if ltx
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
-            // todo special case. interrupt DDL
-            return Status::WARN_STORAGE_NOT_FOUND;
-        }
-        // update local read range
-        std::string key_buf{};
-        rec_ptr->get_key(key_buf);
-        long_tx::update_local_read_range(ti, wp_meta_ptr, key_buf);
-    }
-
     /**
      * Check read-own-write
      */
@@ -78,7 +51,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::DELETE) {
-                read_register_if_ltx(rec_ptr);
                 return Status::WARN_NOT_FOUND;
             }
             if (key_read) {
@@ -88,7 +60,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                         rec_ptr->get_mtx_value()};
                 inws->get_value(buf);
             }
-            read_register_if_ltx(rec_ptr);
             return Status::OK;
         }
     }
@@ -121,8 +92,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         } // else: return result about read (rr: read result)
         return rr;
     }
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-        ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         version* ver{};
         bool is_latest{false};
         tid_word f_check{};
@@ -130,7 +100,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 rec_ptr, ti->get_valid_epoch(), ver, is_latest, f_check)};
         if (rc == Status::WARN_NOT_FOUND) {
             // version list traversed.
-            read_register_if_ltx(rec_ptr);
             return rc;
         }
         if (rc != Status::OK) {
@@ -160,9 +129,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             // verify optimistic read
             if (s_check.get_obj() == f_check.get_obj()) {
                 // success optimistic read latest version
-                read_register_if_ltx(rec_ptr);
                 // check max epoch of read version
-                register_read_version_max_epoch(f_check.get_epoch());
                 if (f_check.get_absent()) { return Status::WARN_NOT_FOUND; }
                 return Status::OK;
             }
@@ -176,7 +143,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                     ti->get_valid_epoch(), ver);
             if (rc == Status::WARN_NOT_FOUND) {
                 // version list traversed.
-                read_register_if_ltx(rec_ptr);
                 return rc;
             }
         }
@@ -190,9 +156,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             }
         }
 
-        read_register_if_ltx(rec_ptr);
         // check max epoch of read version
-        register_read_version_max_epoch(ver->get_tid().get_epoch());
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         // ok case
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {

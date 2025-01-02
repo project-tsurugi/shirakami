@@ -53,10 +53,6 @@ static Status fin_process(session* const ti, Status const this_result) {
         transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
         if (ti->get_result_info().get_reason_code() != reason_code::UNKNOWN) {
             // but concurrent strand thread failed
-            if (this_tx_type == transaction_options::transaction_type::LONG) {
-                long_tx::abort(ti);
-                return Status::ERR_CC;
-            }
             if (this_tx_type == transaction_options::transaction_type::SHORT) {
                 short_tx::abort(ti);
                 return Status::ERR_CC;
@@ -94,8 +90,6 @@ static Status check_not_found(
                 return Status::OK;
             }
             if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() < ti->get_valid_epoch()) {
                     // latest version check
@@ -154,8 +148,6 @@ static Status check_not_found(
                 ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
                 if (tid.get_epoch() >= ti->get_valid_epoch()) {
                     // there may be readable rec
@@ -195,8 +187,7 @@ static Status open_scan_body(
     // pre-process
 
     // check about long tx
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
-        ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+    if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         // check start epoch
         if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
             return Status::WARN_PREMATURE;
@@ -237,10 +228,6 @@ static Status open_scan_body(
             ti->set_result(reason_code::CC_OCC_WP_VERIFY);
             return Status::ERR_CC;
         }
-    } else if (ti->get_tx_type() ==
-               transaction_options::transaction_type::LONG) {
-        // wp verify and forwarding
-        long_tx::wp_verify_and_forwarding(ti, wp_meta_ptr);
     } else if (ti->get_tx_type() !=
                transaction_options::transaction_type::READ_ONLY) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
@@ -249,24 +236,7 @@ static Status open_scan_body(
     // ==========
 
     // check read information
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        wp::page_set_meta* psm{};
-        auto rc = wp::find_page_set_meta(storage, psm);
-        if (rc != Status::OK) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-            return Status::ERR_FATAL;
-        }
-        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-        /**
-         * register read_by_set
-         * todo: enhancement:
-         * The range is modified according to the execution of
-         * read_from_scan, and the range is fixed and registered at the end of
-         * the transaction.
-         */
-        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
-                rrbp, std::string(l_key), l_end, std::string(r_key), r_end));
-    } else if (ti->get_tx_type() ==
+    if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {
         wp::page_set_meta* psm{};
         auto rc{wp::find_page_set_meta(storage, psm)};
@@ -282,15 +252,6 @@ static Status open_scan_body(
         return Status::ERR_FATAL;
     }
 
-    // for no hit
-    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, l_end, r_key,
-                                           r_end]() {
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end,
-                                             r_key, r_end);
-        }
-    };
-
     // scan for index
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     constexpr std::size_t index_rec_ptr{1};
@@ -305,7 +266,6 @@ static Status open_scan_body(
         rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec, right_to_left);
     }
     if (rc != Status::OK) {
-        update_local_read_range_if_ltx();
         return rc;
     }
     // not empty of targeting records
@@ -334,7 +294,6 @@ static Status open_scan_body(
                 }
             }
         }
-        update_local_read_range_if_ltx();
         return fin_process(ti, rc);
     }
 
@@ -372,11 +331,6 @@ static Status open_scan_body(
                 if (rc == Status::ERR_CC) { return rc; }
             }
         }
-    }
-
-    // for hit, register left end point info as already read
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
     }
 
     // Cache a pointer to record.

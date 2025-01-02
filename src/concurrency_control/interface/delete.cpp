@@ -46,12 +46,6 @@ static inline bool cancel_insert_if_tomb_stone(write_set_obj* wso) {
     return false;
 }
 
-static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        ti->read_set_for_ltx().push(rec_ptr);
-    }
-}
-
 static inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert_if_tomb_stone(wso);
@@ -83,7 +77,6 @@ static inline Status process_after_write(session* ti, write_set_obj* wso) {
         if (!rc) {
             // if this was update
             ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
-            register_read_if_ltx(ti, wso->get_rec_ptr());
         }
         garbage::set_dirty(st);
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
@@ -95,28 +88,7 @@ static inline Status process_after_write(session* ti, write_set_obj* wso) {
 static void process_before_return_not_found(session* const ti,
                                             Storage const storage,
                                             std::string_view const key) {
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        /**
-         * Normally, read information is stored at page, but the page is not
-         * found. So it stores at table level information as range,
-         * key <= range <= key.
-         */
-        // get page set meta info
-        wp::page_set_meta* psm{};
-        auto rc = wp::find_page_set_meta(storage, psm);
-        if (rc != Status::OK) {
-            LOG_FIRST_N(ERROR, 1)
-                    << log_location_prefix
-                    << "unexpected error. library programming error or "
-                       "usage error (mixed ddl and dml?)";
-            return;
-        }
-        // get range read  by info
-        range_read_by_long* rrbp{psm->get_range_read_by_long_ptr()};
-        ti->get_range_read_set_for_ltx().insert(std::make_tuple(
-                rrbp, std::string(key), scan_endpoint::INCLUSIVE,
-                std::string(key), scan_endpoint::INCLUSIVE));
-    }
+    (void) ti; (void) storage; (void) key;
 }
 
 static Status delete_record_body(Token token, Storage storage,
@@ -150,7 +122,6 @@ static Status delete_record_body(Token token, Storage storage,
         }
         // prepare write
         ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
-        register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }
     if (rc == Status::WARN_NOT_FOUND) {

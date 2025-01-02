@@ -30,9 +30,7 @@ static Status exist_key_body(Token const token, Storage const storage, // NOLINT
     std::string dummy{};
     Status rc{};
     transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
-    if (this_tx_type == transaction_options::transaction_type::LONG) {
-        rc = long_tx::search_key(ti, storage, key, dummy, false);
-    } else if (this_tx_type == transaction_options::transaction_type::SHORT) {
+    if (this_tx_type == transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, dummy, false);
     } else if (this_tx_type ==
                transaction_options::transaction_type::READ_ONLY) {
@@ -46,10 +44,7 @@ static Status exist_key_body(Token const token, Storage const storage, // NOLINT
         std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         if (ti->get_result_info().get_reason_code() != reason_code::UNKNOWN) {
             // but concurrent strand thread failed
-            if (this_tx_type == transaction_options::transaction_type::LONG) {
-                long_tx::abort(ti);
-                rc = Status::ERR_CC;
-            } else if (this_tx_type ==
+            if (this_tx_type ==
                        transaction_options::transaction_type::SHORT) {
                 short_tx::abort(ti);
                 rc = Status::ERR_CC;
@@ -87,9 +82,7 @@ static Status search_key_body(Token const token, Storage const storage, // NOLIN
 
     Status rc{};
     transaction_options::transaction_type this_tx_type{ti->get_tx_type()};
-    if (this_tx_type == transaction_options::transaction_type::LONG) {
-        rc = long_tx::search_key(ti, storage, key, value);
-    } else if (this_tx_type == transaction_options::transaction_type::SHORT) {
+    if (this_tx_type == transaction_options::transaction_type::SHORT) {
         rc = short_tx::search_key(ti, storage, key, value);
     } else if (this_tx_type ==
                transaction_options::transaction_type::READ_ONLY) {
@@ -103,10 +96,7 @@ static Status search_key_body(Token const token, Storage const storage, // NOLIN
         std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
         if (ti->get_result_info().get_reason_code() != reason_code::UNKNOWN) {
             // but concurrent strand thread failed
-            if (this_tx_type == transaction_options::transaction_type::LONG) {
-                long_tx::abort(ti);
-                rc = Status::ERR_CC;
-            } else if (this_tx_type ==
+            if (this_tx_type ==
                        transaction_options::transaction_type::SHORT) {
                 short_tx::abort(ti);
                 rc = Status::ERR_CC;
