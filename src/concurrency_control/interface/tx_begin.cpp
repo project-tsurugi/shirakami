@@ -48,10 +48,8 @@ static Status tx_begin_body(transaction_options options) { // NOLINT
         }
     }
     if (tx_type == transaction_options::transaction_type::LONG) {
-        ti->init_flags_for_ltx_begin();
-
-        auto rc{long_tx::tx_begin(ti, write_preserve, options.get_read_area())};
-        if (rc != Status::OK) { return rc; }
+        return Status::ERR_NOT_IMPLEMENTED;
+        // NOLINTNEXTLINE(*-else-after-return)
     } else if (tx_type == transaction_options::transaction_type::SHORT) {
         ti->init_flags_for_stx_begin();
     } else if (tx_type == transaction_options::transaction_type::READ_ONLY) {
