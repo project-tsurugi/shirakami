@@ -34,7 +34,7 @@ Status check_constraint_key_length(std::string_view const key) {
 }
 
 Status check_before_write_ops(session* const ti, Storage const st,
-                              std::string_view const key, OP_TYPE const op) {
+                              [[maybe_unused]] std::string_view const key, OP_TYPE const op) {
     // check whether it is read only mode.
     if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         // can't write in read only mode.
@@ -49,32 +49,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
         return Status::WARN_STORAGE_NOT_FOUND;
     }
 
-    // long check
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-            // not in valid epoch.
-            return Status::WARN_PREMATURE;
-        }
-        if (!ti->check_exist_wp_set(st)) {
-            // can't write without wp.
-            return Status::WARN_WRITE_WITHOUT_WP;
-        }
-        if (op != OP_TYPE::UPSERT) {
-            // check for read area invalidation
-            auto rs = long_tx::check_read_area(ti, st);
-            if (rs == Status::ERR_READ_AREA_VIOLATION) {
-                std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
-                long_tx::abort(ti);
-                ti->get_result_info().set_storage_name(st);
-                ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
-                return rs;
-            }
-            // insert and delete with read
-            // may need forwarding
-            long_tx::wp_verify_and_forwarding(ti, wm, key);
-        }
-
-    } else if (ti->get_tx_type() ==
+    if (ti->get_tx_type() ==
                transaction_options::transaction_type::SHORT) {
         // check wp
         auto wps{wm->get_wped()};

@@ -23,11 +23,8 @@
 
 namespace shirakami::wp {
 
-bool wp_meta::empty(const wp_meta::wped_type& wped) {
-    return std::all_of(
-            wped.begin(), wped.end(), [](wp::wp_meta::wped_elem_type elem) {
-                return elem == std::pair<epoch::epoch_t, std::size_t>(0, 0);
-            });
+bool wp_meta::empty(const wp_meta::wped_type&) {
+    return true;
 }
 
 void wp_meta::display() {
@@ -46,148 +43,24 @@ void wp_meta::init() {
 
 wp_meta::wped_type wp_meta::get_wped() {
     wped_type r_obj{};
-    for (;;) {
-        auto ts_f{wp_lock_.load_obj()};
-        if (wp_lock::is_locked(ts_f)) {
-            _mm_pause();
-            continue;
-        }
-        r_obj = wped_;
-        auto ts_s{wp_lock_.load_obj()};
-        if (wp_lock::is_locked(ts_s) || ts_f != ts_s) { continue; }
-        break;
-    }
     return r_obj;
 }
 
-Status wp_meta::find_slot(std::size_t& at) {
-    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
-        if (!wped_used_.test(i)) {
-            at = i;
-            return Status::OK;
-        }
-    }
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-    return Status::WARN_NOT_FOUND;
-}
-
-epoch::epoch_t wp_meta::find_min_ep(const wp_meta::wped_type& wped) {
-    bool first{true};
+epoch::epoch_t wp_meta::find_min_ep(const wp_meta::wped_type&) {
     epoch::epoch_t min_ep{0};
-    for (auto&& elem : wped) {
-        if (elem.first != 0) {
-            // used slot
-            if (first) {
-                first = false;
-                min_ep = elem.first;
-            } else if (min_ep > elem.first) {
-                min_ep = elem.first;
-            }
-        }
-    }
     return min_ep;
 }
 
 std::pair<epoch::epoch_t, std::size_t>
-wp_meta::find_min_ep_id(const wp_meta::wped_type& wped) {
-    bool first{true};
+wp_meta::find_min_ep_id(const wp_meta::wped_type&) {
     std::size_t min_id{0};
     std::size_t min_ep{0};
-    for (auto&& elem : wped) {
-        if (elem.first != 0) {
-            // used slot
-            if (first) {
-                first = false;
-                min_ep = elem.first;
-                min_id = elem.second;
-            } else if (min_id > elem.second) {
-                min_ep = elem.first;
-                min_id = elem.second;
-            }
-        }
-    }
     return {min_ep, min_id};
 }
 
-std::size_t wp_meta::find_min_id(const wp_meta::wped_type& wped) {
-    bool first{true};
+std::size_t wp_meta::find_min_id(const wp_meta::wped_type&) {
     std::size_t min_id{0};
-    for (auto&& elem : wped) {
-        if (elem.first != 0) {
-            // used slot
-            if (first) {
-                first = false;
-                min_id = elem.second;
-            } else if (min_id > elem.second) {
-                min_id = elem.second;
-            }
-        }
-    }
     return min_id;
-}
-
-Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
-    wp_lock_.lock();
-    std::size_t slot{};
-    if (Status::OK != find_slot(slot)) { return Status::ERR_CC; }
-    wped_used_.set(slot);
-    set_wped(slot, {ep, id});
-    wp_lock_.unlock();
-    return Status::OK;
-}
-
-[[nodiscard]] Status
-wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
-    {
-        std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
-        wp_result_set_.emplace_back(elem);
-    }
-    wp_lock_.lock();
-    auto ret = remove_wp_without_lock(wp_result_elem_extract_id(elem));
-    if (ret == Status::OK) { return ret; }
-    wp_lock_.unlock();
-
-    // clear wp write range info
-    remove_write_range(std::get<1>(elem));
-    return ret;
-}
-
-[[nodiscard]] Status wp_meta::remove_wp_without_lock(std::size_t const id) {
-    for (std::size_t i = 0; i < KVS_MAX_PARALLEL_THREADS; ++i) {
-        if (wped_.at(i).second == id) {
-            set_wped(i, {0, 0});
-            wped_used_.reset(i);
-            wp_lock_.unlock();
-            return Status::OK;
-        }
-    }
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "concurrent program error";
-    return Status::WARN_NOT_FOUND;
-}
-
-void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
-                               std::string_view right_key) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
-
-    auto ret_pair = get_write_range().emplace(
-            txid, std::make_tuple(left_key, right_key));
-    if (!ret_pair.second) {
-        // already exist, not inserted
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                              << "programming error. tx do this only once.";
-    }
-}
-
-void wp_meta::remove_write_range(std::size_t const txid) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
-
-    auto ret_num = get_write_range().erase(txid);
-    if (ret_num != 1) {
-        // can't erase
-        LOG_FIRST_N(ERROR, 1)
-                << log_location_prefix
-                << "programming error. it does once after push_write_range";
-    }
 }
 
 bool wp_meta::read_write_range(std::size_t txid, std::string& out_left_key,
