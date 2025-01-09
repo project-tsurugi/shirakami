@@ -12,6 +12,7 @@
 #include "gtest/gtest.h"
 
 #define ASSERT_OK(expr) ASSERT_EQ(expr, shirakami::Status::OK)
+#define EXPECT_OK(expr) EXPECT_EQ(expr, shirakami::Status::OK)
 
 namespace shirakami {
 

@@ -233,24 +233,6 @@ public:
 
     void sort_if_ol();
 
-    /**
-     * @brief unlock records in write set.
-     *
-     * This function unlocked all records in write set absolutely.
-     * So it has a pre-condition.
-     * @pre It has locked all records in write set.
-     * @return void
-     */
-    void unlock();
-
-    /**
-     * @brief unlock write set object between @a begin and @a begin + num.
-     * @param [in] num The number of removing.
-     * @pre It already locked write set between @a begin and @a end.
-     * @return void
-     */
-    void unlock(std::size_t num);
-
 private:
     std::atomic<bool> for_batch_{false};
     /**
