@@ -62,14 +62,12 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                         if (std::get<0>(p_elem) == st.first) {
                             // check key range level
                             // todo: use constant value, not magic number
-                            std::string w_lkey = std::get<0>(st.second); // NOLINT
-                            std::string w_rkey = std::get<1>(st.second); // NOLINT
-                            std::string r_lkey = std::get<2>(p_elem); // NOLINT
-                            scan_endpoint r_lpoint =
-                                    std::get<3>(p_elem);              // NOLINT
-                            std::string r_rkey = std::get<4>(p_elem); // NOLINT
-                            scan_endpoint r_rpoint =
-                                    std::get<5>(p_elem); // NOLINT
+                            std::string_view w_lkey = std::get<0>(st.second); // NOLINT
+                            std::string_view w_rkey = std::get<1>(st.second); // NOLINT
+                            std::string_view r_lkey = std::get<2>(p_elem); // NOLINT
+                            scan_endpoint r_lpoint  = std::get<3>(p_elem); // NOLINT
+                            std::string_view r_rkey = std::get<4>(p_elem); // NOLINT
+                            scan_endpoint r_rpoint  = std::get<5>(p_elem); // NOLINT
                             // define write range [], read range ()
                             bool no_overwrap = (
                                 // case: []()
