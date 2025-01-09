@@ -80,7 +80,7 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                     // case: ([])
                                     || ((r_lkey < w_lkey ||
                                          r_lpoint == scan_endpoint::INF) &&
-                                        (w_lkey < r_rkey ||
+                                        (w_rkey < r_rkey ||
                                          r_rpoint == scan_endpoint::INF))
                                     // case: ([)]
                                     || ((r_lkey < w_lkey ||
