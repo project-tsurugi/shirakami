@@ -32,12 +32,12 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
             return true;
         }
 
-        for (auto&& elem :
+        for (auto&& st :
              static_cast<session*>(token)->get_write_set().get_storage_map()) {
             // cond3 only nlist
             if (plist.empty()) {
                 // the higher priori ltx is not submitted commit
-                auto itr = nlist.find(elem.first);
+                auto itr = nlist.find(st.first);
                 if (itr == nlist.end()) {
                     // the high priori ltx may read this
                     return true;
@@ -52,20 +52,18 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                     // storage level
                     if (!std::get<1>(p_elem)) {
                         // it didn't submit commit
-                        if (std::get<0>(p_elem) == elem.first) {
+                        if (std::get<0>(p_elem) == st.first) {
                             // hit
                             return true;
                         }
                     } else {
                         // it submit commit
                         // check conflict storage level
-                        if (std::get<0>(p_elem) == elem.first) {
+                        if (std::get<0>(p_elem) == st.first) {
                             // check key range level
                             // todo: use constant value, not magic number
-                            std::string w_lkey =
-                                    std::get<0>(elem.second); // NOLINT
-                            std::string w_rkey =
-                                    std::get<1>(elem.second);         // NOLINT
+                            std::string w_lkey = std::get<0>(st.second);
+                            std::string w_rkey = std::get<1>(st.second);
                             std::string r_lkey = std::get<2>(p_elem); // NOLINT
                             scan_endpoint r_lpoint =
                                     std::get<3>(p_elem);              // NOLINT
