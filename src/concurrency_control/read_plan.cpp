@@ -71,21 +71,24 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                             scan_endpoint r_rpoint =
                                     std::get<5>(p_elem); // NOLINT
                             // define write range [], read range ()
+                            // XXX: bug when INCLUSIVE
+                            auto cmp_wl_rl = w_lkey.compare(r_lkey);
+                            auto cmp_wr_rr = w_rkey.compare(r_rkey);
                             if (
                                     // case: [(])
-                                    ((w_lkey < r_lkey &&
+                                    ((cmp_wl_rl < 0 &&
                                       r_lpoint != scan_endpoint::INF) &&
-                                     (w_rkey < r_rkey ||
+                                     (cmp_wr_rr < 0 ||
                                       r_rpoint == scan_endpoint::INF))
                                     // case: ([])
-                                    || ((r_lkey < w_lkey ||
+                                    || ((cmp_wl_rl > 0 ||
                                          r_lpoint == scan_endpoint::INF) &&
-                                        (w_rkey < r_rkey ||
+                                        (cmp_wr_rr < 0 ||
                                          r_rpoint == scan_endpoint::INF))
                                     // case: ([)]
-                                    || ((r_lkey < w_lkey ||
+                                    || ((cmp_wl_rl > 0 ||
                                          r_lpoint == scan_endpoint::INF) &&
-                                        (w_rkey < r_rkey &&
+                                        (cmp_wr_rr > 0 &&
                                          r_rpoint != scan_endpoint::INF))) {
                                 return true;
                             }
