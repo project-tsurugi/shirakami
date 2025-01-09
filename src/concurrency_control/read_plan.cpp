@@ -71,25 +71,19 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                             scan_endpoint r_rpoint =
                                     std::get<5>(p_elem); // NOLINT
                             // define write range [], read range ()
-                            // XXX: bug when INCLUSIVE
-                            auto cmp_wl_rl = w_lkey.compare(r_lkey);
-                            auto cmp_wr_rr = w_rkey.compare(r_rkey);
-                            if (
+                            bool no_overwrap = (
+                                // case: []()
+                                   (r_lpoint == scan_endpoint::INCLUSIVE && w_rkey < r_lkey)
+                                || (r_lpoint == scan_endpoint::EXCLUSIVE && w_rkey <= r_lkey)
+                                // case: ()[]
+                                || (r_rpoint == scan_endpoint::INCLUSIVE && w_lkey > r_rkey)
+                                || (r_rpoint == scan_endpoint::EXCLUSIVE && w_lkey >= r_rkey)
+                            );
+                            if (!no_overwrap) {
                                     // case: [(])
-                                    ((cmp_wl_rl < 0 &&
-                                      r_lpoint != scan_endpoint::INF) &&
-                                     (cmp_wr_rr < 0 ||
-                                      r_rpoint == scan_endpoint::INF))
+                                    // case: [()]
                                     // case: ([])
-                                    || ((cmp_wl_rl > 0 ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (cmp_wr_rr < 0 ||
-                                         r_rpoint == scan_endpoint::INF))
                                     // case: ([)]
-                                    || ((cmp_wl_rl > 0 ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (cmp_wr_rr > 0 &&
-                                         r_rpoint != scan_endpoint::INF))) {
                                 return true;
                             }
                         }
