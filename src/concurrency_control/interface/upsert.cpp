@@ -142,7 +142,8 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
 }
 
 Status upsert(Token token, Storage storage, std::string_view const key,
-              std::string_view const val) {
+              std::string_view const val,
+              [[maybe_unused]] std::vector<blob_id_type> const& used_blobs) {
     shirakami_log_entry << "upsert, token: " << token << ", storage; "
                         << storage << shirakami_binstring(key)
                         << shirakami_binstring(val);

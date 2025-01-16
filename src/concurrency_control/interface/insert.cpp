@@ -163,7 +163,8 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
 
 Status insert(Token const token, Storage const storage, // NOLINT
               const std::string_view key,               // NOLINT
-              const std::string_view val) {
+              const std::string_view val,
+              [[maybe_unused]] std::vector<blob_id_type> const& used_blobs) {
     shirakami_log_entry << "insert, token: " << token
                         << ", storage: " << storage << shirakami_binstring(key)
                         << shirakami_binstring(val);

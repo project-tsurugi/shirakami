@@ -182,6 +182,7 @@ Status init(database_options options = {}); // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
+ * @param[in] used_blobs the blob references used by the inserted record
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success. If this tx executed delete operation, this insert
  * change the operation into update operation which updates using @a val.
@@ -206,7 +207,9 @@ Status init(database_options options = {}); // NOLINT
  */
 Status insert(Token token, Storage storage,
               std::string_view key, // NOLINT
-              std::string_view val);
+              std::string_view val,
+              std::vector<blob_id_type> const& used_blobs = {}
+              );
 
 /**
  * @brief leave session
@@ -393,6 +396,7 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
+ * @param[in] used_blobs the blob references used by the updated record
  * @return Status::OK Success.
  * @return Status::WARN_ILLEGAL_OPERATION You execute update on read only
  * mode. So this operation was canceled.
@@ -404,8 +408,8 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  * this tx is long tx and didn't execute wp for @a storage.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-Status update(Token token, Storage storage, std::string_view key,
-              std::string_view val); // NOLINT
+Status update(Token token, Storage storage, std::string_view key, std::string_view val,
+              std::vector<blob_id_type> const& used_blobs = {}); // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -414,6 +418,7 @@ Status update(Token token, Storage storage, std::string_view key,
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the upserted record
  * @param[in] val the value of the upserted record
+ * @param[in] used_blobs the blob references used by the upserted record
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success
  * @return Status::WARN_ILLEGAL_OPERATION You execute upsert on read only
@@ -428,8 +433,8 @@ Status update(Token token, Storage storage, std::string_view key,
  * @return Status::WARN_WRITE_WITHOUT_WP This function can't execute because
  * this tx is long tx and didn't execute wp for @a storage.
  */
-Status upsert(Token token, Storage storage, std::string_view key,
-              std::string_view val); // NOLINT
+Status upsert(Token token, Storage storage, std::string_view key, std::string_view val,
+              std::vector<blob_id_type> const& used_blobs = {}); // NOLINT
 
 
 //==========
