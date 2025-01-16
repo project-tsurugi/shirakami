@@ -347,12 +347,13 @@ inline std::ostream& operator<<(std::ostream& out,
 
 struct OP_TYPE {
     using base_int_type = std::uint32_t;
-    static constexpr base_int_type WSO_FROM_ABSENT = (0x100U | 0U);
-    static constexpr base_int_type WSO_FROM_ALIVE  = (0x100U | 1U);
-    static constexpr base_int_type WSO_FROM_ANY    = (0x100U | 2U);
+    static constexpr base_int_type WSO_BASE = 0x100U;
+    static constexpr base_int_type WSO_FROM_ABSENT = (WSO_BASE | 0U);
+    static constexpr base_int_type WSO_FROM_ALIVE  = (WSO_BASE | 1U);
+    static constexpr base_int_type WSO_FROM_ANY    = (WSO_BASE | 2U);
     static constexpr base_int_type WSO_FROM_MASK   = WSO_FROM_ABSENT | WSO_FROM_ALIVE | WSO_FROM_ANY;
-    static constexpr base_int_type WSO_TO_ABSENT   = (0x100U | (0U << 2U));
-    static constexpr base_int_type WSO_TO_ALIVE    = (0x100U | (1U << 2U));
+    static constexpr base_int_type WSO_TO_ABSENT   = (WSO_BASE | (0U << 2U));
+    static constexpr base_int_type WSO_TO_ALIVE    = (WSO_BASE | (1U << 2U));
     static constexpr base_int_type WSO_TO_MASK     = WSO_TO_ABSENT | WSO_TO_ALIVE;
 
     enum OP_TYPE_E : base_int_type {
@@ -370,6 +371,7 @@ struct OP_TYPE {
     UPDATE    = WSO_FROM_ALIVE  | WSO_TO_ALIVE,
     UPSERT    = WSO_FROM_ANY    | WSO_TO_ALIVE,
     };
+static_assert(SEARCH < WSO_BASE);
 
 private:
     OP_TYPE_E op;
