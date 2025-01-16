@@ -182,7 +182,11 @@ Status init(database_options options = {}); // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the inserted record
  * @param[in] val the value of the inserted record
- * @param[in] used_blobs the blob references used by the inserted record
+ * @param[in] blobs_data blob references list used by the inserted record.
+ * The blobs will be fully registered on datastore when transaction successfully commits.
+ * Specify nullptr to pass empty list if the inserted record does not contain blob.
+ * @param[in] blobs_size length of the blob references list
+ * Specify 0 to pass empty list.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK success. If this tx executed delete operation, this insert
  * change the operation into update operation which updates using @a val.
@@ -208,7 +212,8 @@ Status init(database_options options = {}); // NOLINT
 Status insert(Token token, Storage storage,
               std::string_view key, // NOLINT
               std::string_view val,
-              std::vector<blob_id_type> const& used_blobs = {}
+              blob_id_type const* blobs_data = nullptr,
+              std::size_t blobs_size = 0
               );
 
 /**
@@ -396,7 +401,11 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the updated record
  * @param[in] val the value of the updated record
- * @param[in] used_blobs the blob references used by the updated record
+ * @param[in] blobs_data blob references list used by the updated record.
+ * The blobs will be fully registered on datastore when transaction successfully commits.
+ * Specify nullptr to pass empty list if the updated record does not contain blob.
+ * @param[in] blobs_size length of the blob references list
+ * Specify 0 to pass empty list.
  * @return Status::OK Success.
  * @return Status::WARN_ILLEGAL_OPERATION You execute update on read only
  * mode. So this operation was canceled.
@@ -409,7 +418,8 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 Status update(Token token, Storage storage, std::string_view key, std::string_view val,
-              std::vector<blob_id_type> const& used_blobs = {}); // NOLINT
+              blob_id_type const* blobs_data = nullptr,
+              std::size_t blobs_size = 0); // NOLINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -418,7 +428,11 @@ Status update(Token token, Storage storage, std::string_view key, std::string_vi
  * @param[in] storage the handle of storage.
  * @param[in] key the key of the upserted record
  * @param[in] val the value of the upserted record
- * @param[in] used_blobs the blob references used by the upserted record
+ * @param[in] blobs_data blob references list used by the upserted record.
+ * The blobs will be fully registered on datastore when transaction successfully commits.
+ * Specify nullptr to pass empty list if the upserted record does not contain blob.
+ * @param[in] blobs_size length of the blob references list
+ * Specify 0 to pass empty list.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::OK Success
  * @return Status::WARN_ILLEGAL_OPERATION You execute upsert on read only
@@ -434,7 +448,8 @@ Status update(Token token, Storage storage, std::string_view key, std::string_vi
  * this tx is long tx and didn't execute wp for @a storage.
  */
 Status upsert(Token token, Storage storage, std::string_view key, std::string_view val,
-              std::vector<blob_id_type> const& used_blobs = {}); // NOLINT
+              blob_id_type const* blobs_data = nullptr,
+              std::size_t blobs_size = 0); // NOLINT
 
 
 //==========

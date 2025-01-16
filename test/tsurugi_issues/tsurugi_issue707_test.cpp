@@ -130,7 +130,7 @@ TEST_P(tsurugi_issue707_test, // NOLINT
     ASSERT_OK(commit(t));
 
     // prepare write operator
-    std::function<Status(Token, Storage, std::string_view, std::string_view, std::vector<blob_id_type> const&)>
+    std::function<Status(Token, Storage, std::string_view, std::string_view, blob_id_type const*, std::size_t)>
             write;
     if (GetParam()) {
         write = insert;
@@ -200,7 +200,7 @@ TEST_P(tsurugi_issue707_test, // NOLINT
 
             // write st1
             rc = write(t, st1, std::to_string(count + 1),
-                       std::to_string(count + 1), std::vector<blob_id_type>{});
+                       std::to_string(count + 1), nullptr, 0);
             ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS || rc == Status::OK ||
                         rc == Status::ERR_CC);
             if (rc == Status::WARN_ALREADY_EXISTS) {
@@ -223,7 +223,7 @@ TEST_P(tsurugi_issue707_test, // NOLINT
 
             // write st2
             rc = write(t, st2, std::to_string(count + 1),
-                       std::to_string(count + 1), std::vector<blob_id_type>{});
+                       std::to_string(count + 1), nullptr, 0);
             ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS || rc == Status::OK ||
                         rc == Status::ERR_CC);
             if (rc == Status::WARN_ALREADY_EXISTS) {
