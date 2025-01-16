@@ -377,7 +377,7 @@ private:
     OP_TYPE_E op;
 public:
     OP_TYPE() = default;
-    OP_TYPE(enum OP_TYPE_E type) : op(type) {} // NOLINT
+    constexpr OP_TYPE(enum OP_TYPE_E type) : op(type) {} // NOLINT
     // constexpr bool operator==(OP_TYPE a) const noexcept { return a.op == op; }
     // constexpr bool operator!=(OP_TYPE a) const noexcept { return a.op != op; }
     constexpr operator OP_TYPE_E() const { return op; } // NOLINT
@@ -401,6 +401,10 @@ public:
 
 [[nodiscard]] inline constexpr bool is_wso_to_alive() const noexcept {
     return (op & WSO_TO_MASK) == WSO_TO_ALIVE;
+}
+
+[[nodiscard]] inline constexpr OP_TYPE of_wso_to_alive() const noexcept {
+    return OP_TYPE{static_cast<OP_TYPE_E>((op & ~WSO_TO_MASK) | WSO_TO_ALIVE)};
 }
 
 [[nodiscard]] inline constexpr std::string_view to_string_view() const noexcept {
