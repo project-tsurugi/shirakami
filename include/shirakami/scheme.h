@@ -400,6 +400,14 @@ public:
 [[nodiscard]] inline constexpr bool is_wso_to_alive() const noexcept {
     return (op & WSO_TO_MASK) == WSO_TO_ALIVE;
 }
+
+[[nodiscard]] inline constexpr OP_TYPE of_wso_to_absent() const noexcept {
+    return OP_TYPE{static_cast<OP_TYPE_E>((op & ~WSO_TO_MASK) | WSO_TO_ABSENT)};
+}
+
+[[nodiscard]] inline constexpr OP_TYPE of_wso_to_alive() const noexcept {
+    return OP_TYPE{static_cast<OP_TYPE_E>((op & ~WSO_TO_MASK) | WSO_TO_ALIVE)};
+}
 };
 
 inline constexpr std::string_view to_string_view(const OP_TYPE op) noexcept {
