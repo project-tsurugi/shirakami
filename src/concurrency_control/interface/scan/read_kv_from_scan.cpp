@@ -60,7 +60,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-        auto itr = scan_buf.begin() + scan_index; // LINT
+        auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
@@ -220,7 +220,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     return Status::ERR_FATAL;
 }
 
-Status read_key_from_scan(Token const token, ScanHandle const handle, // LINT
+Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                           std::string& key) {
     shirakami_log_entry << "read_key_from_scan, token: " << token
                         << ", handle: " << handle;
@@ -237,7 +237,7 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // LINT
     return ret;
 }
 
-Status read_value_from_scan(Token const token, // LINT
+Status read_value_from_scan(Token const token, // NOLINT
                             ScanHandle const handle, std::string& value) {
     shirakami_log_entry << "read_value_from_scan, token: " << token
                         << ", handle: " << handle;

@@ -74,9 +74,9 @@ public:
             return value_;
         }
 
-        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // LINT
+        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // NOLINT
         lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {}
-        operator std::uint64_t() const noexcept { return value_; } // LINT
+        operator std::uint64_t() const noexcept { return value_; } // NOLINT
 
     private:
         std::uint64_t value_{};
@@ -1030,8 +1030,8 @@ private:
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number
      * of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // LINT
-            session_table_;                                     // LINT
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
+            session_table_;                                     // NOLINT
 };
 
 /**

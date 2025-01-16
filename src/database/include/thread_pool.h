@@ -20,12 +20,12 @@ public:
     /**
      * @brief init thread pool
      */
-    static void init(std::size_t thread_pool_size = 10) { // LINT
+    static void init(std::size_t thread_pool_size = 10) { // NOLINT
         // set thread pool size
         set_thread_pool_size(thread_pool_size);
 
         // gen thread array
-        get_threads().reset(new std::thread[get_thread_pool_size()]); // LINT
+        get_threads().reset(new std::thread[get_thread_pool_size()]); // NOLINT
 
         // set flag
         set_running(true);
@@ -61,7 +61,7 @@ public:
         return running_.load(std::memory_order_acquire);
     }
 
-    static std::unique_ptr<std::thread[]>& get_threads() { // LINT
+    static std::unique_ptr<std::thread[]>& get_threads() { // NOLINT
         return threads_;
     }
 
@@ -94,12 +94,12 @@ private:
     /**
      * @brief threads of thread pool
      */
-    static inline std::unique_ptr<std::thread[]> threads_; // LINT
+    static inline std::unique_ptr<std::thread[]> threads_; // NOLINT
 
     /**
      * @brief task container
      */
-    static inline concurrent_queue<thread_task*> task_queue_; // LINT
+    static inline concurrent_queue<thread_task*> task_queue_; // NOLINT
 };
 
 } // namespace shirakami

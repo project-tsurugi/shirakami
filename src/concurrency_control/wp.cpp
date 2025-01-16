@@ -164,19 +164,19 @@ Status fin() {
 Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     Storage page_set_meta_storage = get_page_set_meta_storage();
     std::string_view page_set_meta_storage_view = {
-            reinterpret_cast<char*>(&page_set_meta_storage), // LINT
+            reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
             sizeof(page_set_meta_storage)};
     std::string_view storage_view = {
-            reinterpret_cast<const char*>(&st), // LINT
+            reinterpret_cast<const char*>(&st), // NOLINT
             sizeof(st)};
     std::pair<page_set_meta**, std::size_t> out{};
-    auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view, // LINT
+    auto rc{yakushima::get<page_set_meta*>(page_set_meta_storage_view, // NOLINT
                                            storage_view, out)};
     if (rc != yakushima::status::OK) {
         ret = nullptr;
         return Status::WARN_NOT_FOUND;
     }
-    ret = reinterpret_cast<page_set_meta*>(out.first); // LINT
+    ret = reinterpret_cast<page_set_meta*>(out.first); // NOLINT
     // by inline optimization
     return Status::OK;
 }
@@ -234,14 +234,14 @@ Status write_preserve(Token token, std::vector<Storage> storage,
     for (auto&& wp_target : storage) {
         Storage page_set_meta_storage = get_page_set_meta_storage();
         std::string_view page_set_meta_storage_view = {
-                reinterpret_cast<char*>( // LINT
+                reinterpret_cast<char*>( // NOLINT
                         &page_set_meta_storage),
                 sizeof(page_set_meta_storage)};
         std::string_view storage_view = {
-                reinterpret_cast<char*>(&wp_target), // LINT
+                reinterpret_cast<char*>(&wp_target), // NOLINT
                 sizeof(wp_target)};
         std::pair<page_set_meta**, std::size_t> out{};
-        auto rc{yakushima::get<page_set_meta*>( // LINT
+        auto rc{yakushima::get<page_set_meta*>( // NOLINT
                 page_set_meta_storage_view,     // LINT
                 storage_view, out)};
 
@@ -263,7 +263,7 @@ Status write_preserve(Token token, std::vector<Storage> storage,
             return Status::WARN_INVALID_ARGS;
         }
         wp_meta* target_wp_meta =
-                (reinterpret_cast<page_set_meta*>(out.first)) // LINT
+                (reinterpret_cast<page_set_meta*>(out.first)) // NOLINT
                         ->get_wp_meta_ptr();
         if (target_wp_meta->register_wp(valid_epoch, long_tx_id) !=
             Status::OK) {

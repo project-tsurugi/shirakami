@@ -123,7 +123,7 @@ version* find_latest_invisible_version_from_batch(
 void delete_version_list(version* ver) {
     while (ver != nullptr) {
         version* v_next = ver->get_next();
-        delete ver; // LINT
+        delete ver; // NOLINT
         ++get_gc_ct_ver();
         ver = v_next;
     }
@@ -274,7 +274,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         Storage st, std::size_t& record_num,
         std::size_t& average_version_list_size, std::size_t& average_key_size,
         std::size_t& average_value_size) {
-    std::string_view st_view = {reinterpret_cast<char*>(&st), // LINT
+    std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
     // init about stats
     record_num = 0;
@@ -308,7 +308,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     };
 
     for (auto&& sr : scan_res) {
-        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // LINT
+        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
 
         // gathering stats info
         average_key_size += rec_ptr->get_key_view().size();
@@ -352,7 +352,7 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
 
 void force_release_key_memory() {
     auto& cont = garbage::get_container_rec();
-    for (auto& elem : cont) { delete elem.first; } // LINT
+    for (auto& elem : cont) { delete elem.first; } // NOLINT
     cont.clear();
 }
 
@@ -367,7 +367,7 @@ void release_key_memory() {
          * have finished.
          */
         if ((*itr).second < me) {
-            delete (*itr).first; // LINT
+            delete (*itr).first; // NOLINT
             ++erase_count;
             ++itr;
         } else {
@@ -375,7 +375,7 @@ void release_key_memory() {
         }
     }
     if (erase_count > 0) {
-        cont.erase(cont.begin(), cont.begin() + erase_count); // LINT
+        cont.erase(cont.begin(), cont.begin() + erase_count); // NOLINT
     }
 }
 

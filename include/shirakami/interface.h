@@ -159,7 +159,7 @@ Status exist_key(Token token, Storage storage, std::string_view key);
  * interface.
  * @return void
  */
-void fin(bool force_shut_down_logging = true); // LINT
+void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
  * @brief It initializes shirakami's environment.
@@ -174,7 +174,7 @@ void fin(bool force_shut_down_logging = true); // LINT
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have
  * not done anything in this call.
  */
-Status init(database_options options = {}); // LINT
+Status init(database_options options = {}); // NOLINT
 
 /**
  * @brief insert the record with given key/value
@@ -266,8 +266,8 @@ Status leave(Token token); // LINT
 Status open_scan(Token token, Storage storage, std::string_view l_key,
                  scan_endpoint l_end, std::string_view r_key,
                  scan_endpoint r_end, ScanHandle& handle,
-                 std::size_t max_size = 0,    // LINT
-                 bool right_to_left = false); // LINT
+                 std::size_t max_size = 0,    // NOLINT
+                 bool right_to_left = false); // NOLINT
 
 /**
  * @brief advance cursor
@@ -393,7 +393,7 @@ Status search_key(Token token, Storage storage, std::string_view key,
  * write_preserve and not using long tx mode.
  * @return Status::WARN_INVALID_ARGS User used storages not existed.
  */
-Status tx_begin(transaction_options options = {}); // LINT
+Status tx_begin(transaction_options options = {}); // NOLINT
 
 /**
  * @brief It updates the record for the given key.

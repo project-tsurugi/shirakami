@@ -11,7 +11,7 @@
 
 namespace shirakami {
 
-Status acquire_tx_state_handle_body(Token const token, // LINT
+Status acquire_tx_state_handle_body(Token const token, // NOLINT
                                     TxStateHandle& handle) {
     auto* ti{static_cast<session*>(token)};
     // check whether it already begun.
@@ -57,7 +57,7 @@ Status acquire_tx_state_handle_body(Token const token, // LINT
     return Status::OK;
 }
 
-Status acquire_tx_state_handle(Token const token, // LINT
+Status acquire_tx_state_handle(Token const token, // NOLINT
                                TxStateHandle& handle) {
     shirakami_log_entry << "acquire_tx_state_handle, token: " << token
                         << ", handle: " << handle;

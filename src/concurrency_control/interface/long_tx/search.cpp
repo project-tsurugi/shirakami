@@ -75,7 +75,7 @@ RETRY:
          * so this tx must wait unlocking because it may read invalid state with
          * locking.
          */
-        goto RETRY; // LINT
+        goto RETRY; // NOLINT
     }
 
     // read non-latest version after version function

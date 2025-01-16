@@ -124,7 +124,7 @@ public:
         wped_.at(pos) = val;
     }
 
-    void set_wped_used(std::size_t pos, bool val = true) { // LINT
+    void set_wped_used(std::size_t pos, bool val = true) { // NOLINT
         wped_used_.set(pos, val);
     }
 

@@ -71,7 +71,7 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                     std::get<3>(p_elem);              // LINT
                             std::string r_rkey = std::get<4>(p_elem); // LINT
                             scan_endpoint r_rpoint =
-                                    std::get<5>(p_elem); // LINT
+                                    std::get<5>(p_elem); // NOLINT
                             // define write range [], read range ()
                             if (
                                     // case: [(])

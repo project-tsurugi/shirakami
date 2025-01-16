@@ -16,7 +16,7 @@ void wp_lock::lock() {
             expected = obj.load(std::memory_order_acquire);
             continue;
         }
-        std::uint64_t desired{expected | 1}; // LINT
+        std::uint64_t desired{expected | 1}; // NOLINT
         if (obj.compare_exchange_weak(expected, desired,
                                       std::memory_order_acq_rel,
                                       std::memory_order_acquire)) {
@@ -27,9 +27,9 @@ void wp_lock::lock() {
 
 void wp_lock::unlock() {
     std::uint64_t desired{obj.load(std::memory_order_acquire)};
-    std::uint64_t locked_num{desired >> 1}; // LINT
+    std::uint64_t locked_num{desired >> 1}; // NOLINT
     ++locked_num;
-    desired = locked_num << 1; // LINT
+    desired = locked_num << 1; // NOLINT
     obj.store(desired, std::memory_order_release);
 }
 

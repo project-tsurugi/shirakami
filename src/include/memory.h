@@ -19,7 +19,7 @@ namespace shirakami {
     if (getrusage(RUSAGE_SELF, &r) != 0) {
         LOG_FIRST_N(ERROR, 1) << "getrusage error";
     }
-    return r.ru_maxrss; // LINT
+    return r.ru_maxrss; // NOLINT
 }
 
 [[maybe_unused]] static void displayRusageRUMaxrss() { // LINT
@@ -29,7 +29,7 @@ namespace shirakami {
         return;
     }
     std::size_t maxrss{getRusageRUMaxrss()};
-    printf("maxrss:\t%ld kB\n", maxrss); // LINT
+    printf("maxrss:\t%ld kB\n", maxrss); // NOLINT
 }
 
 } // namespace shirakami

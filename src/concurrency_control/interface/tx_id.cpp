@@ -40,7 +40,7 @@ Status get_tx_id_body(Token token, std::string& tx_id) {
 
     // prepare string stream for tx counter
     ss.clear(std::stringstream::goodbit);
-    ss << std::setw(8) << std::setfill('0') << std::hex // LINT
+    ss << std::setw(8) << std::setfill('0') << std::hex // NOLINT
        << static_cast<std::uint32_t>(ti->get_tx_counter());
     // use down cast
     tx_id += ss.str();

@@ -154,7 +154,7 @@ public:
      * @return Status::OK success.
      */
     static Status register_storage(Storage storage,
-                                   storage_option options = {}); // LINT
+                                   storage_option options = {}); // NOLINT
 
     /**
      * @brief Create a storage object
@@ -216,7 +216,7 @@ private:
      * @details key is storage's key given by outside. value is storage id
      * given by internally.
      */
-    static inline std::unordered_map<std::string, Storage> // LINT
+    static inline std::unordered_map<std::string, Storage> // NOLINT
             key_handle_map_;                               // LINT
 
     /**

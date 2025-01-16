@@ -23,7 +23,7 @@ Status create_sequence(SequenceId* const id) {
     return ret;
 }
 
-Status update_sequence(Token const token, SequenceId const id, // LINT
+Status update_sequence(Token const token, SequenceId const id, // NOLINT
                        SequenceVersion const version,
                        SequenceValue const value) {
     shirakami_log_entry << "update_sequence, token: " << token << ", id: " << id
@@ -283,16 +283,16 @@ Status sequence::create_sequence(SequenceId* id) {
     // logging sequence operation
     // gen key
     std::string key{};
-    key.append(reinterpret_cast<char*>(id), sizeof(*id)); // LINT
+    key.append(reinterpret_cast<char*>(id), sizeof(*id)); // NOLINT
     // gen value
     std::tuple<SequenceVersion, SequenceValue> initial_pair =
             sequence::initial_value;
     SequenceVersion initial_version{std::get<0>(initial_pair)};
     SequenceValue initial_value{std::get<1>(initial_pair)};
     std::string value{}; // value is version + value
-    value.append(reinterpret_cast<char*>(&initial_version), // LINT
+    value.append(reinterpret_cast<char*>(&initial_version), // NOLINT
                  sizeof(initial_version));
-    value.append(reinterpret_cast<char*>(&initial_value), // LINT
+    value.append(reinterpret_cast<char*>(&initial_value), // NOLINT
                  sizeof(initial_value));
     ret = tx_begin({token, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
@@ -328,7 +328,7 @@ Status sequence::create_sequence(SequenceId* id) {
     return Status::OK;
 }
 
-Status sequence::update_sequence(Token const token, // LINT
+Status sequence::update_sequence(Token const token, // NOLINT
                                  SequenceId const id,
                                  SequenceVersion const version,
                                  SequenceValue const value) {
@@ -394,16 +394,16 @@ Status sequence::delete_sequence(SequenceId const id) {
     // logging sequence operation
     // gen key
     std::string key{};
-    key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // LINT
+    key.append(reinterpret_cast<const char*>(&id), sizeof(id)); // NOLINT
     // gen value
     std::tuple<SequenceVersion, SequenceValue> new_tuple =
             sequence::non_exist_value;
     SequenceVersion version = std::get<0>(new_tuple);
     SequenceValue value = std::get<1>(new_tuple);
     std::string new_value{}; // value is version + value
-    new_value.append(reinterpret_cast<const char*>(&version), // LINT
+    new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
                      sizeof(version));
-    new_value.append(reinterpret_cast<const char*>(&value), // LINT
+    new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
                      sizeof(value));
     ret = tx_begin({token, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {

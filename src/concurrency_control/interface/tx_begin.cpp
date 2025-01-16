@@ -36,7 +36,7 @@
 
 namespace shirakami {
 
-Status tx_begin_body(transaction_options options) { // LINT
+Status tx_begin_body(transaction_options options) { // NOLINT
                                                     // get tx options
     Token token = options.get_token();
 
@@ -108,7 +108,7 @@ Status tx_begin_body(transaction_options options) { // LINT
     return Status::OK;
 }
 
-Status tx_begin(transaction_options options) { // LINT
+Status tx_begin(transaction_options options) { // NOLINT
     shirakami_log_entry << "tx_begin, options: " << options;
     Token token = options.get_token();
     auto* ti = static_cast<session*>(token);

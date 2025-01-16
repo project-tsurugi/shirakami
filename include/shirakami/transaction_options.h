@@ -72,7 +72,7 @@ public:
 
     transaction_options() = default; // LINT
 
-    transaction_options(Token token) : token_(token) {} // LINT
+    transaction_options(Token token) : token_(token) {} // NOLINT
 
     transaction_options(Token token, transaction_type tt)
         : token_(token), transaction_type_(tt) {}
@@ -212,7 +212,7 @@ to_string(const transaction_options::read_area& ra) noexcept {
 }
 
 inline std::ostream& operator<<(std::ostream& out,
-                                const transaction_options to) { // LINT
+                                const transaction_options to) { // NOLINT
     return out << "Token: " << to.get_token()
                << ", transaction_type: " << to.get_transaction_type()
                << ", write_preserve: " << to_string(to.get_write_preserve())

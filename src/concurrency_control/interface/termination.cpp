@@ -59,8 +59,8 @@ Status abort(Token token) { // LINT
     return ret;
 }
 
-Status commit_body(Token const token,                    // LINT
-                   commit_callback_type callback = {}) { // LINT
+Status commit_body(Token const token,                    // NOLINT
+                   commit_callback_type callback = {}) { // NOLINT
     // default 引数は後方互換性のため。いずれ削除する。
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
@@ -121,7 +121,7 @@ Status commit_body(Token const token,                    // LINT
     return rc;
 }
 
-Status commit(Token const token) { // LINT
+Status commit(Token const token) { // NOLINT
     shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();

@@ -88,7 +88,7 @@ private:
     /**
      * @brief container for read area
      */
-    static inline cont_type cont_; // LINT
+    static inline cont_type cont_; // NOLINT
 };
 
 } // namespace shirakami

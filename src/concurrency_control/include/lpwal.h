@@ -34,7 +34,7 @@ namespace shirakami::lpwal {
  * @brief log directory pointed at initialize.
  *
  */
-[[maybe_unused]] inline std::string log_dir_{""}; // LINT
+[[maybe_unused]] inline std::string log_dir_{""}; // NOLINT
 
 /**
  * @brief Whether log_dir is pointed at initialize.
@@ -51,7 +51,7 @@ namespace shirakami::lpwal {
  * @brief This thread is collecting each worker's log.
  *
  */
-[[maybe_unused]] inline std::thread daemon_thread_; // LINT
+[[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
 
 class write_version_type {
 public:

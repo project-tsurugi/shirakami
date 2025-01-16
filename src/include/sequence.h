@@ -120,7 +120,7 @@ public:
     }
 
 private:
-    static inline std::map<SequenceId, value_type> sequence_map_; // LINT
+    static inline std::map<SequenceId, value_type> sequence_map_; // NOLINT
     static inline std::atomic<SequenceId> id_generator_ctr_{0};
     static inline std::shared_mutex sequence_map_smtx_;
 };

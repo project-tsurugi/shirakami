@@ -323,7 +323,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
                 // for fail safe
                 wso->get_rec_ptr()->unlock();
                 wso->set_rec_ptr(rec_ptr);
-                goto RE_LOCK; // LINT
+                goto RE_LOCK; // NOLINT
             }
         } else {
             // already unhooked
@@ -614,7 +614,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
              * To be larger than LTX.
              * Ltx's minor version is ltx id.
              */
-            minor_version <<= 63; // LINT
+            minor_version <<= 63; // NOLINT
             minor_version |= update_tid.get_tid();
         }
         ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(

@@ -27,10 +27,10 @@
 
 namespace shirakami {
 
-class read_set_obj { // LINT
+class read_set_obj { // NOLINT
 public:
     read_set_obj(Storage const storage, Record* const rec_ptr,
-                 tid_word const tid) // LINT
+                 tid_word const tid) // NOLINT
         : storage_(storage), rec_ptr_(rec_ptr), tid_(tid) {}
 
     read_set_obj(const read_set_obj& right) = delete;
@@ -66,7 +66,7 @@ private:
 
 static_assert(std::is_nothrow_move_constructible_v<read_set_obj>);
 
-class write_set_obj { // LINT
+class write_set_obj { // NOLINT
 public:
     // for update / upsert / insert
     write_set_obj(Storage const storage, OP_TYPE const op,

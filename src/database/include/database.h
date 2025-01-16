@@ -6,7 +6,7 @@ namespace shirakami {
 
 inline std::atomic<bool> is_shutdowning_{false}; // LINT
 
-inline database_options used_database_options_{}; // LINT
+inline database_options used_database_options_{}; // NOLINT
 
 [[maybe_unused]] static database_options get_used_database_options() {
     return used_database_options_;

@@ -36,7 +36,7 @@ public:
         std::ios init(nullptr);
         init.copyfmt(out);
         for (std::size_t idx = 0; idx < value.size_; ++idx) {
-            auto c = *(static_cast<std::uint8_t const*>(value.ptr_) + // LINT
+            auto c = *(static_cast<std::uint8_t const*>(value.ptr_) + // NOLINT
                        idx);
             if (std::isprint(c) != 0) {
                 out << c;
@@ -45,7 +45,7 @@ public:
                 out << std::hex << std::setw(2) << std::setfill('0')
                     << static_cast<std::uint32_t>(
                                *(static_cast<std::uint8_t const*>(
-                                         value.ptr_) + // LINT
+                                         value.ptr_) + // NOLINT
                                  idx));
             }
         }

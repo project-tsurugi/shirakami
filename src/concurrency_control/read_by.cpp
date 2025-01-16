@@ -67,7 +67,7 @@ void point_read_by_long::push(body_elem_type const elem) {
     }
     // erase in bulk
     if (erase_count > 0) {
-        body_.erase(body_.begin(), body_.begin() + erase_count); // LINT
+        body_.erase(body_.begin(), body_.begin() + erase_count); // NOLINT
     }
 
     // push info
@@ -156,7 +156,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
 
     // erase in bulk
     if (erase_count > 0) {
-        body_.erase(body_.begin(), body_.begin() + erase_count); // LINT
+        body_.erase(body_.begin(), body_.begin() + erase_count); // NOLINT
     }
 
     // push info

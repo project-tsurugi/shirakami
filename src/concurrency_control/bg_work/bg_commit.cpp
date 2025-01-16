@@ -153,7 +153,7 @@ void bg_commit::worker() {
                 std::unique_lock<std::mutex> lk2{mtx_used_ids()};
                 used_ids().erase(tx_id);
             }
-            goto REFIND; // LINT
+            goto REFIND; // NOLINT
         }                // termination was successed
         ti->set_result_requested_commit(rc);
 
@@ -168,7 +168,7 @@ void bg_commit::worker() {
          * リストが空になったら安全に used_ids をクリアする。
          */
 
-        goto REFIND; // LINT
+        goto REFIND; // NOLINT
     }
 
     // normal termination, update joined_waiting_resolver

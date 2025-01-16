@@ -764,7 +764,7 @@ extern Status commit(session* const ti) {
         long_tx::abort(ti);
         ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
                                  0);
-        goto END_COMMIT; // LINT
+        goto END_COMMIT; // NOLINT
     }
     if (rc != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
@@ -897,7 +897,7 @@ END_COMMIT: // LINT
     return rc;
 }
 
-Status check_commit(Token const token) { // LINT
+Status check_commit(Token const token) { // NOLINT
     auto* ti = static_cast<session*>(token);
 
     // check for requested commit.

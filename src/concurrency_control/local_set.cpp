@@ -70,7 +70,7 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
         }
     } else {
         cont_for_occ_.emplace_back(std::move(elem)); // LINT
-        if (cont_for_occ_.size() > 100) {            // LINT
+        if (cont_for_occ_.size() > 100) {            // NOLINT
             // swtich to use cont_for_bt_ for performance
             set_for_batch(true);
             for (auto&& elem_occ : cont_for_occ_) {

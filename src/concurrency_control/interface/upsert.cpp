@@ -33,7 +33,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
                                     const std::string_view val) {
     Record* rec_ptr{};
-    rec_ptr = new Record(key); // LINT
+    rec_ptr = new Record(key); // NOLINT
     tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
@@ -71,7 +71,7 @@ static inline Status insert_process(session* const ti, Storage st,
         return Status::OK;
     }
     // fail insert rec_ptr
-    delete rec_ptr; // LINT
+    delete rec_ptr; // NOLINT
     return Status::WARN_CONCURRENT_INSERT;
 }
 
@@ -117,7 +117,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             rc = try_deleted_to_inserting(storage, key, rec_ptr, dummy_tid);
             if (rc == Status::WARN_NOT_FOUND) {
                 // the rec_ptr is gced.
-                goto INSERT_PROCESS; // LINT
+                goto INSERT_PROCESS; // NOLINT
             }
             if (rc == Status::OK) { // sharing tombstone
                 // prepare insert / upsert with tombstone count

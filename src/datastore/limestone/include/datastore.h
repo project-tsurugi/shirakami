@@ -7,7 +7,7 @@
 
 namespace shirakami::datastore {
 
-inline std::unique_ptr<limestone::api::datastore> datastore_; // LINT
+inline std::unique_ptr<limestone::api::datastore> datastore_; // NOLINT
 
 [[maybe_unused]] static limestone::api::datastore* get_datastore() {
     return datastore_.get();

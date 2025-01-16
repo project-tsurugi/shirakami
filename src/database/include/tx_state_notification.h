@@ -7,7 +7,7 @@
 
 namespace shirakami {
 
-inline std::vector<durability_callback_type> durability_callbacks{}; // LINT
+inline std::vector<durability_callback_type> durability_callbacks{}; // NOLINT
 
 inline std::mutex mtx_durability_callbacks{};
 

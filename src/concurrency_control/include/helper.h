@@ -20,6 +20,6 @@ namespace shirakami {
  * @return Status
  */
 Status read_record(Record* rec_ptr, tid_word& tid, std::string& val,
-                   bool read_value = true); // LINT
+                   bool read_value = true); // NOLINT
 
 } // namespace shirakami

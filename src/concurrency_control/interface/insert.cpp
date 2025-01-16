@@ -33,7 +33,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view val,
                                     Record*& out_rec_ptr) {
     Record* rec_ptr{};
-    rec_ptr = new Record(key); // LINT
+    rec_ptr = new Record(key); // NOLINT
     tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
@@ -72,7 +72,7 @@ static inline Status insert_process(session* const ti, Storage st,
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so retry from index access
-    delete rec_ptr; // LINT
+    delete rec_ptr; // NOLINT
     return Status::WARN_CONCURRENT_INSERT;
 }
 
@@ -82,7 +82,7 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-Status insert_body(Token const token, Storage const storage, // LINT
+Status insert_body(Token const token, Storage const storage, // NOLINT
                    const std::string_view key,               // LINT
                    const std::string_view val) {
     // check constraint: key
@@ -128,7 +128,7 @@ Status insert_body(Token const token, Storage const storage, // LINT
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; }
             if (rc == Status::WARN_NOT_FOUND) {
                 // the rec_ptr is gced;
-                goto INSERT_PROCESS; // LINT
+                goto INSERT_PROCESS; // NOLINT
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // ==========
@@ -161,7 +161,7 @@ Status insert_body(Token const token, Storage const storage, // LINT
     }
 }
 
-Status insert(Token const token, Storage const storage, // LINT
+Status insert(Token const token, Storage const storage, // NOLINT
               const std::string_view key,               // LINT
               const std::string_view val,
               [[maybe_unused]] blob_id_type const* blobs_data,

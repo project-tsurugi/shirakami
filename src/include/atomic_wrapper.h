@@ -12,25 +12,25 @@ namespace shirakami {
  */
 template<typename T>
 [[maybe_unused]] static T loadRelaxed(T& ptr) {     // LINT
-    return __atomic_load_n(&ptr, __ATOMIC_RELAXED); // LINT
+    return __atomic_load_n(&ptr, __ATOMIC_RELAXED); // NOLINT
 }
 
 template<typename T>
 [[maybe_unused]] static T loadRelaxed(T* ptr) {    // LINT
-    return __atomic_load_n(ptr, __ATOMIC_RELAXED); // LINT
+    return __atomic_load_n(ptr, __ATOMIC_RELAXED); // NOLINT
 }
 
 /**
  * @brief atomic acquire load.
  */
 template<typename T>
-static T loadAcquire(T& ptr) {                      // LINT
-    return __atomic_load_n(&ptr, __ATOMIC_ACQUIRE); // LINT
+static T loadAcquire(T& ptr) {                      // NOLINT
+    return __atomic_load_n(&ptr, __ATOMIC_ACQUIRE); // NOLINT
 }
 
 template<typename T>
 [[maybe_unused]] static T loadAcquire(T* ptr) {    // LINT
-    return __atomic_load_n(ptr, __ATOMIC_ACQUIRE); // LINT
+    return __atomic_load_n(ptr, __ATOMIC_ACQUIRE); // NOLINT
 }
 
 /**
@@ -38,12 +38,12 @@ template<typename T>
  */
 template<typename T, typename T2>
 [[maybe_unused]] static void storeRelaxed(T& ptr, T2 val) {
-    __atomic_store_n(&ptr, (T) val, __ATOMIC_RELAXED); // LINT
+    __atomic_store_n(&ptr, (T) val, __ATOMIC_RELAXED); // NOLINT
 }
 
 template<typename T, typename T2>
 [[maybe_unused]] static void storeRelaxed(T* ptr, T2 val) {
-    __atomic_store_n(ptr, (T) val, __ATOMIC_RELAXED); // LINT
+    __atomic_store_n(ptr, (T) val, __ATOMIC_RELAXED); // NOLINT
 }
 
 /**
@@ -51,12 +51,12 @@ template<typename T, typename T2>
  */
 template<typename T, typename T2>
 static void storeRelease(T& ptr, T2 val) {
-    __atomic_store_n(&ptr, (T) val, __ATOMIC_RELEASE); // LINT
+    __atomic_store_n(&ptr, (T) val, __ATOMIC_RELEASE); // NOLINT
 }
 
 template<typename T, typename T2>
 [[maybe_unused]] static void storeRelease(T* ptr, T2 val) {
-    __atomic_store_n(ptr, (T) val, __ATOMIC_RELEASE); // LINT
+    __atomic_store_n(ptr, (T) val, __ATOMIC_RELEASE); // NOLINT
 }
 
 /**
@@ -64,7 +64,7 @@ template<typename T, typename T2>
  */
 template<typename T, typename T2>
 static bool compareExchange(T& m, T& before, T2 after) {              // LINT
-    return __atomic_compare_exchange_n(&m, &before, (T) after, false, // LINT
+    return __atomic_compare_exchange_n(&m, &before, (T) after, false, // NOLINT
                                        __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
 }
 

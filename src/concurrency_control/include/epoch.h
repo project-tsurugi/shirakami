@@ -31,7 +31,7 @@ inline std::atomic<epoch_t> global_epoch{initial_epoch}; // LINT
 /**
  * @brief Global epoch time. Default is 40 ms == 40,000 us.
  */
-inline std::atomic<std::size_t> global_epoch_time_us{40 * 1000}; // LINT
+inline std::atomic<std::size_t> global_epoch_time_us{40 * 1000}; // NOLINT
 
 /**
  * @brief safe snapshot epoch in the viewpoint of concurrency control.
@@ -47,9 +47,9 @@ inline std::atomic<epoch_t> min_epoch_occ_potentially_write{0};
 
 inline std::atomic<epoch_t> datastore_durable_epoch{0}; // LINT
 
-[[maybe_unused]] inline std::thread epoch_thread; // LINT
+[[maybe_unused]] inline std::thread epoch_thread; // NOLINT
 
-[[maybe_unused]] inline std::atomic<bool> epoch_thread_end; // LINT
+[[maybe_unused]] inline std::atomic<bool> epoch_thread_end; // NOLINT
 
 [[maybe_unused]] inline std::mutex ep_mtx_; // LINT
 
