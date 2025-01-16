@@ -27,16 +27,16 @@
 
 namespace shirakami {
 
-class read_set_obj { // NOLINT
+class read_set_obj { // LINT
 public:
     read_set_obj(Storage const storage, Record* const rec_ptr,
-                 tid_word const tid) // NOLINT
+                 tid_word const tid) // LINT
         : storage_(storage), rec_ptr_(rec_ptr), tid_(tid) {}
 
     read_set_obj(const read_set_obj& right) = delete;
     read_set_obj(read_set_obj&& right) = default;
 
-    read_set_obj& operator=(const read_set_obj& right) = delete; // NOLINT
+    read_set_obj& operator=(const read_set_obj& right) = delete; // LINT
     read_set_obj& operator=(read_set_obj&& right) = default;
 
     [[nodiscard]] Storage get_storage() const { return storage_; }
@@ -66,7 +66,7 @@ private:
 
 static_assert(std::is_nothrow_move_constructible_v<read_set_obj>);
 
-class write_set_obj { // NOLINT
+class write_set_obj { // LINT
 public:
     // for update / upsert / insert
     write_set_obj(Storage const storage, OP_TYPE const op,
@@ -253,8 +253,8 @@ private:
     std::shared_mutex mtx_;
 };
 
-inline std::ostream& operator<<(std::ostream& out,     // NOLINT
-                                local_write_set& ws) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out,     // LINT
+                                local_write_set& ws) { // LINT
                                                        // now occ only
     std::stringstream ss;
     ss << "for_batch_: " << ws.get_for_batch() << std::endl;

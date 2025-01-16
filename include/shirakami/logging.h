@@ -20,7 +20,7 @@ static constexpr std::string_view log_location_prefix_timing_event =
 // receive string_view only
 #define shirakami_binstring(arg)                                               \
     " " #arg "(len=" << (arg).size() << "):\"" << binary_printer((arg))        \
-                     << "\"" //NOLINT
+                     << "\"" //LINT
 
 /**
  * @brief logging level constant for errors

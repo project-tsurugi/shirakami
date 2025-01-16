@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-Status next_body(Token const token, ScanHandle const handle) { // NOLINT
+Status next_body(Token const token, ScanHandle const handle) { // LINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
@@ -55,7 +55,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             // check target record
             auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                     sh.get_scan_cache()[handle]);
-            auto itr = scan_buf.begin() + scan_index; // NOLINT
+            auto itr = scan_buf.begin() + scan_index; // LINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }
 
@@ -183,7 +183,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
 /**
  * @pre This is called by only long tx mode
  */
-void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
+void check_ltx_scan_range_rp_and_log(Token const token, // LINT
                                      ScanHandle const handle) {
     auto* ti = static_cast<session*>(token);
     auto& sh = ti->get_scan_handle();
@@ -222,7 +222,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
     }
 }
 
-Status next(Token const token, ScanHandle const handle) { // NOLINT
+Status next(Token const token, ScanHandle const handle) { // LINT
     shirakami_log_entry << "next, token: " << token << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();

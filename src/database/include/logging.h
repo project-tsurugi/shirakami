@@ -28,15 +28,15 @@ inline std::atomic<bool> is_debug_mode_{false};
 namespace shirakami::logging {
 
 #define shirakami_log_entry                                                    \
-    VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // LINT
 #define shirakami_log_exit                                                     \
-    VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
+    VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // LINT
 #define shirakami_ex_log_entry                                                 \
     VLOG(log_ex_trace) << std::boolalpha << log_location_prefix                \
-                       << "-->" // NOLINT
+                       << "-->" // LINT
 #define shirakami_ex_log_exit                                                  \
     VLOG(log_ex_trace) << std::boolalpha << log_location_prefix                \
-                       << "<--" // NOLINT
+                       << "<--" // LINT
 
 inline std::atomic<bool> enable_logging_detail_info_{false};
 

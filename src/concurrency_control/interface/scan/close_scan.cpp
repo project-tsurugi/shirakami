@@ -19,13 +19,13 @@
 
 namespace shirakami {
 
-Status close_scan_body(Token const token, ScanHandle const handle) { // NOLINT
+Status close_scan_body(Token const token, ScanHandle const handle) { // LINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     return ti->get_scan_handle().clear(handle);
 }
 
-Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
+Status close_scan(Token const token, ScanHandle const handle) { // LINT
     shirakami_log_entry << "close_scan, token: " << token
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);

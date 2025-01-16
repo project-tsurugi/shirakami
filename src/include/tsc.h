@@ -8,24 +8,24 @@
 
 namespace shirakami {
 
-[[maybe_unused]] static uint64_t rdtsc() { // NOLINT
+[[maybe_unused]] static uint64_t rdtsc() { // LINT
     uint64_t rax{};
     uint64_t rdx{};
 
-    asm volatile("cpuid" ::: "rax", "rbx", "rcx", "rdx"); // NOLINT
-    asm volatile("rdtsc" : "=a"(rax), "=d"(rdx));         // NOLINT
+    asm volatile("cpuid" ::: "rax", "rbx", "rcx", "rdx"); // LINT
+    asm volatile("rdtsc" : "=a"(rax), "=d"(rdx));         // LINT
 
-    return (rdx << 32) | rax; // NOLINT
+    return (rdx << 32) | rax; // LINT
 }
 
-[[maybe_unused]] static uint64_t rdtscp() { // NOLINT
+[[maybe_unused]] static uint64_t rdtscp() { // LINT
     uint64_t rax{};
     uint64_t rdx{};
     uint64_t aux{};
 
-    asm volatile("rdtscp" : "=a"(rax), "=d"(rdx), "=c"(aux)::); // NOLINT
+    asm volatile("rdtscp" : "=a"(rax), "=d"(rdx), "=c"(aux)::); // LINT
 
-    return (rdx << 32) | rax; // NOLINT
+    return (rdx << 32) | rax; // LINT
 }
 
 } // namespace shirakami

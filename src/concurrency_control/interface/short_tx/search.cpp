@@ -68,7 +68,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // check local write set
-    write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+    write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // LINT
     if (in_ws != nullptr) {
         if (in_ws->get_op() == OP_TYPE::DELETE) {
             return Status::WARN_NOT_FOUND;

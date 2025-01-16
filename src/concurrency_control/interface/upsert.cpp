@@ -33,7 +33,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
                                     const std::string_view val) {
     Record* rec_ptr{};
-    rec_ptr = new Record(key); // NOLINT
+    rec_ptr = new Record(key); // LINT
     tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
@@ -71,7 +71,7 @@ static inline Status insert_process(session* const ti, Storage st,
         return Status::OK;
     }
     // fail insert rec_ptr
-    delete rec_ptr; // NOLINT
+    delete rec_ptr; // LINT
     return Status::WARN_CONCURRENT_INSERT;
 }
 
@@ -96,7 +96,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
         Record* rec_ptr{};
         if (Status::OK == get<Record>(storage, key, rec_ptr)) {
             // check local write
-            write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+            write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // LINT
             if (in_ws != nullptr) {
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
@@ -117,18 +117,18 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             rc = try_deleted_to_inserting(storage, key, rec_ptr, dummy_tid);
             if (rc == Status::WARN_NOT_FOUND) {
                 // the rec_ptr is gced.
-                goto INSERT_PROCESS; // NOLINT
+                goto INSERT_PROCESS; // LINT
             }
             if (rc == Status::OK) { // sharing tombstone
                 // prepare insert / upsert with tombstone count
                 ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val,
-                                       true}); // NOLINT
+                                       true}); // LINT
                 return Status::OK;
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // prepare update
                 ti->push_to_write_set(
-                        {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+                        {storage, OP_TYPE::UPSERT, rec_ptr, val}); // LINT
                 return Status::OK;
             }
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; } // else

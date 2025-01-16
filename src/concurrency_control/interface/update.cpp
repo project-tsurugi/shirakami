@@ -45,7 +45,7 @@ static void process_before_return_not_found(session* const ti,
 }
 
 Status update_body(Token token, Storage storage,
-                   const std::string_view key, // NOLINT
+                   const std::string_view key, // LINT
                    const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -65,7 +65,7 @@ Status update_body(Token token, Storage storage,
     Record* rec_ptr{};
     if (Status::OK == get<Record>(storage, key, rec_ptr)) {
         // check local write
-        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // LINT
         if (in_ws != nullptr) {
             if (in_ws->get_op() == OP_TYPE::DELETE) {
                 return Status::WARN_NOT_FOUND;
@@ -83,7 +83,7 @@ Status update_body(Token token, Storage storage,
 
         // prepare write
         ti->push_to_write_set(
-                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
+                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // LINT
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }
@@ -92,7 +92,7 @@ Status update_body(Token token, Storage storage,
 }
 
 Status update(Token token, Storage storage,
-              std::string_view const key, // NOLINT
+              std::string_view const key, // LINT
               std::string_view const val,
               [[maybe_unused]] blob_id_type const* blobs_data,
               [[maybe_unused]] std::size_t blobs_size) {

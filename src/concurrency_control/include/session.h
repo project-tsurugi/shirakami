@@ -74,9 +74,9 @@ public:
             return value_;
         }
 
-        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // NOLINT
+        lock_and_epoch_t(std::uint64_t value) noexcept : value_(value) {} // LINT
         lock_and_epoch_t(bool lock, epoch::epoch_t e) noexcept : value_((lock ? BIT_MASK : 0UL) | e) {}
-        operator std::uint64_t() const noexcept { return value_; } // NOLINT
+        operator std::uint64_t() const noexcept { return value_; } // LINT
 
     private:
         std::uint64_t value_{};
@@ -702,7 +702,7 @@ public:
     // ========== start: node set
     node_set& get_node_set() { return node_set_; }
 
-    Status update_node_set(yakushima::node_version64* nvp) { // NOLINT
+    Status update_node_set(yakushima::node_version64* nvp) { // LINT
         return get_node_set().update_node_set(nvp);
     }
 
@@ -999,7 +999,7 @@ public:
     /**
      * @brief Acquire right of an one session.
      */
-    static Status decide_token(Token& token); // NOLINT
+    static Status decide_token(Token& token); // LINT
 
     /**
      * @brief getter of session_table_
@@ -1030,8 +1030,8 @@ private:
      * @attention Please set KVS_MAX_PARALLEL_THREADS larger than actual number
      * of sessions.
      */
-    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // NOLINT
-            session_table_;                                     // NOLINT
+    static inline std::array<session, KVS_MAX_PARALLEL_THREADS> // LINT
+            session_table_;                                     // LINT
 };
 
 /**
@@ -1051,6 +1051,6 @@ private:
  * that or calling for not ltx, the result of calling this (finished)
  * transaction is undefined behavior.
  */
-Status check_commit(Token token); // NOLINT
+Status check_commit(Token token); // LINT
 
 } // namespace shirakami

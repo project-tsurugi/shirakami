@@ -79,48 +79,48 @@ private:
     /**
      * @brief The number of threads for resolving waiting list.
      */
-    static inline std::atomic<std::size_t> waiting_resolver_threads_{// NOLINT
+    static inline std::atomic<std::size_t> waiting_resolver_threads_{// LINT
                                                                      2};
 
     /**
      * @brief The number of joined threads at last running for resolver threads.
      * This is initialized 0 at init. This can be checked after fin.
      */
-    static inline std::atomic<std::size_t> // NOLINT
+    static inline std::atomic<std::size_t> // LINT
             joined_waiting_resolver_threads_{};
 
     /**
      * @brief ltx commit verify threads
      */
-    static inline worker_cont_type worker_threads_; // NOLINT
+    static inline worker_cont_type worker_threads_; // LINT
 
     /**
      * @brief This is a list what transaction do it be processed now by @a
      * worker_threads_ to prevent conflict.
      */
-    static inline used_ids_type used_ids_; // NOLINT
+    static inline used_ids_type used_ids_; // LINT
 
     /**
      * @brief mutex for @a used_ids_
      */
-    static inline std::mutex mtx_used_ids_; // NOLINT
+    static inline std::mutex mtx_used_ids_; // LINT
 
     /**
      * @brief Flag used for signal to start or stop worker thread.
      *
      */
-    static inline bool worker_thread_end_; // NOLINT
+    static inline bool worker_thread_end_; // LINT
 
     /**
      * @brief mutex for cont_wait_tx
      *
      */
-    static inline std::shared_mutex mtx_cont_wait_tx_; // NOLINT
+    static inline std::shared_mutex mtx_cont_wait_tx_; // LINT
 
     /**
      * @brief container of long transactions waiting to commit.
      */
-    static inline cont_type cont_wait_tx_; // NOLINT
+    static inline cont_type cont_wait_tx_; // LINT
 };
 
 } // namespace shirakami::bg_work

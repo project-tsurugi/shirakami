@@ -11,7 +11,7 @@
 
 namespace shirakami {
 
-Status abort_body(Token token) { // NOLINT
+Status abort_body(Token token) { // LINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
@@ -43,7 +43,7 @@ Status abort_body(Token token) { // NOLINT
     return rc;
 }
 
-Status abort(Token token) { // NOLINT
+Status abort(Token token) { // LINT
     shirakami_log_entry << "abort, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
@@ -59,8 +59,8 @@ Status abort(Token token) { // NOLINT
     return ret;
 }
 
-Status commit_body(Token const token,                    // NOLINT
-                   commit_callback_type callback = {}) { // NOLINT
+Status commit_body(Token const token,                    // LINT
+                   commit_callback_type callback = {}) { // LINT
     // default 引数は後方互換性のため。いずれ削除する。
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
@@ -70,7 +70,7 @@ Status commit_body(Token const token,                    // NOLINT
     }
 
     // log callback
-    ti->set_commit_callback(std::move(callback)); // NOLINT
+    ti->set_commit_callback(std::move(callback)); // LINT
 
     Status rc{};
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
@@ -121,7 +121,7 @@ Status commit_body(Token const token,                    // NOLINT
     return rc;
 }
 
-Status commit(Token const token) { // NOLINT
+Status commit(Token const token) { // LINT
     shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
@@ -137,7 +137,7 @@ Status commit(Token const token) { // NOLINT
     return ret;
 }
 
-bool commit(Token token, commit_callback_type callback) { // NOLINT
+bool commit(Token token, commit_callback_type callback) { // LINT
     shirakami_log_entry << "commit, token: " << token;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();

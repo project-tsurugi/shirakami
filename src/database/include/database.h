@@ -4,9 +4,9 @@
 
 namespace shirakami {
 
-inline std::atomic<bool> is_shutdowning_{false}; // NOLINT
+inline std::atomic<bool> is_shutdowning_{false}; // LINT
 
-inline database_options used_database_options_{}; // NOLINT
+inline database_options used_database_options_{}; // LINT
 
 [[maybe_unused]] static database_options get_used_database_options() {
     return used_database_options_;
@@ -32,6 +32,6 @@ set_used_database_options(database_options const& dos) {
  * This is not transactional operation.
  * @return Status::OK success
  */
-[[maybe_unused]] extern Status delete_all_records(); // NOLINT
+[[maybe_unused]] extern Status delete_all_records(); // LINT
 
 } // namespace shirakami

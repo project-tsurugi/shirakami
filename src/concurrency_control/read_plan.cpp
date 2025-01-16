@@ -63,15 +63,15 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                             // check key range level
                             // todo: use constant value, not magic number
                             std::string w_lkey =
-                                    std::get<0>(elem.second); // NOLINT
+                                    std::get<0>(elem.second); // LINT
                             std::string w_rkey =
-                                    std::get<1>(elem.second);         // NOLINT
-                            std::string r_lkey = std::get<2>(p_elem); // NOLINT
+                                    std::get<1>(elem.second);         // LINT
+                            std::string r_lkey = std::get<2>(p_elem); // LINT
                             scan_endpoint r_lpoint =
-                                    std::get<3>(p_elem);              // NOLINT
-                            std::string r_rkey = std::get<4>(p_elem); // NOLINT
+                                    std::get<3>(p_elem);              // LINT
+                            std::string r_rkey = std::get<4>(p_elem); // LINT
                             scan_endpoint r_rpoint =
-                                    std::get<5>(p_elem); // NOLINT
+                                    std::get<5>(p_elem); // LINT
                             // define write range [], read range ()
                             if (
                                     // case: [(])

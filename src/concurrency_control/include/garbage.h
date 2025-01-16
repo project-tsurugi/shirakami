@@ -29,13 +29,13 @@ using stats_info_type =
  * @details Perform version pruning of GC based on the timestamp determined
  * by the manager.
  */
-[[maybe_unused]] inline std::thread cleaner; // NOLINT
+[[maybe_unused]] inline std::thread cleaner; // LINT
 
 /**
  * @brief garbage collection manager thread.
  * @details Periodically calculate @a min_step_epoch and @a min_batch_epoch.
  */
-[[maybe_unused]] inline std::thread manager; // NOLINT
+[[maybe_unused]] inline std::thread manager; // LINT
 
 // function for background thread
 [[maybe_unused]] void work_manager();
@@ -78,7 +78,7 @@ using stats_info_type =
  * First of elements is pointer to record. Second of elements is global epoch
  * of unhooking.
  */
-[[maybe_unused]] inline std::vector< // NOLINT
+[[maybe_unused]] inline std::vector< // LINT
         std::pair<Record*, epoch::epoch_t>>
         container_rec_{};
 

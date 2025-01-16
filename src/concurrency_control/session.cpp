@@ -53,7 +53,7 @@ void session::commit_sequence(tid_word ctid) {
 #ifdef PWAL
     std::vector<shirakami::lpwal::log_record> log_recs{};
 #endif
-    for (auto itr = ss.begin(); itr != ss.end();) { // NOLINT
+    for (auto itr = ss.begin(); itr != ss.end();) { // LINT
         SequenceId id = itr->first;
         SequenceVersion version = std::get<0>(itr->second);
         SequenceValue value = std::get<1>(itr->second);
@@ -76,13 +76,13 @@ void session::commit_sequence(tid_word ctid) {
         // This entry is valid. it generates log.
         // gen key
         std::string key{};
-        key.append(reinterpret_cast<const char*>(&id), // NOLINT
+        key.append(reinterpret_cast<const char*>(&id), // LINT
                    sizeof(id));
         // gen value
         std::string new_value{}; // value is version + value
-        new_value.append(reinterpret_cast<const char*>(&version), // NOLINT
+        new_value.append(reinterpret_cast<const char*>(&version), // LINT
                          sizeof(version));
-        new_value.append(reinterpret_cast<const char*>(&value), // NOLINT
+        new_value.append(reinterpret_cast<const char*>(&value), // LINT
                          sizeof(value));
         log_operation lo{log_operation::UPSERT};
         // log to local to reduce contention for locks

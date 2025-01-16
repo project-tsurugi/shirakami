@@ -69,7 +69,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
         }
         if (!rc) {
             // if this was update
-            ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+            ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // LINT
             register_read_if_ltx(ti, wso->get_rec_ptr());
         }
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
@@ -106,7 +106,7 @@ static void process_before_return_not_found(session* const ti,
 }
 
 Status delete_record_body(Token token, Storage storage,
-                          const std::string_view key) { // NOLINT
+                          const std::string_view key) { // LINT
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -126,7 +126,7 @@ Status delete_record_body(Token token, Storage storage,
     rc = get<Record>(storage, key, rec_ptr);
     if (Status::OK == rc) {
         // check local write
-        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+        write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // LINT
         if (in_ws != nullptr) { return process_after_write(ti, in_ws); }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
@@ -135,7 +135,7 @@ Status delete_record_body(Token token, Storage storage,
             return Status::WARN_NOT_FOUND;
         }
         // prepare write
-        ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr}); // NOLINT
+        ti->push_to_write_set({storage, OP_TYPE::DELETE, rec_ptr}); // LINT
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }

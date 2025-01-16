@@ -16,7 +16,7 @@
 
 namespace shirakami {
 
-class alignas(CACHE_LINE_SIZE) version { // NOLINT
+class alignas(CACHE_LINE_SIZE) version { // LINT
 public:
     explicit version() { set_next(nullptr); }
 

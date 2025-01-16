@@ -33,7 +33,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view val,
                                     Record*& out_rec_ptr) {
     Record* rec_ptr{};
-    rec_ptr = new Record(key); // NOLINT
+    rec_ptr = new Record(key); // LINT
     tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
@@ -72,7 +72,7 @@ static inline Status insert_process(session* const ti, Storage st,
     }
     // else insert_result == Status::WARN_ALREADY_EXISTS
     // so retry from index access
-    delete rec_ptr; // NOLINT
+    delete rec_ptr; // LINT
     return Status::WARN_CONCURRENT_INSERT;
 }
 
@@ -82,8 +82,8 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-Status insert_body(Token const token, Storage const storage, // NOLINT
-                   const std::string_view key,               // NOLINT
+Status insert_body(Token const token, Storage const storage, // LINT
+                   const std::string_view key,               // LINT
                    const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -128,7 +128,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; }
             if (rc == Status::WARN_NOT_FOUND) {
                 // the rec_ptr is gced;
-                goto INSERT_PROCESS; // NOLINT
+                goto INSERT_PROCESS; // LINT
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // ==========
@@ -151,7 +151,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
             return rc;
         }
 
-    INSERT_PROCESS: // NOLINT
+    INSERT_PROCESS: // LINT
         auto rc{insert_process(ti, storage, key, val, rec_ptr)};
         if (rc == Status::OK) {
             register_read_if_ltx(ti, rec_ptr);
@@ -161,8 +161,8 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
     }
 }
 
-Status insert(Token const token, Storage const storage, // NOLINT
-              const std::string_view key,               // NOLINT
+Status insert(Token const token, Storage const storage, // LINT
+              const std::string_view key,               // LINT
               const std::string_view val,
               [[maybe_unused]] blob_id_type const* blobs_data,
               [[maybe_unused]] std::size_t blobs_size) {

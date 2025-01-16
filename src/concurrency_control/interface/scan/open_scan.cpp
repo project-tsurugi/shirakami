@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-inline Status find_open_scan_slot(session* const ti, // NOLINT
+inline Status find_open_scan_slot(session* const ti, // LINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
     for (ScanHandle i = 0;; ++i) {
@@ -77,7 +77,7 @@ Status check_not_found(
     head_skip_rec_n = 0;
     bool once_not_skip{false};
     for (auto& elem : scan_res) {
-        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
+        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // LINT
         // by inline optimization
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
@@ -170,7 +170,7 @@ Status check_not_found(
     return Status::WARN_NOT_FOUND;
 }
 
-Status open_scan_body(Token const token, Storage storage, // NOLINT
+Status open_scan_body(Token const token, Storage storage, // LINT
                       const std::string_view l_key, const scan_endpoint l_end,
                       const std::string_view r_key, const scan_endpoint r_end,
                       ScanHandle& handle, std::size_t const max_size,
@@ -385,7 +385,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
                 sh.get_scan_cache()[handle]);
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
+            vec.emplace_back(reinterpret_cast<Record*>( // LINT
                                      std::get<index_rec_ptr>(scan_res.at(i))),
                              // by inline optimization
                              std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
@@ -405,7 +405,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     return fin_process(ti, Status::OK);
 }
 
-Status open_scan(Token const token, Storage storage, // NOLINT
+Status open_scan(Token const token, Storage storage, // LINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size, bool right_to_left) {

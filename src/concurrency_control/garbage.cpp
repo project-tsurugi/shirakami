@@ -123,7 +123,7 @@ version* find_latest_invisible_version_from_batch(
 void delete_version_list(version* ver) {
     while (ver != nullptr) {
         version* v_next = ver->get_next();
-        delete ver; // NOLINT
+        delete ver; // LINT
         ++get_gc_ct_ver();
         ver = v_next;
     }
@@ -274,7 +274,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         Storage st, std::size_t& record_num,
         std::size_t& average_version_list_size, std::size_t& average_key_size,
         std::size_t& average_value_size) {
-    std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
+    std::string_view st_view = {reinterpret_cast<char*>(&st), // LINT
                                 sizeof(st)};
     // init about stats
     record_num = 0;
@@ -308,7 +308,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     };
 
     for (auto&& sr : scan_res) {
-        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
+        Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // LINT
 
         // gathering stats info
         average_key_size += rec_ptr->get_key_view().size();
@@ -317,7 +317,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         average_value_size += buf.size();
 
         unhooking_keys_and_pruning_versions(
-                ytk, st, rec_ptr, average_version_list_size); // NOLINT
+                ytk, st, rec_ptr, average_version_list_size); // LINT
         if (get_flag_cleaner_end()) {
             process_before_fin();
             break;
@@ -352,7 +352,7 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
 
 void force_release_key_memory() {
     auto& cont = garbage::get_container_rec();
-    for (auto& elem : cont) { delete elem.first; } // NOLINT
+    for (auto& elem : cont) { delete elem.first; } // LINT
     cont.clear();
 }
 
@@ -361,13 +361,13 @@ void release_key_memory() {
     // compute minimum epoch
     auto me = std::min(garbage::get_min_step_epoch(), garbage::get_min_batch_epoch());
     std::size_t erase_count{0};
-    for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
+    for (auto itr = cont.begin(); itr != cont.end();) { // LINT
         /**
          * If me changed from unhooking, all tx which existed at unhooking must
          * have finished.
          */
         if ((*itr).second < me) {
-            delete (*itr).first; // NOLINT
+            delete (*itr).first; // LINT
             ++erase_count;
             ++itr;
         } else {
@@ -375,7 +375,7 @@ void release_key_memory() {
         }
     }
     if (erase_count > 0) {
-        cont.erase(cont.begin(), cont.begin() + erase_count); // NOLINT
+        cont.erase(cont.begin(), cont.begin() + erase_count); // LINT
     }
 }
 

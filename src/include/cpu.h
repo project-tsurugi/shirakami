@@ -22,10 +22,10 @@ namespace shirakami {
 /**
  * @brief cache line size is 64 bytes.
  */
-static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
+static constexpr std::size_t CACHE_LINE_SIZE{64}; // LINT
 #else
 #undef CACHE_LINE_SIZE
-static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
+static constexpr std::size_t CACHE_LINE_SIZE{64}; // LINT
 #endif
 
 #ifdef SHIRAKAMI_LINUX
@@ -36,7 +36,7 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
     int local_n_processors = n_processors.load(memory_order_acquire);
     for (;;) {
         if (local_n_processors != -1) { break; }
-        int desired = sysconf(_SC_NPROCESSORS_CONF); // NOLINT
+        int desired = sysconf(_SC_NPROCESSORS_CONF); // LINT
         if (n_processors.compare_exchange_strong(local_n_processors, desired,
                                                  memory_order_acq_rel,
                                                  memory_order_acquire)) {
@@ -44,11 +44,11 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
         }
     }
 
-    pid_t pid = syscall(SYS_gettid); // NOLINT
+    pid_t pid = syscall(SYS_gettid); // LINT
     cpu_set_t cpu_set;
 
     CPU_ZERO(&cpu_set);
-    CPU_SET(my_id % local_n_processors, &cpu_set); // NOLINT
+    CPU_SET(my_id % local_n_processors, &cpu_set); // LINT
 
     if (sched_setaffinity(pid, sizeof(cpu_set_t), &cpu_set) != 0) {
         LOG_FIRST_N(ERROR, 1);
@@ -57,7 +57,7 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
 }
 
 [[maybe_unused]] static void setThreadAffinity(const cpu_set_t id) {
-    pid_t pid = syscall(SYS_gettid); // NOLINT
+    pid_t pid = syscall(SYS_gettid); // LINT
 
     if (sched_setaffinity(pid, sizeof(cpu_set_t), &id) != 0) {
         LOG_FIRST_N(ERROR, 1);
@@ -65,8 +65,8 @@ static constexpr std::size_t CACHE_LINE_SIZE{64}; // NOLINT
     }
 }
 
-[[maybe_unused]] static cpu_set_t getThreadAffinity() { // NOLINT
-    pid_t pid = syscall(SYS_gettid);                    // NOLINT
+[[maybe_unused]] static cpu_set_t getThreadAffinity() { // LINT
+    pid_t pid = syscall(SYS_gettid);                    // LINT
     cpu_set_t result;
 
     if (sched_getaffinity(pid, sizeof(cpu_set_t), &result) != 0) {

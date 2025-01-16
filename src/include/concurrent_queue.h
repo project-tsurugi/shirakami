@@ -9,7 +9,7 @@
 namespace shirakami {
 
 template<class T>
-class concurrent_queue { // NOLINT
+class concurrent_queue { // LINT
     // Begin : intel tbb
 public:
     void clear() { return queue.clear(); }

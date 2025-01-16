@@ -69,12 +69,12 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
             }
         }
     } else {
-        cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
-        if (cont_for_occ_.size() > 100) {            // NOLINT
+        cont_for_occ_.emplace_back(std::move(elem)); // LINT
+        if (cont_for_occ_.size() > 100) {            // LINT
             // swtich to use cont_for_bt_ for performance
             set_for_batch(true);
             for (auto&& elem_occ : cont_for_occ_) {
-                cont_for_bt_.insert_or_assign(elem_occ.get_rec_ptr(), // NOLINT
+                cont_for_bt_.insert_or_assign(elem_occ.get_rec_ptr(), // LINT
                                               std::move(elem_occ));
             }
             // clear occ set

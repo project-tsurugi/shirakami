@@ -70,9 +70,9 @@ public:
         list_type negative_list_{};
     };
 
-    transaction_options() = default; // NOLINT
+    transaction_options() = default; // LINT
 
-    transaction_options(Token token) : token_(token) {} // NOLINT
+    transaction_options(Token token) : token_(token) {} // LINT
 
     transaction_options(Token token, transaction_type tt)
         : token_(token), transaction_type_(tt) {}
@@ -153,11 +153,11 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
     using namespace std::string_view_literals;
     switch (tp) {
         case transaction_options::transaction_type::SHORT:
-            return "SHORT"sv; // NOLINT
+            return "SHORT"sv; // LINT
         case transaction_options::transaction_type::LONG:
-            return "LONG"sv; // NOLINT
+            return "LONG"sv; // LINT
         case transaction_options::transaction_type::READ_ONLY:
-            return "READ_ONLY"sv; // NOLINT
+            return "READ_ONLY"sv; // LINT
     }
     /**
      * LOG_FIRST_N マクロは下記エラーによって利用できない。
@@ -170,7 +170,7 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
 
 inline std::ostream&
 operator<<(std::ostream& out,
-           const transaction_options::transaction_type tp) { // NOLINT
+           const transaction_options::transaction_type tp) { // LINT
     return out << to_string_view(tp);
 }
 
@@ -212,7 +212,7 @@ to_string(const transaction_options::read_area& ra) noexcept {
 }
 
 inline std::ostream& operator<<(std::ostream& out,
-                                const transaction_options to) { // NOLINT
+                                const transaction_options to) { // LINT
     return out << "Token: " << to.get_token()
                << ", transaction_type: " << to.get_transaction_type()
                << ", write_preserve: " << to_string(to.get_write_preserve())

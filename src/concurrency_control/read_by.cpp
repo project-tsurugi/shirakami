@@ -46,7 +46,7 @@ void point_read_by_long::push(body_elem_type const elem) {
     // gc
     // TODO at 559: too erase, threshold must be cc safe ss epoch
     std::size_t erase_count{0};
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
+    for (auto itr = body_.begin(); itr != body_.end();) { // LINT
         if ((*itr).second < elem.second) {
             // high priori
             // check gc
@@ -67,7 +67,7 @@ void point_read_by_long::push(body_elem_type const elem) {
     }
     // erase in bulk
     if (erase_count > 0) {
-        body_.erase(body_.begin(), body_.begin() + erase_count); // NOLINT
+        body_.erase(body_.begin(), body_.begin() + erase_count); // LINT
     }
 
     // push info
@@ -76,7 +76,7 @@ void point_read_by_long::push(body_elem_type const elem) {
 
 void point_read_by_long::print() {
     LOG(INFO) << ">> print point_read_by_long";
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
+    for (auto itr = body_.begin(); itr != body_.end();) { // LINT
         LOG(INFO) << (*itr).first << ", " << (*itr).second;
     }
     LOG(INFO) << "<< print point_read_by_long";
@@ -135,7 +135,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
 
     // gc
     std::size_t erase_count{0};
-    for (auto itr = body_.begin(); itr != body_.end();) { // NOLINT
+    for (auto itr = body_.begin(); itr != body_.end();) { // LINT
         if (std::get<range_read_by_long::index_tx_id>(*itr) < tx_id) {
             // high priori
             if (std::get<range_read_by_long::index_epoch>(*itr) <
@@ -156,7 +156,7 @@ void range_read_by_long::push(body_elem_type const& elem) {
 
     // erase in bulk
     if (erase_count > 0) {
-        body_.erase(body_.begin(), body_.begin() + erase_count); // NOLINT
+        body_.erase(body_.begin(), body_.begin() + erase_count); // LINT
     }
 
     // push info

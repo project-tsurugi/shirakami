@@ -164,7 +164,7 @@ static inline void expose_local_write(
                     // case: first of list
                     std::string vb{};
                     if (wso.get_op() != OP_TYPE::DELETE) { wso.get_value(vb); }
-                    version* new_v{new version( // NOLINT
+                    version* new_v{new version( // LINT
                             vb, rec_ptr->get_latest())};
                     // prepare tid for old version
                     pre_tid.set_absent(false);
@@ -210,7 +210,7 @@ static inline void expose_local_write(
                             // load payload if not delete.
                             wso.get_value(vb);
                         }
-                        version* new_v{new version(ctid, vb, ver)}; // NOLINT
+                        version* new_v{new version(ctid, vb, ver)}; // LINT
                         pre_ver->set_next(new_v);
                     };
                     should_log = false;
@@ -385,7 +385,7 @@ static inline void cleanup_process(
 
 // ==============================
 // functions declared at header
-Status abort(session* const ti) { // NOLINT
+Status abort(session* const ti) { // LINT
     // about tx state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
@@ -764,7 +764,7 @@ extern Status commit(session* const ti) {
         long_tx::abort(ti);
         ti->call_commit_callback(rc, ti->get_result_info().get_reason_code(),
                                  0);
-        goto END_COMMIT; // NOLINT
+        goto END_COMMIT; // LINT
     }
     if (rc != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
@@ -883,7 +883,7 @@ extern Status commit(session* const ti) {
         LOG_FIRST_N(ERROR, 1) << "library programming error.";
     }
 
-END_COMMIT: // NOLINT
+END_COMMIT: // LINT
     // log debug timing event
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                  << "end_precommit : " << str_tx_id;
@@ -897,7 +897,7 @@ END_COMMIT: // NOLINT
     return rc;
 }
 
-Status check_commit(Token const token) { // NOLINT
+Status check_commit(Token const token) { // LINT
     auto* ti = static_cast<session*>(token);
 
     // check for requested commit.

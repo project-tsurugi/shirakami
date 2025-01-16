@@ -161,7 +161,7 @@ void change_inserting_records_state(session* const ti) {
 }
 // ==========
 
-Status abort(session* ti) { // NOLINT
+Status abort(session* ti) { // LINT
     // about tx state
     ti->set_tx_state_if_valid(TxState::StateKind::ABORTED);
 
@@ -308,7 +308,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
                     << "lock key " + std::string(rec_ptr->get_key_view());
         }
 
-    RE_LOCK: // NOLINT
+    RE_LOCK: // LINT
         // locking
         rec_ptr->get_tidw_ref().lock();
 
@@ -323,7 +323,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
                 // for fail safe
                 wso->get_rec_ptr()->unlock();
                 wso->set_rec_ptr(rec_ptr);
-                goto RE_LOCK; // NOLINT
+                goto RE_LOCK; // LINT
             }
         } else {
             // already unhooked
@@ -614,7 +614,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
              * To be larger than LTX.
              * Ltx's minor version is ltx id.
              */
-            minor_version <<= 63; // NOLINT
+            minor_version <<= 63; // LINT
             minor_version |= update_tid.get_tid();
         }
         ti->get_lpwal_handle().push_log(shirakami::lpwal::log_record(

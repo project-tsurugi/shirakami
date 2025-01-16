@@ -7,7 +7,7 @@ namespace shirakami::wp {
 
 class wp_lock {
 public:
-    static bool is_locked(std::uint64_t obj) { return obj & 1; } // NOLINT
+    static bool is_locked(std::uint64_t obj) { return obj & 1; } // LINT
 
     std::uint64_t load_obj() { return obj.load(std::memory_order_acquire); }
 

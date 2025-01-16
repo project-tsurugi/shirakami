@@ -33,8 +33,8 @@ void init_about_session_table(std::string_view log_dir_path) {
 void recovery_storage_meta(std::vector<Storage>& st_list) {
     std::sort(st_list.begin(), st_list.end());
     st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
-    if (st_list.back() >= (storage::initial_strg_ctr << 32)) { // NOLINT
-        storage::set_strg_ctr((st_list.back() >> 32) + 1);     // NOLINT
+    if (st_list.back() >= (storage::initial_strg_ctr << 32)) { // LINT
+        storage::set_strg_ctr((st_list.back() >> 32) + 1);     // LINT
     } else {
         storage::set_strg_ctr(storage::initial_strg_ctr);
     }
@@ -66,7 +66,7 @@ void recovery_from_datastore() {
                 rec_ptr->set_value(val);
             } else {
                 // create record
-                rec_ptr = new Record(key); // NOLINT
+                rec_ptr = new Record(key); // LINT
                 // fix record contents
                 // about value
                 rec_ptr->set_value(val);
@@ -106,16 +106,16 @@ void recovery_from_datastore() {
             }
             memcpy(&st2, val.data(), sizeof(st2));
             storage_option::id_t id{};
-            memcpy(&id, val.data() + sizeof(st2), sizeof(id)); // NOLINT
+            memcpy(&id, val.data() + sizeof(st2), sizeof(id)); // LINT
             std::string payload{};
             if (val.size() > sizeof(st2) + sizeof(id)) {
-                payload.append(val.data() + sizeof(st2) + sizeof(id), // NOLINT
+                payload.append(val.data() + sizeof(st2) + sizeof(id), // LINT
                                val.size() - sizeof(st2) - sizeof(id));
             }
             std::string new_value{};
-            new_value.append(reinterpret_cast<const char*>(&st2), // NOLINT
+            new_value.append(reinterpret_cast<const char*>(&st2), // LINT
                              sizeof(st2));
-            new_value.append(reinterpret_cast<const char*>(&id), // NOLINT
+            new_value.append(reinterpret_cast<const char*>(&id), // LINT
                              sizeof(id));
             new_value.append(payload);
             // check st2 existence
@@ -171,7 +171,7 @@ void recovery_from_datastore() {
             SequenceVersion version{};
             memcpy(&version, val.data(), sizeof(version));
             SequenceValue value{};
-            memcpy(&value, val.data() + sizeof(version), // NOLINT
+            memcpy(&value, val.data() + sizeof(version), // LINT
                    sizeof(version));
             auto ret = sequence::sequence_map_push(id, 0, version, value);
             if (ret != Status::OK) {
@@ -212,7 +212,7 @@ void scan_all_and_logging() {
         if (rc == Status::OK) {
             // It found some records
             for (auto&& each_rec : scan_res) {
-                Record* rec_ptr{reinterpret_cast<Record*>( // NOLINT
+                Record* rec_ptr{reinterpret_cast<Record*>( // LINT
                         std::get<1>(each_rec))};
                 // get key val info.
                 std::string key{};

@@ -15,13 +15,13 @@ Record::~Record() {
     auto* ver = get_latest();
     while (ver != nullptr) {
         auto* ver_tmp = ver->get_next();
-        delete ver; // NOLINT
+        delete ver; // LINT
         ver = ver_tmp;
     }
 }
 
 Record::Record(std::string_view const key) : key_(key) {
-    latest_.store(new version(), std::memory_order_release); // NOLINT
+    latest_.store(new version(), std::memory_order_release); // LINT
     tidw_.set_lock(false);
     tidw_.set_latest(true);
     tidw_.set_absent(true);
@@ -29,7 +29,7 @@ Record::Record(std::string_view const key) : key_(key) {
 
 Record::Record(std::string_view const key, std::string_view const val)
     : key_(key) {
-    latest_.store(new version(val), std::memory_order_release); // NOLINT
+    latest_.store(new version(val), std::memory_order_release); // LINT
     tidw_.set_lock(true);
     tidw_.set_latest(true);
     tidw_.set_absent(true);

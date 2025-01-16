@@ -29,10 +29,10 @@ public:
     // constructor
     storage_option() = default;
 
-    storage_option(id_t id) : id_(id) {} // NOLINT
+    storage_option(id_t id) : id_(id) {} // LINT
 
     storage_option(id_t id, std::string_view pl)
-        : id_(id), payload_(pl) {} // NOLINT
+        : id_(id), payload_(pl) {} // LINT
 
     // setter / getter
     void id(id_t id) { id_ = id; }

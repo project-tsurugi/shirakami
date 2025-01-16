@@ -36,7 +36,7 @@
 
 namespace shirakami {
 
-Status enter_body(Token& token) { // NOLINT
+Status enter_body(Token& token) { // LINT
     Status ret_status = session_table::decide_token(token);
     if (ret_status != Status::OK) return ret_status;
 
@@ -49,7 +49,7 @@ Status enter_body(Token& token) { // NOLINT
     return Status::OK;
 }
 
-Status enter(Token& token) { // NOLINT
+Status enter(Token& token) { // LINT
     shirakami_log_entry << "enter, token: " << token;
     auto ret = enter_body(token);
     shirakami_log_exit << "enter, Status: " << ret;
@@ -71,7 +71,7 @@ void unlock_for_other_client(session* const ti) {
     ti->set_visible(false); // unlock
 }
 
-Status leave_body(Token const token) { // NOLINT
+Status leave_body(Token const token) { // LINT
     for (auto&& itr : session_table::get_session_table()) {
         auto* ti = static_cast<session*>(token);
         if (&itr == ti) {
@@ -106,7 +106,7 @@ Status leave_body(Token const token) { // NOLINT
     return Status::WARN_INVALID_ARGS;
 }
 
-Status leave(Token const token) { // NOLINT
+Status leave(Token const token) { // LINT
     shirakami_log_entry << "leave, token: " << token;
     auto ret = leave_body(token);
     shirakami_log_exit << "leave, Status: " << ret;

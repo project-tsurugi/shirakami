@@ -31,9 +31,9 @@ void write_storage_metadata(std::string_view key, Storage st,
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
     // value = Storage + id + payload
-    value.append(reinterpret_cast<char*>(&st), sizeof(st)); // NOLINT
+    value.append(reinterpret_cast<char*>(&st), sizeof(st)); // LINT
     storage_option::id_t id = options.id();
-    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
+    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // LINT
     std::string payload{options.payload()};
     value.append(payload);
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
@@ -51,7 +51,7 @@ void write_storage_metadata(std::string_view key, Storage st,
 #ifdef PWAL
         auto* ti = static_cast<session*>(s);
         // reuse mrc_tid of previous commit to calculate the write-version
-        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // NOLINT
+        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // LINT
         {
             std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
             ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::ADD_STORAGE, wv, st, {}, {}));
@@ -85,7 +85,7 @@ void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) 
 #ifdef PWAL
         auto* ti = static_cast<session*>(s);
         // reuse mrc_tid of previous commit to calculate the write-version
-        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // NOLINT
+        lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // LINT
         // note: this write-version is calculated without reading any Records in this storage,
         // so it may be smaller than that of concurrent transactions writing this storage.
         {
@@ -215,11 +215,11 @@ Status storage_get_options_body(Storage storage, storage_option& options) {
                     << ret;
             return Status::ERR_FATAL;
         }
-        if (commit(s) == Status::OK) { break; } // NOLINT
+        if (commit(s) == Status::OK) { break; } // LINT
         // Someone may executed storage_set_options and it occurs occ error.
         _mm_pause();
         ++try_num;
-        if (try_num > 100) { // NOLINT
+        if (try_num > 100) { // LINT
             LOG(INFO) << "strange statement";
             leave(s);
             return Status::WARN_ILLEGAL_OPERATION;
@@ -228,12 +228,12 @@ Status storage_get_options_body(Storage storage, storage_option& options) {
     leave(s);
     // value = Storage + id + payload
     storage_option::id_t id{};
-    memcpy(&id, value.data() + sizeof(Storage), // NOLINT
+    memcpy(&id, value.data() + sizeof(Storage), // LINT
            sizeof(storage_option::id_t));
     std::string payload{};
     if (value.size() > sizeof(Storage) + sizeof(storage_option::id_t)) {
-        payload.append(value.data() + sizeof(Storage) +      // NOLINT
-                               sizeof(storage_option::id_t), // NOLINT
+        payload.append(value.data() + sizeof(Storage) +      // LINT
+                               sizeof(storage_option::id_t), // LINT
                        value.size() - sizeof(Storage) -
                                sizeof(storage_option::id_t));
     }
@@ -264,9 +264,9 @@ Status storage_set_options_body(Storage storage,
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
     // value = Storage + id + payload
-    value.append(reinterpret_cast<char*>(&storage), sizeof(storage)); // NOLINT
+    value.append(reinterpret_cast<char*>(&storage), sizeof(storage)); // LINT
     storage_option::id_t id = options.id();
-    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // NOLINT
+    value.append(reinterpret_cast<char*>(&id), sizeof(id)); // LINT
     std::string payload{options.payload()};
     value.append(payload);
     // store and log information
@@ -299,11 +299,11 @@ Status storage_set_options(Storage storage, storage_option const& options) {
 
 Status storage::register_storage(Storage storage, storage_option options) {
     std::string_view storage_view = {
-            reinterpret_cast<char*>(&storage), // NOLINT
+            reinterpret_cast<char*>(&storage), // LINT
             sizeof(storage)};
     auto rc = yakushima::create_storage(std::string_view(storage_view));
     // create storage must return WARN_UNIQUE_RESTRICTION or OK
-    if (rc == yakushima::status::WARN_UNIQUE_RESTRICTION) { // NOLINT
+    if (rc == yakushima::status::WARN_UNIQUE_RESTRICTION) { // LINT
         return Status::WARN_ALREADY_EXISTS;
     }
     if (rc != yakushima::status::OK) {
@@ -321,10 +321,10 @@ Status storage::register_storage(Storage storage, storage_option options) {
                 new wp::page_set_meta(std::move(options))};
         auto rc = yakushima::put<wp::page_set_meta*>(
                 ytoken,
-                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                {reinterpret_cast<char*>(&page_set_meta_storage), // LINT
                  sizeof(page_set_meta_storage)},
                 storage_view, &page_set_meta_ptr,
-                sizeof(page_set_meta_ptr)); // NOLINT
+                sizeof(page_set_meta_ptr)); // LINT
         if (yakushima::status::OK != rc) {
             LOG_FIRST_N(ERROR, 1)
                     << log_location_prefix << rc << ", unreachable path";
@@ -350,19 +350,19 @@ Status storage::create_storage(Storage& storage,
         // storage id is not specified by shirakami-user.
         get_new_storage_num(storage);
         // check depletion
-        if ((storage >> 32) > 0) { // NOLINT
+        if ((storage >> 32) > 0) { // LINT
             VLOG(log_trace)
                     << "system defined storage id depletion. you should "
                        "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;
         }
         // higher bit is used for system defined.
-        storage <<= 32; // NOLINT
+        storage <<= 32; // LINT
     } else {
         // storage id is specified by shirakami-user.
         storage = storage_id;
         // check depletion
-        if ((storage >> 32) > 0) { // NOLINT
+        if ((storage >> 32) > 0) { // LINT
             VLOG(log_trace) << "user defined storage id depletion. you should "
                                "implement re-using storage id.";
             return Status::WARN_STORAGE_ID_DEPLETION;
@@ -375,17 +375,17 @@ Status storage::create_storage(Storage& storage,
 
 Status storage::exist_storage(Storage storage) {
     auto ret = yakushima::find_storage(
-            {reinterpret_cast<char*>(&storage), sizeof(storage)}); // NOLINT
+            {reinterpret_cast<char*>(&storage), sizeof(storage)}); // LINT
     if (ret == yakushima::status::OK) { return Status::OK; }
     return Status::WARN_NOT_FOUND;
 }
 
 Status storage::delete_storage(Storage storage) {
-    // NOLINT
+    // LINT
     std::unique_lock lk{garbage::get_mtx_cleaner()};
 
     std::string_view storage_view = {
-            reinterpret_cast<char*>(&storage), // NOLINT
+            reinterpret_cast<char*>(&storage), // LINT
             sizeof(storage)};
     auto ret = yakushima::find_storage(storage_view);
     if ((ret != yakushima::status::OK) ||
@@ -399,17 +399,17 @@ Status storage::delete_storage(Storage storage) {
     yakushima::scan(storage_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);
 
-    if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // NOLINT
+    if (scan_res.size() < std::thread::hardware_concurrency() * 10) { // LINT
         // single thread clean up
         for (auto&& itr : scan_res) {
             if (wp::get_finalizing()) {
-                delete reinterpret_cast<wp::page_set_meta*>( // NOLINT
+                delete reinterpret_cast<wp::page_set_meta*>( // LINT
                         std::get<v_index>(itr));
             } else {
-                Record* target_rec{reinterpret_cast<Record*>( // NOLINT
+                Record* target_rec{reinterpret_cast<Record*>( // LINT
                         std::get<v_index>(itr))};
                 // by inline optimization
-                delete target_rec; // NOLINT
+                delete target_rec; // LINT
             }
         }
     } else {
@@ -418,12 +418,12 @@ Status storage::delete_storage(Storage storage) {
                                    std::size_t const end) {
             for (std::size_t i = begin; i < end; ++i) {
                 if (wp::get_finalizing()) {
-                    delete reinterpret_cast<wp::page_set_meta*>( // NOLINT
+                    delete reinterpret_cast<wp::page_set_meta*>( // LINT
                             std::get<v_index>(scan_res[i]));
                 } else {
-                    Record* target_rec{reinterpret_cast<Record*>( // NOLINT
+                    Record* target_rec{reinterpret_cast<Record*>( // LINT
                             std::get<v_index>(scan_res[i]))};
-                    delete target_rec; // NOLINT
+                    delete target_rec; // LINT
                 }
             }
         };
@@ -448,7 +448,7 @@ Status storage::delete_storage(Storage storage) {
         }
         std::pair<wp::page_set_meta**, std::size_t> out{};
         auto rc{yakushima::get<wp::page_set_meta*>(
-                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                {reinterpret_cast<char*>(&page_set_meta_storage), // LINT
                  sizeof(page_set_meta_storage)},
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
@@ -458,11 +458,11 @@ Status storage::delete_storage(Storage storage) {
                     << std::endl;
             return Status::ERR_FATAL;
         }
-        delete reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT
+        delete reinterpret_cast<wp::page_set_meta*>(out.first); // LINT
         // by inline optimization
         rc = yakushima::remove(
                 ytoken,
-                {reinterpret_cast<char*>(&page_set_meta_storage), // NOLINT
+                {reinterpret_cast<char*>(&page_set_meta_storage), // LINT
                  sizeof(page_set_meta_storage)},
                 storage_view);
         if (yakushima::status::OK != rc) {
@@ -478,7 +478,7 @@ Status storage::delete_storage(Storage storage) {
         }
     }
     auto rc = yakushima::delete_storage(storage_view);
-    if (yakushima::status::OK != rc) { // NOLINT
+    if (yakushima::status::OK != rc) { // LINT
         LOG_FIRST_N(ERROR, 1)
                 << log_location_prefix << rc << ", unreachable path";
         return Status::ERR_FATAL;

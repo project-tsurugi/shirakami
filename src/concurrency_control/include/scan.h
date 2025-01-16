@@ -95,11 +95,11 @@ public:
 
     // getter
 
-    [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
+    [[maybe_unused]] scan_cache_type& get_scan_cache() { // LINT
         return scan_cache_;
     }
 
-    [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
+    [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // LINT
         return scan_cache_itr_;
     }
 

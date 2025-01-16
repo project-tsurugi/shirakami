@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-Status scannable_total_index_size_body(Token const token, // NOLINT
+Status scannable_total_index_size_body(Token const token, // LINT
                                        ScanHandle const handle,
                                        std::size_t& size) {
     auto* ti = static_cast<session*>(token);
@@ -43,7 +43,7 @@ Status scannable_total_index_size_body(Token const token, // NOLINT
     return Status::OK;
 }
 
-Status scannable_total_index_size(Token const token, // NOLINT
+Status scannable_total_index_size(Token const token, // LINT
                                   ScanHandle const handle, std::size_t& size) {
     shirakami_log_entry << "scannable_total_index_size, "
                         << "token: " << token << ", handle: " << handle

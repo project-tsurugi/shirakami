@@ -25,7 +25,7 @@ namespace shirakami {
  * Please review your usage.
  */
 Status create_storage(std::string_view key, Storage& storage,
-                      storage_option const& options = {}); // NOLINT
+                      storage_option const& options = {}); // LINT
 
 /**
  * @brief delete existing storage and records under the storage.

@@ -14,6 +14,6 @@ extern Status abort(session* ti);
 extern Status commit(session* ti);
 
 extern Status search_key(session* ti, Storage storage, std::string_view key,
-                         std::string& value, bool read_value = true); // NOLINT
+                         std::string& value, bool read_value = true); // LINT
 
 } // namespace shirakami::short_tx

@@ -83,12 +83,12 @@ private:
     /**
      * @brief mutex for container.
      */
-    static inline std::shared_mutex mtx_cont_; // NOLINT
+    static inline std::shared_mutex mtx_cont_; // LINT
 
     /**
      * @brief container for read area
      */
-    static inline cont_type cont_; // NOLINT
+    static inline cont_type cont_; // LINT
 };
 
 } // namespace shirakami

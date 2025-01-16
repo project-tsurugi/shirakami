@@ -75,7 +75,7 @@ RETRY:
          * so this tx must wait unlocking because it may read invalid state with
          * locking.
          */
-        goto RETRY; // NOLINT
+        goto RETRY; // LINT
     }
 
     // read non-latest version after version function
@@ -171,7 +171,7 @@ Status search_key(session* ti, Storage const storage,
     }
 
     // check local write set
-    write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
+    write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // LINT
     if (in_ws != nullptr) {
         rc = hit_local_write_set(in_ws, rec_ptr, value, read_value);
         if (rc == Status::OK) {

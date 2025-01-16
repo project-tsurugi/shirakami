@@ -10,7 +10,7 @@
 
 namespace shirakami {
 
-[[maybe_unused]] static bool check_clock_span(uint64_t& start, // NOLINT
+[[maybe_unused]] static bool check_clock_span(uint64_t& start, // LINT
                                               uint64_t& stop,
                                               uint64_t threshold) {
     uint64_t diff{stop - start};

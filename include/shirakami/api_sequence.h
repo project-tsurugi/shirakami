@@ -41,7 +41,7 @@ using SequenceVersion = std::size_t;
  * @note This function is not intended to be called concurrently with running
  * transactions. Typical usage is in DDL to register sequence objects.
  */
-Status create_sequence(SequenceId* id); // NOLINT
+Status create_sequence(SequenceId* id); // LINT
 
 /**
  * @brief update sequence value and version.
@@ -94,7 +94,7 @@ Status update_sequence(Token token, SequenceId id, SequenceVersion version,
  * time of database recovery.
  */
 Status read_sequence(SequenceId id, SequenceVersion* version,
-                     SequenceValue* value); // NOLINT
+                     SequenceValue* value); // LINT
 
 /**
  * @brief delete the sequence
@@ -107,6 +107,6 @@ Status read_sequence(SequenceId id, SequenceVersion* version,
  * @note This function is not intended to be called concurrently with running
  * transactions. Typical usage is in DDL to unregister sequence objects.
  */
-Status delete_sequence(SequenceId id); // NOLINT
+Status delete_sequence(SequenceId id); // LINT
 
 } // namespace shirakami

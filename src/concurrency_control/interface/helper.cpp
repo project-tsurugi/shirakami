@@ -39,7 +39,7 @@ namespace shirakami {
 
 Status check_constraint_key_length(std::string_view const key) {
     // check constraint: key
-    if (key.size() > 30 * 1024) { // NOLINT
+    if (key.size() > 30 * 1024) { // LINT
         // we can't control over 30KB key.
         return Status::WARN_INVALID_KEY_LENGTH;
     }
@@ -106,7 +106,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
 }
 
 Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
-                   bool const read_value = true) { // NOLINT
+                   bool const read_value = true) { // LINT
     tid_word f_check{};
     tid_word s_check{};
 

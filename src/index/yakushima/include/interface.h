@@ -16,15 +16,15 @@ namespace shirakami {
 
 template<class Record>
 Status get(Storage st, std::string_view const key, Record*& rec_ptr,
-           std::pair<yakushima::node_version64_body,                // NOLINT
-                     yakushima::node_version64*>* checked_version = // NOLINT
-           nullptr) {                                               // NOLINT
+           std::pair<yakushima::node_version64_body,                // LINT
+                     yakushima::node_version64*>* checked_version = // LINT
+           nullptr) {                                               // LINT
     std::pair<Record**, std::size_t> out{};
-    auto rc{yakushima::get<Record*>({reinterpret_cast<char*>(&st), // NOLINT
+    auto rc{yakushima::get<Record*>({reinterpret_cast<char*>(&st), // LINT
                                      sizeof(st)},
                                     key, out, checked_version)};
     if (rc == yakushima::status::OK) {
-        rec_ptr = reinterpret_cast<Record*>(out.first); // NOLINT
+        rec_ptr = reinterpret_cast<Record*>(out.first); // LINT
         // by inline optimization
         return Status::OK;
     }
@@ -49,20 +49,20 @@ template<class Record>
 yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
                       Record* rec_ptr, yakushima::node_version64*& nvp) {
     return yakushima::put<Record*>(
-            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,       // NOLINT
-            &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
-            static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
+            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,       // LINT
+            &rec_ptr, sizeof(Record*), nullptr,                        // LINT
+            static_cast<yakushima::value_align_type>(sizeof(Record*)), // LINT
             true, &nvp);
 }
 
 template<class Record>
 yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
                       std::string_view val) {
-    Record* rec_ptr = new Record(key, val); // NOLINT
+    Record* rec_ptr = new Record(key, val); // LINT
     rec_ptr->reset_ts();
     yakushima::node_version64* nvp{};
     auto rc{put<Record>(tk, st, key, rec_ptr, nvp)};
-    if (rc != yakushima::status::OK) { delete rec_ptr; } // NOLINT
+    if (rc != yakushima::status::OK) { delete rec_ptr; } // LINT
     return rc;
 }
 
@@ -100,7 +100,7 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
                            yakushima::node_version64*>>* nvec,
                            bool right_to_left) {
     auto rc{yakushima::scan(
-            {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            {reinterpret_cast<char*>(&st), sizeof(st)}, // LINT
             l_key, parse_scan_endpoint(l_end), r_key,
             parse_scan_endpoint(r_end), scan_res, nvec, max_size, right_to_left)};
     if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
@@ -119,7 +119,7 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
 static inline Status remove(yakushima::Token tk, Storage st,
                             std::string_view key) {
     auto rc{yakushima::remove(
-            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+            tk, {reinterpret_cast<char*>(&st), sizeof(st)}, // LINT
             key)};
     if (yakushima::status::OK != rc) { return Status::INTERNAL_WARN_NOT_FOUND; }
     return Status::OK;

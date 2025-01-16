@@ -34,24 +34,24 @@ namespace shirakami::lpwal {
  * @brief log directory pointed at initialize.
  *
  */
-[[maybe_unused]] inline std::string log_dir_{""}; // NOLINT
+[[maybe_unused]] inline std::string log_dir_{""}; // LINT
 
 /**
  * @brief Whether log_dir is pointed at initialize.
  *
  */
-[[maybe_unused]] inline bool log_dir_pointed_{false}; // NOLINT
+[[maybe_unused]] inline bool log_dir_pointed_{false}; // LINT
 
 /**
  * @brief It shows whether it is in fin().
  */
-[[maybe_unused]] inline std::atomic<bool> stopping_{false}; // NOLINT
+[[maybe_unused]] inline std::atomic<bool> stopping_{false}; // LINT
 
 /**
  * @brief This thread is collecting each worker's log.
  *
  */
-[[maybe_unused]] inline std::thread daemon_thread_; // NOLINT
+[[maybe_unused]] inline std::thread daemon_thread_; // LINT
 
 class write_version_type {
 public:

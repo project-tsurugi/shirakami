@@ -33,7 +33,7 @@ namespace shirakami {
  * wait the result.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
  */
-Status abort(Token token); // NOLINT
+Status abort(Token token); // LINT
 
 /**
  * @brief close the scan which was opened at open_scan.
@@ -44,7 +44,7 @@ Status abort(Token token); // NOLINT
  * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it
  * can't execute it.
  */
-Status close_scan(Token token, ScanHandle handle); // NOLINT
+Status close_scan(Token token, ScanHandle handle); // LINT
 
 /**
  * @brief commit function with result notified by callback
@@ -76,7 +76,7 @@ bool commit(Token token, commit_callback_type callback);
 /**
  * @brief old api. it is planed to remove from api.
  */
-Status commit(Token token); // NOLINT
+Status commit(Token token); // LINT
 
 /**
  * @brief delete the record for the given key
@@ -107,7 +107,7 @@ Status commit(Token token); // NOLINT
  * @return Status::OK success.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
-Status delete_record(Token token, Storage storage, // NOLINT
+Status delete_record(Token token, Storage storage, // LINT
                      std::string_view key);
 
 /**
@@ -119,7 +119,7 @@ Status delete_record(Token token, Storage storage, // NOLINT
  * @return Status::OK
  * @return Status::ERR_SESSION_LIMIT There are no capacity of session.
  */
-Status enter(Token& token); // NOLINT
+Status enter(Token& token); // LINT
 
 /**
  * @brief Confirm existence of the key in the @a storage.
@@ -159,7 +159,7 @@ Status exist_key(Token token, Storage storage, std::string_view key);
  * interface.
  * @return void
  */
-void fin(bool force_shut_down_logging = true); // NOLINT
+void fin(bool force_shut_down_logging = true); // LINT
 
 /**
  * @brief It initializes shirakami's environment.
@@ -174,7 +174,7 @@ void fin(bool force_shut_down_logging = true); // NOLINT
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have
  * not done anything in this call.
  */
-Status init(database_options options = {}); // NOLINT
+Status init(database_options options = {}); // LINT
 
 /**
  * @brief insert the record with given key/value
@@ -210,7 +210,7 @@ Status init(database_options options = {}); // NOLINT
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 Status insert(Token token, Storage storage,
-              std::string_view key, // NOLINT
+              std::string_view key, // LINT
               std::string_view val,
               blob_id_type const* blobs_data = nullptr,
               std::size_t blobs_size = 0
@@ -225,7 +225,7 @@ Status insert(Token token, Storage storage,
  * @return Status::WARN_NOT_IN_A_SESSION The session may be already ended.
  * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  */
-Status leave(Token token); // NOLINT
+Status leave(Token token); // LINT
 
 /**
  * @brief This function preserve the specified range of masstree. If you use ltx
@@ -266,8 +266,8 @@ Status leave(Token token); // NOLINT
 Status open_scan(Token token, Storage storage, std::string_view l_key,
                  scan_endpoint l_end, std::string_view r_key,
                  scan_endpoint r_end, ScanHandle& handle,
-                 std::size_t max_size = 0,    // NOLINT
-                 bool right_to_left = false); // NOLINT
+                 std::size_t max_size = 0,    // LINT
+                 bool right_to_left = false); // LINT
 
 /**
  * @brief advance cursor
@@ -342,7 +342,7 @@ Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
  */
 [[maybe_unused]] Status scannable_total_index_size(Token token,
                                                    ScanHandle handle,
-                                                   std::size_t& size); // NOLINT
+                                                   std::size_t& size); // LINT
 
 /**
  * @brief It searches with the given key and return the found tuple.
@@ -370,7 +370,7 @@ Status read_value_from_scan(Token token, ScanHandle handle, std::string& value);
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 Status search_key(Token token, Storage storage, std::string_view key,
-                  std::string& value); // NOLINT
+                  std::string& value); // LINT
 
 /**
  * @brief Transaction begins.
@@ -393,7 +393,7 @@ Status search_key(Token token, Storage storage, std::string_view key,
  * write_preserve and not using long tx mode.
  * @return Status::WARN_INVALID_ARGS User used storages not existed.
  */
-Status tx_begin(transaction_options options = {}); // NOLINT
+Status tx_begin(transaction_options options = {}); // LINT
 
 /**
  * @brief It updates the record for the given key.
@@ -419,7 +419,7 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  */
 Status update(Token token, Storage storage, std::string_view key, std::string_view val,
               blob_id_type const* blobs_data = nullptr,
-              std::size_t blobs_size = 0); // NOLINT
+              std::size_t blobs_size = 0); // LINT
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -449,7 +449,7 @@ Status update(Token token, Storage storage, std::string_view key, std::string_vi
  */
 Status upsert(Token token, Storage storage, std::string_view key, std::string_view val,
               blob_id_type const* blobs_data = nullptr,
-              std::size_t blobs_size = 0); // NOLINT
+              std::size_t blobs_size = 0); // LINT
 
 
 //==========

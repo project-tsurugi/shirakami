@@ -58,7 +58,7 @@ public:
 
     static Status key_handle_map_erase(Storage storage) {
         std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
-        for (auto itr = key_handle_map_.begin(); // NOLINT
+        for (auto itr = key_handle_map_.begin(); // LINT
              itr != key_handle_map_.end(); ++itr) {
             if (itr->second == storage) {
                 key_handle_map_.erase(itr);
@@ -77,7 +77,7 @@ public:
      */
     [[nodiscard]] static Status
     key_handle_map_erase_storage_without_lock(Storage st, std::string& out) {
-        for (auto itr = key_handle_map_.begin(); // NOLINT
+        for (auto itr = key_handle_map_.begin(); // LINT
              itr != key_handle_map_.end(); ++itr) {
             if (itr->second == st) {
                 out = itr->first;
@@ -154,7 +154,7 @@ public:
      * @return Status::OK success.
      */
     static Status register_storage(Storage storage,
-                                   storage_option options = {}); // NOLINT
+                                   storage_option options = {}); // LINT
 
     /**
      * @brief Create a storage object
@@ -209,20 +209,20 @@ private:
     /**
      * @attention The number of storages above UINT64_MAX is undefined behavior.
      */
-    static inline std::atomic<Storage> strg_ctr_{initial_strg_ctr}; // NOLINT
+    static inline std::atomic<Storage> strg_ctr_{initial_strg_ctr}; // LINT
 
     /**
      * @brief key handle map
      * @details key is storage's key given by outside. value is storage id
      * given by internally.
      */
-    static inline std::unordered_map<std::string, Storage> // NOLINT
-            key_handle_map_;                               // NOLINT
+    static inline std::unordered_map<std::string, Storage> // LINT
+            key_handle_map_;                               // LINT
 
     /**
      * @brief Mutex for key handle map.
      */
-    static inline std::shared_mutex mtx_key_handle_map_; // NOLINT
+    static inline std::shared_mutex mtx_key_handle_map_; // LINT
 };
 
 } // namespace shirakami

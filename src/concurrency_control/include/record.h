@@ -22,7 +22,7 @@
 
 namespace shirakami {
 
-class alignas(CACHE_LINE_SIZE) Record { // NOLINT
+class alignas(CACHE_LINE_SIZE) Record { // LINT
 public:
     Record() = default;
 
@@ -37,7 +37,7 @@ public:
     explicit Record(std::string_view key);
 
     Record(tid_word const& tidw, std::string_view vinfo) : tidw_(tidw) {
-        latest_.store(new version(vinfo), std::memory_order_release); // NOLINT
+        latest_.store(new version(vinfo), std::memory_order_release); // LINT
     }
 
     // start: getter

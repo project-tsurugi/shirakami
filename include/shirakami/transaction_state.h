@@ -223,11 +223,11 @@ private:
      * 2: There is a case which it needs long tx's id.
      */
     Token token_{};
-    static inline std::atomic<TxStateHandle> handle_ctr_{1};       // NOLINT
-    static inline handle_container_type handle_container_;         // NOLINT
-    static inline std::shared_mutex mtx_hc_;                       // NOLINT
-    static inline std::vector<TxStateHandle> reuse_ctr_container_; // NOLINT
-    static inline std::mutex mtx_reuse_ctr_container_;             // NOLINT
+    static inline std::atomic<TxStateHandle> handle_ctr_{1};       // LINT
+    static inline handle_container_type handle_container_;         // LINT
+    static inline std::shared_mutex mtx_hc_;                       // LINT
+    static inline std::vector<TxStateHandle> reuse_ctr_container_; // LINT
+    static inline std::mutex mtx_reuse_ctr_container_;             // LINT
 };
 
 /**

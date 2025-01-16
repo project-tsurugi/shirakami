@@ -75,34 +75,34 @@ inline constexpr std::string_view to_string_view(reason_code rc) noexcept {
     using namespace std::string_view_literals;
     switch (rc) {
         case reason_code::UNKNOWN:
-            return "UNKNOWN"sv; // NOLINT
+            return "UNKNOWN"sv; // LINT
         case reason_code::KVS_DELETE:
-            return "KVS_DELETE"sv; // NOLINT
+            return "KVS_DELETE"sv; // LINT
         case reason_code::KVS_INSERT:
-            return "KVS_INSERT"sv; // NOLINT
+            return "KVS_INSERT"sv; // LINT
         case reason_code::KVS_UPDATE:
-            return "KVS_UPDATE"sv; // NOLINT
+            return "KVS_UPDATE"sv; // LINT
         case reason_code::CC_LTX_PHANTOM_AVOIDANCE:
-            return "CC_LTX_PHANTOM_AVOIDANCE"sv; //NOLINT
+            return "CC_LTX_PHANTOM_AVOIDANCE"sv; //LINT
         case reason_code::CC_LTX_READ_AREA_VIOLATION:
-            return "CC_LTX_READ_AREA_VIOLATION"sv; // NOLINT
+            return "CC_LTX_READ_AREA_VIOLATION"sv; // LINT
         case reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION:
-            return "CC_LTX_READ_UPPER_BOUND_VIOLATION"sv; // NOLINT
+            return "CC_LTX_READ_UPPER_BOUND_VIOLATION"sv; // LINT
         case reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION:
-            return "CC_LTX_WRITE_COMMITTED_READ_PROTECTION"sv; // NOLINT
+            return "CC_LTX_WRITE_COMMITTED_READ_PROTECTION"sv; // LINT
         case reason_code::CC_OCC_READ_VERIFY:
-            return "CC_OCC_READ_VERIFY"sv; // NOLINT
+            return "CC_OCC_READ_VERIFY"sv; // LINT
         case reason_code::CC_OCC_WP_VERIFY:
-            return "CC_OCC_WP_VERIFY"sv; // NOLINT
+            return "CC_OCC_WP_VERIFY"sv; // LINT
         case reason_code::CC_OCC_PHANTOM_AVOIDANCE:
-            return "CC_OCC_PHANTOM_AVOIDANCE"sv; //NOLINT
+            return "CC_OCC_PHANTOM_AVOIDANCE"sv; //LINT
         case reason_code::USER_ABORT:
-            return "USER_ABORT"sv; // NOLINT
+            return "USER_ABORT"sv; // LINT
     }
     std::abort();
 }
 
-inline std::ostream& operator<<(std::ostream& out, reason_code rc) { // NOLINT
+inline std::ostream& operator<<(std::ostream& out, reason_code rc) { // LINT
     return out << to_string_view(rc);
 }
 

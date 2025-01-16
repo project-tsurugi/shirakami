@@ -36,7 +36,7 @@ public:
     page_set_meta() = default;
 
     explicit page_set_meta(storage_option options)
-        : storage_option_(std::move(options)) {} // NOLINT
+        : storage_option_(std::move(options)) {} // LINT
 
     range_read_by_long* get_range_read_by_long_ptr() {
         return &range_read_by_long_;

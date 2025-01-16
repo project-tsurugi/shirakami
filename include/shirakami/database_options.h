@@ -14,9 +14,9 @@ public:
         MAINTENANCE = 0x004,
     };
 
-    database_options() = default; // NOLINT
+    database_options() = default; // LINT
 
-    database_options(open_mode om) : open_mode_(om) {} // NOLINT
+    database_options(open_mode om) : open_mode_(om) {} // LINT
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path)
         : open_mode_(om), log_directory_path_(log_directory_path) {}
@@ -99,7 +99,7 @@ private:
     /**
      * @brief Parameter of epoch [us]
      */
-    std::size_t epoch_time_{40000}; // NOLINT
+    std::size_t epoch_time_{40000}; // LINT
     // ==========
 
     // ==========

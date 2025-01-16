@@ -5,7 +5,7 @@
 
 namespace shirakami {
 
-Status session_table::decide_token(Token& token) { // NOLINT
+Status session_table::decide_token(Token& token) { // LINT
     for (auto&& itr : get_session_table()) {
         if (!itr.get_visible()) {
             bool expected(false);

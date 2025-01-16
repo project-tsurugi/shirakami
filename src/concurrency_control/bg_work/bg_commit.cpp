@@ -78,7 +78,7 @@ void bg_commit::worker() {
         std::size_t tx_id{};
         session* ti{};
     // find process tx
-    REFIND : // NOLINT
+    REFIND : // LINT
         {
             std::shared_lock<std::shared_mutex> lk1{mtx_cont_wait_tx()};
             // if cont empty then clear used_ids
@@ -153,7 +153,7 @@ void bg_commit::worker() {
                 std::unique_lock<std::mutex> lk2{mtx_used_ids()};
                 used_ids().erase(tx_id);
             }
-            goto REFIND; // NOLINT
+            goto REFIND; // LINT
         }                // termination was successed
         ti->set_result_requested_commit(rc);
 
@@ -168,7 +168,7 @@ void bg_commit::worker() {
          * リストが空になったら安全に used_ids をクリアする。
          */
 
-        goto REFIND; // NOLINT
+        goto REFIND; // LINT
     }
 
     // normal termination, update joined_waiting_resolver

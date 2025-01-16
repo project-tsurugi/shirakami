@@ -251,7 +251,7 @@ void ongoing_tx::remove_id(std::size_t const id) {
     epoch::epoch_t lep{0};
     bool first{true};
     bool erased{false};
-    for (auto it = tx_info_.begin(); it != tx_info_.end();) { // NOLINT
+    for (auto it = tx_info_.begin(); it != tx_info_.end();) { // LINT
         if (!erased && std::get<ongoing_tx::index_id>(*it) == id) {
             tx_info_.erase(it);
             // TODO: it = ?

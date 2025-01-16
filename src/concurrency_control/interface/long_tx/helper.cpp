@@ -53,7 +53,7 @@ void preprocess_read_area(transaction_options::read_area& ra) {
         // if you set positive and negative, you can read positive erased by negative
         for (auto elem : ra.get_negative_list()) {
             auto pset = ra.get_positive_list();
-            for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // NOLINT
+            for (auto itr = pset.begin(); itr != pset.end(); ++itr) { // LINT
                 if (elem == *itr) {
                     ra.erase_from_positive_list(elem);
                     break;
@@ -137,7 +137,7 @@ void update_wp_at_commit(session* const ti) {
 }
 
 Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
-                transaction_options::read_area ra) { // NOLINT
+                transaction_options::read_area ra) { // LINT
     // get wp mutex, exclude long tx's coming and epoch update
     auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
 
@@ -158,7 +158,7 @@ Status tx_begin(session* const ti, std::vector<Storage> write_preserve,
     // after deciding success
     wp::long_tx::set_counter(long_tx_id + 1);
 
-    if (long_tx_id >= pow(2, 63)) { // NOLINT
+    if (long_tx_id >= pow(2, 63)) { // LINT
         LOG_FIRST_N(ERROR, 1)
                 << log_location_prefix
                 << "long tx id depletion. limit of specification.";

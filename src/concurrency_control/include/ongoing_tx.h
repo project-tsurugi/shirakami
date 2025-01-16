@@ -83,19 +83,19 @@ private:
     /**
      * @brief This is mutex for tx_info_;
      */
-    static inline std::shared_mutex mtx_; // NOLINT
+    static inline std::shared_mutex mtx_; // LINT
     /**
      * @brief register info of running long tx's epoch and id.
      */
-    static inline tx_info_type tx_info_; // NOLINT
+    static inline tx_info_type tx_info_; // LINT
     /**
      * @brief enable/disable waiting bypass.
      */
-    static inline bool optflag_disable_waiting_bypass_; // NOLINT
+    static inline bool optflag_disable_waiting_bypass_; // LINT
     /**
      * @brief waiting bypass to root (aggressive optimization).
      */
-    static inline bool optflag_waiting_bypass_to_root_; // NOLINT
+    static inline bool optflag_waiting_bypass_to_root_; // LINT
 };
 
 } // namespace shirakami

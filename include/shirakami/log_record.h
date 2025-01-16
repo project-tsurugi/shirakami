@@ -93,35 +93,35 @@ struct log_record {
      * @brief operation type for log record entry.
      *
      */
-    log_operation operation_{}; // NOLINT
+    log_operation operation_{}; // LINT
 
     /**
      * @brief key part of the log record
      */
-    std::string_view key_{}; // NOLINT
+    std::string_view key_{}; // LINT
 
     /**
      * @brief value part of the log record
      *
      */
-    std::string_view value_{}; // NOLINT
+    std::string_view value_{}; // LINT
 
     /**
      * @brief major version of the log record
      *
      */
-    std::uint64_t major_version_{}; // NOLINT
+    std::uint64_t major_version_{}; // LINT
 
     /**
      * @brief minor version of the log record
      *
      */
-    std::uint64_t minor_version_{}; // NOLINT
+    std::uint64_t minor_version_{}; // LINT
 
     /**
      * @brief storage id where the log record is made
      */
-    storage_id_type storage_id_{}; // NOLINT
+    storage_id_type storage_id_{}; // LINT
 };
 
 static_assert(std::is_trivially_copyable_v<log_record>);

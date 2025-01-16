@@ -57,7 +57,7 @@ void for_output_config(database_options const& options) {
                  "commit. Default is 2.";
 }
 
-Status init_body(database_options options) { // NOLINT
+Status init_body(database_options options) { // LINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -80,7 +80,7 @@ Status init_body(database_options options) { // NOLINT
             // order to recover, but log_dir is nothing
             enable_true_log_nothing = true;
         }
-        int tid = syscall(SYS_gettid); // NOLINT
+        int tid = syscall(SYS_gettid); // LINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
                   std::to_string(tsc);
@@ -91,7 +91,7 @@ Status init_body(database_options options) { // NOLINT
         lpwal::set_log_dir_pointed(true);
         // check exist
         boost::filesystem::path ldp{
-                std::string(options.get_log_directory_path())}; // NOLINT
+                std::string(options.get_log_directory_path())}; // LINT
         boost::system::error_code error;
         const bool result = boost::filesystem::exists(ldp, error);
         if (!result || error) {
@@ -231,7 +231,7 @@ Status init_body(database_options options) { // NOLINT
     return Status::OK;
 }
 
-Status init(database_options options) { // NOLINT
+Status init(database_options options) { // LINT
     shirakami_log_entry << "init, options: " << options;
     auto ret = init_body(options);
     shirakami_log_exit << "init, Status: " << ret;

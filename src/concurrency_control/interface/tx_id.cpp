@@ -20,7 +20,7 @@ Status get_tx_id_body(Token token, std::string& tx_id) {
 
     // prepare string stream for higher tx counter
     std::stringstream ss;
-    ss << std::setw(4) << std::setfill('0') << std::hex // NOLINT
+    ss << std::setw(4) << std::setfill('0') << std::hex // LINT
        << static_cast<std::uint16_t>(ti->get_higher_tx_counter());
     // use down cast
     // add to tx id
@@ -30,7 +30,7 @@ Status get_tx_id_body(Token token, std::string& tx_id) {
 
     // prepare string stream for session id
     ss.clear(std::stringstream::goodbit);
-    ss << std::setw(4) << std::setfill('0') << std::hex << // NOLINT
+    ss << std::setw(4) << std::setfill('0') << std::hex << // LINT
             static_cast<std::uint16_t>(ti->get_session_id());
     // use down cast
     // add to tx id
@@ -40,7 +40,7 @@ Status get_tx_id_body(Token token, std::string& tx_id) {
 
     // prepare string stream for tx counter
     ss.clear(std::stringstream::goodbit);
-    ss << std::setw(8) << std::setfill('0') << std::hex // NOLINT
+    ss << std::setw(8) << std::setfill('0') << std::hex // LINT
        << static_cast<std::uint32_t>(ti->get_tx_counter());
     // use down cast
     tx_id += ss.str();
