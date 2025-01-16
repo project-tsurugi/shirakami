@@ -106,13 +106,7 @@ static Status upsert_body(
             // check local write
             write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
             if (in_ws != nullptr) {
-                if (in_ws->get_op() == OP_TYPE::DELETE) {
-                    in_ws->set_op(OP_TYPE::UPDATE);
-                } else if (in_ws->get_op() == OP_TYPE::DELSERT) {
-                    in_ws->set_op(OP_TYPE::UPSERT);
-                } else if (in_ws->get_op() == OP_TYPE::TOMBSTONE) {
-                    in_ws->set_op(OP_TYPE::INSERT);
-                }
+                in_ws->set_op(in_ws->get_op().of_wso_to_alive());
                 in_ws->set_val(val);
                 in_ws->set_lobs(std::move(lobs));
                 return Status::OK;
