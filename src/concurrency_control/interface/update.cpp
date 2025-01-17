@@ -93,7 +93,10 @@ Status update_body(Token token, Storage storage,
 
 Status update(Token token, Storage storage,
               std::string_view const key, // NOLINT
-              std::string_view const val) {
+              std::string_view const val,
+              [[maybe_unused]] blob_id_type const* blobs_data,
+              [[maybe_unused]] std::size_t blobs_size) {
+    //TODO implement blobs
     shirakami_log_entry << "update, token: " << token
                         << ", storage: " << storage << shirakami_binstring(key)
                         << shirakami_binstring(val);

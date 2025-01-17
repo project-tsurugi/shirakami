@@ -12,6 +12,7 @@ cppcoreguidelines-*,\
 fuchsia-*,\
 -fuchsia-default-arguments,\
 -fuchsia-default-arguments-calls,\
+-fuchsia-default-arguments-declarations,\
 -fuchsia-overloaded-operator,\
 google-*,\
 -google-build-using-namespace,\

@@ -56,6 +56,12 @@ inline std::ostream& operator<<(std::ostream& out, scan_endpoint op) { // NOLINT
 }
 
 /**
+ * @brief BLOB reference type.
+ * @details the reference type for BLOB data. This must be same as one defined by datastore.
+ */
+using blob_id_type = std::uint64_t;
+
+/**
  * @brief the status which is after some function.
  * OK is success return code.
  * WARN_... is no problem for extra progressing due to work but last command
