@@ -16,19 +16,15 @@ bool read_plan::check_range_overlap(
         const std::string& w_lkey, const std::string& w_rkey,
         const std::string& r_lkey, scan_endpoint r_lpoint, const std::string& r_rkey, scan_endpoint r_rpoint) {
     // define write range [], read range ()
-    if (
-            // case: [(])
-            ((w_lkey < r_lkey && r_lpoint != scan_endpoint::INF) &&
-             (w_rkey < r_rkey || r_rpoint == scan_endpoint::INF))
-            // case: ([])
-            || ((r_lkey < w_lkey || r_lpoint == scan_endpoint::INF) &&
-                (w_lkey < r_rkey || r_rpoint == scan_endpoint::INF))
-            // case: ([)]
-            || ((r_lkey < w_lkey || r_lpoint == scan_endpoint::INF) &&
-                (w_rkey < r_rkey && r_rpoint != scan_endpoint::INF))) {
-        return true;
-    }
-    return false;
+    bool no_overlap = (
+            // case: []()
+               (r_lpoint == scan_endpoint::INCLUSIVE && w_rkey < r_lkey)
+            || (r_lpoint == scan_endpoint::EXCLUSIVE && w_rkey <= r_lkey)
+            // case: ()[]
+            || (r_rpoint == scan_endpoint::INCLUSIVE && w_lkey > r_rkey)
+            || (r_rpoint == scan_endpoint::EXCLUSIVE && w_lkey >= r_rkey)
+    );
+    return !no_overlap;
 }
 
 bool read_plan::check_potential_read_anti(std::size_t const tx_id,
