@@ -45,7 +45,7 @@ static void process_before_return_not_found(session* const ti,
 }
 
 Status update_body(Token token, Storage storage,
-                   const std::string_view key, // NOLINT
+                   const std::string_view key,
                    const std::string_view val) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
@@ -92,7 +92,7 @@ Status update_body(Token token, Storage storage,
 }
 
 Status update(Token token, Storage storage,
-              std::string_view const key, // NOLINT
+              std::string_view const key,
               std::string_view const val,
               [[maybe_unused]] blob_id_type const* blobs_data,
               [[maybe_unused]] std::size_t blobs_size) {

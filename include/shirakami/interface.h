@@ -210,7 +210,7 @@ Status init(database_options options = {}); // NOLINT
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
  */
 Status insert(Token token, Storage storage,
-              std::string_view key, // NOLINT
+              std::string_view key,
               std::string_view val,
               blob_id_type const* blobs_data = nullptr,
               std::size_t blobs_size = 0
@@ -419,7 +419,7 @@ Status tx_begin(transaction_options options = {}); // NOLINT
  */
 Status update(Token token, Storage storage, std::string_view key, std::string_view val,
               blob_id_type const* blobs_data = nullptr,
-              std::size_t blobs_size = 0); // NOLINT
+              std::size_t blobs_size = 0);
 
 /**
  * @brief update the record for the given key, or insert the key/value if the
@@ -449,7 +449,7 @@ Status update(Token token, Storage storage, std::string_view key, std::string_vi
  */
 Status upsert(Token token, Storage storage, std::string_view key, std::string_view val,
               blob_id_type const* blobs_data = nullptr,
-              std::size_t blobs_size = 0); // NOLINT
+              std::size_t blobs_size = 0);
 
 
 //==========
