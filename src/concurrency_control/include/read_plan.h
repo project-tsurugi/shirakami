@@ -72,6 +72,9 @@ public:
         }
     }
 
+    static bool check_range_overlap(
+            const std::string& w_lkey, const std::string& w_rkey,
+            const std::string& r_lkey, scan_endpoint r_lpoint, const std::string& r_rkey, scan_endpoint r_rpoint);
     static bool check_potential_read_anti(std::size_t tx_id, Token token);
 
     // getter / setter

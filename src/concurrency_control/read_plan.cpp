@@ -10,6 +10,27 @@
 
 namespace shirakami {
 
+// check overlap between { w_lkey:INCLUSIVE, w_rkey:INCLUSIVE } and { r_lkey:r_lpoint, r_rkey:r_rpoint }
+// TODO: use some range operation library
+bool read_plan::check_range_overlap(
+        const std::string& w_lkey, const std::string& w_rkey,
+        const std::string& r_lkey, scan_endpoint r_lpoint, const std::string& r_rkey, scan_endpoint r_rpoint) {
+    // define write range [], read range ()
+    if (
+            // case: [(])
+            ((w_lkey < r_lkey && r_lpoint != scan_endpoint::INF) &&
+             (w_rkey < r_rkey || r_rpoint == scan_endpoint::INF))
+            // case: ([])
+            || ((r_lkey < w_lkey || r_lpoint == scan_endpoint::INF) &&
+                (w_lkey < r_rkey || r_rpoint == scan_endpoint::INF))
+            // case: ([)]
+            || ((r_lkey < w_lkey || r_lpoint == scan_endpoint::INF) &&
+                (w_rkey < r_rkey && r_rpoint != scan_endpoint::INF))) {
+        return true;
+    }
+    return false;
+}
+
 bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                           Token token) {
     std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
@@ -62,33 +83,11 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                         if (std::get<0>(p_elem) == st.first) {
                             // check key range level
                             // todo: use constant value, not magic number
-                            std::string w_lkey = std::get<0>(st.second);
-                            std::string w_rkey = std::get<1>(st.second);
-                            std::string r_lkey = std::get<2>(p_elem); // NOLINT
-                            scan_endpoint r_lpoint =
-                                    std::get<3>(p_elem);              // NOLINT
-                            std::string r_rkey = std::get<4>(p_elem); // NOLINT
-                            scan_endpoint r_rpoint =
-                                    std::get<5>(p_elem); // NOLINT
-                            // define write range [], read range ()
-                            if (
-                                    // case: [(])
-                                    ((w_lkey < r_lkey &&
-                                      r_lpoint != scan_endpoint::INF) &&
-                                     (w_rkey < r_rkey ||
-                                      r_rpoint == scan_endpoint::INF))
-                                    // case: ([])
-                                    || ((r_lkey < w_lkey ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (w_lkey < r_rkey ||
-                                         r_rpoint == scan_endpoint::INF))
-                                    // case: ([)]
-                                    || ((r_lkey < w_lkey ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (w_rkey < r_rkey &&
-                                         r_rpoint != scan_endpoint::INF))) {
-                                return true;
-                            }
+                            bool hit = check_range_overlap(
+                                    std::get<0>(st.second), std::get<1>(st.second),
+                                    std::get<2>(p_elem), std::get<3>(p_elem),
+                                    std::get<4>(p_elem), std::get<5>(p_elem)); // NOLINT
+                            if (hit) { return true; }
                         }
                     }
                 }
