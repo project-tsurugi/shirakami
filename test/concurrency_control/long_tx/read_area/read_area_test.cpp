@@ -260,4 +260,121 @@ TEST_F(read_area_test, conflict_positive_negative) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(read_area_test, ut_check_range_overlap) {
+    // note(category): define write range [], read range (), write end is read end {}
+    // note(set): open end (), closed end []
+
+    // same {}
+    // w:["1":"1"] vs r:["1":"1"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "1", "1", scan_endpoint::INCLUSIVE, "1", scan_endpoint::INCLUSIVE));
+    // w:["1":"5"] vs r:["1":"5"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "5", "1", scan_endpoint::INCLUSIVE, "5", scan_endpoint::INCLUSIVE));
+
+    // range overlap [(]), write is left
+    // w:["1":"3"] vs r:["2":"4"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::INCLUSIVE, "4", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:("2":"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::EXCLUSIVE, "4", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:("1":"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::EXCLUSIVE, "4", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:["2":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::INCLUSIVE, "", scan_endpoint::INF));
+    // w:["1":"3"] vs r:("2":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::EXCLUSIVE, "", scan_endpoint::INF));
+    // w:["1":"3"] vs r:("1":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::EXCLUSIVE, "", scan_endpoint::INF));
+    // range overlap ([)], write is right
+    // w:["1":"3"] vs r:["0":"2"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::INCLUSIVE, "2", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:("0":"2") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::EXCLUSIVE, "2", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:("0":"3") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::EXCLUSIVE, "3", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:"3") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "3", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:"2"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "2", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:"2") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "2", scan_endpoint::EXCLUSIVE));
+
+    // containing ([]), write is smaller
+    // w:["1":"3"] vs r:["0":"4"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::INCLUSIVE, "4", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:("0":"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::EXCLUSIVE, "4", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:["0":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::INCLUSIVE, "", scan_endpoint::INF));
+    // w:["1":"3"] vs r:("0":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::EXCLUSIVE, "", scan_endpoint::INF));
+    // w:["1":"3"] vs r:(-inf:"4"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "4", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "4", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "", scan_endpoint::INF));
+    // containing [()], write is larger
+    // w:["0":"4"] vs r:["1":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("0", "4", "1", scan_endpoint::INCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // w:["0":"4"] vs r:("1":"3") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("0", "4", "1", scan_endpoint::EXCLUSIVE, "3", scan_endpoint::EXCLUSIVE));
+    // w:["0":"4"] vs r:("0":"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("0", "4", "0", scan_endpoint::EXCLUSIVE, "4", scan_endpoint::EXCLUSIVE));
+    // containing {)], write is larger, left is same
+    // w:["1":"3"] vs r:["1":"2"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "2", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:["1":"2") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "2", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:["1":"3") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "3", scan_endpoint::EXCLUSIVE));
+    // containing {]), write is smaller, left is same
+    // w:["1":"3"] vs r:["1":"4"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "4", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:["1":"4") -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "4", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:["1":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::INCLUSIVE, "", scan_endpoint::INF));
+    // containing [(}, write is larger, right is same
+    // w:["1":"3"] vs r:["2":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::INCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:("2":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "2", scan_endpoint::EXCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:("1":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "1", scan_endpoint::EXCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // containing ([}, write is smaller, right is same
+    // w:["1":"3"] vs r:["0":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "0", scan_endpoint::INCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:(-inf:"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "", scan_endpoint::INF, "3", scan_endpoint::INCLUSIVE));
+
+    // separated [](), write is left
+    // w:["1":"2"] vs r:["4":"5"] -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("1", "2", "4", scan_endpoint::INCLUSIVE, "5", scan_endpoint::INCLUSIVE));
+    // w:["1":"2"] vs r:("4":"5") -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("1", "2", "4", scan_endpoint::EXCLUSIVE, "5", scan_endpoint::EXCLUSIVE));
+    // separated ()[], write is right
+    // w:["4":"5"] vs r:["1":"2"] -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("4", "5", "1", scan_endpoint::INCLUSIVE, "2", scan_endpoint::INCLUSIVE));
+    // w:["4":"5"] vs r:("1":"2") -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("4", "5", "1", scan_endpoint::EXCLUSIVE, "2", scan_endpoint::EXCLUSIVE));
+
+    // touching [](), write is left
+    // w:["1":"3"] vs r:["3":"5"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "3", scan_endpoint::INCLUSIVE, "5", scan_endpoint::INCLUSIVE));
+    // w:["1":"3"] vs r:["3":inf) -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("1", "3", "3", scan_endpoint::INCLUSIVE, "", scan_endpoint::INF));
+    // w:["1":"3"] vs r:("3":"5") -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("1", "3", "3", scan_endpoint::EXCLUSIVE, "5", scan_endpoint::EXCLUSIVE));
+    // w:["1":"3"] vs r:("3":inf) -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("1", "3", "3", scan_endpoint::EXCLUSIVE, "", scan_endpoint::INF));
+    // touching ()[], write is right
+    // w:["3":"5"] vs r:["1":"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("3", "5", "1", scan_endpoint::INCLUSIVE, "3", scan_endpoint::INCLUSIVE));
+    // w:["3":"5"] vs r:(-inf:"3"] -> hit
+    EXPECT_TRUE(read_plan::check_range_overlap("3", "5", "", scan_endpoint::INF, "3", scan_endpoint::INCLUSIVE));
+    // w:["3":"5"] vs r:("1":"3") -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("3", "5", "1", scan_endpoint::EXCLUSIVE, "3", scan_endpoint::EXCLUSIVE));
+    // w:["3":"5"] vs r:(-inf:"3") -> miss
+    EXPECT_FALSE(read_plan::check_range_overlap("3", "5", "", scan_endpoint::INF, "3", scan_endpoint::EXCLUSIVE));
+}
+
 } // namespace shirakami::testing
