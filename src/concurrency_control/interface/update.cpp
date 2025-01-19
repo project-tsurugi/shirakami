@@ -82,8 +82,7 @@ Status update_body(Token token, Storage storage,
         }
 
         // prepare write
-        ti->push_to_write_set(
-                {storage, OP_TYPE::UPDATE, rec_ptr, val}); // NOLINT
+        ti->push_to_write_set({storage, OP_TYPE::UPDATE, rec_ptr, val, false});
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }

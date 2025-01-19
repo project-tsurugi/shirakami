@@ -70,15 +70,6 @@ class write_set_obj { // NOLINT
 public:
     // for update / upsert / insert
     write_set_obj(Storage const storage, OP_TYPE const op,
-                  Record* const rec_ptr, std::string_view const val)
-        : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val) {
-        if (op == OP_TYPE::DELETE) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-        }
-    }
-
-    // for upsert / insert
-    write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr, std::string_view const val,
                   bool const inc_tombstone)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
