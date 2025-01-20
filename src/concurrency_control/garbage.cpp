@@ -11,6 +11,8 @@
 #include "concurrency_control/include/wp.h"
 
 #include "database/include/logging.h"
+#include "datastore/limestone/include/datastore.h"
+#include "datastore/limestone/include/limestone_api_helper.h"
 
 #include "index/yakushima/include/interface.h"
 
@@ -91,6 +93,9 @@ void work_manager() {
         } else {
             set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
         }
+#ifdef PWAL
+        switch_available_boundary_version(shirakami::datastore::get_datastore(), std::min(get_min_step_epoch(), get_min_batch_epoch()));
+#endif
 
         sleepUs(epoch::get_global_epoch_time_us());
     }

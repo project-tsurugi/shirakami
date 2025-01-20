@@ -29,6 +29,8 @@ void recover(limestone::api::datastore* ds);
 
 void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep);
 
+void switch_available_boundary_version(limestone::api::datastore* ds, epoch::epoch_t ep);
+
 // log_channel
 
 void add_entry(limestone::api::log_channel* lc,

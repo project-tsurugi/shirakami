@@ -75,6 +75,16 @@ void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep) {
     shirakami_ex_log_exit << "datastore::switch_epoch()";
 }
 
+void switch_available_boundary_version(limestone::api::datastore* ds, epoch::epoch_t ep) {
+    if (ds == nullptr) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+        return;
+    }
+    shirakami_ex_log_entry << "datastore::switch_available_boundary_version()";
+    ds->switch_available_boundary_version(limestone::api::write_version_type(ep, 0UL));
+    shirakami_ex_log_exit << "datastore::switch_available_boundary_version()";
+}
+
 // log channel
 
 void add_entry(limestone::api::log_channel* lc,
