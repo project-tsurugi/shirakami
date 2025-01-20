@@ -291,7 +291,7 @@ static inline void expose_local_write(
                     lo,
                     lpwal::write_version_type(ti->get_valid_epoch(),
                                               ti->get_long_tx_id()),
-                    wso.get_storage(), key, val));
+                    wso.get_storage(), key, val, wso.get_lobs()));
         }
 #endif
         return Status::OK;

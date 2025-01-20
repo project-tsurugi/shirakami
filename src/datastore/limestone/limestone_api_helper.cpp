@@ -81,19 +81,22 @@ void add_entry(limestone::api::log_channel* lc,
                limestone::api::storage_id_type storage_id,
                std::string_view const key, std::string_view const val,
                limestone::api::epoch_t major_version,
-               std::uint64_t minor_version) {
+               std::uint64_t minor_version,
+               const std::vector<limestone::api::blob_id_type>& large_objects) {
     if (lc == nullptr) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return;
     }
-    shirakami_log_entry << "log_channel::add_entry(): storage_id: "
-                        << storage_id << shirakami_binstring(key)
-                        << shirakami_binstring(val)
-                        << ", major write version: " << major_version
-                        << ", minor write version: " << minor_version;
+    shirakami_log_entry_lazy("log_channel::add_entry(): storage_id: "
+                             << storage_id << shirakami_binstring(key)
+                             << shirakami_binstring(val)
+                             << ", major write version: " << major_version
+                             << ", minor write version: " << minor_version
+                             << shirakami_vecstring(large_objects));
     lc->add_entry(
             storage_id, key, val,
-            limestone::api::write_version_type(major_version, minor_version));
+            limestone::api::write_version_type(major_version, minor_version),
+            large_objects);
     shirakami_log_exit << "log_channel::add_entry()";
 }
 
