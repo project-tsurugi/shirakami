@@ -31,7 +31,8 @@ void abort_insert(session* const ti) {
 static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
                                     const std::string_view val,
-                                    Record*& out_rec_ptr) {
+                                    Record*& out_rec_ptr,
+                                    std::vector<blob_id_type>& lobs) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
     tid_word tid{rec_ptr->get_tidw()};
@@ -66,7 +67,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
         }
-        ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val, true});
+        ti->push_to_write_set({st, OP_TYPE::INSERT, rec_ptr, val, true, std::move(lobs)});
         out_rec_ptr = rec_ptr;
         return Status::OK;
     }
@@ -84,7 +85,9 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 
 Status insert_body(Token const token, Storage const storage, // NOLINT
                    const std::string_view key,
-                   const std::string_view val) {
+                   const std::string_view val,
+                   blob_id_type const* blobs_data,
+                   std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -99,6 +102,10 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::INSERT)};
     if (rc != Status::OK) { return rc; }
 
+    std::vector<blob_id_type> lobs(blobs_size);
+    if (blobs_size != 0) {
+        lobs.assign(blobs_data, blobs_data + blobs_size); // NOLINT
+    }
     for (;;) {
         // index access to check local write set
         Record* rec_ptr{};
@@ -113,6 +120,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
                 if (in_ws->get_op() == OP_TYPE::DELETE) {
                     in_ws->set_op(OP_TYPE::UPDATE);
                     in_ws->set_val(val);
+                    in_ws->set_lobs(std::move(lobs));
                     return Status::OK;
                 }
             }
@@ -120,8 +128,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
             tid_word found_tid{};
             rc = try_deleted_to_inserting(storage, key, rec_ptr, found_tid);
             if (rc == Status::OK) { // ok already count up tombstone count
-                ti->push_to_write_set(
-                        {storage, OP_TYPE::INSERT, rec_ptr, val, true});
+                ti->push_to_write_set({storage, OP_TYPE::INSERT, rec_ptr, val, true, std::move(lobs)});
                 register_read_if_ltx(ti, rec_ptr);
                 return Status::OK;
             }
@@ -152,7 +159,7 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
         }
 
     INSERT_PROCESS: // NOLINT
-        auto rc{insert_process(ti, storage, key, val, rec_ptr)};
+        auto rc{insert_process(ti, storage, key, val, rec_ptr, lobs)};
         if (rc == Status::OK) {
             register_read_if_ltx(ti, rec_ptr);
             return Status::OK;
@@ -164,12 +171,12 @@ Status insert_body(Token const token, Storage const storage, // NOLINT
 Status insert(Token const token, Storage const storage, // NOLINT
               const std::string_view key,
               const std::string_view val,
-              [[maybe_unused]] blob_id_type const* blobs_data,
-              [[maybe_unused]] std::size_t blobs_size) {
-    //TODO implement blobs
-    shirakami_log_entry << "insert, token: " << token
-                        << ", storage: " << storage << shirakami_binstring(key)
-                        << shirakami_binstring(val);
+              blob_id_type const* blobs_data,
+              std::size_t blobs_size) {
+    shirakami_log_entry_lazy("insert, token: " << token << ", storage: " << storage
+                             << shirakami_binstring(key) << shirakami_binstring(val)
+                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                             << " " << span_printer(blobs_data, blobs_size));
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};
@@ -177,7 +184,7 @@ Status insert(Token const token, Storage const storage, // NOLINT
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
 
         // insert_body check warn not begin
-        ret = insert_body(token, storage, key, val);
+        ret = insert_body(token, storage, key, val, blobs_data, blobs_size);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "insert, Status: " << ret;

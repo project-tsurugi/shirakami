@@ -31,7 +31,8 @@ void abort_update(session* ti) {
 
 static inline Status insert_process(session* const ti, Storage st,
                                     const std::string_view key,
-                                    const std::string_view val) {
+                                    const std::string_view val,
+                                    std::vector<blob_id_type>& lobs) {
     Record* rec_ptr{};
     rec_ptr = new Record(key); // NOLINT
     tid_word tid{rec_ptr->get_tidw()};
@@ -67,7 +68,7 @@ static inline Status insert_process(session* const ti, Storage st,
                 ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
         }
-        ti->push_to_write_set({st, OP_TYPE::UPSERT, rec_ptr, val, true});
+        ti->push_to_write_set({st, OP_TYPE::UPSERT, rec_ptr, val, true, std::move(lobs)});
         return Status::OK;
     }
     // fail insert rec_ptr
@@ -76,7 +77,9 @@ static inline Status insert_process(session* const ti, Storage st,
 }
 
 Status upsert_body(Token token, Storage storage, const std::string_view key,
-                   const std::string_view val) {
+                   const std::string_view val,
+                   blob_id_type const* blobs_data,
+                   std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -91,6 +94,11 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::UPSERT)};
     if (rc != Status::OK) { return rc; }
 
+    std::vector<blob_id_type> lobs(blobs_size);
+    if (blobs_size != 0) {
+        lobs.assign(blobs_data, blobs_data + blobs_size); // NOLINT
+    }
+
     for (;;) {
         // index access to check local write set
         Record* rec_ptr{};
@@ -104,6 +112,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
                 } else {
                     in_ws->set_val(val);
                 }
+                in_ws->set_lobs(std::move(lobs));
                 return Status::OK;
             }
 
@@ -121,13 +130,12 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             }
             if (rc == Status::OK) { // sharing tombstone
                 // prepare insert / upsert with tombstone count
-                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val,
-                                       true}); // NOLINT
+                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val, true, std::move(lobs)});
                 return Status::OK;
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // prepare update
-                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val, false});
+                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val, false, std::move(lobs)});
                 return Status::OK;
             }
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; } // else
@@ -135,22 +143,22 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
         }
 
     INSERT_PROCESS:
-        rc = insert_process(ti, storage, key, val);
+        rc = insert_process(ti, storage, key, val, lobs);
         if (rc == Status::ERR_CC) { return rc; }
     }
 }
 
 Status upsert(Token token, Storage storage, std::string_view const key,
               std::string_view const val,
-              [[maybe_unused]] blob_id_type const* blobs_data,
-              [[maybe_unused]] std::size_t blobs_size) {
-    //TODO implement blobs
-    shirakami_log_entry << "upsert, token: " << token << ", storage; "
-                        << storage << shirakami_binstring(key)
-                        << shirakami_binstring(val);
+              blob_id_type const* blobs_data,
+              std::size_t blobs_size) {
+    shirakami_log_entry_lazy("upsert, token: " << token << ", storage: " << storage
+                             << shirakami_binstring(key) << shirakami_binstring(val)
+                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                             << " " << span_printer(blobs_data, blobs_size));
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    auto ret = upsert_body(token, storage, key, val);
+    auto ret = upsert_body(token, storage, key, val, blobs_data, blobs_size);
     ti->process_before_finish_step();
     shirakami_log_exit << "upsert, Status: " << ret;
     return ret;

@@ -46,7 +46,9 @@ static void process_before_return_not_found(session* const ti,
 
 Status update_body(Token token, Storage storage,
                    const std::string_view key,
-                   const std::string_view val) {
+                   const std::string_view val,
+                   blob_id_type const* blobs_data,
+                   std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
@@ -61,6 +63,11 @@ Status update_body(Token token, Storage storage,
     auto rc{check_before_write_ops(ti, storage, key, OP_TYPE::UPDATE)};
     if (rc != Status::OK) { return rc; }
 
+    std::vector<blob_id_type> lobs(blobs_size);
+    if (blobs_size != 0) {
+        lobs.assign(blobs_data, blobs_data + blobs_size); // NOLINT
+    }
+
     // index access to check local write set
     Record* rec_ptr{};
     if (Status::OK == get<Record>(storage, key, rec_ptr)) {
@@ -71,6 +78,7 @@ Status update_body(Token token, Storage storage,
                 return Status::WARN_NOT_FOUND;
             }
             in_ws->set_val(val);
+            in_ws->set_lobs(std::move(lobs));
             return Status::OK;
         }
 
@@ -82,7 +90,7 @@ Status update_body(Token token, Storage storage,
         }
 
         // prepare write
-        ti->push_to_write_set({storage, OP_TYPE::UPDATE, rec_ptr, val, false});
+        ti->push_to_write_set({storage, OP_TYPE::UPDATE, rec_ptr, val, false, std::move(lobs)});
         register_read_if_ltx(ti, rec_ptr);
         return Status::OK;
     }
@@ -93,12 +101,12 @@ Status update_body(Token token, Storage storage,
 Status update(Token token, Storage storage,
               std::string_view const key,
               std::string_view const val,
-              [[maybe_unused]] blob_id_type const* blobs_data,
-              [[maybe_unused]] std::size_t blobs_size) {
-    //TODO implement blobs
-    shirakami_log_entry << "update, token: " << token
-                        << ", storage: " << storage << shirakami_binstring(key)
-                        << shirakami_binstring(val);
+              blob_id_type const* blobs_data,
+              std::size_t blobs_size) {
+    shirakami_log_entry_lazy("update, token: " << token << ", storage: " << storage
+                             << shirakami_binstring(key) << shirakami_binstring(val)
+                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                             << " " << span_printer(blobs_data, blobs_size));
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};
@@ -106,7 +114,7 @@ Status update(Token token, Storage storage,
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
 
         // update_body check termation by concurrent strand
-        ret = update_body(token, storage, key, val);
+        ret = update_body(token, storage, key, val, blobs_data, blobs_size);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "update, Status: " << ret;

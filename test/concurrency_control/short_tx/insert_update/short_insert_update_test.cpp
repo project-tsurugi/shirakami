@@ -2,14 +2,12 @@
 #include <mutex>
 #include <string>
 
+#include "concurrency_control/include/session.h"
+
 #include "gtest/gtest.h"
-#include "shirakami/interface.h"
 #include "glog/logging.h"
-#include "shirakami/api_diagnostic.h"
-#include "shirakami/api_storage.h"
-#include "shirakami/scheme.h"
-#include "shirakami/storage_options.h"
-#include "shirakami/transaction_options.h"
+
+#include "test_tool.h"
 
 namespace shirakami::testing {
 
@@ -57,6 +55,35 @@ TEST_F(insert_update_test, insert_update) { // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(insert_update_test, insert_update_blob) {
+    // prepare
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_OK(enter(s));
+
+    // test and verify
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    const blob_id_type b1[2] = {11, 22};
+    ASSERT_OK(insert(s, st, "", "v", b1, 2));
+    {
+        ASSERT_EQ(1, static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().size());
+        auto& wso = static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().at(0);
+        EXPECT_EQ(std::vector(std::begin(b1), std::end(b1)), wso.get_lobs());
+    }
+    const blob_id_type b2[3] = {99, 88, 77};
+    ASSERT_OK(update(s, st, "", "v1", b2, 3));
+    {
+        ASSERT_EQ(1, static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().size());
+        auto& wso = static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().at(0);
+        EXPECT_EQ(std::vector(std::begin(b2), std::end(b2)), wso.get_lobs());
+    }
+    ASSERT_OK(commit(s));
+
+    // cleanup
+    ASSERT_OK(leave(s));
 }
 
 TEST_F(insert_update_test, update_insert) { // NOLINT

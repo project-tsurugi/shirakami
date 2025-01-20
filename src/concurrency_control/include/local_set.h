@@ -71,9 +71,9 @@ public:
     // for update / upsert / insert
     write_set_obj(Storage const storage, OP_TYPE const op,
                   Record* const rec_ptr, std::string_view const val,
-                  bool const inc_tombstone)
+                  bool const inc_tombstone, std::vector<blob_id_type>&& lobs)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
-          inc_tombstone_(inc_tombstone) {
+          inc_tombstone_(inc_tombstone), lobs_(lobs) {
         if (op == OP_TYPE::DELETE) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         }
@@ -125,6 +125,8 @@ public:
 
     [[nodiscard]] bool get_inc_tombstone() const { return inc_tombstone_; }
 
+    [[nodiscard]] const std::vector<blob_id_type>& get_lobs() const { return lobs_; }
+
     void set_op(OP_TYPE op) { op_ = op; }
 
     void set_rec_ptr(Record* rec_ptr) { rec_ptr_ = rec_ptr; }
@@ -136,6 +138,8 @@ public:
     void set_val(std::string_view const val) { val_ = val; }
 
     void set_inc_tombstone(bool tf) { inc_tombstone_ = tf; }
+
+    void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_.swap(lobs); }
 
 private:
     /**
@@ -162,6 +166,10 @@ private:
      * we want to use std::atomic<bool> but some overload to reduce copy forbid it.
      */
     bool inc_tombstone_{false};
+    /**
+     * @brief large object info
+     */
+    std::vector<blob_id_type> lobs_;
 };
 
 class local_write_set {
