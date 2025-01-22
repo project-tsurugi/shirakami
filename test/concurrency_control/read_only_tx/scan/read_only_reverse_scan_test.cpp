@@ -107,18 +107,22 @@ TEST_F(read_only_reverse_scan_test, fail_to_fetch_max_size) { // NOLINT
     ASSERT_EQ(Status::OK, upsert(s, st, k0, v0));
     ASSERT_EQ(Status::OK, upsert(s, st, k1, v1));
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::OK, delete_record(s, st, k1));
-    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-
     {
-        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
-        wait_epoch_update();
-        ScanHandle hd{};
-        ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd, 1, true));
-        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    }
+        // stop gc so that k1 is left as tombstone and open_scan results in not-found
+        std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
 
+        ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_EQ(Status::OK, delete_record(s, st, k1));
+        ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+
+        {
+            ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+            wait_epoch_update();
+            ScanHandle hd{};
+            ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd, 1, true));
+            ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+        }
+    }
     {
         // expecting waiting some epochs fix the problem
         wait_epoch_update();
