@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "binary_printer.h"
+#include "span_printer.h"
 
 namespace shirakami {
 
@@ -21,6 +22,9 @@ static constexpr std::string_view log_location_prefix_timing_event =
 #define shirakami_binstring(arg)                                               \
     " " #arg "(len=" << (arg).size() << "):\"" << binary_printer((arg))        \
                      << "\"" //NOLINT
+// receive std::vector only
+#define shirakami_vecstring(arg)                                               \
+    " " #arg "(len=" << (arg).size() << "):" << span_printer((arg))
 
 /**
  * @brief logging level constant for errors

@@ -127,8 +127,7 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
             }
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 // prepare update
-                ti->push_to_write_set(
-                        {storage, OP_TYPE::UPSERT, rec_ptr, val}); // NOLINT
+                ti->push_to_write_set({storage, OP_TYPE::UPSERT, rec_ptr, val, false});
                 return Status::OK;
             }
             if (rc == Status::WARN_CONCURRENT_INSERT) { continue; } // else

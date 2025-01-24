@@ -34,19 +34,6 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
     std::lock_guard<std::shared_mutex> lk{get_mtx()};
 
     if (get_for_batch()) {
-        if (elem.get_op() == OP_TYPE::DELETE) {
-            cont_for_bt_.insert_or_assign(elem.get_rec_ptr(),
-                                          write_set_obj(elem.get_storage(),
-                                                        elem.get_op(),
-                                                        elem.get_rec_ptr()));
-        } else {
-            cont_for_bt_.insert_or_assign(
-                    elem.get_rec_ptr(),
-                    write_set_obj(elem.get_storage(), elem.get_op(),
-                                  elem.get_rec_ptr(), elem.get_value_view(),
-                                  elem.get_inc_tombstone()));
-        }
-
         if (static_cast<session*>(token)->get_tx_type() ==
             transaction_options::transaction_type::LONG) {
             // update storage map
@@ -68,6 +55,8 @@ void local_write_set::push(Token token, write_set_obj&& elem) {
                 }
             }
         }
+        auto* rec_ptr = elem.get_rec_ptr();
+        cont_for_bt_.insert_or_assign(rec_ptr, std::move(elem));
     } else {
         cont_for_occ_.emplace_back(std::move(elem)); // NOLINT
         if (cont_for_occ_.size() > 100) {            // NOLINT
