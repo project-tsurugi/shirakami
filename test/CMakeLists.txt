@@ -1,4 +1,4 @@
-# Copyright 2019-2019 tsurugi project.
+# Copyright 2019-2025 tsurugi project.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -132,8 +132,19 @@ else ()
           "datastore/two_recovery/*.cpp"
           "datastore/three_recovery/*.cpp"
           )
+    file (GLOB TEST_WITH_LIMESTONE_DOUBLE_SOURCES
+          "test_double/*.cpp"
+          )
   endif()
 endif()
+
+file (GLOB LIMESTONE_DOUBLE_SOURCES "test_double/doubles/limestone_double.cpp")
+add_library(limestone-double ${LIMESTONE_DOUBLE_SOURCES})
+target_link_libraries(limestone-double PRIVATE limestone)
+target_include_directories(limestone-double
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        )
 
 register_tests(
         TARGET shirakami
@@ -177,6 +188,20 @@ else ()
               PRIVATE yakushima
               PRIVATE atomic
             SOURCES ${LOGGING_TEST_SOURCES}
+            TEST_LABELS "LOGGING"
+    )
+    register_tests(
+            TARGET shirakami
+            DEPENDS
+              shirakami-impl
+              PRIVATE glog::glog
+              PRIVATE ${tbb_prefix}tbb
+              PRIVATE ${tbb_prefix}tbbmalloc
+              PRIVATE ${tbb_prefix}tbbmalloc_proxy
+              PRIVATE yakushima
+              PRIVATE atomic
+              PRIVATE limestone-double
+            SOURCES ${TEST_WITH_LIMESTONE_DOUBLE_SOURCES}
             TEST_LABELS "LOGGING"
     )
   endif()
