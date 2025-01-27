@@ -93,10 +93,24 @@ void add_entry(limestone::api::log_channel* lc,
                              << ", major write version: " << major_version
                              << ", minor write version: " << minor_version
                              << shirakami_vecstring(large_objects));
+#if 0
     lc->add_entry(
             storage_id, key, val,
             limestone::api::write_version_type(major_version, minor_version),
             large_objects);
+#else
+    // avoid limestone unimplemented
+    if (large_objects.empty()) {
+        lc->add_entry(
+                storage_id, key, val,
+                limestone::api::write_version_type(major_version, minor_version));
+    } else {
+        lc->add_entry(
+                storage_id, key, val,
+                limestone::api::write_version_type(major_version, minor_version),
+                large_objects);
+    }
+#endif
     shirakami_log_exit << "log_channel::add_entry()";
 }
 
