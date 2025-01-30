@@ -66,7 +66,8 @@ void add_entry_from_logs(handler& handle) {
                       static_cast<limestone::api::epoch_t>(
                               log_elem.get_wv().get_major_write_version()),
                       static_cast<std::uint64_t>(
-                              log_elem.get_wv().get_minor_write_version()));
+                              log_elem.get_wv().get_minor_write_version()),
+                      log_elem.get_lobs());
         }
     }
 

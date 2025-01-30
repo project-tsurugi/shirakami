@@ -88,7 +88,7 @@ void session::commit_sequence(tid_word ctid) {
         // log to local to reduce contention for locks
         log_recs.emplace_back(shirakami::lpwal::log_record(
                 lo, lpwal::write_version_type(ctid.get_epoch(), version),
-                storage::sequence_storage, key, new_value));
+                storage::sequence_storage, key, new_value, {}));
 #endif
 
         // update sequence object

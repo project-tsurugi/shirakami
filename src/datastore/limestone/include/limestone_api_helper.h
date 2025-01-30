@@ -34,7 +34,8 @@ void switch_epoch(limestone::api::datastore* ds, epoch::epoch_t ep);
 void add_entry(limestone::api::log_channel* lc,
                limestone::api::storage_id_type storage_id, std::string_view key,
                std::string_view val, limestone::api::epoch_t major_version,
-               std::uint64_t minor_version);
+               std::uint64_t minor_version,
+               const std::vector<limestone::api::blob_id_type>& large_objects);
 
 void remove_entry(limestone::api::log_channel* lc,
                   limestone::api::storage_id_type storage_id,

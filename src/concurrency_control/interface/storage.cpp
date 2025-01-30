@@ -54,7 +54,7 @@ void write_storage_metadata(std::string_view key, Storage st,
         lpwal::write_version_type wv{ti->get_mrc_tid().get_epoch(), ti->get_mrc_tid().get_tid() | (1UL << 63)};  // NOLINT
         {
             std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
-            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::ADD_STORAGE, wv, st, {}, {}));
+            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::ADD_STORAGE, wv, st, {}, {}, {}));
         }
 #endif
         leave(s);
@@ -90,7 +90,7 @@ void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) 
         // so it may be smaller than that of concurrent transactions writing this storage.
         {
             std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
-            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::REMOVE_STORAGE, wv, st, {}, {}));
+            ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::REMOVE_STORAGE, wv, st, {}, {}, {}));
         }
 #endif
         leave(s);

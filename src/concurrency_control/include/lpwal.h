@@ -94,8 +94,8 @@ private:
 class log_record {
 public:
     log_record(log_operation operation, write_version_type wv, Storage st,
-               std::string_view key, std::string_view val)
-        : operation_(operation), wv_(wv), st_(st), key_(key), val_(val) {}
+               std::string_view key, std::string_view val, const std::vector<blob_id_type>& lobs) // NOLINT
+        : operation_(operation), wv_(wv), st_(st), key_(key), val_(val), lobs_(lobs) {}
 
     [[nodiscard]] log_operation get_operation() const { return operation_; }
 
@@ -106,6 +106,8 @@ public:
     [[nodiscard]] std::string_view get_val() const { return val_; }
 
     [[nodiscard]] write_version_type get_wv() const { return wv_; }
+
+    [[nodiscard]] const std::vector<blob_id_type>& get_lobs() const { return lobs_; }
 
     void set_operation(log_operation operation) { operation_ = operation; }
 
@@ -143,6 +145,11 @@ private:
      * @brief value info
      */
     std::string val_{};
+
+    /**
+     * @brief large object info
+     */
+    std::vector<blob_id_type> lobs_{};
 };
 
 /**

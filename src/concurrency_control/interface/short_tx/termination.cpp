@@ -621,7 +621,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 lo,
                 lpwal::write_version_type(update_tid.get_epoch(),
                                           minor_version),
-                wso_ptr->get_storage(), key, val));
+                wso_ptr->get_storage(), key, val, wso_ptr->get_lobs()));
 #endif
         return Status::OK;
     };

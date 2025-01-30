@@ -4,16 +4,14 @@
 #include <ostream>
 #include <string>
 
-#include "compiler.h"
+#include "concurrency_control/include/session.h"
+
 #include "memory.h"
-#include "shirakami/interface.h"
+
 #include "gtest/gtest.h"
 #include "glog/logging.h"
-#include "shirakami/api_storage.h"
-#include "shirakami/scheme.h"
-#include "shirakami/storage_options.h"
-#include "shirakami/transaction_options.h"
 
+#include "test_tool.h"
 
 namespace shirakami::testing {
 
@@ -60,6 +58,48 @@ TEST_F(upsert_after_upsert, double_upsert_same_tx) { // NOLINT
     ASSERT_EQ(vb, v3);
     ASSERT_EQ(Status::OK, commit(s));
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(upsert_after_upsert, double_upsert_blob_same_tx) {
+    // double upsert by the same tx
+    std::string k("aaa");  // NOLINT
+    std::string v("bbb");  // NOLINT
+    std::string v2("ccc"); // NOLINT
+    std::string v3("ddd"); // NOLINT
+    const blob_id_type b1[2] = {11, 22};
+    const blob_id_type b2[3] = {99, 88, 77};
+    // b3 : empty
+    Token s{};
+    ASSERT_OK(enter(s));
+
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s, st, k, v, b1, std::size(b1)));
+    {
+        ASSERT_EQ(1, static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().size());
+        auto& wso = static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().at(0);
+        EXPECT_EQ(std::vector(std::begin(b1), std::end(b1)), wso.get_lobs());
+    }
+    ASSERT_OK(commit(s));
+
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s, st, k, v2, b2, std::size(b2)));
+    {
+        ASSERT_EQ(1, static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().size());
+        auto& wso = static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().at(0);
+        EXPECT_EQ(std::vector(std::begin(b2), std::end(b2)), wso.get_lobs());
+    }
+    ASSERT_OK(upsert(s, st, k, v3, nullptr, 0));
+    {
+        ASSERT_EQ(1, static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().size());
+        auto& wso = static_cast<session*>(s)->get_write_set().get_ref_cont_for_occ().at(0);
+        EXPECT_EQ(0, wso.get_lobs().size());
+    }
+    std::string vb{};
+    ASSERT_OK(search_key(s, st, k, vb));
+    ASSERT_EQ(vb, v3);
+    ASSERT_OK(commit(s));
+
+    ASSERT_OK(leave(s));
 }
 
 TEST_F(upsert_after_upsert, double_upsert_diff_tx) { // NOLINT
