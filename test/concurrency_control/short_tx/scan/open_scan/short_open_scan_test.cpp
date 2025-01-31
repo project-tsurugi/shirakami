@@ -9,6 +9,8 @@
 
 #include "gtest/gtest.h"
 
+#include "test_tool.h"
+
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -162,6 +164,34 @@ TEST_F(open_scan_test, multi_open_reading_values) { // NOLINT
 
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(open_scan_test, empty_range) {
+    Storage storage{};
+    create_storage("", storage);
+    Token s{};
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s, storage, "a", "val"));
+    ScanHandle handle{};
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(s, storage,
+                        "b", scan_endpoint::INCLUSIVE,
+                        "a", scan_endpoint::INCLUSIVE, handle));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(s, storage,
+                        "a", scan_endpoint::INCLUSIVE,
+                        "a", scan_endpoint::EXCLUSIVE, handle));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(s, storage,
+                        "a", scan_endpoint::EXCLUSIVE,
+                        "a", scan_endpoint::EXCLUSIVE, handle));
+    ASSERT_EQ(Status::WARN_NOT_FOUND,
+              open_scan(s, storage,
+                        "a", scan_endpoint::EXCLUSIVE,
+                        "a", scan_endpoint::INCLUSIVE, handle));
+    ASSERT_OK(commit(s));
+    ASSERT_OK(leave(s));
 }
 
 } // namespace shirakami::testing
