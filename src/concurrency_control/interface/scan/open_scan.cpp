@@ -34,6 +34,27 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
     return Status::WARN_MAX_OPEN_SCAN;
 }
 
+constexpr Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
+                                        const std::string_view r_key, const scan_endpoint r_end) {
+    if (r_end == scan_endpoint::INF) {
+        return Status::OK; // if right end is inf, not empty
+    }
+    if (l_end == scan_endpoint::INF) {
+        // if left end is inf, not empty in most cases
+        if (r_end == scan_endpoint::EXCLUSIVE && r_key.empty()) {
+            return Status::WARN_NOT_FOUND; // the only exception
+        }
+        return Status::OK;
+    }
+    int cmp_key = l_key.compare(r_key);
+    if (cmp_key < 0) { return Status::OK; } // if left is less, not empty
+    if (cmp_key > 0) { return Status::WARN_NOT_FOUND; } // if left is greater, invalid range
+    // l_key == r_key
+    return (l_end == scan_endpoint::INCLUSIVE && r_end == scan_endpoint::INCLUSIVE)
+            ? Status::OK // single point, not empty
+            : Status::WARN_NOT_FOUND; // empty
+}
+
 /**
  * This is for some creating for this tx and consider other concurrent strand
  * thread. If that failed, this cleanup local effect, respect the result and
@@ -292,8 +313,11 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
             nvec;
     constexpr std::size_t index_nvec_body{0};
     constexpr std::size_t index_nvec_ptr{1};
-    auto rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res,
-                   &nvec, right_to_left);
+    auto rc = check_empty_scan_range(l_key, l_end, r_key, r_end);
+
+    if (rc == Status::OK) {
+        rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec, right_to_left);
+    }
     if (rc != Status::OK) {
         update_local_read_range_if_ltx();
         return rc;
