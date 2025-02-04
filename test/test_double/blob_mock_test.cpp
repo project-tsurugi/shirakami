@@ -82,4 +82,53 @@ TEST_F(blob_mock_test, insert_update_blob) {
     ASSERT_OK(leave(s));
 }
 
+TEST_F(blob_mock_test, gc_limit) {
+    std::atomic<epoch::epoch_t> sent{0};
+    test_double::datastore_switch_available_boundary_version::hook_func = [&sent] (
+            test_double::datastore_switch_available_boundary_version::orig_type orig_func,
+            limestone::api::datastore* this_ptr,
+            limestone::api::write_version_type version) -> void {
+        //epoch::epoch_t major = version.get_major_version();
+        // limestone::api::write_version_type has no public major_version getter, so far
+        epoch::epoch_t major = *reinterpret_cast<std::uint64_t*>(&version);
+        sent = major;
+        VLOG(40) << "switch_available_boundary_version version.major:" << major;
+        orig_func(this_ptr, version);
+    };
+
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_OK(enter(s));
+    auto epoch_duration = std::chrono::microseconds(epoch::get_global_epoch_time_us());
+
+    wait_epoch_update();
+    std::this_thread::sleep_for(epoch_duration / 2);
+
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    auto ve = static_cast<session*>(s)->get_valid_epoch();
+    VLOG(40) << "RTX began; valid_epoch = " << ve;
+
+    std::this_thread::sleep_for(epoch_duration);
+    std::this_thread::sleep_for(epoch_duration);
+    EXPECT_EQ(sent, ve - 1); // check hold
+    std::this_thread::sleep_for(epoch_duration);
+    EXPECT_EQ(sent, ve - 1); // check hold again
+    wait_epoch_update();
+    std::this_thread::sleep_for(epoch_duration / 2);
+
+    auto ce = epoch::get_global_epoch();
+    ASSERT_OK(commit(s));
+    VLOG(40) << "RTX commited; current epoch >= " << ce;
+
+    std::this_thread::sleep_for(epoch_duration);
+    std::this_thread::sleep_for(epoch_duration);
+    EXPECT_GE(sent, ce - 1); // check advanced
+
+    // cleanup
+    ASSERT_OK(leave(s));
+
+    test_double::datastore_switch_available_boundary_version::hook_func = nullptr;
+}
+
 } // namespace shirakami::testing
