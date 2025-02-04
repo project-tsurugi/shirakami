@@ -73,7 +73,7 @@ TEST_F(li_single_recovery_delete_one_storage_test, // NOLINT
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
-    ASSERT_EQ(0, st_list.size()); // 1 is due to recovery
+    ASSERT_EQ(0, st_list.size()) << shirakami_vecstring(st_list);
 
     fin();
 }
