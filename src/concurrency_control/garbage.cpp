@@ -11,8 +11,13 @@
 #include "concurrency_control/include/wp.h"
 
 #include "database/include/logging.h"
+
+#ifdef PWAL
+
 #include "datastore/limestone/include/datastore.h"
 #include "datastore/limestone/include/limestone_api_helper.h"
+
+#endif
 
 #include "index/yakushima/include/interface.h"
 
