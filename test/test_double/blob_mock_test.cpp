@@ -82,15 +82,29 @@ TEST_F(blob_mock_test, insert_update_blob) {
     ASSERT_OK(leave(s));
 }
 
+// older version of limestone::api::write_version_type has no public major_version getter
+template<class WV, class = void>
+struct access_major {
+    static epoch::epoch_t get(WV& wv) {
+        VLOG(45) << "using cast";
+        return *reinterpret_cast<epoch::epoch_t*>(&wv);
+    }
+};
+template<class WV>
+struct access_major<WV, std::void_t<decltype(std::declval<WV>().get_major())>> {
+    static epoch::epoch_t get(WV& wv) {
+        VLOG(45) << "using getter";
+        return wv.get_major();
+    }
+};
+
 TEST_F(blob_mock_test, gc_limit) {
     std::atomic<epoch::epoch_t> sent{0};
     test_double::datastore_switch_available_boundary_version::hook_func = [&sent] (
             test_double::datastore_switch_available_boundary_version::orig_type orig_func,
             limestone::api::datastore* this_ptr,
             limestone::api::write_version_type version) -> void {
-        //epoch::epoch_t major = version.get_major_version();
-        // limestone::api::write_version_type has no public major_version getter, so far
-        epoch::epoch_t major = *reinterpret_cast<std::uint64_t*>(&version);
+        auto major = access_major<limestone::api::write_version_type>::get(version);
         sent = major;
         VLOG(40) << "switch_available_boundary_version version.major:" << major;
         orig_func(this_ptr, version);
