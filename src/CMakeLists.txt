@@ -60,7 +60,7 @@ endif()
 
 set_target_properties(shirakami
         PROPERTIES
-                INSTALL_RPATH "\$ORIGIN/../lib"
+                INSTALL_RPATH "\$ORIGIN"
                 LIBRARY_OUTPUT_NAME "kvs"
         )
 
