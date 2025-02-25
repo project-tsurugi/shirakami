@@ -18,6 +18,10 @@ start_datastore(limestone::api::configuration const& conf) {
     datastore_ = std::make_unique<limestone::api::datastore>(conf);
 }
 
+[[maybe_unused]] static void release_datastore() {
+    datastore_ = nullptr;
+}
+
 /**
  * @brief It executes create_channel and pass it to shirakami's executor.
  */
