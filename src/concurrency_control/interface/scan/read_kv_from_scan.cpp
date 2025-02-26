@@ -45,13 +45,11 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     yakushima::node_version64* nv_ptr{};
     yakushima::node_version64_body nv{};
     {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         // ==========
         /**
          * Check whether the handle is valid.
          */
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.get_scan_cache().find(handle) == nullptr) {
             return Status::WARN_INVALID_HANDLE;
         }
         // ==========
@@ -226,11 +224,7 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = read_from_scan(token, handle, true, key);
-    }
+    auto ret = read_from_scan(token, handle, true, key);
     ti->process_before_finish_step();
     shirakami_log_exit << "read_key_from_scan, Status: " << ret
                        << ", key: " << key;
@@ -243,11 +237,7 @@ Status read_value_from_scan(Token const token, // NOLINT
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
-    Status ret{};
-    { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
-        ret = read_from_scan(token, handle, false, value);
-    }
+    auto ret = read_from_scan(token, handle, false, value);
     ti->process_before_finish_step();
     shirakami_log_exit << "read_value_from_scan, Status: " << ret << ", value: "
                        << shirakami_binstring(std::string_view(value));

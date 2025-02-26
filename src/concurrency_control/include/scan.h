@@ -4,6 +4,8 @@
 #include <shared_mutex>
 #include <tuple>
 
+#include <tbb/concurrent_hash_map.h>
+
 #include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 
@@ -47,6 +49,114 @@ private:
     std::shared_mutex mtx_{};
 };
 
+class scan_cache {
+public:
+    using scan_elem_type =
+            std::tuple<Storage,
+                       std::vector<std::tuple<const Record*,
+                                              yakushima::node_version64_body,
+                                              yakushima::node_version64*>>>;
+
+    using element_iterator_pair = std::pair<scan_elem_type, std::size_t>;
+
+    using entity_type = tbb::concurrent_hash_map<ScanHandle, element_iterator_pair>;
+
+    /**
+     * @brief create empty object
+     */
+    scan_cache() = default;
+
+    /**
+     * @brief destruct object
+     */
+    ~scan_cache() = default;
+
+    scan_cache(scan_cache const& other) = delete;
+    scan_cache& operator=(scan_cache const& other) = delete;
+    scan_cache(scan_cache&& other) noexcept = delete;
+    scan_cache& operator=(scan_cache&& other) noexcept = delete;
+
+    void clear() {
+        entity_.clear();
+    }
+
+    bool erase(ScanHandle s) {
+        return entity_.erase(s);
+    }
+
+    scan_elem_type* find(ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        if (! entity_.find(acc, s)) { //NOLINT
+            return nullptr;
+        }
+        return std::addressof(acc->second.first);
+    }
+
+    bool create(ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        return entity_.insert(acc, s);
+    }
+
+    scan_elem_type& operator[](ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        entity_.insert(acc, s);
+        return acc->second.first;
+    }
+
+private:
+    entity_type entity_{};
+};
+
+class scan_cache_itr {
+public:
+    using entity_type = tbb::concurrent_hash_map<ScanHandle, std::size_t>;
+
+    /**
+     * @brief create empty object
+     */
+    scan_cache_itr() = default;
+
+    /**
+     * @brief destruct object
+     */
+    ~scan_cache_itr() = default;
+
+    scan_cache_itr(scan_cache_itr const& other) = delete;
+    scan_cache_itr& operator=(scan_cache_itr const& other) = delete;
+    scan_cache_itr(scan_cache_itr&& other) noexcept = delete;
+    scan_cache_itr& operator=(scan_cache_itr&& other) noexcept = delete;
+
+    void clear() {
+        entity_.clear();
+    }
+
+    bool erase(ScanHandle s) {
+        return entity_.erase(s);
+    }
+
+    size_t* find(ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        if (! entity_.find(acc, s)) { //NOLINT
+            return nullptr;
+        }
+        return std::addressof(acc->second);
+    }
+
+    bool create(ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        return entity_.insert(acc, s);
+    }
+
+    std::size_t& operator[](ScanHandle s) {
+        decltype(entity_)::accessor acc{};
+        entity_.insert(acc, s);
+        return acc->second;
+    }
+
+private:
+    entity_type entity_{};
+};
+
 class scan_handler {
 public:
     using scan_elem_type =
@@ -54,38 +164,26 @@ public:
                        std::vector<std::tuple<const Record*,
                                               yakushima::node_version64_body,
                                               yakushima::node_version64*>>>;
-    using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
-    using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
+    using scan_cache_type = scan_cache;
+    using scan_cache_itr_type = scan_cache_itr;
     static constexpr std::size_t scan_cache_storage_pos = 0;
     static constexpr std::size_t scan_cache_vec_pos = 1;
 
     void clear() {
-        {
-            // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            get_scan_cache().clear();
-            get_scan_cache_itr().clear();
-        }
+        get_scan_cache().clear();
+        get_scan_cache_itr().clear();
         get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
         // about scan cache
-        {
-            // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto itr = get_scan_cache().find(hd);
-            if (itr == get_scan_cache().end()) {
-                return Status::WARN_INVALID_HANDLE;
-            }
-            get_scan_cache().erase(itr);
-
-            // about scan cache iterator
-            auto index_itr = get_scan_cache_itr().find(hd);
-            get_scan_cache_itr().erase(index_itr);
-            set_r_key("");
-            set_r_end(scan_endpoint::EXCLUSIVE);
+        if(! get_scan_cache().erase(hd)) {
+            return Status::WARN_INVALID_HANDLE;
         }
+        // about scan cache iterator
+        get_scan_cache_itr().erase(hd);
+        set_r_key(""); //FIXME
+        set_r_end(scan_endpoint::EXCLUSIVE); //FIXME
 
         // about scanned storage set
         scanned_storage_set_.clear(hd);
@@ -102,8 +200,6 @@ public:
     [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
         return scan_cache_itr_;
     }
-
-    std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
 
     scanned_storage_set& get_scanned_storage_set() {
         return scanned_storage_set_;
@@ -129,11 +225,6 @@ private:
      * @brief cursor of the scan_cache_.
      */
     scan_cache_itr_type scan_cache_itr_{};
-
-    /**
-     * @brief mutex for scan cache
-     */
-    std::shared_mutex mtx_scan_cache_{};
 
     /**
      * @brief scanned storage set.
