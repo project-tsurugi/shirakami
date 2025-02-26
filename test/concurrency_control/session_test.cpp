@@ -85,7 +85,7 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
+TEST_F(session_test, member_short_expose_ongoing_target_epoch_after_each_api) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // prepare data
@@ -98,10 +98,10 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
 
     // test
     auto* ti{static_cast<session*>(s)};
-    auto wait_change_step_epoch = [ti]() {
-        auto ce{ti->get_step_epoch()};
+    auto wait_change_short_expose_ongoing_target_epoch = [ti]() {
+        auto ce{ti->get_short_expose_ongoing_status().get_target_epoch()};
         for (;;) {
-            auto ne{ti->get_step_epoch()};
+            auto ne{ti->get_short_expose_ongoing_status().get_target_epoch()};
             if (ce != ne) {
                 LOG(INFO) << ce << " " << ne;
                 break;
@@ -110,39 +110,39 @@ TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
         }
     };
     ASSERT_EQ(Status::OK, tx_begin({s}));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::WARN_NOT_BEGIN, abort(s));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, insert(s, st, "k", ""));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, update(s, st, "k", ""));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, upsert(s, st, "k", ""));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s, st, "k"));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     std::string sb{};
     ASSERT_EQ(Status::OK, search_key(s, st, "", sb));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, exist_key(s, st, ""));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     std::size_t sz{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, sz));
-    wait_change_step_epoch();
+    wait_change_short_expose_ongoing_target_epoch();
     ASSERT_EQ(Status::OK, leave(s));
 }
 
