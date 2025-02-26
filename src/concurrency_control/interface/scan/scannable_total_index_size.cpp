@@ -28,17 +28,15 @@ Status scannable_total_index_size_body(Token const token, // NOLINT
     auto& sh = ti->get_scan_handle();
 
     {
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        auto* sc = sh.get_scan_cache().find(handle);
+        if(sc == nullptr) {
             /**
              * the handle was invalid.
              */
             return Status::WARN_INVALID_HANDLE;
         }
 
-        size = std::get<scan_handler::scan_cache_vec_pos>(
-                       sh.get_scan_cache()[handle])
-                       .size();
+        size = sc->get_records().size();
     }
     return Status::OK;
 }

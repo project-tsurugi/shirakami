@@ -44,36 +44,31 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     Record* rec_ptr{};
     yakushima::node_version64* nv_ptr{};
     yakushima::node_version64_body nv{};
-    {
-        // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        // ==========
-        /**
-         * Check whether the handle is valid.
-         */
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
-            return Status::WARN_INVALID_HANDLE;
-        }
-        // ==========
 
-        scan_handler::scan_elem_type target_elem;
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
-        auto itr = scan_buf.begin() + scan_index; // NOLINT
-        nv = std::get<1>(*itr);
-        nv_ptr = std::get<2>(*itr);
-        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
-
-        // ==========
-        rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    // ==========
+    /**
+     * Check whether the handle is valid.
+     */
+    scan_cache* sc{};
+    if ((sc = sh.get_scan_cache().find(handle)) == nullptr) {
+        return Status::WARN_INVALID_HANDLE;
     }
+    // ==========
+
+    auto& scan_buf = sc->get_records();
+    std::size_t& scan_index = sc->scan_index();
+    auto itr = scan_buf.begin() + scan_index; // NOLINT
+    nv = std::get<1>(*itr);
+    nv_ptr = std::get<2>(*itr);
+    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+
+    // ==========
+    rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
 
     // log read range info if ltx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
-                             wp_meta_ptr) != Status::OK) {
+        if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
             // todo special case. interrupt DDL
             return Status::WARN_STORAGE_NOT_FOUND;
         }
@@ -121,14 +116,14 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // note: update can't log effect, but insert / delete log read effect.
         // optimization: set for re-read
         ti->push_to_read_set_for_stx(
-                {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
+                {sc->get_storage(), rec_ptr, tidb});
 
         // create node set info, maybe phantom (Status::ERR_CC)
         auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
         if (rc == Status::ERR_CC) {
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(
-                    sh.get_scanned_storage_set().get(handle));
+                    sc->get_storage());
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             short_tx::abort(ti);
             return Status::ERR_CC;
@@ -211,8 +206,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // ok case
         std::string key_buf{};
         rec_ptr->get_key(key_buf);
-        ti->insert_to_ltx_storage_read_set(
-                sh.get_scanned_storage_set().get(handle), key_buf);
+        ti->insert_to_ltx_storage_read_set(sc->get_storage(), key_buf);
         return Status::OK;
     }
 
