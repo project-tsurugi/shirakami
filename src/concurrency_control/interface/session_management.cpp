@@ -60,10 +60,6 @@ void assert_before_unlock(session* const ti) {
     if (ti->get_tx_began()) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "tx began at leave";
     }
-    if (ti->get_operating().load(std::memory_order_acquire) != 0) {
-        LOG_FIRST_N(ERROR, 1)
-                << log_location_prefix << "operating is not zero at leave";
-    }
 }
 
 void unlock_for_other_client(session* const ti) {

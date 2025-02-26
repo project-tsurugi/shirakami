@@ -270,8 +270,6 @@ public:
      */
     [[nodiscard]] tid_word get_mrc_tid() const { return mrc_tid_; }
 
-    std::atomic<std::size_t>& get_operating() { return operating_; }
-
     // ========== start: strand
 
     std::shared_mutex& get_mtx_state_da_term() { return mtx_state_da_term_; }
@@ -421,24 +419,9 @@ public:
     // ========== end: getter
 
     void process_before_start_step() {
-        get_operating()++;
     }
 
     void process_before_finish_step() {
-        auto expected = get_operating().load(std::memory_order_acquire);
-        for (;;) {
-            if (expected == 0) {
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << "programming error.";
-                break;
-            }
-            auto desired = expected - 1;
-            if (get_operating().compare_exchange_weak(
-                        expected, desired, std::memory_order_acq_rel,
-                        std::memory_order_acquire)) {
-                break;
-            }
-        }
     }
 
     void clear_ltx_storage_read_set() {
@@ -582,10 +565,6 @@ public:
     // ========== end: diagnostics
 
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
-
-    void set_operating(std::size_t num) {
-        operating_.store(num, std::memory_order_release);
-    }
 
     void set_read_area(transaction_options::read_area const& ra) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_read_area()};
@@ -862,14 +841,7 @@ private:
     /**
      * @brief This variable shows whether this session (transaction (tx)) is processing
      * public api now.
-     * @details Process from public api of tx update @a valid_epoch_.
-     * But that is not update when public api of tx is not called.
-     * So if public api of tx is not called for a long time,
-     * @a valid_epoch_ is also not updated. And if @a valid_epoch_ is not
-     * update for a long time, long tx can not find to be able to start
-     * process because the short tx may be serialized before the long tx.
-     * To resolve that situation, it use this variable for background thread
-     * to update @a valid_epoch_  automatically.
+     * @deprecated not used any more, to be removed.
      */
     std::atomic<std::size_t> operating_{0};
 
