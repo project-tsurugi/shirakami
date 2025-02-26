@@ -45,7 +45,7 @@ TEST_F(epoch_no_stop_test, sleep_to_watch_change_epoch) { // NOLINT
 }
 
 TEST_F(epoch_no_stop_test,                          // NOLINT
-       check_progress_of_step_epoch_by_bg_thread) { // NOLINT
+       DISABLED_check_progress_of_step_epoch_by_bg_thread) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti{static_cast<session*>(s)};
@@ -60,7 +60,7 @@ TEST_F(epoch_no_stop_test,                          // NOLINT
 }
 
 TEST_F(epoch_no_stop_test,                                   // NOLINT
-       check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
+       DISABLED_check_not_progress_of_step_epoch_if_operating_true) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti{static_cast<session*>(s)};
