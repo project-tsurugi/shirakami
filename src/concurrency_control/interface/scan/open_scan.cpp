@@ -27,7 +27,7 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
         if (itr == sh.get_scan_cache().end()) {
             out = i;
             // clear cursor info
-            sh.get_scan_cache_itr()[i] = 0;
+            std::get<scan_handler::scan_cache_itr_pos>(sh.get_scan_cache()[i]) = 0;
             return Status::OK;
         }
     }
@@ -420,7 +420,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         // increment for head skipped records
         // may need mutex for strand
         std::size_t& scan_index =
-                ti->get_scan_handle().get_scan_cache_itr()[handle];
+                std::get<scan_handler::scan_cache_itr_pos>(ti->get_scan_handle().get_scan_cache()[handle]);
         scan_index += head_skip_rec_n;
 
         sh.get_scanned_storage_set().set(handle, storage);

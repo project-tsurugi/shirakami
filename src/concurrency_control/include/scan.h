@@ -53,24 +53,23 @@ public:
             std::tuple<Storage,
                        std::vector<std::tuple<const Record*,
                                               yakushima::node_version64_body,
-                                              yakushima::node_version64*>>>;
+                                              yakushima::node_version64*>>,
+                       std::size_t>;  // the cursor pos
     using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
-    using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
     static constexpr std::size_t scan_cache_storage_pos = 0;
     static constexpr std::size_t scan_cache_vec_pos = 1;
+    static constexpr std::size_t scan_cache_itr_pos = 2;
 
     void clear() {
         {
             // for strand
             std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
-            get_scan_cache_itr().clear();
         }
         get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
-        // about scan cache
         {
             // for strand
             std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
@@ -80,9 +79,6 @@ public:
             }
             get_scan_cache().erase(itr);
 
-            // about scan cache iterator
-            auto index_itr = get_scan_cache_itr().find(hd);
-            get_scan_cache_itr().erase(index_itr);
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
@@ -97,10 +93,6 @@ public:
 
     [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
         return scan_cache_;
-    }
-
-    [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
-        return scan_cache_itr_;
     }
 
     std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
@@ -124,11 +116,6 @@ private:
      * @brief cache of index scan.
      */
     scan_cache_type scan_cache_{};
-
-    /**
-     * @brief cursor of the scan_cache_.
-     */
-    scan_cache_itr_type scan_cache_itr_{};
 
     /**
      * @brief mutex for scan cache
