@@ -67,13 +67,38 @@ class scan_handler {
     };
     class scan_cache_dummy {
     public:
-        ScanHandle allocate() { return new scan_handler_obj(); }
-        void clear() {}
+        void clear() {
+            std::lock_guard lk{allocated_mtx};
+            for (auto it = allocated.begin(); it != allocated.end(); ) {
+                delete *it;
+                it = allocated.erase(it);
+            }
+        }
         scan_handler_obj* find(ScanHandle sh) { return (scan_handler_obj*)sh; }
         scan_handler_obj* end() { return nullptr; }
-        void erase(scan_handler_obj* o) { delete o; }
+        void erase(scan_handler_obj* o) {
+            std::lock_guard lk{allocated_mtx};
+            allocated.erase(o);
+            delete o;
+        }
         scan_handler_obj& operator[](ScanHandle sh) {return *find(sh);}
 
+        ScanHandle allocate() {
+            auto n = new scan_handler_obj();
+            std::lock_guard lk{allocated_mtx};
+            allocated.insert(n);
+            return n;
+        }
+
+        // disable copy
+        scan_cache_dummy(const scan_cache_dummy&) = delete;
+        scan_cache_dummy& operator=(const scan_cache_dummy&) = delete;
+        scan_cache_dummy() = default;
+        ~scan_cache_dummy() = default;
+
+        private:
+        std::mutex allocated_mtx;
+        std::set<scan_handler_obj*> allocated{};
     };
     using scan_cache_type = scan_cache_dummy;
 
