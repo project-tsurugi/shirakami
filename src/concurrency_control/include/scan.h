@@ -105,7 +105,7 @@ public:
     void clear() {
         {
             // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
+            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
         }
         get_scanned_storage_set().clear();
@@ -114,7 +114,7 @@ public:
     Status clear(ScanHandle hd) {
         {
             // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
+            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             auto* itr = get_scan_cache().find(hd);
             if (itr == get_scan_cache().end()) {
                 return Status::WARN_INVALID_HANDLE;
@@ -137,7 +137,7 @@ public:
         return scan_cache_;
     }
 
-    std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
+    //std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
 
     scanned_storage_set& get_scanned_storage_set() {
         return scanned_storage_set_;
@@ -162,7 +162,7 @@ private:
     /**
      * @brief mutex for scan cache
      */
-    std::shared_mutex mtx_scan_cache_{};
+    //std::shared_mutex mtx_scan_cache_{};
 
     /**
      * @brief scanned storage set.

@@ -395,7 +395,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     auto& sh = ti->get_scan_handle();
     {
         // lock for strand
-        std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        //std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
 
         // find slot to log scan result.
         auto rc = find_open_scan_slot(ti, handle);
