@@ -65,7 +65,7 @@ TEST_F(tsurugi_issue361, comment_20240220) { // NOLINT
     ASSERT_OK(tx_begin({t2, transaction_options::transaction_type::SHORT}));
     ScanHandle shd2{};
     ASSERT_OK(open_scan(t2, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
-                        shd1));
+                        shd2));
     ASSERT_OK(read_key_from_scan(t2, shd2, buf));
     ASSERT_EQ(buf, "1");
     ASSERT_EQ(Status::OK, next(t2, shd2));

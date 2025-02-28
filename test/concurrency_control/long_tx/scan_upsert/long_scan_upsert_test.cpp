@@ -163,7 +163,7 @@ TEST_F(long_scan_upsert_test, read_modify_write) { // NOLINT
         ScanHandle hd2{};
         ASSERT_EQ(Status::OK, open_scan(s2, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, hd2));
-        ASSERT_EQ(Status::OK, read_value_from_scan(s2, hd, vb)); // forwarding
+        ASSERT_EQ(Status::OK, read_value_from_scan(s2, hd2, vb)); // forwarding
         ASSERT_EQ(vb, init_val);
         ASSERT_EQ(upsert(s2, st, "", s2_val), Status::OK);
         ASSERT_EQ(Status::OK, commit(s1));
