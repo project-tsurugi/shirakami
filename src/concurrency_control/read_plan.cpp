@@ -10,6 +10,23 @@
 
 namespace shirakami {
 
+// check overlap between { w_lkey:INCLUSIVE, w_rkey:INCLUSIVE } and { r_lkey:r_lpoint, r_rkey:r_rpoint }
+// TODO: use some range operation library
+bool read_plan::check_range_overlap(
+        const std::string& w_lkey, const std::string& w_rkey,
+        const std::string& r_lkey, scan_endpoint r_lpoint, const std::string& r_rkey, scan_endpoint r_rpoint) {
+    // define write range [], read range ()
+    bool no_overlap = (
+            // case: []()
+               (r_lpoint == scan_endpoint::INCLUSIVE && w_rkey < r_lkey)
+            || (r_lpoint == scan_endpoint::EXCLUSIVE && w_rkey <= r_lkey)
+            // case: ()[]
+            || (r_rpoint == scan_endpoint::INCLUSIVE && w_lkey > r_rkey)
+            || (r_rpoint == scan_endpoint::EXCLUSIVE && w_lkey >= r_rkey)
+    );
+    return !no_overlap;
+}
+
 bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                                           Token token) {
     std::shared_lock<std::shared_mutex> lk{get_mtx_cont()};
@@ -32,12 +49,12 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
             return true;
         }
 
-        for (auto&& elem :
+        for (auto&& st :
              static_cast<session*>(token)->get_write_set().get_storage_map()) {
             // cond3 only nlist
             if (plist.empty()) {
                 // the higher priori ltx is not submitted commit
-                auto itr = nlist.find(elem.first);
+                auto itr = nlist.find(st.first);
                 if (itr == nlist.end()) {
                     // the high priori ltx may read this
                     return true;
@@ -52,45 +69,21 @@ bool read_plan::check_potential_read_anti(std::size_t const tx_id,
                     // storage level
                     if (!std::get<1>(p_elem)) {
                         // it didn't submit commit
-                        if (std::get<0>(p_elem) == elem.first) {
+                        if (std::get<0>(p_elem) == st.first) {
                             // hit
                             return true;
                         }
                     } else {
                         // it submit commit
                         // check conflict storage level
-                        if (std::get<0>(p_elem) == elem.first) {
+                        if (std::get<0>(p_elem) == st.first) {
                             // check key range level
                             // todo: use constant value, not magic number
-                            std::string w_lkey =
-                                    std::get<0>(elem.second); // NOLINT
-                            std::string w_rkey =
-                                    std::get<1>(elem.second);         // NOLINT
-                            std::string r_lkey = std::get<2>(p_elem); // NOLINT
-                            scan_endpoint r_lpoint =
-                                    std::get<3>(p_elem);              // NOLINT
-                            std::string r_rkey = std::get<4>(p_elem); // NOLINT
-                            scan_endpoint r_rpoint =
-                                    std::get<5>(p_elem); // NOLINT
-                            // define write range [], read range ()
-                            if (
-                                    // case: [(])
-                                    ((w_lkey < r_lkey &&
-                                      r_lpoint != scan_endpoint::INF) &&
-                                     (w_rkey < r_rkey ||
-                                      r_rpoint == scan_endpoint::INF))
-                                    // case: ([])
-                                    || ((r_lkey < w_lkey ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (w_lkey < r_rkey ||
-                                         r_rpoint == scan_endpoint::INF))
-                                    // case: ([)]
-                                    || ((r_lkey < w_lkey ||
-                                         r_lpoint == scan_endpoint::INF) &&
-                                        (w_rkey < r_rkey &&
-                                         r_rpoint != scan_endpoint::INF))) {
-                                return true;
-                            }
+                            bool hit = check_range_overlap(
+                                    std::get<0>(st.second), std::get<1>(st.second),
+                                    std::get<2>(p_elem), std::get<3>(p_elem),
+                                    std::get<4>(p_elem), std::get<5>(p_elem)); // NOLINT
+                            if (hit) { return true; }
                         }
                     }
                 }
