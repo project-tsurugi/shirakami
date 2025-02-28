@@ -27,7 +27,7 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
         if (itr == sh.get_scan_cache().end()) {
             out = i;
             // clear cursor info
-            std::get<scan_handler::scan_cache_itr_pos>(sh.get_scan_cache()[i]) = 0;
+            sh.get_scan_cache()[i].get_scan_index() = 0;
             return Status::OK;
         }
     }
@@ -404,10 +404,8 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto rc = find_open_scan_slot(ti, handle);
         if (rc != Status::OK) { return rc; }
 
-        std::get<scan_handler::scan_cache_storage_pos>(
-                sh.get_scan_cache()[handle]) = storage;
-        auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
+        sh.get_scan_cache()[handle].get_storage() = storage;
+        auto& vec = sh.get_scan_cache()[handle].get_vec();
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
             vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
@@ -419,8 +417,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
 
         // increment for head skipped records
         // may need mutex for strand
-        std::size_t& scan_index =
-                std::get<scan_handler::scan_cache_itr_pos>(ti->get_scan_handle().get_scan_cache()[handle]);
+        std::size_t& scan_index = ti->get_scan_handle().get_scan_cache()[handle].get_scan_index();
         scan_index += head_skip_rec_n;
 
         sh.get_scanned_storage_set().set(handle, storage);

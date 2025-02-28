@@ -36,9 +36,7 @@ Status scannable_total_index_size_body(Token const token, // NOLINT
             return Status::WARN_INVALID_HANDLE;
         }
 
-        size = std::get<scan_handler::scan_cache_vec_pos>(
-                       sh.get_scan_cache()[handle])
-                       .size();
+        size = sh.get_scan_cache()[handle].get_vec().size();
     }
     return Status::OK;
 }

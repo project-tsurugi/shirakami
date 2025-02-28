@@ -13,6 +13,19 @@
 
 namespace shirakami {
 
+class alignas(CACHE_LINE_SIZE) scan_cache_obj {
+public:
+    Storage& get_storage() { return storage_; }
+    auto& get_vec() { return vec_; }
+    std::size_t& get_scan_index() { return scan_index_; }
+private:
+    Storage storage_{};
+    std::vector<std::tuple<const Record*,
+                           yakushima::node_version64_body,
+                           yakushima::node_version64*>> vec_;
+    std::size_t scan_index_{};
+};
+
 class scanned_storage_set {
 public:
     Storage get(ScanHandle const hd) {
@@ -49,16 +62,7 @@ private:
 
 class scan_handler {
 public:
-    using scan_elem_type =
-            std::tuple<Storage,
-                       std::vector<std::tuple<const Record*,
-                                              yakushima::node_version64_body,
-                                              yakushima::node_version64*>>,
-                       std::size_t>;  // the cursor pos
-    using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
-    static constexpr std::size_t scan_cache_storage_pos = 0;
-    static constexpr std::size_t scan_cache_vec_pos = 1;
-    static constexpr std::size_t scan_cache_itr_pos = 2;
+    using scan_cache_type = std::map<ScanHandle, scan_cache_obj>;
 
     void clear() {
         {
