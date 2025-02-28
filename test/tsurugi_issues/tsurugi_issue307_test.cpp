@@ -122,9 +122,7 @@ TEST_F(tsurugi_issue307_test, simple) { // NOLINT
                 LOG(FATAL);
             }
             auto* ti = static_cast<session*>(s);
-            auto entry_size =
-                    std::get<scan_handler::scan_cache_vec_pos>(
-                            ti->get_scan_handle().get_scan_cache()[scanh])
+            auto entry_size = ti->get_scan_handle().get_scan_cache()[scanh].get_vec()
                             .size();
             if (entry_size != n && entry_size != n - 1) {
                 // open scan bug

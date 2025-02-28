@@ -48,17 +48,24 @@ private:
 };
 
 class scan_handler {
-public:
-    using scan_elem_type =
-            std::tuple<Storage,
-                       std::vector<std::tuple<const Record*,
-                                              yakushima::node_version64_body,
-                                              yakushima::node_version64*>>,
-                       std::size_t>;  // the cursor pos
-    using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
-    static constexpr std::size_t scan_cache_storage_pos = 0;
-    static constexpr std::size_t scan_cache_vec_pos = 1;
-    static constexpr std::size_t scan_cache_itr_pos = 2;
+
+    public:
+    class scan_handler_obj {
+        private:
+        Storage storage_;
+        std::vector<std::tuple<const Record*,
+                               yakushima::node_version64_body,
+                               yakushima::node_version64*>> vec_;
+        std::size_t itr_;
+    public:
+        Storage get_storage() const { return storage_; }
+        decltype(vec_)& get_vec() { return vec_; }
+        decltype(itr_)& get_itr() { return itr_; }
+        void set_storage(Storage storage) { storage_ = storage; }
+        void set_vec(decltype(vec_) vec) { vec_ = vec; }
+        void set_itr(decltype(itr_) itr) { itr_ = itr; }
+    };
+    using scan_cache_type = std::map<ScanHandle, scan_handler_obj>;
 
     void clear() {
         {
