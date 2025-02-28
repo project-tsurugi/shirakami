@@ -22,14 +22,11 @@ namespace shirakami {
 inline Status find_open_scan_slot(session* const ti, // NOLINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
-    for (ScanHandle i = 0;; ++i) {
-        auto itr = sh.get_scan_cache().find(i);
-        if (itr == sh.get_scan_cache().end()) {
+    if (auto* i = sh.get_scan_cache().allocate(); i != nullptr) {
             out = i;
             // clear cursor info
             sh.get_scan_cache()[i].get_scan_index() = 0;
             return Status::OK;
-        }
     }
     return Status::WARN_MAX_OPEN_SCAN;
 }

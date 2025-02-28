@@ -181,8 +181,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
 /**
  * @pre This is called by only long tx mode
  */
-void check_ltx_scan_range_rp_and_log(Token const token, // NOLINT
-                                     ScanHandle const handle) {
+void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto& sh = ti->get_scan_handle();
     /**

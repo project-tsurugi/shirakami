@@ -237,8 +237,8 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
     return ret;
 }
 
-Status read_value_from_scan(Token const token, // NOLINT
-                            ScanHandle const handle, std::string& value) {
+Status read_value_from_scan(Token const token, ScanHandle const handle, // NOLINT
+                            std::string& value) {
     shirakami_log_entry << "read_value_from_scan, token: " << token
                         << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);

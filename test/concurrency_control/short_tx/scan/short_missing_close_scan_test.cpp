@@ -56,7 +56,7 @@ TEST_F(missing_close_scan_test, read_first) { // NOLINT
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
-        ASSERT_EQ(0, handle);
+        ASSERT_NE(nullptr, handle);
 
         std::string sb{};
         ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
@@ -86,7 +86,7 @@ TEST_F(missing_close_scan_test, read_second) { // NOLINT
         ScanHandle handle{};
         ASSERT_EQ(Status::OK, open_scan(s, storage0, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
-        ASSERT_EQ(0, handle);
+        ASSERT_NE(nullptr, handle);
 
         std::string sb{};
         ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
