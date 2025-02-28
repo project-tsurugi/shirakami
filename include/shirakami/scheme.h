@@ -30,7 +30,7 @@ using Token = void*;
 /**
  * @brief Scan Handle
  */
-using ScanHandle = std::size_t;
+using ScanHandle = void*;
 
 enum class scan_endpoint : char {
     EXCLUSIVE,

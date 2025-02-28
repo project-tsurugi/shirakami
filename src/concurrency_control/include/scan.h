@@ -65,7 +65,17 @@ class scan_handler {
         void set_vec(decltype(vec_) vec) { vec_ = vec; }
         void set_itr(decltype(itr_) itr) { itr_ = itr; }
     };
-    using scan_cache_type = std::map<ScanHandle, scan_handler_obj>;
+    class scan_cache_dummy {
+    public:
+        ScanHandle allocate() { return new scan_handler_obj(); }
+        void clear() {}
+        scan_handler_obj* find(ScanHandle sh) { return (scan_handler_obj*)sh; }
+        scan_handler_obj* end() { return nullptr; }
+        void erase(scan_handler_obj* o) { delete o; }
+        scan_handler_obj& operator[](ScanHandle sh) {return *find(sh);}
+
+    };
+    using scan_cache_type = scan_cache_dummy;
 
     void clear() {
         {
