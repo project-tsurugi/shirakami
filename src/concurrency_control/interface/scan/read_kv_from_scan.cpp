@@ -46,7 +46,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     yakushima::node_version64_body nv{};
     {
         // take read lock
-        std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
+        //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
         // ==========
         /**
          * Check whether the handle is valid.
