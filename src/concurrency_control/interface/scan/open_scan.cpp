@@ -22,16 +22,11 @@ namespace shirakami {
 inline Status find_open_scan_slot(session* const ti, // NOLINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
-    for (ScanHandle i = 0;; ++i) {
-        auto itr = sh.get_scan_cache().find(i);
-        if (itr == sh.get_scan_cache().end()) {
-            out = i;
-            // clear cursor info
-            sh.get_scan_cache()[i].set_itr(0);
-            return Status::OK;
-        }
-    }
-    return Status::WARN_MAX_OPEN_SCAN;
+    auto* o = sh.get_scan_cache().allocate();
+    out = o;
+    // clear cursor info
+    sh.get_scan_cache()[o].set_itr(0);
+    return Status::OK;
 }
 
 // TODO: create a new header file and move this function definition there as constexpr

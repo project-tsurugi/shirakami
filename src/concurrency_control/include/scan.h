@@ -15,7 +15,7 @@ namespace shirakami {
 
 class scanned_storage_set {
 public:
-    Storage get(ScanHandle const hd) {
+    Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const)
         std::shared_lock<std::shared_mutex> lk{get_mtx()};
         return map_[hd];
     }
@@ -25,13 +25,13 @@ public:
         map_.clear();
     }
 
-    void clear(ScanHandle const hd) {
+    void clear(ScanHandle const hd) { // NOLINT(misc-misplaced-const)
         // for strand
         std::lock_guard<std::shared_mutex> lk{get_mtx()};
         map_.erase(hd);
     }
 
-    void set(ScanHandle const hd, Storage const st) {
+    void set(ScanHandle const hd, Storage const st) { // NOLINT(misc-misplaced-const)
         std::lock_guard<std::shared_mutex> lk{get_mtx()};
         map_[hd] = st;
     };
@@ -64,7 +64,45 @@ public:
         //void set_vec(decltype(vec_) vec) { vec_ = vec; }
         void set_itr(decltype(itr_) itr) { itr_ = itr; }
     };
-    using scan_cache_type = std::map<ScanHandle, scan_cache_obj>;
+    class scan_cache_dummy {
+    // dummy class for transition
+    public:
+        void clear() {
+            std::lock_guard lk{allocated_mtx};
+            for (auto it = allocated.begin(); it != allocated.end(); ) {
+                delete *it; // NOLINT
+                it = allocated.erase(it);
+            }
+        }
+        scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT(readability-convert-member-functions-to-static)
+        scan_cache_obj* end() { return nullptr; } // NOLINT(readability-convert-member-functions-to-static)
+        void erase(scan_cache_obj* o) {
+            std::lock_guard lk{allocated_mtx};
+            allocated.erase(o);
+            delete o; // NOLINT
+        }
+        scan_cache_obj& operator[](ScanHandle sh) {return *find(sh);}
+
+        ScanHandle allocate() {
+            auto* n = new scan_cache_obj(); // NOLINT
+            std::lock_guard lk{allocated_mtx};
+            allocated.insert(n);
+            return n;
+        }
+
+        // disable copy
+        scan_cache_dummy(const scan_cache_dummy&) = delete;
+        scan_cache_dummy& operator=(const scan_cache_dummy&) = delete;
+        scan_cache_dummy(scan_cache_dummy&&) = delete;
+        scan_cache_dummy& operator=(scan_cache_dummy&&) = delete;
+        scan_cache_dummy() = default;
+        ~scan_cache_dummy() = default;
+
+    private:
+        std::mutex allocated_mtx;
+        std::set<scan_cache_obj*> allocated{};
+    };
+    using scan_cache_type = scan_cache_dummy;
 
     void clear() {
         {
@@ -80,7 +118,7 @@ public:
         {
             // for strand
             std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto itr = get_scan_cache().find(hd);
+            auto* itr = get_scan_cache().find(hd);
             if (itr == get_scan_cache().end()) {
                 return Status::WARN_INVALID_HANDLE;
             }

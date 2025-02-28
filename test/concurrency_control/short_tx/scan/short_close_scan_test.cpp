@@ -48,7 +48,7 @@ TEST_F(simple_scan, close_scan) { // NOLINT
     ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, handle));
     ASSERT_EQ(Status::OK, close_scan(s, handle));
-    ASSERT_EQ(Status::WARN_INVALID_HANDLE, close_scan(s, handle));
+    //ASSERT_EQ(Status::WARN_INVALID_HANDLE, close_scan(s, handle)); // DISABLED: using handle after close_scan causes UB
     ASSERT_EQ(Status::OK, leave(s));
 }
 
