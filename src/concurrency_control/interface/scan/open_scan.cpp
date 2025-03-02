@@ -417,7 +417,6 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         std::size_t& scan_index = ti->get_scan_handle().get_scan_cache()[handle].get_scan_index();
         scan_index += head_skip_rec_n;
 
-        sh.get_scanned_storage_set().set(handle, storage);
         sh.set_r_key(r_key);
         sh.set_r_end(r_end);
     }

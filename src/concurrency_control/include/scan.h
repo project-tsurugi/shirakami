@@ -26,38 +26,13 @@ private:
     std::size_t scan_index_{};
 };
 
+// deprecated dummy class for transition
 class scanned_storage_set {
 public:
     Storage get(ScanHandle const hd) { // NOLINT
-        std::shared_lock<std::shared_mutex> lk{get_mtx()};
-        return map_[hd];
+        auto* o = static_cast<scan_cache_obj*>(hd);
+        return o->get_storage();
     }
-
-    void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.clear();
-    }
-
-    void clear(ScanHandle const hd) { // NOLINT
-        // for strand
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.erase(hd);
-    }
-
-    void set(ScanHandle const hd, Storage const st) { // NOLINT
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_[hd] = st;
-    };
-
-    std::shared_mutex& get_mtx() { return mtx_; }
-
-private:
-    std::map<ScanHandle, Storage> map_;
-
-    /**
-     * @brief mutex for scanned storage set
-     */
-    std::shared_mutex mtx_{};
 };
 
 class scan_handler {
@@ -108,7 +83,6 @@ public:
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
         }
-        get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
@@ -124,9 +98,6 @@ public:
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
-
-        // about scanned storage set
-        scanned_storage_set_.clear(hd);
 
         return Status::OK;
     }
