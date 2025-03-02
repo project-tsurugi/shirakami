@@ -13,7 +13,7 @@
 
 namespace shirakami {
 
-class scan_handler_obj {
+class alignas(CACHE_LINE_SIZE) scan_handler_obj {
     private:
     Storage storage_{};
     std::vector<std::tuple<const Record*,
