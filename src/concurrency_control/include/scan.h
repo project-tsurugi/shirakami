@@ -74,8 +74,8 @@ class scan_handler {
                 it = allocated.erase(it);
             }
         }
-        scan_handler_obj* find(ScanHandle sh) { return static_cast<scan_handler_obj*>(sh); }
-        static scan_handler_obj* end() { return nullptr; }
+        scan_handler_obj* find(ScanHandle sh) { return static_cast<scan_handler_obj*>(sh); } // NOLINT(readability-convert-member-functions-to-static)
+        scan_handler_obj* end() { return nullptr; } // NOLINT(readability-convert-member-functions-to-static)
         void erase(scan_handler_obj* o) {
             std::lock_guard lk{allocated_mtx};
             allocated.erase(o);

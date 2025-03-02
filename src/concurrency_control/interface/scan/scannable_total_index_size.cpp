@@ -42,7 +42,7 @@ Status scannable_total_index_size_body(Token const token, // NOLINT
 }
 
 Status scannable_total_index_size(Token const token, // NOLINT
-                                  ScanHandle const handle, std::size_t& size) {
+                                  ScanHandle const handle, std::size_t& size) { // NOLINT(misc-misplaced-const)
     shirakami_log_entry << "scannable_total_index_size, "
                         << "token: " << token << ", handle: " << handle
                         << ", size: " << size;
