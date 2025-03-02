@@ -13,28 +13,28 @@
 
 namespace shirakami {
 
+class scan_handler_obj {
+    private:
+    Storage storage_{};
+    std::vector<std::tuple<const Record*,
+                           yakushima::node_version64_body,
+                           yakushima::node_version64*>> vec_;
+    std::size_t itr_{0U};
+public:
+    [[nodiscard]] Storage get_storage() const { return storage_; }
+    decltype(vec_)& get_vec() { return vec_; }
+    decltype(itr_)& get_itr() { return itr_; }
+    void set_storage(Storage storage) { storage_ = storage; }
+    //void set_vec(decltype(vec_) vec) { vec_ = vec; }
+    //void set_itr(decltype(itr_) itr) { itr_ = itr; }
+};
+
 class scanned_storage_set {
 public:
     Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const)
-        std::shared_lock<std::shared_mutex> lk{get_mtx()};
-        return map_[hd];
+        auto* o = static_cast<scan_handler_obj*>(hd);
+        return o->get_storage();
     }
-
-    void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.clear();
-    }
-
-    void clear(ScanHandle const hd) { // NOLINT(misc-misplaced-const)
-        // for strand
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.erase(hd);
-    }
-
-    void set(ScanHandle const hd, Storage const st) { // NOLINT(misc-misplaced-const)
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_[hd] = st;
-    };
 
     std::shared_mutex& get_mtx() { return mtx_; }
 
@@ -50,21 +50,6 @@ private:
 class scan_handler {
 
     public:
-    class scan_handler_obj {
-        private:
-        Storage storage_{};
-        std::vector<std::tuple<const Record*,
-                               yakushima::node_version64_body,
-                               yakushima::node_version64*>> vec_;
-        std::size_t itr_{0U};
-    public:
-        //[[nodiscard]] Storage get_storage() const { return storage_; }
-        decltype(vec_)& get_vec() { return vec_; }
-        decltype(itr_)& get_itr() { return itr_; }
-        void set_storage(Storage storage) { storage_ = storage; }
-        //void set_vec(decltype(vec_) vec) { vec_ = vec; }
-        //void set_itr(decltype(itr_) itr) { itr_ = itr; }
-    };
     class scan_cache_dummy {
     public:
         void clear() {
@@ -110,7 +95,6 @@ class scan_handler {
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
         }
-        get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
@@ -128,9 +112,6 @@ class scan_handler {
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
-
-        // about scanned storage set
-        scanned_storage_set_.clear(hd);
 
         return Status::OK;
     }

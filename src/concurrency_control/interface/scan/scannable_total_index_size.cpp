@@ -20,7 +20,7 @@
 namespace shirakami {
 
 Status scannable_total_index_size_body(Token const token, // NOLINT
-                                       ScanHandle const handle,
+                                       ScanHandle const handle, // NOLINT(misc-misplaced-const)
                                        std::size_t& size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
