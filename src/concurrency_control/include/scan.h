@@ -52,11 +52,11 @@ class scan_handler {
     public:
     class scan_handler_obj {
         private:
-        Storage storage_;
+        Storage storage_{};
         std::vector<std::tuple<const Record*,
                                yakushima::node_version64_body,
                                yakushima::node_version64*>> vec_;
-        std::size_t itr_;
+        std::size_t itr_{0U};
     public:
         //[[nodiscard]] Storage get_storage() const { return storage_; }
         decltype(vec_)& get_vec() { return vec_; }
@@ -64,7 +64,6 @@ class scan_handler {
         void set_storage(Storage storage) { storage_ = storage; }
         //void set_vec(decltype(vec_) vec) { vec_ = vec; }
         //void set_itr(decltype(itr_) itr) { itr_ = itr; }
-        scan_handler_obj() : storage_(), vec_({}), itr_(0) {}
     };
     class scan_cache_dummy {
     public:
