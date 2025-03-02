@@ -15,7 +15,7 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
-    //[[nodiscard]] Storage get_storage() const { return storage_; }
+    [[nodiscard]] Storage get_storage() const { return storage_; }
     auto& get_vec() { return vec_; }
     std::size_t& get_itr() { return itr_; }
     void set_storage(Storage storage) { storage_ = storage; }
@@ -28,37 +28,12 @@ private:
 };
 
 class scanned_storage_set {
+// dummy class for transition
 public:
-    Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const)
-        std::shared_lock<std::shared_mutex> lk{get_mtx()};
-        return map_[hd];
+    Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const,*-functions-to-static)
+        auto* o = static_cast<scan_cache_obj*>(hd);
+        return o->get_storage();
     }
-
-    void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.clear();
-    }
-
-    void clear(ScanHandle const hd) { // NOLINT(misc-misplaced-const)
-        // for strand
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.erase(hd);
-    }
-
-    void set(ScanHandle const hd, Storage const st) { // NOLINT(misc-misplaced-const)
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_[hd] = st;
-    };
-
-    std::shared_mutex& get_mtx() { return mtx_; }
-
-private:
-    std::map<ScanHandle, Storage> map_;
-
-    /**
-     * @brief mutex for scanned storage set
-     */
-    std::shared_mutex mtx_{};
 };
 
 class scan_handler {
@@ -109,7 +84,6 @@ public:
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             get_scan_cache().clear();
         }
-        get_scanned_storage_set().clear();
     }
 
     Status clear(ScanHandle hd) {
@@ -127,9 +101,6 @@ public:
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
-
-        // about scanned storage set
-        scanned_storage_set_.clear(hd);
 
         return Status::OK;
     }
