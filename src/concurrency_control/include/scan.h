@@ -30,27 +30,19 @@ public:
 };
 
 class scanned_storage_set {
+// dummy class for transition
 public:
     Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const)
         auto* o = static_cast<scan_handler_obj*>(hd);
         return o->get_storage();
     }
-
-    std::shared_mutex& get_mtx() { return mtx_; }
-
-private:
-    std::map<ScanHandle, Storage> map_;
-
-    /**
-     * @brief mutex for scanned storage set
-     */
-    std::shared_mutex mtx_{};
 };
 
 class scan_handler {
 
     public:
     class scan_cache_dummy {
+// dummy class for transition
     public:
         void clear() {
             std::lock_guard lk{allocated_mtx};
