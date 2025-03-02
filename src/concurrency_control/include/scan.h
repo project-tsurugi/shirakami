@@ -25,13 +25,13 @@ public:
         map_.clear();
     }
 
-    void clear(ScanHandle const hd) {
+    void clear(ScanHandle const hd) { // NOLINT(misc-misplaced-const)
         // for strand
         std::lock_guard<std::shared_mutex> lk{get_mtx()};
         map_.erase(hd);
     }
 
-    void set(ScanHandle const hd, Storage const st) {
+    void set(ScanHandle const hd, Storage const st) { // NOLINT(misc-misplaced-const)
         std::lock_guard<std::shared_mutex> lk{get_mtx()};
         map_[hd] = st;
     };
@@ -75,7 +75,7 @@ class scan_handler {
             }
         }
         scan_handler_obj* find(ScanHandle sh) { return static_cast<scan_handler_obj*>(sh); }
-        scan_handler_obj* end() { return nullptr; }
+        static scan_handler_obj* end() { return nullptr; }
         void erase(scan_handler_obj* o) {
             std::lock_guard lk{allocated_mtx};
             allocated.erase(o);
