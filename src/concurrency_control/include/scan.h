@@ -15,7 +15,7 @@ namespace shirakami {
 
 class scanned_storage_set {
 public:
-    Storage get(ScanHandle const hd) {
+    Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const)
         std::shared_lock<std::shared_mutex> lk{get_mtx()};
         return map_[hd];
     }
@@ -58,7 +58,7 @@ class scan_handler {
                                yakushima::node_version64*>> vec_;
         std::size_t itr_;
     public:
-        Storage get_storage() const { return storage_; }
+        [[nodiscard]] Storage get_storage() const { return storage_; }
         decltype(vec_)& get_vec() { return vec_; }
         decltype(itr_)& get_itr() { return itr_; }
         void set_storage(Storage storage) { storage_ = storage; }
@@ -74,7 +74,7 @@ class scan_handler {
                 it = allocated.erase(it);
             }
         }
-        scan_handler_obj* find(ScanHandle sh) { return (scan_handler_obj*)sh; }
+        scan_handler_obj* find(ScanHandle sh) { return static_cast<scan_handler_obj*>(sh); }
         scan_handler_obj* end() { return nullptr; }
         void erase(scan_handler_obj* o) {
             std::lock_guard lk{allocated_mtx};
@@ -84,7 +84,7 @@ class scan_handler {
         scan_handler_obj& operator[](ScanHandle sh) {return *find(sh);}
 
         ScanHandle allocate() {
-            auto n = new scan_handler_obj();
+            auto* n = new scan_handler_obj();
             std::lock_guard lk{allocated_mtx};
             allocated.insert(n);
             return n;
