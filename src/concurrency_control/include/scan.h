@@ -58,12 +58,13 @@ class scan_handler {
                                yakushima::node_version64*>> vec_;
         std::size_t itr_;
     public:
-        [[nodiscard]] Storage get_storage() const { return storage_; }
+        //[[nodiscard]] Storage get_storage() const { return storage_; }
         decltype(vec_)& get_vec() { return vec_; }
         decltype(itr_)& get_itr() { return itr_; }
         void set_storage(Storage storage) { storage_ = storage; }
-        void set_vec(decltype(vec_) vec) { vec_ = vec; }
-        void set_itr(decltype(itr_) itr) { itr_ = itr; }
+        //void set_vec(decltype(vec_) vec) { vec_ = vec; }
+        //void set_itr(decltype(itr_) itr) { itr_ = itr; }
+        scan_handler_obj() : storage_(), vec_({}), itr_(0) {}
     };
     class scan_cache_dummy {
     public:
