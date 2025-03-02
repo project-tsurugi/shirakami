@@ -51,18 +51,18 @@ class scan_handler {
 public:
     class scan_cache_obj {
     private:
-        Storage storage_;
+        Storage storage_{};
         std::vector<std::tuple<const Record*,
                                yakushima::node_version64_body,
                                yakushima::node_version64*>> vec_;
-        std::size_t itr_;
+        std::size_t itr_{0U};
     public:
         //[[nodiscard]] Storage get_storage() const { return storage_; }
         decltype(vec_)& get_vec() { return vec_; }
         decltype(itr_)& get_itr() { return itr_; }
         void set_storage(Storage storage) { storage_ = storage; }
         //void set_vec(decltype(vec_) vec) { vec_ = vec; }
-        void set_itr(decltype(itr_) itr) { itr_ = itr; }
+        //void set_itr(decltype(itr_) itr) { itr_ = itr; }
     };
     class scan_cache_dummy {
     // dummy class for transition

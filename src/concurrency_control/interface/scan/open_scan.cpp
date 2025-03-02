@@ -24,8 +24,6 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
     auto& sh = ti->get_scan_handle();
     auto* o = sh.get_scan_cache().allocate();
     out = o;
-    // clear cursor info
-    sh.get_scan_cache()[o].set_itr(0);
     return Status::OK;
 }
 
