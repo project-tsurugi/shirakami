@@ -22,7 +22,7 @@ namespace shirakami {
 inline Status find_open_scan_slot(session* const ti, // NOLINT
                                   ScanHandle& out) {
     auto& sh = ti->get_scan_handle();
-    auto o = sh.get_scan_cache().allocate();
+    auto* o = sh.get_scan_cache().allocate();
     out = o;
     return Status::OK;
 }

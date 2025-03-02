@@ -93,6 +93,8 @@ class scan_handler {
         // disable copy
         scan_cache_dummy(const scan_cache_dummy&) = delete;
         scan_cache_dummy& operator=(const scan_cache_dummy&) = delete;
+        scan_cache_dummy(scan_cache_dummy&&) = default;
+        scan_cache_dummy& operator=(scan_cache_dummy&&) = default;
         scan_cache_dummy() = default;
         ~scan_cache_dummy() = default;
 
@@ -116,7 +118,7 @@ class scan_handler {
         {
             // for strand
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto itr = get_scan_cache().find(hd);
+            auto* itr = get_scan_cache().find(hd);
             if (itr == get_scan_cache().end()) {
                 return Status::WARN_INVALID_HANDLE;
             }
