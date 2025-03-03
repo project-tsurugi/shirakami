@@ -73,12 +73,12 @@ TEST_F(scan_range_check_test, irregular) {
     // ("a", "a"); empty with two EXCLUSIVEs
     EXPECT_EQ(Status::WARN_NOT_FOUND, check_empty_scan_range("a", scan_endpoint::EXCLUSIVE, "a", scan_endpoint::EXCLUSIVE));
 
-    // invalid use
-    // inf with non empty key; this implementation treats these as normal inf
-    // EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INF, "a", scan_endpoint::INCLUSIVE));
-    // EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INCLUSIVE, "a", scan_endpoint::INF));
-    // EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INF, "a", scan_endpoint::INF));
-    // EXPECT_EQ(Status::OK, check_empty_scan_range("a", scan_endpoint::INF, "a", scan_endpoint::INF));
+    // legal, but not legitimate
+    // inf with non empty key; treated these as normal inf
+    EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INF, "a", scan_endpoint::INCLUSIVE));
+    EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INCLUSIVE, "a", scan_endpoint::INF));
+    EXPECT_EQ(Status::OK, check_empty_scan_range("b", scan_endpoint::INF, "a", scan_endpoint::INF));
+    EXPECT_EQ(Status::OK, check_empty_scan_range("a", scan_endpoint::INF, "a", scan_endpoint::INF));
 }
 
 } // namespace shirakami::testing
