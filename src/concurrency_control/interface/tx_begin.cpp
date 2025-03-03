@@ -119,4 +119,68 @@ Status tx_begin(transaction_options options) { // NOLINT
     return ret;
 }
 
+Status tx_clone_body(const Token new_tx, const Token from_tx) { // NOLINT
+    auto* ti = static_cast<session*>(new_tx);
+    if (ti->get_tx_began()) { return Status::WARN_ALREADY_BEGIN; }
+
+    // clear abort result info
+    {
+        std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+        ti->get_result_info().clear();
+    }
+
+    auto* from_ti = static_cast<session*>(from_tx);
+    if (!from_ti->get_tx_began()) { return Status::WARN_ILLEGAL_OPERATION; }
+
+    // tx for new_tx is not began.
+    transaction_options::transaction_type tx_type = from_ti->get_tx_type();
+    if (tx_type == transaction_options::transaction_type::READ_ONLY) {
+        ti->init_flags_for_rtx_begin();
+        auto rc{read_only_tx::tx_clone(ti, from_ti)};
+        if (rc != Status::OK) {
+            LOG_FIRST_N(ERROR, 1)
+                    << log_location_prefix << rc << ", unreachable path";
+            return rc;
+        }
+    } else {
+        return Status::ERR_NOT_IMPLEMENTED;
+    }
+    // begin success, set begin epoch
+    ti->set_begin_epoch(epoch::get_global_epoch());
+
+    // about tx counter
+    if (tx_id::is_max_lower_info(ti->get_tx_counter())) {
+        ti->set_higher_tx_counter(ti->get_higher_tx_counter() + 1);
+        ti->set_tx_counter(0);
+    } else {
+        ti->set_tx_counter(ti->get_tx_counter() + 1);
+    }
+
+    // success tx begin
+    // process about diagnostics
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        ti->set_diag_tx_state_kind(TxState::StateKind::STARTED);
+    } else {
+        // ltx and rtx
+        ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
+    }
+
+    /**
+     * This is for concurrent programming. It teaches to other thread that this
+     * tx began at last.
+     */
+    ti->set_tx_began(true);
+    return Status::OK;
+}
+
+Status tx_clone(const Token new_tx, const Token from_tx) { // NOLINT
+    shirakami_log_entry << "tx_clone, new_tx: " << new_tx << " , from_tx: " << from_tx;
+    auto* ti = static_cast<session*>(new_tx);
+    ti->process_before_start_step();
+    auto ret = tx_clone_body(new_tx, from_tx);
+    ti->process_before_finish_step();
+    shirakami_log_exit << "tx_begin, Status: " << ret;
+    return ret;
+}
+
 } // namespace shirakami

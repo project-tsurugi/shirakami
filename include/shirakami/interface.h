@@ -393,6 +393,8 @@ Status search_key(Token token, Storage storage, std::string_view key,
  */
 Status tx_begin(transaction_options options = {}); // NOLINT
 
+Status tx_clone(Token new_tx, Token from_tx);
+
 /**
  * @brief It updates the record for the given key.
  * @param[in] token the token retrieved by enter()

@@ -15,4 +15,6 @@ extern Status search_key(session* ti, Storage storage, std::string_view key,
 
 extern Status tx_begin(session* ti);
 
+extern Status tx_clone(session* ti, session* from_ti);
+
 } // namespace shirakami::read_only_tx
