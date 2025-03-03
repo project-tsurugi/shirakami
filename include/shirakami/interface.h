@@ -228,37 +228,33 @@ Status insert(Token token, Storage storage,
 Status leave(Token token); // NOLINT
 
 /**
- * @brief This function preserve the specified range of masstree. If you use ltx
+ * @brief start scan and return the scan handle for the specified range.
+ * @details This function preserve the specified range of masstree. If you use ltx
  * mode, it may log forwarding and read information.
  * @param[in] token the token retrieved by enter()
  * @param[in] storage the handle of storage.
- * @param[in] l_key the left end key of range.
- * @param[in] l_end whether including the left end key for this range.
- * @param[in] r_key the right end key of range.
- * @param[in] r_end whether including the right end key for this range.
- * @param[out] handle the handle to identify scanned result. This handle will be
- * deleted at abort function or close_scan command.
- * @param[in] max_size Default is 0. If this argument is 0, it will not use
- * this argument. This argument limits the number of results.
- * @attention This scan limits range which is specified by @b l_key, @b l_end,
- * @b r_key, and @b r_end.
+ * @param[in] l_key the left end key of range. This argument is ignored if `l_end` is scan_endpoint::INF.
+ * @param[in] l_end whether the scan range includes the left end key.
+ * @param[in] r_key the right end key of range. This argument is ignored if `r_end` is scan_endpoint::INF.
+ * @param[in] r_end whether the scan range includes the right end key.
+ * @attention Contrary to yakushima where ranges are strictly validated, this function does not return an error for the
+ * invalid range (condition that results in empty set, e.g. l_key > r_key.) and returns WARN_NOT_FOUND instead.
+ * @param[out] handle the handle to identify scanned result. This handle will be deleted at abort function
+ * or close_scan command.
+ * @param[in] max_size limits the number of results. Default is 0. If this argument is 0, there is no limit.
  * @warning current implementation of `max_size` discards placeholder/tombstone records after fetching `max_size`
  * records from yakushima, so it's possible that the actual number of records fetched is less than `max_size` even
  * though there are plenty of records.
- * @param[in] right_to_left if true, the scan starts from right end to left. Otherwise, left end to rigth.
+ * @param[in] right_to_left if true, the scan starts from right end to left. Otherwise, left end to right.
  * When this is set to true, current implementation has following limitation: 1. `max_size` must be set to 1
  * so that at most one entry is hit and returned as scan result 2. r_end must be scan_endpoint::INF so that the scan
  * is performed from unbounded right end. Status::ERR_FATAL is returned if these conditions are not met.
  * @return Status::OK success.
- * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length
- * should be equal or less than 30KB.
- * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of
- * concurrent open_scan without close_scan.
+ * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length should be equal or less than 30KB.
+ * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of concurrent open_scan without close_scan.
  * @return Status::WARN_NOT_BEGIN The transaction was not begun.
- * @return Status::WARN_NOT_FOUND The scan couldn't find any records. But But
- * the fact that nothing was read is guaranteed by isolation.
- * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait
- * for some high priority transactions.
+ * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait for some high priority transactions.
  * @return Status::WARN_STORAGE_NOT_FOUND The storage is not found.
  * @return Status::ERR_CC Error about concurrency control.
  * @return Status::ERR_READ_AREA_VIOLATION error about read area.
