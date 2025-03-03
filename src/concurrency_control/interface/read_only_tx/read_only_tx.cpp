@@ -99,4 +99,33 @@ Status tx_begin(session* const ti) {
     return Status::OK;
 }
 
+Status tx_clone(session* const ti, session* const from_ti) {
+    // exclude long tx's coming and epoch update
+    auto wp_mutex = std::unique_lock<std::mutex>(wp::get_wp_mutex());
+
+    // get long tx id
+    auto long_tx_id = shirakami::wp::long_tx::get_counter();
+
+    {
+        std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
+
+        // recheck under lock
+        if (!from_ti->get_tx_began()
+            || from_ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+            return Status::WARN_ILLEGAL_OPERATION;
+        }
+
+        auto ep = from_ti->get_valid_epoch();
+        ti->set_valid_epoch(ep);
+
+        // inc long tx counter
+        wp::long_tx::set_counter(long_tx_id + 1);
+
+        // set metadata
+        ti->set_long_tx_id(long_tx_id);
+        ongoing_tx::push_bringing_lock({ep, long_tx_id, ti});
+    }
+    return Status::OK;
+}
+
 } // namespace shirakami::read_only_tx
