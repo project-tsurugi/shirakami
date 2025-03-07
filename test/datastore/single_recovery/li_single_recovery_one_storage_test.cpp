@@ -62,7 +62,7 @@ void create_storage_and_upsert_one_record(std::size_t i) {
     // data creation
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
-    ASSERT_EQ(Status::OK, upsert(s, st, "", "")); // (*1)
+    ASSERT_EQ(Status::OK, upsert(s, st, "", ""));
     ASSERT_EQ(Status::OK, commit(s));             // NOLINT
 
     // cleanup
@@ -88,7 +88,7 @@ void storage_operation_test(std::size_t storage_num) {
     init({database_options::open_mode::RESTORE, log_dir}); // NOLINT
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
-    ASSERT_EQ(storage_num, st_list.size()); // 1 is due to recovery
+    ASSERT_EQ(storage_num, st_list.size());
 
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));

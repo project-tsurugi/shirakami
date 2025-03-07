@@ -87,7 +87,7 @@ TEST_F(li_single_recovery_test,      // NOLINT
     // test: storage num
     std::vector<Storage> st_list{};
     ASSERT_EQ(Status::OK, storage::list_storage(st_list));
-    ASSERT_EQ(st_list.size(), 2); // because single recovery
+    ASSERT_EQ(st_list.size(), 2);
     bool first{true};
     ASSERT_EQ(Status::OK, enter(s));
 
