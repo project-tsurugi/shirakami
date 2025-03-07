@@ -110,8 +110,7 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
 #ifdef PWAL
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "shutdown:start_shutdown_datastore";
-        datastore::get_datastore()
-                ->shutdown(); // this should after epoch::fin();
+        datastore::get_datastore()->shutdown().wait(); // this should after epoch::fin();
         datastore::release_datastore();
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "shutdown:end_shutdown_datastore";
