@@ -34,8 +34,9 @@ inline Status find_open_scan_slot(session* const ti, // NOLINT
     return Status::WARN_MAX_OPEN_SCAN;
 }
 
-constexpr Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
-                                        const std::string_view r_key, const scan_endpoint r_end) {
+// TODO: create a new header file and move this function definition there as constexpr
+Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
+                              const std::string_view r_key, const scan_endpoint r_end) {
     if (r_end == scan_endpoint::INF) {
         return Status::OK; // if right end is inf, not empty
     }
