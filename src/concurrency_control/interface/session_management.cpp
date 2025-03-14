@@ -113,4 +113,32 @@ Status leave(Token const token) { // NOLINT
     return ret;
 }
 
+// TODO: pool
+// FIXME: set session_id
+Status enter_ext_body(Token& token) {
+    session* n = new session; // NOLINT
+    token = static_cast<void*>(n);
+    return Status::OK;
+}
+
+Status enter_ext(Token& token) {
+    shirakami_log_entry << "enter_ext";
+    auto ret = enter_ext_body(token);
+    shirakami_log_exit << "enter_ext, Status: " << ret << ", token: " << token;
+    return ret;
+}
+
+Status leave_ext_body(Token const token) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    delete ti; // NOLINT
+    return Status::OK;
+}
+
+Status leave_ext(Token const token) { // NOLINT
+    shirakami_log_entry << "leave_ext, token: " << token;
+    auto ret = leave_ext_body(token);
+    shirakami_log_exit << "leave_ext, Status: " << ret;
+    return ret;
+}
+
 } // namespace shirakami

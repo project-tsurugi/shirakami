@@ -123,6 +123,8 @@ Status delete_record(Token token, Storage storage, // NOLINT
  */
 Status enter(Token& token); // NOLINT
 
+Status enter_ext(Token& token);
+
 /**
  * @brief Confirm existence of the key in the @a storage.
  * @param[in] token the token retrieved by enter()
@@ -228,6 +230,8 @@ Status insert(Token token, Storage storage,
  * @return Status::ERR_INVALID_ARGS The @b token is invalid.
  */
 Status leave(Token token); // NOLINT
+
+Status leave_ext(Token token); // NOLINT
 
 /**
  * @brief start scan and return the scan handle for the specified range.
