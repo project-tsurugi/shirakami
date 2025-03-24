@@ -209,10 +209,12 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         register_read_version_max_epoch(ver->get_tid().get_epoch());
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         // ok case
-        std::string key_buf{};
-        rec_ptr->get_key(key_buf);
-        ti->insert_to_ltx_storage_read_set(
-                sh.get_scanned_storage_set().get(handle), key_buf);
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            std::string key_buf{};
+            rec_ptr->get_key(key_buf);
+            ti->insert_to_ltx_storage_read_set(
+                    sh.get_scanned_storage_set().get(handle), key_buf);
+        }
         return Status::OK;
     }
 
