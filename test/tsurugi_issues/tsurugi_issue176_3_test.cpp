@@ -63,7 +63,7 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     auto deleted_epoch = ti->get_mrc_tid().get_epoch();
 
     // wait the record is target of gc
-    while (!(deleted_epoch < garbage::get_min_step_epoch() &&
+    while (!(deleted_epoch < garbage::get_min_begin_epoch() &&
              deleted_epoch < garbage::get_min_batch_epoch())) {
         _mm_pause();
     }
