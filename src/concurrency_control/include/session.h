@@ -333,10 +333,6 @@ public:
         return begin_epoch_.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] epoch::epoch_t get_step_epoch() const {
-        return step_epoch_.load(std::memory_order_acquire);
-    }
-
     [[nodiscard]] lock_and_epoch_t get_short_expose_ongoing_status() const {
         return short_expose_ongoing_status_.load(std::memory_order_acquire);
     }
@@ -425,8 +421,6 @@ public:
     // ========== end: getter
 
     void process_before_start_step() {
-        // make sure that step_epoch is set when operating becomes 0 to 1
-        set_step_epoch(epoch::get_global_epoch());
         get_operating()++;
     }
 
@@ -608,10 +602,6 @@ public:
 
     void set_begin_epoch(epoch::epoch_t e) {
         begin_epoch_.store(e, std::memory_order_release);
-    }
-
-    void set_step_epoch(epoch::epoch_t e) {
-        step_epoch_.store(e, std::memory_order_release);
     }
 
     void lock_short_expose_ongoing() {
@@ -843,6 +833,7 @@ private:
      * @brief The stx's step epoch used for judge whether a ltx can start.
      * @attention For internal. Don't clear at tx termination. This is used for
      * lock-free coordination for multi-threads.
+     * @deprecated not used any more, to be removed.
      */
     std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
 
