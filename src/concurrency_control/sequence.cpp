@@ -69,7 +69,7 @@ Status sequence::generate_sequence_id(SequenceId& id) {
 void sequence::gc_sequence_map() {
     // compute gc epoch
     epoch::epoch_t gc_epoch{};
-    gc_epoch = garbage::get_min_step_epoch();
+    gc_epoch = garbage::get_min_begin_epoch();
     if (gc_epoch > garbage::get_min_batch_epoch()) {
         gc_epoch = garbage::get_min_batch_epoch();
     }

@@ -59,13 +59,13 @@ void fin() {
 void work_manager() {
     // compute gc timestamp
     while (!get_flag_manager_end()) {
-        epoch::epoch_t min_step_epoch{epoch::max_epoch}; // for occ
+        epoch::epoch_t min_begin_epoch{epoch::max_epoch}; // for occ
         // computing about short
         epoch::epoch_t before_loop{epoch::get_global_epoch()};
         epoch::epoch_t valid_epoch{0};
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
-                min_step_epoch = std::min(min_step_epoch, se.get_begin_epoch());
+                min_begin_epoch = std::min(min_begin_epoch, se.get_begin_epoch());
                 auto ve = se.get_valid_epoch();
                 if (ve != 0) {
                     if (valid_epoch == 0) {
@@ -76,19 +76,19 @@ void work_manager() {
                 }
             }
         }
-        if (min_step_epoch != epoch::max_epoch) {
+        if (min_begin_epoch != epoch::max_epoch) {
             // find some living tx
-            if (min_step_epoch < epoch::initial_epoch) {
+            if (min_begin_epoch < epoch::initial_epoch) {
                 LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                       << log_location_prefix << "epoch error";
             }
-            set_min_step_epoch(min_step_epoch);
+            set_min_begin_epoch(min_begin_epoch);
         } else {
             /**
              * above loop didn't find living tx. at least, befor_loop epoch is
-             * minimum step epoch.
+             * minimum begin epoch.
              */
-            set_min_step_epoch(before_loop);
+            set_min_begin_epoch(before_loop);
         }
         // computing about ltx
         if (valid_epoch != 0) {
@@ -99,7 +99,7 @@ void work_manager() {
             set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
         }
 #ifdef PWAL
-        switch_available_boundary_version(shirakami::datastore::get_datastore(), std::min(get_min_step_epoch(), get_min_batch_epoch()));
+        switch_available_boundary_version(shirakami::datastore::get_datastore(), std::min(get_min_begin_epoch(), get_min_batch_epoch()));
 #endif
 
         sleepUs(epoch::get_global_epoch_time_us());
@@ -158,7 +158,7 @@ Status check_unhooking_key_state(tid_word check) {
 inline Status check_unhooking_key_ts(tid_word check) {
     if (
             // threshold for stx.
-            check.get_epoch() < garbage::get_min_step_epoch() &&
+            check.get_epoch() < garbage::get_min_begin_epoch() &&
             // this records version is not needed by current and future long tx.
             check.get_epoch() < garbage::get_min_batch_epoch()) {
         return Status::OK;
@@ -261,7 +261,7 @@ void unhooking_keys_and_pruning_versions(
     }
     // Some occ maybe reads the payload of version.
     for (;;) {
-        if ((ver->get_tid().get_epoch() <= get_min_step_epoch())) {
+        if ((ver->get_tid().get_epoch() <= get_min_begin_epoch())) {
             // ver can be watched yet
             pre_ver = ver;
             ver = ver->get_next();
@@ -369,7 +369,7 @@ void force_release_key_memory() {
 void release_key_memory() {
     auto& cont = garbage::get_container_rec();
     // compute minimum epoch
-    auto me = std::min(garbage::get_min_step_epoch(), garbage::get_min_batch_epoch());
+    auto me = std::min(garbage::get_min_begin_epoch(), garbage::get_min_batch_epoch());
     std::size_t erase_count{0};
     for (auto itr = cont.begin(); itr != cont.end();) { // NOLINT
         /**
