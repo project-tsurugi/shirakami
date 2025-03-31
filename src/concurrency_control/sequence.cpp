@@ -2,6 +2,7 @@
  * @file sequence.cpp
  */
 
+#include <algorithm>
 #include <tuple>
 
 #include "sequence.h"
@@ -69,10 +70,7 @@ Status sequence::generate_sequence_id(SequenceId& id) {
 void sequence::gc_sequence_map() {
     // compute gc epoch
     epoch::epoch_t gc_epoch{};
-    gc_epoch = garbage::get_min_begin_epoch();
-    if (gc_epoch > garbage::get_min_batch_epoch()) {
-        gc_epoch = garbage::get_min_batch_epoch();
-    }
+    gc_epoch = std::min(garbage::get_min_begin_epoch(), garbage::get_min_batch_epoch());
     for (auto it = sequence::sequence_map().begin(); // NOLINT
          it != sequence::sequence_map().end();) {
         // avoid range based for-loop since erase() updates base map structure
