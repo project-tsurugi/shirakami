@@ -408,9 +408,9 @@ public:
     // ========== end: getter
 
     void process_before_start_step() {
+#if 0
         // make sure that step_epoch is set when operating becomes 0 to 1
         set_step_epoch(epoch::get_global_epoch());
-#if 0
         get_operating()++;
 #endif
     }
