@@ -229,7 +229,8 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) { lock.lock(); }
         ret = read_from_scan(token, handle, true, key);
     }
     ti->process_before_finish_step();
@@ -246,7 +247,8 @@ Status read_value_from_scan(Token const token, // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) { lock.lock(); }
         ret = read_from_scan(token, handle, false, value);
     }
     ti->process_before_finish_step();
