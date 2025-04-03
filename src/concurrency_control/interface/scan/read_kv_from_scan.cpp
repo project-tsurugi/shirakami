@@ -39,6 +39,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
+    auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();
 
     Record* rec_ptr{};
@@ -70,8 +71,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     // log read range info if ltx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
-                             wp_meta_ptr) != Status::OK) {
+        if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
             // todo special case. interrupt DDL
             return Status::WARN_STORAGE_NOT_FOUND;
         }
@@ -118,15 +118,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (rr == Status::WARN_CONCURRENT_UPDATE) { return rr; }
         // note: update can't log effect, but insert / delete log read effect.
         // optimization: set for re-read
-        ti->push_to_read_set_for_stx(
-                {sh.get_scanned_storage_set().get(handle), rec_ptr, tidb});
+        ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tidb});
 
         // create node set info, maybe phantom (Status::ERR_CC)
         auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
         if (rc == Status::ERR_CC) {
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
-            ti->get_result_info().set_storage_name(
-                    sh.get_scanned_storage_set().get(handle));
+            ti->get_result_info().set_storage_name(sc->get_storage());
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             short_tx::abort(ti);
             return Status::ERR_CC;
@@ -210,8 +208,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
             std::string key_buf{};
             rec_ptr->get_key(key_buf);
-            ti->insert_to_ltx_storage_read_set(
-                    sh.get_scanned_storage_set().get(handle), key_buf);
+            ti->insert_to_ltx_storage_read_set(sc->get_storage(), key_buf);
         }
         return Status::OK;
     }

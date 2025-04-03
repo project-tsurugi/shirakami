@@ -21,6 +21,7 @@ namespace shirakami {
 
 Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
+    auto* sc = static_cast<scan_cache_obj*>(handle);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     auto& sh = ti->get_scan_handle();
@@ -144,10 +145,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 /**
                  * short mode must read deleted record and verify, so add read set
                  */
-                auto& sh = ti->get_scan_handle();
-                ti->push_to_read_set_for_stx(
-                        {sh.get_scanned_storage_set().get(handle), rec_ptr,
-                         tid});
+                ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
@@ -183,6 +181,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
  */
 void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
+    auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();
     /**
      * Check whether the handle is valid.
@@ -199,8 +198,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle)
     // log full scan
     // get storage info
     wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(sh.get_scanned_storage_set().get(handle),
-                         wp_meta_ptr) != Status::OK) {
+    if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
         // todo special case. interrupt DDL
         return;
     }
