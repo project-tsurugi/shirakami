@@ -45,7 +45,7 @@ public:
             allocated_.erase(o);
             delete o; // NOLINT
         }
-        scan_cache_obj& operator[](ScanHandle sh) {return *find(sh);}
+        //scan_cache_obj& operator[](ScanHandle sh) {return *find(sh);}
 
         ScanHandle allocate() {
             auto* n = new scan_cache_obj(); // NOLINT
