@@ -27,15 +27,6 @@ private:
     std::size_t itr_{0U};
 };
 
-class scanned_storage_set {
-// dummy class for transition
-public:
-    Storage get(ScanHandle const hd) {  // NOLINT(misc-misplaced-const,*-functions-to-static)
-        auto* o = static_cast<scan_cache_obj*>(hd);
-        return o->get_storage();
-    }
-};
-
 class scan_handler {
 public:
     class scan_cache_dummy {
@@ -113,10 +104,6 @@ public:
 
     //std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
 
-    scanned_storage_set& get_scanned_storage_set() {
-        return scanned_storage_set_;
-    }
-
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
 
     [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
@@ -137,14 +124,6 @@ private:
      * @brief mutex for scan cache
      */
     //std::shared_mutex mtx_scan_cache_{};
-
-    /**
-     * @brief scanned storage set.
-     * @details As a result of being scanned, the pointer to the record
-     * is retained. However, it does not retain the scanned storage information
-     * . Without it, you will have problems generating read sets.
-     */
-    scanned_storage_set scanned_storage_set_{};
 
     /**
      * @brief range of right endpoint for ltx
