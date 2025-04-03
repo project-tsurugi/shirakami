@@ -31,7 +31,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     {
         // take read lock
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
     }
@@ -189,7 +189,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle)
     {
         // take read lock
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.check_valid_scan_handle(sc) != Status::OK) {
             return;
         }
     }

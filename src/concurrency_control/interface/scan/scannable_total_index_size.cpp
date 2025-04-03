@@ -29,7 +29,7 @@ Status scannable_total_index_size_body(Token const token, ScanHandle const handl
 
     {
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.check_valid_scan_handle(sc) != Status::OK) {
             /**
              * the handle was invalid.
              */

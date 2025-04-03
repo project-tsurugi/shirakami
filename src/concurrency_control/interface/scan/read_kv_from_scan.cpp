@@ -52,7 +52,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         /**
          * Check whether the handle is valid.
          */
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (sh.check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
         // ==========

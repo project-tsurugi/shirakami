@@ -38,8 +38,8 @@ public:
                 it = allocated_.erase(it);
             }
         }
-        scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT
-        scan_cache_obj* end() { return nullptr; } // NOLINT
+        //scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT
+        //scan_cache_obj* end() { return nullptr; } // NOLINT
         void erase(scan_cache_obj* o) {
             std::lock_guard lk{mtx_allocated_};
             allocated_.erase(o);
@@ -80,16 +80,31 @@ public:
         {
             // for strand
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto* itr = get_scan_cache().find(hd);
-            if (itr == get_scan_cache().end()) {
+            auto* sc = static_cast<scan_cache_obj*>(hd);
+            if (check_valid_scan_handle(sc) != Status::OK) {
                 return Status::WARN_INVALID_HANDLE;
             }
-            get_scan_cache().erase(itr);
+            get_scan_cache().erase(sc);
 
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
 
+        return Status::OK;
+    }
+
+    static constexpr bool precise_handle_check = false;
+
+    // NOLINTNEXTLINE
+    Status check_valid_scan_handle(scan_cache_obj* sc) {
+        if constexpr (precise_handle_check) {
+            // unimplemented
+            // check sc is in allocated_
+        } else {
+            if (sc == nullptr) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        }
         return Status::OK;
     }
 
