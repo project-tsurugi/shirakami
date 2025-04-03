@@ -32,6 +32,8 @@ namespace shirakami {
  * @return Status::WARN_ILLEGAL_OPERATION After submitting commit, you must
  * wait the result.
  * @return Status::WARN_NOT_BEGIN This transaction was not begun.
+ * @note Under normal circumstances, this function never returns errors other
+ * than ones listed above.
  */
 Status abort(Token token); // NOLINT
 
