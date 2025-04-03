@@ -13,6 +13,8 @@
 
 namespace shirakami {
 
+class scan_handler;
+
 class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
     [[nodiscard]] Storage get_storage() const { return storage_; }
@@ -24,10 +26,12 @@ public:
     // getter
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
     [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
     // setter
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_parent(scan_handler* parent) { parent_ = parent; }
 
 private:
     Storage storage_{};
@@ -44,6 +48,8 @@ private:
     std::string r_key_{};
 
     scan_endpoint r_end_{};
+
+    scan_handler* parent_{};
 };
 
 class scan_handler {
@@ -74,6 +80,7 @@ public:
 
     scan_cache_obj* allocate() {
         auto* sc = new scan_cache_obj(); // NOLINT
+        sc->set_parent(this);
         std::lock_guard lk{mtx_allocated_};
         allocated_.insert(sc);
         return sc;
@@ -88,7 +95,7 @@ public:
                 return Status::WARN_INVALID_HANDLE;
             }
         } else {
-            if (sc == nullptr) {
+            if (sc == nullptr || sc->get_parent() != this) {
                 return Status::WARN_INVALID_HANDLE;
             }
         }
