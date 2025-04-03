@@ -19,18 +19,6 @@
 
 namespace shirakami {
 
-inline Status find_open_scan_slot(session* const ti, // NOLINT
-                                  ScanHandle& out) {
-    auto& sh = ti->get_scan_handle();
-    if (auto* i = sh.allocate(); i != nullptr) {
-            out = i;
-            // clear cursor info
-            static_cast<scan_cache_obj*>(i)->get_scan_index() = 0;
-            return Status::OK;
-    }
-    return Status::WARN_MAX_OPEN_SCAN;
-}
-
 // TODO: create a new header file and move this function definition there as constexpr
 Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
                               const std::string_view r_key, const scan_endpoint r_end) {
@@ -397,11 +385,13 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         // lock for strand
         //std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
 
-        // find slot to log scan result.
-        auto rc = find_open_scan_slot(ti, handle);
-        if (rc != Status::OK) { return rc; }
+        auto* sc = sh.allocate();
+        if (sc == nullptr) {
+            return Status::WARN_MAX_OPEN_SCAN;
+        }
+        handle = sc;
 
-        auto* sc = static_cast<scan_cache_obj*>(handle);
+        sc->get_scan_index() = 0; // clear cursor info
         sc->get_storage() = storage;
         auto& vec = sc->get_vec();
         vec.reserve(scan_res.size());
