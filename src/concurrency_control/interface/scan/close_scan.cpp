@@ -22,7 +22,7 @@ namespace shirakami {
 Status close_scan_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    return ti->get_scan_handle().clear(handle);
+    return ti->get_scan_handle().clear(static_cast<scan_cache_obj*>(handle));
 }
 
 Status close_scan(Token const token, ScanHandle const handle) { // NOLINT

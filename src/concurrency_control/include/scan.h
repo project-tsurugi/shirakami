@@ -38,9 +38,8 @@ public:
         }
     }
 
-    Status clear(ScanHandle hd) {
+    Status clear(scan_cache_obj* sc) {
         // about scan cache
-        auto* sc = static_cast<scan_cache_obj*>(hd);
         if (check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
@@ -57,11 +56,11 @@ public:
         return Status::OK;
     }
 
-    ScanHandle allocate() {
-        auto* n = new scan_cache_obj(); // NOLINT
+    scan_cache_obj* allocate() {
+        auto* sc = new scan_cache_obj(); // NOLINT
         std::lock_guard lk{mtx_allocated_};
-        allocated_.insert(n);
-        return n;
+        allocated_.insert(sc);
+        return sc;
     }
 
     Status check_valid_scan_handle(scan_cache_obj* sc) {
