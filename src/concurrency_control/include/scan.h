@@ -28,51 +28,15 @@ private:
 
 class scan_handler {
 public:
-    // dummy class for transition
-    class scan_cache_dummy {
-    public:
-        void clear() {
+    void clear() {
+        {
+            // for strand
+            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
             std::lock_guard lk{mtx_allocated_};
             for (auto it = allocated_.begin(); it != allocated_.end(); ) {
                 delete *it; // NOLINT
                 it = allocated_.erase(it);
             }
-        }
-        //scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT
-        //scan_cache_obj* end() { return nullptr; } // NOLINT
-        void erase(scan_cache_obj* o) {
-            std::lock_guard lk{mtx_allocated_};
-            allocated_.erase(o);
-            delete o; // NOLINT
-        }
-        //scan_cache_obj& operator[](ScanHandle sh) {return *find(sh);}
-
-        ScanHandle allocate() {
-            auto* n = new scan_cache_obj(); // NOLINT
-            std::lock_guard lk{mtx_allocated_};
-            allocated_.insert(n);
-            return n;
-        }
-
-        // disable copy
-        scan_cache_dummy(const scan_cache_dummy&) = delete;
-        scan_cache_dummy& operator=(const scan_cache_dummy&) = delete;
-        scan_cache_dummy(scan_cache_dummy&&) = delete;
-        scan_cache_dummy& operator=(scan_cache_dummy&&) = delete;
-        scan_cache_dummy() = default;
-        ~scan_cache_dummy() = default;
-
-    private:
-        std::set<scan_cache_obj*> allocated_{};
-        std::mutex mtx_allocated_;
-    };
-    using scan_cache_type = scan_cache_dummy;
-
-    void clear() {
-        {
-            // for strand
-            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            get_scan_cache().clear();
         }
     }
 
@@ -84,7 +48,11 @@ public:
             if (check_valid_scan_handle(sc) != Status::OK) {
                 return Status::WARN_INVALID_HANDLE;
             }
-            get_scan_cache().erase(sc);
+            {
+                std::lock_guard lk{mtx_allocated_};
+                allocated_.erase(sc);
+                delete sc; // NOLINT
+            }
 
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
@@ -93,13 +61,22 @@ public:
         return Status::OK;
     }
 
+    ScanHandle allocate() {
+        auto* sc = new scan_cache_obj(); // NOLINT
+        std::lock_guard lk{mtx_allocated_};
+        allocated_.insert(sc);
+        return sc;
+    }
+
     static constexpr bool precise_handle_check = false;
 
-    // NOLINTNEXTLINE
     Status check_valid_scan_handle(scan_cache_obj* sc) {
         if constexpr (precise_handle_check) {
-            // unimplemented
-            // check sc is in allocated_
+            // for strand
+            std::lock_guard lk{mtx_allocated_};
+            if (allocated_.find(sc) == allocated_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
         } else {
             if (sc == nullptr) {
                 return Status::WARN_INVALID_HANDLE;
@@ -109,12 +86,6 @@ public:
     }
 
     // getter
-
-    [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
-        return scan_cache_;
-    }
-
-    //std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
 
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
 
@@ -127,15 +98,16 @@ public:
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
 
 private:
-    /**
-     * @brief cache of index scan.
-     */
-    scan_cache_type scan_cache_{};
 
     /**
-     * @brief mutex for scan cache
+     * @brief set of scan cache objects allocated from this handler
      */
-    //std::shared_mutex mtx_scan_cache_{};
+    std::set<scan_cache_obj*> allocated_{};
+
+    /**
+     * @brief mutex for allocated set
+     */
+    std::mutex mtx_allocated_;
 
     /**
      * @brief range of right endpoint for ltx
