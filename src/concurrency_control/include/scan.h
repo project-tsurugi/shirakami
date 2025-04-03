@@ -15,15 +15,16 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
-    Storage& get_storage() { return storage_; }
-    auto& get_vec() { return vec_; }
-    std::size_t& get_scan_index() { return scan_index_; }
-
     // getter
+    [[nodiscard]] Storage get_storage() const { return storage_; }
+    auto& get_vec() { return vec_; }
+    [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
+    std::size_t& get_scan_index_ref() { return scan_index_; }
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
     [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
 
     // setter
+    void set_storage(Storage storage) { storage_ = storage; }
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
 
@@ -32,7 +33,7 @@ private:
     std::vector<std::tuple<const Record*,
                            yakushima::node_version64_body,
                            yakushima::node_version64*>> vec_;
-    std::size_t scan_index_{};
+    std::size_t scan_index_{0U};
 
     /**
      * @brief range of right endpoint for ltx

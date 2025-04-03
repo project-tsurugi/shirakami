@@ -43,7 +43,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         {
             // take read lock
             //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-            std::size_t& scan_index = sc->get_scan_index();
+            std::size_t& scan_index = sc->get_scan_index_ref();
             ++scan_index;
 
             auto& scan_buf = sc->get_vec();

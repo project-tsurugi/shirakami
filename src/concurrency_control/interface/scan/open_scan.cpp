@@ -391,8 +391,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         }
         handle = sc;
 
-        sc->get_scan_index() = 0; // clear cursor info
-        sc->get_storage() = storage;
+        sc->set_storage(storage);
         auto& vec = sc->get_vec();
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
@@ -405,7 +404,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
 
         // increment for head skipped records
         // may need mutex for strand
-        std::size_t& scan_index = sc->get_scan_index();
+        std::size_t& scan_index = sc->get_scan_index_ref();
         scan_index += head_skip_rec_n;
 
         sc->set_r_key(r_key);

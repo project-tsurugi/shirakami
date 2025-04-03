@@ -58,7 +58,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // ==========
 
         auto& scan_buf = sc->get_vec();
-        std::size_t& scan_index = sc->get_scan_index();
+        std::size_t scan_index = sc->get_scan_index();
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
