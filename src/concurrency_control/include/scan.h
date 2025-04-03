@@ -109,6 +109,9 @@ private:
      */
     std::mutex mtx_allocated_;
 
+    /**
+     * @brief set of allocated objects from this handler
+     */
     std::set<scan_cache_obj*> allocated_{};
 };
 
