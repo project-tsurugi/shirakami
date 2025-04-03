@@ -57,7 +57,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // ==========
 
         auto& scan_buf = sc->get_vec();
-        std::size_t& scan_index = sc->get_itr();
+        std::size_t scan_index = sc->get_itr();
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);

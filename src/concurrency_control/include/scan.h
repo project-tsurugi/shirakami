@@ -17,7 +17,8 @@ class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
     [[nodiscard]] Storage get_storage() const { return storage_; }
     auto& get_vec() { return vec_; }
-    std::size_t& get_itr() { return itr_; }
+    [[nodiscard]] std::size_t get_itr() const { return itr_; }
+    std::size_t& get_itr_ref() { return itr_; }
     void set_storage(Storage storage) { storage_ = storage; }
 
     // getter

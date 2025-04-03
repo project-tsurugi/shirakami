@@ -401,7 +401,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
 
         // increment for head skipped records
         // may need mutex for strand
-        std::size_t& scan_index = sc->get_itr();
+        std::size_t& scan_index = sc->get_itr_ref();
         scan_index += head_skip_rec_n;
 
         sc->set_r_key(r_key);
