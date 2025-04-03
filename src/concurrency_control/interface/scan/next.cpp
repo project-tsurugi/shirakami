@@ -43,17 +43,16 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         {
             // take read lock
             //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-            std::size_t& scan_index = sh.get_scan_cache()[handle].get_itr();
+            std::size_t& scan_index = sc->get_itr();
             ++scan_index;
 
             // check range of cursor
-            if (sh.get_scan_cache()[handle].get_vec()
-                        .size() <= scan_index) {
+            if (sc->get_vec().size() <= scan_index) {
                 return Status::WARN_SCAN_LIMIT;
             }
 
             // check target record
-            auto& scan_buf = sh.get_scan_cache()[handle].get_vec();
+            auto& scan_buf = sc->get_vec();
             auto itr = scan_buf.begin() + scan_index; // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }

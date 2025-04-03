@@ -24,6 +24,7 @@ Status scannable_total_index_size_body(Token const token, ScanHandle const handl
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
+    auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();
 
     {
@@ -35,7 +36,7 @@ Status scannable_total_index_size_body(Token const token, ScanHandle const handl
             return Status::WARN_INVALID_HANDLE;
         }
 
-        size = sh.get_scan_cache()[handle].get_vec().size();
+        size = sc->get_vec().size();
     }
     return Status::OK;
 }

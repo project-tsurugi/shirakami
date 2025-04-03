@@ -397,8 +397,9 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
         auto rc = find_open_scan_slot(ti, handle);
         if (rc != Status::OK) { return rc; }
 
-        sh.get_scan_cache()[handle].set_storage(storage);
-        auto& vec = sh.get_scan_cache()[handle].get_vec();
+        auto* sc = static_cast<scan_cache_obj*>(handle);
+        sc->set_storage(storage);
+        auto& vec = sc->get_vec();
         vec.reserve(scan_res.size());
         for (std::size_t i = 0; i < scan_res.size(); ++i) {
             vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
@@ -410,7 +411,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
 
         // increment for head skipped records
         // may need mutex for strand
-        std::size_t& scan_index = ti->get_scan_handle().get_scan_cache()[handle].get_itr();
+        std::size_t& scan_index = sc->get_itr();
         scan_index += head_skip_rec_n;
 
         sh.set_r_key(r_key);
