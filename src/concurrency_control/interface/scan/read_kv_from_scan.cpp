@@ -22,7 +22,6 @@ namespace shirakami {
 Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                       std::string& buf) {
     auto* ti = static_cast<session*>(token);
-    auto* sc = static_cast<scan_cache_obj*>(handle);
 
     // for register point read information.
     auto read_register_if_ltx = [ti](Record* rec_ptr) {
@@ -40,7 +39,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
-    auto& sh = ti->get_scan_handle();
+    auto* sc = static_cast<scan_cache_obj*>(handle);
 
     Record* rec_ptr{};
     yakushima::node_version64* nv_ptr{};
@@ -52,7 +51,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         /**
          * Check whether the handle is valid.
          */
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
         // ==========

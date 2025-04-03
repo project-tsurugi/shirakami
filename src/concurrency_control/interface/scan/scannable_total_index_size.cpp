@@ -25,11 +25,10 @@ Status scannable_total_index_size_body(Token const token, ScanHandle const handl
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
     auto* sc = static_cast<scan_cache_obj*>(handle);
-    auto& sh = ti->get_scan_handle();
 
     {
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
             /**
              * the handle was invalid.
              */

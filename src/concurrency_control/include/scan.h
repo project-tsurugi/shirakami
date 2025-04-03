@@ -39,8 +39,8 @@ public:
                 it = allocated.erase(it);
             }
         }
-        scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT(readability-convert-member-functions-to-static)
-        scan_cache_obj* end() { return nullptr; } // NOLINT(readability-convert-member-functions-to-static)
+        //scan_cache_obj* find(ScanHandle sh) { return static_cast<scan_cache_obj*>(sh); } // NOLINT(readability-convert-member-functions-to-static)
+        //scan_cache_obj* end() { return nullptr; } // NOLINT(readability-convert-member-functions-to-static)
         void erase(scan_cache_obj* o) {
             std::lock_guard lk{allocated_mtx};
             allocated.erase(o);
@@ -82,17 +82,33 @@ public:
         {
             // for strand
             //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto* itr = get_scan_cache().find(hd);
-            if (itr == get_scan_cache().end()) {
+            auto* sc = static_cast<scan_cache_obj*>(hd);
+            if (check_valid_scan_handle(sc) != Status::OK) {
                 return Status::WARN_INVALID_HANDLE;
             }
-            get_scan_cache().erase(itr);
+            get_scan_cache().erase(sc);
 
             // about scan cache iterator
             set_r_key("");
             set_r_end(scan_endpoint::EXCLUSIVE);
         }
 
+        return Status::OK;
+    }
+
+    Status check_valid_scan_handle(scan_cache_obj* sc) {
+        constexpr bool heavy_check = false;
+        if constexpr (heavy_check) {
+            // for strand
+            std::lock_guard lk{mtx_allocated_};
+            if (allocated_.find(sc) == allocated_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        } else {
+            if (sc == nullptr) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        }
         return Status::OK;
     }
 

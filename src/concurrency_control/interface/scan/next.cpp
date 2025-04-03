@@ -24,14 +24,13 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* sc = static_cast<scan_cache_obj*>(handle);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
-    auto& sh = ti->get_scan_handle();
     /**
      * Check whether the handle is valid.
      */
     {
         // take read lock
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
     }
@@ -188,7 +187,7 @@ void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle)
     {
         // take read lock
         //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.get_scan_cache().find(handle) == sh.get_scan_cache().end()) {
+        if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
             return;
         }
     }
