@@ -18,12 +18,30 @@ public:
     Storage& get_storage() { return storage_; }
     auto& get_vec() { return vec_; }
     std::size_t& get_scan_index() { return scan_index_; }
+
+    // getter
+    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
+    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+
+    // setter
+    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
+    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+
 private:
     Storage storage_{};
     std::vector<std::tuple<const Record*,
                            yakushima::node_version64_body,
                            yakushima::node_version64*>> vec_;
     std::size_t scan_index_{};
+
+    /**
+     * @brief range of right endpoint for ltx
+     * @details if user read to right endpoint till scan limit, shirakami needs
+     * to know this information to log range info.
+     */
+    std::string r_key_{};
+
+    scan_endpoint r_end_{};
 };
 
 class scan_handler {
@@ -52,9 +70,6 @@ public:
                 allocated_.erase(sc);
                 delete sc; // NOLINT
             }
-
-            set_r_key("");
-            set_r_end(scan_endpoint::EXCLUSIVE);
         }
 
         return Status::OK;
@@ -84,18 +99,6 @@ public:
         return Status::OK;
     }
 
-    // getter
-
-    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
-
-    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
-
-    // setter
-
-    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
-
-    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
-
 private:
 
     /**
@@ -107,15 +110,6 @@ private:
      * @brief mutex for allocated set
      */
     std::mutex mtx_allocated_;
-
-    /**
-     * @brief range of right endpoint for ltx
-     * @details if user read to right endpoint till scan limit, shirakami needs
-     * to know this information to log range info.
-     */
-    std::string r_key_{};
-
-    scan_endpoint r_end_{};
 };
 
 } // namespace shirakami
