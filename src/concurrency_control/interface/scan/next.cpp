@@ -180,7 +180,6 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
 void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_cache_obj*>(handle);
-    auto& sh = ti->get_scan_handle();
     /**
      * Check whether the handle is valid.
      */
@@ -205,11 +204,11 @@ void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle)
 
         auto& read_range =
                 std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        if (std::get<2>(read_range) < sh.get_r_key()) {
-            std::get<2>(read_range) = sh.get_r_key();
+        if (std::get<2>(read_range) < sc->get_r_key()) {
+            std::get<2>(read_range) = sc->get_r_key();
         }
         // conside only inf
-        if (sh.get_r_end() == scan_endpoint::INF) {
+        if (sc->get_r_end() == scan_endpoint::INF) {
             std::get<3>(read_range) = scan_endpoint::INF;
         }
     }
