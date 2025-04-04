@@ -56,7 +56,6 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
         // ==========
 
-        scan_handler::scan_elem_type target_elem;
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
