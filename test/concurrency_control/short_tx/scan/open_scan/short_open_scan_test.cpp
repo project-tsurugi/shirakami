@@ -56,44 +56,38 @@ TEST_F(open_scan_test, max_size_test) { // NOLINT
 
     // open scan
     ScanHandle handle{};
-    auto* ti{static_cast<session*>(s)};
-    auto& sh = ti->get_scan_handle();
+    std::size_t len{};
     {
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        ASSERT_EQ(scan_buf.size(), 3);
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 1));
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        ASSERT_EQ(scan_buf.size(), 1);
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, 1);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 2));
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        ASSERT_EQ(scan_buf.size(), 2);
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, 2);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 3));
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        ASSERT_EQ(scan_buf.size(), 3);
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, 3);
     }
     {
         ASSERT_EQ(Status::OK, open_scan(s, storage, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle, 4));
-        auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        ASSERT_EQ(scan_buf.size(), 3);
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, 3);
     }
 }
 
