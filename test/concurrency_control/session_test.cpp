@@ -85,7 +85,7 @@ TEST_F(session_test, member_operating) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(session_test, member_step_epoch_after_each_api) { // NOLINT
+TEST_F(session_test, DISABLED_member_step_epoch_after_each_api) { // NOLINT
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     // prepare data

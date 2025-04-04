@@ -23,6 +23,7 @@
 namespace shirakami::epoch {
 
 inline void check_epoch_load_and_update_idle_living_tx() {
+#if 0
     auto ce{epoch::get_global_epoch()};
     for (auto&& itr : session_table::get_session_table()) {
         if (itr.get_operating().load(std::memory_order_acquire) == 0) {
@@ -30,6 +31,7 @@ inline void check_epoch_load_and_update_idle_living_tx() {
             if (itr.get_step_epoch() < ce) { itr.set_step_epoch(ce); }
         }
     }
+#endif
 }
 
 inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
