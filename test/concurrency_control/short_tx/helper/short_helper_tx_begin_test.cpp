@@ -200,7 +200,7 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     ScanHandle handle = {};
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k,
                                     scan_endpoint::INCLUSIVE, handle));
-    ASSERT_EQ(handle, 0);
+    ASSERT_NE(handle, nullptr);
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));
     ASSERT_EQ(ti->get_tx_began(), false);
@@ -208,7 +208,7 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
               tx_begin({s, transaction_options::transaction_type::SHORT}));
     ASSERT_EQ(Status::OK, open_scan(s, storage, k, scan_endpoint::INCLUSIVE, k,
                                     scan_endpoint::INCLUSIVE, handle));
-    ASSERT_EQ(handle, 0);
+    ASSERT_NE(handle, nullptr);
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, commit(s));
     // cleanup
