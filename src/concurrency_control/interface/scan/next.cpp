@@ -45,16 +45,15 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
             ++scan_index;
 
+            auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
+                    sh.get_scan_cache()[handle]);
             // check range of cursor
-            if (std::get<scan_handler::scan_cache_vec_pos>(
-                        sh.get_scan_cache()[handle])
-                        .size() <= scan_index) {
+            if (scan_buf.size() <= scan_index) {
+                scan_index = scan_buf.size(); // stop at scan_buf.size
                 return Status::WARN_SCAN_LIMIT;
             }
 
             // check target record
-            auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
-                    sh.get_scan_cache()[handle]);
             auto itr = scan_buf.begin() + scan_index; // NOLINT
             rec_ptr = const_cast<Record*>(std::get<0>(*itr));
         }

@@ -59,10 +59,10 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);
-        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
 
         // ==========
         rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
