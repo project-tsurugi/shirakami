@@ -57,30 +57,24 @@ private:
 class scan_handler {
 public:
     void clear() {
-        {
-            // for strand
-            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            std::lock_guard lk{mtx_allocated_};
-            for (auto it = allocated_.begin(); it != allocated_.end(); ) {
-                delete *it; // NOLINT
-                it = allocated_.erase(it);
-            }
+        // for strand
+        std::lock_guard lk{mtx_allocated_};
+        for (auto it = allocated_.begin(); it != allocated_.end(); ) {
+            delete *it; // NOLINT
+            it = allocated_.erase(it);
         }
     }
 
     Status clear(scan_cache_obj* sc) {
+        if (check_valid_scan_handle(sc) != Status::OK) {
+            return Status::WARN_INVALID_HANDLE;
+        }
         {
             // for strand
-            //std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            if (check_valid_scan_handle(sc) != Status::OK) {
-                return Status::WARN_INVALID_HANDLE;
-            }
-            {
-                std::lock_guard lk{mtx_allocated_};
-                allocated_.erase(sc);
-                delete sc; // NOLINT
-            }
+            std::lock_guard lk{mtx_allocated_};
+            allocated_.erase(sc);
         }
+        delete sc; // NOLINT
 
         return Status::OK;
     }

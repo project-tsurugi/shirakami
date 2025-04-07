@@ -42,31 +42,21 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();
 
-    Record* rec_ptr{};
-    yakushima::node_version64* nv_ptr{};
-    yakushima::node_version64_body nv{};
-    {
-        // take read lock
-        //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        // ==========
-        /**
-         * Check whether the handle is valid.
-         */
-        if (sh.check_valid_scan_handle(sc) != Status::OK) {
-            return Status::WARN_INVALID_HANDLE;
-        }
-        // ==========
-
-        auto& scan_buf = sc->get_vec();
-        std::size_t scan_index = sc->get_scan_index();
-        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
-        auto itr = scan_buf.begin() + scan_index; // NOLINT
-        nv = std::get<1>(*itr);
-        nv_ptr = std::get<2>(*itr);
-
-        // ==========
-        rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    /**
+     * Check whether the handle is valid.
+     */
+    if (sh.check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
     }
+
+    auto& scan_buf = sc->get_vec();
+    std::size_t scan_index = sc->get_scan_index();
+    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+    auto itr = scan_buf.begin() + scan_index; // NOLINT
+    yakushima::node_version64_body nv = std::get<1>(*itr);
+    yakushima::node_version64* nv_ptr = std::get<2>(*itr);
+
+    Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
 
     // log read range info if ltx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {

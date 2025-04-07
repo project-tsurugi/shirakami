@@ -24,39 +24,29 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* sc = static_cast<scan_cache_obj*>(handle);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
-    auto& sh = ti->get_scan_handle();
     /**
      * Check whether the handle is valid.
      */
-    {
-        // take read lock
-        //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.check_valid_scan_handle(sc) != Status::OK) {
-            return Status::WARN_INVALID_HANDLE;
-        }
+    if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
     }
     // valid handle
 
     // increment cursor
     for (;;) {
-        Record* rec_ptr{};
-        {
-            // take read lock
-            //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-            std::size_t& scan_index = sc->get_scan_index_ref();
-            ++scan_index;
+        std::size_t& scan_index = sc->get_scan_index_ref();
+        ++scan_index;
 
-            auto& scan_buf = sc->get_vec();
-            // check range of cursor
-            if (scan_buf.size() <= scan_index) {
-                scan_index = scan_buf.size(); // stop at scan_buf.size
-                return Status::WARN_SCAN_LIMIT;
-            }
-
-            // check target record
-            auto itr = scan_buf.begin() + scan_index; // NOLINT
-            rec_ptr = const_cast<Record*>(std::get<0>(*itr));
+        auto& scan_buf = sc->get_vec();
+        // check range of cursor
+        if (scan_buf.size() <= scan_index) {
+            scan_index = scan_buf.size(); // stop at scan_buf.size
+            return Status::WARN_SCAN_LIMIT;
         }
+
+        // check target record
+        auto itr = scan_buf.begin() + scan_index; // NOLINT
+        Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
 
         write_set_obj* inws{};
         if (ti->get_tx_type() !=
@@ -186,12 +176,8 @@ void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle)
     /**
      * Check whether the handle is valid.
      */
-    {
-        // take read lock
-        //std::shared_lock<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-        if (sh.check_valid_scan_handle(sc) != Status::OK) {
-            return;
-        }
+    if (sh.check_valid_scan_handle(sc) != Status::OK) {
+        return;
     }
     // valid handle
 

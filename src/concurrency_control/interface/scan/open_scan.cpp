@@ -380,36 +380,29 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // Cache a pointer to record.
-    auto& sh = ti->get_scan_handle();
-    {
-        // lock for strand
-        //std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-
-        auto* sc = sh.allocate();
-        if (sc == nullptr) {
-            return Status::WARN_MAX_OPEN_SCAN;
-        }
-        handle = sc;
-
-        sc->set_storage(storage);
-        auto& vec = sc->get_vec();
-        vec.reserve(scan_res.size());
-        for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
-                                     std::get<index_rec_ptr>(scan_res.at(i))),
-                             // by inline optimization
-                             std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
-                             std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
-        }
-
-        // increment for head skipped records
-        // may need mutex for strand
-        std::size_t& scan_index = sc->get_scan_index_ref();
-        scan_index += head_skip_rec_n;
-
-        sc->set_r_key(r_key);
-        sc->set_r_end(r_end);
+    auto* sc = ti->get_scan_handle().allocate();
+    if (sc == nullptr) {
+        return Status::WARN_MAX_OPEN_SCAN;
     }
+    handle = sc;
+
+    sc->set_storage(storage);
+    auto& vec = sc->get_vec();
+    vec.reserve(scan_res.size());
+    for (std::size_t i = 0; i < scan_res.size(); ++i) {
+        vec.emplace_back(reinterpret_cast<Record*>(std::get<index_rec_ptr>(scan_res.at(i))), // NOLINT
+                         // by inline optimization
+                         std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
+                         std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+    }
+
+    // increment for head skipped records
+    std::size_t& scan_index = sc->get_scan_index_ref();
+    scan_index += head_skip_rec_n;
+
+    sc->set_r_key(r_key);
+    sc->set_r_end(r_end);
+
     return fin_process(ti, Status::OK);
 }
 
