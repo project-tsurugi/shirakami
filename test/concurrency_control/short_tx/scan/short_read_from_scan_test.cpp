@@ -9,6 +9,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "test_tool.h"
 
 namespace shirakami::testing {
 
@@ -127,6 +128,61 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
     ASSERT_EQ(Status::OK, leave(s));
     ASSERT_EQ(Status::OK, leave(s2));
+}
+
+TEST_F(simple_scan, reach_limit) { // NOLINT
+    // regression test
+    // after next() returns SCAN_LIMIT, read_from_scan() causes UB (buffer overflow) in old shirakami
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_OK(enter(s));
+    for (std::size_t i = 1; i < 256; i++) {
+        // insert another entry
+        ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ASSERT_OK(insert(s, st, std::to_string(i), "v"));
+        ASSERT_OK(commit(s));
+
+        ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+        ScanHandle handle{};
+        ASSERT_OK(open_scan(s, st, {}, scan_endpoint::INF, {}, scan_endpoint::INF, handle));
+        std::uint64_t len;
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, i);
+        while (true) {
+            auto rc = next(s, handle);
+            if (rc == Status::OK) { continue; } // ignore records
+            ASSERT_EQ(rc, Status::WARN_SCAN_LIMIT);
+            break;
+        }
+        std::string sb{};
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_value_from_scan(s, handle, sb));
+        ASSERT_OK(close_scan(s, handle));
+        ASSERT_OK(commit(s));
+    }
+}
+
+TEST_F(simple_scan, exceed_limit) { // NOLINT
+    // regression test
+    // after next() returns SCAN_LIMIT, read_from_scan() causes UB (buffer overflow) in old shirakami
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(insert(s, st, "1", "1"));
+    ScanHandle handle{};
+    ASSERT_OK(open_scan(s, st, {}, scan_endpoint::INF, {}, scan_endpoint::INF, handle));
+    // ignore first entry
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
+    std::string sb{};
+    for (unsigned int i = 0; i < 0x10000; i++) {
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, handle));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
+        ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_value_from_scan(s, handle, sb));
+    }
+    ASSERT_OK(abort(s));
 }
 
 } // namespace shirakami::testing

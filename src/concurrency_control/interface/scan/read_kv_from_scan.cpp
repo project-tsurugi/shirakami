@@ -56,14 +56,13 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         }
         // ==========
 
-        scan_handler::scan_elem_type target_elem;
         auto& scan_buf = std::get<scan_handler::scan_cache_vec_pos>(
                 sh.get_scan_cache()[handle]);
         std::size_t& scan_index = sh.get_scan_cache_itr()[handle];
+        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         nv = std::get<1>(*itr);
         nv_ptr = std::get<2>(*itr);
-        if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
 
         // ==========
         rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
@@ -209,10 +208,12 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         register_read_version_max_epoch(ver->get_tid().get_epoch());
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         // ok case
-        std::string key_buf{};
-        rec_ptr->get_key(key_buf);
-        ti->insert_to_ltx_storage_read_set(
-                sh.get_scanned_storage_set().get(handle), key_buf);
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            std::string key_buf{};
+            rec_ptr->get_key(key_buf);
+            ti->insert_to_ltx_storage_read_set(
+                    sh.get_scanned_storage_set().get(handle), key_buf);
+        }
         return Status::OK;
     }
 

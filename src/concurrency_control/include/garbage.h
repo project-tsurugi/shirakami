@@ -33,7 +33,7 @@ using stats_info_type =
 
 /**
  * @brief garbage collection manager thread.
- * @details Periodically calculate @a min_step_epoch and @a min_batch_epoch.
+ * @details Periodically calculate @a min_begin_epoch and @a min_batch_epoch.
  */
 [[maybe_unused]] inline std::thread manager; // NOLINT
 
@@ -130,10 +130,9 @@ get_container_rec() {
 // timestamps
 //================================================================================
 /**
- * @brief The minimum epoch in which a valid transitional step has been
- * performed on all worker threads.
+ * @brief The minimum epoch of transaction begin on all worker threads.
  */
-inline std::atomic<epoch::epoch_t> min_step_epoch_{epoch::initial_epoch};
+inline std::atomic<epoch::epoch_t> min_begin_epoch_{epoch::initial_epoch};
 
 /**
  * @brief The minimum epoch of a batch transaction running on all worker
@@ -142,8 +141,8 @@ inline std::atomic<epoch::epoch_t> min_step_epoch_{epoch::initial_epoch};
 inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
 
 // getter
-[[maybe_unused]] static epoch::epoch_t get_min_step_epoch() {
-    return min_step_epoch_.load(std::memory_order_acquire);
+[[maybe_unused]] static epoch::epoch_t get_min_begin_epoch() {
+    return min_begin_epoch_.load(std::memory_order_acquire);
 }
 
 [[maybe_unused]] static epoch::epoch_t get_min_batch_epoch() {
@@ -151,8 +150,8 @@ inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
 }
 
 // setter
-[[maybe_unused]] static void set_min_step_epoch(epoch::epoch_t e) {
-    min_step_epoch_.store(e, std::memory_order_release);
+[[maybe_unused]] static void set_min_begin_epoch(epoch::epoch_t e) {
+    min_begin_epoch_.store(e, std::memory_order_release);
 }
 
 [[maybe_unused]] static void set_min_batch_epoch(epoch::epoch_t e) {
