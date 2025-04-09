@@ -36,7 +36,7 @@ private:
     Storage storage_{};
     std::vector<std::tuple<const Record*,
                            yakushima::node_version64_body,
-                           yakushima::node_version64*>> vec_;
+                           yakushima::node_version64*>> vec_{};
     std::size_t scan_index_{0U};
 
     /**
@@ -65,7 +65,7 @@ public:
         }
     }
 
-    Status clear(scan_cache_obj* sc) {
+    Status delete_scan_cache(scan_cache_obj* sc) {
         if (check_valid_scan_handle(sc) != Status::OK) {
             return Status::WARN_INVALID_HANDLE;
         }
@@ -79,7 +79,7 @@ public:
         return Status::OK;
     }
 
-    scan_cache_obj* allocate() {
+    scan_cache_obj* create_scan_cache() {
         auto* sc = new scan_cache_obj(); // NOLINT
         sc->set_parent(this);
         std::lock_guard lk{mtx_allocated_};
@@ -87,6 +87,8 @@ public:
         return sc;
     }
 
+    // for shirakami user code debugging
+    // note: precise-handle-check may cause concurrent contentions problems
     static constexpr bool precise_handle_check = false;
 
     Status check_valid_scan_handle(scan_cache_obj* sc) {

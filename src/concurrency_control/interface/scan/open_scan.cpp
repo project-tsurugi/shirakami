@@ -380,7 +380,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().allocate();
+    auto* sc = ti->get_scan_handle().create_scan_cache();
     if (sc == nullptr) {
         return Status::WARN_MAX_OPEN_SCAN;
     }
@@ -397,7 +397,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // increment for head skipped records
-    std::size_t& scan_index = sc->get_scan_index_ref();
+    auto& scan_index = sc->get_scan_index_ref();
     scan_index += head_skip_rec_n;
 
     sc->set_r_key(r_key);

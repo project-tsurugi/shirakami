@@ -34,7 +34,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
 
     // increment cursor
     for (;;) {
-        std::size_t& scan_index = sc->get_scan_index_ref();
+        auto& scan_index = sc->get_scan_index_ref();
         ++scan_index;
 
         auto& scan_buf = sc->get_vec();
