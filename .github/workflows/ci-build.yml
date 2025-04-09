@@ -1,20 +1,26 @@
 name: Shirakami-CI
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      os:
+        type: string
+        default: 'ubuntu-22.04'
 
 jobs:
   Build:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
         test-group: [tl_cc, tl_others] # tl: test label
     runs-on: [self-hosted, docker]
     permissions:
       checks: write
     timeout-minutes: 30
     container:
-      image: ghcr.io/project-tsurugi/tsurugi-ci:${{ matrix.os }}
+      image: ghcr.io/project-tsurugi/tsurugi-ci:${{ inputs.os || 'ubuntu-22.04' }}
       volumes:
         - ${{ vars.ccache_dir }}:${{ vars.ccache_dir }}
     defaults:
@@ -22,7 +28,7 @@ jobs:
         shell: bash
     env:
       CCACHE_CONFIGPATH: ${{ vars.ccache_dir }}/ccache.conf
-      CCACHE_DIR: ${{ vars.ccache_dir }}/${{ matrix.os }}
+      CCACHE_DIR: ${{ vars.ccache_dir }}/${{ inputs.os || 'ubuntu-22.04' }}
 
     steps:
       - name: Checkout
