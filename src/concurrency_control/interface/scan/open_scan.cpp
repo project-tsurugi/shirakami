@@ -19,21 +19,6 @@
 
 namespace shirakami {
 
-inline Status find_open_scan_slot(session* const ti, // NOLINT
-                                  ScanHandle& out) {
-    auto& sh = ti->get_scan_handle();
-    for (ScanHandle i = 0;; ++i) {
-        auto itr = sh.get_scan_cache().find(i);
-        if (itr == sh.get_scan_cache().end()) {
-            out = i;
-            // clear cursor info
-            sh.get_scan_cache_itr()[i] = 0;
-            return Status::OK;
-        }
-    }
-    return Status::WARN_MAX_OPEN_SCAN;
-}
-
 // TODO: create a new header file and move this function definition there as constexpr
 Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
                               const std::string_view r_key, const scan_endpoint r_end) {
@@ -395,38 +380,29 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
     }
 
     // Cache a pointer to record.
-    auto& sh = ti->get_scan_handle();
-    {
-        // lock for strand
-        std::lock_guard<std::shared_mutex> lk{sh.get_mtx_scan_cache()};
-
-        // find slot to log scan result.
-        auto rc = find_open_scan_slot(ti, handle);
-        if (rc != Status::OK) { return rc; }
-
-        std::get<scan_handler::scan_cache_storage_pos>(
-                sh.get_scan_cache()[handle]) = storage;
-        auto& vec = std::get<scan_handler::scan_cache_vec_pos>(
-                sh.get_scan_cache()[handle]);
-        vec.reserve(scan_res.size());
-        for (std::size_t i = 0; i < scan_res.size(); ++i) {
-            vec.emplace_back(reinterpret_cast<Record*>( // NOLINT
-                                     std::get<index_rec_ptr>(scan_res.at(i))),
-                             // by inline optimization
-                             std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
-                             std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
-        }
-
-        // increment for head skipped records
-        // may need mutex for strand
-        std::size_t& scan_index =
-                ti->get_scan_handle().get_scan_cache_itr()[handle];
-        scan_index += head_skip_rec_n;
-
-        sh.get_scanned_storage_set().set(handle, storage);
-        sh.set_r_key(r_key);
-        sh.set_r_end(r_end);
+    auto* sc = ti->get_scan_handle().create_scan_cache();
+    if (sc == nullptr) {
+        return Status::WARN_MAX_OPEN_SCAN;
     }
+    handle = sc;
+
+    sc->set_storage(storage);
+    auto& vec = sc->get_vec();
+    vec.reserve(scan_res.size());
+    for (std::size_t i = 0; i < scan_res.size(); ++i) {
+        vec.emplace_back(reinterpret_cast<Record*>(std::get<index_rec_ptr>(scan_res.at(i))), // NOLINT
+                         // by inline optimization
+                         std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
+                         std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+    }
+
+    // increment for head skipped records
+    auto& scan_index = sc->get_scan_index_ref();
+    scan_index += head_skip_rec_n;
+
+    sc->set_r_key(r_key);
+    sc->set_r_end(r_end);
+
     return fin_process(ti, Status::OK);
 }
 

@@ -13,135 +13,31 @@
 
 namespace shirakami {
 
-class scanned_storage_set {
+class scan_handler;
+
+class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
-    Storage get(ScanHandle const hd) {
-        std::shared_lock<std::shared_mutex> lk{get_mtx()};
-        return map_[hd];
-    }
-
-    void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.clear();
-    }
-
-    void clear(ScanHandle const hd) {
-        // for strand
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_.erase(hd);
-    }
-
-    void set(ScanHandle const hd, Storage const st) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx()};
-        map_[hd] = st;
-    };
-
-    std::shared_mutex& get_mtx() { return mtx_; }
-
-private:
-    std::map<ScanHandle, Storage> map_;
-
-    /**
-     * @brief mutex for scanned storage set
-     */
-    std::shared_mutex mtx_{};
-};
-
-class scan_handler {
-public:
-    using scan_elem_type =
-            std::tuple<Storage,
-                       std::vector<std::tuple<const Record*,
-                                              yakushima::node_version64_body,
-                                              yakushima::node_version64*>>>;
-    using scan_cache_type = std::map<ScanHandle, scan_elem_type>;
-    using scan_cache_itr_type = std::map<ScanHandle, std::size_t>;
-    static constexpr std::size_t scan_cache_storage_pos = 0;
-    static constexpr std::size_t scan_cache_vec_pos = 1;
-
-    void clear() {
-        {
-            // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            get_scan_cache().clear();
-            get_scan_cache_itr().clear();
-        }
-        get_scanned_storage_set().clear();
-    }
-
-    Status clear(ScanHandle hd) {
-        // about scan cache
-        {
-            // for strand
-            std::lock_guard<std::shared_mutex> lk{get_mtx_scan_cache()};
-            auto itr = get_scan_cache().find(hd);
-            if (itr == get_scan_cache().end()) {
-                return Status::WARN_INVALID_HANDLE;
-            }
-            get_scan_cache().erase(itr);
-
-            // about scan cache iterator
-            auto index_itr = get_scan_cache_itr().find(hd);
-            get_scan_cache_itr().erase(index_itr);
-            set_r_key("");
-            set_r_end(scan_endpoint::EXCLUSIVE);
-        }
-
-        // about scanned storage set
-        scanned_storage_set_.clear(hd);
-
-        return Status::OK;
-    }
-
     // getter
-
-    [[maybe_unused]] scan_cache_type& get_scan_cache() { // NOLINT
-        return scan_cache_;
-    }
-
-    [[maybe_unused]] scan_cache_itr_type& get_scan_cache_itr() { // NOLINT
-        return scan_cache_itr_;
-    }
-
-    std::shared_mutex& get_mtx_scan_cache() { return mtx_scan_cache_; }
-
-    scanned_storage_set& get_scanned_storage_set() {
-        return scanned_storage_set_;
-    }
-
+    [[nodiscard]] Storage get_storage() const { return storage_; }
+    auto& get_vec() { return vec_; }
+    [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
+    std::size_t& get_scan_index_ref() { return scan_index_; }
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
-
     [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
     // setter
-
+    void set_storage(Storage storage) { storage_ = storage; }
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
-
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_parent(scan_handler* parent) { parent_ = parent; }
 
 private:
-    /**
-     * @brief cache of index scan.
-     */
-    scan_cache_type scan_cache_{};
-
-    /**
-     * @brief cursor of the scan_cache_.
-     */
-    scan_cache_itr_type scan_cache_itr_{};
-
-    /**
-     * @brief mutex for scan cache
-     */
-    std::shared_mutex mtx_scan_cache_{};
-
-    /**
-     * @brief scanned storage set.
-     * @details As a result of being scanned, the pointer to the record
-     * is retained. However, it does not retain the scanned storage information
-     * . Without it, you will have problems generating read sets.
-     */
-    scanned_storage_set scanned_storage_set_{};
+    Storage storage_{};
+    std::vector<std::tuple<const Record*,
+                           yakushima::node_version64_body,
+                           yakushima::node_version64*>> vec_{};
+    std::size_t scan_index_{0U};
 
     /**
      * @brief range of right endpoint for ltx
@@ -151,6 +47,76 @@ private:
     std::string r_key_{};
 
     scan_endpoint r_end_{};
+
+    /**
+     * @brief scan_handler that allocated this
+     */
+    scan_handler* parent_{};
+};
+
+class scan_handler {
+public:
+    void clear() {
+        // for strand
+        std::lock_guard lk{mtx_allocated_};
+        for (auto it = allocated_.begin(); it != allocated_.end(); ) {
+            delete *it; // NOLINT
+            it = allocated_.erase(it);
+        }
+    }
+
+    Status delete_scan_cache(scan_cache_obj* sc) {
+        if (check_valid_scan_handle(sc) != Status::OK) {
+            return Status::WARN_INVALID_HANDLE;
+        }
+        {
+            // for strand
+            std::lock_guard lk{mtx_allocated_};
+            allocated_.erase(sc);
+        }
+        delete sc; // NOLINT
+
+        return Status::OK;
+    }
+
+    scan_cache_obj* create_scan_cache() {
+        auto* sc = new scan_cache_obj(); // NOLINT
+        sc->set_parent(this);
+        std::lock_guard lk{mtx_allocated_};
+        allocated_.insert(sc);
+        return sc;
+    }
+
+    // for shirakami user code debugging
+    // note: precise-handle-check may cause concurrent contentions problems
+    static constexpr bool precise_handle_check = false;
+
+    Status check_valid_scan_handle(scan_cache_obj* sc) {
+        if constexpr (precise_handle_check) {
+            // for strand
+            std::lock_guard lk{mtx_allocated_};
+            if (allocated_.find(sc) == allocated_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        } else {
+            if (sc == nullptr || sc->get_parent() != this) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        }
+        return Status::OK;
+    }
+
+private:
+
+    /**
+     * @brief set of scan cache objects allocated from this handler
+     */
+    std::set<scan_cache_obj*> allocated_{};
+
+    /**
+     * @brief mutex for allocated set
+     */
+    std::mutex mtx_allocated_;
 };
 
 } // namespace shirakami
