@@ -53,7 +53,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 200 -j 20 -L CC
+          ctest --verbose --timeout 200 -j 16 -L CC
 
       - name: CTest_LOGGING
         if: matrix.test-group == 'tl_others'
@@ -62,7 +62,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 200 -j 20 -L LOGGING
+          ctest --verbose --timeout 200 -j 16 -L LOGGING
 
       - name: CTest_WAITING_BYPASS
         if: matrix.test-group == 'tl_others'
@@ -71,8 +71,8 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
-          SHIRAKAMI_ENABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 16 -L WAITING_BYPASS
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 16 -L WAITING_BYPASS
 
       - name: Verify
         uses: project-tsurugi/tsurugi-annotations-action@v1
