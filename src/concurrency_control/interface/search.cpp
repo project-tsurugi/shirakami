@@ -67,7 +67,8 @@ Status exist_key(Token const token, Storage const storage, // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) { lock.lock(); }
         ret = exist_key_body(token, storage, key);
     }
     ti->process_before_finish_step();
@@ -123,7 +124,8 @@ Status search_key(Token const token, Storage const storage, // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) { lock.lock(); }
 
         // search_key_body check warn not begin by concurrent strand
         ret = search_key_body(token, storage, key, value);
