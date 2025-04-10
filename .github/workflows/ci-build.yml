@@ -1,20 +1,26 @@
 name: Shirakami-CI
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      os:
+        type: string
+        default: 'ubuntu-22.04'
 
 jobs:
-  Build:
+  Test:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
         test-group: [tl_cc, tl_others] # tl: test label
     runs-on: [self-hosted, docker]
     permissions:
       checks: write
     timeout-minutes: 30
     container:
-      image: ghcr.io/project-tsurugi/tsurugi-ci:${{ matrix.os }}
+      image: ghcr.io/project-tsurugi/tsurugi-ci:${{ inputs.os || 'ubuntu-22.04' }}
       volumes:
         - ${{ vars.ccache_dir }}:${{ vars.ccache_dir }}
     defaults:
@@ -22,7 +28,7 @@ jobs:
         shell: bash
     env:
       CCACHE_CONFIGPATH: ${{ vars.ccache_dir }}/ccache.conf
-      CCACHE_DIR: ${{ vars.ccache_dir }}/${{ matrix.os }}
+      CCACHE_DIR: ${{ vars.ccache_dir }}/${{ inputs.os || 'ubuntu-22.04' }}
 
     steps:
       - name: Checkout
@@ -37,7 +43,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/.local -DBUILD_PWAL=ON ..
           cmake --build . --target all --clean-first
 
       - name: CTest_CC
@@ -47,7 +53,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 200 -j 20 -L CC
+          ctest --verbose --timeout 200 -j 16 -L CC
 
       - name: CTest_LOGGING
         if: matrix.test-group == 'tl_others'
@@ -56,7 +62,7 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          ctest --verbose --timeout 200 -j 20 -L LOGGING
+          ctest --verbose --timeout 200 -j 16 -L LOGGING
 
       - name: CTest_WAITING_BYPASS
         if: matrix.test-group == 'tl_others'
@@ -65,8 +71,8 @@ jobs:
           ASAN_OPTIONS: detect_stack_use_after_return=true
         run: |
           cd build
-          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
-          SHIRAKAMI_ENABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 20 -L WAITING_BYPASS
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=0 ctest --verbose --timeout 200 -j 16 -L WAITING_BYPASS
+          SHIRAKAMI_ENABLE_WAITING_BYPASS=1 ctest --verbose --timeout 200 -j 16 -L WAITING_BYPASS
 
       - name: Verify
         uses: project-tsurugi/tsurugi-annotations-action@v1
