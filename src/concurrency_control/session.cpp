@@ -210,6 +210,25 @@ void session::set_envflags() {
     VLOG(log_debug) << log_location_prefix << "optflag: OCC epoch buffering "
                     << (enable_occ_epoch_buff ? "on" : "off");
 #endif
+
+    // check environ "SHIRAKAMI_RTX_DA_TERM_MUTEX"
+    bool rtx_da_term_mutex = false;
+    if (auto* envstr = std::getenv("SHIRAKAMI_RTX_DA_TERM_MUTEX");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            rtx_da_term_mutex = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            rtx_da_term_mutex = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_RTX_DA_TERM_MUTEX; using default value";
+        }
+    }
+    optflag_rtx_da_term_mutex = rtx_da_term_mutex;
+
+    VLOG(log_debug) << log_location_prefix << "optflag: RTX da/term mutex "
+                    << (optflag_rtx_da_term_mutex ? "on" : "off");
 }
 
 // ========== end: result info

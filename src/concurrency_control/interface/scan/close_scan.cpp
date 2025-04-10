@@ -33,7 +33,7 @@ Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
     Status ret{};
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
-        if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) { lock.lock(); }
+        if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
         ret = close_scan_body(token, handle);
     }
     ti->process_before_finish_step();

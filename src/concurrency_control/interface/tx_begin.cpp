@@ -100,6 +100,12 @@ Status tx_begin_body(transaction_options options) { // NOLINT
         ti->set_diag_tx_state_kind(TxState::StateKind::WAITING_START);
     }
 
+    // select required mutex
+    auto& mflags = ti->get_mutex_flags();
+    mflags.set_readaccess_daterm(
+            (tx_type != transaction_options::transaction_type::READ_ONLY) // if not RTX -> true
+            || session::optflag_rtx_da_term_mutex); // if RTX -> optflag_rtx_da_term_mutex
+
     /**
      * This is for concurrent programming. It teaches to other thread that this
      * tx began at last.

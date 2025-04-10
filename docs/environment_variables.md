@@ -26,3 +26,11 @@ Shirakami コードから参照する環境変数の説明
     * 未指定時、空文字列指定時には、デフォルト動作をする。
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=0` とすると、バッファしない。
     * `SHIRAKAMI_ENABLE_OCC_EPOCH_LOG_BUFFERING=1` とすると、バッファする。
+
+* `SHIRAKAMI_RTX_DA_TERM_MUTEX`
+  * RTX での読み出しデータアクセスとトランザクション終了処理との排他制御処理に関するフラグ。排他制御をするかしないかを選択する。
+    排他制御しない場合には RTX でデータアクセスと並行してトランザクション終了処理を呼び出してはならない。並行で呼び出した場合の動作は未定義となる。
+  * デフォルト動作は排他制御をしない。
+    * 未指定時、空文字列指定時には、デフォルト動作をする。
+    * `SHIRAKAMI_RTX_DA_TERM_MUTEX=0` とすると、排他制御をしない。
+    * `SHIRAKAMI_RTX_DA_TERM_MUTEX=1` とすると、排他制御をする。
