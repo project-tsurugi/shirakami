@@ -60,21 +60,20 @@ public:
         // for strand
         std::lock_guard lk{mtx_allocated_};
         for (auto it = allocated_.begin(); it != allocated_.end(); ) {
-            delete *it; // NOLINT
             it = allocated_.erase(it);
         }
     }
 
     Status delete_scan_cache(scan_cache_obj* sc) {
-        if (check_valid_scan_handle(sc) != Status::OK) {
-            return Status::WARN_INVALID_HANDLE;
-        }
         {
             // for strand
             std::lock_guard lk{mtx_allocated_};
-            allocated_.erase(sc);
+            auto itr = allocated_.find(sc);
+            if (itr == allocated_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+            allocated_.erase(itr);
         }
-        delete sc; // NOLINT
 
         return Status::OK;
     }
@@ -83,7 +82,7 @@ public:
         auto* sc = new scan_cache_obj(); // NOLINT
         sc->set_parent(this);
         std::lock_guard lk{mtx_allocated_};
-        allocated_.insert(sc);
+        allocated_.insert(std::unique_ptr<scan_cache_obj>{sc});
         return sc;
     }
 
@@ -108,10 +107,20 @@ public:
 
 private:
 
+    template<typename T>
+    struct less_uniqp_rawp {
+        using is_transparent = void;
+        using UP = const std::unique_ptr<T>&;
+        using RP = T*const&;
+        bool operator()(UP a, RP b) const { return a.get() < b; }
+        bool operator()(RP a, UP b) const { return a < b.get(); }
+        bool operator()(UP a, UP b) const { return a.get() < b.get(); }
+    };
+
     /**
      * @brief set of scan cache objects allocated from this handler
      */
-    std::set<scan_cache_obj*> allocated_{};
+    std::set<std::unique_ptr<scan_cache_obj>, less_uniqp_rawp<scan_cache_obj>> allocated_{};
 
     /**
      * @brief mutex for allocated set
