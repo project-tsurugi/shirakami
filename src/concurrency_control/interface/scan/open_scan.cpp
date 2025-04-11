@@ -230,7 +230,7 @@ Status open_scan_body(Token const token, Storage storage, // NOLINT
          */
         auto wps = wp::find_wp(storage);
         auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && find_min_ep <= ti->get_step_epoch()) {
+        if (find_min_ep != 0 && find_min_ep <= epoch::get_global_epoch()) {
             short_tx::abort(ti);
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(storage);

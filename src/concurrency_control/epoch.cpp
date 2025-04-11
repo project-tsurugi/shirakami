@@ -22,16 +22,6 @@
 
 namespace shirakami::epoch {
 
-inline void check_epoch_load_and_update_idle_living_tx() {
-    auto ce{epoch::get_global_epoch()};
-    for (auto&& itr : session_table::get_session_table()) {
-        if (itr.get_operating().load(std::memory_order_acquire) == 0) {
-            // this session is not processing now.
-            if (itr.get_step_epoch() < ce) { itr.set_step_epoch(ce); }
-        }
-    }
-}
-
 inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
     epoch_t min_short_expose_ongoing_target_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
@@ -193,7 +183,6 @@ void epoch_thread_work() {
             }
             // dtor : release wp_mutex
         }
-        check_epoch_load_and_update_idle_living_tx();
     }
 }
 
