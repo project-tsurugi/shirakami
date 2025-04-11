@@ -82,6 +82,21 @@ public:
         std::uint64_t value_{};
     };
 
+    class mutex_flags_type {
+    public:
+        using base_int_type = std::uint32_t;
+        static constexpr base_int_type READACCESS_DATERM = 0x00000001U;
+
+        [[nodiscard]] bool do_readaccess_daterm() const {
+            return (flags_ & READACCESS_DATERM) != 0U;
+        }
+        void set_readaccess_daterm(bool b) {
+            if (b) { flags_ |= READACCESS_DATERM; } else { flags_ &= ~READACCESS_DATERM; }
+        }
+
+    private:
+        base_int_type flags_{0U};
+    };
 
     /**
      * @brief call commit callback and clear the callback stored
@@ -309,6 +324,8 @@ public:
     [[nodiscard]] transaction_options::transaction_type get_tx_type() const {
         return tx_type_;
     }
+
+    mutex_flags_type& get_mutex_flags() { return mutex_flags_; }
 
     scan_handler& get_scan_handle() { return scan_handle_; }
 
@@ -708,7 +725,17 @@ public:
 
     // ========== end: node set
 
+    // ========== start: config flags
+    /**
+     * @brief set configuration flags from environ
+     */
     static void set_envflags();
+
+    /**
+     * @brief use da/term mutex if RTX
+     */
+    static inline bool optflag_rtx_da_term_mutex;
+    // ========== end: config flags
 
 private:
     /**
@@ -718,6 +745,11 @@ private:
      */
     std::atomic<transaction_options::transaction_type> tx_type_{
             transaction_options::transaction_type::SHORT};
+
+    /**
+     * @brief control which types of mutex are executed
+     */
+    mutex_flags_type mutex_flags_{};
 
     /**
      * @brief session id used for computing transaction id.

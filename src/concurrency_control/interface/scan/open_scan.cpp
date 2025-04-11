@@ -418,7 +418,8 @@ Status open_scan(Token const token, Storage storage, // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
         ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle,
                              max_size, right_to_left);
     }

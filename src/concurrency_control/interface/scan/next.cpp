@@ -209,7 +209,8 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     ti->process_before_start_step();
     Status ret{};
     { // for strand
-        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term()};
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
         ret = next_body(token, handle);
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
             ret == Status::WARN_SCAN_LIMIT) {
