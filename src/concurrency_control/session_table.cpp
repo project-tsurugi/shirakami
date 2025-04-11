@@ -36,8 +36,6 @@ void session_table::init_session_table() {
         itr.set_higher_tx_counter(0);
         itr.set_tx_counter(0);
         itr.set_session_id(worker_number);
-        // for strand
-        itr.set_operating(0);
         // for commit callback
         itr.set_commit_callback({});
         // for mrc tid
