@@ -44,7 +44,7 @@ public:
         return next_.load(std::memory_order_acquire);
     }
 
-    void get_value(std::string& out, bool do_lock) {
+    void get_value(std::string& out, bool do_lock = true) {
         std::shared_lock<std::shared_mutex> lk{mtx_value_, std::defer_lock};
         if (do_lock) { lk.lock(); }
         out = value_;
@@ -56,7 +56,7 @@ public:
      * @brief set value
      * @pre This is also for initialization of version.
      */
-    void set_value(std::string_view const value, bool do_lock) {
+    void set_value(std::string_view const value, bool do_lock = true) {
         std::unique_lock<std::shared_mutex> lk{mtx_value_, std::defer_lock};
         if (do_lock) { lk.lock(); }
         value_ = value;
