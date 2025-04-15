@@ -54,7 +54,7 @@ RETRY:
     // read latest version after version function
     if (is_latest) {
         if (!f_check.get_absent()) {
-            if (read_value) { ver->get_value(value); }
+            if (read_value) { ver->get_value(value, true); }
         }
         if (ver == rec_ptr->get_latest() &&
             loadAcquire(&rec_ptr->get_tidw_ref().get_obj()) ==
@@ -83,7 +83,7 @@ RETRY:
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
     if (!ver->get_tid().get_absent()) {
-        if (read_value) { ver->get_value(value); }
+        if (read_value) { ver->get_value(value, true); }
     }
     // check max epoch of read version
     auto read_epoch{ver->get_tid().get_epoch()};

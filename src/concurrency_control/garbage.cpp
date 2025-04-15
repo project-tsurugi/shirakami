@@ -323,7 +323,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         // gathering stats info
         average_key_size += rec_ptr->get_key_view().size();
         std::string buf;
-        rec_ptr->get_value(buf);
+        rec_ptr->get_value(buf, true);
         average_value_size += buf.size();
 
         unhooking_keys_and_pruning_versions(

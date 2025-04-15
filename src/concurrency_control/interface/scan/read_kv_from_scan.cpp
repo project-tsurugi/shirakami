@@ -144,7 +144,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                 if (key_read) {
                     rec_ptr->get_key(buf);
                 } else {
-                    ver->get_value(buf);
+                    ver->get_value(buf, ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY);
                 }
             }
             // load stable timestamp to verify optimistic read
@@ -186,7 +186,7 @@ Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             if (key_read) {
                 rec_ptr->get_key(buf);
             } else {
-                ver->get_value(buf);
+                ver->get_value(buf, ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY);
             }
         }
 

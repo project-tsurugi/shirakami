@@ -134,7 +134,7 @@ static inline void expose_local_write(
                         // update value
                         std::string vb{};
                         wso.get_value(vb);
-                        rec_ptr->get_latest()->set_value(vb);
+                        rec_ptr->get_latest()->set_value(vb, true);
                         // unlock and set ctid
                         rec_ptr->set_tid(ctid);
                         break;
@@ -187,7 +187,7 @@ static inline void expose_local_write(
                         should_log = true;
                         std::string vb{};
                         wso.get_value(vb);
-                        rec_ptr->get_latest()->set_value(vb);
+                        rec_ptr->get_latest()->set_value(vb, true);
                     } else {
                         // invisible write
                         should_log = false;
@@ -237,7 +237,7 @@ static inline void expose_local_write(
                                 std::string vb{};
                                 wso.get_value(vb);
                                 // set value
-                                ver->set_value(vb);
+                                ver->set_value(vb, true);
                                 ver->set_tid(ctid);
                             }
                             // else: omit due to forwarding

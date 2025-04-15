@@ -493,7 +493,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     // set value
                     std::string vb{};
                     wso_ptr->get_value(vb);
-                    wso_ptr->get_rec_ptr()->set_value(vb);
+                    wso_ptr->get_rec_ptr()->set_value(vb, true);
 
                     // set timestamp and unlock
                     wso_ptr->get_rec_ptr()->set_tid(update_tid);
@@ -542,7 +542,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     if (wso_ptr->get_op() != OP_TYPE::DELETE) {
                         std::string vb{};
                         wso_ptr->get_value(vb);
-                        wso_ptr->get_rec_ptr()->set_value(vb);
+                        wso_ptr->get_rec_ptr()->set_value(vb, true);
                     }
                 }
                 // detail info

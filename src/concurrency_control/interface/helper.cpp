@@ -176,7 +176,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
 
         // read value if it's normal (not inserting & deleted)
         if (!f_check.get_absent() && f_check.get_latest()) {
-            if (read_value) { rec_ptr->get_value(val); }
+            if (read_value) { rec_ptr->get_value(val, true); }
         }
 
         // load second tid for optimistic check

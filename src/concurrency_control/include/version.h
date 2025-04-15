@@ -22,13 +22,13 @@ public:
 
     // for newly insert
     explicit version(std::string_view value) {
-        set_value(value);
+        set_value(value, false);
         set_next(nullptr);
     }
 
     // for insert version to version list at latest
     explicit version(std::string_view const value, version* const next) {
-        set_value(value);
+        set_value(value, false);
         set_next(next);
     }
 
@@ -36,7 +36,7 @@ public:
     explicit version(tid_word const& tid, std::string_view const value,
                      version* const next)
         : tid_(tid) {
-        set_value(value);
+        set_value(value, false);
         set_next(next);
     }
 
@@ -44,8 +44,9 @@ public:
         return next_.load(std::memory_order_acquire);
     }
 
-    void get_value(std::string& out) {
-        std::shared_lock<std::shared_mutex> lk{mtx_value_};
+    void get_value(std::string& out, bool do_lock) {
+        std::shared_lock<std::shared_mutex> lk{mtx_value_, std::defer_lock};
+        if (do_lock) { lk.lock(); }
         out = value_;
     }
 
@@ -55,8 +56,9 @@ public:
      * @brief set value
      * @pre This is also for initialization of version.
      */
-    void set_value(std::string_view const value) {
-        std::lock_guard<std::shared_mutex> lk{mtx_value_};
+    void set_value(std::string_view const value, bool do_lock) {
+        std::unique_lock<std::shared_mutex> lk{mtx_value_, std::defer_lock};
+        if (do_lock) { lk.lock(); }
         value_ = value;
     }
 

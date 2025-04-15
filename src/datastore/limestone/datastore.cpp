@@ -63,13 +63,13 @@ void recovery_from_datastore() {
             Record* rec_ptr{};
             if (Status::OK == get<Record>(st, key, rec_ptr)) {
                 // record existing, update value
-                rec_ptr->set_value(val);
+                rec_ptr->set_value(val, true);
             } else {
                 // create record
                 rec_ptr = new Record(key); // NOLINT
                 // fix record contents
                 // about value
-                rec_ptr->set_value(val);
+                rec_ptr->set_value(val, false);
                 // about tid
                 tid_word new_tid{rec_ptr->get_tidw_ref()};
                 new_tid.set_latest(true);
@@ -195,6 +195,7 @@ void recovery_from_datastore() {
     // recovery epoch info
 }
 
+// what is this??
 void scan_all_and_logging() {
     // check all storage list
     std::vector<Storage> st_list{};
@@ -218,7 +219,7 @@ void scan_all_and_logging() {
                 std::string key{};
                 rec_ptr->get_key(key);
                 std::string val{};
-                rec_ptr->get_value(val);
+                rec_ptr->get_value(val, true);
             }
         }
     }

@@ -63,9 +63,9 @@ public:
 
     std::shared_mutex& get_mtx_value() { return mtx_value_; }
 
-    void get_value(std::string& out) {
-        std::shared_lock<std::shared_mutex> lock{get_mtx_value()};
-        get_latest()->get_value(out);
+    void get_value(std::string& out, bool do_lock) {
+        //std::shared_lock<std::shared_mutex> lock{get_mtx_value()};
+        get_latest()->get_value(out, do_lock);
     }
 
     point_read_by_long& get_point_read_by_long() { return point_read_by_long_; }
@@ -87,9 +87,9 @@ public:
         storeRelease(tidw_.get_obj(), tid.get_obj());
     }
 
-    void set_value(std::string_view const v) {
-        std::lock_guard<std::shared_mutex> lock{get_mtx_value()};
-        get_latest()->set_value(v);
+    void set_value(std::string_view const v, bool do_lock) {
+        //std::lock_guard<std::shared_mutex> lock{get_mtx_value()};
+        get_latest()->set_value(v, do_lock);
     }
 
     void unlock() { tidw_.unlock(); }
