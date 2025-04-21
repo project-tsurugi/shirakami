@@ -110,6 +110,8 @@ Status tx_begin_body(transaction_options options) { // NOLINT
      * This is for concurrent programming. It teaches to other thread that this
      * tx began at last.
      */
+// trying https://github.com/project-tsurugi/tsurugi-issues/issues/1093#issuecomment-2581860417
+std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ti->set_tx_began(true);
     return Status::OK;
 }
