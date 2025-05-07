@@ -7,6 +7,9 @@ inputs:
   path:
     description: Relative path under $GITHUB_WORKSPACE to place the repository
     default: build-deps
+  cmake_build_option:
+    type: string
+    default: ''
 
 runs:
   using: "composite"
@@ -34,7 +37,7 @@ runs:
         rm -fr build
         mkdir build
         cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ${{ inputs.cmake_build_option }} ..
         cmake --build . --target install --clean-first
       shell: bash
 
@@ -44,6 +47,6 @@ runs:
         rm -fr build
         mkdir build
         cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_BENCHMARK=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_TESTS=OFF -DBUILD_DOCUMENTS=OFF -DBUILD_BENCHMARK=OFF -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local ${{ inputs.cmake_build_option }} ..
         cmake --build . --target install --clean-first
       shell: bash
