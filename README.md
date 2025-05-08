@@ -42,6 +42,8 @@ Available options:
    * Never build documents by doxygen (default: `ON` )
 * `-DBUILD_SHARED_LIBS=OFF`
    * Create static libraries instead of shared libraries
+* `-DBUILD_STRICT=OFF`
+   * Don't treat compile warnings as build errors (default: `ON` )
 * `-DCMAKE_PREFIX_PATH=<installation directory>`
    * Indicate prerequiste installation directory (ex. yakushima)
 * `-DFORMAT_FILES_WITH_CLANG_FORMAT_BEFORE_EACH_BUILD=ON`

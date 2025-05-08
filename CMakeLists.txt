@@ -30,6 +30,7 @@ option(ENABLE_SANITIZER "enable sanitizer on debug build" ON)
 option(ENABLE_UB_SANITIZER "enable undefined behavior sanitizer on debug build" OFF)
 option(ENABLE_COVERAGE "enable coverage on debug build" OFF)
 option(BUILD_SHARED_LIBS "build shared libraries instead of static" ON)
+option(BUILD_STRICT "build with option strictly determine of success" ON)
 
 # transaction processing logic
 option(BUILD_PWAL "Build parallel write ahead logging as logging." ON)

@@ -164,6 +164,11 @@ endif ()
 # End : parameter settings
 
 function(set_compile_options target_name)
-    target_compile_options(${target_name}
+    if (BUILD_STRICT)
+        target_compile_options(${target_name}
             PRIVATE -Wall -Wextra -Werror)
+    else()
+        target_compile_options(${target_name}
+            PRIVATE -Wall -Wextra)
+    endif()
 endfunction(set_compile_options)
