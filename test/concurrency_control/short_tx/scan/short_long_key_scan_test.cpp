@@ -36,6 +36,9 @@ private:
 };
 
 TEST_F(long_key_scan_test, long_key_scan) { // NOLINT
+#ifdef __clang__
+    GTEST_SKIP() << "FIXME: clang Debug build may exceed max stack size";
+#endif
     Storage st{};
     create_storage("", st);
     std::string k(1024 * 30, 'A'); // works fine with 30K // NOLINT

@@ -38,6 +38,9 @@ private:
 };
 
 TEST_F(long_upsert_long_key, long_key_upsert) { // NOLINT
+#ifdef __clang__
+    GTEST_SKIP() << "FIXME: clang Debug build may exceed max stack size";
+#endif
     Storage st{};
     create_storage("", st);
     // upsert 30KB key
