@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cfloat>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <random>
 #include <vector>

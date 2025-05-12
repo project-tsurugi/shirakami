@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 
