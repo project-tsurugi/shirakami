@@ -71,6 +71,7 @@ endif()
 find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

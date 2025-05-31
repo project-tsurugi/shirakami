@@ -21,4 +21,5 @@ libspdlog-dev
 libtbb-dev
 libzstd1
 ninja-build
+nlohmann-json3-dev
 zlib1g-dev
