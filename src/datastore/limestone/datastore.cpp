@@ -40,15 +40,12 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
     }
 }
 
-void recovery_from_datastore() {
-    auto ss = get_snapshot(get_datastore());
-
+static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor) {
     /**
      * The cursor point the first entry at calling first next().
      */
     std::vector<Storage> st_list{};
 
-    auto cursor = ss->get_cursor();
     SequenceId max_id{0};
     Storage prev_st{storage::dummy_storage};
 
@@ -179,6 +176,17 @@ void recovery_from_datastore() {
     }
     // cleanup
     leave(token);
+
+    std::sort(st_list.begin(), st_list.end());
+    st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
+
+    return std::make_pair(max_id, std::move(st_list));
+}
+
+void recovery_from_datastore() {
+    auto ss = get_snapshot(get_datastore());
+
+    auto [max_id, st_list] = recovery_from_cursor(ss->get_cursor());
 
     if (max_id > 0) {
         // recovery sequence id generator
