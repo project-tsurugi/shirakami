@@ -10,6 +10,7 @@
 
 #include "index/yakushima/include/interface.h"
 
+#include "shirakami/binary_printer.h"
 #include "shirakami/interface.h"
 #include "shirakami/scheme.h"
 
@@ -43,12 +44,16 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
 void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
 
+    std::mutex mtx;
+    std::vector<Storage> st_list_all{};
+    SequenceId max_id_all{0};
+
+  auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
     /**
      * The cursor point the first entry at calling first next().
      */
     std::vector<Storage> st_list{};
 
-    auto cursor = ss->get_cursor();
     SequenceId max_id{0};
     Storage prev_st{storage::dummy_storage};
 
@@ -62,6 +67,7 @@ void recovery_from_datastore() {
         std::string val{};
         cursor->key(key);
         cursor->value(val);
+        VLOG(log_debug) << "st: " << st << shirakami_binstring(key);
         // prepare function updating information
         auto put_data = [&token](Storage st, std::string_view key, std::string_view val) {
             // check record existence
@@ -89,8 +95,8 @@ void recovery_from_datastore() {
                         key, rec_ptr, dummy);
                 if (yakushima::status::OK != rc) {
                     // can't put
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                          << "unreachable path: " << rc;
+                    LOG_FIRST_N(ERROR, 10) << log_location_prefix
+                                          << "unreachable path: " << rc << " st: " << st << shirakami_binstring(key);
                 }
             }
         };
@@ -100,7 +106,7 @@ void recovery_from_datastore() {
             Storage st2{};
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
-                LOG_FIRST_N(ERROR, 1)
+                LOG_FIRST_N(ERROR, 10)
                         << log_location_prefix << "unreachable path";
                 return;
             }
@@ -131,7 +137,7 @@ void recovery_from_datastore() {
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     // Does DML create key handle map entry?
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                    LOG_FIRST_N(ERROR, 10) << log_location_prefix
                                           << "library programming error.";
                     return;
                 }
@@ -145,7 +151,7 @@ void recovery_from_datastore() {
                      * shirakami::storage::exist_storage(st2) said not exist,
                      * but it can't register_storage.
                      */
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                    LOG_FIRST_N(ERROR, 10) << log_location_prefix
                                           << "library programming error";
                     return;
                 }
@@ -156,7 +162,7 @@ void recovery_from_datastore() {
                      * shirakami::register_storage(st2, {id, payload}) was
                      * succeeded but it can't create entry of this map.
                      */
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                    LOG_FIRST_N(ERROR, 10) << log_location_prefix
                                           << "library programming error";
                     return;
                 }
@@ -191,13 +197,52 @@ void recovery_from_datastore() {
     // cleanup
     leave(token);
 
-    if (max_id > 0) {
+
+    std::sort(st_list.begin(), st_list.end());
+    st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
+
+    std::lock_guard lk{mtx};
+    max_id_all = std::max(max_id_all, max_id);
+    for (auto&& e : st_list) {
+        st_list_all.emplace_back(e);
+    }
+  };
+
+    int thread_num = 8;
+    if (thread_num <= 0) {
+        auto cursor = ss->get_cursor();
+        recovery_work(std::move(cursor));
+    } else {
+        std::mutex mtx_offset;
+        long offset = 0;
+
+        std::vector<std::thread> workers;
+        workers.reserve(thread_num);
+        for (int i = 0; i < thread_num; i++) {
+            workers.emplace_back(std::thread([&ss, &mtx_offset, &offset, &recovery_work](){
+                for (;;) {
+                    std::unique_lock<std::mutex> lock(mtx_offset);
+                    if (offset < 0) break;
+                    auto [cursor, next_offset] = ss->get_chunk_cursor(offset);
+VLOG(20) << "next_offset: " << next_offset;
+                    offset = next_offset;
+                    lock.unlock();
+                    recovery_work(std::move(cursor));
+                }
+            }));
+        }
+        for (int i = 0; i < thread_num; i++) {
+            workers[i].join();
+        }
+    }
+
+    if (max_id_all > 0) {
         // recovery sequence id generator
-        sequence::id_generator_ctr().store(max_id + 1,
+        sequence::id_generator_ctr().store(max_id_all + 1,
                                            std::memory_order_release);
     }
     // recovery storage meta
-    if (!st_list.empty()) { recovery_storage_meta(st_list); }
+    if (!st_list_all.empty()) { recovery_storage_meta(st_list_all); }
     // recovery epoch info
 }
 
