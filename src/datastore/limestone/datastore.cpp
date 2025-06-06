@@ -41,6 +41,17 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
     }
 }
 
+static int get_env_threadnum() {
+    int recovery_thread_num = 0;
+    if (auto* envstr = std::getenv("SHIRAKAMI_RECOVERY_THREAD_NUM");
+        envstr != nullptr && *envstr != '\0') {
+        recovery_thread_num = std::atoi(envstr);  // NOLINT
+    }
+
+    VLOG(log_debug) << log_location_prefix << "optflag: recovery thread num = " << recovery_thread_num;
+    return recovery_thread_num;
+}
+
 void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
 
@@ -208,7 +219,7 @@ void recovery_from_datastore() {
     }
   };
 
-    int thread_num = 8;
+    int thread_num = get_env_threadnum();
     if (thread_num <= 0) {
         auto cursor = ss->get_cursor();
         recovery_work(std::move(cursor));
