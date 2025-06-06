@@ -89,8 +89,7 @@ void recovery_from_datastore() {
                         key, rec_ptr, dummy);
                 if (yakushima::status::OK != rc) {
                     // can't put
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                          << "unreachable path: " << rc;
+                    LOG(FATAL) << log_location_prefix << "unreachable path: " << rc;
                 }
             }
         };
@@ -100,9 +99,7 @@ void recovery_from_datastore() {
             Storage st2{};
             if (val.size() < (sizeof(st2) + sizeof(storage_option::id_t))) {
                 // val size < Storage + id_t + payload
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << "unreachable path";
-                return;
+                LOG(FATAL) << log_location_prefix << "unreachable path";
             }
             memcpy(&st2, val.data(), sizeof(st2));
             storage_option::id_t id{};
@@ -131,9 +128,7 @@ void recovery_from_datastore() {
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
                     // Does DML create key handle map entry?
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                          << "library programming error.";
-                    return;
+                    LOG(FATAL) << log_location_prefix << "library programming error.";
                 }
             } else {
                 // not exist, so create.
@@ -145,9 +140,7 @@ void recovery_from_datastore() {
                      * shirakami::storage::exist_storage(st2) said not exist,
                      * but it can't register_storage.
                      */
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                          << "library programming error";
-                    return;
+                    LOG(FATAL) << log_location_prefix << "library programming error.";
                 }
                 if (storage::key_handle_map_push_storage(key, st2) !=
                     Status::OK) {
@@ -156,9 +149,7 @@ void recovery_from_datastore() {
                      * shirakami::register_storage(st2, {id, payload}) was
                      * succeeded but it can't create entry of this map.
                      */
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                          << "library programming error";
-                    return;
+                    LOG(FATAL) << log_location_prefix << "library programming error.";
                 }
                 put_data(storage::meta_storage, key, new_value);
             }
@@ -175,9 +166,7 @@ void recovery_from_datastore() {
                    sizeof(version));
             auto ret = sequence::sequence_map_push(id, 0, version, value);
             if (ret != Status::OK) {
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << "library programming error";
-                return;
+                LOG(FATAL) << log_location_prefix << "library programming error.";
             }
         } else {
             if (st != prev_st) {
