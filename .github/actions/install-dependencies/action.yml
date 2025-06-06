@@ -21,7 +21,7 @@ runs:
       with:
         repository: project-tsurugi/limestone
         path: ${{ inputs.path }}/limestone
-        ref: master
+        ref: dev-ban-seekable-snapshot
 
     - name: Checkout_Yakushima
       uses: actions/checkout@v4
