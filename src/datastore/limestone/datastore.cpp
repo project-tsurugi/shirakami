@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 
 #include "boost/filesystem/path.hpp"
 
@@ -52,14 +53,35 @@ static int get_env_threadnum() {
     return recovery_thread_num;
 }
 
+static bool get_env_skip_load() {
+    bool recovery_skip_load = false;
+    if (auto* envstr = std::getenv("SHIRAKAMI_RECOVERY_SKIP_LOAD");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            recovery_skip_load = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            recovery_skip_load = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_RECOVERY_SKIP_LOAD; using default value";
+        }
+    }
+
+    VLOG(log_debug) << log_location_prefix << "optflag: skip loading to index "
+                    << (recovery_skip_load ? "on" : "off");
+    return recovery_skip_load;
+}
+
 void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
+    bool skip_load_to_index = get_env_skip_load();
 
     std::mutex mtx;
     std::vector<Storage> st_list_all{};
     SequenceId max_id_all{0};
 
-  auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
+  auto recovery_work = [&mtx, &st_list_all, &max_id_all, &skip_load_to_index](std::unique_ptr<limestone::api::cursor> cursor){
     /**
      * The cursor point the first entry at calling first next().
      */
@@ -79,6 +101,7 @@ void recovery_from_datastore() {
         cursor->key(key);
         cursor->value(val);
         VLOG(log_debug) << "st: " << st << shirakami_binstring(key);
+        if (skip_load_to_index) { continue; }
         // prepare function updating information
         auto put_data = [&token](Storage st, std::string_view key, std::string_view val) {
             // check record existence
@@ -219,6 +242,7 @@ void recovery_from_datastore() {
     }
   };
 
+    auto start_ts = std::chrono::system_clock::now();
     int thread_num = get_env_threadnum();
     if (thread_num <= 0) {
         auto cursor = ss->get_cursor();
@@ -246,6 +270,8 @@ VLOG(20) << "next_offset: " << next_offset;
             workers[i].join();
         }
     }
+    auto end_ts = std::chrono::system_clock::now();
+    LOG(INFO) << "recovery done, thread_num=" << thread_num << " in " << ((end_ts - start_ts) / std::chrono::milliseconds(1)) << " ms";
 
     if (max_id_all > 0) {
         // recovery sequence id generator
