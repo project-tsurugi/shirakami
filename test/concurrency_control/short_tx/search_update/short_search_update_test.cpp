@@ -27,6 +27,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-search_update_test");
         // FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_logbuflevel = -1; // no buffering
     }
 
     void SetUp() override {
@@ -103,6 +104,7 @@ TEST_F(search_update, // NOLINT
         if (ready != 2) { LOG_FIRST_N(ERROR, 1); }
 
         LOG(INFO) << "start work";
+        std::size_t loop1_cnt{0};
 
         for (;;) {
             ASSERT_EQ(Status::OK,
@@ -110,16 +112,20 @@ TEST_F(search_update, // NOLINT
                                 transaction_options::transaction_type::SHORT}));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
+            std::size_t loop2_cnt{0};
             for (;;) {
                 // search must return ok or warn not found.
                 if (rc == Status::OK || rc == Status::WARN_CONCURRENT_UPDATE) {
                     break;
                 }
                 if (rc == Status::WARN_NOT_FOUND) {
+                    // why not found?  does retry make sense?
                     rc = search_key(s, st, k, vb);
                 } else {
-                    LOG_FIRST_N(ERROR, 1) << rc;
+                    GTEST_FAIL() << "rc: " << rc;
                 }
+                ++loop2_cnt;
+                ASSERT_LT(loop2_cnt, 1000) << "loop2: " << loop2_cnt << ", rc: " << rc;
             }
             ASSERT_EQ(Status::OK, update(s, st, k, v));
             rc = commit(s); // NOLINT
@@ -131,6 +137,8 @@ TEST_F(search_update, // NOLINT
                 }
             }
             if (work_a_cnt > 10 && work_b_cnt > 10) { break; } // NOLINT
+            ++loop1_cnt;
+            ASSERT_LT(loop1_cnt, 1000) << "loop1: " << loop1_cnt << ", rc: " << rc;
         }
         ASSERT_EQ(Status::OK, leave(s));
     };
