@@ -81,7 +81,7 @@ void recovery_from_datastore() {
     std::vector<Storage> st_list_all{};
     SequenceId max_id_all{0};
 
-  auto recovery_work = [&mtx, &st_list_all, &max_id_all, &skip_load_to_index](std::unique_ptr<limestone::api::cursor> cursor){
+  auto recovery_work = [&mtx, &st_list_all, &max_id_all, &skip_load_to_index](Token token, std::unique_ptr<limestone::api::cursor> cursor){
     /**
      * The cursor point the first entry at calling first next().
      */
@@ -89,10 +89,6 @@ void recovery_from_datastore() {
 
     SequenceId max_id{0};
     Storage prev_st{storage::dummy_storage};
-
-    Token token{};
-    // acquire tx handle
-    while (enter(token) != Status::OK) { _mm_pause(); }
 
     while (cursor->next()) { // the next body is none.
         Storage st{cursor->storage()};
@@ -221,16 +217,18 @@ void recovery_from_datastore() {
             }
         } else {
             if (st != prev_st) {
+              std::string_view st_view = {
+               reinterpret_cast<char*>(&st), // NOLINT
+               sizeof(st)};
+              if (yakushima::find_storage(st_view) != yakushima::status::OK) {
                 shirakami::storage::register_storage(st); // maybe already exist
                 st_list.emplace_back(st);
+              }
             }
             put_data(st, key, val);
         }
         prev_st = st;
     }
-    // cleanup
-    leave(token);
-
 
     std::sort(st_list.begin(), st_list.end());
     st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
@@ -245,8 +243,13 @@ void recovery_from_datastore() {
     auto start_ts = std::chrono::system_clock::now();
     int thread_num = get_env_threadnum();
     if (thread_num <= 0) {
+        Token token{};
+        // acquire tx handle
+        while (enter(token) != Status::OK) { _mm_pause(); }
         auto cursor = ss->get_cursor();
-        recovery_work(std::move(cursor));
+        recovery_work(token, std::move(cursor));
+        // cleanup
+        leave(token);
     } else {
         std::mutex mtx_offset;
         long offset = 0;
@@ -255,6 +258,9 @@ void recovery_from_datastore() {
         workers.reserve(thread_num);
         for (int i = 0; i < thread_num; i++) {
             workers.emplace_back(std::thread([&ss, &mtx_offset, &offset, &recovery_work](){
+                Token token{};
+                // acquire tx handle
+                while (enter(token) != Status::OK) { _mm_pause(); }
                 for (;;) {
                     std::unique_lock<std::mutex> lock(mtx_offset);
                     if (offset < 0) break;
@@ -262,8 +268,10 @@ void recovery_from_datastore() {
 VLOG(20) << "next_offset: " << next_offset;
                     offset = next_offset;
                     lock.unlock();
-                    recovery_work(std::move(cursor));
+                    recovery_work(token, std::move(cursor));
                 }
+                // cleanup
+                leave(token);
             }));
         }
         for (int i = 0; i < thread_num; i++) {
