@@ -29,9 +29,6 @@ namespace shirakami::logging {
 
 #define shirakami_log_entry                                                    \
     VLOG(log_trace) << std::boolalpha << log_location_prefix << "-->" // NOLINT
-#define shirakami_log_entry_lazy(data)                                         \
-    if (VLOG_IS_ON(log_trace))                                                 \
-        LOG(INFO)   << std::boolalpha << log_location_prefix << "-->" << data
 #define shirakami_log_exit                                                     \
     VLOG(log_trace) << std::boolalpha << log_location_prefix << "<--" // NOLINT
 #define shirakami_ex_log_entry                                                 \

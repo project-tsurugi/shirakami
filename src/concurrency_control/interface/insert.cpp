@@ -173,10 +173,10 @@ Status insert(Token const token, Storage const storage, // NOLINT
               const std::string_view val,
               blob_id_type const* blobs_data,
               std::size_t blobs_size) {
-    shirakami_log_entry_lazy("insert, token: " << token << ", storage: " << storage
-                             << shirakami_binstring(key) << shirakami_binstring(val)
-                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
-                             << " " << span_printer(blobs_data, blobs_size));
+    shirakami_log_entry << "insert, token: " << token << ", storage: " << storage
+                        << "," shirakami_binstring(key) "," shirakami_binstring(val)
+                           ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                        << " " << span_printer(blobs_data, blobs_size);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};

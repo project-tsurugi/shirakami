@@ -97,12 +97,11 @@ void add_entry(limestone::api::log_channel* lc,
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return;
     }
-    shirakami_log_entry_lazy("log_channel::add_entry(): storage_id: "
-                             << storage_id << shirakami_binstring(key)
-                             << shirakami_binstring(val)
-                             << ", major write version: " << major_version
-                             << ", minor write version: " << minor_version
-                             << shirakami_vecstring(large_objects));
+    shirakami_log_entry << "log_channel::add_entry(): storage_id: "
+                        << storage_id << "," shirakami_binstring(key) "," shirakami_binstring(val)
+                           ", major write version: " << major_version
+                        << ", minor write version: " << minor_version
+                        << "," shirakami_vecstring(large_objects);
 #if 0
     lc->add_entry(
             storage_id, key, val,
