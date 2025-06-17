@@ -129,10 +129,9 @@ Status create_storage_body(std::string_view const key, Storage& storage,
 
 Status create_storage(std::string_view key, Storage& storage,
                       storage_option const& options) {
-    shirakami_log_entry << "create_storage " << shirakami_binstring(key)
-                        << ", storage: " << storage << ", options: " << options;
+    shirakami_log_entry << "create_storage," shirakami_binstring(key) ", options: " << options;
     auto ret = create_storage_body(key, storage, options);
-    shirakami_log_exit << "create_storage, " << ret;
+    shirakami_log_exit << "create_storage, Status: " << ret << ", storage: " << storage;
     return ret;
 }
 
@@ -171,10 +170,9 @@ Status get_storage_body(std::string_view const key, Storage& out) {
 }
 
 Status get_storage(std::string_view key, Storage& out) {
-    shirakami_log_entry << "get_storage " << shirakami_binstring(key)
-                        << ", out: " << out;
+    shirakami_log_entry << "get_storage," shirakami_binstring(key);
     auto ret = get_storage_body(key, out);
-    shirakami_log_exit << "get_storage, " << ret;
+    shirakami_log_exit << "get_storage, Status: " << ret << ", out: " << out;
     return ret;
 }
 
@@ -242,10 +240,9 @@ Status storage_get_options_body(Storage storage, storage_option& options) {
 }
 
 Status storage_get_options(Storage storage, storage_option& options) {
-    shirakami_log_entry << "storage_get_options, storage: " << storage
-                        << ", options: " << options;
+    shirakami_log_entry << "storage_get_options, storage: " << storage;
     auto ret = storage_get_options_body(storage, options);
-    shirakami_log_exit << "storage_get_options, " << ret;
+    shirakami_log_exit << "storage_get_options, Status: " << ret << ", options: " << options;
     return ret;
 }
 

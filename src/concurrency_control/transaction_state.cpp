@@ -59,10 +59,9 @@ Status acquire_tx_state_handle_body(Token const token, // NOLINT
 
 Status acquire_tx_state_handle(Token const token, // NOLINT
                                TxStateHandle& handle) {
-    shirakami_log_entry << "acquire_tx_state_handle, token: " << token
-                        << ", handle: " << handle;
+    shirakami_log_entry << "acquire_tx_state_handle, token: " << token;
     auto ret = acquire_tx_state_handle_body(token, handle);
-    shirakami_log_exit << "acquire_tx_state_handle, Status: " << ret;
+    shirakami_log_exit << "acquire_tx_state_handle, Status: " << ret << ", handle: " << handle;
     return ret;
 }
 
@@ -149,8 +148,7 @@ Status check_tx_state_body(TxStateHandle handle, TxState& out) {
 }
 
 Status check_tx_state(TxStateHandle handle, TxState& out) {
-    shirakami_log_entry << "check_tx_state, handle: " << handle
-                        << ", out: " << out;
+    shirakami_log_entry << "check_tx_state, handle: " << handle;
     auto ret = check_tx_state_body(handle, out);
     shirakami_log_exit << "check_tx_state, Status: " << ret << ", out: " << out;
     return ret;
@@ -180,10 +178,9 @@ Status check_ltx_is_highest_priority_body(Token token, bool& out) {
 }
 
 Status check_ltx_is_highest_priority(Token token, bool& out) {
-    shirakami_log_entry << "check_ltx_is_highest_priority, token: " << token
-                        << ", out: " << out;
+    shirakami_log_entry << "check_ltx_is_highest_priority, token: " << token;
     auto ret = check_ltx_is_highest_priority_body(token, out);
-    shirakami_log_exit << "check_ltx_is_highest_priority, Status: " << ret;
+    shirakami_log_exit << "check_ltx_is_highest_priority, Status: " << ret << ", out: " << out;
     return ret;
 }
 

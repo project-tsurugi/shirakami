@@ -39,9 +39,7 @@ Status scannable_total_index_size_body(Token const token, ScanHandle const handl
 
 Status scannable_total_index_size(Token const token, ScanHandle const handle, // NOLINT
                                   std::size_t& size) {
-    shirakami_log_entry << "scannable_total_index_size, "
-                        << "token: " << token << ", handle: " << handle
-                        << ", size: " << size;
+    shirakami_log_entry << "scannable_total_index_size, token: " << token << ", handle: " << handle;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};

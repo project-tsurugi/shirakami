@@ -131,7 +131,7 @@ Status search_key(Token const token, Storage const storage, // NOLINT
         ret = search_key_body(token, storage, key, value);
     }
     ti->process_before_finish_step();
-    shirakami_log_exit << "search_key, Status: " << ret;
+    shirakami_log_exit << "search_key, Status: " << ret << "," shirakami_binstring(value);
     return ret;
 }
 
