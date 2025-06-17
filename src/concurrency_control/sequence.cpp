@@ -30,7 +30,7 @@ Status update_sequence(Token const token, SequenceId const id, // NOLINT
     shirakami_log_entry << "update_sequence, token: " << token << ", id: " << id
                         << ", version: " << version << ", value: " << value;
     auto ret = sequence::update_sequence(token, id, version, value);
-    shirakami_log_exit << "update_sequence, " << ret;
+    shirakami_log_exit << "update_sequence, Status: " << ret;
     return ret;
 }
 
@@ -40,14 +40,14 @@ Status read_sequence(SequenceId const id, SequenceVersion* const version,
     shirakami_log_entry << "read_sequence, id: " << id
                         << ", version: " << version << ", value: " << value;
     auto ret = sequence::read_sequence(id, version, value);
-    shirakami_log_exit << "read_sequence, " << ret;
+    shirakami_log_exit << "read_sequence, Status: " << ret;
     return ret;
 }
 
 Status delete_sequence(SequenceId const id) {
     shirakami_log_entry << "delete_sequence, id: " << id;
     auto ret = sequence::delete_sequence(id);
-    shirakami_log_exit << "delete_sequence, " << ret;
+    shirakami_log_exit << "delete_sequence, Status: " << ret;
     return ret;
 }
 

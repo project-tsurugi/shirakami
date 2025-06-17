@@ -158,7 +158,7 @@ Status delete_storage_body(Storage const storage) {
 Status delete_storage(Storage const storage) {
     shirakami_log_entry << "delete_storage, storage: " << storage;
     auto ret = delete_storage_body(storage);
-    shirakami_log_exit << "delete_storage, " << ret;
+    shirakami_log_exit << "delete_storage, Status: " << ret;
     return ret;
 }
 
@@ -290,7 +290,7 @@ Status storage_set_options(Storage storage, storage_option const& options) {
     shirakami_log_entry << "storage_set_options, storage: " << storage
                         << ", options: " << options;
     auto ret = storage_set_options_body(storage, options);
-    shirakami_log_exit << "storage_set_options, " << ret;
+    shirakami_log_exit << "storage_set_options, Status: " << ret;
     return ret;
 }
 

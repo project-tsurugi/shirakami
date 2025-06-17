@@ -27,7 +27,7 @@ create_channel(limestone::api::datastore* ds,
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return nullptr;
     }
-    shirakami_log_entry << "datastore::create_channel(): " << location;
+    shirakami_log_entry << "datastore::create_channel(): location: " << location;
     auto& ret = ds->create_channel(location);
     shirakami_log_exit << "datastore::create_channel()";
     return &ret;
@@ -133,8 +133,8 @@ void remove_entry(limestone::api::log_channel* const lc,
         return;
     }
     shirakami_log_entry << "log_channel::remove_entry(): storage_id: "
-                        << storage_id << shirakami_binstring(key)
-                        << ", major write version: " << major_version
+                        << storage_id << "," shirakami_binstring(key)
+                           ", major write version: " << major_version
                         << ", minor write version: " << minor_version;
     lc->remove_entry(
             storage_id, key,
