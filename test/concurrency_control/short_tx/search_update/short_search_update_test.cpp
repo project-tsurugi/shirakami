@@ -1,7 +1,6 @@
 
 #include <emmintrin.h>
 #include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <cstddef>
@@ -87,21 +86,13 @@ TEST_F(search_update, // NOLINT
     std::atomic<std::size_t> ready{0};
     std::atomic<std::size_t> work_a_cnt{0};
     std::atomic<std::size_t> work_b_cnt{0};
-    std::mutex mtx_ready;
-    std::condition_variable cond;
-    auto work = [st, k, &ready, &mtx_ready, &cond, &work_a_cnt,
-                 &work_b_cnt](std::string const& v, bool is_a) {
+    auto work = [st, k, &ready, &work_a_cnt, &work_b_cnt](std::string const& v, bool is_a) {
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
 
         ++ready;
         // wait for other
-        {
-            std::unique_lock<std::mutex> lk{mtx_ready};
-
-            cond.wait(lk, [&ready] { return ready == 2; });
-        }
-        if (ready != 2) { LOG_FIRST_N(ERROR, 1); }
+        while (ready.load() != 2) { _mm_pause(); }
 
         LOG(INFO) << "start work";
         std::size_t loop1_cnt{0};
@@ -145,16 +136,6 @@ TEST_F(search_update, // NOLINT
 
     std::thread work_a(work, v1, true);
     std::thread work_b(work, v2, false);
-
-    // ready
-    for (;;) {
-        if (ready == 2) {
-            // go
-            cond.notify_all();
-            break;
-        }
-        _mm_pause();
-    }
 
     work_a.join();
     work_b.join();
