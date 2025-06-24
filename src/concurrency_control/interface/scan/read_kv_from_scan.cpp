@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-Status read_from_scan(Token token, ScanHandle handle, bool key_read,
+static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
                       std::string& buf) {
     auto* ti = static_cast<session*>(token);
 

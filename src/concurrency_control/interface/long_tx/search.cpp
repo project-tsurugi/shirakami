@@ -23,7 +23,7 @@
 
 namespace shirakami::long_tx {
 
-void set_read_version_max_epoch_if_need(session* ti, epoch::epoch_t ep) {
+static void set_read_version_max_epoch_if_need(session* ti, epoch::epoch_t ep) {
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
         ti->set_read_version_max_epoch_if_need(ep);
     }
