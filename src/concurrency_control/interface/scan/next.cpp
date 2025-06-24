@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-Status next_body(Token const token, ScanHandle const handle) { // NOLINT
+static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_cache_obj*>(handle);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }

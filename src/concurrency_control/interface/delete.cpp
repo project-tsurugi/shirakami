@@ -105,7 +105,7 @@ static void process_before_return_not_found(session* const ti,
     }
 }
 
-Status delete_record_body(Token token, Storage storage,
+static Status delete_record_body(Token token, Storage storage,
                           const std::string_view key) { // NOLINT
     // check constraint: key
     auto ret = check_constraint_key_length(key);

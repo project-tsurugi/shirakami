@@ -44,7 +44,7 @@ static void process_before_return_not_found(session* const ti,
     }
 }
 
-Status update_body(Token token, Storage storage,
+static Status update_body(Token token, Storage storage,
                    const std::string_view key,
                    const std::string_view val,
                    blob_id_type const* blobs_data,
