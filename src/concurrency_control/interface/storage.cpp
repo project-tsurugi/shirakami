@@ -66,7 +66,6 @@ void write_storage_metadata(std::string_view key, Storage st,
 void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
-    std::string value{};
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
