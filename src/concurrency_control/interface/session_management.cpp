@@ -50,9 +50,9 @@ Status enter_body(Token& token) { // NOLINT
 }
 
 Status enter(Token& token) { // NOLINT
-    shirakami_log_entry << "enter, token: " << token;
+    shirakami_log_entry << "enter";
     auto ret = enter_body(token);
-    shirakami_log_exit << "enter, Status: " << ret;
+    shirakami_log_exit << "enter, Status: " << ret << ", token: " << token;
     return ret;
 }
 

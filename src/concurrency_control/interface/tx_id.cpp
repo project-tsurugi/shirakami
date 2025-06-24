@@ -49,8 +49,7 @@ Status get_tx_id_body(Token token, std::string& tx_id) {
 }
 
 Status get_tx_id(Token token, std::string& tx_id) {
-    shirakami_log_entry << "get_tx_id, token: " << token
-                        << ", tx_id: " << tx_id;
+    shirakami_log_entry << "get_tx_id, token: " << token;
     auto ret = get_tx_id_body(token, tx_id);
     shirakami_log_exit << "get_tx_id, Status: " << ret << ", tx_id: " << tx_id;
     return ret;

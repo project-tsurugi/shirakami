@@ -410,10 +410,10 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
-    shirakami_log_entry_lazy("open_scan token: " << token << ", storage: " << storage
-                             << shirakami_binstring(l_key) << ", l_end: " << l_end
-                             << shirakami_binstring(r_key) << ", r_end: " << r_end
-                             << ", max_size: " << max_size << ", right_to_left: " << right_to_left);
+    shirakami_log_entry << "open_scan token: " << token << ", storage: " << storage
+                        << "," shirakami_binstring(l_key) ", l_end: " << l_end
+                        << "," shirakami_binstring(r_key) ", r_end: " << r_end
+                        << ", max_size: " << max_size << ", right_to_left: " << right_to_left;
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};

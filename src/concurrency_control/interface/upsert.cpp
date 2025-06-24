@@ -152,10 +152,10 @@ Status upsert(Token token, Storage storage, std::string_view const key,
               std::string_view const val,
               blob_id_type const* blobs_data,
               std::size_t blobs_size) {
-    shirakami_log_entry_lazy("upsert, token: " << token << ", storage: " << storage
-                             << shirakami_binstring(key) << shirakami_binstring(val)
-                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
-                             << " " << span_printer(blobs_data, blobs_size));
+    shirakami_log_entry << "upsert, token: " << token << ", storage: " << storage
+                        << "," shirakami_binstring(key) "," shirakami_binstring(val)
+                           ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                        << " " << span_printer(blobs_data, blobs_size);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     auto ret = upsert_body(token, storage, key, val, blobs_data, blobs_size);

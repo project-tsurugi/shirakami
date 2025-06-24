@@ -50,6 +50,12 @@ void recovery_from_datastore() {
 
     auto cursor = ss->get_cursor();
     SequenceId max_id{0};
+    Storage prev_st{storage::dummy_storage};
+
+    Token token{};
+    // acquire tx handle
+    while (enter(token) != Status::OK) { _mm_pause(); }
+
     while (cursor->next()) { // the next body is none.
         Storage st{cursor->storage()};
         std::string key{};
@@ -57,8 +63,7 @@ void recovery_from_datastore() {
         cursor->key(key);
         cursor->value(val);
         // prepare function updating information
-        auto put_data = [](Storage st, std::string_view key,
-                           std::string_view val) {
+        auto put_data = [&token](Storage st, std::string_view key, std::string_view val) {
             // check record existence
             Record* rec_ptr{};
             if (Status::OK == get<Record>(st, key, rec_ptr)) {
@@ -78,9 +83,6 @@ void recovery_from_datastore() {
                 // set tid
                 rec_ptr->set_tid(new_tid);
                 // put contents to tree
-                Token token{};
-                // acquire tx handle
-                while (enter(token) != Status::OK) { _mm_pause(); }
                 yakushima::node_version64* dummy{};
                 auto rc = put<Record>(
                         static_cast<session*>(token)->get_yakushima_token(), st,
@@ -90,8 +92,6 @@ void recovery_from_datastore() {
                     LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                           << "unreachable path: " << rc;
                 }
-                // cleanup
-                leave(token);
             }
         };
         // check storage
@@ -180,11 +180,17 @@ void recovery_from_datastore() {
                 return;
             }
         } else {
-            shirakami::storage::register_storage(st); // maybe already exist
-            st_list.emplace_back(st);
+            if (st != prev_st) {
+                shirakami::storage::register_storage(st); // maybe already exist
+                st_list.emplace_back(st);
+            }
             put_data(st, key, val);
         }
+        prev_st = st;
     }
+    // cleanup
+    leave(token);
+
     if (max_id > 0) {
         // recovery sequence id generator
         sequence::id_generator_ctr().store(max_id + 1,

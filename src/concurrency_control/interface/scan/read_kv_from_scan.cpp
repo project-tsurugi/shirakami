@@ -220,8 +220,7 @@ Status read_key_from_scan(Token const token, ScanHandle const handle, // NOLINT
         ret = read_from_scan(token, handle, true, key);
     }
     ti->process_before_finish_step();
-    shirakami_log_exit << "read_key_from_scan, Status: " << ret
-                       << ", key: " << key;
+    shirakami_log_exit << "read_key_from_scan, Status: " << ret << "," shirakami_binstring(key);
     return ret;
 }
 
@@ -238,8 +237,7 @@ Status read_value_from_scan(Token const token, ScanHandle const handle, // NOLIN
         ret = read_from_scan(token, handle, false, value);
     }
     ti->process_before_finish_step();
-    shirakami_log_exit << "read_value_from_scan, Status: " << ret << ", value: "
-                       << shirakami_binstring(std::string_view(value));
+    shirakami_log_exit << "read_value_from_scan, Status: " << ret << "," shirakami_binstring(value);
     return ret;
 }
 

@@ -1,7 +1,6 @@
 
 #include <emmintrin.h>
 #include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <cstddef>
@@ -27,6 +26,7 @@ public:
         google::InitGoogleLogging(
                 "shirakami-test-concurrency_control-silo-search_update_test");
         // FLAGS_stderrthreshold = 0; // output more than INFO
+        // FLAGS_logbuflevel = -1; // no buffering
     }
 
     void SetUp() override {
@@ -86,23 +86,16 @@ TEST_F(search_update, // NOLINT
     std::atomic<std::size_t> ready{0};
     std::atomic<std::size_t> work_a_cnt{0};
     std::atomic<std::size_t> work_b_cnt{0};
-    std::mutex mtx_ready;
-    std::condition_variable cond;
-    auto work = [st, k, &ready, &mtx_ready, &cond, &work_a_cnt,
-                 &work_b_cnt](std::string const& v, bool is_a) {
+    auto work = [st, k, &ready, &work_a_cnt, &work_b_cnt](std::string const& v, bool is_a) {
         Token s{};
         ASSERT_EQ(Status::OK, enter(s));
 
         ++ready;
         // wait for other
-        {
-            std::unique_lock<std::mutex> lk{mtx_ready};
-
-            cond.wait(lk, [&ready] { return ready == 2; });
-        }
-        if (ready != 2) { LOG_FIRST_N(ERROR, 1); }
+        while (ready.load() != 2) { _mm_pause(); }
 
         LOG(INFO) << "start work";
+        std::size_t loop1_cnt{0};
 
         for (;;) {
             ASSERT_EQ(Status::OK,
@@ -110,16 +103,20 @@ TEST_F(search_update, // NOLINT
                                 transaction_options::transaction_type::SHORT}));
             std::string vb{};
             auto rc{search_key(s, st, k, vb)};
+            std::size_t loop2_cnt{0};
             for (;;) {
                 // search must return ok or warn not found.
                 if (rc == Status::OK || rc == Status::WARN_CONCURRENT_UPDATE) {
                     break;
                 }
                 if (rc == Status::WARN_NOT_FOUND) {
+                    // why not found?  does retry make sense?
                     rc = search_key(s, st, k, vb);
                 } else {
-                    LOG_FIRST_N(ERROR, 1) << rc;
+                    GTEST_FAIL() << "rc: " << rc;
                 }
+                ++loop2_cnt;
+                ASSERT_LT(loop2_cnt, 1000) << "loop2: " << loop2_cnt << ", rc: " << rc;
             }
             ASSERT_EQ(Status::OK, update(s, st, k, v));
             rc = commit(s); // NOLINT
@@ -131,22 +128,14 @@ TEST_F(search_update, // NOLINT
                 }
             }
             if (work_a_cnt > 10 && work_b_cnt > 10) { break; } // NOLINT
+            ++loop1_cnt;
+            ASSERT_LT(loop1_cnt, 1000) << "loop1: " << loop1_cnt << ", rc: " << rc;
         }
         ASSERT_EQ(Status::OK, leave(s));
     };
 
     std::thread work_a(work, v1, true);
     std::thread work_b(work, v2, false);
-
-    // ready
-    for (;;) {
-        if (ready == 2) {
-            // go
-            cond.notify_all();
-            break;
-        }
-        _mm_pause();
-    }
 
     work_a.join();
     work_b.join();

@@ -103,10 +103,10 @@ Status update(Token token, Storage storage,
               std::string_view const val,
               blob_id_type const* blobs_data,
               std::size_t blobs_size) {
-    shirakami_log_entry_lazy("update, token: " << token << ", storage: " << storage
-                             << shirakami_binstring(key) << shirakami_binstring(val)
-                             << ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
-                             << " " << span_printer(blobs_data, blobs_size));
+    shirakami_log_entry << "update, token: " << token << ", storage: " << storage
+                        << "," shirakami_binstring(key) "," shirakami_binstring(val)
+                           ", blobs_data: " << blobs_data << ", blobs_size: " << blobs_size
+                        << " " << span_printer(blobs_data, blobs_size);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};

@@ -152,8 +152,8 @@ Status delete_record_body(Token token, Storage storage,
 }
 
 Status delete_record(Token token, Storage storage, const std::string_view key) {
-    shirakami_log_entry << "delete_record token: " << token
-                        << " storage: " << storage << shirakami_binstring(key);
+    shirakami_log_entry << "delete_record, token: " << token
+                        << ", storage: " << storage << "," shirakami_binstring(key);
     auto* ti = static_cast<session*>(token);
     ti->process_before_start_step();
     Status ret{};
