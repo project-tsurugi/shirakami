@@ -43,12 +43,16 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
 void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
 
+    std::mutex mtx;
+    std::vector<Storage> st_list_all{};
+    SequenceId max_id_all{0};
+
+  auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
     /**
      * The cursor point the first entry at calling first next().
      */
     std::vector<Storage> st_list{};
 
-    auto cursor = ss->get_cursor();
     SequenceId max_id{0};
     Storage prev_st{storage::dummy_storage};
 
@@ -180,13 +184,40 @@ void recovery_from_datastore() {
     // cleanup
     leave(token);
 
-    if (max_id > 0) {
+
+    std::sort(st_list.begin(), st_list.end());
+    st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
+
+    std::lock_guard lk{mtx};
+    max_id_all = std::max(max_id_all, max_id);
+    for (auto&& e : st_list) {
+        st_list_all.emplace_back(e);
+    }
+  };
+
+    std::size_t thread_num = 8; // TODO: config
+    if (thread_num <= 0) {
+        auto cursor = ss->get_cursor();
+        recovery_work(std::move(cursor));
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(thread_num);
+        std::vector<std::unique_ptr<limestone::api::cursor>> cursor_vec = ss->get_partitioned_cursors(thread_num);
+        for (std::size_t i = 0; i < thread_num; i++) {
+            workers.emplace_back(std::thread(recovery_work, std::move(cursor_vec[i])));
+        }
+        for (std::size_t i = 0; i < thread_num; i++) {
+            workers[i].join();
+        }
+    }
+
+    if (max_id_all > 0) {
         // recovery sequence id generator
-        sequence::id_generator_ctr().store(max_id + 1,
+        sequence::id_generator_ctr().store(max_id_all + 1,
                                            std::memory_order_release);
     }
     // recovery storage meta
-    if (!st_list.empty()) { recovery_storage_meta(st_list); }
+    if (!st_list_all.empty()) { recovery_storage_meta(st_list_all); }
     // recovery epoch info
 }
 
