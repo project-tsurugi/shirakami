@@ -248,23 +248,11 @@ void recovery_from_datastore() {
         auto cursor = ss->get_cursor();
         recovery_work(std::move(cursor));
     } else {
-        std::mutex mtx_offset;
-        long offset = 0;
-
         std::vector<std::thread> workers;
         workers.reserve(thread_num);
+        std::vector<std::unique_ptr<limestone::api::cursor>> cursor_vec = ss->get_partitioned_cursors(thread_num);
         for (int i = 0; i < thread_num; i++) {
-            workers.emplace_back(std::thread([&ss, &mtx_offset, &offset, &recovery_work](){
-                for (;;) {
-                    std::unique_lock<std::mutex> lock(mtx_offset);
-                    if (offset < 0) break;
-                    auto [cursor, next_offset] = ss->get_chunk_cursor(offset);
-VLOG(20) << "next_offset: " << next_offset;
-                    offset = next_offset;
-                    lock.unlock();
-                    recovery_work(std::move(cursor));
-                }
-            }));
+            workers.emplace_back(std::thread(recovery_work, std::move(cursor_vec[i])));
         }
         for (int i = 0; i < thread_num; i++) {
             workers[i].join();
