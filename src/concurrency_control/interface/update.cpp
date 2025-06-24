@@ -44,11 +44,10 @@ static void process_before_return_not_found(session* const ti,
     }
 }
 
-Status update_body(Token token, Storage storage,
-                   const std::string_view key,
-                   const std::string_view val,
-                   blob_id_type const* blobs_data,
-                   std::size_t blobs_size) {
+static Status update_body(
+        Token token, Storage storage,
+        const std::string_view key, const std::string_view val,
+        blob_id_type const* blobs_data, std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }

@@ -11,7 +11,7 @@
 
 namespace shirakami {
 
-void add_durability_callbacks(durability_callback_type const& dc) {
+static void add_durability_callbacks(durability_callback_type const& dc) {
     std::unique_lock<std::mutex> lk{get_mtx_durability_callbacks()};
 #ifdef PWAL
     // enable logging

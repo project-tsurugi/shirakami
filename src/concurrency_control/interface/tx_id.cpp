@@ -8,7 +8,7 @@
 
 namespace shirakami {
 
-Status get_tx_id_body(Token token, std::string& tx_id) {
+static Status get_tx_id_body(Token token, std::string& tx_id) {
     // prepare
     auto* ti = static_cast<session*>(token);
 

@@ -26,7 +26,7 @@ namespace shirakami::lpwal {
 /**
  * @brief It executes log_channel_.add_entry for entire logs_.
  */
-void add_entry_from_logs(handler& handle) {
+static void add_entry_from_logs(handler& handle) {
     // send logs to datastore
     for (auto&& log_elem : handle.get_logs()) {
         if (log_elem.get_operation() == log_operation::DELETE) {
@@ -75,7 +75,7 @@ void add_entry_from_logs(handler& handle) {
     handle.set_min_log_epoch(0);
 }
 
-void daemon_work() {
+static void daemon_work() {
     for (;;) {
         // sleep epoch time
         sleepUs(epoch::get_global_epoch_time_us());
@@ -135,7 +135,7 @@ void handler::end_session() {
 }
 
 // @pre take mtx of logs
-void flush_log_and_end_session_if_exists(lpwal::handler& handle) {
+static void flush_log_and_end_session_if_exists(lpwal::handler& handle) {
     if (!handle.get_logs().empty()) {
         if (!handle.get_begun_session()) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()

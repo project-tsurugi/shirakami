@@ -17,7 +17,7 @@
 
 namespace shirakami::short_tx {
 
-inline Status wp_verify(session* const ti, Storage const st) {
+static inline Status wp_verify(session* const ti, Storage const st) {
     wp::wp_meta* wm{};
     auto rc{wp::find_wp_meta(st, wm)};
     if (rc != Status::OK) { return Status::WARN_STORAGE_NOT_FOUND; }
