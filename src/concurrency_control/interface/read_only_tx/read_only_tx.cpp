@@ -28,8 +28,8 @@ Status abort(session* const ti) {
     return Status::OK;
 }
 
-void process_tx_state(session* const ti,
-                      [[maybe_unused]] epoch::epoch_t const durable_epoch) {
+static void process_tx_state(session* const ti,
+                             [[maybe_unused]] epoch::epoch_t const durable_epoch) {
     if (ti->get_has_current_tx_state_handle()) {
 #ifdef PWAL
         // this tx state is checked

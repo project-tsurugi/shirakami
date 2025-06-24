@@ -19,7 +19,7 @@ bool session::check_exist_wp_set(Storage storage) const {
                        });
 }
 
-void clear_about_read_area(session* ti) { ti->set_read_area({}); }
+static void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 
 void session::clear_local_set() {
     node_set_.clear();

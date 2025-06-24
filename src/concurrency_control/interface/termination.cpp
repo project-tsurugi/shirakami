@@ -11,7 +11,7 @@
 
 namespace shirakami {
 
-Status abort_body(Token token) { // NOLINT
+static Status abort_body(Token token) { // NOLINT
     // clean up local set
     auto* ti = static_cast<session*>(token);
     // check whether it already began.
@@ -59,8 +59,8 @@ Status abort(Token token) { // NOLINT
     return ret;
 }
 
-Status commit_body(Token const token,                    // NOLINT
-                   commit_callback_type callback = {}) { // NOLINT
+static Status commit_body(Token const token,                    // NOLINT
+                          commit_callback_type callback = {}) { // NOLINT
     // default 引数は後方互換性のため。いずれ削除する。
     auto* ti = static_cast<session*>(token);
     // check whether it already began.

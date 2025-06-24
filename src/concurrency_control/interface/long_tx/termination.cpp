@@ -408,7 +408,7 @@ Status abort(session* const ti) { // NOLINT
     return Status::OK;
 }
 
-void register_read_by(session* const ti) {
+static void register_read_by(session* const ti) {
     // point read
     // register to page info
     {
@@ -435,7 +435,7 @@ void register_read_by(session* const ti) {
     }
 }
 
-Status verify(session* const ti) {
+static Status verify(session* const ti) {
     // forwarding verify
     auto gc_threshold = epoch::get_cc_safe_ss_epoch();
     {
@@ -675,8 +675,8 @@ Status check_wait_for_preceding_bt(session* const ti) {
     return rc;
 }
 
-void process_tx_state(session* ti,
-                      [[maybe_unused]] epoch::epoch_t durable_epoch) {
+static void process_tx_state(session* ti,
+                             [[maybe_unused]] epoch::epoch_t durable_epoch) {
     if (ti->get_has_current_tx_state_handle()) {
 #ifdef PWAL
         // this tx state is checked
@@ -689,7 +689,7 @@ void process_tx_state(session* ti,
     }
 }
 
-void update_read_area(session* const ti) {
+static void update_read_area(session* const ti) {
     if (ti->get_ltx_storage_read_set().empty()) {
         // write only tx
         read_plan::add_elem(ti->get_long_tx_id(),

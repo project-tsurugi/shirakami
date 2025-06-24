@@ -18,7 +18,7 @@
 
 namespace shirakami {
 
-void abort_update(session* ti) {
+static void abort_update(session* ti) {
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         short_tx::abort(ti);
     } else if (ti->get_tx_type() ==
@@ -76,10 +76,10 @@ static inline Status insert_process(session* const ti, Storage st,
     return Status::WARN_CONCURRENT_INSERT;
 }
 
-Status upsert_body(Token token, Storage storage, const std::string_view key,
-                   const std::string_view val,
-                   blob_id_type const* blobs_data,
-                   std::size_t blobs_size) {
+static Status upsert_body(
+        Token token, Storage storage,
+        const std::string_view key, const std::string_view val,
+        blob_id_type const* blobs_data, std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }

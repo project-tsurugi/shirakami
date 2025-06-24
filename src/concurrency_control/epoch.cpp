@@ -22,7 +22,7 @@
 
 namespace shirakami::epoch {
 
-inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
+static inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
     epoch_t min_short_expose_ongoing_target_epoch{session::lock_and_epoch_t::UINT63_MASK};
     for (auto&& itr : session_table::get_session_table()) {
         // update short_expose_ongoing_status
@@ -67,7 +67,7 @@ inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
     set_min_epoch_occ_potentially_write(min_short_expose_ongoing_target_epoch);
 }
 
-inline void compute_and_set_cc_safe_ss_epoch() {
+static inline void compute_and_set_cc_safe_ss_epoch() {
     // compute cc safe ss epoch
     // get read lock and block ending of highest priori ltx
     epoch_t result_epoch{0};

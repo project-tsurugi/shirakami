@@ -33,7 +33,7 @@
 
 namespace shirakami::garbage {
 
-void set_envflags() {
+static void set_envflags() {
     // check environ "SHIRAKAMI_REDUCE_GC"
     constexpr bool reduce_gc_default = true;
     bool reduce_gc = reduce_gc_default;
@@ -132,7 +132,7 @@ void work_manager() {
     }
 }
 
-version* find_latest_invisible_version_from_batch(
+static version* find_latest_invisible_version_from_batch(
         Record* rec_ptr, version*& pre_ver,
         std::size_t& average_version_list_size, bool& old_version_still_exists) {
     version* ver{rec_ptr->get_latest()};
@@ -157,7 +157,7 @@ version* find_latest_invisible_version_from_batch(
     }
 }
 
-void delete_version_list(version* ver) {
+static void delete_version_list(version* ver) {
     while (ver != nullptr) {
         version* v_next = ver->get_next();
         delete ver; // NOLINT
@@ -166,7 +166,7 @@ void delete_version_list(version* ver) {
     }
 }
 
-Status check_unhooking_key_state(tid_word check) {
+static Status check_unhooking_key_state(tid_word check) {
     if (check.get_latest() && check.get_absent()) {
         return Status::INTERNAL_WARN_CONCURRENT_INSERT;
     }
@@ -182,7 +182,7 @@ Status check_unhooking_key_state(tid_word check) {
  * @return Status::INTERNAL_WARN_PREMATURE it can't unhook from the point of
  * view of timestamp.
  */
-inline Status check_unhooking_key_ts(tid_word check) {
+static inline Status check_unhooking_key_ts(tid_word check) {
     if (
             // threshold for stx.
             check.get_epoch() < garbage::get_min_begin_epoch() &&
@@ -204,7 +204,7 @@ inline Status check_unhooking_key_ts(tid_word check) {
  * concurrently.
  * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
  */
-inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, bool& absent_still_exists) {
+static inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, bool& absent_still_exists) {
     tid_word check{};
 
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
@@ -274,7 +274,7 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, b
     return Status::OK;
 }
 
-void unhooking_keys_and_pruning_versions(
+static void unhooking_keys_and_pruning_versions(
         yakushima::Token ytk, Storage st, Record* rec_ptr,
         std::size_t& average_version_list_size, bool& not_collected_record) {
     // unhooking keys
@@ -318,7 +318,7 @@ void unhooking_keys_and_pruning_versions(
     }
 }
 
-inline void unhooking_keys_and_pruning_versions_at_the_storage(
+static inline void unhooking_keys_and_pruning_versions_at_the_storage(
         Storage st, std::size_t& record_num,
         std::size_t& average_version_list_size, std::size_t& average_key_size,
         std::size_t& average_value_size) {
@@ -382,7 +382,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
     process_before_fin();
 }
 
-inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
+static inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
@@ -415,13 +415,13 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     }
 }
 
-void force_release_key_memory() {
+static void force_release_key_memory() {
     auto& cont = garbage::get_container_rec();
     for (auto& elem : cont) { delete elem.first; } // NOLINT
     cont.clear();
 }
 
-void release_key_memory() {
+static void release_key_memory() {
     auto& cont = garbage::get_container_rec();
     // compute minimum epoch
     auto me = std::min(garbage::get_min_begin_epoch(), garbage::get_min_batch_epoch());
@@ -459,7 +459,7 @@ void set_dirty(Storage st) {
     }
 }
 
-void output_gc_stats(stats_info_type const& stats_info) {
+static void output_gc_stats(stats_info_type const& stats_info) {
     //std::stringstream ss;
     //ss.clear();
     VLOG(log_info_gc_stats)
