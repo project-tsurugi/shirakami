@@ -186,7 +186,32 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
 void recovery_from_datastore() {
     auto ss = get_snapshot(get_datastore());
 
-    auto [max_id, st_list] = recovery_from_cursor(ss->get_cursor());
+    std::mutex mtx; // for following two variables
+    std::vector<Storage> st_list{};
+    SequenceId max_id{0};
+
+    auto recovery_work = [&mtx, &st_list, &max_id](std::unique_ptr<limestone::api::cursor> cursor){
+        auto [max_id_1, st_list_1] = recovery_from_cursor(std::move(cursor));
+        std::lock_guard lk{mtx};
+        max_id = std::max(max_id, max_id_1);
+        st_list.insert(st_list.end(), st_list_1.begin(), st_list_1.end());
+    };
+
+    std::size_t thread_num = 8; // TODO: config // NOLINT
+    if (thread_num <= 0) {
+        auto cursor = ss->get_cursor();
+        recovery_work(std::move(cursor));
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(thread_num);
+        auto cursor_vec = ss->get_partitioned_cursors(thread_num);
+        for (std::size_t i = 0; i < thread_num; i++) {
+            workers.emplace_back(recovery_work, std::move(cursor_vec[i]));
+        }
+        for (std::size_t i = 0; i < thread_num; i++) {
+            workers[i].join();
+        }
+    }
 
     if (max_id > 0) {
         // recovery sequence id generator
