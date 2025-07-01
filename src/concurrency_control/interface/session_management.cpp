@@ -52,7 +52,8 @@ Status enter_body(Token& token) { // NOLINT
 Status enter(Token& token) { // NOLINT
     shirakami_log_entry << "enter";
     auto ret = enter_body(token);
-    shirakami_log_exit << "enter, Status: " << ret << ", token: " << token;
+    VLOG(0) << std::boolalpha << log_location_prefix << "<--"  << "enter, Status: " << ret << ", token: " << token;
+//    shirakami_log_exit << "enter, Status: " << ret << ", token: " << token;
     return ret;
 }
 
@@ -103,9 +104,13 @@ Status leave_body(Token const token) { // NOLINT
 }
 
 Status leave(Token const token) { // NOLINT
-    shirakami_log_entry << "leave, token: " << token;
+    VLOG(0) << std::boolalpha << log_location_prefix << "-->" << "leave, token: " << token;
+//    shirakami_log_entry << "leave, token: " << token;
     auto ret = leave_body(token);
-    shirakami_log_exit << "leave, Status: " << ret;
+//    shirakami_log_exit << "leave, Status: " << ret;
+    if (ret != Status::OK) {
+        VLOG(0) << std::boolalpha << log_location_prefix << "<--" << "leave, Status: " << ret;
+    }
     return ret;
 }
 
