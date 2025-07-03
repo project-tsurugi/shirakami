@@ -23,26 +23,6 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-static inline Status process_after_write(write_set_obj* wso) {
-    if (wso->get_op() == OP_TYPE::INSERT) {
-        wso->set_op(OP_TYPE::TOMBSTONE);
-        // insert operation already registered read non-existence for ltx
-        return Status::OK;
-    }
-    if (wso->get_op() == OP_TYPE::UPDATE) {
-        wso->set_op(OP_TYPE::DELETE);
-        // update operation already registered read for ltx
-        return Status::OK;
-    }
-    if (wso->get_op() == OP_TYPE::UPSERT) {
-        wso->set_op(OP_TYPE::DELSERT);
-        // delete operation reads upsert'ed record in wso, so no need to register read
-        return Status::OK;
-    }
-    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown code path";
-    return Status::ERR_FATAL;
-}
-
 static void process_before_return_not_found(session* const ti,
                                             Storage const storage,
                                             std::string_view const key) {
@@ -96,7 +76,8 @@ static Status delete_record_body(Token token, Storage storage,
             if (in_ws->get_op().is_wso_to_absent()) {
                 return Status::WARN_NOT_FOUND;
             }
-            return process_after_write(in_ws);
+            in_ws->set_op(in_ws->get_op().of_wso_to_absent());
+            return Status::OK;
         }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
