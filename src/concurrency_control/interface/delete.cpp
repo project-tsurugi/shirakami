@@ -34,10 +34,6 @@ static inline Status process_after_write(write_set_obj* wso) {
         // update operation already registered read for ltx
         return Status::OK;
     }
-    if (wso->get_op() == OP_TYPE::DELETE) {
-        // delete operation already registered read for ltx
-        return Status::WARN_NOT_FOUND;
-    }
     if (wso->get_op() == OP_TYPE::UPSERT) {
         wso->set_op(OP_TYPE::DELSERT);
         // delete operation reads upsert'ed record in wso, so no need to register read
@@ -96,7 +92,12 @@ static Status delete_record_body(Token token, Storage storage,
     if (Status::OK == rc) {
         // check local write
         write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
-        if (in_ws != nullptr) { return process_after_write(in_ws); }
+        if (in_ws != nullptr) {
+            if (in_ws->get_op().is_wso_to_absent()) {
+                return Status::WARN_NOT_FOUND;
+            }
+            return process_after_write(in_ws);
+        }
         // check absent
         tid_word ctid{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
         if (ctid.get_absent()) {
