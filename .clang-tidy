@@ -33,12 +33,14 @@ misc-*,\
 -misc-const-correctness,\
 -misc-include-cleaner,\
 -misc-unused-parameters,\
+-misc-use-anonymous-namespace,\
 modernize-*,\
 -modernize-use-trailing-return-type,\
 performance-*,\
 -performance-enum-size,\
 -performance-noexcept-move-constructor,\
 readability-*,\
+-readability-avoid-return-with-void-value,\
 -readability-braces-around-statements,\
 -readability-function-cognitive-complexity,\
 -readability-identifier-length,\
