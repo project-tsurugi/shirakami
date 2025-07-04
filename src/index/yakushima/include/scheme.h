@@ -25,7 +25,7 @@ parse_scan_endpoint(shirakami::scan_endpoint s_end) {
             return yakushima::scan_endpoint::INF;
         default:
             std::cout << __FILE__ << " : " << __LINE__ << " : error"
-                      << std::endl;
+                      << std::endl; // NOLINT(*-avoid-endl)
             std::abort();
     }
 }
