@@ -97,7 +97,7 @@ static void display_tx_diagnostics_info(std::ostream& out, bool& exist_ltx,
     check_and_update_diag_state(ti);
     // check this state
     TxState::StateKind st = ti->get_diag_tx_state_kind();
-    out << "state: " << st << std::endl;
+    out << "state: " << st << std::endl; // NOLINT(*-avoid-endl)
 }
 
 void session_table::print_diagnostics(std::ostream& out) {
