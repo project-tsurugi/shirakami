@@ -26,11 +26,13 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 static inline Status process_after_write(session* /*ti*/, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         wso->set_op(OP_TYPE::TOMBSTONE);
+        wso->set_val({});
         // insert operation already registered read non-existence for ltx
         return Status::OK;
     }
     if (wso->get_op() == OP_TYPE::UPDATE) {
         wso->set_op(OP_TYPE::DELETE);
+        wso->set_val({});
         // update operation already registered read for ltx
         return Status::OK;
     }
@@ -40,6 +42,7 @@ static inline Status process_after_write(session* /*ti*/, write_set_obj* wso) {
     }
     if (wso->get_op() == OP_TYPE::UPSERT) {
         wso->set_op(OP_TYPE::DELSERT);
+        wso->set_val({});
         // delete operation reads upsert'ed record in wso, so no need to register read
         return Status::OK;
     }
