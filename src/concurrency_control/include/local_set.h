@@ -256,9 +256,9 @@ inline std::ostream& operator<<(std::ostream& out,     // NOLINT
                                 local_write_set& ws) { // NOLINT
                                                        // now occ only
     std::stringstream ss;
-    ss << "for_batch_: " << ws.get_for_batch() << std::endl;
+    ss << "for_batch_: " << ws.get_for_batch() << '\n';
     // for occ container
-    ss << "about occ container" << std::endl;
+    ss << "about occ container\n";
     for (auto itr = ws.get_ref_cont_for_occ().begin();
          itr != ws.get_ref_cont_for_occ().end(); ++itr) {
         ss << "No " << std::distance(ws.get_ref_cont_for_occ().begin(), itr)
@@ -266,7 +266,7 @@ inline std::ostream& operator<<(std::ostream& out,     // NOLINT
            << ", rec_ptr_: " << itr->get_rec_ptr() << ", val_: ";
         std::string val_buf{};
         itr->get_value(val_buf);
-        ss << val_buf << std::endl;
+        ss << val_buf << '\n';
     }
     out << ss.str();
     return out;

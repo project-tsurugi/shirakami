@@ -71,14 +71,14 @@ static void display_tx_diagnostics_info(std::ostream& out, bool& exist_ltx,
     // output txid
     std::string buf{};
     get_tx_id(static_cast<Token>(ti), buf);
-    out << "TID: " << buf << std::endl;
+    out << "TID: " << buf << '\n';
 
     // check tx mode
-    out << "tx mode: " << ti->get_tx_type() << std::endl;
+    out << "tx mode: " << ti->get_tx_type() << '\n';
 
     // if ltx, ltx id
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        out << "ltx id: " << ti->get_long_tx_id() << std::endl;
+        out << "ltx id: " << ti->get_long_tx_id() << '\n';
         // analysis for ltx
         if (exist_ltx) {
             if (highest_priori_ltxid > ti->get_long_tx_id()) {
@@ -97,7 +97,7 @@ static void display_tx_diagnostics_info(std::ostream& out, bool& exist_ltx,
     check_and_update_diag_state(ti);
     // check this state
     TxState::StateKind st = ti->get_diag_tx_state_kind();
-    out << "state: " << st << std::endl;
+    out << "state: " << st << std::endl; // NOLINT(*-avoid-endl)
 }
 
 void session_table::print_diagnostics(std::ostream& out) {
@@ -113,26 +113,25 @@ void session_table::print_diagnostics(std::ostream& out) {
         ++num_running_tx;
 
         // output start with token id
-        out << "==token: " << &(itr) << ", start information" << std::endl;
+        out << "==token: " << &(itr) << ", start information\n";
 
         // print tx information for diagnostics
         display_tx_diagnostics_info(out, exist_ltx, highest_priori_ltxid,
                                     highest_priori_ltx_session, &itr);
 
         // output end with token id
-        out << "==token: " << &(itr) << ", end information" << std::endl;
+        out << "==token: " << &(itr) << ", end information" << std::endl; // NOLINT(*-avoid-endl)
     }
-    out << "number of running tx: " << num_running_tx << std::endl;
+    out << "number of running tx: " << num_running_tx << '\n';
     if (exist_ltx) {
-        out << "highest priori LTX id was: " << highest_priori_ltxid
-            << std::endl;
-        out << "re-display about the worker which has the tx: start"
-            << std::endl;
+        out << "highest priori LTX id was: " << highest_priori_ltxid << "\n"
+               "re-display about the worker which has the tx: start\n";
         display_tx_diagnostics_info(out, exist_ltx, highest_priori_ltxid,
                                     highest_priori_ltx_session,
                                     highest_priori_ltx_session);
-        out << "re-display about the worker which has the tx: end" << std::endl;
+        out << "re-display about the worker which has the tx: end\n";
     }
+    out << std::flush;
 }
 
 } // namespace shirakami
