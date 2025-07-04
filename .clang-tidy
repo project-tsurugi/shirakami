@@ -33,6 +33,7 @@ misc-*,\
 -misc-const-correctness,\
 -misc-include-cleaner,\
 -misc-unused-parameters,\
+-misc-use-anonymous-namespace,\
 modernize-*,\
 -modernize-use-trailing-return-type,\
 performance-*,\
