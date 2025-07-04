@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "concurrency_control/include/ongoing_tx.h"
 #include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/wp.h"
@@ -262,9 +264,7 @@ void ongoing_tx::remove_id(std::size_t const id) {
                 lep = std::get<ongoing_tx::index_epoch>(*it);
                 first = false;
             } else {
-                if (std::get<ongoing_tx::index_epoch>(*it) < lep) {
-                    lep = std::get<ongoing_tx::index_epoch>(*it);
-                }
+                lep = std::min(lep, std::get<ongoing_tx::index_epoch>(*it));
             }
 
             ++it;
