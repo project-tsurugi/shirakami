@@ -466,11 +466,10 @@ static Status write_lock(session* ti, tid_word& commit_tid) {
 static Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
-        VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: "
-                        << shirakami_binstring(
-                                   wso_ptr->get_rec_ptr()->get_key_view())
-                        << ", value: "
-                        << shirakami_binstring(wso_ptr->get_value_view());
+        VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: \""
+                        << binary_printer(wso_ptr->get_rec_ptr()->get_key_view())
+                        << "\", value: \""
+                        << binary_printer(wso_ptr->get_value_view()) << "\"";
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -549,9 +548,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 if (logging::get_enable_logging_detail_info()) {
                     VLOG(log_trace)
                             << log_location_prefix_detail_info
-                            << "unlock key " +
-                                       std::string(wso_ptr->get_rec_ptr()
-                                                           ->get_key_view());
+                            << "unlock key " << wso_ptr->get_rec_ptr()->get_key_view();
                 }
 
                 // unlock the record
@@ -561,9 +558,7 @@ static Status write_phase(session* ti, epoch::epoch_t ce) {
                 if (logging::get_enable_logging_detail_info()) {
                     VLOG(log_trace)
                             << log_location_prefix_detail_info
-                            << "unlocked key " +
-                                       std::string(wso_ptr->get_rec_ptr()
-                                                           ->get_key_view());
+                            << "unlocked key " << wso_ptr->get_rec_ptr()->get_key_view();
                 }
 
                 break;
