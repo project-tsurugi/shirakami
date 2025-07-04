@@ -21,7 +21,7 @@ namespace shirakami {
  * @return true canceled
  * @return false not canceled
  */
-inline bool cancel_insert_if_tomb_stone(Record* rec_ptr) {
+static inline bool cancel_insert_if_tomb_stone(Record* rec_ptr) {
     rec_ptr->get_tidw_ref().lock();
     tid_word check{loadAcquire(rec_ptr->get_tidw_ref().get_obj())};
     if (check.get_absent() && check.get_latest()) {
@@ -41,7 +41,7 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-inline Status process_after_write(session* ti, write_set_obj* wso) {
+static inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert_if_tomb_stone(wso->get_rec_ptr());
         ti->get_write_set().erase(wso);

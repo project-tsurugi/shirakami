@@ -20,7 +20,7 @@ namespace shirakami::short_tx {
 
 // ==========
 // locking
-void unlock_write_set(session* const ti) {
+static void unlock_write_set(session* const ti) {
     auto process = [](Record* rec_ptr) {
         // detail info
         if (logging::get_enable_logging_detail_info()) {
@@ -45,7 +45,7 @@ void unlock_write_set(session* const ti) {
 }
 
 
-void unlock_records(session* const ti, std::size_t num_locked) {
+static void unlock_records(session* const ti, std::size_t num_locked) {
     auto process = [&num_locked](write_set_obj* wso_ptr) {
         if (num_locked == 0) { return; }
         // detail info
@@ -89,7 +89,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
 /**
  * This is called by only abort function
  */
-void change_inserting_records_state(session* const ti) {
+static void change_inserting_records_state(session* const ti) {
     auto process = [](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
@@ -176,7 +176,7 @@ Status abort(session* ti) { // NOLINT
     return Status::OK;
 }
 
-Status read_verify(session* ti, tid_word read_tid, tid_word check,
+static Status read_verify(session* ti, tid_word read_tid, tid_word check,
                    const Record* const rec_ptr, Storage storage) {
     if (
             // different tid
@@ -211,7 +211,7 @@ Status read_verify(session* ti, tid_word read_tid, tid_word check,
     return Status::OK;
 }
 
-Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
+static Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) {
@@ -228,7 +228,7 @@ Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     return Status::OK;
 }
 
-Status read_wp_verify(session* const ti, epoch::epoch_t ce,
+static Status read_wp_verify(session* const ti, epoch::epoch_t ce,
                       tid_word& commit_tid) {
     tid_word check{};
     std::vector<Storage> accessed_st{};
@@ -280,7 +280,7 @@ Status read_wp_verify(session* const ti, epoch::epoch_t ce,
     return Status::OK;
 }
 
-Status sert_process_at_write_lock(write_set_obj* wso) {
+static Status sert_process_at_write_lock(write_set_obj* wso) {
     // check key exists yet
     std::string key{};
     wso->get_rec_ptr()->get_key(key);
@@ -357,7 +357,7 @@ Status sert_process_at_write_lock(write_set_obj* wso) {
     return Status::ERR_CC; // for fail safe
 }
 
-Status write_lock(session* ti, tid_word& commit_tid) {
+static Status write_lock(session* ti, tid_word& commit_tid) {
     std::size_t num_locked{0};
     // sorf if occ for deadlock avoidance
     ti->get_write_set().sort_if_ol();
@@ -463,7 +463,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
     return Status::OK;
 }
 
-Status write_phase(session* ti, epoch::epoch_t ce) {
+static Status write_phase(session* ti, epoch::epoch_t ce) {
     auto process = [ti, ce](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
         VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: "
@@ -655,7 +655,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
     return Status::OK;
 }
 
-void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
+static void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     // about tid
     auto tid_a{commit_tid};
     tid_a.inc_tid();
@@ -677,7 +677,7 @@ void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_tid) {
     ti->set_mrc_tid(commit_tid);
 }
 
-void register_point_read_by_short(session* const ti) {
+static void register_point_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
     std::set<Record*> recs{};
@@ -691,7 +691,7 @@ void register_point_read_by_short(session* const ti) {
     }
 }
 
-void register_range_read_by_short(session* const ti) {
+static void register_range_read_by_short(session* const ti) {
     auto ce{ti->get_mrc_tid().get_epoch()};
 
     {
@@ -702,7 +702,7 @@ void register_range_read_by_short(session* const ti) {
     }
 }
 
-void process_tx_state(session* ti,
+static void process_tx_state(session* ti,
                       [[maybe_unused]] epoch::epoch_t durable_epoch) {
     if (ti->get_has_current_tx_state_handle()) {
 // this tx state is checked
