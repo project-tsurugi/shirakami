@@ -258,7 +258,7 @@ static inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec
 
     // register record and minimum epoch of step or batch.
     auto& cont = garbage::get_container_rec();
-    cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
+    cont.emplace_back(rec_ptr, epoch::get_global_epoch());
 
     if (rec_ptr->get_shared_tombstone_count() != 0) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix

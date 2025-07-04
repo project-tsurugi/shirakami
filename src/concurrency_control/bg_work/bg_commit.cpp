@@ -28,7 +28,7 @@ void bg_commit::init(std::size_t waiting_resolver_threads_num) {
 
     // invoke thread
     for (std::size_t i = 0; i < waiting_resolver_threads_num; ++i) {
-        workers().emplace_back(std::thread(worker));
+        workers().emplace_back(worker);
     }
 }
 
