@@ -84,10 +84,9 @@ Status leave_body(Token const token) { // NOLINT
                                     << "library programming error";
                         }
                         // the ltx commit was submitted, wait result.
-                        do {
-                            rc = check_commit(&itr);
+                        while (check_commit(&itr) == Status::WARN_WAITING_FOR_OTHER_TX) {
                             _mm_pause();
-                        } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
+                        }
                     }
                 }
 
