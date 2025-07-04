@@ -470,11 +470,10 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
     std::unordered_set<Storage> dirty{};
     auto process = [ti, ce, &dirty](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
-        VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: "
-                        << shirakami_binstring(
-                                   wso_ptr->get_rec_ptr()->get_key_view())
-                        << ", value: "
-                        << shirakami_binstring(wso_ptr->get_value_view());
+        VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: \""
+                        << binary_printer(wso_ptr->get_rec_ptr()->get_key_view())
+                        << "\", value: \""
+                        << binary_printer(wso_ptr->get_value_view()) << "\"";
         dirty.insert(wso_ptr->get_storage());
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
@@ -554,9 +553,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 if (logging::get_enable_logging_detail_info()) {
                     VLOG(log_trace)
                             << log_location_prefix_detail_info
-                            << "unlock key " +
-                                       std::string(wso_ptr->get_rec_ptr()
-                                                           ->get_key_view());
+                            << "unlock key " << wso_ptr->get_rec_ptr()->get_key_view();
                 }
 
                 // unlock the record
@@ -566,9 +563,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                 if (logging::get_enable_logging_detail_info()) {
                     VLOG(log_trace)
                             << log_location_prefix_detail_info
-                            << "unlocked key " +
-                                       std::string(wso_ptr->get_rec_ptr()
-                                                           ->get_key_view());
+                            << "unlocked key " << wso_ptr->get_rec_ptr()->get_key_view();
                 }
 
                 break;

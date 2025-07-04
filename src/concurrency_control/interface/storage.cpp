@@ -449,9 +449,8 @@ Status storage::delete_storage(Storage storage) {
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
             LOG_FIRST_N(ERROR, 1)
-                    << log_location_prefix << "missing error" << std::endl
-                    << " " << page_set_meta_storage << " " << storage
-                    << std::endl;
+                    << log_location_prefix << "missing error "
+                    << page_set_meta_storage << " " << storage;
             return Status::ERR_FATAL;
         }
         delete reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT
