@@ -155,7 +155,7 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
             // compute sequence id
             SequenceId id{};
             memcpy(&id, key.data(), key.size());
-            if (id > max_id) { max_id = id; }
+            max_id = std::max(max_id, id);
             SequenceVersion version{};
             memcpy(&version, val.data(), sizeof(version));
             SequenceValue value{};

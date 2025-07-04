@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "clock.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -100,10 +102,7 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
                 // check
                 if (ti->get_overtaken_ltx_set().empty()) {
                     // no forwarding
-                    if (ti->get_valid_epoch() < result_epoch) {
-                        result_epoch = ti->get_valid_epoch();
-                    }
-                    // else, already initialize for non zero
+                    result_epoch = std::min(result_epoch, ti->get_valid_epoch());
                     continue;
                 }
                 // exist forwarding, compute return epoch
