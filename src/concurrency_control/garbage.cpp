@@ -258,7 +258,7 @@ static inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec
 
     // register record and minimum epoch of step or batch.
     auto& cont = garbage::get_container_rec();
-    cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
+    cont.emplace_back(rec_ptr, epoch::get_global_epoch());
 
     // unlock
     rec_ptr->get_tidw_ref().unlock();
