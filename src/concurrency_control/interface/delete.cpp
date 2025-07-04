@@ -77,6 +77,7 @@ static Status delete_record_body(Token token, Storage storage,
                 return Status::WARN_NOT_FOUND;
             }
             in_ws->set_op(in_ws->get_op().of_wso_to_absent());
+            in_ws->set_val({});
             return Status::OK;
         }
         // check absent
