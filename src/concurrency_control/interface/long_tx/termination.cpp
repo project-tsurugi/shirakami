@@ -709,11 +709,6 @@ void update_read_area(session* const ti) {
     read_plan::add_elem(ti->get_long_tx_id(), plist, nlist);
 }
 
-void call_commit_callback(commit_callback_type const& cb, Status sc,
-                          reason_code rc, durability_marker_type dm) {
-    if (cb) { cb(sc, rc, dm); }
-}
-
 extern Status commit(session* const ti) {
     // check premature
     if (epoch::get_global_epoch() < ti->get_valid_epoch()) {
