@@ -62,6 +62,10 @@ public:
         return waiting_resolver_threads_;
     }
 
+    [[nodiscard]] int get_index_recovery_threads() const {
+        return index_recovery_threads_;
+    }
+
     void set_open_mode(open_mode om) { open_mode_ = om; }
 
     void set_log_directory_path(std::filesystem::path& pt) {
@@ -80,6 +84,10 @@ public:
 
     void set_waiting_resolver_threads(std::size_t nm) {
         waiting_resolver_threads_ = nm;
+    }
+
+    void set_index_recovery_threads(std::size_t nm) {
+        index_recovery_threads_ = nm;
     }
 
 private:
@@ -104,7 +112,10 @@ private:
 
     // ==========
     // about recovery
+    // for limestone
     int recover_max_parallelism_{0};
+    // for shirakami
+    int index_recovery_threads_{0};
     // ==========
 
     // ==========
