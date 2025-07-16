@@ -194,9 +194,7 @@ void recovery_from_datastore(std::size_t thread_num) {
         auto [max_id_1, st_list_1] = recovery_from_cursor(std::move(cursor));
         std::lock_guard lk{mtx};
         max_id = std::max(max_id, max_id_1);
-        for (auto&& e : st_list_1) {
-            st_list.emplace_back(e);
-        }
+        st_list.insert(st_list.end(), st_list_1.begin(), st_list_1.end());
     };
 
     if (thread_num <= 0) {
