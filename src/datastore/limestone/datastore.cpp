@@ -40,14 +40,7 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
     }
 }
 
-void recovery_from_datastore(std::size_t thread_num) {
-    auto ss = get_snapshot(get_datastore());
-
-    std::mutex mtx;
-    std::vector<Storage> st_list_all{};
-    SequenceId max_id_all{0};
-
-  auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
+static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor) {
     /**
      * The cursor point the first entry at calling first next().
      */
@@ -184,16 +177,27 @@ void recovery_from_datastore(std::size_t thread_num) {
     // cleanup
     leave(token);
 
-
     std::sort(st_list.begin(), st_list.end());
     st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
 
-    std::lock_guard lk{mtx};
-    max_id_all = std::max(max_id_all, max_id);
-    for (auto&& e : st_list) {
-        st_list_all.emplace_back(e);
-    }
-  };
+    return std::make_pair(max_id, std::move(st_list));
+}
+
+void recovery_from_datastore(std::size_t thread_num) {
+    auto ss = get_snapshot(get_datastore());
+
+    std::mutex mtx; // for following two variables
+    std::vector<Storage> st_list_all{};
+    SequenceId max_id_all{0};
+
+    auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
+        auto [max_id, st_list] = recovery_from_cursor(std::move(cursor));
+        std::lock_guard lk{mtx};
+        max_id_all = std::max(max_id_all, max_id);
+        for (auto&& e : st_list) {
+            st_list_all.emplace_back(e);
+        }
+    };
 
     if (thread_num <= 0) {
         auto cursor = ss->get_cursor();
