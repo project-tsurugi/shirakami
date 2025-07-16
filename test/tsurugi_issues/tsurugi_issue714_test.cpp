@@ -92,8 +92,8 @@ TEST_F(tsurugi_issue714_test, // NOLINT
                 &rc3](Status rs, [[maybe_unused]] reason_code rc,
                       [[maybe_unused]] durability_marker_type dm) {
         cb_rc3.store(rs, std::memory_order_release);
-        was_committed3 = true;
         rc3 = rc;
+        was_committed3 = true;
     };
     ASSERT_FALSE(commit(t3, cb3));
 
@@ -166,8 +166,8 @@ TEST_F(tsurugi_issue714_test, // NOLINT
                 &rc3](Status rs, [[maybe_unused]] reason_code rc,
                       [[maybe_unused]] durability_marker_type dm) {
         cb_rc3.store(rs, std::memory_order_release);
-        was_committed3 = true;
         rc3 = rc;
+        was_committed3 = true;
     };
     ASSERT_FALSE(commit(t3, cb3));
 
