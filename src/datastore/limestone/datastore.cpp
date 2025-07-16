@@ -187,15 +187,15 @@ void recovery_from_datastore(std::size_t thread_num) {
     auto ss = get_snapshot(get_datastore());
 
     std::mutex mtx; // for following two variables
-    std::vector<Storage> st_list_all{};
-    SequenceId max_id_all{0};
+    std::vector<Storage> st_list{};
+    SequenceId max_id{0};
 
-    auto recovery_work = [&mtx, &st_list_all, &max_id_all](std::unique_ptr<limestone::api::cursor> cursor){
-        auto [max_id, st_list] = recovery_from_cursor(std::move(cursor));
+    auto recovery_work = [&mtx, &st_list, &max_id](std::unique_ptr<limestone::api::cursor> cursor){
+        auto [max_id_1, st_list_1] = recovery_from_cursor(std::move(cursor));
         std::lock_guard lk{mtx};
-        max_id_all = std::max(max_id_all, max_id);
-        for (auto&& e : st_list) {
-            st_list_all.emplace_back(e);
+        max_id = std::max(max_id, max_id_1);
+        for (auto&& e : st_list_1) {
+            st_list.emplace_back(e);
         }
     };
 
@@ -214,13 +214,13 @@ void recovery_from_datastore(std::size_t thread_num) {
         }
     }
 
-    if (max_id_all > 0) {
+    if (max_id > 0) {
         // recovery sequence id generator
-        sequence::id_generator_ctr().store(max_id_all + 1,
+        sequence::id_generator_ctr().store(max_id + 1,
                                            std::memory_order_release);
     }
     // recovery storage meta
-    if (!st_list_all.empty()) { recovery_storage_meta(st_list_all); }
+    if (!st_list.empty()) { recovery_storage_meta(st_list); }
     // recovery epoch info
 }
 
