@@ -219,7 +219,6 @@ void recovery_from_datastore(std::size_t thread_num) {
     }
     // recovery storage meta
     if (!st_list.empty()) { recovery_storage_meta(st_list); }
-    // recovery epoch info
 }
 
 void scan_all_and_logging() {
