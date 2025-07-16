@@ -183,7 +183,7 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
     return std::make_pair(max_id, std::move(st_list));
 }
 
-void recovery_from_datastore() {
+void recovery_from_datastore(std::size_t thread_num) {
     auto ss = get_snapshot(get_datastore());
 
     std::mutex mtx; // for following two variables
@@ -197,7 +197,6 @@ void recovery_from_datastore() {
         st_list.insert(st_list.end(), st_list_1.begin(), st_list_1.end());
     };
 
-    std::size_t thread_num = 8; // TODO: config // NOLINT
     if (thread_num <= 0) {
         auto cursor = ss->get_cursor();
         recovery_work(std::move(cursor));
