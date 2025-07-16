@@ -40,7 +40,7 @@ void recovery_storage_meta(std::vector<Storage>& st_list) {
     }
 }
 
-void recovery_from_datastore() {
+void recovery_from_datastore(std::size_t thread_num) {
     auto ss = get_snapshot(get_datastore());
 
     std::mutex mtx;
@@ -195,7 +195,6 @@ void recovery_from_datastore() {
     }
   };
 
-    std::size_t thread_num = 8; // TODO: config
     if (thread_num <= 0) {
         auto cursor = ss->get_cursor();
         recovery_work(std::move(cursor));
