@@ -55,6 +55,11 @@ void for_output_config(database_options const& options) {
               << options.get_waiting_resolver_threads() << ", "
               << "The number of threads which process about waiting ltx for "
                  "commit. Default is 2.";
+    // about index_restore_threads
+    LOG(INFO) << log_location_prefix_config << "index_restore_threads: "
+              << options.get_index_restore_threads() << ", "
+                 "The number of threads which process about index recovery from datastore. "
+                 "Default is 0 (sequential).";
 }
 
 Status init_body(database_options options) { // NOLINT
@@ -200,7 +205,7 @@ Status init_body(database_options options) { // NOLINT
                                      << "startup:start_recovery_from_datastore";
         if (options.get_open_mode() != database_options::open_mode::CREATE &&
             !enable_true_log_nothing) {
-            datastore::recovery_from_datastore();
+            datastore::recovery_from_datastore(options.get_index_restore_threads());
         }
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "startup:end_recovery_from_datastore";
