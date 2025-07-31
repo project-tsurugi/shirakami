@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <mutex>
 #include <thread>
 #include <tuple>
@@ -156,6 +157,17 @@ inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
 
 [[maybe_unused]] static void set_min_batch_epoch(epoch::epoch_t e) {
     min_batch_epoch_.store(e, std::memory_order_release);
+}
+
+/**
+ * @brief map of need gc
+ */
+inline std::map<Storage, bool> worth_to_next_try_{}; // NOLINT
+inline std::mutex mtx_worth_to_next_try_;
+
+[[maybe_unused]] static void set_dirty(Storage st) {
+    std::unique_lock lk{mtx_worth_to_next_try_};
+    worth_to_next_try_[st] = true;
 }
 
 //================================================================================

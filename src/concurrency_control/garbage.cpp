@@ -108,7 +108,7 @@ void work_manager() {
 
 version* find_latest_invisible_version_from_batch(
         Record* rec_ptr, version*& pre_ver,
-        std::size_t& average_version_list_size) {
+        std::size_t& average_version_list_size, bool& multi_version_still_exists) {
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
@@ -125,6 +125,7 @@ version* find_latest_invisible_version_from_batch(
             pre_ver = ver;
             return ver->get_next();
         }
+        multi_version_still_exists = true;
         // gathering stats info
         ++average_version_list_size;
     }
@@ -176,19 +177,20 @@ inline Status check_unhooking_key_ts(tid_word check) {
  * concurrently.
  * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
  */
-inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
+inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, bool& absent_still_exists) {
     tid_word check{};
 
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
     // ====================
     // check before lock for reducing lock
-    // check timestamp whether it can unhook.
-    auto rc = check_unhooking_key_ts(check);
-    if (rc != Status::OK) { return rc; }
-
     // check before w lock
+    Status rc{};
     rc = check_unhooking_key_state(check);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) { return rc; } // absent is not found
+
+    // check timestamp whether it can unhook.
+    rc = check_unhooking_key_ts(check);
+    if (rc != Status::OK) { absent_still_exists = true; return rc; } // absent is found and not processed
     // ====================
 
     // w lock
@@ -199,15 +201,16 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     // ====================
     // main check after lock
     // check after w lock
-    rc = check_unhooking_key_ts(check);
+    rc = check_unhooking_key_state(check);
     if (rc != Status::OK) {
         rec_ptr->get_tidw_ref().unlock();
         return rc;
     }
 
-    rc = check_unhooking_key_state(check);
+    rc = check_unhooking_key_ts(check);
     if (rc != Status::OK) {
         rec_ptr->get_tidw_ref().unlock();
+        absent_still_exists = true;
         return rc;
     }
     // ====================
@@ -238,9 +241,9 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
 
 void unhooking_keys_and_pruning_versions(
         yakushima::Token ytk, Storage st, Record* rec_ptr,
-        std::size_t& average_version_list_size) {
+        std::size_t& average_version_list_size, bool& dirty_record) {
     // unhooking keys
-    auto rc{unhooking_key(ytk, st, rec_ptr)};
+    auto rc{unhooking_key(ytk, st, rec_ptr, dirty_record)};
     if (rc == Status::OK) {
         // unhooked the key.
         return;
@@ -254,7 +257,7 @@ void unhooking_keys_and_pruning_versions(
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(
-            rec_ptr, pre_ver, average_version_list_size)};
+            rec_ptr, pre_ver, average_version_list_size, dirty_record)};
     if (ver == nullptr) {
         // no version from long tx view.
         return;
@@ -317,6 +320,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         if (average_value_size != 0) { average_value_size /= record_num; }
     };
 
+    bool worth_to_retry{false};
     for (auto&& sr : scan_res) {
         Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
 
@@ -327,11 +331,15 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         average_value_size += buf.size();
 
         unhooking_keys_and_pruning_versions(
-                ytk, st, rec_ptr, average_version_list_size); // NOLINT
+                ytk, st, rec_ptr, average_version_list_size, worth_to_retry); // NOLINT
         if (get_flag_cleaner_end()) {
             process_before_fin();
             break;
         }
+    }
+    if (worth_to_retry) {
+        std::unique_lock lk{mtx_worth_to_next_try_};
+        worth_to_next_try_[st] = true;
     }
 
     // cleanup
@@ -344,6 +352,13 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
+        {
+            std::unique_lock lk{mtx_worth_to_next_try_};
+            if (!worth_to_next_try_[st]) {
+                continue;
+            }
+            worth_to_next_try_[st] = false;
+        }
         std::size_t entry_num{};
         std::size_t average_version_list_size{};
         std::size_t average_key_size{};
