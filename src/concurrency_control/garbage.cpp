@@ -182,12 +182,13 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
     // ====================
     // check before lock for reducing lock
-    // check timestamp whether it can unhook.
-    auto rc = check_unhooking_key_ts(check);
+    // check before w lock
+    Status rc{};
+    rc = check_unhooking_key_state(check);
     if (rc != Status::OK) { return rc; }
 
-    // check before w lock
-    rc = check_unhooking_key_state(check);
+    // check timestamp whether it can unhook.
+    rc = check_unhooking_key_ts(check);
     if (rc != Status::OK) { return rc; }
     // ====================
 
@@ -199,13 +200,13 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     // ====================
     // main check after lock
     // check after w lock
-    rc = check_unhooking_key_ts(check);
+    rc = check_unhooking_key_state(check);
     if (rc != Status::OK) {
         rec_ptr->get_tidw_ref().unlock();
         return rc;
     }
 
-    rc = check_unhooking_key_state(check);
+    rc = check_unhooking_key_ts(check);
     if (rc != Status::OK) {
         rec_ptr->get_tidw_ref().unlock();
         return rc;
