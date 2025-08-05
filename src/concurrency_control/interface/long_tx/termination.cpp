@@ -297,10 +297,10 @@ static inline void expose_local_write(
         return Status::OK;
     };
 
-#ifdef PWAL
-    std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
-#endif
     {
+#ifdef PWAL
+        std::unique_lock<std::mutex> lk0{ti->get_lpwal_handle().get_mtx_logs()};
+#endif
         std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
         for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
             std::string_view pkey_view =
