@@ -90,7 +90,7 @@ void unlock_records(session* const ti, std::size_t num_locked) {
  * This is called by only abort function
  */
 void change_inserting_records_state(session* const ti) {
-    std::set<Storage> dirty{};
+    std::unordered_set<Storage> dirty{};
     auto process = [&dirty](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
@@ -160,9 +160,7 @@ void change_inserting_records_state(session* const ti) {
             }
         }
     }
-    for (auto && st : dirty) {
-        garbage::set_dirty(st);
-    }
+    garbage::set_dirty(dirty);
 }
 // ==========
 
@@ -469,7 +467,7 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 }
 
 Status write_phase(session* ti, epoch::epoch_t ce) {
-    std::set<Storage> dirty{};
+    std::unordered_set<Storage> dirty{};
     auto process = [ti, ce, &dirty](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
         VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: "
@@ -658,9 +656,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
     }
-    for (auto && st : dirty) {
-        garbage::set_dirty(st);
-    }
+    garbage::set_dirty(dirty);
 
     return Status::OK;
 }

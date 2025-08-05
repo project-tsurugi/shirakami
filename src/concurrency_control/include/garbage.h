@@ -4,6 +4,7 @@
 #include <mutex>
 #include <thread>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 #include "concurrent_queue.h"
@@ -168,6 +169,13 @@ inline std::mutex mtx_worth_to_next_try_;
 [[maybe_unused]] static void set_dirty(Storage st) {
     std::unique_lock lk{mtx_worth_to_next_try_};
     worth_to_next_try_[st] = true;
+}
+
+[[maybe_unused]] static void set_dirty(const std::unordered_set<Storage>& sts) {
+    std::unique_lock lk{mtx_worth_to_next_try_};
+    for (auto&& st : sts) {
+        worth_to_next_try_[st] = true;
+    }
 }
 
 //================================================================================

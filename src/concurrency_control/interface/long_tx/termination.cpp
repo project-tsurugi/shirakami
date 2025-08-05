@@ -27,7 +27,7 @@ namespace shirakami::long_tx {
 // ==============================
 // static inline functions for this source
 static inline void cancel_flag_inserted_records(session* const ti) {
-    std::set<Storage> dirty{};
+    std::unordered_set<Storage> dirty{};
     auto process = [&dirty](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT ||
@@ -78,9 +78,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         process(wso);
     }
-    for (auto && st : dirty) {
-        garbage::set_dirty(st);
-    }
+    garbage::set_dirty(dirty);
 }
 
 static inline void compute_tid(session* ti, tid_word& ctid) {
@@ -102,7 +100,7 @@ static inline void expose_local_write(
     //bool should_backward{ti->is_write_only_ltx_now()};
     bool should_backward{!ti->get_is_forwarding()};
 
-    std::set<Storage> dirty{};
+    std::unordered_set<Storage> dirty{};
     auto process = [ti, should_backward, &dirty](
                            std::pair<Record* const, write_set_obj>& wse,
                            tid_word ctid) {
@@ -333,9 +331,7 @@ static inline void expose_local_write(
             process(wso, ctid);
         }
     }
-    for (auto && st : dirty) {
-        garbage::set_dirty(st);
-    }
+    garbage::set_dirty(dirty);
 }
 
 static inline void register_wp_result_and_remove_wps(
