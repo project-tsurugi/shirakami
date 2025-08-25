@@ -34,20 +34,22 @@ private:
 };
 
 TEST_F(blob_mock_test, insert_update_blob) {
+    std::mutex mtx_added; // mutex: this thread vs pwal bg worker
     std::vector<std::pair<std::string, std::vector<limestone::api::blob_id_type>>> added;
     // prepare
 
     // test double
-    test_double::log_channel_add_entry1::hook_func = [&added] (
+    test_double::log_channel_add_entry1::hook_func = [&mtx_added, &added] (
             [[maybe_unused]] test_double::log_channel_add_entry1::orig_type orig_func,
             [[maybe_unused]] limestone::api::log_channel* this_ptr,
             [[maybe_unused]] limestone::api::storage_id_type storage_id,
             [[maybe_unused]] std::string_view key, [[maybe_unused]] std::string_view value,
             [[maybe_unused]] limestone::api::write_version_type write_version) -> void {
         VLOG(40) << "add_entry 1 storage_id:" << storage_id << " key:" << key;
+        std::unique_lock lk{mtx_added};
         added.emplace_back(key, std::vector<limestone::api::blob_id_type>{});
     };
-    test_double::log_channel_add_entry2::hook_func = [&added] (
+    test_double::log_channel_add_entry2::hook_func = [&mtx_added, &added] (
             [[maybe_unused]] test_double::log_channel_add_entry2::orig_type orig_func,
             [[maybe_unused]] limestone::api::log_channel* this_ptr,
             [[maybe_unused]] limestone::api::storage_id_type storage_id,
@@ -55,17 +57,24 @@ TEST_F(blob_mock_test, insert_update_blob) {
             [[maybe_unused]] limestone::api::write_version_type write_version,
             [[maybe_unused]] const std::vector<limestone::api::blob_id_type>& large_objects) -> void {
         VLOG(40) << "add_entry 2 storage_id:" << storage_id << " key:" << key << shirakami_vecstring(large_objects);
+        std::unique_lock lk{mtx_added};
         added.emplace_back(key, large_objects);
     };
 
     Storage st{};
     create_storage("", st); // N.B. create_storage may call add_entry
+    wait_epoch_update();
     Token s{};
     ASSERT_OK(enter(s));
+
+    std::unique_lock lk{mtx_added};
     added.clear();
+    lk.unlock();
 
     // test and verify
+    lk.lock();
     ASSERT_EQ(added.size(), 0);
+    lk.unlock();
     ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
     const blob_id_type b1[2] = {11, 22};
     ASSERT_OK(insert(s, st, "k", "v", b1, 2));
@@ -73,9 +82,16 @@ TEST_F(blob_mock_test, insert_update_blob) {
     ASSERT_OK(update(s, st, "k", "v1", b2, 3));
     ASSERT_OK(commit(s));
     {
+        lk.lock();
+        for (int retry = 3; added.size() == 0; retry--) {
+            lk.unlock();
+            wait_epoch_update();
+            lk.lock();
+        }
         ASSERT_EQ(added.size(), 1);
         auto lobs = std::get<1>(added.at(0));
         EXPECT_EQ(std::vector(std::begin(b2), std::end(b2)), lobs);
+        lk.unlock();
     }
 
     // cleanup
