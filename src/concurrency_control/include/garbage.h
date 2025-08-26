@@ -1,8 +1,10 @@
 #pragma once
 
+#include <atomic>
 #include <mutex>
 #include <thread>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 #include "concurrent_queue.h"
@@ -71,6 +73,24 @@ using stats_info_type =
  */
 [[maybe_unused]] inline std::atomic<std::uint64_t> gc_ct_ver_{0};
 
+// hot/cold manage
+/**
+ * @brief data set (per storage) for hot/cold manage
+ */
+struct alignas(CACHE_LINE_SIZE) storage_stats {
+    std::atomic_bool worth_to_gc;
+};
+
+/**
+ * @brief marks "dirty" for a storage
+ */
+[[maybe_unused]] void set_dirty(Storage st);
+
+[[maybe_unused]] static void set_dirty(const std::unordered_set<Storage>& sts) {
+    for (auto&& st : sts) {
+        set_dirty(st);
+    }
+}
 
 // container for gc
 /**

@@ -44,7 +44,9 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 inline Status process_after_write(session* ti, write_set_obj* wso) {
     if (wso->get_op() == OP_TYPE::INSERT) {
         cancel_insert_if_tomb_stone(wso->get_rec_ptr());
+        Storage st = wso->get_storage();
         ti->get_write_set().erase(wso);
+        garbage::set_dirty(st);
         // insert operation already registered read non-existence for ltx
         return Status::WARN_CANCEL_PREVIOUS_INSERT;
     }
@@ -72,6 +74,7 @@ inline Status process_after_write(session* ti, write_set_obj* wso) {
             ti->push_to_write_set({st, OP_TYPE::DELETE, rec_ptr}); // NOLINT
             register_read_if_ltx(ti, wso->get_rec_ptr());
         }
+        garbage::set_dirty(st);
         return Status::WARN_CANCEL_PREVIOUS_UPSERT;
     }
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown code path";
