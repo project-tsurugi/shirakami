@@ -415,7 +415,9 @@ void release_key_memory() {
         return;
     }
     storage_stats* ssp = psm->get_storage_stats_ptr();
-    ssp->worth_to_gc.store(true, std::memory_order_release); // FIXME: check value. if true, skip write 
+    if (!ssp->worth_to_gc.load(std::memory_order_acquire)) {
+        ssp->worth_to_gc.store(true, std::memory_order_release);
+    }
 }
 
 void output_gc_stats(stats_info_type const& stats_info) {
