@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <atomic>
 #include <mutex>
 #include <thread>
 #include <tuple>
@@ -20,6 +20,10 @@
 #include "glog/logging.h"
 
 namespace shirakami::garbage {
+
+struct storage_stats {
+    std::atomic_bool worth_to_gc;
+};
 
 using stats_info_type =
         std::vector<std::tuple<Storage, std::size_t, std::size_t, std::size_t,
@@ -160,21 +164,11 @@ inline std::atomic<epoch::epoch_t> min_batch_epoch_{epoch::initial_epoch};
     min_batch_epoch_.store(e, std::memory_order_release);
 }
 
-/**
- * @brief map of need gc
- */
-inline std::map<Storage, bool> worth_to_next_try_{}; // NOLINT
-inline std::mutex mtx_worth_to_next_try_;
-
-[[maybe_unused]] static void set_dirty(Storage st) {
-    std::unique_lock lk{mtx_worth_to_next_try_};
-    worth_to_next_try_[st] = true;
-}
+[[maybe_unused]] void set_dirty(Storage st);
 
 [[maybe_unused]] static void set_dirty(const std::unordered_set<Storage>& sts) {
-    std::unique_lock lk{mtx_worth_to_next_try_};
     for (auto&& st : sts) {
-        worth_to_next_try_[st] = true;
+        set_dirty(st);
     }
 }
 

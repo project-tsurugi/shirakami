@@ -338,8 +338,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         }
     }
     if (worth_to_retry) {
-        std::unique_lock lk{mtx_worth_to_next_try_};
-        worth_to_next_try_[st] = true;
+        set_dirty(st);
     }
 
     // cleanup
@@ -352,13 +351,17 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
-        {
-            std::unique_lock lk{mtx_worth_to_next_try_};
-            if (!worth_to_next_try_[st]) {
-                continue;
-            }
-            worth_to_next_try_[st] = false;
+        wp::page_set_meta* psm{};
+        auto rc = wp::find_page_set_meta(st, psm);
+        if (rc != Status::OK) {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error";
+            return;
         }
+        storage_stats* ssp = psm->get_storage_stats_ptr();
+        if (!ssp->worth_to_gc.load(std::memory_order_acquire)) {
+            continue;
+        }
+        ssp->worth_to_gc.store(false, std::memory_order_release);
         std::size_t entry_num{};
         std::size_t average_version_list_size{};
         std::size_t average_key_size{};
@@ -402,6 +405,17 @@ void release_key_memory() {
     if (erase_count > 0) {
         cont.erase(cont.begin(), cont.begin() + erase_count); // NOLINT
     }
+}
+
+[[maybe_unused]] void set_dirty(Storage st) {
+    wp::page_set_meta* psm{};
+    auto rc = wp::find_page_set_meta(st, psm);
+    if (rc != Status::OK) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error";
+        return;
+    }
+    storage_stats* ssp = psm->get_storage_stats_ptr();
+    ssp->worth_to_gc.store(true, std::memory_order_release); // FIXME: check value. if true, skip write 
 }
 
 void output_gc_stats(stats_info_type const& stats_info) {

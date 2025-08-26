@@ -16,6 +16,7 @@
 #include "cpu.h"
 
 #include "concurrency_control/include/epoch.h"
+#include "concurrency_control/include/garbage.h"
 #include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/wp_lock.h"
 #include "concurrency_control/include/wp_meta.h"
@@ -48,11 +49,14 @@ public:
 
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
+    garbage::storage_stats* get_storage_stats_ptr() { return &storage_stats_; }
+
 private:
     storage_option storage_option_{};
     range_read_by_long range_read_by_long_{};
     range_read_by_short range_read_by_short_{};
     wp_meta wp_meta_{};
+    garbage::storage_stats storage_stats_{};
 };
 
 constexpr Storage initial_page_set_meta_storage{};
