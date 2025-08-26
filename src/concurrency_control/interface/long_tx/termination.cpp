@@ -27,7 +27,8 @@ namespace shirakami::long_tx {
 // ==============================
 // static inline functions for this source
 static inline void cancel_flag_inserted_records(session* const ti) {
-    auto process = [](std::pair<Record* const, write_set_obj>& wse) {
+    std::unordered_set<Storage> dirty{};
+    auto process = [&dirty](std::pair<Record* const, write_set_obj>& wse) {
         auto&& wso = std::get<1>(wse);
         if (wso.get_op() == OP_TYPE::INSERT ||
             wso.get_op() == OP_TYPE::UPSERT) {
@@ -65,6 +66,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
                     tid.set_lock(false);
                     tid.set_epoch(check.get_epoch());
                     rec_ptr->set_tid(tid); // and unlock
+                    dirty.insert(wso.get_storage());
                 } else {
                     rec_ptr->get_tidw_ref().unlock();
                 }
@@ -76,6 +78,7 @@ static inline void cancel_flag_inserted_records(session* const ti) {
     for (auto&& wso : ti->get_write_set().get_ref_cont_for_bt()) {
         process(wso);
     }
+    garbage::set_dirty(dirty);
 }
 
 static inline void compute_tid(session* ti, tid_word& ctid) {
@@ -96,11 +99,14 @@ static inline void expose_local_write(
 
     //bool should_backward{ti->is_write_only_ltx_now()};
     bool should_backward{!ti->get_is_forwarding()};
-    auto process = [ti, should_backward](
+
+    std::unordered_set<Storage> dirty{};
+    auto process = [ti, should_backward, &dirty](
                            std::pair<Record* const, write_set_obj>& wse,
                            tid_word ctid) {
         auto* rec_ptr = std::get<0>(wse);
         auto&& wso = std::get<1>(wse);
+        dirty.insert(wso.get_storage());
         [[maybe_unused]] bool should_log{true};
         // bw can backward including occ bw
         switch (wso.get_op()) {
@@ -325,6 +331,7 @@ static inline void expose_local_write(
             process(wso, ctid);
         }
     }
+    garbage::set_dirty(dirty);
 }
 
 static inline void register_wp_result_and_remove_wps(
