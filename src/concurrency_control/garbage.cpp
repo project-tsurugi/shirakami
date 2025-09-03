@@ -33,7 +33,30 @@
 
 namespace shirakami::garbage {
 
+void set_envflags() {
+    // check environ "SHIRAKAMI_REDUCE_GC"
+    constexpr bool reduce_gc_default = false;
+    bool reduce_gc = reduce_gc_default;
+    if (auto* envstr = std::getenv("SHIRAKAMI_REDUCE_GC");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            reduce_gc = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            reduce_gc = false;
+        } else {
+            VLOG(log_debug)
+                    << log_location_prefix << "invalid value is set for "
+                    << "SHIRAKAMI_REDUCE_GC; using default value";
+        }
+    }
+    VLOG(log_debug) << log_location_prefix << "envflag: reduce_GC is "
+                    << (reduce_gc ? "enabled" : "disabled")
+                    << (reduce_gc == reduce_gc_default ? " (default)" : "");
+    envflag_reduce_gc_ = reduce_gc;
+}
+
 void init() {
+    set_envflags();
     // output information needed for estimation of memory usage
     VLOG(log_info_gc_stats) << log_location_prefix_detail_info
                             << "sizeof(Record): " << sizeof(Record)
@@ -352,7 +375,7 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
-        {
+        if (envflag_reduce_gc_) {
             wp::page_set_meta* psm{};
             auto rc = wp::find_page_set_meta(st, psm);
             if (rc != Status::OK) {
@@ -411,6 +434,8 @@ void release_key_memory() {
 }
 
 void set_dirty(Storage st) {
+    if (!envflag_reduce_gc_) { return; }
+
     wp::page_set_meta* psm{};
     auto rc = wp::find_page_set_meta(st, psm);
     if (rc != Status::OK) {

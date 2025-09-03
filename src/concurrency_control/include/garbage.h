@@ -92,6 +92,8 @@ struct alignas(CACHE_LINE_SIZE) storage_stats {
     }
 }
 
+[[maybe_unused]] inline bool envflag_reduce_gc_{};
+
 // container for gc
 /**
  * @brief container of records which was unhooked from index.
