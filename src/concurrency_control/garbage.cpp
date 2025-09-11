@@ -44,9 +44,8 @@ void set_envflags() {
         } else if (std::strcmp(envstr, "0") == 0) {
             reduce_gc = false;
         } else {
-            VLOG(log_debug)
-                    << log_location_prefix << "invalid value is set for "
-                    << "SHIRAKAMI_REDUCE_GC; using default value";
+            LOG(INFO) << log_location_prefix << "invalid value is set for "
+                      << "SHIRAKAMI_REDUCE_GC; using default value";
         }
     }
     VLOG(log_debug) << log_location_prefix << "envflag: reduce_GC is "
