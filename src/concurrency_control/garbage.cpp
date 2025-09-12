@@ -33,7 +33,29 @@
 
 namespace shirakami::garbage {
 
+void set_envflags() {
+    // check environ "SHIRAKAMI_REDUCE_GC"
+    constexpr bool reduce_gc_default = false;
+    bool reduce_gc = reduce_gc_default;
+    if (auto* envstr = std::getenv("SHIRAKAMI_REDUCE_GC");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            reduce_gc = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            reduce_gc = false;
+        } else {
+            LOG(INFO) << log_location_prefix << "invalid value is set for "
+                      << "SHIRAKAMI_REDUCE_GC; using default value";
+        }
+    }
+    VLOG(log_debug) << log_location_prefix << "envflag: reduce_GC is "
+                    << (reduce_gc ? "enabled" : "disabled")
+                    << (reduce_gc == reduce_gc_default ? " (default)" : "");
+    envflag_reduce_gc_ = reduce_gc;
+}
+
 void init() {
+    set_envflags();
     // output information needed for estimation of memory usage
     VLOG(log_info_gc_stats) << log_location_prefix_detail_info
                             << "sizeof(Record): " << sizeof(Record)
@@ -108,7 +130,7 @@ void work_manager() {
 
 version* find_latest_invisible_version_from_batch(
         Record* rec_ptr, version*& pre_ver,
-        std::size_t& average_version_list_size) {
+        std::size_t& average_version_list_size, bool& old_version_still_exists) {
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
@@ -125,6 +147,7 @@ version* find_latest_invisible_version_from_batch(
             pre_ver = ver;
             return ver->get_next();
         }
+        old_version_still_exists = true;
         // gathering stats info
         ++average_version_list_size;
     }
@@ -171,24 +194,26 @@ inline Status check_unhooking_key_ts(tid_word check) {
  * executes unhooking.
  * @param[in] st
  * @param[in] rec_ptr
+ * @param[out] absent_still_exists set true if this record is absent but not unhooked
  * @return Status::OK unhooked key
  * @return Status::INTERNAL_WARN_CONCURRENT_INSERT the key is inserted
  * concurrently.
  * @return Status::INTERNAL_WARN_NOT_DELETED the key is not deleted.
  */
-inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
+inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, bool& absent_still_exists) {
     tid_word check{};
 
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
     // ====================
     // check before lock for reducing lock
-    // check timestamp whether it can unhook.
-    auto rc = check_unhooking_key_ts(check);
-    if (rc != Status::OK) { return rc; }
-
     // check before w lock
+    Status rc{};
     rc = check_unhooking_key_state(check);
-    if (rc != Status::OK) { return rc; }
+    if (rc != Status::OK) { return rc; } // not absent record
+
+    // check timestamp whether it can unhook.
+    rc = check_unhooking_key_ts(check);
+    if (rc != Status::OK) { absent_still_exists = true; return rc; } // not old enough
     // ====================
 
     // w lock
@@ -199,15 +224,16 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
     // ====================
     // main check after lock
     // check after w lock
-    rc = check_unhooking_key_ts(check);
-    if (rc != Status::OK) {
+    rc = check_unhooking_key_state(check);
+    if (rc != Status::OK) { // not absent record
         rec_ptr->get_tidw_ref().unlock();
         return rc;
     }
 
-    rc = check_unhooking_key_state(check);
-    if (rc != Status::OK) {
+    rc = check_unhooking_key_ts(check);
+    if (rc != Status::OK) { // not old enough
         rec_ptr->get_tidw_ref().unlock();
+        absent_still_exists = true;
         return rc;
     }
     // ====================
@@ -238,9 +264,9 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr) {
 
 void unhooking_keys_and_pruning_versions(
         yakushima::Token ytk, Storage st, Record* rec_ptr,
-        std::size_t& average_version_list_size) {
+        std::size_t& average_version_list_size, bool& not_collected_record) {
     // unhooking keys
-    auto rc{unhooking_key(ytk, st, rec_ptr)};
+    auto rc{unhooking_key(ytk, st, rec_ptr, not_collected_record)};
     if (rc == Status::OK) {
         // unhooked the key.
         return;
@@ -254,7 +280,7 @@ void unhooking_keys_and_pruning_versions(
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(
-            rec_ptr, pre_ver, average_version_list_size)};
+            rec_ptr, pre_ver, average_version_list_size, not_collected_record)};
     if (ver == nullptr) {
         // no version from long tx view.
         return;
@@ -317,6 +343,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         if (average_value_size != 0) { average_value_size /= record_num; }
     };
 
+    bool uncollected_record_exists{false};
     for (auto&& sr : scan_res) {
         Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
 
@@ -327,11 +354,14 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         average_value_size += buf.size();
 
         unhooking_keys_and_pruning_versions(
-                ytk, st, rec_ptr, average_version_list_size); // NOLINT
+                ytk, st, rec_ptr, average_version_list_size, uncollected_record_exists); // NOLINT
         if (get_flag_cleaner_end()) {
             process_before_fin();
             break;
         }
+    }
+    if (uncollected_record_exists) { // not skip next time
+        set_dirty(st);
     }
 
     // cleanup
@@ -344,6 +374,19 @@ inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
     std::vector<Storage> st_list;
     storage::list_storage(st_list);
     for (auto&& st : st_list) {
+        if (envflag_reduce_gc_) {
+            wp::page_set_meta* psm{};
+            auto rc = wp::find_page_set_meta(st, psm);
+            if (rc != Status::OK) {
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error, storage: " << st;
+                continue;
+            }
+            storage_stats* ssp = psm->get_storage_stats_ptr();
+            if (!ssp->worth_to_gc.load(std::memory_order_acquire)) {
+                continue;
+            }
+            ssp->worth_to_gc.store(false, std::memory_order_release);
+        }
         std::size_t entry_num{};
         std::size_t average_version_list_size{};
         std::size_t average_key_size{};
@@ -386,6 +429,21 @@ void release_key_memory() {
     }
     if (erase_count > 0) {
         cont.erase(cont.begin(), cont.begin() + erase_count); // NOLINT
+    }
+}
+
+void set_dirty(Storage st) {
+    if (!envflag_reduce_gc_) { return; }
+
+    wp::page_set_meta* psm{};
+    auto rc = wp::find_page_set_meta(st, psm);
+    if (rc != Status::OK) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error";
+        return;
+    }
+    storage_stats* ssp = psm->get_storage_stats_ptr();
+    if (!ssp->worth_to_gc.load(std::memory_order_acquire)) {
+        ssp->worth_to_gc.store(true, std::memory_order_release);
     }
 }
 

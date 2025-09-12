@@ -90,7 +90,8 @@ void unlock_records(session* const ti, std::size_t num_locked) {
  * This is called by only abort function
  */
 void change_inserting_records_state(session* const ti) {
-    auto process = [](write_set_obj* wso_ptr) {
+    std::unordered_set<Storage> dirty{};
+    auto process = [&dirty](write_set_obj* wso_ptr) {
         Record* rec_ptr = wso_ptr->get_rec_ptr();
         if (wso_ptr->get_op() == OP_TYPE::INSERT ||
             wso_ptr->get_op() == OP_TYPE::UPSERT) {
@@ -139,6 +140,7 @@ void change_inserting_records_state(session* const ti) {
                     tid.set_epoch(check.get_epoch());
                     tid.set_tid(check.get_tid());
                     rec_ptr->set_tid(tid); // and unlock
+                    dirty.insert(wso_ptr->get_storage());
                 } else {
                     // some operations interrupt and this is normal state.
                     rec_ptr->get_tidw_ref().unlock();
@@ -158,6 +160,7 @@ void change_inserting_records_state(session* const ti) {
             }
         }
     }
+    garbage::set_dirty(dirty);
 }
 // ==========
 
@@ -464,13 +467,15 @@ Status write_lock(session* ti, tid_word& commit_tid) {
 }
 
 Status write_phase(session* ti, epoch::epoch_t ce) {
-    auto process = [ti, ce](write_set_obj* wso_ptr) {
+    std::unordered_set<Storage> dirty{};
+    auto process = [ti, ce, &dirty](write_set_obj* wso_ptr) {
         tid_word update_tid{ti->get_mrc_tid()};
         VLOG(log_trace) << "write. op type: " << wso_ptr->get_op() << ", key: "
                         << shirakami_binstring(
                                    wso_ptr->get_rec_ptr()->get_key_view())
                         << ", value: "
                         << shirakami_binstring(wso_ptr->get_value_view());
+        dirty.insert(wso_ptr->get_storage());
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -626,10 +631,10 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
         return Status::OK;
     };
 
-#ifdef PWAL
-    std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
-#endif
     {
+#ifdef PWAL
+        std::unique_lock<std::mutex> lk0{ti->get_lpwal_handle().get_mtx_logs()};
+#endif
         std::shared_lock<std::shared_mutex> lk{ti->get_write_set().get_mtx()};
         if (ti->get_write_set().get_for_batch()) {
             for (auto&& itr : ti->get_write_set().get_ref_cont_for_bt()) {
@@ -651,6 +656,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
         }
     }
+    garbage::set_dirty(dirty);
 
     return Status::OK;
 }
