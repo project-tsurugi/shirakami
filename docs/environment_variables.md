@@ -37,7 +37,7 @@ Shirakami コードから参照する環境変数の説明
 
 * `SHIRAKAMI_REDUCE_GC`
   * Record GC の動作に関するフラグ。明白に Record GC する必要のない Storage に対しての Record GC をスキップする。
-  * デフォルト動作は Record GC をスキップをしない。
+  * デフォルト動作は Record GC をスキップをする。
     * 未指定時、空文字列指定時には、デフォルト動作をする。
     * `SHIRAKAMI_REDUCE_GC=0` とすると、スキップをしない。
     * `SHIRAKAMI_REDUCE_GC=1` とすると、スキップをする。
