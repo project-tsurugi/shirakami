@@ -35,7 +35,7 @@ namespace shirakami::garbage {
 
 void set_envflags() {
     // check environ "SHIRAKAMI_REDUCE_GC"
-    constexpr bool reduce_gc_default = false;
+    constexpr bool reduce_gc_default = true;
     bool reduce_gc = reduce_gc_default;
     if (auto* envstr = std::getenv("SHIRAKAMI_REDUCE_GC");
         envstr != nullptr && *envstr != '\0') {
