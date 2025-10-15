@@ -27,9 +27,14 @@ create_channel(limestone::api::datastore* ds,
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return nullptr;
     }
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+    shirakami_log_entry << "datastore::create_channel()";
+    auto& ret = ds->create_channel();
+#else
     shirakami_log_entry << "datastore::create_channel(): location: " << location;
     auto& ret = ds->create_channel(location);
-    shirakami_log_exit << "datastore::create_channel()";
+#endif
+    shirakami_log_exit << "datastore::create_channel()" << &ret;
     return &ret;
 }
 

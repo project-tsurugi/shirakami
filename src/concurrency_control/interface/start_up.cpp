@@ -92,12 +92,18 @@ static Status create_datastore(database_options options) { // NOLINT
     // create datastore
     std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
-    std::vector<boost::filesystem::path> data_locations;
-    data_locations.emplace_back(data_location);
-    std::string metadata_dir{log_dir + "m"};
-    boost::filesystem::path metadata_path(metadata_dir);
     try {
-        auto limestone_config = limestone::api::configuration(data_locations, metadata_path);
+        auto limestone_config = limestone::api::configuration(
+#ifdef HAVE_LIMESTONE_CONFIGURE_CTOR_PATH
+                        data_location
+#elif HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH
+                        {data_location}
+#elif HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH_PATH
+                        {data_location}, log_dir + "m"
+#else
+                        {data_location}, log_dir + "m"
+#endif
+                );
         if (int max_para = options.get_recover_max_parallelism();
             max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);

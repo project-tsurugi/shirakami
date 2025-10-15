@@ -1,4 +1,4 @@
-# Copyright 2019-2019 tsurugi project.
+# Copyright 2019-2025 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,10 +58,35 @@ message("It uses yakushima as index structure.")
 
 set(logging_set 0)
 if (BUILD_PWAL)
+include(CheckCXXSourceCompiles)
+
+set(CMAKE_REQUIRED_LIBRARIES limestone)
+
+set(AVAILABLE_LIMESTONE_API_DEFINE "")
+function(check_limestone_api varname method_call)
+        check_cxx_source_compiles(
+"#include <limestone/api/datastore.h>
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]){
+    (void)${method_call};
+    return 0;
+}"
+    ${varname})
+    if(${varname})
+        set(AVAILABLE_LIMESTONE_API_DEFINE "${AVAILABLE_LIMESTONE_API_DEFINE} -D${varname}=1" PARENT_SCOPE)
+    endif()
+endfunction()
+
+check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH_PATH "limestone::api::configuration{{\"/tmp\"}, \"/tmp\"}")
+#check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH_PATH2 "limestone::api::configuration{{\"/tmp\"}, \"/tmp\"}")
+check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH      "limestone::api::configuration{{\"/tmp\"}}")
+check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_PATH         "limestone::api::configuration{\"/tmp\"}")
+check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_PATH "[](limestone::api::datastore* ds){ds->create_channel(\"/tmp\");}")
+check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE "[](limestone::api::datastore* ds){ds->create_channel();}")
     if (logging_set)
         message(FATAL_ERROR "It can select only one logging method.")
     endif ()
     add_definitions(-DPWAL)
+    add_definitions(${AVAILABLE_LIMESTONE_API_DEFINE})
     if (PWAL_ENABLE_READ_LOG)
         add_definitions(-DPWAL_ENABLE_READ_LOG)
     endif ()
