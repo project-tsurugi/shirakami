@@ -77,27 +77,11 @@ Status init_setup_body(database_options options) { // NOLINT
     // logging config information
     for_output_config(options);
 
-    return Status::OK;
-}
-
-// tateyama start phase
-static
-Status init_start_body() {
-    // prevent double initialization
-    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
-
-    auto options = get_used_database_options();
-
     // initialize datastore object
 #if defined(PWAL)
     // check args
     std::string log_dir(options.get_log_directory_path());
-    bool enable_true_log_nothing{false};
     if (log_dir.empty()) {
-        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
-            // order to recover, but log_dir is nothing
-            enable_true_log_nothing = true;
-        }
         int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
@@ -139,6 +123,30 @@ Status init_start_body() {
         }
         datastore::start_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
+#endif
+    return Status::OK;
+}
+
+// tateyama start phase
+static
+Status init_start_body() {
+    // prevent double initialization
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    auto options = get_used_database_options();
+
+    // initialize datastore object
+#if defined(PWAL)
+    // check args
+    std::string log_dir(options.get_log_directory_path());
+    bool enable_true_log_nothing{false};
+    if (log_dir.empty()) {
+        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
+            // order to recover, but log_dir is nothing
+            enable_true_log_nothing = true;
+        }
+    }
+
 #endif
 
     if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
@@ -250,7 +258,7 @@ Status init_start_body() {
 }
 
 Status init_body(database_options options) { // NOLINT
-    auto rc = init_setup_body(options);
+    auto rc = init_setup_body(options); // NOLINT
     if (rc != Status::OK) { return rc; }
     return init_start_body();
 }
