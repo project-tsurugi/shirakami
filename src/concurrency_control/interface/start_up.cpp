@@ -62,7 +62,9 @@ void for_output_config(database_options const& options) {
                  "Default is 0 (sequential).";
 }
 
-Status init_body(database_options options) { // NOLINT
+// tateyama setup phase
+static
+Status init_setup_body(database_options options) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -74,6 +76,17 @@ Status init_body(database_options options) { // NOLINT
 
     // logging config information
     for_output_config(options);
+
+    return Status::OK;
+}
+
+// tateyama start phase
+static
+Status init_start_body() {
+    // prevent double initialization
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    auto options = get_used_database_options();
 
     // initialize datastore object
 #if defined(PWAL)
@@ -234,6 +247,12 @@ Status init_body(database_options options) { // NOLINT
 
     set_initialized(true); // about init command
     return Status::OK;
+}
+
+Status init_body(database_options options) { // NOLINT
+    auto rc = init_setup_body(options);
+    if (rc != Status::OK) { return rc; }
+    return init_start_body();
 }
 
 Status init(database_options options) { // NOLINT
