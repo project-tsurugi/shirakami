@@ -145,6 +145,12 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
         }
     }
 
+    // ASSERTION
+    if (auto old = get_cc_safe_ss_epoch(); result_epoch < old) {
+        LOG_FIRST_N(ERROR, 100) << log_location_prefix << "programming error."
+                << " cc_safe_ss_epoch back from " << old << " to " << result_epoch;
+    }
+
     // set cc safe ss epoch
     set_cc_safe_ss_epoch(result_epoch);
 }
