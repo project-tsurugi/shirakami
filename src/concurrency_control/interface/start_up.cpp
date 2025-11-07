@@ -62,29 +62,11 @@ void for_output_config(database_options const& options) {
                  "Default is 0 (sequential).";
 }
 
-Status init_body(database_options options) { // NOLINT
-    // prevent double initialization
-    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
-
-    // log used database options
-    set_used_database_options(options);
-
-    // clear flag
-    set_is_shutdowning(false);
-
-    // logging config information
-    for_output_config(options);
-
-    // initialize datastore object
+Status create_datastore(database_options options) { // NOLINT
 #if defined(PWAL)
     // check args
     std::string log_dir(options.get_log_directory_path());
-    bool enable_true_log_nothing{false};
     if (log_dir.empty()) {
-        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
-            // order to recover, but log_dir is nothing
-            enable_true_log_nothing = true;
-        }
         int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
@@ -110,7 +92,7 @@ Status init_body(database_options options) { // NOLINT
         }
     }
 
-    // start datastore
+    // create datastore
     std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
     std::vector<boost::filesystem::path> data_locations;
@@ -127,7 +109,35 @@ Status init_body(database_options options) { // NOLINT
         datastore::start_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
 #endif
+    return Status::OK;
+}
 
+Status init_body(database_options options) { // NOLINT
+    // prevent double initialization
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    // log used database options
+    set_used_database_options(options);
+
+    // clear flag
+    set_is_shutdowning(false);
+
+    // logging config information
+    for_output_config(options);
+
+    // initialize datastore object
+    create_datastore(options);
+
+#if defined(PWAL)
+    bool enable_true_log_nothing{false};
+    std::string log_dir(options.get_log_directory_path());
+    if (log_dir.empty()) {
+        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
+            // order to recover, but log_dir is nothing
+            enable_true_log_nothing = true;
+        }
+    }
+#endif
     if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
         // MAINTENANCE mode guarantee fin and get_datastore after init
         // about logging detail information
