@@ -42,9 +42,9 @@ public:
           enable_logging_detail_info_(enable_logging_detail_info),
           waiting_resolver_threads_(waiting_resolver_threads) {}
 
-    open_mode get_open_mode() { return open_mode_; }
+    [[nodiscard]] open_mode get_open_mode() const { return open_mode_; }
 
-    std::filesystem::path get_log_directory_path() {
+    [[nodiscard]] std::filesystem::path get_log_directory_path() const {
         return log_directory_path_;
     }
 
@@ -167,7 +167,7 @@ inline std::ostream& operator<<(std::ostream& out,
     return out << to_string_view(value);
 }
 
-inline std::ostream& operator<<(std::ostream& out, database_options options) {
+inline std::ostream& operator<<(std::ostream& out, const database_options& options) {
     return out << std::boolalpha << "open_mode:" << options.get_open_mode()
                << ", log_directory_path:" << options.get_log_directory_path()
                << ", enable_logging_detail_info:"
