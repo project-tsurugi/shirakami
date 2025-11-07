@@ -44,7 +44,7 @@ TEST_F(start_test, valid_recovery_invalid_log_directory) { // NOLINT
 
 TEST_F(start_test, inject_datastore) { // NOLINT
     auto limestone_config = limestone::api::configuration({"/tmp/shirakamitest"}, "/tmp/shirakamitest-m");
-    auto datastore = new limestone::api::datastore(limestone_config);
+    auto datastore = std::make_shared<limestone::api::datastore>(limestone_config);
     ASSERT_EQ(init({database_options::open_mode::CREATE, "/tmp/shirakamitest"}, datastore), Status::OK);
     fin();
 }

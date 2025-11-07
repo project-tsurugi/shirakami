@@ -176,7 +176,7 @@ void fin(bool force_shut_down_logging = true); // NOLINT
  * @return Status::WARN_ALREADY_INIT Since it have already called int, it have
  * not done anything in this call.
  */
-Status init(database_options options = {}, void* = nullptr); // NOLINT
+Status init(database_options options = {}, std::shared_ptr<void> datastore = {}); // NOLINT
 
 /**
  * @brief insert the record with given key/value

@@ -112,7 +112,7 @@ Status create_datastore(database_options options) { // NOLINT
     return Status::OK;
 }
 
-Status init_body(database_options options, void* datastore) { // NOLINT
+Status init_body(database_options options, std::shared_ptr<void> datastore) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -123,7 +123,7 @@ Status init_body(database_options options, void* datastore) { // NOLINT
         create_datastore(options);
     } else {
        datastore::set_own_datastore(false);
-       datastore::set_datastore(reinterpret_cast<limestone::api::datastore*>(datastore)); // NOLINT
+       datastore::set_datastore(std::reinterpret_pointer_cast<limestone::api::datastore>(datastore)); // NOLINT
     }
 
     // log used database options
@@ -253,7 +253,7 @@ Status init_body(database_options options, void* datastore) { // NOLINT
     return Status::OK;
 }
 
-Status init(database_options options, void* datastore) { // NOLINT
+Status init(database_options options, std::shared_ptr<void> datastore) { // NOLINT
     shirakami_log_entry << "init, options: " << options << ", datastore: " << datastore;
     auto ret = init_body(options, datastore);
     shirakami_log_exit << "init, Status: " << ret;
