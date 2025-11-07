@@ -44,7 +44,7 @@
 
 namespace shirakami {
 
-static void for_output_config(database_options const& options) {
+static void for_output_config(const database_options& options) {
     // about epoch_duration
     LOG(INFO) << log_location_prefix_config
               << "epoch_duration: " << options.get_epoch_time() << ", "
@@ -67,7 +67,7 @@ static void for_output_config(database_options const& options) {
 }
 
 #if defined(PWAL)
-static Status create_datastore(database_options options) { // NOLINT
+static Status create_datastore(const database_options& options) { // NOLINT
     // check args
     std::string log_dir(options.get_log_directory_path());
     if (log_dir.empty()) {
@@ -111,7 +111,7 @@ static Status create_datastore(database_options options) { // NOLINT
 }
 #endif
 
-static Status init_body(database_options options, [[maybe_unused]] void* datastore) {
+static Status init_body(const database_options& options, [[maybe_unused]] void* datastore) {
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
