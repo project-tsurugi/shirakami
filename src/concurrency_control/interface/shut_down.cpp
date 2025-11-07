@@ -115,7 +115,7 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
         VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                      << "shutdown:end_shutdown_datastore";
         // cleanup about limestone
-        if (!lpwal::get_log_dir_pointed()) {
+        if (datastore::get_own_datastore() && !lpwal::get_log_dir_pointed()) {
             // log dir was not pointed. So remove log dir
             VLOG(log_debug_timing_event) << log_location_prefix_timing_event
                                          << "shutdown:start_cleanup_logdir";
