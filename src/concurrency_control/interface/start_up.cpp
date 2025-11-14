@@ -92,7 +92,7 @@ static Status create_datastore(database_options options) { // NOLINT
         }
     }
 
-    // start datastore
+    // create datastore
     std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
     std::vector<boost::filesystem::path> data_locations;
@@ -106,13 +106,13 @@ static Status create_datastore(database_options options) { // NOLINT
             max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);
         }
-        datastore::start_datastore(limestone_config);
+        datastore::create_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
     return Status::OK;
 }
 #endif
 
-Status init_body(database_options options) { // NOLINT
+Status init_body(database_options options, void* datastore) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
@@ -127,18 +127,22 @@ Status init_body(database_options options) { // NOLINT
 
     // initialize datastore object
 #if defined(PWAL)
-    if (auto rc = create_datastore(options); rc != Status::OK) { return rc; }
-
     bool enable_true_log_nothing{false};
     std::string log_dir(options.get_log_directory_path());
-    if (log_dir.empty()) {
-        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
-            // order to recover, but log_dir is nothing
-            enable_true_log_nothing = true;
+    if (datastore == nullptr) {
+        if (auto rc = create_datastore(options); rc != Status::OK) { return rc; }
+        if (log_dir.empty()) {
+            if (options.get_open_mode() == database_options::open_mode::RESTORE) {
+                // order to recover, but log_dir is nothing
+                enable_true_log_nothing = true;
+            }
         }
         log_dir = lpwal::get_log_dir(); // create_datastore() may change log_dir
+    } else {
+        datastore::set_datastore(reinterpret_cast<limestone::api::datastore*>(datastore)); // NOLINT
     }
 #endif
+
     if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
         // MAINTENANCE mode guarantee fin and get_datastore after init
         // about logging detail information
@@ -247,9 +251,9 @@ Status init_body(database_options options) { // NOLINT
     return Status::OK;
 }
 
-Status init(database_options options) { // NOLINT
-    shirakami_log_entry << "init, options: " << options;
-    auto ret = init_body(options);
+Status init(database_options options, void* datastore) { // NOLINT
+    shirakami_log_entry << "init, options: " << options << ", datastore: " << datastore;
+    auto ret = init_body(options, datastore);
     shirakami_log_exit << "init, Status: " << ret;
     return ret;
 }

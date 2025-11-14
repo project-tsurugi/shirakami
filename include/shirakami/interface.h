@@ -164,19 +164,23 @@ Status exist_key(Token token, Storage storage, std::string_view key);
 void fin(bool force_shut_down_logging = true); // NOLINT
 
 /**
- * @brief It initializes shirakami's environment.
- * @details When it starts or restarts this system, in other words, database,
- * it must be executed first or after fin command.
- * If you don't be explicit log directory path by @a options, shirakami makes
- * and uses temporally directory whose the directory name was named by using
+ * @brief Initialize shirakami's environment.
+ * @details When you start or restart this system, in other words, database,
+ * init() must be executed first or after fin().
+ * If @a datastore is provided, shirakami uses this object for persistence.
+ * If @a datastore is not provided (for compativility with old code), shirakami creates
+ * a new datastore object and uses it. When creating a new datastore object,
+ * if you don't explicitly set log directory path in @a options, shirakami makes
+ * and uses temporally directory whose directory name was named by using
  * phrases: shirakami, process id, and value of timestamp counter. For example,
  * shirakami-111-222.
  * @param[in] options Options about open mode and logging.
+ * @param[in] datastore pointer to limestone datastore object.
  * @return Status::OK
- * @return Status::WARN_ALREADY_INIT Since it have already called int, it have
- * not done anything in this call.
+ * @return Status::WARN_ALREADY_INIT Since you have already called init(), this call does nothing.
+ * @return Status::ERR_INVALID_CONFIGURATION parameters contain invalid values.
  */
-Status init(database_options options = {}); // NOLINT
+Status init(database_options options = {}, void* datastore = nullptr); // NOLINT
 
 /**
  * @brief insert the record with given key/value

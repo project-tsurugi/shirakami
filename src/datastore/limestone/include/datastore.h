@@ -7,19 +7,38 @@
 
 namespace shirakami::datastore {
 
-inline std::unique_ptr<limestone::api::datastore> datastore_; // NOLINT
+inline limestone::api::datastore* datastore_; // NOLINT
+
+// whether shirakami creates a datastore and owns it
+//  * false: normal, using datastore that passed by init()
+//  * true: for compat with old code, or testing
+inline bool own_datastore_{false}; // NOLINT
 
 [[maybe_unused]] static limestone::api::datastore* get_datastore() {
-    return datastore_.get();
+    return datastore_;
 }
 
 [[maybe_unused]] static void
-start_datastore(limestone::api::configuration const& conf) {
-    datastore_ = std::make_unique<limestone::api::datastore>(conf);
+create_datastore(limestone::api::configuration const& conf) {
+    datastore_ = new limestone::api::datastore(conf); // NOLINT
+    own_datastore_ = true;
+}
+
+[[maybe_unused]] static void set_datastore(limestone::api::datastore* datastore) {
+    datastore_ = datastore;
+    own_datastore_ = false;
 }
 
 [[maybe_unused]] static void release_datastore() {
+    if (own_datastore_) {
+        delete datastore_; // NOLINT
+        own_datastore_ = false;
+    }
     datastore_ = nullptr;
+}
+
+[[maybe_unused]] [[nodiscard]] static bool get_own_datastore() {
+    return own_datastore_;
 }
 
 /**
