@@ -135,6 +135,39 @@ Status create_storage(std::string_view key, Storage& storage,
     return ret;
 }
 
+static std::string to_big_endian(std::uint64_t value) {
+    constexpr size_t sz = sizeof(value);
+    std::string ret(sz, '\0');
+    for (std::size_t i = 0; i < sz; ++i) {
+        ret[sz - 1 - i] = static_cast<char>(value & 0xFFU);
+        value >>= 8;
+    }
+    return ret;
+}
+
+Status create_storage_body(Storage& storage, storage_option const& options) {
+    Status ret = storage::create_storage(storage, options);
+    if (ret != Status::OK) { return ret; }
+
+    // we use big-endian sequence of storage value as generated storage key
+    std::string key = to_big_endian(storage);
+
+    if (storage::key_handle_map_push_storage(key, storage) != Status::OK) {
+        // Storage value must be unique, so this cannot happen normally
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+        return Status::WARN_ALREADY_EXISTS;
+    }
+    write_storage_metadata(key, storage, options);
+    return Status::OK;
+}
+
+Status create_storage(Storage& storage, storage_option const& options) {
+    shirakami_log_entry << "create_storage options: " << options;
+    auto ret = create_storage_body(storage, options);
+    shirakami_log_exit << "create_storage, Status: " << ret << ", storage: " << storage;
+    return ret;
+}
+
 Status delete_storage_body(Storage const storage) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
@@ -535,6 +568,10 @@ void storage::fin() {
 
     // clear key storage map
     storage::key_handle_map_clear();
+}
+
+Status get_storage_key(Storage storage, std::string& key) {
+    return storage::key_handle_map_get_key(storage, key);
 }
 
 } // namespace shirakami

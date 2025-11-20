@@ -23,9 +23,26 @@ namespace shirakami {
  * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger
  * than 2^32, or shirakami create storage more than 2^32.
  * Please review your usage.
+ * @deprecated this function is deprecated and left only for testing and compatibility.
+ * Use create_storage() function below that does not receive storage key as parameter.
  */
 Status create_storage(std::string_view key, Storage& storage,
                       storage_option const& options = {}); // NOLINT
+
+/**
+ * @brief Create new storage, and return its handler.
+ * New storage key is automatically generated and assigned to the created storage.
+ * The generated storage key can be retrieved by get_storage_key().
+ * @param[out] storage The storage handle mapped for the generated key.
+ * @param[in] options If you don't use this argument, @a storage is specified
+ * by shirakami, otherwise, is specified by user.
+ * @return Status::OK if successful.
+ * @return Status::WARN_ALREADY_EXISTS You may use @a options.id_ more than once.
+ * @return Status::WARN_STORAGE_ID_DEPLETION You may use @a options.id_ larger
+ * than 2^32, or shirakami create storage more than 2^32.
+ * Please review your usage.
+ */
+Status create_storage(Storage& storage, storage_option const& options = {});
 
 /**
  * @brief delete existing storage and records under the storage.
@@ -78,5 +95,14 @@ Status storage_get_options(Storage storage, storage_option& options);
  * meta information internally.
  */
 Status storage_set_options(Storage storage, storage_option const& options);
+
+/**
+ * @brief get the storage key for the given storage handle.
+ * @param[in] storage The storage handle.
+ * @param[out] key The key associated with the storage handle.
+ * @return Status::OK success.
+ * @return Status::WARN_NOT_FOUND The storage was not found.
+ */
+Status get_storage_key(Storage storage, std::string& key);
 
 } // namespace shirakami
