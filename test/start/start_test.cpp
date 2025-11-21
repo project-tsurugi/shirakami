@@ -53,4 +53,12 @@ TEST_F(start_test, borrow_datastore) { // NOLINT
     delete datastore;
 }
 
+TEST_F(start_test, error_when_borrow_ds_and_maintenance) { // NOLINT
+    auto limestone_config = limestone::api::configuration({"/tmp/shirakamitest"}, "/tmp/shirakamitest-m");
+    auto datastore = new limestone::api::datastore(limestone_config);
+    ASSERT_EQ(init({database_options::open_mode::MAINTENANCE, "/tmp/shirakamitest"}, datastore), Status::ERR_INVALID_CONFIGURATION);
+    (void)datastore->last_epoch(); // check (by ASAN): datastore is not freed
+    delete datastore;
+}
+
 } // namespace shirakami::testing

@@ -116,6 +116,11 @@ Status init_body(database_options options, void* datastore) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
+    // MAINTENANCE mode is used for creating limestone
+    if (datastore != nullptr && options.get_open_mode() == database_options::open_mode::MAINTENANCE) {
+        return Status::ERR_INVALID_CONFIGURATION;
+    }
+
     // log used database options
     set_used_database_options(options);
 
