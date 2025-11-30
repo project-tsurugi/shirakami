@@ -11,7 +11,7 @@ public:
         CREATE = 0x001,
         RESTORE = 0x002,
         CREATE_OR_RESTORE = 0x003,
-        MAINTENANCE = 0x004,
+        MAINTENANCE = 0x004, // deprecated
     };
 
     database_options() = default; // NOLINT
