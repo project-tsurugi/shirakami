@@ -236,7 +236,7 @@ Status init_body(database_options options, void* datastore) { // NOLINT
         garbage::init();
 
 #ifdef PWAL
-        lpwal::init(); // start damon
+        lpwal::init(); // start daemon
 #endif
 
         // about back ground worker about commit

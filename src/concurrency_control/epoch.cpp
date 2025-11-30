@@ -106,7 +106,7 @@ inline void compute_and_set_cc_safe_ss_epoch() {
                     // else, already initialize for non zero
                     continue;
                 }
-                // exist forwording, compute return epoch
+                // exist forwarding, compute return epoch
                 for (auto&& oe : ti->get_overtaken_ltx_set()) {
                     wp::wp_meta* wp_meta_ptr{oe.first};
                     // get read lock
