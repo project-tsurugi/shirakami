@@ -61,9 +61,7 @@ static void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
     // set flag
     set_is_shutdowning(true);
 
-    if (get_used_database_options().get_open_mode() !=
-        database_options::open_mode::MAINTENANCE) {
-
+    {
         /**
          * about back ground worker about commit
          * background worker about commit may access global data (object), so it
@@ -158,10 +156,6 @@ static void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
 
         // about read area
         read_plan::fin();
-    } else {
-#ifdef PWAL
-        datastore::release_datastore();
-#endif
     }
 
     // set flag
