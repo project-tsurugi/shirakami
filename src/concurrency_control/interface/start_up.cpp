@@ -62,29 +62,11 @@ void for_output_config(database_options const& options) {
                  "Default is 0 (sequential).";
 }
 
-Status init_body(database_options options) { // NOLINT
-    // prevent double initialization
-    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
-
-    // log used database options
-    set_used_database_options(options);
-
-    // clear flag
-    set_is_shutdowning(false);
-
-    // logging config information
-    for_output_config(options);
-
-    // initialize datastore object
 #if defined(PWAL)
+static Status create_datastore(database_options options) { // NOLINT
     // check args
     std::string log_dir(options.get_log_directory_path());
-    bool enable_true_log_nothing{false};
     if (log_dir.empty()) {
-        if (options.get_open_mode() == database_options::open_mode::RESTORE) {
-            // order to recover, but log_dir is nothing
-            enable_true_log_nothing = true;
-        }
         int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
         log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
@@ -110,7 +92,7 @@ Status init_body(database_options options) { // NOLINT
         }
     }
 
-    // start datastore
+    // create datastore
     std::string data_location_str(log_dir);
     boost::filesystem::path data_location(data_location_str);
     std::vector<boost::filesystem::path> data_locations;
@@ -124,8 +106,46 @@ Status init_body(database_options options) { // NOLINT
             max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);
         }
-        datastore::start_datastore(limestone_config);
+        datastore::create_datastore(limestone_config);
     } catch (...) { return Status::ERR_INVALID_CONFIGURATION; }
+    return Status::OK;
+}
+#endif
+
+Status init_body(database_options options, void* datastore) { // NOLINT
+    // prevent double initialization
+    if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
+
+    // MAINTENANCE mode is used for creating limestone
+    if (datastore != nullptr && options.get_open_mode() == database_options::open_mode::MAINTENANCE) {
+        return Status::ERR_INVALID_CONFIGURATION;
+    }
+
+    // log used database options
+    set_used_database_options(options);
+
+    // clear flag
+    set_is_shutdowning(false);
+
+    // logging config information
+    for_output_config(options);
+
+    // initialize datastore object
+#if defined(PWAL)
+    bool enable_true_log_nothing{false};
+    std::string log_dir(options.get_log_directory_path());
+    if (datastore == nullptr) {
+        if (auto rc = create_datastore(options); rc != Status::OK) { return rc; }
+        if (log_dir.empty()) {
+            if (options.get_open_mode() == database_options::open_mode::RESTORE) {
+                // order to recover, but log_dir is nothing
+                enable_true_log_nothing = true;
+            }
+        }
+        log_dir = lpwal::get_log_dir(); // create_datastore() may change log_dir
+    } else {
+        datastore::set_datastore(reinterpret_cast<limestone::api::datastore*>(datastore)); // NOLINT
+    }
 #endif
 
     if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
@@ -236,9 +256,9 @@ Status init_body(database_options options) { // NOLINT
     return Status::OK;
 }
 
-Status init(database_options options) { // NOLINT
-    shirakami_log_entry << "init, options: " << options;
-    auto ret = init_body(options);
+Status init(database_options options, void* datastore) { // NOLINT
+    shirakami_log_entry << "init, options: " << options << ", datastore: " << datastore;
+    auto ret = init_body(options, datastore);
     shirakami_log_exit << "init, Status: " << ret;
     return ret;
 }
