@@ -21,7 +21,7 @@ project(shirakami
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-option(BUILD_BENCHMARK "Build benchmark programs" ON)
+option(BUILD_BENCHMARK "Build benchmark programs" OFF)
 option(BUILD_TESTS "Build test programs" ON)
 option(BUILD_ONLY_WD_TESTS "Build test programs" OFF)
 option(BUILD_DOCUMENTS "Build documents" ON)
