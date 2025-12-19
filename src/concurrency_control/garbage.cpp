@@ -67,6 +67,10 @@ void init() {
     // clear global statistical data
     get_gc_ct_ver().store(0, std::memory_order_release);
 
+    // initialize timestamps
+    set_min_begin_epoch(epoch::initial_epoch);
+    set_min_batch_epoch(epoch::initial_epoch);
+
     invoke_bg_threads();
 }
 
