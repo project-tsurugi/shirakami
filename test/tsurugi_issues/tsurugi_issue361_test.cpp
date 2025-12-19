@@ -23,7 +23,7 @@ public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-concurrency_control-"
                                   "complicated-tsurugi_issue361");
-        // FLAGS_stderrthreshold = 0;
+        FLAGS_stderrthreshold = 0;
         init_for_test();
     }
 

@@ -21,7 +21,7 @@ class tsurugi_issue1001_test : public ::testing::Test {
 public:
     static void call_once_f() {
         google::InitGoogleLogging("shirakami-test-tsurugi_issues-tsurugi_issue1001_test");
-        // FLAGS_stderrthreshold = 0;
+        FLAGS_stderrthreshold = 0;
     }
 
     void SetUp() override {
