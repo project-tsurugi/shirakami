@@ -170,6 +170,7 @@ void epoch_thread_work() {
             // change epoch
             auto new_epoch{get_global_epoch() + 1};
             set_global_epoch(new_epoch);
+LOG(INFO) << "SHIRAKAMI new_epoch:" << new_epoch;
             refresh_short_expose_ongoing_status(new_epoch);
             compute_and_set_cc_safe_ss_epoch();
 #ifdef PWAL

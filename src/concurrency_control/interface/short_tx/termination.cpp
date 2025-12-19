@@ -476,6 +476,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                         << ", value: "
                         << shirakami_binstring(wso_ptr->get_value_view());
         dirty.insert(wso_ptr->get_storage());
+VLOG(40) << wso_ptr->get_rec_ptr();
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -523,6 +524,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
             }
             case OP_TYPE::UPDATE: {
                 tid_word old_tid{wso_ptr->get_rec_ptr()->get_tidw_ref()};
+VLOG(40) << "UPDATE old_tid{" << old_tid << "}, ce:" << ce;
                 if (ce > old_tid.get_epoch()) {
                     Record* rec_ptr{wso_ptr->get_rec_ptr()};
                     // append new version
@@ -533,12 +535,14 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                     }
                     version* new_v{
                             new version(update_tid, vb, rec_ptr->get_latest())};
+VLOG(40) << "UPDATE update_tid{" << update_tid << "}";
 
                     // update old version tid
                     tid_word old_version_tid{old_tid};
                     old_version_tid.set_latest(false);
                     old_version_tid.set_lock(false);
                     rec_ptr->get_latest()->set_tid(old_version_tid);
+VLOG(40) << "UPDATE old_version_tid{" << old_version_tid << "}";
 
                     // set version to latest
                     rec_ptr->set_latest(new_v);

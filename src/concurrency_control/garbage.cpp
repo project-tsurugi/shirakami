@@ -91,6 +91,7 @@ void work_manager() {
         epoch::epoch_t valid_epoch{0};
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
+LOG(INFO) << "SHIRAKAMI se.get_begin_epoch:" << se.get_begin_epoch();
                 min_begin_epoch = std::min(min_begin_epoch, se.get_begin_epoch());
                 auto ve = se.get_valid_epoch();
                 if (ve != 0) {
@@ -188,8 +189,10 @@ inline Status check_unhooking_key_ts(tid_word check) {
             check.get_epoch() < garbage::get_min_begin_epoch() &&
             // this records version is not needed by current and future long tx.
             check.get_epoch() < garbage::get_min_batch_epoch()) {
+LOG(INFO) << "check_unhooking_key_ts HIT  check:{" << check << "} min_begin:" << garbage::get_min_begin_epoch() << " min_batch:" << garbage::get_min_batch_epoch();
         return Status::OK;
     }
+LOG(INFO) << "check_unhooking_key_ts skip check:{" << check << "} min_begin:" << garbage::get_min_begin_epoch() << " min_batch:" << garbage::get_min_batch_epoch();
     return Status::INTERNAL_WARN_PREMATURE;
 }
 
@@ -206,7 +209,7 @@ inline Status check_unhooking_key_ts(tid_word check) {
  */
 inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, bool& absent_still_exists) {
     tid_word check{};
-
+LOG(INFO) << "unhooking_key " << rec_ptr << shirakami_binstring(rec_ptr->get_key_view());
     check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
     // ====================
     // check before lock for reducing lock
@@ -262,6 +265,7 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, b
 
     // unlock
     rec_ptr->get_tidw_ref().unlock();
+LOG(INFO) << "unhooking_key " << rec_ptr << " unhooked";
 
     return Status::OK;
 }
@@ -314,6 +318,7 @@ inline void unhooking_keys_and_pruning_versions_at_the_storage(
         Storage st, std::size_t& record_num,
         std::size_t& average_version_list_size, std::size_t& average_key_size,
         std::size_t& average_value_size) {
+LOG(INFO) << "SHIRAKAMI unhooking_keys_and_pruning_versions_at_the_storage enter";
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
     // init about stats
