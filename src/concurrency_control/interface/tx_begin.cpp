@@ -111,6 +111,7 @@ Status tx_begin_body(transaction_options options) { // NOLINT
      * tx began at last.
      */
     ti->set_tx_began(true);
+LOG(INFO) << "tx_begin begin_epoch:" << ti->get_begin_epoch();
     return Status::OK;
 }
 

@@ -125,6 +125,7 @@ LOG(INFO) << "SHIRAKAMI se.get_begin_epoch:" << se.get_begin_epoch();
         } else {
             set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
         }
+LOG(INFO) << "min_begin_epoch:" << get_min_begin_epoch() << " min_batch_epoch:" << get_min_batch_epoch();
 #ifdef PWAL
         switch_available_boundary_version(shirakami::datastore::get_datastore(), std::min(get_min_begin_epoch(), get_min_batch_epoch()));
 #endif

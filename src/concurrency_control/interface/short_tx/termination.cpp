@@ -176,6 +176,7 @@ Status abort(session* ti) { // NOLINT
     change_inserting_records_state(ti);
 
     ti->clean_up();
+LOG(INFO) << "OCC abort end";
     return Status::OK;
 }
 
@@ -476,7 +477,7 @@ Status write_phase(session* ti, epoch::epoch_t ce) {
                         << ", value: "
                         << shirakami_binstring(wso_ptr->get_value_view());
         dirty.insert(wso_ptr->get_storage());
-VLOG(40) << wso_ptr->get_rec_ptr();
+LOG(INFO) << wso_ptr->get_rec_ptr();
         switch (wso_ptr->get_op()) {
             case OP_TYPE::UPSERT:
             case OP_TYPE::INSERT: {
@@ -503,6 +504,7 @@ VLOG(40) << wso_ptr->get_rec_ptr();
 
                     // set timestamp and unlock
                     wso_ptr->get_rec_ptr()->set_tid(update_tid);
+LOG(INFO) << "UPDATE1 old_tid{" << old_tid << "}, update_tid{" << update_tid << "}";
                     break;
                 }
                 [[fallthrough]];
@@ -565,6 +567,7 @@ VLOG(40) << "UPDATE old_version_tid{" << old_version_tid << "}";
 
                 // unlock the record
                 wso_ptr->get_rec_ptr()->set_tid(update_tid);
+LOG(INFO) << "UPDATE2 old_tid{" << old_tid << "}, update_tid{" << update_tid << "}";
 
                 // detail info
                 if (logging::get_enable_logging_detail_info()) {
@@ -817,6 +820,7 @@ extern Status commit(session* const ti) {
     }
 #endif
 
+LOG(INFO) << "OCC commit end";
     return Status::OK;
 }
 
