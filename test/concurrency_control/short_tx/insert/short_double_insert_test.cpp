@@ -47,6 +47,7 @@ TEST_F(double_insert, insert_after_user_abort) { // NOLINT
     Token s{};
     {
         stop_epoch();
+        std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
         ASSERT_EQ(Status::OK, enter(s));
         ASSERT_EQ(Status::OK,
                   tx_begin({s, transaction_options::transaction_type::SHORT}));
