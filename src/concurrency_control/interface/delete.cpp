@@ -29,6 +29,7 @@ inline bool cancel_insert_if_tomb_stone(Record* rec_ptr) {
         delete_tid.set_latest(false);
         delete_tid.set_lock(false);
         storeRelease(rec_ptr->get_tidw_ref().get_obj(), delete_tid.get_obj());
+LOG(INFO) << "CANCEL " << rec_ptr << ", check{" << check << "}, delete_tid{" << delete_tid << "}";
         return true;
     }
     rec_ptr->get_tidw_ref().unlock();
