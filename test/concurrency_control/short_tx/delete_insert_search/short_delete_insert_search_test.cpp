@@ -10,6 +10,7 @@
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
+#include "test_tool.h"
 
 #include "gtest/gtest.h"
 
@@ -188,6 +189,8 @@ TEST_F(short_delete_insert_search,                     // NOLINT
     ASSERT_EQ(Status::OK, insert(s1, st, "", ""));
     ASSERT_EQ(Status::OK, insert(s2, st, "", ""));
     ASSERT_EQ(Status::WARN_CANCEL_PREVIOUS_INSERT, delete_record(s2, st, ""));
+wait_epoch_update();
+wait_epoch_update();
     ASSERT_EQ(Status::OK, commit(s2)); // NOLINT
     std::string buf{};
     ASSERT_EQ(Status::OK, search_key(s1, st, "", buf));
