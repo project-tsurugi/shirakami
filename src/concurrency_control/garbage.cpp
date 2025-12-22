@@ -260,6 +260,14 @@ inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec_ptr, b
     auto& cont = garbage::get_container_rec();
     cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
 
+    if (rec_ptr->get_shared_tombstone_count() != 0) {
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix
+                << "unhooked Record has non-zero shared_tombstone_count";
+        VLOG(log_debug) << log_location_prefix
+                << "Record: " << rec_ptr << ", shared_tombstone_count: "
+                << rec_ptr->get_shared_tombstone_count();
+    }
+
     // unlock
     rec_ptr->get_tidw_ref().unlock();
 
