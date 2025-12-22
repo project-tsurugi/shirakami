@@ -264,9 +264,13 @@ LOG(INFO) << "unhooking_key " << rec_ptr << shirakami_binstring(rec_ptr->get_key
     auto& cont = garbage::get_container_rec();
     cont.emplace_back(std::make_pair(rec_ptr, epoch::get_global_epoch()));
 
+LOG(INFO) << "unhooking_key " << rec_ptr << " unhooked";
+if (rec_ptr->get_shared_tombstone_count() != 0) {
+    LOG(INFO) << "Record " << rec_ptr << " has non-zero shared_tombstone_count " << rec_ptr->get_shared_tombstone_count();
+}
+
     // unlock
     rec_ptr->get_tidw_ref().unlock();
-LOG(INFO) << "unhooking_key " << rec_ptr << " unhooked";
 
     return Status::OK;
 }
