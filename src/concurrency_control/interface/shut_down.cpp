@@ -87,6 +87,7 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
             // flush remaining log
             lpwal::flush_remaining_log(); // (*1)
             epoch::epoch_t ce{epoch::get_global_epoch()};
+            // (*1)'s log must be before ce timing.
             // wait durable above flushing
             for (;;) {
                 if (epoch::get_datastore_durable_epoch() >= ce) { break; }
