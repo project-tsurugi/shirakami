@@ -19,25 +19,25 @@ public:
     database_options(open_mode om) : open_mode_(om) {} // NOLINT
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path)
-        : open_mode_(om), log_directory_path_(log_directory_path) {}
+        : open_mode_(om), log_directory_path_(std::move(log_directory_path)) {}
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path,
 
                      bool enable_logging_detail_info)
-        : open_mode_(om), log_directory_path_(log_directory_path),
+        : open_mode_(om), log_directory_path_(std::move(log_directory_path)),
 
           enable_logging_detail_info_(enable_logging_detail_info) {}
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path,
                      std::size_t epoch_time, bool enable_logging_detail_info)
-        : open_mode_(om), log_directory_path_(log_directory_path),
+        : open_mode_(om), log_directory_path_(std::move(log_directory_path)),
           epoch_time_(epoch_time),
           enable_logging_detail_info_(enable_logging_detail_info) {}
 
     database_options(open_mode om, std::filesystem::path&& log_directory_path,
                      std::size_t epoch_time, bool enable_logging_detail_info,
                      std::size_t waiting_resolver_threads)
-        : open_mode_(om), log_directory_path_(log_directory_path),
+        : open_mode_(om), log_directory_path_(std::move(log_directory_path)),
           epoch_time_(epoch_time),
           enable_logging_detail_info_(enable_logging_detail_info),
           waiting_resolver_threads_(waiting_resolver_threads) {}
