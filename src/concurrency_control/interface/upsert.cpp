@@ -144,7 +144,8 @@ Status upsert_body(Token token, Storage storage, const std::string_view key,
 
     INSERT_PROCESS:
         rc = insert_process(ti, storage, key, val, lobs);
-        if (rc == Status::ERR_CC) { return rc; }
+        if (rc == Status::OK || rc == Status::ERR_CC) { return rc; }
+        // retry if Status::WARN_CONCURRENT_INSERT
     }
 }
 
