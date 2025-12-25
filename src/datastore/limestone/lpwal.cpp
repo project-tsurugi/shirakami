@@ -135,7 +135,7 @@ void handler::end_session() {
 }
 
 // @pre take mtx of logs
-void flush_log_and_end_session_if_exists(lpwal::handler& handle) {
+static void flush_log_and_end_session_if_exists(lpwal::handler& handle) {
     if (!handle.get_logs().empty()) {
         if (!handle.get_begun_session()) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "lpwal worker#" << handle.get_worker_number()

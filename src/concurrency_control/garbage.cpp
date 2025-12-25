@@ -33,7 +33,7 @@
 
 namespace shirakami::garbage {
 
-void set_envflags() {
+static void set_envflags() {
     // check environ "SHIRAKAMI_REDUCE_GC"
     constexpr bool reduce_gc_default = true;
     bool reduce_gc = reduce_gc_default;
@@ -132,7 +132,7 @@ void work_manager() {
     }
 }
 
-version* find_latest_invisible_version_from_batch(
+static version* find_latest_invisible_version_from_batch(
         Record* rec_ptr, version*& pre_ver,
         std::size_t& average_version_list_size, bool& old_version_still_exists) {
     version* ver{rec_ptr->get_latest()};

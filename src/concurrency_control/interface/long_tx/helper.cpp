@@ -13,7 +13,7 @@
 
 namespace shirakami::long_tx {
 
-Status check_read_area_body(session* ti, Storage const st) {
+static Status check_read_area_body(session* ti, Storage const st) {
     auto ra = ti->get_read_area();
     auto plist = ra.get_positive_list();
     auto nlist = ra.get_negative_list();
@@ -48,7 +48,7 @@ Status check_read_area(session* ti, Storage const st) {
     return ret;
 }
 
-void preprocess_read_area(transaction_options::read_area& ra) {
+static void preprocess_read_area(transaction_options::read_area& ra) {
     if (!ra.get_positive_list().empty() && !ra.get_negative_list().empty()) {
         // if you set positive and negative, you can read positive erased by negative
         for (auto elem : ra.get_negative_list()) {
