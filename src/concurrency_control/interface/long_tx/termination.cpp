@@ -568,7 +568,7 @@ static Status verify(session* const ti) {
                 } else if (wso.second.get_op() == OP_TYPE::UPDATE ||
                            wso.second.get_op() == OP_TYPE::DELETE) {
                     // expect the record existing
-                    if (!(tid.get_latest() && !tid.get_absent())) {
+                    if (bool alive = (tid.get_latest() && !tid.get_absent()); !alive) {
                         if (wso.second.get_op() == OP_TYPE::UPDATE) {
                             ti->set_result(reason_code::KVS_UPDATE);
                         } else {
