@@ -102,7 +102,7 @@ void daemon_work() {
 void init() {
     // initialize "some" global variables
     set_stopping(false);
-    // start damon thread
+    // start daemon thread
     daemon_thread_ = std::thread(daemon_work);
 }
 
@@ -110,7 +110,7 @@ void fin() {
     // issue signal for daemon
     set_stopping(true);
 
-    // join damon thread
+    // join daemon thread
     daemon_thread_.join();
 
     // clean up signal

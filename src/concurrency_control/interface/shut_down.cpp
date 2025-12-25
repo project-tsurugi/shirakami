@@ -82,11 +82,12 @@ void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
         VLOG(log_debug_timing_event)
                 << log_location_prefix_timing_event
                 << "shutdown:start_send_txlog_wait_durable";
-        lpwal::fin(); // stop damon
+        lpwal::fin(); // stop daemon
         if (!force_shut_down_logging) {
             // flush remaining log
             lpwal::flush_remaining_log(); // (*1)
             epoch::epoch_t ce{epoch::get_global_epoch()};
+            // (*1)'s log must be before ce timing.
             // wait durable above flushing
             for (;;) {
                 if (epoch::get_datastore_durable_epoch() >= ce) { break; }
