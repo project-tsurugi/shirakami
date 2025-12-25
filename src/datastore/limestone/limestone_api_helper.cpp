@@ -102,7 +102,7 @@ void add_entry(limestone::api::log_channel* lc,
                            ", major write version: " << major_version
                         << ", minor write version: " << minor_version
                         << "," shirakami_vecstring(large_objects);
-#if 0
+#if 0 // NOLINT
     lc->add_entry(
             storage_id, key, val,
             limestone::api::write_version_type(major_version, minor_version),
