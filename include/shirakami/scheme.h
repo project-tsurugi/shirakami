@@ -72,7 +72,7 @@ using blob_id_type = std::uint64_t;
  * INTERNAL_WARN .. is return code for internal implements.
  * INTERNAL_ERR... is also return code for internal implements.
  */
-enum class Status : std::int32_t {
+enum class Status : std::int32_t { // NOLINT
     /**
      * @brief Warning.
      * @details When it uses multiple tx_begin without termination command,
