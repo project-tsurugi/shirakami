@@ -9,6 +9,7 @@
 #include "include/helper.h"
 
 #include "concurrency_control/include/epoch_internal.h"
+#include "concurrency_control/include/helper.h"
 #include "concurrency_control/include/session.h"
 #include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
@@ -106,7 +107,7 @@ Status check_before_write_ops(session* const ti, Storage const st,
 }
 
 Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
-                   bool const read_value = true) { // NOLINT
+                   bool read_value) {
     tid_word f_check{};
     tid_word s_check{};
 
