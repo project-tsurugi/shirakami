@@ -73,7 +73,7 @@ public:
                   Record* const rec_ptr, std::string_view const val,
                   bool const inc_tombstone, std::vector<blob_id_type>&& lobs)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
-          inc_tombstone_(inc_tombstone), lobs_(lobs) {
+          inc_tombstone_(inc_tombstone), lobs_(std::move(lobs)) {
         if (op == OP_TYPE::DELETE) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         }
@@ -139,7 +139,7 @@ public:
 
     void set_inc_tombstone(bool tf) { inc_tombstone_ = tf; }
 
-    void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_.swap(lobs); }
+    void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_ = std::move(lobs); }
 
 private:
     /**
