@@ -29,7 +29,7 @@ runs:
       with:
         repository: project-tsurugi/yakushima
         path: ${{ inputs.path }}/yakushima
-        ref: master
+        ref: dev-ban
 
     - name: Install_Limestone
       run: |
