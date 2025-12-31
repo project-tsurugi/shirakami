@@ -6,6 +6,7 @@
 #include "concurrency_control/include/wp_meta.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
+#include "concurrency_control/interface/scan/include/scan.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
 #include "database/include/logging.h"
 #include "index/yakushima/include/interface.h"
@@ -19,7 +20,6 @@
 
 namespace shirakami {
 
-// TODO: create a new header file and move this function definition there as constexpr
 Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
                               const std::string_view r_key, const scan_endpoint r_end) {
     if (r_end == scan_endpoint::INF) {

@@ -37,7 +37,7 @@
 namespace shirakami {
 
 Status tx_begin_body(transaction_options options) { // NOLINT
-                                                    // get tx options
+    // get tx options
     Token token = options.get_token();
 
     // get thread info

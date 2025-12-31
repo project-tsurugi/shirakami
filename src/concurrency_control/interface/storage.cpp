@@ -66,7 +66,6 @@ void write_storage_metadata(std::string_view key, Storage st,
 void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
-    std::string value{};
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
@@ -450,9 +449,8 @@ Status storage::delete_storage(Storage storage) {
                 storage_view, out)};
         if (rc != yakushima::status::OK) {
             LOG_FIRST_N(ERROR, 1)
-                    << log_location_prefix << "missing error" << std::endl
-                    << " " << page_set_meta_storage << " " << storage
-                    << std::endl;
+                    << log_location_prefix << "missing error "
+                    << page_set_meta_storage << " " << storage;
             return Status::ERR_FATAL;
         }
         delete reinterpret_cast<wp::page_set_meta*>(out.first); // NOLINT

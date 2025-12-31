@@ -1,13 +1,10 @@
 
+#include "concurrency_control/interface/scan/include/scan.h"
+
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
 #include "gtest/gtest.h"
-
-namespace shirakami {
-    extern Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint l_end,
-                                         const std::string_view r_key, const scan_endpoint r_end);
-}
 
 namespace shirakami::testing {
 
