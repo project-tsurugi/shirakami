@@ -17,7 +17,7 @@
 
 namespace shirakami {
 
-void abort_insert(session* const ti) {
+static void abort_insert(session* const ti) {
     if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
         short_tx::abort(ti);
     } else if (ti->get_tx_type() ==
@@ -83,11 +83,10 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
     }
 }
 
-Status insert_body(Token const token, Storage const storage, // NOLINT
-                   const std::string_view key,
-                   const std::string_view val,
-                   blob_id_type const* blobs_data,
-                   std::size_t blobs_size) {
+static Status insert_body(
+        Token const token, Storage const storage, // NOLINT
+        const std::string_view key, const std::string_view val,
+        blob_id_type const* blobs_data, std::size_t blobs_size) {
     // check constraint: key
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }

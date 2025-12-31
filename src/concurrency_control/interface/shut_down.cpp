@@ -58,7 +58,7 @@ static inline bool is_fast_shutdown() {
 #endif
 }
 
-void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
+static void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
     if (!get_initialized()) { return; }
     // set flag
     set_is_shutdowning(true);

@@ -25,8 +25,8 @@
 
 namespace shirakami {
 
-void write_storage_metadata(std::string_view key, Storage st,
-                            storage_option const& options) {
+static void write_storage_metadata(std::string_view key, Storage st,
+                                   storage_option const& options) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     std::string value{};
@@ -63,7 +63,7 @@ void write_storage_metadata(std::string_view key, Storage st,
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
 }
 
-void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
+static void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
     Token s{};
     while (enter(s) != Status::OK) { _mm_pause(); }
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
@@ -98,8 +98,8 @@ void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) 
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "library programming error";
 }
 
-Status create_storage_body(std::string_view const key, Storage& storage,
-                           storage_option const& options) {
+static Status create_storage_body(std::string_view const key, Storage& storage,
+                                  storage_option const& options) {
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
@@ -134,7 +134,7 @@ Status create_storage(std::string_view key, Storage& storage,
     return ret;
 }
 
-Status delete_storage_body(Storage const storage) {
+static Status delete_storage_body(Storage const storage) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
     if (ret != Status::OK) { return ret; }
@@ -161,7 +161,7 @@ Status delete_storage(Storage const storage) {
     return ret;
 }
 
-Status get_storage_body(std::string_view const key, Storage& out) {
+static Status get_storage_body(std::string_view const key, Storage& out) {
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
@@ -175,7 +175,7 @@ Status get_storage(std::string_view key, Storage& out) {
     return ret;
 }
 
-Status list_storage_body(std::vector<std::string>& out) {
+static Status list_storage_body(std::vector<std::string>& out) {
     return storage::list_storage(out);
 }
 Status list_storage(std::vector<std::string>& out) {
@@ -185,7 +185,7 @@ Status list_storage(std::vector<std::string>& out) {
     return ret;
 }
 
-Status storage_get_options_body(Storage storage, storage_option& options) {
+static Status storage_get_options_body(Storage storage, storage_option& options) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
@@ -245,8 +245,8 @@ Status storage_get_options(Storage storage, storage_option& options) {
     return ret;
 }
 
-Status storage_set_options_body(Storage storage,
-                                storage_option const& options) {
+static Status storage_set_options_body(Storage storage,
+                                       storage_option const& options) {
     std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};

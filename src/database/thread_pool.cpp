@@ -9,7 +9,7 @@
 namespace shirakami {
 class thread_task;
 
-void do_task([[maybe_unused]] thread_task* const out_task) {
+static void do_task([[maybe_unused]] thread_task* const out_task) {
     // todo task
     LOG(INFO);
 }

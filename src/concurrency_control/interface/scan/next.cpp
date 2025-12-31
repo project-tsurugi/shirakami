@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-Status next_body(Token const token, ScanHandle const handle) { // NOLINT
+static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_cache_obj*>(handle);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
@@ -169,7 +169,7 @@ Status next_body(Token const token, ScanHandle const handle) { // NOLINT
 /**
  * @pre This is called by only long tx mode
  */
-void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
+static void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();

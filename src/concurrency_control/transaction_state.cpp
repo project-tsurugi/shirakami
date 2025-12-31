@@ -11,8 +11,8 @@
 
 namespace shirakami {
 
-Status acquire_tx_state_handle_body(Token const token, // NOLINT
-                                    TxStateHandle& handle) {
+static Status acquire_tx_state_handle_body(Token const token, // NOLINT
+                                           TxStateHandle& handle) {
     auto* ti{static_cast<session*>(token)};
     // check whether it already begun.
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
@@ -65,7 +65,7 @@ Status acquire_tx_state_handle(Token const token, // NOLINT
     return ret;
 }
 
-Status release_tx_state_handle_body(TxStateHandle handle) {
+static Status release_tx_state_handle_body(TxStateHandle handle) {
     if (handle == undefined_handle) { return Status::WARN_INVALID_HANDLE; }
     Token token{};
     auto rc{TxState::find_and_erase_tx_state(handle, token)};
@@ -87,7 +87,7 @@ Status release_tx_state_handle(TxStateHandle handle) {
     return ret;
 }
 
-Status check_tx_state_body(TxStateHandle handle, TxState& out) {
+static Status check_tx_state_body(TxStateHandle handle, TxState& out) {
     if (handle == undefined_handle) { return Status::WARN_INVALID_HANDLE; }
     auto rc{TxState::find_and_get_tx_state(handle, out)};
     if (rc == Status::WARN_INVALID_HANDLE) { return rc; }
@@ -154,7 +154,7 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     return ret;
 }
 
-Status check_ltx_is_highest_priority_body(Token token, bool& out) {
+static Status check_ltx_is_highest_priority_body(Token token, bool& out) {
     // check the tx is already began.
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }

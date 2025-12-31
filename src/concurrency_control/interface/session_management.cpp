@@ -36,7 +36,7 @@
 
 namespace shirakami {
 
-Status enter_body(Token& token) { // NOLINT
+static Status enter_body(Token& token) { // NOLINT
     Status ret_status = session_table::decide_token(token);
     if (ret_status != Status::OK) return ret_status;
 
@@ -56,18 +56,18 @@ Status enter(Token& token) { // NOLINT
     return ret;
 }
 
-void assert_before_unlock(session* const ti) {
+static void assert_before_unlock(session* const ti) {
     if (ti->get_tx_began()) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "tx began at leave";
     }
 }
 
-void unlock_for_other_client(session* const ti) {
+static void unlock_for_other_client(session* const ti) {
     assert_before_unlock(ti);
     ti->set_visible(false); // unlock
 }
 
-Status leave_body(Token const token) { // NOLINT
+static Status leave_body(Token const token) { // NOLINT
     for (auto&& itr : session_table::get_session_table()) {
         auto* ti = static_cast<session*>(token);
         if (&itr == ti) {

@@ -30,7 +30,7 @@ void init_about_session_table(std::string_view log_dir_path) {
     }
 }
 
-void recovery_storage_meta(std::vector<Storage>& st_list) {
+static void recovery_storage_meta(std::vector<Storage>& st_list) {
     std::sort(st_list.begin(), st_list.end());
     st_list.erase(std::unique(st_list.begin(), st_list.end()), st_list.end());
     if (st_list.back() >= (storage::initial_strg_ctr << 32)) { // NOLINT
@@ -155,7 +155,7 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
             // compute sequence id
             SequenceId id{};
             memcpy(&id, key.data(), key.size());
-            if (id > max_id) { max_id = id; }
+            max_id = std::max(max_id, id);
             SequenceVersion version{};
             memcpy(&version, val.data(), sizeof(version));
             SequenceValue value{};

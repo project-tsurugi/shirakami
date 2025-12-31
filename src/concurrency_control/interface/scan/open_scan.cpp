@@ -46,7 +46,7 @@ Status check_empty_scan_range(const std::string_view l_key, const scan_endpoint 
  * thread. If that failed, this cleanup local effect, respect the result and
  * return;
  */
-Status fin_process(session* const ti, Status const this_result) {
+static Status fin_process(session* const ti, Status const this_result) {
     if (this_result <= Status::OK) {
         // It is not error by this strand thread, check termination
         std::unique_lock<std::mutex> lk{ti->get_mtx_termination()};
@@ -77,7 +77,7 @@ Status fin_process(session* const ti, Status const this_result) {
  * @return Status::OK
  * @return Status::WARN_NOT_FOUND
  */
-Status check_not_found(
+static Status check_not_found(
         session* ti, Storage st,
         std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
         std::size_t& head_skip_rec_n) {
@@ -177,11 +177,11 @@ Status check_not_found(
     return Status::WARN_NOT_FOUND;
 }
 
-Status open_scan_body(Token const token, Storage storage, // NOLINT
-                      const std::string_view l_key, const scan_endpoint l_end,
-                      const std::string_view r_key, const scan_endpoint r_end,
-                      ScanHandle& handle, std::size_t const max_size,
-                      bool right_to_left) {
+static Status open_scan_body(
+        Token const token, Storage storage, // NOLINT
+        const std::string_view l_key, const scan_endpoint l_end,
+        const std::string_view r_key, const scan_endpoint r_end,
+        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
     // check constraint: key
     auto ret = check_constraint_key_length(l_key);
     if (ret != Status::OK) { return ret; }

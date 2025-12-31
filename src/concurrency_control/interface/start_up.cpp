@@ -45,7 +45,7 @@
 
 namespace shirakami {
 
-void for_output_config(database_options const& options) {
+static void for_output_config(database_options const& options) {
     // about epoch_duration
     LOG(INFO) << log_location_prefix_config
               << "epoch_duration: " << options.get_epoch_time() << ", "
@@ -112,7 +112,7 @@ static Status create_datastore(database_options options) { // NOLINT
 }
 #endif
 
-Status init_body(database_options options, void* datastore) { // NOLINT
+static Status init_body(database_options options, void* datastore) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 

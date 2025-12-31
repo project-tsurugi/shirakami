@@ -73,7 +73,7 @@ public:
                   Record* const rec_ptr, std::string_view const val,
                   bool const inc_tombstone, std::vector<blob_id_type>&& lobs)
         : storage_(storage), op_(op), rec_ptr_(rec_ptr), val_(val),
-          inc_tombstone_(inc_tombstone), lobs_(lobs) {
+          inc_tombstone_(inc_tombstone), lobs_(std::move(lobs)) {
         if (op == OP_TYPE::DELETE) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         }
@@ -139,7 +139,7 @@ public:
 
     void set_inc_tombstone(bool tf) { inc_tombstone_ = tf; }
 
-    void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_.swap(lobs); }
+    void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_ = std::move(lobs); }
 
 private:
     /**
@@ -256,9 +256,9 @@ inline std::ostream& operator<<(std::ostream& out,     // NOLINT
                                 local_write_set& ws) { // NOLINT
                                                        // now occ only
     std::stringstream ss;
-    ss << "for_batch_: " << ws.get_for_batch() << std::endl;
+    ss << "for_batch_: " << ws.get_for_batch() << '\n';
     // for occ container
-    ss << "about occ container" << std::endl;
+    ss << "about occ container\n";
     for (auto itr = ws.get_ref_cont_for_occ().begin();
          itr != ws.get_ref_cont_for_occ().end(); ++itr) {
         ss << "No " << std::distance(ws.get_ref_cont_for_occ().begin(), itr)
@@ -266,7 +266,7 @@ inline std::ostream& operator<<(std::ostream& out,     // NOLINT
            << ", rec_ptr_: " << itr->get_rec_ptr() << ", val_: ";
         std::string val_buf{};
         itr->get_value(val_buf);
-        ss << val_buf << std::endl;
+        ss << val_buf << '\n';
     }
     out << ss.str();
     return out;
