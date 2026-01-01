@@ -1,4 +1,4 @@
-# Copyright 2019-2019 tsurugi project.
+# Copyright 2019-2026 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,10 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.10)
+
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
 project(shirakami
         VERSION 1.0.0
