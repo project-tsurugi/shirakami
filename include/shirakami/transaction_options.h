@@ -153,11 +153,11 @@ to_string_view(const transaction_options::transaction_type tp) noexcept {
     using namespace std::string_view_literals;
     switch (tp) {
         case transaction_options::transaction_type::SHORT:
-            return "SHORT"sv; // NOLINT
+            return "SHORT"sv;
         case transaction_options::transaction_type::LONG:
-            return "LONG"sv; // NOLINT
+            return "LONG"sv;
         case transaction_options::transaction_type::READ_ONLY:
-            return "READ_ONLY"sv; // NOLINT
+            return "READ_ONLY"sv;
     }
     /**
      * LOG_FIRST_N マクロは下記エラーによって利用できない。
