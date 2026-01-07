@@ -34,7 +34,7 @@ private:
 // related-to: tsurugi-issues issue #751
 // related-to: shirakami issue #141
 
-// an implementation for ti751/si141 causes this regression
+// one of proposed-fix for ti751/si141 causes this regression
 TEST_F(tsurugi_issue751_test, jogasaki_update_range) {
     Storage st{};
     ASSERT_OK(create_storage("", st));
@@ -76,7 +76,7 @@ TEST_F(tsurugi_issue751_test, jogasaki_update_range) {
     ASSERT_OK(leave(s));
 }
 
-// an implementation for ti751/si141 causes this regression
+// one of proposed-fix for ti751/si141 causes this regression
 TEST_F(tsurugi_issue751_test, search_insert_delete) {
     Storage st{};
     ASSERT_OK(create_storage("", st));

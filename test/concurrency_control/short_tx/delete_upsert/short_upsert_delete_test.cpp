@@ -16,7 +16,7 @@ using namespace shirakami;
 
 Storage st{};
 
-class upsert_after_delete : public ::testing::Test { // NOLINT
+class upsert_delete : public ::testing::Test { // NOLINT
 public:
     static void call_once_f() {
         google::InitGoogleLogging(
@@ -35,7 +35,7 @@ private:
     static inline std::once_flag init_google_; // NOLINT
 };
 
-TEST_F(upsert_after_delete, simple) { // NOLINT
+TEST_F(upsert_delete, simple) { // NOLINT
     create_storage("", st);
     std::string k("k"); // NOLINT
     std::string v("v"); // NOLINT

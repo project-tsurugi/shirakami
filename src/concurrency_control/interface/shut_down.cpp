@@ -38,8 +38,6 @@
 
 #include "shirakami/interface.h"
 
-#include "boost/filesystem/path.hpp"
-
 #include "glog/logging.h"
 
 namespace shirakami {
