@@ -1,5 +1,6 @@
 
 
+#include <filesystem>
 #include <sstream>
 #include <string_view>
 
@@ -76,9 +77,8 @@ static Status create_datastore(database_options options) { // NOLINT
         lpwal::set_log_dir(log_dir);
         lpwal::set_log_dir_pointed(true);
         // check exist
-        boost::filesystem::path ldp{std::string(options.get_log_directory_path())}; // NOLINT
-        boost::system::error_code error;
-        const bool result = boost::filesystem::exists(ldp, error);
+        std::error_code error;
+        const bool result = std::filesystem::exists(options.get_log_directory_path(), error);
         if (!result || error) {
             // exists
             if (options.get_open_mode() == database_options::open_mode::CREATE) {
