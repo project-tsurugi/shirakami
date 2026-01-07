@@ -14,23 +14,9 @@
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/read_only_tx/include/read_only_tx.h"
 #include "database/include/logging.h"
-
-#ifdef PWAL
-
-#include "concurrency_control/include/lpwal.h"
-
-#include "datastore/limestone/include/datastore.h"
-#include "datastore/limestone/include/limestone_api_helper.h"
-
-#include "limestone/api/datastore.h"
-
-#endif
-
 #include "index/yakushima/include/interface.h"
 
 #include "shirakami/interface.h"
-
-#include "boost/filesystem/path.hpp"
 
 #include "glog/logging.h"
 
