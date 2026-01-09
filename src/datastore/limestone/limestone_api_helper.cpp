@@ -28,6 +28,7 @@ create_channel(limestone::api::datastore* ds,
         return nullptr;
     }
 #ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+    (void)location;
     shirakami_log_entry << "datastore::create_channel()";
     auto& ret = ds->create_channel();
 #else

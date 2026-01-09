@@ -1,4 +1,4 @@
-# Copyright 2019-2025 Project Tsurugi.
+# Copyright 2019-2026 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -76,12 +76,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]){
     endif()
 endfunction()
 
-check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH_PATH "limestone::api::configuration{{\"/tmp\"}, \"/tmp\"}")
-#check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH_PATH2 "limestone::api::configuration{{\"/tmp\"}, \"/tmp\"}")
-check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_VECPATH      "limestone::api::configuration{{\"/tmp\"}}")
-check_limestone_api(HAVE_LIMESTONE_CONFIGURE_CTOR_PATH         "limestone::api::configuration{\"/tmp\"}")
-check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_PATH "[](limestone::api::datastore* ds){ds->create_channel(\"/tmp\");}")
-check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE "[](limestone::api::datastore* ds){ds->create_channel();}")
+#check_limestone_api(HAVE_LIMESTONE_CONFIG_CTOR_VECBOOSTFSPATH_BOOSTFSPATH
+#                    "limestone::api::configuration{{boost::filesystem::path{\"/tmp\"}}, boost::filesystem::path{\"/tmp\"}}")
+check_limestone_api(HAVE_LIMESTONE_CONFIG_CTOR_NONE
+                    "limestone::api::configuration{}")
+check_limestone_api(HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_BOOSTFSPATH
+                    "[](limestone::api::configuration* conf){conf->set_data_location(boost::filesystem::path{\"/tmp\"});}")
+#check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_BOOSTFSPATH
+#                    "[](limestone::api::datastore* ds){ds->create_channel(boost::filesystem::path{\"/tmp\"});}")
+check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+                    "[](limestone::api::datastore* ds){ds->create_channel();}")
     if (logging_set)
         message(FATAL_ERROR "It can select only one logging method.")
     endif ()
