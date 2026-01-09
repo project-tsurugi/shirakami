@@ -1,4 +1,4 @@
-# Copyright 2019-2019 tsurugi project.
+# Copyright 2019-2026 Project Tsurugi.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,10 +58,38 @@ message("It uses yakushima as index structure.")
 
 set(logging_set 0)
 if (BUILD_PWAL)
+    include(CheckCXXSourceCompiles)
+
+    set(CMAKE_REQUIRED_LIBRARIES limestone)
+    set(AVAILABLE_LIMESTONE_API_DEFINE "")
+    function(check_limestone_api varname method_call)
+        check_cxx_source_compiles(
+"#include <limestone/api/datastore.h>
+int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]){
+    (void)${method_call};
+    return 0;
+}"
+            ${varname})
+        if(${varname})
+            set(AVAILABLE_LIMESTONE_API_DEFINE "${AVAILABLE_LIMESTONE_API_DEFINE} -D${varname}=1" PARENT_SCOPE)
+        endif()
+    endfunction()
+
+    #check_limestone_api(HAVE_LIMESTONE_CONFIG_CTOR_VECBOOSTFSPATH_BOOSTFSPATH
+    #                    "limestone::api::configuration{{boost::filesystem::path{\"/tmp\"}}, boost::filesystem::path{\"/tmp\"}}")
+    check_limestone_api(HAVE_LIMESTONE_CONFIG_CTOR_NONE
+                        "limestone::api::configuration{}")
+    check_limestone_api(HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
+                        "[](limestone::api::configuration* conf){conf->set_data_location(std::filesystem::path{\"/tmp\"});}")
+    #check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_BOOSTFSPATH
+    #                    "[](limestone::api::datastore* ds){ds->create_channel(boost::filesystem::path{\"/tmp\"});}")
+    check_limestone_api(HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+                        "[](limestone::api::datastore* ds){ds->create_channel();}")
     if (logging_set)
         message(FATAL_ERROR "It can select only one logging method.")
     endif ()
     add_definitions(-DPWAL)
+    add_definitions(${AVAILABLE_LIMESTONE_API_DEFINE})
     if (PWAL_ENABLE_READ_LOG)
         add_definitions(-DPWAL_ENABLE_READ_LOG)
     endif ()

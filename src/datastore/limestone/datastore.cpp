@@ -22,6 +22,14 @@ namespace shirakami::datastore {
 
 #if defined(PWAL)
 
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+void init_about_session_table() {
+    for (auto&& elem : session_table::get_session_table()) {
+        elem.get_lpwal_handle().set_log_channel_ptr(
+                create_channel(get_datastore()));
+    }
+}
+#else
 void init_about_session_table(std::string_view log_dir_path) {
     boost::filesystem::path log_dir{std::string(log_dir_path)};
     for (auto&& elem : session_table::get_session_table()) {
@@ -29,6 +37,7 @@ void init_about_session_table(std::string_view log_dir_path) {
                 create_channel(get_datastore(), log_dir));
     }
 }
+#endif
 
 static void recovery_storage_meta(std::vector<Storage>& st_list) {
     std::sort(st_list.begin(), st_list.end());

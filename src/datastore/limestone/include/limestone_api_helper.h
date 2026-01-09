@@ -16,9 +16,14 @@ namespace shirakami {
 
 // datastore
 
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+limestone::api::log_channel*
+create_channel(limestone::api::datastore* ds);
+#else
 limestone::api::log_channel*
 create_channel(limestone::api::datastore* ds,
                boost::filesystem::path const& location);
+#endif
 
 std::unique_ptr<limestone::api::snapshot>
 get_snapshot(limestone::api::datastore* ds);
