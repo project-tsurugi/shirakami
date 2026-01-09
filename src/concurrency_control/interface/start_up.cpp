@@ -40,8 +40,6 @@
 
 #include "shirakami/interface.h"
 
-#include "boost/filesystem/path.hpp"
-
 #include "glog/logging.h"
 
 namespace shirakami {
@@ -64,6 +62,7 @@ static void for_output_config(database_options const& options) {
 }
 
 #if defined(PWAL)
+// for old API (used from tests)
 static Status create_datastore(database_options options) { // NOLINT
     // check args
     std::string log_dir(options.get_log_directory_path());
@@ -91,13 +90,13 @@ static Status create_datastore(database_options options) { // NOLINT
 
     // create datastore
     std::string data_location_str(log_dir);
-    boost::filesystem::path data_location(data_location_str);
-    std::vector<boost::filesystem::path> data_locations;
-    data_locations.emplace_back(data_location);
-    std::string metadata_dir{log_dir + "m"};
-    boost::filesystem::path metadata_path(metadata_dir);
     try {
-        auto limestone_config = limestone::api::configuration(data_locations, metadata_path);
+#if HAVE_LIMESTONE_CONFIG_CTOR_NONE && HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
+        auto limestone_config = limestone::api::configuration{};
+        limestone_config.set_data_location(data_location_str);
+#else
+        auto limestone_config = limestone::api::configuration{{data_location_str}, log_dir + "m"};
+#endif
         if (int max_para = options.get_recover_max_parallelism();
             max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);
@@ -167,7 +166,11 @@ static Status init_body(database_options options, void* datastore) { // NOLINT
     /**
      * This executes create_channel and pass it to shirakami's executor.
      */
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+    datastore::init_about_session_table();
+#else
     datastore::init_about_session_table(log_dir);
+#endif
 
     // datastore ready
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "startup:start_datastore_ready";

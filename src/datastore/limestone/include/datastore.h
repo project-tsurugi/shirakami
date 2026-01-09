@@ -44,7 +44,11 @@ create_datastore(limestone::api::configuration const& conf) {
 /**
  * @brief It executes create_channel and pass it to shirakami's executor.
  */
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+void init_about_session_table();
+#else
 void init_about_session_table(std::string_view log_dir_path);
+#endif
 
 /**
  * @brief recovery from datastore
