@@ -75,6 +75,16 @@ std::size_t dir_size(boost::filesystem::path& path) {
     return total_file_size;
 }
 
+static limestone::api::configuration create_limestone_config(const std::string& path) {
+#if HAVE_LIMESTONE_CONFIG_CTOR_NONE && HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
+    auto limestone_config = limestone::api::configuration{};
+    limestone_config.set_data_location(path);
+#else
+    auto limestone_config = limestone::api::configuration({path}, path + "m");
+#endif
+    return limestone_config;
+}
+
 TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     // decide test dir name
     int tid = syscall(SYS_gettid); // NOLINT
@@ -107,15 +117,18 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
 
     // allocate datastore
     std::unique_ptr<limestone::api::datastore> datastore;
-    datastore = std::make_unique<limestone::api::datastore>(
-            limestone::api::configuration({data_location}, metadata_path));
+    datastore = std::make_unique<limestone::api::datastore>(create_limestone_config(data_dir));
     set_data_log_dir(data_dir);
     set_metadata_log_dir(metadata_dir);
     limestone::api::datastore* d_ptr{datastore.get()};
     d_ptr->add_persistent_callback(set_limestone_durable_epoch);
 
     //create log_channel
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+    limestone::api::log_channel* lc{&d_ptr->create_channel()};
+#else
     limestone::api::log_channel* lc{&d_ptr->create_channel(data_location)};
+#endif
 
     // start datastore
     d_ptr->ready();
@@ -176,8 +189,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     d_ptr->shutdown();
 
     // start datastore
-    datastore = std::make_unique<limestone::api::datastore>(
-            limestone::api::configuration({data_location}, metadata_path));
+    datastore = std::make_unique<limestone::api::datastore>(create_limestone_config(data_dir));
     datastore->recover();
     datastore->ready();
     d_ptr = datastore.get();
@@ -232,8 +244,7 @@ TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
 
     // allocate datastore
     std::unique_ptr<limestone::api::datastore> datastore;
-    datastore = std::make_unique<limestone::api::datastore>(
-            limestone::api::configuration({data_location}, metadata_path));
+    datastore = std::make_unique<limestone::api::datastore>(create_limestone_config(data_dir));
     set_data_log_dir(data_dir);
     set_metadata_log_dir(metadata_dir);
     limestone::api::datastore* d_ptr{datastore.get()};
