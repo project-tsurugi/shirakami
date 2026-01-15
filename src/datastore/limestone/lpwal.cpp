@@ -75,6 +75,7 @@ static void add_entry_from_logs(handler& handle) {
     handle.set_min_log_epoch(0);
 }
 
+// to be removed
 static void daemon_work() {
     for (;;) {
         // sleep epoch time
@@ -92,8 +93,7 @@ static void daemon_work() {
             auto oldest_log_epoch{es.get_lpwal_handle().get_min_log_epoch()};
             if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
                 oldest_log_epoch != epoch::get_global_epoch()) {
-                // should flush
-                flush_log(&es);
+                LOG(ERROR) << log_location_prefix << "log found by daemon on lpwal worker#" << es.get_lpwal_handle().get_worker_number();
             }
         }
     }
@@ -131,6 +131,7 @@ void handler::begin_session() {
 void handler::end_session() {
     // assert begun_session_ = true
     shirakami::end_session(log_channel_ptr_);
+    transaction_id_.clear();
     begun_session_ = false;
 }
 
@@ -156,10 +157,15 @@ void flush_log(Token token) {
     auto* ti = static_cast<session*>(token);
     auto& handle = ti->get_lpwal_handle();
     // this is called worker or daemon, so use try_lock
+  while (true) {
     if (handle.get_mtx_logs().try_lock()) {
         flush_log_and_end_session_if_exists(handle);
         handle.get_mtx_logs().unlock();
+        break;
     }
+    // retry
+    _mm_pause();
+  }
 }
 
 void flush_remaining_log() {

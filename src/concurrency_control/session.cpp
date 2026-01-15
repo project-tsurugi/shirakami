@@ -106,6 +106,7 @@ void session::commit_sequence(tid_word ctid) {
     std::unique_lock<std::mutex> lk_for_pwal_buf{
             get_lpwal_handle().get_mtx_logs()};
     for (auto& elem : log_recs) { get_lpwal_handle().push_log(elem); }
+    shirakami::lpwal::flush_log(static_cast<void*>(this));
 #endif
 }
 

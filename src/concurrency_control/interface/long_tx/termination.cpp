@@ -851,7 +851,14 @@ extern Status commit(session* const ti) {
         {
             auto& handle = ti->get_lpwal_handle();
             std::unique_lock lk{handle.get_mtx_logs()};
-            if (handle.get_begun_session()) { this_dm = handle.get_durable_epoch(); }
+            if (handle.get_begun_session()) {
+                LOG(ERROR) << log_location_prefix << "unreachable";
+                this_dm = handle.get_durable_epoch();
+            } else {
+                std::string transaction_id{};
+                get_tx_id/*_body*/(ti, transaction_id);
+                handle.set_transaction_id(transaction_id);
+            }
         }
 #endif
 
@@ -874,8 +881,7 @@ extern Status commit(session* const ti) {
 #if defined(PWAL)
         auto oldest_log_epoch{ti->get_lpwal_handle().get_min_log_epoch()};
         // think the wal buffer is empty due to background thread's work
-        if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
-            oldest_log_epoch != epoch::get_global_epoch()) {
+        if (oldest_log_epoch != 0) { // this means the wal buffer is not empty.
             // should flush
             shirakami::lpwal::flush_log(static_cast<void*>(ti));
         }
