@@ -46,16 +46,6 @@ Status search_key(session* ti, Storage const storage,
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             return Status::ERR_CC;
         }
-
-        // read protection for low priori ltx
-        wp::page_set_meta* psm{};
-        auto rc_fpsm{wp::find_page_set_meta(storage, psm)};
-        if (rc_fpsm == Status::WARN_NOT_FOUND) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-            return Status::ERR_FATAL;
-        }
-        range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
-        ti->push_to_range_read_by_short_set(rrbs);
         return rc;
     }
 

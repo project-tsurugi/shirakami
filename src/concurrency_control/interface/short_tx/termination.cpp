@@ -673,31 +673,6 @@ static void compute_commit_tid(session* ti, epoch::epoch_t ce, tid_word& commit_
     ti->set_mrc_tid(commit_tid);
 }
 
-static void register_point_read_by_short(session* const ti) {
-    auto ce{ti->get_mrc_tid().get_epoch()};
-
-    std::set<Record*> recs{};
-    for (auto&& itr : ti->get_read_set_for_stx()) {
-        recs.insert(itr.get_rec_ptr());
-    }
-
-    for (auto&& itr : recs) {
-        auto& ro{itr->get_read_by()};
-        ro.push(ce);
-    }
-}
-
-static void register_range_read_by_short(session* const ti) {
-    auto ce{ti->get_mrc_tid().get_epoch()};
-
-    {
-        //take read lock
-        std::shared_lock<std::shared_mutex> lk{
-                ti->get_mtx_range_read_by_short_set()};
-        for (auto&& itr : ti->get_range_read_by_short_set()) { itr->push(ce); }
-    }
-}
-
 static void process_tx_state(session* ti,
                              [[maybe_unused]] epoch::epoch_t durable_epoch) {
     if (ti->get_has_current_tx_state_handle()) {
@@ -761,10 +736,6 @@ extern Status commit(session* const ti) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "impossible code path.";
         return Status::ERR_FATAL;
     }
-
-    // This calculation can be done outside the critical section.
-    register_point_read_by_short(ti);
-    register_range_read_by_short(ti);
 
     // sequence process
     // This must be after cc commit and before log process

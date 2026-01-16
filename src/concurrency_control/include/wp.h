@@ -17,7 +17,6 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/garbage.h"
-#include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/wp_lock.h"
 #include "concurrency_control/include/wp_meta.h"
 
@@ -39,22 +38,12 @@ public:
     explicit page_set_meta(storage_option options)
         : storage_option_(std::move(options)) {} // NOLINT
 
-    range_read_by_long* get_range_read_by_long_ptr() {
-        return &range_read_by_long_;
-    }
-
-    range_read_by_short* get_range_read_by_short_ptr() {
-        return &range_read_by_short_;
-    }
-
     wp_meta* get_wp_meta_ptr() { return &wp_meta_; }
 
     garbage::storage_stats* get_storage_stats_ptr() { return &storage_stats_; }
 
 private:
     storage_option storage_option_{};
-    range_read_by_long range_read_by_long_{};
-    range_read_by_short range_read_by_short_{};
     wp_meta wp_meta_{};
     garbage::storage_stats storage_stats_{};
 };
@@ -105,9 +94,6 @@ void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
 
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
-
-[[maybe_unused]] extern Status find_read_by(Storage st,
-                                            range_read_by_long*& ret);
 
 [[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
 

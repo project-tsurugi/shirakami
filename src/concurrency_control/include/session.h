@@ -21,7 +21,6 @@
 #endif
 
 #include "concurrency_control/include/local_set.h"
-#include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/scan.h"
 #include "concurrency_control/include/tid.h"
 #include "concurrency_control/include/wp.h"
@@ -37,7 +36,6 @@ namespace shirakami {
 
 class alignas(CACHE_LINE_SIZE) session {
 public:
-    using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_for_stx_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     static constexpr decltype(tid_word::obj_) initial_mrc_tid{0};
@@ -223,14 +221,6 @@ public:
 
     // ========== end: strand
 
-    std::shared_mutex& get_mtx_range_read_by_short_set() {
-        return mtx_range_read_by_short_set_;
-    }
-
-    range_read_by_short_set_type& get_range_read_by_short_set() {
-        return range_read_by_short_set_;
-    }
-
     std::shared_mutex& get_mtx_read_area() { return mtx_read_area_; }
 
     [[nodiscard]] transaction_options::read_area get_read_area() {
@@ -329,20 +319,6 @@ public:
     }
 
     void process_before_finish_step() {
-    }
-
-    void clear_range_read_by_short_set() {
-        // take write lock
-        std::lock_guard<std::shared_mutex> lk{
-                get_mtx_range_read_by_short_set()};
-        get_range_read_by_short_set().clear();
-    }
-
-    void push_to_range_read_by_short_set(range_read_by_short* rrbs) {
-        // take write lock
-        std::lock_guard<std::shared_mutex> lk{
-                get_mtx_range_read_by_short_set()};
-        get_range_read_by_short_set().insert(rrbs);
     }
 
     void clear_read_set_for_stx() {
@@ -586,13 +562,6 @@ private:
      * @details If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
-
-    /**
-     * mutex for range_read_by_short_set_
-     */
-    std::shared_mutex mtx_range_read_by_short_set_;
-
-    range_read_by_short_set_type range_read_by_short_set_{};
 
     std::shared_mutex mtx_read_area_{};
 

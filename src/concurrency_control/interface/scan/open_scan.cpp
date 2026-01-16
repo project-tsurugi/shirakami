@@ -205,43 +205,6 @@ static Status open_scan_body(
     }
 
     // ==========
-    // wp verify section
-    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-        /**
-         * early abort optimization. If it is not, it finally finds at commit phase.
-         */
-        auto wps = wp::find_wp(storage);
-        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && find_min_ep <= epoch::get_global_epoch()) {
-            short_tx::abort(ti);
-            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
-            ti->get_result_info().set_storage_name(storage);
-            ti->set_result(reason_code::CC_OCC_WP_VERIFY);
-            return Status::ERR_CC;
-        }
-    } else if (ti->get_tx_type() !=
-               transaction_options::transaction_type::READ_ONLY) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-        return Status::ERR_FATAL;
-    }
-    // ==========
-
-    // check read information
-    if (ti->get_tx_type() ==
-               transaction_options::transaction_type::SHORT) {
-        wp::page_set_meta* psm{};
-        auto rc{wp::find_page_set_meta(storage, psm)};
-        if (rc == Status::WARN_NOT_FOUND) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-            return Status::ERR_FATAL;
-        }
-        range_read_by_short* rrbs{psm->get_range_read_by_short_ptr()};
-        ti->push_to_range_read_by_short_set(rrbs);
-    } else if (ti->get_tx_type() !=
-               transaction_options::transaction_type::READ_ONLY) {
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
-        return Status::ERR_FATAL;
-    }
 
     // scan for index
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;

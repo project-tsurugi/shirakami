@@ -13,7 +13,6 @@
 #include <string>
 #include <string_view>
 
-#include "concurrency_control/include/read_by.h"
 #include "concurrency_control/include/tid.h"
 
 #include "atomic_wrapper.h"
@@ -51,8 +50,6 @@ public:
         return latest_.load(std::memory_order_acquire);
     }
 
-    point_read_by_short& get_read_by() { return read_by_; }
-
     [[nodiscard]] tid_word get_stable_tidw();
 
     [[nodiscard]] tid_word get_tidw() const { return tidw_; }
@@ -67,8 +64,6 @@ public:
         std::shared_lock<std::shared_mutex> lock{get_mtx_value()};
         get_latest()->get_value(out);
     }
-
-    point_read_by_long& get_point_read_by_long() { return point_read_by_long_; }
 
     std::atomic<std::size_t>& get_shared_tombstone_count() {
         return shared_tombstone_count_;
@@ -109,15 +104,6 @@ private:
     std::string key_{};
 
     std::shared_mutex mtx_value_{};
-
-    point_read_by_short read_by_{};
-
-    // read information about long transaction
-    /**
-     * @brief read information about point read by long transaction.
-     */
-    point_read_by_long point_read_by_long_{};
-    // ==========
 
     /**
      * @brief The count about shared tombstone.
