@@ -51,9 +51,6 @@ public:
                      std::tuple<std::set<std::size_t>,
                                 std::tuple<std::string, scan_endpoint,
                                            std::string, scan_endpoint, bool>>>;
-    using ltx_storage_read_set_type =
-            std::map<Storage, std::tuple<std::string, scan_endpoint,
-                                         std::string, scan_endpoint>>;
     static constexpr decltype(tid_word::obj_) initial_mrc_tid{0};
 
     /**
@@ -237,18 +234,6 @@ public:
 
     // ========== end: strand
 
-    std::shared_mutex& get_mtx_ltx_storage_read_set() {
-        return mtx_ltx_storage_read_set_;
-    }
-
-    ltx_storage_read_set_type& get_ltx_storage_read_set() {
-        return ltx_storage_read_set_;
-    }
-
-    range_read_set_for_ltx& get_range_read_set_for_ltx() {
-        return range_read_set_for_ltx_;
-    }
-
     std::shared_mutex& get_mtx_range_read_by_short_set() {
         return mtx_range_read_by_short_set_;
     }
@@ -357,11 +342,6 @@ public:
     void process_before_finish_step() {
     }
 
-    void clear_ltx_storage_read_set() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
-        get_ltx_storage_read_set().clear();
-    }
-
     void clear_range_read_by_short_set() {
         // take write lock
         std::lock_guard<std::shared_mutex> lk{
@@ -380,67 +360,6 @@ public:
         // take write lock
         std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
         read_set_for_stx_.clear();
-    }
-
-    void insert_to_ltx_storage_read_set(Storage const st) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
-        // find entry
-        auto itr = get_ltx_storage_read_set().find(st);
-        if (itr == get_ltx_storage_read_set().end()) {
-            // no hit
-            get_ltx_storage_read_set().emplace(
-                    st, std::make_tuple("", scan_endpoint::EXCLUSIVE, "",
-                                        scan_endpoint::EXCLUSIVE));
-        }
-    }
-
-    void insert_to_ltx_storage_read_set(Storage const st,
-                                        std::string const& key) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
-        // find entry
-        auto itr = get_ltx_storage_read_set().find(st);
-        if (itr == get_ltx_storage_read_set().end()) {
-            // no hit
-            get_ltx_storage_read_set().emplace(
-                    st, std::make_tuple(key, scan_endpoint::INCLUSIVE, key,
-                                        scan_endpoint::INCLUSIVE));
-        } else {
-            std::string& now_lkey = std::get<0>(itr->second);
-            scan_endpoint& now_lpoint = std::get<1>(itr->second);
-            std::string& now_rkey = std::get<2>(itr->second);
-            scan_endpoint& now_rpoint = std::get<3>(itr->second);
-
-            // check initialize
-            if (now_lkey.empty() && now_lpoint == scan_endpoint::EXCLUSIVE &&
-                now_rkey.empty() && now_rpoint == scan_endpoint::EXCLUSIVE) {
-                now_lkey = key;
-                now_rkey = key;
-                now_lpoint = scan_endpoint::INCLUSIVE;
-                now_rpoint = scan_endpoint::INCLUSIVE;
-                return;
-            }
-
-            // hit, check left key
-            if (key < now_lkey) {
-                now_lkey = key;
-                if (now_lpoint == scan_endpoint::EXCLUSIVE) {
-                    now_lpoint = scan_endpoint::INCLUSIVE;
-                }
-            }
-            if (key == now_lkey && now_lpoint == scan_endpoint::EXCLUSIVE) {
-                now_lpoint = scan_endpoint::INCLUSIVE;
-            }
-            // check right key
-            if (now_rkey < key) {
-                now_rkey = key;
-                if (now_rpoint == scan_endpoint::EXCLUSIVE) {
-                    now_rpoint = scan_endpoint::INCLUSIVE;
-                }
-            }
-            if (key == now_rkey && now_rpoint == scan_endpoint::EXCLUSIVE) {
-                now_rpoint = scan_endpoint::INCLUSIVE;
-            }
-        }
     }
 
     void push_to_read_set_for_stx(read_set_obj&& elem) {
@@ -678,22 +597,6 @@ private:
      * @details If this is true, this session is in some tx, otherwise, not.
      */
     std::atomic<bool> tx_began_{false};
-
-    /**
-     * @brief for optimization for read area
-     * @details ltx mode log where they read the storage and update read area
-     * at commit phase.
-     */
-    ltx_storage_read_set_type ltx_storage_read_set_{};
-
-    /**
-     * @brief mutex for @a ltx_storage_read_set_.
-     * mutex for data access phase. it doesn't need to mutex for commit phase
-     * because commit phase is isolated from data access phase by mutex.
-     */
-    std::shared_mutex mtx_ltx_storage_read_set_{};
-
-    range_read_set_for_ltx range_read_set_for_ltx_{};
 
     /**
      * mutex for range_read_by_short_set_

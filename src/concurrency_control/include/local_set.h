@@ -433,30 +433,4 @@ private:
     std::shared_mutex mtx_set_;
 };
 
-class range_read_set_for_ltx {
-public:
-    using elem_type = std::tuple<range_read_by_long*, std::string,
-                                 scan_endpoint, std::string, scan_endpoint>;
-    using set_type = std::set<elem_type>;
-
-    std::shared_mutex& get_mtx_set() { return mtx_set_; }
-
-    set_type& get_set() { return set_; }
-
-    void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
-        set_.clear();
-    }
-
-    void insert(elem_type const& elem) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
-        set_.insert(elem);
-    }
-
-private:
-    set_type set_;
-
-    std::shared_mutex mtx_set_{};
-};
-
 } // namespace shirakami

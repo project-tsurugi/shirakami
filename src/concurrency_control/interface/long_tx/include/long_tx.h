@@ -14,17 +14,10 @@ extern Status abort(session* ti);
 
 extern Status check_commit(Token token);
 
-extern Status check_read_area(session* ti, Storage st);
-
 extern Status commit(session* ti);
 
 extern Status search_key(session* ti, Storage storage, std::string_view key,
                          std::string& value, bool read_value = true); // NOLINT
-
-extern Status tx_begin(session* ti, std::vector<Storage> write_preserve,
-                       transaction_options::read_area ra);
-
-extern void update_wp_at_commit(session* ti);
 
 /**
  * @brief version function for long tx.

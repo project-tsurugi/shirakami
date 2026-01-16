@@ -16,8 +16,6 @@ static void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 
 void session::clear_local_set() {
     node_set_.clear();
-    get_range_read_set_for_ltx().clear();
-    clear_ltx_storage_read_set();
     clear_range_read_by_short_set();
     clear_read_set_for_stx();
     wp_set_.clear();

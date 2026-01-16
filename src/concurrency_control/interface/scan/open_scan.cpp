@@ -196,15 +196,6 @@ static Status open_scan_body(
         if (ti->find_high_priority_short(false) == Status::WARN_PREMATURE) {
             return Status::WARN_PREMATURE;
         }
-        // check for read area invalidation
-        auto rs = long_tx::check_read_area(ti, storage);
-        if (rs == Status::ERR_READ_AREA_VIOLATION) {
-            long_tx::abort(ti);
-            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
-            ti->get_result_info().set_storage_name(storage);
-            ti->set_result(reason_code::CC_LTX_READ_AREA_VIOLATION);
-            return rs;
-        }
     }
 
     // check storage existence

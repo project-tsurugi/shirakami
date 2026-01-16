@@ -159,11 +159,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         // check max epoch of read version
         if (ver->get_tid().get_absent()) { return Status::WARN_NOT_FOUND; }
         // ok case
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-            std::string key_buf{};
-            rec_ptr->get_key(key_buf);
-            ti->insert_to_ltx_storage_read_set(sc->get_storage(), key_buf);
-        }
         return Status::OK;
     }
 
