@@ -63,17 +63,4 @@ std::size_t wp_meta::find_min_id(const wp_meta::wped_type&) {
     return min_id;
 }
 
-bool wp_meta::read_write_range(std::size_t txid, std::string& out_left_key,
-                               std::string& out_right_key) {
-    std::shared_lock<std::shared_mutex> lk{get_mtx_write_range()};
-
-    auto ret_itr = get_write_range().find(txid);
-    if (ret_itr == get_write_range().end()) { // not found
-        return false;
-    } // found
-    out_left_key = std::get<0>(ret_itr->second);
-    out_right_key = std::get<1>(ret_itr->second);
-    return true;
-}
-
 } // namespace shirakami::wp

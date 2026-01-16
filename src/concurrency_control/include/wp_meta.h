@@ -83,15 +83,6 @@ public:
 
     wp_write_range_type& get_write_range() { return write_range_; }
 
-    /**
-     * @brief check the space of write preserve.
-     * @param[out] at If this function returns Status::OK, the value of @a at
-     * shows empty slot.
-     * @return Status::OK success.
-     * @return Status::WARN_NOT_FOUND fail.
-     */
-    Status find_slot(std::size_t& at);
-
     static epoch::epoch_t find_min_ep(const wped_type& wped);
 
     static std::pair<epoch::epoch_t, std::size_t>
@@ -99,71 +90,6 @@ public:
 
     static std::size_t find_min_id(const wped_type& wped);
 
-    /**
-     * @brief single register.
-     */
-    Status register_wp(epoch::epoch_t ep, std::size_t id);
-
-    [[nodiscard]] Status
-    register_wp_result_and_remove_wp(wp_result_elem_type const& elem);
-
-    [[nodiscard]] Status remove_wp_without_lock(std::size_t id);
-
-    /**
-     * @brief remove element from wped_
-     * @param[in] id batch id.
-     * @return Status::OK success.
-     * @return Status::WARN_NOT_FOUND fail.
-     */
-    [[nodiscard]] Status remove_wp(std::size_t const id) {
-        wp_lock_.lock();
-        return remove_wp_without_lock(id);
-    }
-
-    void set_wped(std::size_t const pos, wped_elem_type const val) {
-        wped_.at(pos) = val;
-    }
-
-    void set_wped_used(std::size_t pos, bool val = true) { // NOLINT
-        wped_used_.set(pos, val);
-    }
-
-    static epoch::epoch_t
-    wp_result_elem_extract_epoch(const wp_result_elem_type& elem) {
-        return std::get<0>(elem);
-    }
-
-    static std::size_t
-    wp_result_elem_extract_id(const wp_result_elem_type& elem) {
-        return std::get<1>(elem);
-    }
-
-    static bool
-    wp_result_elem_extract_was_committed(const wp_result_elem_type& elem) {
-        return std::get<2>(elem);
-    }
-
-    static const std::tuple<bool, std::string, std::string>&
-    wp_result_elem_extract_write_result(const wp_result_elem_type& elem) {
-        return std::get<3>(elem);
-    }
-
-    // about write range
-    // ==========
-    /**
-     * @details This is called only once or not called by each tx.
-     */
-    void push_write_range(std::size_t txid, std::string_view left_key,
-                          std::string_view right_key);
-
-    void remove_write_range(std::size_t txid);
-
-    /**
-     * @return true there is a entry
-     * @return false there is not an entry
-     */
-    bool read_write_range(std::size_t txid, std::string& out_left_key,
-                          std::string& out_right_key);
     // ==========
 
 private:

@@ -214,7 +214,7 @@ static Status read_verify(session* ti, tid_word read_tid, tid_word check,
     return Status::OK;
 }
 
-static Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
+static Status wp_verify(Storage const st, epoch::epoch_t) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) {
@@ -222,11 +222,6 @@ static Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
                 << log_location_prefix
                 << "unreachable path. It strongly suspect that DML and DDL "
                    "are mixed.";
-    }
-    auto wps{wm->get_wped()};
-    auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-    if (find_min_ep != 0 && find_min_ep <= commit_epoch) {
-        return Status::ERR_CC;
     }
     return Status::OK;
 }
