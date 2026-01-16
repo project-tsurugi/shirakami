@@ -12,13 +12,6 @@
 
 namespace shirakami {
 
-bool session::check_exist_wp_set(Storage storage) const {
-    return std::any_of(get_wp_set().begin(), get_wp_set().end(),
-                       [storage](std::pair<Storage, wp::wp_meta*> elem) {
-                           return elem.first == storage;
-                       });
-}
-
 static void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 
 void session::clear_local_set() {
@@ -27,10 +20,8 @@ void session::clear_local_set() {
     clear_ltx_storage_read_set();
     clear_range_read_by_short_set();
     clear_read_set_for_stx();
-    read_set_for_ltx().clear();
     wp_set_.clear();
     write_set_.clear();
-    clear_overtaken_ltx_set();
     if (tx_type_ != transaction_options::transaction_type::SHORT) {
         clear_about_read_area(this);
         set_read_area({});
@@ -109,22 +100,6 @@ void session::commit_sequence(tid_word ctid) {
 #endif
 }
 
-std::set<std::size_t> session::extract_wait_for() {
-    // extract wait for
-    std::set<std::size_t> wait_for;
-    {
-        // get read lock
-        std::shared_lock<std::shared_mutex> lk{
-                this->get_mtx_overtaken_ltx_set()};
-        for (auto&& each_pair : get_overtaken_ltx_set()) {
-            for (auto&& each_id : std::get<0>(each_pair.second)) {
-                wait_for.insert(each_id);
-            }
-        }
-    }
-    return wait_for;
-}
-
 Status session::find_high_priority_short(bool for_check) const {
     if (get_tx_type() == transaction_options::transaction_type::SHORT) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
@@ -175,13 +150,6 @@ Status session::find_high_priority_short(bool for_check) const {
     // so try to update min_epoch_occ_potentially_write value by min_epoch
     epoch::advance_min_epoch_occ_potentially_write(min_epoch);
     return Status::OK;
-}
-
-Status session::find_wp(Storage st) const {
-    for (auto&& elem : get_wp_set()) {
-        if (elem.first == st) { return Status::OK; }
-    }
-    return Status::WARN_NOT_FOUND;
 }
 
 // ========== start: result info

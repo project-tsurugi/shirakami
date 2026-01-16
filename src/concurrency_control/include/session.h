@@ -122,13 +122,6 @@ public:
                                               std::memory_order_acquire);
     }
 
-    /**
-     * @brief check the existance of @a storage in wp_set_.
-     * @return true exist.
-     * @return false not exist.
-     */
-    [[nodiscard]] bool check_exist_wp_set(Storage storage) const;
-
     void clear_about_long_tx_metadata() {
         set_read_version_max_epoch(0);
         set_long_tx_id(0);
@@ -172,13 +165,6 @@ public:
     void commit_sequence(tid_word ctid);
 
     /**
-     * @brief extract wait_for from overtaken_ltx_set_.
-     *
-     * @return std::set<std::size_t>
-     */
-    std::set<std::size_t> extract_wait_for();
-
-    /**
      * @brief long tx find high priority short.
      * @param for_check true if only status check (with lower log level).
      * @pre This is called by long tx.
@@ -187,14 +173,6 @@ public:
      * @return Status::ERR_FATAL programming error.
      */
     [[nodiscard]] Status find_high_priority_short(bool for_check) const;
-
-    /**
-     * @brief Find wp about @a st from wp set.
-     * @param st target storage.
-     * @return Status::OK success.
-     * @return Status::WARN_NOT_FOUND fail.
-     */
-    [[nodiscard]] Status find_wp(Storage st) const;
 
     void init_flags_for_tx_begin() { get_result_info().clear(); }
 
