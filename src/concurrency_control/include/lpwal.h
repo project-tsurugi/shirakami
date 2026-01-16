@@ -213,7 +213,7 @@ public:
 
     void set_worker_number(std::size_t wn) { worker_number_ = wn; }
 
-    void set_transaction_id(std::string& const tid) {
+    void set_transaction_id(const std::string& tid) {
         transaction_id_ = tid;
     }
 
