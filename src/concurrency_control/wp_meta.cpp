@@ -23,15 +23,10 @@
 
 namespace shirakami::wp {
 
-bool wp_meta::empty(const wp_meta::wped_type&) {
-    return true;
-}
-
 void wp_meta::display() {
 }
 
 void wp_meta::init() {
-    clear_wped();
 }
 
 } // namespace shirakami::wp

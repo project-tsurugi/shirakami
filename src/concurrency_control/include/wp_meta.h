@@ -27,11 +27,6 @@ namespace shirakami::wp {
 class alignas(CACHE_LINE_SIZE) wp_meta {
 public:
     /**
-     * @brief First is the epoch of the tx. Second is the id of the tx.
-     */
-    using wped_elem_type = std::pair<epoch::epoch_t, std::size_t>;
-    using wped_type = std::array<wped_elem_type, KVS_MAX_PARALLEL_THREADS>;
-    /**
      * key: tx id
      * value: whether write, left key, right key
      */
@@ -39,12 +34,6 @@ public:
             std::map<std::size_t, std::tuple<std::string, std::string>>;
 
     wp_meta() { init(); }
-
-    static bool empty(const wped_type& wped);
-
-    void clear_wped() {
-        for (auto&& elem : wped_) { elem = {0, 0}; }
-    }
 
     void display();
 
@@ -59,12 +48,6 @@ public:
     // ==========
 
 private:
-    /**
-     * @brief write preserve infomation.
-     * @details first of each vector's element is epoch which is the valid
-     * point of wp. second of those is the long tx's id.
-     */
-    wped_type wped_;
 
     /**
      * @brief mutex for wped_

@@ -65,17 +65,6 @@ Status find_wp_meta(Storage st, wp_meta*& ret) {
     return Status::OK;
 }
 
-wp_meta::wped_type find_wp(Storage const storage) {
-    wp_meta* target_wp_meta{};
-    if (find_wp_meta(storage, target_wp_meta) != Status::OK) {
-        LOG_FIRST_N(ERROR, 1)
-                << log_location_prefix
-                << "There is no metadata that should be there.: " << storage;
-    }
-
-    return target_wp_meta->get_wped();
-}
-
 Status init() {
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 

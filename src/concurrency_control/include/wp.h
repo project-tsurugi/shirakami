@@ -73,11 +73,6 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
  */
 [[maybe_unused]] extern Status fin();
 
-/**
- * @brief There is no metadata that should be there.
- */
-[[maybe_unused]] extern wp_meta::wped_type find_wp(Storage storage);
-
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
 
