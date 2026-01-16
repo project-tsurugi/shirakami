@@ -69,20 +69,6 @@ inline std::mutex wp_mutex;
 inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 
 /**
- * @brief extract ltxs info higher priority than @a ltx_id from @a wps.
- * @param[in] ti The transaction which executes on this session takes information.
- * @param[in] wp_meta_ptr wp information.
- * @param[in] wps wp information.
- * @param[in] key key information.
- */
-void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
-                                    wp_meta::wped_type const& wps,
-                                    std::string_view key);
-
-void extract_higher_priori_ltx_info(session* ti, wp_meta* wp_meta_ptr,
-                                    wp_meta::wped_type const& wps);
-
-/**
  * @brief termination process about wp.
  */
 [[maybe_unused]] extern Status fin();
