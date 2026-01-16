@@ -34,7 +34,7 @@ Status check_constraint_key_length(std::string_view const key) {
 }
 
 Status check_before_write_ops(session* const ti, Storage const st,
-                              [[maybe_unused]] std::string_view const key, OP_TYPE const op) {
+                              [[maybe_unused]] std::string_view const, OP_TYPE const) {
     // check whether it is read only mode.
     if (ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
         // can't write in read only mode.
@@ -42,25 +42,11 @@ Status check_before_write_ops(session* const ti, Storage const st,
     }
 
     // check storage and wp data
-    wp::wp_meta* wm{};
-    auto rc{wp::find_wp_meta(st, wm)};
+    wp::page_set_meta* psm{};
+    auto rc{wp::find_page_set_meta(st, psm)};
     if (rc == Status::WARN_NOT_FOUND) {
         // no storage.
         return Status::WARN_STORAGE_NOT_FOUND;
-    }
-
-    if (ti->get_tx_type() ==
-               transaction_options::transaction_type::SHORT) {
-        // check wp
-        auto wps{wm->get_wped()};
-        auto find_min_ep{wp::wp_meta::find_min_ep(wps)};
-        if (find_min_ep != 0 && op != OP_TYPE::UPSERT) {
-            // exist valid wp
-            //ti->get_result_info().set_reason_code(
-            //        reason_code::CC_OCC_WP_VERIFY);
-            //ti->get_result_info().set_key_storage_name(key, st);
-            return Status::WARN_CONFLICT_ON_WRITE_PRESERVE;
-        }
     }
 
     return Status::OK;
