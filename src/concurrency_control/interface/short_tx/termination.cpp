@@ -758,6 +758,20 @@ extern Status commit(session* const ti) {
 
     compute_commit_tid(ti, ce, commit_tid);
 
+#if defined(PWAL)
+    {
+        auto& handle = ti->get_lpwal_handle();
+        std::unique_lock lk{handle.get_mtx_logs()};
+        if (handle.get_begun_session()) {
+            LOG(ERROR) << log_location_prefix << "unreachable";
+        } else {
+            std::string transaction_id{};
+            get_tx_id/*_body*/(ti, transaction_id);
+            handle.set_transaction_id(transaction_id);
+        }
+    }
+#endif
+
     // write phase
     rc = write_phase(ti, ce);
     if (rc != Status::OK) {
@@ -781,14 +795,7 @@ extern Status commit(session* const ti) {
     {
         auto& handle = ti->get_lpwal_handle();
         std::unique_lock lk{handle.get_mtx_logs()};
-        if (handle.get_begun_session()) {
-            LOG(ERROR) << log_location_prefix << "unreachable";
-            this_dm = handle.get_durable_epoch();
-        } else {
-            std::string transaction_id{};
-            get_tx_id/*_body*/(ti, transaction_id);
-            handle.set_transaction_id(transaction_id);
-        }
+        if (handle.get_begun_session()) { this_dm = handle.get_durable_epoch(); }
     }
 #endif
 
