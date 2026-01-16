@@ -56,6 +56,7 @@ static void write_storage_metadata(std::string_view key, Storage st,
             std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
             ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::ADD_STORAGE, wv, st, {}, {}, {}));
         }
+        shirakami::lpwal::flush_log(static_cast<void*>(ti));
 #endif
         leave(s);
         return;
@@ -91,6 +92,7 @@ static void remove_storage_metadata(std::string_view key, [[maybe_unused]] Stora
             std::unique_lock<std::mutex> lk{ti->get_lpwal_handle().get_mtx_logs()};
             ti->get_lpwal_handle().push_log(lpwal::log_record(log_operation::REMOVE_STORAGE, wv, st, {}, {}, {}));
         }
+        shirakami::lpwal::flush_log(static_cast<void*>(ti));
 #endif
         leave(s);
         return;

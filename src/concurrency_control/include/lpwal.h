@@ -213,6 +213,10 @@ public:
 
     void set_worker_number(std::size_t wn) { worker_number_ = wn; }
 
+    void set_transaction_id(const std::string& tid) {
+        transaction_id_ = tid;
+    }
+
     /**
      * @pre take mtx of logs
      */
@@ -252,6 +256,11 @@ private:
      * @brief log channel
      */
     limestone::api::log_channel* log_channel_ptr_{};
+
+    /**
+     * @brief Tx ID of this log blocks
+     */
+    std::string transaction_id_{};
 };
 
 /**
