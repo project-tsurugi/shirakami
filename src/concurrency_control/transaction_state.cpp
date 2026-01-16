@@ -36,8 +36,6 @@ static Status acquire_tx_state_handle_body(Token const token, // NOLINT
         ts.set_serial_epoch(0);
         ts.set_kind(TxState::StateKind::STARTED);
     } else if (ti->get_tx_type() ==
-                       transaction_options::transaction_type::LONG ||
-               ti->get_tx_type() ==
                        transaction_options::transaction_type::READ_ONLY) {
         ts.set_serial_epoch(static_cast<std::uint64_t>(ti->get_valid_epoch()));
         if (
@@ -154,7 +152,7 @@ Status check_tx_state(TxStateHandle handle, TxState& out) {
     return ret;
 }
 
-static Status check_ltx_is_highest_priority_body(Token token, bool& out) {
+static Status check_ltx_is_highest_priority_body(Token token, bool&) {
     // check the tx is already began.
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
@@ -164,17 +162,7 @@ static Status check_ltx_is_highest_priority_body(Token token, bool& out) {
     if (ti->get_tx_type() != transaction_options::transaction_type::LONG) {
         return Status::WARN_INVALID_ARGS;
     }
-
-    {
-        // take shared lock for ongoing tx info
-        std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
-        // check highest tx id
-        std::size_t highest_tx_id{std::get<ongoing_tx::index_id>(
-                (*ongoing_tx::get_tx_info().begin()))};
-        out = highest_tx_id == ti->get_long_tx_id();
-    }
-
-    return Status::OK;
+    return Status::ERR_NOT_IMPLEMENTED;
 }
 
 Status check_ltx_is_highest_priority(Token token, bool& out) {

@@ -40,17 +40,6 @@ public:
     using range_read_by_short_set_type = std::set<range_read_by_short*>;
     using read_set_for_stx_type = std::vector<read_set_obj>;
     using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
-    /**
-     * map <key, value>: key is table info. value is tuple information:
-     * overtaken ltxs, read information compressed to range information,
-     * 1: left key, 2: left point info, 3: right key, 4: right point info, 5:
-     * whether it is initialize.
-     */
-    using overtaken_ltx_set_type =
-            std::map<wp::wp_meta*,
-                     std::tuple<std::set<std::size_t>,
-                                std::tuple<std::string, scan_endpoint,
-                                           std::string, scan_endpoint, bool>>>;
     static constexpr decltype(tid_word::obj_) initial_mrc_tid{0};
 
     /**
@@ -753,16 +742,6 @@ private:
      * @brief long tx id.
      */
     std::size_t long_tx_id_{};
-
-    /**
-     * @brief The ltx set which this transaction overtook.
-     */
-    overtaken_ltx_set_type overtaken_ltx_set_;
-
-    /**
-     * @brief The shared mutex about overtaken_ltx_set_.
-     */
-    std::shared_mutex mtx_overtaken_ltx_set_;
 
     /**
      * @brief the temporary serialization epoch for ltx.
