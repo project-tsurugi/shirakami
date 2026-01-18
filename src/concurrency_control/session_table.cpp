@@ -30,8 +30,6 @@ void session_table::init_session_table() {
         itr.set_visible(false);
         // for internal
         itr.clean_up();
-        // clear metadata about auto commit.
-        itr.set_requested_commit(false);
         // for tx counter
         itr.set_higher_tx_counter(0);
         itr.set_tx_counter(0);

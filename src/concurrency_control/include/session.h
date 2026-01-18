@@ -281,10 +281,6 @@ public:
 
     // ========== start: long tx
 
-    [[nodiscard]] bool get_requested_commit() const {
-        return requested_commit_.load(std::memory_order_acquire);
-    }
-
     [[nodiscard]] std::size_t get_long_tx_id() const { return long_tx_id_; }
 
     [[nodiscard]] epoch::epoch_t get_read_version_max_epoch() const {
@@ -435,17 +431,6 @@ public:
     }
 
     // ========== start: long tx
-
-    void set_requested_commit(bool tf) {
-        if (tf) {
-            set_result_requested_commit(Status::WARN_WAITING_FOR_OTHER_TX);
-        }
-        requested_commit_.store(tf, std::memory_order_release);
-    }
-
-    void set_result_requested_commit(Status st) {
-        result_requested_commit_.store(st, std::memory_order_release);
-    }
 
     void set_long_tx_id(std::size_t bid) { long_tx_id_ = bid; }
 
@@ -666,19 +651,6 @@ private:
     // ========== end: diagnostics
 
     // ========== start: long tx
-    /**
-     * @brief Whether the long tx was already requested commit.
-     * @note It may be accessed by user and shirakami background worker.
-     */
-    std::atomic<bool> requested_commit_{};
-
-    /**
-     * @brief The requested transaction commit status which is/was decided
-     * shirakami manager.
-     * @note It may be accessed by user and shirakami background worker.
-     */
-    std::atomic<Status> result_requested_commit_{};
-
     /**
      * @brief Whether this tx is forced to backward due to protocol logic.
      */
