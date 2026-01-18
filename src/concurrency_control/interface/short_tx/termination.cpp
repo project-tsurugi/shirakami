@@ -215,8 +215,8 @@ static Status read_verify(session* ti, tid_word read_tid, tid_word check,
 }
 
 static Status wp_verify(Storage const st, epoch::epoch_t) {
-    wp::wp_meta* wm{};
-    auto rc{find_wp_meta(st, wm)};
+    wp::page_set_meta* psm{};
+    auto rc{wp::find_page_set_meta(st, psm)};
     if (rc != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
                 << log_location_prefix

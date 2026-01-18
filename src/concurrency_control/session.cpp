@@ -17,7 +17,6 @@ static void clear_about_read_area(session* ti) { ti->set_read_area({}); }
 void session::clear_local_set() {
     node_set_.clear();
     clear_read_set_for_stx();
-    wp_set_.clear();
     write_set_.clear();
     if (tx_type_ != transaction_options::transaction_type::SHORT) {
         clear_about_read_area(this);

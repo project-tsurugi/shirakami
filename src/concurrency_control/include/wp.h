@@ -75,8 +75,6 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 [[maybe_unused]] extern Status find_page_set_meta(Storage st,
                                                   page_set_meta*& ret);
 
-[[maybe_unused]] extern Status find_wp_meta(Storage st, wp_meta*& ret);
-
 /**
  * @brief getter
  */
@@ -125,11 +123,6 @@ inline Storage page_set_meta_storage{initial_page_set_meta_storage};
 [[maybe_unused]] static void set_page_set_meta_storage(Storage storage) {
     page_set_meta_storage = storage;
 }
-
-[[maybe_unused]] extern Status write_preserve(Token token,
-                                              std::vector<Storage> storage,
-                                              std::size_t long_tx_id,
-                                              epoch::epoch_t valid_epoch);
 
 } // namespace wp
 

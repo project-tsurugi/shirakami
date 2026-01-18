@@ -57,14 +57,6 @@ Status find_page_set_meta(Storage st, page_set_meta*& ret) {
     return Status::OK;
 }
 
-Status find_wp_meta(Storage st, wp_meta*& ret) {
-    page_set_meta* psm{};
-    auto rc{find_page_set_meta(st, psm)};
-    if (rc == Status::WARN_NOT_FOUND) { return rc; }
-    ret = psm->get_wp_meta_ptr();
-    return Status::OK;
-}
-
 Status init() {
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 

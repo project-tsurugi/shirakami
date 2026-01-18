@@ -3,7 +3,7 @@
 
 #include "concurrency_control/include/helper.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/wp_meta.h"
+#include "concurrency_control/include/wp.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/scan/include/scan.h"
@@ -199,8 +199,8 @@ static Status open_scan_body(
     }
 
     // check storage existence
-    wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
+    wp::page_set_meta* psm{};
+    if (wp::find_page_set_meta(storage, psm) != Status::OK) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
 

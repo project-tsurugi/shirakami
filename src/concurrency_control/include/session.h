@@ -37,7 +37,6 @@ namespace shirakami {
 class alignas(CACHE_LINE_SIZE) session {
 public:
     using read_set_for_stx_type = std::vector<read_set_obj>;
-    using wp_set_type = std::vector<std::pair<Storage, wp::wp_meta*>>;
     static constexpr decltype(tid_word::obj_) initial_mrc_tid{0};
 
     /**
@@ -110,8 +109,6 @@ public:
         set_read_version_max_epoch(0);
         set_long_tx_id(0);
         set_valid_epoch(0);
-        set_was_considering_forwarding_at_once(false);
-        set_is_forwarding(false);
     }
 
     void clear_about_tx_state() {
@@ -433,8 +430,6 @@ public:
 
     void set_visible(bool tf) { visible_.store(tf, std::memory_order_release); }
 
-    void set_wp_set(wp_set_type const& wps) { wp_set_ = wps; }
-
     void set_yakushima_token(yakushima::Token token) {
         yakushima_token_ = token;
     }
@@ -447,12 +442,6 @@ public:
         }
         requested_commit_.store(tf, std::memory_order_release);
     }
-
-    void set_was_considering_forwarding_at_once(bool tf) {
-        was_considering_forwarding_at_once_ = tf;
-    }
-
-    void set_is_forwarding(bool const tf) { is_forwarding_ = tf; }
 
     void set_result_requested_commit(Status st) {
         result_requested_commit_.store(st, std::memory_order_release);
@@ -684,18 +673,6 @@ private:
     std::atomic<bool> requested_commit_{};
 
     /**
-     * @brief whether this tx was considering forwarding at once. This is used
-     * for considering read wait
-     */
-    bool was_considering_forwarding_at_once_{false};
-
-    /**
-     * @brief This is forwarding as ltx
-     *
-     */
-    bool is_forwarding_{false};
-
-    /**
      * @brief The requested transaction commit status which is/was decided
      * shirakami manager.
      * @note It may be accessed by user and shirakami background worker.
@@ -717,15 +694,6 @@ private:
      * @details at the end of successful commit processing, this is the serialization epoch.
      */
     std::atomic<epoch::epoch_t> valid_epoch_{epoch::initial_epoch};
-
-    /**
-     * @brief local wp set.
-     * @details If this session processes long transaction in a long tx mode and
-     * executes transactional write operations, it is for checking whether the
-     * target of the operation was write preserved properly by use this
-     * infomation.
-     */
-    wp_set_type wp_set_{};
 
     /**
      * @brief The max (created) epoch in the versions which was read by this

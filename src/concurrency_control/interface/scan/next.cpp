@@ -3,7 +3,6 @@
 
 #include "concurrency_control/include/helper.h"
 #include "concurrency_control/include/session.h"
-#include "concurrency_control/include/wp_meta.h"
 #include "concurrency_control/interface/include/helper.h"
 #include "concurrency_control/interface/long_tx/include/long_tx.h"
 #include "concurrency_control/interface/short_tx/include/short_tx.h"
