@@ -1,22 +1,6 @@
 #pragma once
 
-#include <array>
-#include <bitset>
-#include <cstddef>
-#include <map>
-#include <shared_mutex>
-#include <string>
-#include <string_view>
-#include <tuple>
-#include <utility>
-#include <vector>
-
 #include "cpu.h"
-
-#include "concurrency_control/include/epoch.h"
-#include "concurrency_control/include/wp_lock.h"
-
-#include "shirakami/scheme.h"
 
 namespace shirakami::wp {
 
@@ -33,16 +17,7 @@ public:
 
     void init();
 
-    wp_lock& get_wp_lock() { return wp_lock_; }
-
     // ==========
-
-private:
-
-    /**
-     * @brief mutex for wped_
-     */
-    wp_lock wp_lock_;
 
 };
 

@@ -17,7 +17,6 @@
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/garbage.h"
-#include "concurrency_control/include/wp_lock.h"
 #include "concurrency_control/include/wp_meta.h"
 
 #include "shirakami/storage_options.h"
