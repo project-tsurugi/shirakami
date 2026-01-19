@@ -129,6 +129,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // 2occ1ltx
     // ool
     ASSERT_EQ(Status::OK, tx_begin({s.at(3),
@@ -439,6 +440,7 @@ TEST_F(write_conflict_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

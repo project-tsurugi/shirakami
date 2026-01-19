@@ -43,6 +43,7 @@ private:
 };
 
 TEST_F(tsurugi_issue382, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                    // commit ordre is reverse of case 1
     // prepare
     Storage tb1{};

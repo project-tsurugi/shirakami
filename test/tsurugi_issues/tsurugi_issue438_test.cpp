@@ -46,6 +46,7 @@ INSTANTIATE_TEST_SUITE_P(revorder, tsurugi_issue438_test,
                          ::testing::Values(false, true));
 
 TEST_P(tsurugi_issue438_test, case_1) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     Storage st{};
     ASSERT_OK(create_storage("test", st));

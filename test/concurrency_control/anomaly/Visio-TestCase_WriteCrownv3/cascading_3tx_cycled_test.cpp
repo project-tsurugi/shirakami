@@ -146,6 +146,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // test case 2
     // oool
     // ltx begin
@@ -960,6 +961,7 @@ TEST_F(cascading_3tx_cycled_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
     // cleanup

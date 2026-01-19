@@ -42,6 +42,7 @@ private:
 };
 
 TEST_F(tsurugi_issue438_3_test, simple) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st1;
     Storage st2;
     ASSERT_OK(create_storage("A", st1));

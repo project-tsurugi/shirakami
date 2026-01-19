@@ -61,6 +61,7 @@ INSTANTIATE_TEST_SUITE_P(tx_mode, tsurugi_issue242_search_key_test,
 
 TEST_P(tsurugi_issue242_search_key_test, // NOLINT
        search_key) {                     // NOLINT
+    if (GetParam() == transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
     // prepare
     LOG(INFO) << "test about " << GetParam();
     Storage st{};

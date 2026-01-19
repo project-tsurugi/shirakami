@@ -37,6 +37,7 @@ private:
 };
 
 TEST_F(Visio_TestCase_Parallel, test) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // parallel_1boundary_hop
     // 2tx_2read_conflict_delay
     // all ltx

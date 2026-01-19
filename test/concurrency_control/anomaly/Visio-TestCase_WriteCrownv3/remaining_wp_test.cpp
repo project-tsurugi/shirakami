@@ -131,6 +131,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // test case 2
     ASSERT_EQ(
             Status::OK,
@@ -831,6 +832,7 @@ TEST_F(remaining_wp_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

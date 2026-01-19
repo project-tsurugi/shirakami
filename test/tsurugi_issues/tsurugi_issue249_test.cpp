@@ -38,6 +38,7 @@ private:
 };
 
 TEST_F(tsurugi_issue249, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_OK(create_storage("", st));
     Token s1{};

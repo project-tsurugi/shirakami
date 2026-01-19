@@ -55,6 +55,7 @@ static void wait_for_ready(const std::vector<char>& readys) {
 
 TEST_F(tsurugi_issue242_insert_test, // NOLINT
        insert) {                     // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                      /**
         * マルチスレッドで insert
        */

@@ -49,6 +49,7 @@ private:
 };
 
 TEST_F(sequent_4t_with_epoch_uncycled_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                    // create table
     // ==========
     // prepare

@@ -71,6 +71,7 @@ void full_scan_and_read(Token& t, Storage& st) {
 
 // same API sequence as original scenario in issue429
 TEST_F(tsurugi_issue429, case_1) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     VLOG(10) << "case 1";
     Storage st;
     ASSERT_OK(create_storage("", st));
@@ -140,6 +141,7 @@ TEST_F(tsurugi_issue429, case_1) {
 }
 
 TEST_F(tsurugi_issue429, short_case) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     VLOG(10) << "short case";
     Storage st;
     ASSERT_OK(create_storage("", st));

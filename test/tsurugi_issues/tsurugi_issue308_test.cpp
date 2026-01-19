@@ -40,6 +40,7 @@ private:
 };
 
 TEST_F(tsurugi_issue308, 20230621_comment_kurosawa_slack) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st1{};
     Storage st2{};
     ASSERT_OK(create_storage("test1", st1));

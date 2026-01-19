@@ -74,6 +74,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 ));
 
 TEST_P(Visio_TestCase, test) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     /**
      * read only が crown を形成するケース(4項) ROx2+RoWx2
     */

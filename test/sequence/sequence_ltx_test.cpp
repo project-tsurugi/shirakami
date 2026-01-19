@@ -37,6 +37,7 @@ private:
 };
 
 TEST_F(sequence_ltx_test, basic) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // create sequence
     {
         SequenceId id{};

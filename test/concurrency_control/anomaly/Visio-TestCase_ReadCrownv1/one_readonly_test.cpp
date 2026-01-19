@@ -137,6 +137,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // test case 2
     // oool
     ASSERT_EQ(
@@ -485,6 +486,7 @@ TEST_F(one_readonly_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

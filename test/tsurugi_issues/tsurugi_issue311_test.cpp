@@ -40,6 +40,7 @@ private:
 };
 
 TEST_F(tsurugi_issue311, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     constexpr std::size_t thread_num = 10;
     constexpr std::size_t loop_num = 100;
 

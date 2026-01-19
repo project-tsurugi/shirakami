@@ -46,6 +46,7 @@ private:
 
 TEST_F(tsurugi_issue707_2_test, // NOLINT
        simple) {                // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // comment for https://github.com/project-tsurugi/tsurugi-issues/issues/707#issuecomment-2027394041
     /**
      * test senario

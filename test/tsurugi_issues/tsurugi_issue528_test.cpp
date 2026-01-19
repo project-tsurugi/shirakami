@@ -52,6 +52,7 @@ INSTANTIATE_TEST_SUITE_P(has_initialization, tsurugi_issue528_test,
 
 TEST_P(tsurugi_issue528_test,           // NOLINT
        upsert_ltx2th_20ops_val18char) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool has_init = GetParam();
 
     // prepare
@@ -171,6 +172,7 @@ TEST_P(tsurugi_issue528_test,           // NOLINT
 
 TEST_P(tsurugi_issue528_test,   // NOLINT
        upsert_ltx10th_100ops) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool has_init = GetParam();
 
     // prepare
@@ -289,6 +291,7 @@ TEST_P(tsurugi_issue528_test,   // NOLINT
 
 TEST_F(tsurugi_issue528_test,               // NOLINT
        concurrent_ltx_read_x_write_y1_50) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // concurrent ltx. each tx read x and write y_1 - y_50
 
     // prepare

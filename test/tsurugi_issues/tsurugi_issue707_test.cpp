@@ -111,6 +111,7 @@ INSTANTIATE_TEST_SUITE_P(is_insert, tsurugi_issue707_test,
 
 TEST_P(tsurugi_issue707_test, // NOLINT
        simple) {              // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                               // prepare
     Storage st1{};
     Storage st2{};

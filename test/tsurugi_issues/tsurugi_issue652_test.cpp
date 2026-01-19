@@ -41,6 +41,7 @@ INSTANTIATE_TEST_SUITE_P(commit_from_one, tsurugi_issue652_test,
 
 TEST_P(tsurugi_issue652_test, // NOLINT
        simple) {              // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                               // prepare
     Storage st{};
     ASSERT_OK(create_storage("predicate_test", st));

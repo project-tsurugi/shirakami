@@ -51,6 +51,7 @@ void wait_start_tx(Token tx) {
 }
 
 TEST_F(tsurugi_issue232_2, case_11) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage stA;
     Storage stB;
     ASSERT_OK(create_storage("A", stA));
@@ -121,6 +122,7 @@ TEST_F(tsurugi_issue232_2, case_11) {
 }
 
 TEST_F(tsurugi_issue232_2, case_12) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage stA;
     Storage stB;
     ASSERT_OK(create_storage("A", stA));

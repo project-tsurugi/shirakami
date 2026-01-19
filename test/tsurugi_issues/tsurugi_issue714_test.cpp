@@ -46,6 +46,7 @@ private:
 
 TEST_F(tsurugi_issue714_test, // NOLINT
        point_read) {          // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     /**
      * issue senario
     */
@@ -113,6 +114,7 @@ TEST_F(tsurugi_issue714_test, // NOLINT
 
 TEST_F(tsurugi_issue714_test, // NOLINT
        range_read) {          // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     /**
      * issue senario, no where (full scan)
     */

@@ -71,6 +71,7 @@ INSTANTIATE_TEST_SUITE_P(revorder, tsurugi_issue378_2_test,
                          ::testing::Values(false, true));
 
 TEST_P(tsurugi_issue378_2_test, case_1) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     Storage st;
     ASSERT_OK(create_storage("", st));
@@ -133,6 +134,7 @@ TEST_P(tsurugi_issue378_2_test, case_1) {
 }
 
 TEST_P(tsurugi_issue378_2_test, case_2b) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     Storage st;
     ASSERT_OK(create_storage("", st));
@@ -197,6 +199,7 @@ TEST_P(tsurugi_issue378_2_test, case_2b) {
 }
 
 TEST_P(tsurugi_issue378_2_test, case_3b) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     Storage st;
     ASSERT_OK(create_storage("", st));

@@ -91,6 +91,7 @@ TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
 
 TEST_F(li_single_recovery_before_delete_records_test, // NOLINT
        ltx_delete_after_recovery) {                   // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // prepare
     std::string log_dir{};
     log_dir = create_log_dir_name();

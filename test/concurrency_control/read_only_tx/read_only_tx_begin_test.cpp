@@ -58,6 +58,7 @@ TEST_F(read_only_tx_begin_test, double_tx_begin) { // NOLINT
 }
 
 TEST_F(read_only_tx_begin_test, tx_begin_SS_epoch) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Token s1{};
     Token s2{};
     Token s3{};

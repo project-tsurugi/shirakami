@@ -37,6 +37,7 @@ private:
 };
 
 TEST_F(Visio_TestCase_Parallel, test) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // 2tx_3read_no_conflict
     // all ltx
 

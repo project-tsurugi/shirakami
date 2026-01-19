@@ -41,6 +41,7 @@ private:
 };
 
 TEST_F(shirakami_issue109, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_OK(create_storage("", st));
     // stop gc

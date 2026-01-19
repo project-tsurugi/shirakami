@@ -87,6 +87,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     while (wait_callback != 0) { _mm_pause(); }
     EXPECT_EQ(p.use_count(), 2);
 
+#if 0
     // ltx
     LOG(INFO) << "about ltx";
     ASSERT_OK(tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
@@ -105,6 +106,8 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     while (wait_callback != 0) { _mm_pause(); }
     sleep(1);
     EXPECT_EQ(p.use_count(), 2);
+#endif
+    std::string buf{};
 
     // read only
     LOG(INFO) << "about rtx";

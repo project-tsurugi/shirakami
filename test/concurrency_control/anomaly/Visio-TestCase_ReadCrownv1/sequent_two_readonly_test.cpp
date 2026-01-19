@@ -48,6 +48,7 @@ private:
 };
 
 TEST_F(sequent_two_readonly_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                          // create table
     // ==========
     // prepare

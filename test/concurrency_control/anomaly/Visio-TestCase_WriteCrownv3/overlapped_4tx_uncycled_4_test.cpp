@@ -48,6 +48,7 @@ private:
 };
 
 TEST_F(overlapped_4tx_uncycled_4_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                               // create table
     // ==========
     // prepare

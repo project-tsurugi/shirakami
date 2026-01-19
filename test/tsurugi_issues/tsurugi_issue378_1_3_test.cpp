@@ -43,6 +43,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                        // trading read operator at case_2
     // prepare
     Storage st{};
@@ -91,6 +92,7 @@ TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1_3, case_4) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                        // tx1 point read, tx2 range read
     // prepare
     Storage st{};

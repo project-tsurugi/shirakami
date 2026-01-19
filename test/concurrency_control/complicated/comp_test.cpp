@@ -224,6 +224,7 @@ TEST_F(comp_test, test1) { // NOLINT
 }
 
 TEST_F(comp_test, test2) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     Token s{};

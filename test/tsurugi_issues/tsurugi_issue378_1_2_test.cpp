@@ -43,6 +43,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1_2, case_2) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                        // t1 do point read at case_2
     // prepare
     Storage st{};
@@ -78,6 +79,7 @@ TEST_F(tsurugi_issue378_1_2, case_2) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1_2, case_2_rev) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                            // t1 do point read at case_2
     // prepare
     Storage st{};

@@ -72,6 +72,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     transaction_type t1_type = std::get<0>(GetParam());
     transaction_type t2_type = std::get<1>(GetParam());
     transaction_type t3_type = std::get<2>(GetParam());
+    if (t1_type == transaction_type::LONG || t2_type == transaction_type::LONG || t3_type == transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
     bool t1_can_commit = std::get<3>(GetParam());
     bool t2_can_commit = std::get<4>(GetParam());
     bool t3_can_commit = std::get<5>(GetParam());

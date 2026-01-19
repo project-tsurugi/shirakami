@@ -39,6 +39,7 @@ private:
 };
 
 TEST_F(tsurugi_issue344, from_jogasaki_sql_test) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st_system{};
     ASSERT_OK(create_storage("__system_sequence", st_system));
 

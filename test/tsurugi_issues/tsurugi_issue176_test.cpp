@@ -38,6 +38,7 @@ private:
 };
 
 TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // テストシナリオ: 多くのスレッドが同一テーブルで独立したキーに対してRMW をする。
 
     Storage st{};

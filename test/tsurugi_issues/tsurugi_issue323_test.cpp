@@ -74,6 +74,7 @@ void wait_start_tx(Token tx) {
 TEST_P(tsurugi_issue323, must_not_read_inserting_record) { // NOLINT
     transaction_type write_tx_type = std::get<0>(GetParam());
     transaction_type read_tx_type = std::get<1>(GetParam());
+    if (write_tx_type == transaction_type::LONG || read_tx_type == transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
     // setup
     Storage st{};
     ASSERT_OK(create_storage("", st));

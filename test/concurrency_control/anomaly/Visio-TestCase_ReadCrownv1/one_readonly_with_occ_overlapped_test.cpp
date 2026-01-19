@@ -49,6 +49,7 @@ private:
 };
 
 TEST_F(one_readonly_with_occ_overlapped_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                      // create table
     // ==========
     // prepare

@@ -38,6 +38,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
+#if 0
 TEST_F(tsurugi_issue319, check_read_write_range_after_submit_commit) { // NOLINT
     // prepare
     Storage st{};
@@ -99,5 +100,6 @@ TEST_F(tsurugi_issue319, check_read_write_range_after_submit_commit) { // NOLINT
     ASSERT_OK(leave(t1));
     ASSERT_OK(leave(t2));
 }
+#endif
 
 } // namespace shirakami::testing

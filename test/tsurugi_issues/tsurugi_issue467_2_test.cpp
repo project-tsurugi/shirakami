@@ -40,6 +40,7 @@ private:
 
 TEST_F(ti467_2_test, // NOLINT
        ng_case1) {   // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867482481
     // 上記コメントを受けて、下記コメントのものを簡潔化
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
@@ -90,6 +91,7 @@ TEST_F(ti467_2_test, // NOLINT
 
 TEST_F(ti467_2_test, // NOLINT
        ng_case2) {   // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1867258088
 
     Storage system_st;

@@ -33,6 +33,7 @@ private:
 };
 
 TEST_F(tsurugi_issue849_test, tombstone) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     //           : "a"  "b"
     //  --------------------
     //  epoch e1 : "1"
@@ -149,6 +150,7 @@ TEST_F(tsurugi_issue849_test, tombstone) {
 }
 
 TEST_F(tsurugi_issue849_test, old_normal) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     //           : "a"
     //  ---------------
     //  epoch e1 : "1"
@@ -215,6 +217,7 @@ TEST_F(tsurugi_issue849_test, old_normal) {
 }
 
 TEST_F(tsurugi_issue849_test, latest_deleted) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     //           : "a"
     //  ---------------
     //  epoch e1 : "1"

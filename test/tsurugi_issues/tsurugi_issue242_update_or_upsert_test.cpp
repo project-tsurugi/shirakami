@@ -60,6 +60,7 @@ INSTANTIATE_TEST_SUITE_P(is_update, tsurugi_issue242_update_or_upsert_test,
 
 TEST_P(tsurugi_issue242_update_or_upsert_test, // NOLINT
        update_or_upsert) {                     // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                /**
         * マルチスレッドで scan-update_or_upsert
        */

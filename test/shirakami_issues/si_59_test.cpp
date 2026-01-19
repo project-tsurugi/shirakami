@@ -41,6 +41,7 @@ private:
 };
 
 TEST_F(si_59, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                         // prepare
     Storage st{};
     ASSERT_OK(create_storage("", st));

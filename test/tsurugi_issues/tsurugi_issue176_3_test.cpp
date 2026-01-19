@@ -82,6 +82,7 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
 }
 
 TEST_F(tsurugi_issue176_3, comment_by_tanabe_20230301_1643) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // create storage
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

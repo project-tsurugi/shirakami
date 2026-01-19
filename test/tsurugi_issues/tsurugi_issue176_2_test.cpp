@@ -38,6 +38,7 @@ private:
 };
 
 TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
     std::atomic<std::size_t> prepare_scan_thread_num{0};

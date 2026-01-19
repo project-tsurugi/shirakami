@@ -39,6 +39,7 @@ private:
 
 TEST_F(ti467_test,           // NOLINT
        by_comment_ok_case) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1857177573
 
     // prepare
@@ -81,6 +82,7 @@ TEST_F(ti467_test,           // NOLINT
 
 TEST_F(ti467_test,           // NOLINT
        by_comment_ng_case) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // https://github.com/project-tsurugi/tsurugi-issues/issues/467#issuecomment-1857177573
 
     // prepare

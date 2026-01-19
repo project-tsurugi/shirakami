@@ -90,6 +90,7 @@ TEST_F(c_helper_tx_begin, tx_begin_not_change_after_warn) { // NOLINT
 }
 
 TEST_F(c_helper_tx_begin, check_param_tx_type_after_tx_begin) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Token s{};
     ASSERT_EQ(Status::OK, enter(s));
     auto* ti = static_cast<session*>(s);

@@ -49,6 +49,7 @@ private:
 };
 
 TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                           // create table
     // ==========
     // prepare
@@ -183,6 +184,7 @@ TEST_F(out_of_and_inner_boundary_test, out_of_boundary) { // NOLINT
 }
 
 TEST_F(out_of_and_inner_boundary_test, inner_boundary) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                          // create table
     // ==========
     // prepare

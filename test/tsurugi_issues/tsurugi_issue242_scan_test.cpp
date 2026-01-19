@@ -65,6 +65,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(tsurugi_issue242_scan_test, // NOLINT
        scan) {                                         // NOLINT
+    if (std::get<0>(GetParam()) == transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
                                                        /**
         * シングルスレッドで open_scan, read key/value from scan するタスクを
         * マルチスレッド

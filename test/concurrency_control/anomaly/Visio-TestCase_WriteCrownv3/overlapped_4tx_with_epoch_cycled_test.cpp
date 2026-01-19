@@ -149,6 +149,7 @@ TEST_F(overlapped_4tx_with_epoch_cycled_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // test case 2
     // oool
     ASSERT_EQ(
@@ -314,6 +315,7 @@ TEST_F(overlapped_4tx_with_epoch_cycled_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

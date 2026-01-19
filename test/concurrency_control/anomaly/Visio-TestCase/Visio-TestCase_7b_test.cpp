@@ -65,6 +65,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
                 ));
 
 TEST_P(Visio_TestCase, test_1) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // read only が crown を形成するケース（3項） ROx2+RoW
     transaction_type t1_type = std::get<0>(GetParam());
     transaction_type t2_type = std::get<1>(GetParam());

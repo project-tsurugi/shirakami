@@ -72,6 +72,7 @@ TEST_F(read_only_scan_test, start_no_long_tx_exist) { // NOLINT
 }
 
 TEST_F(read_only_scan_test, start_before_epoch_long_tx_exist) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};

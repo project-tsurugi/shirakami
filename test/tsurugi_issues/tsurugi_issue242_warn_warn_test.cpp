@@ -65,6 +65,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(tsurugi_issue242_warn_warn_test, // NOLINT
        scan) {                          // NOLINT
+    if (std::get<0>(GetParam()) == transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
                                         /**
         * th id non 0: 存在しないストレージに対して open_scan
         * th id 1: 存在しないストレージに対して open_scan

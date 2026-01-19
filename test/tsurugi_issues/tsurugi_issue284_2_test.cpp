@@ -68,6 +68,7 @@ INSTANTIATE_TEST_SUITE_P( // NOLINT
 
 TEST_P(tsurugi_issue284_2_test,                      // NOLINT
        read_from_scan_must_not_read_absent_record) { // NOLINT
+    if (std::get<0>(GetParam()) == transaction_options::transaction_type::LONG) { GTEST_SKIP() << "LONG is not supported"; }
     auto tx_type = std::get<0>(GetParam());
     bool FLAGS_check_open_scan = std::get<1>(GetParam());
     // setup

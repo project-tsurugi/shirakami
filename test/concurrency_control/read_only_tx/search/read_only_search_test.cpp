@@ -70,6 +70,7 @@ TEST_F(read_only_search_test, operation_before_after_start_epoch) { // NOLINT
 }
 
 TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // =================================
     // prepare
     Storage st{};
@@ -120,6 +121,7 @@ TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
 }
 
 TEST_F(read_only_search_test, search_SS_version) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // =================================
     // prepare
     Storage st{};

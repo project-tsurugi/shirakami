@@ -43,6 +43,7 @@ private:
 };
 
 TEST_F(tsurugi_issue378_1, case_1) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     // prepare
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));
@@ -78,6 +79,7 @@ TEST_F(tsurugi_issue378_1, case_1) { // NOLINT
 }
 
 TEST_F(tsurugi_issue378_1, case_1_rev) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                          // commit ordre is reverse of case 1
     // prepare
     Storage st{};

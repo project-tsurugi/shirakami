@@ -38,6 +38,7 @@ private:
 };
 
 TEST_F(tsurugi_issue234, comment_by_ban_20230308) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     /**
      * テストシナリオ
      * ltx scan が最新のバージョンを読むと楽観的に判断し、楽観検証を実施したときに

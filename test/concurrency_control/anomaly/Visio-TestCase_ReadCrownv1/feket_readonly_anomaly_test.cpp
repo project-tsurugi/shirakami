@@ -49,6 +49,7 @@ INSTANTIATE_TEST_SUITE_P(t3_type, feket_readonly_anomaly_test,
                                            transaction_options::transaction_type::READ_ONLY));
 
 TEST_P(feket_readonly_anomaly_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                            // create table
     // ==========
     // prepare

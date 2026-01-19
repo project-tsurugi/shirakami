@@ -69,6 +69,7 @@ void full_scan(Token& t, Storage& st) {
 }
 
 TEST_F(tsurugi_issue438_2_test, case_1) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     LOG(INFO) << "case 1";
     Storage st;
     ASSERT_OK(create_storage("", st));
@@ -120,6 +121,7 @@ TEST_F(tsurugi_issue438_2_test, case_1) {
 }
 
 TEST_P(tsurugi_issue438_2_test, case_2) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     LOG(INFO) << "case 2b" << std::boolalpha << rev;
     Storage st;
@@ -196,6 +198,7 @@ TEST_P(tsurugi_issue438_2_test, case_2) {
 }
 
 TEST_P(tsurugi_issue438_2_test, case_3) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool rev = GetParam();
     LOG(INFO) << "case 3b" << std::boolalpha << rev;
     Storage st;
@@ -304,6 +307,7 @@ TEST_P(tsurugi_issue438_2_test, case_3) {
 }
 
 TEST_P(tsurugi_issue438_2_test, case_d2) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     bool wait_after_delete = GetParam();
     LOG(INFO) << "case 2 after delete";
     Storage st;

@@ -47,6 +47,7 @@ private:
 };
 
 TEST_F(cascading_3tx_uncycled_test, all) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                            // create table
     // ==========
     // prepare

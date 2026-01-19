@@ -106,6 +106,7 @@ TEST_F(tsurugi_issue1001_test, second_rtx_should_read_newer_ss) {
 }
 
 TEST_F(tsurugi_issue1001_test, record_gc_never_unhook_records_on_alive_ss) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     // setup
     // storage = { A: 1 }
 

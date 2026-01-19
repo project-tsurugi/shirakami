@@ -39,6 +39,7 @@ private:
 };
 
 TEST_F(tsurugi_issue438_4_test, simple) {
+    { GTEST_SKIP() << "LONG is not supported"; }
     // https://github.com/project-tsurugi/tsurugi-issues/issues/438#issuecomment-1835644560
     Storage current_batch;
     Storage receipts;

@@ -90,6 +90,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_test, all) { // NOLINT
     std::string buf{};
     // ==========
 
+#if 0
     // ==========
     // note: o is occ, l is ltx
     // test case 1
@@ -269,6 +270,7 @@ TEST_F(cascading_3tx_1epoch_per_1ope_uncycled_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

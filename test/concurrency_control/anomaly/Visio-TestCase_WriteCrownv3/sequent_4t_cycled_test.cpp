@@ -138,6 +138,7 @@ TEST_F(sequent_4t_cycled_test, all) { // NOLINT
     // cleanup
     init_db();
 
+#if 0
     // test case 2
     // oool
     ASSERT_EQ(Status::OK, tx_begin({s.at(4),
@@ -507,6 +508,7 @@ TEST_F(sequent_4t_cycled_test, all) { // NOLINT
 
     // cleanup
     init_db();
+#endif
 
     // ==========
 

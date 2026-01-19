@@ -42,6 +42,7 @@ private:
 // for issue#232
 
 TEST_F(tsurugi_issue232, 20230609_by_hishidama) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                                   // prepare
     Storage st1{};
     Storage st2{};

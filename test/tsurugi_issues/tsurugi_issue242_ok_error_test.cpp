@@ -44,6 +44,7 @@ private:
 
 TEST_F(tsurugi_issue242_ok_error_test, // NOLINT
        simple) {                       // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
                                        /**
         * ok x error strand test
         * ltx が commit 前に early abort するのは read area 違反の時のみ

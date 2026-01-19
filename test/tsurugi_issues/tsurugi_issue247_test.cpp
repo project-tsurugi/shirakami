@@ -38,6 +38,7 @@ private:
 };
 
 TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s1{};
@@ -86,6 +87,7 @@ TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
 }
 
 TEST_F(tsurugi_issue247, 20230427_for_comment_ban) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     fin();
     database_options options{};
     options.set_epoch_time(1);

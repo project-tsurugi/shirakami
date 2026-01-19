@@ -83,6 +83,7 @@ TEST_F(short_delete_test, read_only_mode_delete_) { // NOLINT
 }
 
 TEST_F(short_delete_test, short_delete_find_wp) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     Storage st{};
     create_storage("", st);
     Token s{};

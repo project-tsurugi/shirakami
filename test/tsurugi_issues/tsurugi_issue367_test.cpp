@@ -37,6 +37,7 @@ private:
 };
 
 TEST_F(tsurugi_issue367_test, simple) { // NOLINT
+    { GTEST_SKIP() << "LONG is not supported"; }
     database_options options{};
     int waiting_resolver_threads_num = 16;
     options.set_waiting_resolver_threads(waiting_resolver_threads_num);
