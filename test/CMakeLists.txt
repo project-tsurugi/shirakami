@@ -24,7 +24,6 @@ else ()
           "concurrency_control/anomaly/Visio-TestCase_Functions_v1/false_positive/*.cpp"
           "concurrency_control/anomaly/Visio-TestCase_ReadCrownv1/*.cpp"
           "concurrency_control/anomaly/Visio-TestCase_WriteCrownv3/*.cpp"
-          "concurrency_control/bg_work/*.cpp"
           "concurrency_control/complicated/*.cpp"
           "concurrency_control/read_only_tx/*.cpp"
           "concurrency_control/read_only_tx/search/*.cpp"
