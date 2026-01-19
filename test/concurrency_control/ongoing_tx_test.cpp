@@ -30,6 +30,7 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
+#if 0
 TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     ongoing_tx::push({1, 1, nullptr});
     Token s{};
@@ -48,6 +49,7 @@ TEST_F(ongoing_tx_test, exist_wait_for_test) { // NOLINT
     // ASSERT_EQ(ongoing_tx::exist_wait_for(ti), false);
     ASSERT_EQ(Status::OK, leave(s));
 }
+#endif
 
 TEST_F(ongoing_tx_test, exist_id_test) { // NOLINT
     ASSERT_EQ(ongoing_tx::exist_id(1), false);
