@@ -119,7 +119,7 @@ void fin() {
 
 void handler::begin_session() {
     // assert begun_session_ = false
-    shirakami::begin_session(log_channel_ptr_);
+    shirakami::begin_session(log_channel_ptr_, transaction_id_);
     // TODO: global epoch is approximate value for durable epoch, but is guaranteed to be >= real durable epoch.
     // if the exact value becomes available, change this to use that.
     // eg. if limestone::log_chanell::begin_session returns the exact value in the future,

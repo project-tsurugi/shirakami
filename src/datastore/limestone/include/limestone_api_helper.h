@@ -54,7 +54,7 @@ void remove_storage(limestone::api::log_channel* lc,
                     limestone::api::epoch_t major_version,
                     std::uint64_t minor_version);
 
-void begin_session(limestone::api::log_channel* lc);
+void begin_session(limestone::api::log_channel* lc, std::string_view transaction_id);
 
 void end_session(limestone::api::log_channel* lc);
 

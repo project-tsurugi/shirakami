@@ -176,13 +176,13 @@ void remove_storage(limestone::api::log_channel* const lc,
     shirakami_log_exit << "log_channel::remove_storage()";
 }
 
-void begin_session(limestone::api::log_channel* lc) {
+void begin_session(limestone::api::log_channel* lc, std::string_view transaction_id) {
     if (lc == nullptr) {
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return;
     }
-    shirakami_log_entry << "log_channel::begin_session()";
-    lc->begin_session();
+    shirakami_log_entry << "log_channel::begin_session(): tx_id: " << transaction_id;
+    lc->begin_session(transaction_id.empty() ? std::nullopt : std::make_optional<std::string_view>(transaction_id));
     shirakami_log_exit << "log_channel::begin_session()";
 }
 
