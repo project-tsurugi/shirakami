@@ -10,7 +10,6 @@
 
 #include "include/helper.h"
 
-#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/epoch_internal.h"
 #include "concurrency_control/include/ongoing_tx.h"
@@ -50,11 +49,6 @@ static void for_output_config(database_options const& options) {
     LOG(INFO) << log_location_prefix_config
               << "epoch_duration: " << options.get_epoch_time() << ", "
               << "The duration of epoch. Default is 40,000 [us].";
-    // about waiting_resolver_thrads
-    LOG(INFO) << log_location_prefix_config << "waiting_resolver_threads: "
-              << options.get_waiting_resolver_threads() << ", "
-              << "The number of threads which process about waiting ltx for "
-                 "commit. Default is 2.";
     // about index_restore_threads
     LOG(INFO) << log_location_prefix_config << "index_restore_threads: "
               << options.get_index_restore_threads() << ", "
@@ -238,9 +232,6 @@ static Status init_body(database_options options, void* datastore) { // NOLINT
 #ifdef PWAL
         lpwal::init(); // start daemon
 #endif
-
-        // about back ground worker about commit
-        bg_work::bg_commit::init(options.get_waiting_resolver_threads());
 
         //// about thread pool
         //thread_pool::init();

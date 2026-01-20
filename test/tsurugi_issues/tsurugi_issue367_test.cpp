@@ -1,5 +1,4 @@
 
-#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
 
@@ -36,8 +35,8 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
+#if 0
 TEST_F(tsurugi_issue367_test, simple) { // NOLINT
-    { GTEST_SKIP() << "LONG is not supported"; }
     database_options options{};
     int waiting_resolver_threads_num = 16;
     options.set_waiting_resolver_threads(waiting_resolver_threads_num);
@@ -122,5 +121,6 @@ TEST_F(tsurugi_issue367_test, simple) { // NOLINT
     ASSERT_EQ(waiting_resolver_threads_num,
               bg_work::bg_commit::joined_waiting_resolver_threads());
 }
+#endif
 
 } // namespace shirakami::testing

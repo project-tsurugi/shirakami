@@ -4,7 +4,6 @@ file(GLOB SOURCES
 
 # about cc
 file(GLOB CC_SOURCES
-"concurrency_control/bg_work/*.cpp"
 "concurrency_control/*.cpp"
 "concurrency_control/interface/*.cpp"
 "concurrency_control/interface/long_tx/*.cpp"

@@ -10,7 +10,6 @@
 
 #include "include/helper.h"
 
-#include "concurrency_control/bg_work/include/bg_commit.h"
 #include "concurrency_control/include/epoch_internal.h"
 #include "concurrency_control/include/read_plan.h"
 #include "concurrency_control/include/session.h"
@@ -63,17 +62,6 @@ static void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
 
     if (get_used_database_options().get_open_mode() !=
         database_options::open_mode::MAINTENANCE) {
-
-        /**
-         * about back ground worker about commit
-         * background worker about commit may access global data (object), so it
-         * must execute before cleanup environment.
-         */
-        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << "shutdown:start_bg_commit";
-        bg_work::bg_commit::fin();
-        VLOG(log_debug_timing_event)
-                << log_location_prefix_timing_event << "shutdown:end_bg_commit";
 
         // about datastore
 #if defined(PWAL)
