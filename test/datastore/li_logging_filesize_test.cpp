@@ -3,6 +3,7 @@
 
 #include <array>
 #include <atomic>
+#include <filesystem>
 #include <mutex>
 #include <string_view>
 #include <thread>
@@ -26,9 +27,6 @@
 
 #include "glog/logging.h"
 
-#include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
-
 namespace shirakami::testing {
 
 using namespace shirakami;
@@ -49,13 +47,11 @@ private:
     static inline std::once_flag init_google; // NOLINT
 };
 
-std::size_t dir_size(boost::filesystem::path& path) {
+std::size_t dir_size(std::filesystem::path& path) {
     std::size_t total_file_size{0};
-    BOOST_FOREACH (const boost::filesystem::path& p, // NOLINT
-                   std::make_pair(boost::filesystem::directory_iterator(path),
-                                  boost::filesystem::directory_iterator())) {
-        if (!boost::filesystem::is_directory(p)) {
-            total_file_size += boost::filesystem::file_size(p);
+    for (const std::filesystem::path& p : std::filesystem::directory_iterator(path)) {
+        if (!std::filesystem::is_directory(p)) {
+            total_file_size += std::filesystem::file_size(p);
         }
     }
 
@@ -73,7 +69,7 @@ TEST_F(li_logging_test,                          // NOLINT
     // prepare test
     std::string log_dir{};
     log_dir = create_log_dir_name();
-    boost::filesystem::path data_location(log_dir);
+    std::filesystem::path data_location(log_dir);
     init({database_options::open_mode::CREATE, log_dir}); // NOLINT
     Storage st{};
     ASSERT_EQ(Status::OK, create_storage("", st));

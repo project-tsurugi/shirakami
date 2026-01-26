@@ -12,11 +12,10 @@
 #pragma once
 
 #include <atomic>
+#include <filesystem>
 #include <mutex>
 #include <string_view>
 #include <thread>
-
-#include <boost/filesystem.hpp>
 
 #include "concurrency_control/include/epoch.h"
 
@@ -299,11 +298,10 @@ private:
 }
 
 [[maybe_unused]] static void remove_under_log_dir() {
-    std::string ld{get_log_dir()};
-    const boost::filesystem::path path(ld);
+    const std::filesystem::path path(get_log_dir());
     try {
-        boost::filesystem::remove_all(path);
-    } catch (boost::filesystem::filesystem_error& ex) {
+        std::filesystem::remove_all(path);
+    } catch (std::filesystem::filesystem_error& ex) {
         LOG_FIRST_N(ERROR, 1)
                 << log_location_prefix << "file system error: " << ex.what()
                 << " : " << path;

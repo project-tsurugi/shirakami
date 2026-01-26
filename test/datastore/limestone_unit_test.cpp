@@ -3,6 +3,7 @@
 
 #include <array>
 #include <atomic>
+#include <filesystem>
 #include <mutex>
 #include <string_view>
 #include <thread>
@@ -24,9 +25,6 @@
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
-
-#include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
 
 #include "limestone/api/datastore.h"
 
@@ -62,13 +60,11 @@ private:
     static inline std::string metadata_log_dir_; // NOLINT
 };
 
-std::size_t dir_size(boost::filesystem::path& path) {
+std::size_t dir_size(std::filesystem::path& path) {
     std::size_t total_file_size{0};
-    BOOST_FOREACH (const boost::filesystem::path& p, // NOLINT
-                   std::make_pair(boost::filesystem::directory_iterator(path),
-                                  boost::filesystem::directory_iterator())) {
-        if (!boost::filesystem::is_directory(p)) {
-            total_file_size += boost::filesystem::file_size(p);
+    for (const std::filesystem::path& p : std::filesystem::directory_iterator(path)) {
+        if (!std::filesystem::is_directory(p)) {
+            total_file_size += std::filesystem::file_size(p);
         }
     }
 
@@ -92,8 +88,8 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     std::string data_dir =
             "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
     std::string metadata_dir = data_dir + "m";
-    boost::filesystem::path data_location(data_dir);
-    boost::filesystem::path metadata_path(metadata_dir);
+    std::filesystem::path data_location(data_dir);
+    std::filesystem::path metadata_path(metadata_dir);
 
     // prepare durable epoch
     std::atomic<size_t> limestone_durable_epoch{0};
@@ -106,14 +102,14 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     };
 
     // prepare data / metadata directory
-    if (boost::filesystem::exists(data_location)) {
-        boost::filesystem::remove_all(data_location);
+    if (std::filesystem::exists(data_location)) {
+        std::filesystem::remove_all(data_location);
     }
-    ASSERT_TRUE(boost::filesystem::create_directory(data_location));
-    if (boost::filesystem::exists(metadata_dir)) {
-        boost::filesystem::remove_all(metadata_dir);
+    ASSERT_TRUE(std::filesystem::create_directory(data_location));
+    if (std::filesystem::exists(metadata_dir)) {
+        std::filesystem::remove_all(metadata_dir);
     }
-    ASSERT_TRUE(boost::filesystem::create_directory(metadata_dir));
+    ASSERT_TRUE(std::filesystem::create_directory(metadata_dir));
 
     // allocate datastore
     std::unique_ptr<limestone::api::datastore> datastore;
@@ -127,7 +123,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
 #ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
     limestone::api::log_channel* lc{&d_ptr->create_channel()};
 #else
-    limestone::api::log_channel* lc{&d_ptr->create_channel(data_location)};
+    limestone::api::log_channel* lc{&d_ptr->create_channel(data_dir)};
 #endif
 
     // start datastore
@@ -157,10 +153,10 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     }
 
     // check existence of log file about (*1)
-    ASSERT_TRUE(boost::filesystem::exists(data_location));
+    ASSERT_TRUE(std::filesystem::exists(data_location));
 
     // log file size after flushing log (*1)
-    boost::uintmax_t size1 = dir_size(data_location);
+    auto size1 = dir_size(data_location);
 
     // flush logs
     lc->begin_session();
@@ -180,7 +176,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     }
 
     // log file size after flushing log (*2)
-    boost::uintmax_t size2 = dir_size(data_location);
+    auto size2 = dir_size(data_location);
 
     // verify size1 != size2
     ASSERT_NE(size1, size2);
@@ -219,8 +215,8 @@ TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
     std::string data_dir =
             "/tmp/shirakami" + std::to_string(tid) + "-" + std::to_string(tsc);
     std::string metadata_dir = data_dir + "m";
-    boost::filesystem::path data_location(data_dir);
-    boost::filesystem::path metadata_path(metadata_dir);
+    std::filesystem::path data_location(data_dir);
+    std::filesystem::path metadata_path(metadata_dir);
 
     // prepare durable epoch
     std::atomic<size_t> limestone_durable_epoch{0};
@@ -233,14 +229,14 @@ TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
     };
 
     // prepare data / metadata directory
-    if (boost::filesystem::exists(data_location)) {
-        boost::filesystem::remove_all(data_location);
+    if (std::filesystem::exists(data_location)) {
+        std::filesystem::remove_all(data_location);
     }
-    ASSERT_TRUE(boost::filesystem::create_directory(data_location));
-    if (boost::filesystem::exists(metadata_dir)) {
-        boost::filesystem::remove_all(metadata_dir);
+    ASSERT_TRUE(std::filesystem::create_directory(data_location));
+    if (std::filesystem::exists(metadata_dir)) {
+        std::filesystem::remove_all(metadata_dir);
     }
-    ASSERT_TRUE(boost::filesystem::create_directory(metadata_dir));
+    ASSERT_TRUE(std::filesystem::create_directory(metadata_dir));
 
     // allocate datastore
     std::unique_ptr<limestone::api::datastore> datastore;
