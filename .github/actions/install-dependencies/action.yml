@@ -21,7 +21,7 @@ runs:
       with:
         repository: project-tsurugi/limestone
         path: ${{ inputs.path }}/limestone
-        ref: master
+        ref: 4f40aca72901015b300903ab831f98a7139552f8
 
     - name: Checkout_Yakushima
       uses: actions/checkout@v4
