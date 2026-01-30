@@ -42,8 +42,18 @@ TEST_F(start_test, valid_recovery_invalid_log_directory) { // NOLINT
     fin();
 }
 
+static limestone::api::configuration create_limestone_config(const std::string& path) {
+#if HAVE_LIMESTONE_CONFIG_CTOR_NONE && HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
+    auto limestone_config = limestone::api::configuration{};
+    limestone_config.set_data_location(path);
+#else
+    auto limestone_config = limestone::api::configuration({path}, path + "m");
+#endif
+    return limestone_config;
+}
+
 TEST_F(start_test, borrow_datastore) { // NOLINT
-    auto limestone_config = limestone::api::configuration({"/tmp/shirakamitest"}, "/tmp/shirakamitest-m");
+    auto limestone_config = create_limestone_config("/tmp/shirakamitest");
     auto datastore = new limestone::api::datastore(limestone_config);
     // transitional: need log_directory_path for now
     ASSERT_EQ(init({database_options::open_mode::RESTORE, "/tmp/shirakamitest"}, datastore), Status::OK);
@@ -54,7 +64,7 @@ TEST_F(start_test, borrow_datastore) { // NOLINT
 }
 
 TEST_F(start_test, error_when_borrow_ds_and_maintenance) { // NOLINT
-    auto limestone_config = limestone::api::configuration({"/tmp/shirakamitest"}, "/tmp/shirakamitest-m");
+    auto limestone_config = create_limestone_config("/tmp/shirakamitest");
     auto datastore = new limestone::api::datastore(limestone_config);
     ASSERT_EQ(init({database_options::open_mode::MAINTENANCE, "/tmp/shirakamitest"}, datastore), Status::ERR_INVALID_CONFIGURATION);
     (void)datastore->last_epoch(); // check (by ASAN): datastore is not freed
