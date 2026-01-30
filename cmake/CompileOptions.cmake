@@ -63,6 +63,7 @@ if (BUILD_PWAL)
     set(CMAKE_REQUIRED_LIBRARIES limestone)
     set(AVAILABLE_LIMESTONE_API_DEFINE "")
     function(check_limestone_api varname method_call)
+        set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
         check_cxx_source_compiles(
 "#include <limestone/api/datastore.h>
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]){
