@@ -87,14 +87,17 @@ static void daemon_work() {
 
         // do work
         for (auto&& es : session_table::get_session_table()) {
-            // FIXME: use durable epoch instead of min_log_epoch (this is write version)
-            // copied from short_tx::commit
-            // flush work
-            auto oldest_log_epoch{es.get_lpwal_handle().get_min_log_epoch()};
+            auto& handle = es.get_lpwal_handle();
+            if (handle.get_min_log_epoch() == 0) { continue; }  // light check
+            if (!handle.get_mtx_logs().try_lock()) {  // someone is processing this buffer
+                continue;  // skip check in this round
+            }
+            auto oldest_log_epoch{handle.get_min_log_epoch()};
             if (oldest_log_epoch != 0 && // mean the wal buffer is not empty.
                 oldest_log_epoch != epoch::get_global_epoch()) {
-                LOG(ERROR) << log_location_prefix << "log found by daemon on lpwal worker#" << es.get_lpwal_handle().get_worker_number();
+                LOG(INFO) << log_location_prefix << "log found by daemon on lpwal worker#" << handle.get_worker_number();
             }
+            handle.get_mtx_logs().unlock();
         }
     }
 }
