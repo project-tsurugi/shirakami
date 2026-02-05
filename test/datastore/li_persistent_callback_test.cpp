@@ -26,9 +26,6 @@
 
 #include "glog/logging.h"
 
-#include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
-
 namespace shirakami::testing {
 
 using namespace shirakami;

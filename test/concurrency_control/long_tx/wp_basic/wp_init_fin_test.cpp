@@ -6,12 +6,6 @@
 
 #include "concurrency_control/include/wp.h"
 
-#if defined(RECOVERY)
-
-#include "boost/filesystem.hpp"
-
-#endif
-
 #include "shirakami/interface.h"
 
 #include "yakushima/include/kvs.h"

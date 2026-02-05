@@ -35,12 +35,10 @@ private:
     static inline std::once_flag init_; // NOLINT
 };
 
-TEST_F(maintenance_mode_test, simple) { // NOLINT
+TEST_F(maintenance_mode_test, removed) { // NOLINT
     database_options options{};
     options.set_open_mode(database_options::open_mode::MAINTENANCE);
-    ASSERT_OK(init(options));
-    ASSERT_NE(get_datastore(), nullptr);
-    fin();
+    ASSERT_EQ(init(options), Status::ERR_INVALID_CONFIGURATION);
 }
 
 } // namespace shirakami::testing

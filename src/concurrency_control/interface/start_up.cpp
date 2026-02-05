@@ -1,5 +1,6 @@
 
 
+#include <filesystem>
 #include <sstream>
 #include <string_view>
 
@@ -39,8 +40,6 @@
 
 #include "shirakami/interface.h"
 
-#include "boost/filesystem/path.hpp"
-
 #include "glog/logging.h"
 
 namespace shirakami {
@@ -69,22 +68,18 @@ static Status create_datastore(database_options options) { // NOLINT
     if (log_dir.empty()) {
         int tid = syscall(SYS_gettid); // NOLINT
         std::uint64_t tsc = rdtsc();
-        log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" +
-                  std::to_string(tsc);
+        log_dir = "/tmp/shirakami-" + std::to_string(tid) + "-" + std::to_string(tsc);
         lpwal::set_log_dir_pointed(false);
         lpwal::set_log_dir(log_dir);
     } else {
         lpwal::set_log_dir(log_dir);
         lpwal::set_log_dir_pointed(true);
         // check exist
-        boost::filesystem::path ldp{
-                std::string(options.get_log_directory_path())}; // NOLINT
-        boost::system::error_code error;
-        const bool result = boost::filesystem::exists(ldp, error);
+        std::error_code error;
+        const bool result = std::filesystem::exists(options.get_log_directory_path(), error);
         if (!result || error) {
             // exists
-            if (options.get_open_mode() ==
-                database_options::open_mode::CREATE) {
+            if (options.get_open_mode() == database_options::open_mode::CREATE) {
                 // there are some data not expected.
                 lpwal::set_log_dir(log_dir);
                 lpwal::remove_under_log_dir();
@@ -94,14 +89,13 @@ static Status create_datastore(database_options options) { // NOLINT
 
     // create datastore
     std::string data_location_str(log_dir);
-    boost::filesystem::path data_location(data_location_str);
-    std::vector<boost::filesystem::path> data_locations;
-    data_locations.emplace_back(data_location);
-    std::string metadata_dir{log_dir + "m"};
-    boost::filesystem::path metadata_path(metadata_dir);
     try {
-        auto limestone_config =
-                limestone::api::configuration(data_locations, metadata_path);
+#if HAVE_LIMESTONE_CONFIG_CTOR_NONE && HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
+        auto limestone_config = limestone::api::configuration{};
+        limestone_config.set_data_location(data_location_str);
+#else
+        auto limestone_config = limestone::api::configuration{{data_location_str}, log_dir + "m"};
+#endif
         if (int max_para = options.get_recover_max_parallelism();
             max_para > 0) {
             limestone_config.set_recover_max_parallelism(max_para);
@@ -116,8 +110,8 @@ static Status init_body(database_options options, void* datastore) { // NOLINT
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 
-    // MAINTENANCE mode is used for creating limestone
-    if (datastore != nullptr && options.get_open_mode() == database_options::open_mode::MAINTENANCE) {
+    // MAINTENANCE mode was used for creating limestone, but is now disabled
+    if (options.get_open_mode() == database_options::open_mode::MAINTENANCE) {
         return Status::ERR_INVALID_CONFIGURATION;
     }
 
@@ -148,109 +142,104 @@ static Status init_body(database_options options, void* datastore) { // NOLINT
     }
 #endif
 
-    if (options.get_open_mode() != database_options::open_mode::MAINTENANCE) {
-        // MAINTENANCE mode guarantee fin and get_datastore after init
-        // about logging detail information
-        logging::init(options.get_enable_logging_detail_info());
+    // about logging detail information
+    logging::init(options.get_enable_logging_detail_info());
 
-        // about storage
-        storage::init();
+    // about storage
+    storage::init();
 
-        /**
-         * about sequence. the generator of sequence id is cleared, So if this is
-         * a start up with recovery, it must also recovery sequence id generator.
-         */
-        sequence::init();
+    /**
+     * about sequence. the generator of sequence id is cleared, So if this is
+     * a start up with recovery, it must also recovery sequence id generator.
+     */
+    sequence::init();
 
-        // data recovery
+    // data recovery
 #if defined(PWAL)
-        // recover data
-        if (options.get_open_mode() != database_options::open_mode::CREATE &&
-            !enable_true_log_nothing) {
-            recover(datastore::get_datastore());
-        }
-        datastore::get_datastore()->add_persistent_callback(
-                epoch::set_datastore_durable_epoch); // should execute before ready()
-        /**
-         * This executes create_channel and pass it to shirakami's executor.
-         */
-        datastore::init_about_session_table(log_dir);
-
-        // datastore ready
-        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << "startup:start_datastore_ready";
-        ready(datastore::get_datastore());
-        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << "startup:end_datastore_ready";
-
-#endif
-
-        // epoch adjustment
-#if defined(PWAL)
-        epoch::set_datastore_durable_epoch(datastore::get_datastore()->last_epoch());
-        auto new_epoch = epoch::initial_epoch;
-        if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
-            new_epoch = datastore::get_datastore()->last_epoch() + 1;
-        }
-        epoch::set_global_epoch(new_epoch);
-        epoch::set_cc_safe_ss_epoch(new_epoch + 1);
-        epoch::set_min_epoch_occ_potentially_write(0);
-        // change also datastore's epoch, this must be after ready()
-        switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
-#else
-        epoch::set_global_epoch(epoch::initial_epoch);
-        epoch::set_cc_safe_ss_epoch(epoch::initial_cc_safe_ss_epoch);
-#endif
-
-        // about tx state
-        TxState::init();
-
-        // about cc
-        session_table::init_session_table();
-
-        // about index
-        // pre condition : before wp::init() because wp::init() use yakushima function.
-        yakushima::init();
-
-        // about wp
-        auto ret = wp::init();
-        if (ret != Status::OK) { return ret; }
-
-        // about meta storage
-        storage::init_meta_storage();
-
-#ifdef PWAL
-        // recover shirakami from datastore recovered.
-        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << "startup:start_recovery_from_datastore";
-        if (options.get_open_mode() != database_options::open_mode::CREATE &&
-            !enable_true_log_nothing) {
-            datastore::recovery_from_datastore(options.get_index_restore_threads());
-        }
-        VLOG(log_debug_timing_event) << log_location_prefix_timing_event
-                                     << "startup:end_recovery_from_datastore";
-#endif
-
-        // about epoch
-        epoch::init(options.get_epoch_time());
-        garbage::init();
-
-#ifdef PWAL
-        lpwal::init(); // start daemon
-#endif
-
-        // about back ground worker about commit
-        bg_work::bg_commit::init(options.get_waiting_resolver_threads());
-
-        //// about thread pool
-        //thread_pool::init();
-
-        // about read area
-        read_plan::init();
-
-        session::set_envflags();
-        ongoing_tx::set_optflags();
+    // recover data
+    if (options.get_open_mode() != database_options::open_mode::CREATE && !enable_true_log_nothing) {
+        recover(datastore::get_datastore());
     }
+    datastore::get_datastore()->add_persistent_callback(
+            epoch::set_datastore_durable_epoch); // should execute before ready()
+    /**
+     * This executes create_channel and pass it to shirakami's executor.
+     */
+#ifdef HAVE_LIMESTONE_DATASTORE_CREATE_CHANNEL_NONE
+    datastore::init_about_session_table();
+#else
+    datastore::init_about_session_table(log_dir);
+#endif
+
+    // datastore ready
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "startup:start_datastore_ready";
+    ready(datastore::get_datastore());
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "startup:end_datastore_ready";
+
+#endif
+
+    // epoch adjustment
+#if defined(PWAL)
+    epoch::set_datastore_durable_epoch(datastore::get_datastore()->last_epoch());
+    auto new_epoch = epoch::initial_epoch;
+    if (datastore::get_datastore()->last_epoch() >= epoch::initial_epoch) {
+        new_epoch = datastore::get_datastore()->last_epoch() + 1;
+    }
+    epoch::set_global_epoch(new_epoch);
+    epoch::set_cc_safe_ss_epoch(new_epoch + 1);
+    epoch::set_min_epoch_occ_potentially_write(0);
+    // change also datastore's epoch, this must be after ready()
+    switch_epoch(shirakami::datastore::get_datastore(), new_epoch);
+#else
+    epoch::set_global_epoch(epoch::initial_epoch);
+    epoch::set_cc_safe_ss_epoch(epoch::initial_cc_safe_ss_epoch);
+#endif
+
+    // about tx state
+    TxState::init();
+
+    // about cc
+    session_table::init_session_table();
+
+    // about index
+    // pre condition : before wp::init() because wp::init() use yakushima function.
+    yakushima::init();
+
+    // about wp
+    auto ret = wp::init();
+    if (ret != Status::OK) { return ret; }
+
+    // about meta storage
+    storage::init_meta_storage();
+
+#ifdef PWAL
+    // recover shirakami from datastore recovered.
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "startup:start_recovery_from_datastore";
+    if (options.get_open_mode() != database_options::open_mode::CREATE && !enable_true_log_nothing) {
+        datastore::recovery_from_datastore(options.get_index_restore_threads());
+    }
+    VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "startup:end_recovery_from_datastore";
+#endif
+
+    // about epoch
+    epoch::init(options.get_epoch_time());
+    garbage::init();
+
+#ifdef PWAL
+    lpwal::init(); // start daemon
+#endif
+
+    // about back ground worker about commit
+    bg_work::bg_commit::init(options.get_waiting_resolver_threads());
+
+    //// about thread pool
+    //thread_pool::init();
+
+    // about read area
+    read_plan::init();
+
+    session::set_envflags();
+    ongoing_tx::set_optflags();
 
     set_initialized(true); // about init command
     return Status::OK;
