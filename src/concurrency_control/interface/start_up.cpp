@@ -106,7 +106,7 @@ static Status create_datastore(database_options options) { // NOLINT
 }
 #endif
 
-static Status init_body(database_options options, void* datastore) { // NOLINT
+static Status init_body(database_options options, [[maybe_unused]] void* datastore) {
     // prevent double initialization
     if (get_initialized()) { return Status::WARN_ALREADY_INIT; }
 

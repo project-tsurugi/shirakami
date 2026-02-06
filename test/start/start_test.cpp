@@ -6,7 +6,9 @@
 #include "gtest/gtest.h"
 #include "glog/logging.h"
 
+#ifdef PWAL
 #include "limestone/api/datastore.h"
+#endif
 
 #include "shirakami/api_diagnostic.h"
 #include "shirakami/database_options.h"
@@ -42,6 +44,8 @@ TEST_F(start_test, valid_recovery_invalid_log_directory) { // NOLINT
     fin();
 }
 
+#ifdef PWAL
+
 static limestone::api::configuration create_limestone_config(const std::string& path) {
 #if HAVE_LIMESTONE_CONFIG_CTOR_NONE && HAVE_LIMESTONE_CONFIG_SET_DATA_LOCATION_STDFSPATH
     auto limestone_config = limestone::api::configuration{};
@@ -70,5 +74,7 @@ TEST_F(start_test, error_when_borrow_ds_and_maintenance) { // NOLINT
     (void)datastore->last_epoch(); // check (by ASAN): datastore is not freed
     delete datastore;
 }
+
+#endif
 
 } // namespace shirakami::testing

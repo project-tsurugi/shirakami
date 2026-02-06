@@ -135,16 +135,15 @@ else ()
     file (GLOB TEST_WITH_LIMESTONE_DOUBLE_SOURCES
           "test_double/*.cpp"
           )
+    file (GLOB LIMESTONE_DOUBLE_SOURCES "test_double/doubles/limestone_double.cpp")
+    add_library(limestone-double ${LIMESTONE_DOUBLE_SOURCES})
+    target_link_libraries(limestone-double PRIVATE limestone)
+    target_include_directories(limestone-double
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            )
   endif()
 endif()
-
-file (GLOB LIMESTONE_DOUBLE_SOURCES "test_double/doubles/limestone_double.cpp")
-add_library(limestone-double ${LIMESTONE_DOUBLE_SOURCES})
-target_link_libraries(limestone-double PRIVATE limestone)
-target_include_directories(limestone-double
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        )
 
 register_tests(
         TARGET shirakami
