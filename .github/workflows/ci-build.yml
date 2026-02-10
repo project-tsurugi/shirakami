@@ -2,7 +2,11 @@ name: Shirakami-CI
 
 on:
   push:
+    paths-ignore:
+      - '**.md'
   pull_request:
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
     inputs:
       os:
@@ -94,12 +98,19 @@ jobs:
       image: ghcr.io/project-tsurugi/tsurugi-ci:almalinux-latest
       volumes:
         - ${{ vars.ccache_dir }}:${{ vars.ccache_dir }}
+        - ${{ vars.ctcache_dir }}:${{ vars.ctcache_dir }}
     defaults:
       run:
         shell: bash
     env:
       CCACHE_CONFIGPATH: ${{ vars.ccache_dir }}/ccache.conf
       CCACHE_DIR: ${{ vars.ccache_dir }}/almalinux-latest
+
+      CTCACHE_DISABLE: ${{ vars.ctcache_disable }}
+      CTCACHE_DIR: ${{ vars.ctcache_dir }}/almalinux-latest
+      CTCACHE_SAVE_OUTPUT: 1
+      CTCACHE_LOCAL: 1
+
       CC: clang
       CXX: 'clang++ -march=native'
 
@@ -123,8 +134,8 @@ jobs:
 
       - name: Clang-Tidy
         run: |
-          #python3 tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench)/.*\.(h|hh)$' $(pwd)'/(src|bench)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
-          python3 tools/bin/run-clang-tidy.py -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src)/.*\.(h|hh)$' $(pwd)'/src/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
+          #python3 tools/bin/run-clang-tidy.py -clang-tidy-binary=/opt/ctcache/clang-tidy -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench)/.*\.(h|hh)$' $(pwd)'/(src|bench)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
+          python3 tools/bin/run-clang-tidy.py -clang-tidy-binary=/opt/ctcache/clang-tidy -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src)/.*\.(h|hh)$' $(pwd)'/src/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
 
       - name: Doxygen
         run: |
