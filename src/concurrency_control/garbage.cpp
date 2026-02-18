@@ -108,13 +108,23 @@ void work_manager() {
                 LOG_FIRST_N(ERROR, 1) << log_location_prefix
                                       << log_location_prefix << "epoch error";
             }
-            set_min_begin_epoch(min_begin_epoch);
         } else {
             /**
              * above loop didn't find living tx. at least, befor_loop epoch is
              * minimum begin epoch.
              */
-            set_min_begin_epoch(before_loop);
+            min_begin_epoch = before_loop;
+        }
+        // NB. The calculation method used in the code above has a potential concurrency flaws,
+        // as it can miss recently begun transactions,
+        // which can result in a smaller value than the previously calculated value of min_begin_epoch.
+        // But even if the calculated value of min_begin_epoch is small,
+        // OCC reads/writes the latest version, and never reads/writes that version.
+        // Therefore, instead of correcting the calculation method, simply discards the smaller value.
+        if (auto old = get_min_begin_epoch(); min_begin_epoch > old) {
+            set_min_begin_epoch(min_begin_epoch);
+        } else if (min_begin_epoch < old) {
+            VLOG(log_debug) << log_location_prefix << "min_begin_epoch back from " << old << " to " << min_begin_epoch << " (ignored)";
         }
         // computing about ltx
         if (valid_epoch != 0) {
