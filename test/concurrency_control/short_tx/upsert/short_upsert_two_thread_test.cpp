@@ -78,7 +78,9 @@ TEST_F(short_upsert_two_thread_test,           // NOLINT
                     LOG(FATAL);
                 }
                 std::memcpy(k.data(), &buf, sizeof(buf));
-                ASSERT_EQ(upsert(s, st, k, "v"), Status::OK);
+                auto rc_upsert = upsert(s, st, k, "v");
+                EXPECT_EQ(rc_upsert, Status::OK) << "i:" << i;
+                if (rc_upsert != Status::OK) { break; }
             }
             (*meet)++;
             while (meet->load(std::memory_order_acquire) != 2) { _mm_pause(); }
