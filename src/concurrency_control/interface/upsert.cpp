@@ -38,10 +38,10 @@ static inline Status insert_process(session* const ti, Storage st,
     tid_word tid{rec_ptr->get_tidw()};
     rec_ptr->get_shared_tombstone_count().store(1, std::memory_order_release);
 
-    yakushima::node_version64* nvp{};
+    yakushima::inserted_node_info ii{};
     // create tombstone
     if (yakushima::status::OK ==
-        put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, nvp)) {
+        put<Record>(ti->get_yakushima_token(), st, key, rec_ptr, ii)) {
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
             // detail info
             if (logging::get_enable_logging_detail_info()) {
@@ -49,7 +49,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                 << "insert record, key " + std::string(key);
             }
 
-            Status check_node_set_res{ti->update_node_set(nvp)};
+            Status check_node_set_res{ti->update_node_set(ii.modified_nvp)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**
                  * This This transaction is confirmed to be aborted
