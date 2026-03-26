@@ -390,6 +390,26 @@ public:
         return Status::OK;
     }
 
+    Status update_node_set(const yakushima::inserted_node_info& ii) {
+        Status check_node_set_res = update_node_set(ii.modified_nvp);
+        // split care: iff left node is already tracked, add right node
+        if (check_node_set_res == Status::OK) {
+            if (yakushima::node_version64* split_nvp = ii.created_nvp; split_nvp != nullptr) {
+                yakushima::node_version64_body split_nvb = split_nvp->get_stable_version(); // XXX: gap
+                auto rc = emplace_back({split_nvb, split_nvp});
+                if (rc == Status::ERR_CC) {
+                    // newly created border node is already in the node-set of this session
+                    // and modified by another session.
+                    // (currently never happen. possible if OCC-writable-strand is implemented?)
+                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                                          << " newly created border node is already in node-set.";
+                    return Status::ERR_CC;
+                }
+            }
+        }
+        return check_node_set_res;
+    }
+
     auto empty() {
         std::shared_lock<std::shared_mutex> lk{get_mtx_set()};
         return get_set().empty();

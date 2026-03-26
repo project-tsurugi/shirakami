@@ -48,7 +48,7 @@ static inline Status insert_process(session* const ti, Storage st,
                                 << "insert record, key " + std::string(key);
             }
 
-            Status check_node_set_res{ti->update_node_set(ii.modified_nvp)};
+            Status check_node_set_res{ti->update_node_set(ii)};
             if (check_node_set_res == Status::ERR_CC) {
                 /**
                  * This This transaction is confirmed to be aborted
