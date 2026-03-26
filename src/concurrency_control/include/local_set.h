@@ -333,13 +333,18 @@ public:
         for (auto&& elem : set_) {
             // compare node version ptr
             if (std::get<1>(elem) == nvp) {
-                yakushima::node_version64_body nvb = nvp->get_stable_version();
+                yakushima::node_version64_body nvb{};
+                if (!found) {
+                    nvb = nvp->get_stable_version();
+                    out_nvb = nvb;
+                    found = true;
+                } else {
+                    nvb = out_nvb;
+                }
                 if (std::get<0>(elem).get_vinsert_delete() + 1 !=
                     nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
-                found = true;
-                out_nvb = nvb;
                 std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
                  * note : discussion.
