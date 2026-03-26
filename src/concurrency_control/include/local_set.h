@@ -327,7 +327,7 @@ public:
         return get_set().clear();
     }
 
-    Status update_node_set(yakushima::node_version64* nvp) {
+    Status update_node_set(yakushima::node_version64* nvp, yakushima::node_version64_body& out_nvb) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         bool found = false;
         for (auto&& elem : set_) {
@@ -339,6 +339,7 @@ public:
                     return Status::ERR_CC;
                 }
                 found = true;
+                out_nvb = nvb;
                 std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
                  * note : discussion.
@@ -391,11 +392,16 @@ public:
     }
 
     Status update_node_set(const yakushima::inserted_node_info& ii) {
-        Status check_node_set_res = update_node_set(ii.modified_nvp);
+        yakushima::node_version64_body modified_nvb{};
+        Status check_node_set_res = update_node_set(ii.modified_nvp, modified_nvb);
         // split care: iff left node is already tracked, add right node
         if (check_node_set_res == Status::OK) {
             if (yakushima::node_version64* split_nvp = ii.created_nvp; split_nvp != nullptr) {
-                yakushima::node_version64_body split_nvb = split_nvp->get_stable_version(); // XXX: gap
+                yakushima::node_version64_body split_nvb = split_nvp->get_stable_version();
+                // the two border nodes just after splitting has the same version
+                if (split_nvb.get_vinsert_delete() != modified_nvb.get_vinsert_delete()) {
+                    return Status::ERR_CC;
+                }
                 auto rc = emplace_back({split_nvb, split_nvp});
                 if (rc == Status::ERR_CC) {
                     // newly created border node is already in the node-set of this session
