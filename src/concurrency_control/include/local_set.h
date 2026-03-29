@@ -327,18 +327,24 @@ public:
         return get_set().clear();
     }
 
-    Status update_node_set(yakushima::node_version64* nvp) {
+    Status update_node_set(yakushima::node_version64* nvp, yakushima::node_version64_body& out_nvb) {
         std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
         bool found = false;
         for (auto&& elem : set_) {
             // compare node version ptr
             if (std::get<1>(elem) == nvp) {
-                yakushima::node_version64_body nvb = nvp->get_stable_version();
+                yakushima::node_version64_body nvb{};
+                if (!found) {
+                    nvb = nvp->get_stable_version();
+                    out_nvb = nvb;
+                    found = true;
+                } else {
+                    nvb = out_nvb;
+                }
                 if (std::get<0>(elem).get_vinsert_delete() + 1 !=
                     nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
-                found = true;
                 std::get<0>(elem) = nvb; // update vinsert_delete
                 /**
                  * note : discussion.
@@ -388,6 +394,31 @@ public:
 
         get_set().emplace_back(elem);
         return Status::OK;
+    }
+
+    Status update_node_set(const yakushima::inserted_node_info& ii) {
+        yakushima::node_version64_body modified_nvb{};
+        Status check_node_set_res = update_node_set(ii.modified_nvp, modified_nvb);
+        // split care: iff left node is already tracked, add right node
+        if (check_node_set_res == Status::OK) {
+            if (yakushima::node_version64* split_nvp = ii.created_nvp; split_nvp != nullptr) {
+                yakushima::node_version64_body split_nvb = split_nvp->get_stable_version();
+                // the two border nodes just after splitting has the same version
+                if (split_nvb.get_vinsert_delete() != modified_nvb.get_vinsert_delete()) {
+                    return Status::ERR_CC;
+                }
+                auto rc = emplace_back({split_nvb, split_nvp});
+                if (rc == Status::ERR_CC) {
+                    // newly created border node is already in the node-set of this session
+                    // and modified by another session.
+                    // (currently never happen. possible if OCC-writable-strand is implemented?)
+                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error."
+                                          << " newly created border node is already in node-set.";
+                    return Status::ERR_CC;
+                }
+            }
+        }
+        return check_node_set_res;
     }
 
     auto empty() {

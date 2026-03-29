@@ -132,7 +132,7 @@ TEST_F(short_insert_scan_split_test, phantom_multitx_mtroot_left) {
 }
 
 // issue 1453
-TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_mtroot_right) {
+TEST_F(short_insert_scan_split_test, phantom_multitx_mtroot_right) {
     // phantom if another tx inserts into right split node
     // split position: masstree root border
 
@@ -180,7 +180,7 @@ TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_mtroot_right) {
 }
 
 // issue 1453
-TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_nonroot_right) {
+TEST_F(short_insert_scan_split_test, phantom_multitx_nonroot_right) {
     // phantom if another tx inserts into right split node
     // split position: non-masstree root border (parent is interior node)
 
@@ -238,7 +238,7 @@ TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_nonroot_right) {
 }
 
 // issue 1453
-TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_l1root_right) {
+TEST_F(short_insert_scan_split_test, phantom_multitx_l1root_right) {
     // phantom if another tx inserts into right split node
     // split position: Layer1+ btree root border
 
@@ -274,7 +274,7 @@ TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_l1root_right) {
 }
 
 // issue 1453
-TEST_F(short_insert_scan_split_test, DISABLED_phantom_multitx_nonserial_mtroot_right) {
+TEST_F(short_insert_scan_split_test, phantom_multitx_nonserial_mtroot_right) {
     // like phantom_multitx_mtroot_right
     // abort either tx in non-serial two txs
 

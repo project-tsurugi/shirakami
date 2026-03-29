@@ -89,7 +89,7 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
                 // set tid
                 rec_ptr->set_tid(new_tid);
                 // put contents to tree
-                yakushima::node_version64* dummy{};
+                yakushima::inserted_node_info dummy{};
                 auto rc = put<Record>(
                         static_cast<session*>(token)->get_yakushima_token(), st,
                         key, rec_ptr, dummy);

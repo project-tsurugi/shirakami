@@ -688,8 +688,8 @@ public:
     // ========== start: node set
     node_set& get_node_set() { return node_set_; }
 
-    Status update_node_set(yakushima::node_version64* nvp) { // NOLINT
-        return get_node_set().update_node_set(nvp);
+    Status update_node_set(const yakushima::inserted_node_info& ii) {
+        return get_node_set().update_node_set(ii);
     }
 
     // ========== end: node set

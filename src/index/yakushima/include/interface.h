@@ -47,12 +47,12 @@ Status get(Storage st, std::string_view const key, Record*& rec_ptr,
 
 template<class Record>
 yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
-                      Record* rec_ptr, yakushima::node_version64*& nvp) {
+                      Record* rec_ptr, yakushima::inserted_node_info& ii) {
     return yakushima::put<Record*>(
             tk, {reinterpret_cast<char*>(&st), sizeof(st)}, key,       // NOLINT
             &rec_ptr, sizeof(Record*), nullptr,                        // NOLINT
             static_cast<yakushima::value_align_type>(sizeof(Record*)), // NOLINT
-            true, &nvp);
+            true, &ii);
 }
 
 template<class Record>
@@ -60,8 +60,8 @@ yakushima::status put(yakushima::Token tk, Storage st, std::string_view key,
                       std::string_view val) {
     Record* rec_ptr = new Record(key, val); // NOLINT
     rec_ptr->reset_ts();
-    yakushima::node_version64* nvp{};
-    auto rc{put<Record>(tk, st, key, rec_ptr, nvp)};
+    yakushima::inserted_node_info dummy{};
+    auto rc{put<Record>(tk, st, key, rec_ptr, dummy)};
     if (rc != yakushima::status::OK) { delete rec_ptr; } // NOLINT
     return rc;
 }
