@@ -809,14 +809,6 @@ private:
     std::atomic<epoch::epoch_t> begin_epoch_{epoch::initial_epoch};
 
     /**
-     * @brief The stx's step epoch used for judge whether a ltx can start.
-     * @attention For internal. Don't clear at tx termination. This is used for
-     * lock-free coordination for multi-threads.
-     * @deprecated not used any more, to be removed.
-     */
-    std::atomic<epoch::epoch_t> step_epoch_{epoch::initial_epoch};
-
-    /**
      * @brief check value for detecting whether short_tx commit expose operation is ongoing.
      * @attention the type should be std::atomic\<lock_and_epoch_t\>, but fetch_or method cannot be used
      * for std::atomic\<custom 64-bit size class\>, so std::atomic\<std::uint64_t\> is used instead.
@@ -837,13 +829,6 @@ private:
      * @brief about scan operation.
      */
     scan_handler scan_handle_;
-
-    /**
-     * @brief This variable shows whether this session (transaction (tx)) is processing
-     * public api now.
-     * @deprecated not used any more, to be removed.
-     */
-    std::atomic<std::size_t> operating_{0};
 
     // ========== start: strand
 
