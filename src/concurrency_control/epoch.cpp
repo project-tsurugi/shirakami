@@ -126,17 +126,13 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
                         auto wp_result_was_committed = wp::wp_meta::
                                 wp_result_elem_extract_was_committed(
                                         (*wp_result_itr));
-                        if (wp_result_was_committed) {
+                        if (wp_result_was_committed && wp_result_epoch < result_epoch) {
                             /**
                              * the target ltx was commited, so it needs to check.
                              */
-                            for (auto&& hid : std::get<0>(oe.second)) {
-                                if (wp_result_id == hid) {
-                                    if (wp_result_epoch < result_epoch) {
+                            if (auto& set = std::get<0>(oe.second);
+                                set.find(wp_result_id) != set.end()) {
                                         result_epoch = wp_result_epoch;
-                                        break;
-                                    }
-                                }
                             }
                         }
                     }

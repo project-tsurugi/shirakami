@@ -459,15 +459,16 @@ static Status verify(session* const ti) {
                 auto wp_result_was_committed =
                         wp::wp_meta::wp_result_elem_extract_was_committed(
                                 (*wp_result_itr));
-                auto write_result =
+                const auto& write_result =
                         wp::wp_meta::wp_result_elem_extract_write_result(
                                 (*wp_result_itr));
                 if (wp_result_was_committed) {
                     /**
                      * the target ltx was commited, so it needs to check.
                      */
-                    for (auto&& hid : std::get<0>(oe.second)) {
-                        if (wp_result_id == hid) {
+                    if (auto& set = std::get<0>(oe.second);
+                        set.find(wp_result_id) != set.end()) {
+                        do { // NOLINT
                             // check conflict
                             if (!std::get<0>(write_result)) {
                                 // the ltx didn't write.
@@ -516,7 +517,7 @@ static Status verify(session* const ti) {
                             }
                             // verify success
                             break;
-                        }
+                        } while (false);
                     }
                 }
 
