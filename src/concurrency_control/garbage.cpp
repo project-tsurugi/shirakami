@@ -105,8 +105,7 @@ void work_manager() {
         if (min_begin_epoch != epoch::max_epoch) {
             // find some living tx
             if (min_begin_epoch < epoch::initial_epoch) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                      << log_location_prefix << "epoch error";
+                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "epoch error";
             }
         } else {
             /**
@@ -148,8 +147,7 @@ static version* find_latest_invisible_version_from_batch(
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
-        LOG_FIRST_N(ERROR, 1) << log_location_prefix << log_location_prefix
-                              << "unreachable path";
+        LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
     // gathering stats info
     ++average_version_list_size;
