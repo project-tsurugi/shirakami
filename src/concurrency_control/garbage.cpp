@@ -82,16 +82,23 @@ void fin() {
     join_bg_threads();
 }
 
+// for debug
+
+/** @brief string representation of the data used to calculate min_begin_epoch and min_batch_epoch */
+static std::string data_used_to_calc_threshold{};
+
 void work_manager() {
     // compute gc timestamp
     while (!get_flag_manager_end()) {
+        std::stringstream ss;
         epoch::epoch_t min_begin_epoch{epoch::max_epoch}; // for occ
         // computing about short
         epoch::epoch_t before_loop{epoch::get_global_epoch()};
         epoch::epoch_t valid_epoch{0};
         for (auto&& se : session_table::get_session_table()) {
             if (se.get_visible() && se.get_tx_began()) {
-                min_begin_epoch = std::min(min_begin_epoch, se.get_begin_epoch());
+                auto be = se.get_begin_epoch();
+                min_begin_epoch = std::min(min_begin_epoch, be);
                 auto ve = se.get_valid_epoch();
                 if (ve != 0) {
                     if (valid_epoch == 0) {
@@ -100,6 +107,7 @@ void work_manager() {
                         valid_epoch = std::min(valid_epoch, ve);
                     }
                 }
+                ss << "[" << se.get_session_id() << ",b:" << be << ",v:" << ve << "]";
             }
         }
         if (min_begin_epoch != epoch::max_epoch) {
@@ -123,20 +131,28 @@ void work_manager() {
         if (auto old = get_min_begin_epoch(); min_begin_epoch > old) {
             set_min_begin_epoch(min_begin_epoch);
         } else if (min_begin_epoch < old) {
-            VLOG(log_debug) << log_location_prefix << "min_begin_epoch back from " << old << " to " << min_begin_epoch << " (ignored)";
+            VLOG(log_debug) << log_location_prefix << "min_begin_epoch back from " << old << " to "
+                            << min_begin_epoch << " (ignored)"
+                            << " data_to_calc old:" << data_used_to_calc_threshold << " new:" << ss.str();
         }
         // computing about ltx
+        epoch::epoch_t min_batch_epoch{};
         if (valid_epoch != 0) {
-            // exist some ltx
+            // exist some ltx, rtx
             auto csse = epoch::get_cc_safe_ss_epoch();
-            set_min_batch_epoch(std::min(csse, valid_epoch));
+            min_batch_epoch = std::min(csse, valid_epoch); // RTX valid_epoch may less than cc_safe_epoch
         } else {
-            set_min_batch_epoch(epoch::get_cc_safe_ss_epoch());
+            min_batch_epoch = epoch::get_cc_safe_ss_epoch();
         }
+        if (auto old = get_min_batch_epoch(); min_batch_epoch < old) {
+            LOG(ERROR) << log_location_prefix << "min_batch_epoch back from " << old << " to " << min_batch_epoch
+                       << " data_to_calc old:" << data_used_to_calc_threshold << " new:" << ss.str();
+        }
+        set_min_batch_epoch(min_batch_epoch);
 #ifdef PWAL
         switch_available_boundary_version(shirakami::datastore::get_datastore(), std::min(get_min_begin_epoch(), get_min_batch_epoch()));
 #endif
-
+        data_used_to_calc_threshold = ss.str();
         sleepUs(epoch::get_global_epoch_time_us());
     }
 }
