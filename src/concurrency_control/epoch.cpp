@@ -97,8 +97,7 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
             if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
             // acquire read lock about overtaken ltx set
             {
-                std::shared_lock<std::shared_mutex> lk_ols{
-                        ti->get_mtx_overtaken_ltx_set()};
+                std::shared_lock<std::shared_mutex> lk_ols{ti->get_mtx_overtaken_ltx_set()};
                 // check
                 if (ti->get_overtaken_ltx_set().empty()) {
                     // no forwarding
@@ -109,30 +108,20 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
                 for (auto&& oe : ti->get_overtaken_ltx_set()) {
                     wp::wp_meta* wp_meta_ptr{oe.first};
                     // get read lock
-                    std::shared_lock<std::shared_mutex> lk{
-                            wp_meta_ptr->get_mtx_wp_result_set()};
-                    for (auto&& wp_result_itr =
-                                 wp_meta_ptr->get_wp_result_set().begin();
-                         wp_result_itr !=
-                         wp_meta_ptr->get_wp_result_set().end();
+                    std::shared_lock<std::shared_mutex> lk{wp_meta_ptr->get_mtx_wp_result_set()};
+                    for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
+                         wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
                          ++wp_result_itr) {
                         // prepare committed information
-                        auto wp_result_id =
-                                wp::wp_meta::wp_result_elem_extract_id(
-                                        (*wp_result_itr));
-                        auto wp_result_epoch =
-                                wp::wp_meta::wp_result_elem_extract_epoch(
-                                        (*wp_result_itr));
+                        auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(*wp_result_itr);
+                        auto wp_result_epoch = wp::wp_meta::wp_result_elem_extract_epoch(*wp_result_itr);
                         auto wp_result_was_committed = wp::wp_meta::
-                                wp_result_elem_extract_was_committed(
-                                        (*wp_result_itr));
+                                wp_result_elem_extract_was_committed(*wp_result_itr);
                         if (wp_result_was_committed && wp_result_epoch < result_epoch) {
-                            /**
-                             * the target ltx was commited, so it needs to check.
-                             */
+                            // the target ltx was committed, so it needs to check.
                             if (auto& map = std::get<0>(oe.second);
                                 map.find(wp_result_id) != map.end()) {
-                                        result_epoch = wp_result_epoch;
+                                result_epoch = wp_result_epoch;
                             }
                         }
                     }

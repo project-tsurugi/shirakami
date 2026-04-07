@@ -443,29 +443,18 @@ static Status verify(session* const ti) {
         std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
         for (auto&& oe : ti->get_overtaken_ltx_set()) {
             wp::wp_meta* wp_meta_ptr{oe.first};
-            std::lock_guard<std::shared_mutex> lk{
-                    wp_meta_ptr->get_mtx_wp_result_set()};
+            std::lock_guard<std::shared_mutex> lk{wp_meta_ptr->get_mtx_wp_result_set()};
             bool is_first_item_before_gc_threshold{true};
             auto read_range = std::get<1>(oe.second);
-            for (auto&& wp_result_itr =
-                         wp_meta_ptr->get_wp_result_set().begin();
+            for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
                  wp_result_itr != wp_meta_ptr->get_wp_result_set().end();) {
                 // oe.second is forwarding high priori ltxs
-                auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(
-                        (*wp_result_itr));
-                auto wp_result_epoch =
-                        wp::wp_meta::wp_result_elem_extract_epoch(
-                                (*wp_result_itr));
-                auto wp_result_was_committed =
-                        wp::wp_meta::wp_result_elem_extract_was_committed(
-                                (*wp_result_itr));
-                const auto& write_result =
-                        wp::wp_meta::wp_result_elem_extract_write_result(
-                                (*wp_result_itr));
+                auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id(*wp_result_itr);
+                auto wp_result_epoch = wp::wp_meta::wp_result_elem_extract_epoch(*wp_result_itr);
+                auto wp_result_was_committed = wp::wp_meta::wp_result_elem_extract_was_committed(*wp_result_itr);
+                const auto& write_result = wp::wp_meta::wp_result_elem_extract_write_result(*wp_result_itr);
                 if (wp_result_was_committed) {
-                    /**
-                     * the target ltx was commited, so it needs to check.
-                     */
+                    // the target ltx was committed, so it needs to check.
                     if (auto& map = std::get<0>(oe.second);
                         map.find(wp_result_id) != map.end()) {
                         do { // NOLINT
@@ -474,35 +463,24 @@ static Status verify(session* const ti) {
                                 // the ltx didn't write.
                                 break;
                             }
-                            // def ramda for hit
+                            // def lamda for hit
                             auto hit_process = [ti, wp_result_epoch]() {
                                 // check read upper bound
-                                if (ti->get_read_version_max_epoch() >=
-                                    wp_result_epoch) {
+                                if (ti->get_read_version_max_epoch() >= wp_result_epoch) {
                                     // forwarding break own old read
-                                    ti->set_result(
-                                            reason_code::
-                                                    CC_LTX_READ_UPPER_BOUND_VIOLATION);
+                                    ti->set_result(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
                                     return Status::ERR_CC;
                                 } // forwarding not break own old read
                                 ti->set_valid_epoch(wp_result_epoch);
                                 return Status::OK;
                             };
                             if (
-                                    /**
-                                     * read right point < write left point
-                                     */
-                                    (std::get<2>(read_range) <
-                                             std::get<1>(write_result) &&
-                                     std::get<3>(read_range) !=
-                                             scan_endpoint::INF) ||
-                                    /**
-                                     * write right point < read left point
-                                     */
-                                    (std::get<2>(write_result) <
-                                             std::get<0>(read_range) &&
-                                     std::get<1>(read_range) !=
-                                             scan_endpoint::INF)) {
+                                    // read right point < write left point
+                                    (std::get<2>(read_range) < std::get<1>(write_result) &&
+                                     std::get<3>(read_range) != scan_endpoint::INF) ||
+                                    // write right point < read left point
+                                    (std::get<2>(write_result) < std::get<0>(read_range) &&
+                                     std::get<1>(read_range) != scan_endpoint::INF)) {
                                 // can't hit
                                 break;
                             }
@@ -530,8 +508,7 @@ static Status verify(session* const ti) {
                         ++wp_result_itr;
                     } else {
                         // remove
-                        wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(
-                                wp_result_itr);
+                        wp_result_itr = wp_meta_ptr->get_wp_result_set().erase(wp_result_itr);
                     }
                 } else {
                     // else. should not gc
