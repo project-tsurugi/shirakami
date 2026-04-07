@@ -69,6 +69,9 @@ static inline void refresh_short_expose_ongoing_status(const epoch_t ce) {
     set_min_epoch_occ_potentially_write(min_short_expose_ongoing_target_epoch);
 }
 
+/** @brief string representation of the data used to calculate cc_safe_ss_epoch */
+static std::string data_used_to_calc_safe{};
+
 static inline void compute_and_set_cc_safe_ss_epoch() {
     // compute cc safe ss epoch
     // get read lock and block ending of highest priori ltx
@@ -88,11 +91,14 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
         if (ongoing_ltx.empty()) {
             // set cc safe ss epoch
             set_cc_safe_ss_epoch(get_global_epoch() + 1);
+            data_used_to_calc_safe = "(empty)";
             return;
         }
         // exist ltx
+        std::stringstream new_data_used;
         for (auto& elem : ongoing_ltx) {
             auto* ti = std::get<ongoing_tx::index_session>(elem);
+            new_data_used << "[" << ti->get_session_id() << ",";
             // initialize result_epoch
             if (result_epoch == 0) { result_epoch = ti->get_valid_epoch(); }
             // acquire read lock about overtaken ltx set
@@ -101,13 +107,16 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
                 // check
                 if (ti->get_overtaken_ltx_set().empty()) {
                     // no forwarding
+                    auto ve = ti->get_valid_epoch();
                     result_epoch = std::min(result_epoch, ti->get_valid_epoch());
+                    new_data_used << "v:" << ve;
                     continue;
                 }
                 // exist forwarding, compute return epoch
                 for (auto&& oe : ti->get_overtaken_ltx_set()) {
                     wp::wp_meta* wp_meta_ptr{oe.first};
                     // get read lock
+                    new_data_used << "(";
                     std::shared_lock<std::shared_mutex> lk{wp_meta_ptr->get_mtx_wp_result_set()};
                     for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
                          wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
@@ -125,8 +134,10 @@ static inline void compute_and_set_cc_safe_ss_epoch() {
                             }
                         }
                     }
+                    new_data_used << ")";
                 }
             }
+            new_data_used << "]";
         }
     }
 
