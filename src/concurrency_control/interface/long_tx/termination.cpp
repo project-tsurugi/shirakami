@@ -457,45 +457,37 @@ static Status verify(session* const ti) {
                     // the target ltx was committed, so it needs to check.
                     if (auto& map = std::get<0>(oe.second);
                         map.find(wp_result_id) != map.end()) {
-                        do { // NOLINT
-                            // check conflict
+                        // check conflict
+                        auto hit_check = [&write_result, &read_range] {
                             if (!std::get<0>(write_result)) {
-                                // the ltx didn't write.
-                                break;
+                                return false; // the ltx didn't write.
                             }
-                            // def lamda for hit
-                            auto hit_process = [ti, wp_result_epoch]() {
+                            if (// read right point < write left point
+                                (std::get<2>(read_range) < std::get<1>(write_result) &&
+                                 std::get<3>(read_range) != scan_endpoint::INF) ||
+                                // write right point < read left point
+                                (std::get<2>(write_result) < std::get<0>(read_range) &&
+                                 std::get<1>(read_range) != scan_endpoint::INF)) {
+                                return false; // can't hit
+                            }
+                            return true;
+                        };
+                        if (hit_check()) {
+                            // hit process, forwarding
+                            // register whether forwarding
+                            ti->set_is_forwarding(true);
+                            if (wp_result_epoch < ti->get_valid_epoch()) {
                                 // check read upper bound
                                 if (ti->get_read_version_max_epoch() >= wp_result_epoch) {
                                     // forwarding break own old read
                                     ti->set_result(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
                                     return Status::ERR_CC;
                                 } // forwarding not break own old read
-                                ti->set_valid_epoch(wp_result_epoch);
-                                return Status::OK;
-                            };
-                            if (
-                                    // read right point < write left point
-                                    (std::get<2>(read_range) < std::get<1>(write_result) &&
-                                     std::get<3>(read_range) != scan_endpoint::INF) ||
-                                    // write right point < read left point
-                                    (std::get<2>(write_result) < std::get<0>(read_range) &&
-                                     std::get<1>(read_range) != scan_endpoint::INF)) {
-                                // can't hit
-                                break;
-                            }
-
-                            // hit process, forwarding
-                            // register whether forwarding
-                            ti->set_is_forwarding(true);
-                            if (wp_result_epoch < ti->get_valid_epoch()) {
                                 // need to update epoch
-                                auto rc = hit_process();
-                                if (rc == Status::ERR_CC) { return rc; }
+                                ti->set_valid_epoch(wp_result_epoch);
                             }
                             // verify success
-                            break;
-                        } while (false);
+                        }
                     }
                 }
 
