@@ -96,7 +96,7 @@ void work_manager() {
         epoch::epoch_t before_loop{epoch::get_global_epoch()};
         epoch::epoch_t valid_epoch{0};
         for (auto&& se : session_table::get_session_table()) {
-            if (se.get_visible() && se.get_tx_began()) {
+            if (se.get_visible() && se.get_tx_began3() != 0) {
                 auto be = se.get_begin_epoch();
                 min_begin_epoch = std::min(min_begin_epoch, be);
                 auto ve = se.get_valid_epoch();

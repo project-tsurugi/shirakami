@@ -47,6 +47,7 @@ static Status tx_begin_body(transaction_options options) { // NOLINT
             return Status::WARN_ILLEGAL_OPERATION;
         }
     }
+    ti->set_tx_began3(2); // preparing
     if (tx_type == transaction_options::transaction_type::LONG) {
         ti->init_flags_for_ltx_begin();
 

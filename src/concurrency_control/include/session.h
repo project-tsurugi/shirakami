@@ -313,7 +313,14 @@ public:
      * @brief get the value of tx_began_.
      */
     [[nodiscard]] bool get_tx_began() {
-        return tx_began_.load(std::memory_order_acquire);
+        return tx_began3_.load(std::memory_order_acquire) == 1;
+    }
+
+    /**
+     * @brief get the value of tx_began3_.
+     */
+    [[nodiscard]] std::uint8_t get_tx_began3() {
+        return tx_began3_.load(std::memory_order_acquire);
     }
 
     /**
@@ -572,7 +579,11 @@ public:
     }
 
     void set_tx_began(bool tf) {
-        tx_began_.store(tf, std::memory_order_release);
+        tx_began3_.store(tf ? 1 : 0, std::memory_order_release);
+    }
+
+    void set_tx_began3(std::uint8_t tf3) {
+        tx_began3_.store(tf3, std::memory_order_release);
     }
 
     void set_tx_type(transaction_options::transaction_type const tp) {
@@ -747,9 +758,9 @@ private:
 
     /**
      * @brief Flag of transaction beginning.
-     * @details If this is true, this session is in some tx, otherwise, not.
+     * @details if 1, this session is in some tx, otherwise, not.
      */
-    std::atomic<bool> tx_began_{false};
+    std::atomic<std::uint8_t> tx_began3_{0};
 
     /**
      * @brief for optimization for read area
