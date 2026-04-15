@@ -17,7 +17,7 @@ runs:
 
   steps:
     - name: Checkout_Limestone
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       if: ${{ inputs.checkout == 'true' }}
       with:
         repository: project-tsurugi/limestone
@@ -25,7 +25,7 @@ runs:
         ref: master
 
     - name: Checkout_Yakushima
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       if: ${{ inputs.checkout == 'true' }}
       with:
         repository: project-tsurugi/yakushima
