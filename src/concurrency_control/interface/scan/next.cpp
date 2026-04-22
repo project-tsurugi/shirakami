@@ -98,6 +98,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             // check read own inserting
             if (inws != nullptr) {
                 if (inws->get_op() == OP_TYPE::INSERT) { break; }
+                // when UPSERT ???
             }
 
             // short tx should read inserting page
