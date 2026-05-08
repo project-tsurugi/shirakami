@@ -161,7 +161,8 @@ TEST_P(shirakami_issue141, not_serializable_2occ_steps) {
     auto search_key_must_not_read_b = [&st](Token& s) {
         std::string buf{};
         auto rc_searchkey = search_key(s, st, "b", buf);
-        ASSERT_TRUE(rc_searchkey == Status::WARN_NOT_FOUND || rc_searchkey == Status::WARN_CONCURRENT_INSERT);
+        ASSERT_TRUE(rc_searchkey == Status::WARN_NOT_FOUND || rc_searchkey == Status::WARN_CONCURRENT_INSERT)
+                << "rc_searchkey:" << rc_searchkey;
     };
 
     ASSERT_OK(create_storage("", st));

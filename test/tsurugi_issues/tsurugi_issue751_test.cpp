@@ -67,7 +67,7 @@ TEST_F(tsurugi_issue751_test, jogasaki_update_range) {
     ASSERT_TRUE(rc_del1 == Status::OK);
     ASSERT_OK(upsert(s, st, "a", "s2"));
     auto rc_del2 = delete_record(s, st, "b");
-    ASSERT_TRUE(rc_del2 == Status::OK || rc_del2 == Status::WARN_CANCEL_PREVIOUS_UPSERT);
+    ASSERT_TRUE(rc_del2 == Status::OK || rc_del2 == Status::WARN_CANCEL_PREVIOUS_UPSERT) << "rc_del2:" << rc_del2;
     ASSERT_OK(upsert(s, st, "b", "s3"));
     // commit
     ASSERT_OK(commit(s));
@@ -98,7 +98,7 @@ TEST_F(tsurugi_issue751_test, search_insert_delete) {
     ASSERT_OK(upsert(s, st, "b", "s1"));
     // delete the same page
     auto rc_del = delete_record(s, st, "b");
-    ASSERT_TRUE(rc_del == Status::OK || rc_del == Status::WARN_CANCEL_PREVIOUS_UPSERT);
+    ASSERT_TRUE(rc_del == Status::OK || rc_del == Status::WARN_CANCEL_PREVIOUS_UPSERT) << "rc_del:" << rc_del;
     // commit
     ASSERT_OK(commit(s));
 

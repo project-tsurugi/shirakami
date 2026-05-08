@@ -189,7 +189,7 @@ TEST_F(tsurugi_issue1001_test, record_gc_never_unhook_records_on_alive_ss) {
     // RTX2 full-scan should read { }
     auto rcs2 = open_scan(r2, st, "", scan_endpoint::INF, "", scan_endpoint::INF, shd);
     // {open_scan -> NOT_FOUND}  OR  {open_scan -> OK, read_from_scan -> NOT_FOUND, next -> SCAN_LIMIT}
-    ASSERT_TRUE(rcs2 == Status::WARN_NOT_FOUND || rcs2 == Status::OK);
+    ASSERT_TRUE(rcs2 == Status::WARN_NOT_FOUND || rcs2 == Status::OK) << "rcs2:" << rcs2;
     if (rcs2 == Status::OK) {
         ASSERT_EQ(read_key_from_scan(r2, shd, buf), Status::WARN_NOT_FOUND);
         ASSERT_EQ(next(r2, shd), Status::WARN_SCAN_LIMIT);

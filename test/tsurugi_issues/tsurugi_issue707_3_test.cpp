@@ -63,7 +63,7 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
     Status rc = open_scan(t, st, "", scan_endpoint::INF, "", scan_endpoint::INF,
                           shd);
     ASSERT_TRUE(rc == Status::OK || rc == Status::WARN_NOT_FOUND ||
-                rc == Status::ERR_CC);
+                rc == Status::ERR_CC) << "rc:" << rc;
     if (rc == Status::OK) {
         // loop and read all
         for (;;) {
@@ -210,7 +210,7 @@ TEST_P(tsurugi_issue707_3_test, // NOLINT
             // write st1
             rc = write(t, st1, gen_st1_key(count + 1), gen_st1_key(count + 1), nullptr, 0);
             ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS || rc == Status::OK ||
-                        rc == Status::ERR_CC);
+                        rc == Status::ERR_CC) << "rc:" << rc;
             if (rc == Status::WARN_ALREADY_EXISTS) {
                 abort(t);
                 ++ct_abort;
@@ -234,7 +234,7 @@ TEST_P(tsurugi_issue707_3_test, // NOLINT
                 rc = write(t, st2, gen_st2_key(count + 1, i),
                            gen_st2_key(count + 1, i), nullptr, 0);
                 ASSERT_TRUE(rc == Status::WARN_ALREADY_EXISTS ||
-                            rc == Status::OK || rc == Status::ERR_CC);
+                            rc == Status::OK || rc == Status::ERR_CC) << "rc:" << rc;
                 if (rc == Status::WARN_ALREADY_EXISTS) {
                     abort(t);
                     ++ct_abort;
