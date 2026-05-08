@@ -77,8 +77,8 @@ TEST_F(read_only_reverse_scan_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
-TEST_F(read_only_reverse_scan_test, bad_parameters) { // NOLINT
-    // currently reverse scan must be called with max_size == 1 and r_end == INF
+TEST_F(read_only_reverse_scan_test, DISABLED_bad_parameters) { // NOLINT
+    // supported now
     Storage st{};
     ASSERT_EQ(create_storage("", st), Status::OK);
     Token s{};
