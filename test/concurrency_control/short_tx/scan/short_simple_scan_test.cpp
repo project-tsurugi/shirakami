@@ -53,6 +53,7 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, end,
                                     scan_endpoint::EXCLUSIVE, hd));
+    while (next(s, hd) == Status::OK) {}
     std::size_t ssize{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, ssize));
     ASSERT_EQ(ssize, 1);
@@ -97,6 +98,7 @@ TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, b, scan_endpoint::INCLUSIVE, e,
                                     scan_endpoint::EXCLUSIVE, hd));
+    while (next(s, hd) == Status::OK) {}
     std::size_t ssize{};
     ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, ssize));
     ASSERT_EQ(ssize, 1);
