@@ -320,6 +320,10 @@ static Status open_scan_body(
     std::size_t head_skip_rec_n{0U}; // TODO: deprecated
     while ((rc = check_not_found(ti, storage, value)) != Status::OK) { // absent check
         head_skip_rec_n++;
+        if (max_size != 0 && head_skip_rec_n >= max_size) {
+            rc = Status::WARN_NOT_FOUND;
+            break;
+        }
         yakushima::status yrc{};
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
             yrc = yakushima::iscan_next(ycontext, value, occ_cb);
@@ -328,6 +332,7 @@ static Status open_scan_body(
         }
         if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS) {
             rc = Status::ERR_CC;
+            break;
         }
         if (yrc == yakushima::status::OK_SCAN_END) {
             rc = Status::WARN_NOT_FOUND;
