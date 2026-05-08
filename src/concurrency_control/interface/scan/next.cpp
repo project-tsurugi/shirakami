@@ -33,20 +33,38 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     // valid handle
 
     // increment cursor
+    auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
+        auto rc = ti->get_node_set().emplace_back({nvb, nvp});
+        return (rc == Status::ERR_CC);
+    };
     for (;;) {
         auto& scan_index = sc->get_scan_index_ref();
         ++scan_index;
 
-        auto& scan_buf = sc->get_vec();
         // check range of cursor
-        if (scan_buf.size() <= scan_index) {
-            scan_index = scan_buf.size(); // stop at scan_buf.size
+        if (sc->get_max_size() <= scan_index) {
             return Status::WARN_SCAN_LIMIT;
         }
 
+        yakushima::status yrc{};
+        void* value{};
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            yrc = yakushima::iscan_next(sc->get_ycontext_ref(), value, occ_cb);
+        } else {
+            yrc = yakushima::iscan_next(sc->get_ycontext_ref(), value);
+        }
+
         // check target record
-        auto itr = scan_buf.begin() + scan_index; // NOLINT
-        Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS) {
+            sc->set_error(Status::ERR_CC);
+            break;
+        }
+        if (yrc == yakushima::status::OK_SCAN_END) {
+            sc->set_max_size(scan_index);
+            return Status::WARN_SCAN_LIMIT;
+        }
+        Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
+        sc->get_rec_ptr_ref() = rec_ptr;
 
         write_set_obj* inws{};
         if (ti->get_tx_type() !=
@@ -64,6 +82,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         }
         // not in local write set
 
+        // the code below is equal to open_scan.cpp check_not_found() ???
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // normal page

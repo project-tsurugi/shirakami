@@ -17,27 +17,48 @@ class scan_handler;
 
 class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
+    scan_cache_obj() = default;
+    scan_cache_obj(const scan_cache_obj&) = delete;
+    scan_cache_obj(scan_cache_obj&&) = delete;
+    scan_cache_obj& operator=(const scan_cache_obj&) = delete;
+    scan_cache_obj& operator=(scan_cache_obj&&) = delete;
+
+    ~scan_cache_obj() {
+        if (ycontext_) { yakushima::iscan_close(ycontext_); }
+    }
+
     // getter
     [[nodiscard]] Storage get_storage() const { return storage_; }
-    auto& get_vec() { return vec_; }
+    [[nodiscard]] Status get_error() const { return error_; }
     [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
     std::size_t& get_scan_index_ref() { return scan_index_; }
+    [[nodiscard]] std::size_t get_max_size() const { return max_size_; }
+    yakushima::iscan_context*& get_ycontext_ref() { return ycontext_; }
+    Record*& get_rec_ptr_ref() { return rec_ptr_; }
     [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
     [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
+    void set_error(Status error) { error_ = error; }
+    void set_max_size(std::size_t max_size) { max_size_ = max_size; }
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
     void set_parent(scan_handler* parent) { parent_ = parent; }
 
 private:
     Storage storage_{};
-    std::vector<std::tuple<const Record*,
-                           yakushima::node_version64_body,
-                           yakushima::node_version64*>> vec_{};
+    yakushima::iscan_context* ycontext_{nullptr};
+    Record* rec_ptr_{};
     std::size_t scan_index_{0U};
+    std::size_t max_size_{0U}; // deprecated
+
+    /**
+     * @brief remember error occurred in next() until read_from_scan() call
+     * @details to emulate when vector-based scan returns an error.
+     */
+    Status error_{Status::OK};
 
     /**
      * @brief range of right endpoint for ltx
