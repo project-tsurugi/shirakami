@@ -149,6 +149,7 @@ TEST_F(short_delete_short_search,             // NOLINT
                                     scan_endpoint::INCLUSIVE, hd));
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(Status::OK, next(s, hd));
     auto* ti = static_cast<session*>(s);
     // node must be 1
     ASSERT_EQ(ti->get_node_set().size(), 1);
