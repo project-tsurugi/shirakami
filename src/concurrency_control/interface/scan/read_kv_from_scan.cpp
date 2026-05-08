@@ -49,14 +49,10 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         return Status::WARN_INVALID_HANDLE;
     }
 
-    auto& scan_buf = sc->get_vec();
     auto scan_index = sc->get_scan_index();
-    if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
-    auto itr = scan_buf.begin() + scan_index; // NOLINT
-    yakushima::node_version64_body nv = std::get<1>(*itr);
-    yakushima::node_version64* nv_ptr = std::get<2>(*itr);
+    if (sc->get_max_size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
 
-    Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    Record* rec_ptr = sc->get_rec_ptr_ref();
 
     // log read range info if ltx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
@@ -111,7 +107,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tidb});
 
         // create node set info, maybe phantom (Status::ERR_CC)
-        auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
+        auto rc = sc->get_error();
         if (rc == Status::ERR_CC) {
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
             ti->get_result_info().set_storage_name(sc->get_storage());

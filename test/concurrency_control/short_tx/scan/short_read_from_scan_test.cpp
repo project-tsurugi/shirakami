@@ -80,7 +80,7 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
     ASSERT_EQ(memcmp(sb.data(), v1.data(), v1.size()), 0);
     ASSERT_EQ(Status::OK, next(s, handle));
     ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
-    ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0);
+    ASSERT_EQ(memcmp(sb.data(), k2.data(), k2.size()), 0) << "\"" << sb << "\"";
     ASSERT_EQ(Status::OK, read_value_from_scan(s, handle, sb));
     ASSERT_EQ(memcmp(sb.data(), v2.data(), v2.size()), 0);
     ASSERT_EQ(Status::OK, next(s, handle));
@@ -147,14 +147,14 @@ TEST_F(simple_scan, reach_limit) { // NOLINT
         ScanHandle handle{};
         ASSERT_OK(open_scan(s, st, {}, scan_endpoint::INF, {}, scan_endpoint::INF, handle));
         std::uint64_t len;
-        ASSERT_OK(scannable_total_index_size(s, handle, len));
-        ASSERT_EQ(len, i);
         while (true) {
             auto rc = next(s, handle);
             if (rc == Status::OK) { continue; } // ignore records
             ASSERT_EQ(rc, Status::WARN_SCAN_LIMIT);
             break;
         }
+        ASSERT_OK(scannable_total_index_size(s, handle, len));
+        ASSERT_EQ(len, i);
         std::string sb{};
         ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_key_from_scan(s, handle, sb));
         ASSERT_EQ(Status::WARN_SCAN_LIMIT, read_value_from_scan(s, handle, sb));

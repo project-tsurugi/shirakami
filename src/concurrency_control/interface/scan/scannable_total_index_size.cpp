@@ -33,7 +33,7 @@ static Status scannable_total_index_size_body(Token const token, ScanHandle cons
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = sc->get_vec().size();
+    size = sc->get_max_size();
     return Status::OK;
 }
 
