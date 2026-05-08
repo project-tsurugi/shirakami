@@ -296,7 +296,7 @@ static Status open_scan_body(
 
     if (rc == Status::OK) {
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, true, ycontext, value, occ_cb);
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, value, occ_cb);
         } else {
             rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, value, nullptr);
         }
