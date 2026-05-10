@@ -69,11 +69,13 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
         for (;;) {
             std::string buf{};
             rc = read_key_from_scan(t, shd, buf);
-            if (rc == Status::OK) {
-                ++count;
-                if (count == final_rec_num) {
-                    ret = Status::WARN_SCAN_LIMIT;
-                    return;
+            if (rc == Status::OK || rc == Status::WARN_CONCURRENT_INSERT) {
+                if (rc == Status::OK) {
+                    ++count;
+                    if (count == final_rec_num) {
+                        ret = Status::WARN_SCAN_LIMIT;
+                        return;
+                    }
                 }
                 rc = next(t, shd);
                 if (rc == Status::WARN_SCAN_LIMIT) { break; }
