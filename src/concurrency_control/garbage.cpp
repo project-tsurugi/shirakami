@@ -398,7 +398,12 @@ static inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_in
             wp::page_set_meta* psm{};
             auto rc = wp::find_page_set_meta(st, psm);
             if (rc != Status::OK) {
-                LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error, storage: " << st;
+                if (storage::exist_storage(st) == Status::OK) {
+                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error, Storage " << st
+                                          << " exists, but cannot get page_set_meta of it";
+                } else {
+                    VLOG(log_debug) << log_location_prefix << "Storage " << st << " is not found";
+                }
                 continue;
             }
             storage_stats* ssp = psm->get_storage_stats_ptr();
