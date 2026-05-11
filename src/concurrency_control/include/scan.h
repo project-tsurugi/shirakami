@@ -57,17 +57,15 @@ private:
 class scan_handler {
 public:
     void clear() {
-        // for strand
-        std::lock_guard lk{mtx_allocated_};
-        for (auto it = allocated_.begin(); it != allocated_.end(); ) {
-            it = allocated_.erase(it);
+        std::lock_guard lk{mtx_allocated_}; // for strand
+        for (auto itr = allocated_.begin(); itr != allocated_.end(); ) {
+            itr = allocated_.erase(itr);
         }
     }
 
     Status delete_scan_cache(scan_cache_obj* sc) {
         {
-            // for strand
-            std::lock_guard lk{mtx_allocated_};
+            std::lock_guard lk{mtx_allocated_}; // for strand
             auto itr = allocated_.find(sc);
             if (itr == allocated_.end()) {
                 return Status::WARN_INVALID_HANDLE;
