@@ -218,10 +218,10 @@ static Status wp_verify(Storage const st, epoch::epoch_t const commit_epoch) {
     wp::wp_meta* wm{};
     auto rc{find_wp_meta(st, wm)};
     if (rc != Status::OK) {
-        LOG_FIRST_N(ERROR, 1)
-                << log_location_prefix
-                << "unreachable path. It strongly suspect that DML and DDL "
-                   "are mixed.";
+        LOG(ERROR) << log_location_prefix
+                   << "unreachable path. It strongly suspect that DML and DDL "
+                      "are mixed."
+                   << " rc:" << rc;
     }
     auto wps{wm->get_wped()};
     auto find_min_ep{wp::wp_meta::find_min_ep(wps)};

@@ -346,8 +346,11 @@ static inline void register_wp_result_and_remove_wps(
             // check the ptr was not changed
             (ret == Status::OK &&
              elem.second != target_psm_ptr->get_wp_meta_ptr())) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                  << "Error. Suspected mix of DML and DDL";
+            LOG(ERROR) << log_location_prefix
+                       << "Error. Suspected mix of DML and DDL"
+                       << " ret:" << ret
+                       << " elem.second:" << elem.second
+                       << " target_psm_ptr->get_wp_meta_ptr():" << target_psm_ptr->get_wp_meta_ptr();
             continue;
         }
 
