@@ -83,8 +83,11 @@ void update_wp_at_commit(session* const ti) {
             // check the ptr was not changed
             (ret == Status::OK &&
              itr->second != target_psm_ptr->get_wp_meta_ptr())) {
-            LOG_FIRST_N(ERROR, 1) << log_location_prefix
-                                  << "Error. Suspected mix of DML and DDL";
+            LOG(ERROR) << log_location_prefix
+                       << "Error. Suspected mix of DML and DDL"
+                       << " ret:" << ret
+                       << " itr->second:" << itr->second
+                       << " target_psm_ptr->get_wp_meta_ptr():" << target_psm_ptr->get_wp_meta_ptr();
             ++itr;
             continue;
         }
