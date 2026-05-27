@@ -60,7 +60,7 @@ static void for_output_config(const database_options& options) {
                  "The number of threads which process about index recovery from datastore. "
                  "Default is 0 (sequential).";
     // about index_restore_threads (dev config option)
-    VLOG(log_debug) << log_location_prefix_config << "get_iterator_based_scan: "
+    VLOG(log_debug) << log_location_prefix_config << "iterator_based_scan: "
                     << std::boolalpha << options.get_iterator_based_scan() << ", "
                        "Make scan operations iterator-based. "
                        "Default is false (vector-based).";
@@ -245,6 +245,7 @@ static Status init_body(const database_options& options, [[maybe_unused]] void* 
 
     session::set_envflags();
     ongoing_tx::set_optflags();
+    set_scan_mode_iterator_based(options.get_iterator_based_scan());
 
     set_initialized(true); // about init command
     return Status::OK;

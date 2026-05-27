@@ -126,4 +126,16 @@ private:
     std::mutex mtx_allocated_;
 };
 
+// mode flag
+
+inline bool scan_mode_iterator_based_{false};
+
+static inline bool get_scan_mode_iterator_based() {
+    return scan_mode_iterator_based_;
+}
+
+static inline void set_scan_mode_iterator_based(bool b) {
+    scan_mode_iterator_based_ = b;
+}
+
 } // namespace shirakami
