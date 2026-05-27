@@ -66,6 +66,10 @@ public:
         return index_restore_threads_;
     }
 
+    [[nodiscard]] bool get_iterator_based_scan() const {
+        return iterator_based_scan_;
+    }
+
     void set_open_mode(open_mode om) { open_mode_ = om; }
 
     void set_log_directory_path(std::filesystem::path& pt) {
@@ -88,6 +92,10 @@ public:
 
     void set_index_restore_threads(std::size_t nm) {
         index_restore_threads_ = nm;
+    }
+
+    void set_iterator_based_scan(bool tf) {
+        iterator_based_scan_ = tf;
     }
 
 private:
@@ -131,6 +139,11 @@ private:
     */
     std::size_t waiting_resolver_threads_{2};
     // ==========
+
+    // ==========
+    // about scan mode
+    bool iterator_based_scan_{false};
+    // ==========
 };
 
 inline constexpr std::string_view
@@ -163,7 +176,8 @@ inline std::ostream& operator<<(std::ostream& out, database_options options) {
                << ", recover_max_parallelism_:"
                << options.get_recover_max_parallelism()
                << ", waiting_resolver_threads:"
-               << options.get_waiting_resolver_threads();
+               << options.get_waiting_resolver_threads()
+               << ", iterator_based_scan:" << options.get_iterator_based_scan();
 }
 
 } // namespace shirakami

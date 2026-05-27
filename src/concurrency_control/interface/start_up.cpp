@@ -59,6 +59,11 @@ static void for_output_config(database_options const& options) {
               << options.get_index_restore_threads() << ", "
                  "The number of threads which process about index recovery from datastore. "
                  "Default is 0 (sequential).";
+    // about index_restore_threads (dev config option)
+    VLOG(log_debug) << log_location_prefix_config << "get_iterator_based_scan: "
+                    << std::boolalpha << options.get_iterator_based_scan() << ", "
+                       "Make scan operations iterator-based. "
+                       "Default is false (vector-based).";
 }
 
 #if defined(PWAL)
