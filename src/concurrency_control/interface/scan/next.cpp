@@ -95,11 +95,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             }
         } else if (tid.get_latest()) {
             // inserting page
-            // check read own inserting
-            if (inws != nullptr) {
-                if (inws->get_op() == OP_TYPE::INSERT) { break; }
-                // when UPSERT ???
-            }
+            // read own inserting check is already done
 
             // short tx should read inserting page
             if (ti->get_tx_type() ==
