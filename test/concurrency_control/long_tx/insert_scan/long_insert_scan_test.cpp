@@ -68,10 +68,60 @@ TEST_F(long_insert_scan_test,  // NOLINT
                                     scan_endpoint::INF, hd));
     std::string buf{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, buf));
+    ASSERT_EQ(buf, "");
     ASSERT_EQ(Status::OK, commit(s)); // NOLINT
 
     // cleanup
     ASSERT_EQ(Status::OK, leave(s));
+}
+
+TEST_F(long_insert_scan_test, scan_read_own_insert_on_absent) { // NOLINT
+    // test for check_not_found in open_scan/next (with local write set)
+
+    // prepare
+    // storage: { "1": absent, "2": alive, "3": absent }
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s{};
+
+    // stop Record GC
+    std::unique_lock<std::mutex> lk{garbage::get_mtx_cleaner()};
+
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, insert(s, st, "1", ""));
+    ASSERT_EQ(Status::OK, insert(s, st, "2", ""));
+    ASSERT_EQ(Status::OK, insert(s, st, "3", ""));
+    ASSERT_OK(commit(s));
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "1"));
+    ASSERT_EQ(Status::OK, delete_record(s, st, "3"));
+    ASSERT_OK(commit(s));
+    wait_epoch_update();
+
+    // test
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    ltx_begin_wait(s);
+
+    ASSERT_OK(insert(s, st, "1", ""));
+    ASSERT_OK(insert(s, st, "3", ""));
+    ScanHandle hd{};
+    ASSERT_OK(open_scan(s, st, {}, scan_endpoint::INF, {}, scan_endpoint::INF, hd));
+    std::string buf{};
+    ASSERT_OK(read_key_from_scan(s, hd, buf)); // read local write set
+    EXPECT_EQ(buf, "1");
+    ASSERT_OK(next(s, hd));
+    ASSERT_OK(read_key_from_scan(s, hd, buf));
+    EXPECT_EQ(buf, "2");
+    ASSERT_OK(next(s, hd));
+    ASSERT_OK(read_key_from_scan(s, hd, buf)); // read local write set
+    EXPECT_EQ(buf, "3");
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    ASSERT_OK(commit(s));
+
+    // cleanup
+    ASSERT_OK(leave(s));
 }
 
 } // namespace shirakami::testing
