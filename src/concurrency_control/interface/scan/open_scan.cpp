@@ -67,25 +67,8 @@ static Status fin_process(session* const ti, Status const this_result) {
     return this_result;
 }
 
-/**
- * @brief
- *
- * @param ti
- * @param st
- * @param scan_res
- * @param head_skip_rec_n
- * @return Status::OK
- * @return Status::WARN_NOT_FOUND
- */
-static Status check_not_found(
-        session* ti, Storage st,
-        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
-        std::size_t& head_skip_rec_n) {
-    head_skip_rec_n = 0;
-    bool once_not_skip{false};
-    for (auto& elem : scan_res) {
-        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
-        // by inline optimization
+static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
+    { // indent is left unchanged to keep the diff small. TODO: cleanup later
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // normal page.
@@ -171,6 +154,32 @@ static Status check_not_found(
                     }
                 }
             }
+        }
+    }
+    return Status::INTERNAL_WARN_NOT_FOUND;
+}
+
+/**
+ * @brief
+ *
+ * @param ti
+ * @param st
+ * @param scan_res
+ * @param head_skip_rec_n
+ * @return Status::OK
+ * @return Status::WARN_NOT_FOUND
+ */
+static Status check_not_found(
+        session* ti, Storage st,
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+        std::size_t& head_skip_rec_n) {
+    head_skip_rec_n = 0;
+    bool once_not_skip{false};
+    for (auto& elem : scan_res) {
+        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
+        // by inline optimization
+        if (auto rc = check_not_found(ti, st, rec_ptr); rc != Status::INTERNAL_WARN_NOT_FOUND) {
+            return rc;
         }
         if (!once_not_skip) { ++head_skip_rec_n; }
     }
