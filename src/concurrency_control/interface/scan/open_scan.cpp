@@ -330,7 +330,7 @@ static Status open_scan_body(
         } else {
             yrc = yakushima::iscan_next(ycontext, value);
         }
-        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS) {
+        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
             rc = Status::ERR_CC;
             break;
         }

@@ -143,7 +143,7 @@ iscan_open(Storage st, std::string_view const l_key, scan_endpoint const l_end,
     }
     if (rc == yakushima::status::OK) { return Status::OK; }
     if (rc == yakushima::status::OK_SCAN_END) { return Status::WARN_NOT_FOUND; }
-    if (rc == yakushima::status::WARN_CONCURRENT_OPERATIONS) { return Status::ERR_CC; }
+    if (rc == yakushima::status::WARN_CONCURRENT_OPERATIONS || rc == yakushima::status::WARN_ABORTED_BY_USER) { return Status::ERR_CC; }
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima iscan_open error " << rc;
     return Status::ERR_FATAL;
 }

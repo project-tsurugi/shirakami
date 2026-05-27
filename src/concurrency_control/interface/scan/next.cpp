@@ -55,7 +55,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         }
 
         // check target record
-        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS) {
+        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
             sc->set_error(Status::ERR_CC);
             break;
         }
