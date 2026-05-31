@@ -245,6 +245,7 @@ static Status init_body(const database_options& options, [[maybe_unused]] void* 
 
     session::set_envflags();
     ongoing_tx::set_optflags();
+    set_scan_mode_iterator_based(options.get_iterator_based_scan());
 
     set_initialized(true); // about init command
     return Status::OK;

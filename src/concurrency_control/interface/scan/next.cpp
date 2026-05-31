@@ -19,6 +19,8 @@
 
 namespace shirakami {
 
+static Status next_check_not_found(session*, Storage, Record*);
+
 static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_cache_obj*>(handle);
@@ -33,6 +35,48 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     // valid handle
 
     // increment cursor
+    Storage st = sc->get_storage();
+    for (;;) {
+        auto& scan_index = sc->get_scan_index_ref();
+        ++scan_index;
+
+        auto& scan_buf = sc->get_vec();
+        // check range of cursor
+        if (scan_buf.size() <= scan_index) {
+            scan_index = scan_buf.size(); // stop at scan_buf.size
+            return Status::WARN_SCAN_LIMIT;
+        }
+
+        // check target record
+        auto itr = scan_buf.begin() + scan_index; // NOLINT
+        Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+
+        auto rc = next_check_not_found(ti, st, rec_ptr);
+        if (rc == Status::OK) { break; }
+        if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
+        return rc;
+    }
+
+    // reset cache in cursor
+    //ti->get_scan_handle().get_ci(handle).reset();
+    return Status::OK;
+}
+
+static Status next_body_iscan(Token const token, ScanHandle const handle) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    auto* sc = static_cast<scan_context*>(handle);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+
+    /**
+     * Check whether the handle is valid.
+     */
+    if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
+    }
+    // valid handle
+
+    // increment cursor
+    Storage st = sc->get_storage();
     auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
         auto rc = ti->get_node_set().emplace_back({nvb, nvp});
         return (rc == Status::ERR_CC);
@@ -66,6 +110,19 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
         sc->get_rec_ptr_ref() = rec_ptr;
 
+        auto rc = next_check_not_found(ti, st, rec_ptr);
+        if (rc == Status::OK) { break; }
+        if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
+        return rc;
+    }
+
+    // reset cache in cursor
+    //ti->get_scan_handle().get_ci(handle).reset();
+    return Status::OK;
+}
+
+static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
+    {
         write_set_obj* inws{};
         if (ti->get_tx_type() !=
             transaction_options::transaction_type::READ_ONLY) {
@@ -76,8 +133,8 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                  * If it exists and it is not delete operation, read from scan api
                  * call should be able to read the record.
                  */
-                if (inws->get_op() == OP_TYPE::DELETE) { continue; }
-                break;
+                if (inws->get_op() == OP_TYPE::DELETE) { return Status::INTERNAL_WARN_NOT_FOUND; }
+                return Status::OK;
             }
         }
         // not in local write set
@@ -88,13 +145,13 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             // normal page
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
-                break;
+                return Status::OK;
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
                 ti->get_tx_type() ==
                         transaction_options::transaction_type::READ_ONLY) {
-                if (tid.get_epoch() < ti->get_valid_epoch()) { break; }
+                if (tid.get_epoch() < ti->get_valid_epoch()) { return Status::OK; }
                 version* ver = rec_ptr->get_latest();
                 for (;;) {
                     ver = ver->get_next();
@@ -105,7 +162,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 }
                 if (ver != nullptr) {
                     // there is a readable rec
-                    break;
+                    return Status::OK;
                 }
             } else {
                 LOG_FIRST_N(ERROR, 1)
@@ -119,7 +176,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
             // short tx should read inserting page
             if (ti->get_tx_type() ==
                 transaction_options::transaction_type::SHORT) {
-                break;
+                return Status::OK;
             }
             // rtx, ltx may read middle of version list
             if (tid.get_epoch() != 0) {
@@ -137,11 +194,11 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                     }
                     if (ver != nullptr) {
                         // there is a readable rec
-                        break;
+                        return Status::OK;
                     }
                 } else {
                     // it can read latest version
-                    break;
+                    return Status::OK;
                 }
             }
         } else {
@@ -151,7 +208,7 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                 /**
                  * short mode must read deleted record and verify, so add read set
                  */
-                ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tid});
+                ti->push_to_read_set_for_stx({st, rec_ptr, tid});
             }
             if (ti->get_tx_type() ==
                         transaction_options::transaction_type::LONG ||
@@ -170,16 +227,13 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
                     }
                     if (ver != nullptr) {
                         // there is a readable rec
-                        break;
+                        return Status::OK;
                     }
                 }
             }
         }
+        return Status::INTERNAL_WARN_NOT_FOUND;
     }
-
-    // reset cache in cursor
-    //ti->get_scan_handle().get_ci(handle).reset();
-    return Status::OK;
 }
 
 /**
@@ -227,7 +281,11 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
         if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
-        ret = next_body(token, handle);
+        if (get_scan_mode_iterator_based()) {
+            ret = next_body_iscan(token, handle);
+        } else {
+            ret = next_body(token, handle);
+        }
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
             ret == Status::WARN_SCAN_LIMIT) {
             // register right end point info

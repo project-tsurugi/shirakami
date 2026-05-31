@@ -170,11 +170,27 @@ static Status check_not_found(session* ti, Storage st, void* value) {
     return Status::WARN_NOT_FOUND;
 }
 
-static Status open_scan_body(
+static Status check_not_found(
+        session* ti, Storage st,
+        std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
+        std::size_t& head_skip_rec_n) {
+    head_skip_rec_n = 0;
+    bool once_not_skip{false};
+    for (auto& elem : scan_res) {
+        auto rc = check_not_found(ti, st, std::get<1>(elem)); // NOLINT
+        if (rc != Status::WARN_NOT_FOUND) {
+            return rc;
+        }
+        if (!once_not_skip) { ++head_skip_rec_n; }
+    }
+    return Status::WARN_NOT_FOUND;
+}
+
+static Status open_scan_precheck(
         Token const token, Storage storage, // NOLINT
         const std::string_view l_key, const scan_endpoint l_end,
         const std::string_view r_key, const scan_endpoint r_end,
-        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+        wp::wp_meta*& wp_meta_ptr) {
     // check constraint: key
     auto ret = check_constraint_key_length(l_key);
     if (ret != Status::OK) { return ret; }
@@ -210,7 +226,6 @@ static Status open_scan_body(
     }
 
     // check storage existence
-    wp::wp_meta* wp_meta_ptr{};
     if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
@@ -275,6 +290,22 @@ static Status open_scan_body(
         return Status::ERR_FATAL;
     }
 
+    return Status::OK;
+}
+
+static Status open_scan_body(
+        Token const token, Storage storage, // NOLINT
+        const std::string_view l_key, const scan_endpoint l_end,
+        const std::string_view r_key, const scan_endpoint r_end,
+        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+    wp::wp_meta* wp_meta_ptr{};
+
+    auto ret = open_scan_precheck(token, storage, l_key, l_end, r_key, r_end, wp_meta_ptr);
+    if (ret != Status::OK) { return ret; }
+
+    // take thread info
+    auto* ti = static_cast<session*>(token);
+
     // for no hit
     auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, l_end, r_key,
                                            r_end]() {
@@ -285,6 +316,7 @@ static Status open_scan_body(
     };
 
     // scan for index
+if (get_scan_mode_iterator_based()) {
     yakushima::iscan_context* ycontext{nullptr};
     void* value{nullptr};
     auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
@@ -368,7 +400,7 @@ static Status open_scan_body(
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().create_scan_cache();
+    auto* sc = ti->get_scan_handle().create_scan_context();
     handle = sc;
 
     // increment for head skipped records
@@ -383,6 +415,120 @@ static Status open_scan_body(
     // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
     sc->set_r_key(r_key);
     sc->set_r_end(r_end);
+} else {
+    std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
+    constexpr std::size_t index_rec_ptr{1};
+    std::vector<std::pair<yakushima::node_version64_body,
+                          yakushima::node_version64*>>
+            nvec;
+    constexpr std::size_t index_nvec_body{0};
+    constexpr std::size_t index_nvec_ptr{1};
+
+    auto rc = check_empty_scan_range(l_key, l_end, r_key, r_end);
+
+    if (rc == Status::OK) {
+        rc = scan(storage, l_key, l_end, r_key, r_end, max_size, scan_res, &nvec, right_to_left);
+    }
+    if (rc != Status::OK) {
+        update_local_read_range_if_ltx();
+        return rc;
+    }
+    // not empty of targeting records
+
+    std::size_t head_skip_rec_n{};
+    /**
+     * skip leading unreadable records.
+     */
+    rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
+    if (rc != Status::OK) {
+        /**
+         * The fact must be guaranteed by isolation. So it can get node version
+         * and it must check about phantom at commit phase.
+         */
+        {
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                for (auto&& elem : nvec) {
+                    auto rc_ns = ti->get_node_set().emplace_back(elem);
+                    if (rc_ns == Status::ERR_CC) {
+                        short_tx::abort(ti);
+                        std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+                        ti->get_result_info().set_storage_name(storage);
+                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                        return Status::ERR_CC;
+                    }
+                }
+            }
+        }
+        update_local_read_range_if_ltx();
+        return fin_process(ti, rc);
+    }
+
+    /**
+     * You must ensure that new elements are not interrupted in the range at
+     * the node that did not retrieve the element but scanned it when masstree
+     * scanned it.
+     */
+    std::size_t nvec_delta{0};
+    if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+        if (scan_res.size() < nvec.size()) {
+            auto add_ns = [&ti, &nvec, storage](std::size_t n) {
+                for (std::size_t i = 0; i < n; ++i) {
+                    auto rc = ti->get_node_set().emplace_back(nvec.at(i));
+                    if (rc == Status::ERR_CC) {
+                        short_tx::abort(ti);
+                        std::unique_lock<std::mutex> lk{
+                                ti->get_mtx_result_info()};
+                        ti->get_result_info().set_storage_name(storage);
+                        ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                        return Status::ERR_CC;
+                    }
+                }
+                return Status::OK;
+            };
+            if (scan_res.size() + 1 == nvec.size()) {
+                nvec_delta = 1;
+                rc = add_ns(1);
+                if (rc == Status::ERR_CC) { return rc; }
+
+
+            } else if (scan_res.size() + 2 == nvec.size()) {
+                nvec_delta = 2;
+                rc = add_ns(2);
+                if (rc == Status::ERR_CC) { return rc; }
+            }
+        }
+    }
+
+    // for hit, register left end point info as already read
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
+    }
+
+    // Cache a pointer to record.
+    auto* sc = ti->get_scan_handle().create_scan_cache();
+    if (sc == nullptr) {
+        return Status::WARN_MAX_OPEN_SCAN;
+    }
+    handle = sc;
+
+    sc->set_storage(storage);
+    auto& vec = sc->get_vec();
+    vec.reserve(scan_res.size());
+    for (std::size_t i = 0; i < scan_res.size(); ++i) {
+        vec.emplace_back(reinterpret_cast<Record*>(std::get<index_rec_ptr>(scan_res.at(i))), // NOLINT
+                         // by inline optimization
+                         std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
+                         std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+    }
+
+    // increment for head skipped records
+    auto& scan_index = sc->get_scan_index_ref();
+    scan_index += head_skip_rec_n;
+
+    sc->set_r_key(r_key);
+    sc->set_r_end(r_end);
+}
 
     return fin_process(ti, Status::OK);
 }

@@ -17,13 +17,52 @@ class scan_handler;
 
 class alignas(CACHE_LINE_SIZE) scan_cache_obj {
 public:
-    scan_cache_obj() = default;
-    scan_cache_obj(const scan_cache_obj&) = delete;
-    scan_cache_obj(scan_cache_obj&&) = delete;
-    scan_cache_obj& operator=(const scan_cache_obj&) = delete;
-    scan_cache_obj& operator=(scan_cache_obj&&) = delete;
+    // getter
+    [[nodiscard]] Storage get_storage() const { return storage_; }
+    auto& get_vec() { return vec_; }
+    [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
+    std::size_t& get_scan_index_ref() { return scan_index_; }
+    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
+    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
-    ~scan_cache_obj() {
+    // setter
+    void set_storage(Storage storage) { storage_ = storage; }
+    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
+    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_parent(scan_handler* parent) { parent_ = parent; }
+
+private:
+    Storage storage_{};
+    std::vector<std::tuple<const Record*,
+                           yakushima::node_version64_body,
+                           yakushima::node_version64*>> vec_{};
+    std::size_t scan_index_{0U};
+
+    /**
+     * @brief range of right endpoint for ltx
+     * @details if user read to right endpoint till scan limit, shirakami needs
+     * to know this information to log range info.
+     */
+    std::string r_key_{};
+
+    scan_endpoint r_end_{};
+
+    /**
+     * @brief scan_handler that allocated this
+     */
+    scan_handler* parent_{};
+};
+
+class alignas(CACHE_LINE_SIZE) scan_context {
+public:
+    scan_context() = default;
+    scan_context(const scan_context&) = delete;
+    scan_context(scan_context&&) = delete;
+    scan_context& operator=(const scan_context&) = delete;
+    scan_context& operator=(scan_context&&) = delete;
+
+    ~scan_context() {
         if (ycontext_) { yakushima::iscan_close(ycontext_); }
     }
 
@@ -82,6 +121,9 @@ public:
         for (auto itr = allocated_.begin(); itr != allocated_.end(); ) {
             itr = allocated_.erase(itr);
         }
+        for (auto itr = allocated_i_.begin(); itr != allocated_i_.end(); ) {
+            itr = allocated_i_.erase(itr);
+        }
     }
 
     Status delete_scan_cache(scan_cache_obj* sc) {
@@ -97,11 +139,32 @@ public:
         return Status::OK;
     }
 
+    Status delete_scan_context(scan_context* sc) {
+        {
+            std::lock_guard lk{mtx_allocated_}; // for strand
+            auto itr = allocated_i_.find(sc);
+            if (itr == allocated_i_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+            allocated_i_.erase(itr);
+        }
+
+        return Status::OK;
+    }
+
     scan_cache_obj* create_scan_cache() {
         auto* sc = new scan_cache_obj(); // NOLINT
         sc->set_parent(this);
         std::lock_guard lk{mtx_allocated_};
         allocated_.insert(std::unique_ptr<scan_cache_obj>{sc});
+        return sc;
+    }
+
+    scan_context* create_scan_context() {
+        auto* sc = new scan_context(); // NOLINT
+        sc->set_parent(this);
+        std::lock_guard lk{mtx_allocated_};
+        allocated_i_.insert(std::unique_ptr<scan_context>{sc});
         return sc;
     }
 
@@ -124,6 +187,21 @@ public:
         return Status::OK;
     }
 
+    Status check_valid_scan_handle(scan_context* sc) {
+        if constexpr (precise_handle_check) {
+            // for strand
+            std::lock_guard lk{mtx_allocated_};
+            if (allocated_i_.find(sc) == allocated_i_.end()) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        } else {
+            if (sc == nullptr || sc->get_parent() != this) {
+                return Status::WARN_INVALID_HANDLE;
+            }
+        }
+        return Status::OK;
+    }
+
 private:
 
     template<typename T>
@@ -136,15 +214,27 @@ private:
         bool operator()(UP a, UP b) const { return a.get() < b.get(); }
     };
 
-    /**
-     * @brief set of scan cache objects allocated from this handler
-     */
+    /// @brief set of scan cache objects allocated from this handler (used for old scan (aka. vscan))
     std::set<std::unique_ptr<scan_cache_obj>, less_uniqp_rawp<scan_cache_obj>> allocated_{};
+    /// @brief set of scan context allocated from this handler (used for iscan)
+    std::set<std::unique_ptr<scan_context>, less_uniqp_rawp<scan_context>> allocated_i_{};
 
     /**
      * @brief mutex for allocated set
      */
     std::mutex mtx_allocated_;
 };
+
+// mode flag
+
+inline bool scan_mode_iterator_based_{false};
+
+static inline bool get_scan_mode_iterator_based() {
+    return scan_mode_iterator_based_;
+}
+
+static inline void set_scan_mode_iterator_based(bool b) {
+    scan_mode_iterator_based_ = b;
+}
 
 } // namespace shirakami

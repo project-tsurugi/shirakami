@@ -24,7 +24,8 @@ static Status scannable_total_index_size_body(Token const token, ScanHandle cons
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
-    auto* sc = static_cast<scan_cache_obj*>(handle);
+  if (get_scan_mode_iterator_based()) {
+    auto* sc = static_cast<scan_context*>(handle);
 
     if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
         /**
@@ -34,6 +35,18 @@ static Status scannable_total_index_size_body(Token const token, ScanHandle cons
     }
 
     size = sc->get_max_size();
+  } else {
+    auto* sc = static_cast<scan_cache_obj*>(handle);
+
+    if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
+        /**
+         * the handle was invalid.
+         */
+        return Status::WARN_INVALID_HANDLE;
+    }
+
+    size = sc->get_vec().size();
+  }
     return Status::OK;
 }
 
