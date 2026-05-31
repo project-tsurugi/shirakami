@@ -150,6 +150,10 @@ TEST_F(short_delete_short_search,             // NOLINT
     std::string vb{};
     ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, vb));
     auto* ti = static_cast<session*>(s);
+    if (get_scan_mode_iterator_based()) {
+        ASSERT_EQ(ti->get_node_set().size(), 0);
+        ASSERT_EQ(Status::OK, next(s, hd));
+    }
     // node must be 1
     ASSERT_EQ(ti->get_node_set().size(), 1);
     yakushima::node_version64_body version = ti->get_node_set().front().first;

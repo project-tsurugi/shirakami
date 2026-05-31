@@ -99,7 +99,9 @@ void full_scan(Token t, Storage st, std::size_t const final_rec_num,
         }
     }
     // at least it can read ("0","0")
-    LOG(FATAL) << rc;
+    // XXX: can be ERR_CC
+    LOG(ERROR) << rc;
+    ret = Status::ERR_CC;
     return;
 }
 

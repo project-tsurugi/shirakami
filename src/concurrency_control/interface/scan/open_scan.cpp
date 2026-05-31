@@ -186,11 +186,11 @@ static Status check_not_found(
     return Status::WARN_NOT_FOUND;
 }
 
-static Status open_scan_body(
+static Status open_scan_precheck(
         Token const token, Storage storage, // NOLINT
         const std::string_view l_key, const scan_endpoint l_end,
         const std::string_view r_key, const scan_endpoint r_end,
-        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+        wp::wp_meta*& wp_meta_ptr) {
     // check constraint: key
     auto ret = check_constraint_key_length(l_key);
     if (ret != Status::OK) { return ret; }
@@ -226,7 +226,6 @@ static Status open_scan_body(
     }
 
     // check storage existence
-    wp::wp_meta* wp_meta_ptr{};
     if (wp::find_wp_meta(storage, wp_meta_ptr) != Status::OK) {
         return Status::WARN_STORAGE_NOT_FOUND;
     }
@@ -290,6 +289,22 @@ static Status open_scan_body(
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
         return Status::ERR_FATAL;
     }
+
+    return Status::OK;
+}
+
+static Status open_scan_body(
+        Token const token, Storage storage, // NOLINT
+        const std::string_view l_key, const scan_endpoint l_end,
+        const std::string_view r_key, const scan_endpoint r_end,
+        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+    wp::wp_meta* wp_meta_ptr{};
+
+    auto ret = open_scan_precheck(token, storage, l_key, l_end, r_key, r_end, wp_meta_ptr);
+    if (ret != Status::OK) { return ret; }
+
+    // take thread info
+    auto* ti = static_cast<session*>(token);
 
     // for no hit
     auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, l_end, r_key,
@@ -416,6 +431,131 @@ static Status open_scan_body(
     return fin_process(ti, Status::OK);
 }
 
+static Status open_scan_body_iscan(
+        Token const token, Storage storage, // NOLINT
+        const std::string_view l_key, const scan_endpoint l_end,
+        const std::string_view r_key, const scan_endpoint r_end,
+        ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+    wp::wp_meta* wp_meta_ptr{};
+
+    auto ret = open_scan_precheck(token, storage, l_key, l_end, r_key, r_end, wp_meta_ptr);
+    if (ret != Status::OK) { return ret; }
+
+    // take thread info
+    auto* ti = static_cast<session*>(token);
+
+    // for no hit
+    auto update_local_read_range_if_ltx = [ti, wp_meta_ptr, l_key, l_end, r_key,
+                                           r_end]() {
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end,
+                                             r_key, r_end);
+        }
+    };
+
+    // scan for index
+    yakushima::iscan_context* ycontext{nullptr};
+    Record* rec_ptr{nullptr};
+    auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
+        return ti->get_node_set().emplace_back({nvb, nvp}) == Status::ERR_CC;
+    };
+
+    auto rc = check_empty_scan_range(l_key, l_end, r_key, r_end);
+    if (rc == Status::OK) {
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext,
+                            reinterpret_cast<void*&>(rec_ptr), occ_cb); // NOLINT
+        } else {
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext,
+                            reinterpret_cast<void*&>(rec_ptr), nullptr); // NOLINT
+        }
+    }
+    if (rc != Status::OK) {
+        if (ycontext) { yakushima::iscan_close(ycontext); }
+        if (rc == Status::ERR_CC) {
+            if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+                short_tx::abort(ti);
+                std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+                ti->get_result_info().set_storage_name(storage);
+                ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                return Status::ERR_CC;
+            }
+        }
+        update_local_read_range_if_ltx();
+        return rc;
+    }
+    // found one entry
+
+    std::size_t head_skip_rec_n{0U};
+    while ((rc = check_not_found(ti, storage, rec_ptr)) != Status::OK) { // absent check
+        head_skip_rec_n++;
+        if (max_size != 0 && head_skip_rec_n >= max_size) {
+            rc = Status::WARN_NOT_FOUND;
+            break;
+        }
+        yakushima::status yrc{};
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb); // NOLINT
+        } else {
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr)); // NOLINT
+        }
+        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
+            rc = Status::ERR_CC;
+            break;
+        }
+        if (yrc == yakushima::status::OK_SCAN_END) {
+            rc = Status::WARN_NOT_FOUND;
+            break;
+        }
+    }
+    if (rc != Status::OK) {
+        if (ycontext) { yakushima::iscan_close(ycontext); }
+        /**
+         * The fact must be guaranteed by isolation. So it can get node version
+         * and it must check about phantom at commit phase.
+         */
+        {
+            if (ti->get_tx_type() ==
+                transaction_options::transaction_type::SHORT) {
+                if (rc == Status::ERR_CC) {
+                    short_tx::abort(ti);
+                    std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+                    ti->get_result_info().set_storage_name(storage);
+                    ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+                    return Status::ERR_CC;
+                }
+            }
+        }
+        update_local_read_range_if_ltx();
+        return fin_process(ti, rc);
+    }
+
+    // for hit, register left end point info as already read
+    // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
+    }
+
+    // Cache a pointer to record.
+    auto* sc = ti->get_scan_handle().create_scan_context();
+    handle = sc;
+
+    // increment for head skipped records
+    auto& scan_index = sc->get_scan_index_ref();
+    scan_index += head_skip_rec_n;
+
+    sc->set_storage(storage);
+    sc->set_max_size(max_size != 0 ? max_size : SIZE_MAX);
+    sc->get_rec_ptr_ref() = rec_ptr; // NOLINT
+    sc->get_ycontext_ref() = ycontext;
+
+    // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
+    sc->set_r_key(r_key);
+    sc->set_r_end(r_end);
+
+    return fin_process(ti, Status::OK);
+}
+
 Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
@@ -430,8 +570,11 @@ Status open_scan(Token const token, Storage storage, // NOLINT
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
         if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
-        ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle,
-                             max_size, right_to_left);
+        if (get_scan_mode_iterator_based()) {
+            ret = open_scan_body_iscan(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left);
+        } else {
+            ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left);
+        }
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "open_scan, Status: " << ret << ", handle: " << handle;

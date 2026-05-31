@@ -36,6 +36,7 @@ private:
 };
 
 TEST_F(open_scan_test, max_size_test) { // NOLINT
+    if (get_scan_mode_iterator_based()) { GTEST_SKIP() << "this test is for vscan"; }
     Storage storage{};
     create_storage("", storage);
     std::string k1("k1"); // NOLINT

@@ -116,6 +116,41 @@ scan(Storage st, std::string_view const l_key, scan_endpoint const l_end,
     return Status::ERR_FATAL;
 }
 
+[[maybe_unused]] static inline Status
+iscan_open(Storage st, std::string_view const l_key, scan_endpoint const l_end,
+     std::string_view const r_key, scan_endpoint const r_end,
+     bool right_to_left, bool early_abort,
+        yakushima::iscan_context*& context, void*& value,
+        const std::function<bool(yakushima::node_version64*, yakushima::node_version64_body)>& bnv_cb) {
+    yakushima::status rc{};
+    if (bnv_cb == nullptr) {
+        rc = yakushima::iscan_open(
+                {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+                l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end),
+                right_to_left, early_abort, context, value);
+    } else {
+        rc = yakushima::iscan_open(
+                {reinterpret_cast<char*>(&st), sizeof(st)}, // NOLINT
+                l_key, parse_scan_endpoint(l_end), r_key, parse_scan_endpoint(r_end),
+                right_to_left, early_abort, context, value, bnv_cb);
+    }
+    if (rc == yakushima::status::OK) { return Status::OK; }
+    if (rc == yakushima::status::WARN_STORAGE_NOT_EXIST) {
+        return Status::WARN_STORAGE_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_NOT_EXIST ||
+        rc == yakushima::status::OK_ROOT_IS_NULL ||
+        rc == yakushima::status::OK_SCAN_END) {
+        return Status::WARN_NOT_FOUND;
+    }
+    if (rc == yakushima::status::WARN_CONCURRENT_OPERATIONS ||
+        rc == yakushima::status::WARN_ABORTED_BY_USER) {
+        return Status::ERR_CC;
+    }
+    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "yakushima iscan_open error " << rc;
+    return Status::ERR_FATAL;
+}
+
 static inline Status remove(yakushima::Token tk, Storage st,
                             std::string_view key) {
     auto rc{yakushima::remove(

@@ -122,9 +122,6 @@ TEST_P(tsurugi_issue242_ok_warn_test, // NOLINT
             ScanHandle shd{};
             ASSERT_OK(open_scan(t, st, "", scan_endpoint::INF, "",
                                 scan_endpoint::INF, shd));
-            std::size_t can_scan_num{0};
-            ASSERT_OK(scannable_total_index_size(t, shd, can_scan_num));
-            ASSERT_EQ(can_scan_num, rec_num);
             std::size_t read_num{0};
             do {
                 std::string buf{};
@@ -132,6 +129,9 @@ TEST_P(tsurugi_issue242_ok_warn_test, // NOLINT
                 ++read_num;
             } while (next(t, shd) == Status::OK);
             ASSERT_EQ(read_num, rec_num);
+            std::size_t can_scan_num{0};
+            ASSERT_OK(scannable_total_index_size(t, shd, can_scan_num));
+            ASSERT_EQ(can_scan_num, rec_num);
         } else {
             // warn case. open scan for non existence storage
             Storage st2 = st + 1;

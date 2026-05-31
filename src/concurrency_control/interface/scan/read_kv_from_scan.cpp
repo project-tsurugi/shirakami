@@ -39,6 +39,24 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
 
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
 
+    Storage st{};
+    Record* rec_ptr{};
+    std::function<Status()> node_check{};
+  if (get_scan_mode_iterator_based()) {
+    auto* sc = static_cast<scan_context*>(handle);
+    auto& sh = ti->get_scan_handle();
+
+    // Check whether the handle is valid.
+    if (sh.check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
+    }
+
+    auto scan_index = sc->get_scan_index();
+    if (sc->get_max_size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+    rec_ptr = sc->get_rec_ptr_ref();
+    node_check = [sc] { return sc->get_error(); };
+    st = sc->get_storage();
+  } else {
     auto* sc = static_cast<scan_cache_obj*>(handle);
     auto& sh = ti->get_scan_handle();
 
@@ -55,13 +73,15 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     auto itr = scan_buf.begin() + scan_index; // NOLINT
     yakushima::node_version64_body nv = std::get<1>(*itr);
     yakushima::node_version64* nv_ptr = std::get<2>(*itr);
-
-    Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+    node_check = [&ti, nv, nv_ptr] { return ti->get_node_set().emplace_back({nv, nv_ptr}); };
+    st = sc->get_storage();
+  }
 
     // log read range info if ltx
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
         wp::wp_meta* wp_meta_ptr{};
-        if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
+        if (wp::find_wp_meta(st, wp_meta_ptr) != Status::OK) {
             // todo special case. interrupt DDL
             return Status::WARN_STORAGE_NOT_FOUND;
         }
@@ -108,13 +128,13 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (rr == Status::WARN_CONCURRENT_UPDATE) { return rr; }
         // note: update can't log effect, but insert / delete log read effect.
         // optimization: set for re-read
-        ti->push_to_read_set_for_stx({sc->get_storage(), rec_ptr, tidb});
+        ti->push_to_read_set_for_stx({st, rec_ptr, tidb});
 
         // create node set info, maybe phantom (Status::ERR_CC)
-        auto rc = ti->get_node_set().emplace_back({nv, nv_ptr});
+        auto rc = node_check();
         if (rc == Status::ERR_CC) {
             std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
-            ti->get_result_info().set_storage_name(sc->get_storage());
+            ti->get_result_info().set_storage_name(st);
             ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
             short_tx::abort(ti);
             return Status::ERR_CC;
@@ -198,7 +218,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
         if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
             std::string key_buf{};
             rec_ptr->get_key(key_buf);
-            ti->insert_to_ltx_storage_read_set(sc->get_storage(), key_buf);
+            ti->insert_to_ltx_storage_read_set(st, key_buf);
         }
         return Status::OK;
     }

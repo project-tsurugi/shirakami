@@ -20,6 +20,7 @@
 namespace shirakami {
 
 static Status next_check_not_found(session*, Storage, Record*);
+static void check_ltx_scan_range_rp_and_log(session*, Storage, std::string_view, scan_endpoint);
 
 static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
@@ -44,12 +45,77 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         // check range of cursor
         if (scan_buf.size() <= scan_index) {
             scan_index = scan_buf.size(); // stop at scan_buf.size
+            if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+                check_ltx_scan_range_rp_and_log(ti, st, sc->get_r_key(), sc->get_r_end());
+            }
             return Status::WARN_SCAN_LIMIT;
         }
 
         // check target record
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
+
+        auto rc = next_check_not_found(ti, st, rec_ptr);
+        if (rc == Status::OK) { break; }
+        if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
+        return rc;
+    }
+
+    // reset cache in cursor
+    //ti->get_scan_handle().get_ci(handle).reset();
+    return Status::OK;
+}
+
+static Status next_body_iscan(Token const token, ScanHandle const handle) { // NOLINT
+    auto* ti = static_cast<session*>(token);
+    auto* sc = static_cast<scan_context*>(handle);
+    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
+
+    /**
+     * Check whether the handle is valid.
+     */
+    if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
+    }
+    // valid handle
+
+    // increment cursor
+    Storage st = sc->get_storage();
+    auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
+        auto rc = ti->get_node_set().emplace_back({nvb, nvp});
+        return (rc == Status::ERR_CC);
+    };
+    for (;;) {
+        auto& scan_index = sc->get_scan_index_ref();
+        ++scan_index;
+
+        // check range of cursor
+        if (sc->get_max_size() <= scan_index) {
+            return Status::WARN_SCAN_LIMIT;
+        }
+
+        yakushima::status yrc{};
+        void* value{};
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            yrc = yakushima::iscan_next(sc->get_ycontext_ref(), value, occ_cb);
+        } else {
+            yrc = yakushima::iscan_next(sc->get_ycontext_ref(), value);
+        }
+
+        // check target record
+        if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
+            sc->set_error(Status::ERR_CC);
+            break;
+        }
+        if (yrc == yakushima::status::OK_SCAN_END) {
+            sc->set_max_size(scan_index);
+            if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+                check_ltx_scan_range_rp_and_log(ti, st, sc->get_r_key(), sc->get_r_end());
+            }
+            return Status::WARN_SCAN_LIMIT;
+        }
+        Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
+        sc->get_rec_ptr_ref() = rec_ptr;
 
         auto rc = next_check_not_found(ti, st, rec_ptr);
         if (rc == Status::OK) { break; }
@@ -179,23 +245,13 @@ static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
 
 /**
  * @pre This is called by only long tx mode
+ * @brief register right end point info
  */
-static void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const handle) { // NOLINT
-    auto* ti = static_cast<session*>(token);
-    auto* sc = static_cast<scan_cache_obj*>(handle);
-    auto& sh = ti->get_scan_handle();
-    /**
-     * Check whether the handle is valid.
-     */
-    if (sh.check_valid_scan_handle(sc) != Status::OK) {
-        return;
-    }
-    // valid handle
-
+static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string_view r_key, scan_endpoint r_end) {
     // log full scan
     // get storage info
     wp::wp_meta* wp_meta_ptr{};
-    if (wp::find_wp_meta(sc->get_storage(), wp_meta_ptr) != Status::OK) {
+    if (wp::find_wp_meta(st, wp_meta_ptr) != Status::OK) {
         // todo special case. interrupt DDL
         return;
     }
@@ -204,11 +260,11 @@ static void check_ltx_scan_range_rp_and_log(Token const token, ScanHandle const 
 
         auto& read_range =
                 std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        if (std::get<2>(read_range) < sc->get_r_key()) {
-            std::get<2>(read_range) = sc->get_r_key();
+        if (std::get<2>(read_range) < r_key) {
+            std::get<2>(read_range) = r_key;
         }
         // conside only inf
-        if (sc->get_r_end() == scan_endpoint::INF) {
+        if (r_end == scan_endpoint::INF) {
             std::get<3>(read_range) = scan_endpoint::INF;
         }
     }
@@ -222,11 +278,10 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
         if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
-        ret = next_body(token, handle);
-        if (ti->get_tx_type() == transaction_options::transaction_type::LONG &&
-            ret == Status::WARN_SCAN_LIMIT) {
-            // register right end point info
-            check_ltx_scan_range_rp_and_log(token, handle);
+        if (get_scan_mode_iterator_based()) {
+            ret = next_body_iscan(token, handle);
+        } else {
+            ret = next_body(token, handle);
         }
     }
     ti->process_before_finish_step();

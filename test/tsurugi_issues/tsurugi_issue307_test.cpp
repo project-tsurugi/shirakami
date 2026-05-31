@@ -121,12 +121,6 @@ TEST_F(tsurugi_issue307_test, simple) { // NOLINT
                 rc != Status::OK) {
                 LOG(FATAL);
             }
-            std::size_t entry_size{};
-            ASSERT_OK(scannable_total_index_size(s, scanh, entry_size));
-            if (entry_size != n && entry_size != n - 1) {
-                // open scan bug
-                LOG(FATAL);
-            }
             int count = 0;
             do {
                 std::string key;
@@ -145,6 +139,12 @@ TEST_F(tsurugi_issue307_test, simple) { // NOLINT
                 if (val != common_val) { LOG(FATAL); }
                 count++;
             } while (next(s, scanh) == Status::OK);
+            std::size_t entry_size{};
+            ASSERT_OK(scannable_total_index_size(s, scanh, entry_size));
+            if (entry_size != n && entry_size != n - 1) {
+                // open scan bug
+                LOG(FATAL);
+            }
             if (auto rc = commit(s); rc != Status::OK) { LOG(FATAL); }
             if (count != n && count != n - 1) {
                 // next bug

@@ -73,11 +73,19 @@ TEST_F(c_next, next_for_two) { // NOLINT
     ScanHandle hd{};
     ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                     scan_endpoint::INF, hd));
-    auto* sc = static_cast<scan_cache_obj*>(hd);
-    auto before_next{sc->get_scan_index()};
-    ASSERT_EQ(Status::OK, next(s, hd));
-    auto after_next{sc->get_scan_index()};
-    ASSERT_NE(before_next, after_next);
+    if (get_scan_mode_iterator_based()) {
+        auto* sc = static_cast<scan_context*>(hd);
+        auto before_next{sc->get_scan_index()};
+        ASSERT_EQ(Status::OK, next(s, hd));
+        auto after_next{sc->get_scan_index()};
+        ASSERT_NE(before_next, after_next);
+    } else {
+        auto* sc = static_cast<scan_cache_obj*>(hd);
+        auto before_next{sc->get_scan_index()};
+        ASSERT_EQ(Status::OK, next(s, hd));
+        auto after_next{sc->get_scan_index()};
+        ASSERT_NE(before_next, after_next);
+    }
     ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
     ASSERT_EQ(Status::OK, leave(s));
 }
