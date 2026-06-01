@@ -74,10 +74,10 @@ static Status fin_process(session* const ti, Status const this_result) {
  * @param st
  * @param value
  * @return Status::OK
- * @return Status::WARN_NOT_FOUND
+ * @return Status::INTERNAL_WARN_NOT_FOUND
  */
 static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
-    {
+    { // indent is left unchanged to keep the diff small. TODO: cleanup later
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // normal page.
@@ -165,7 +165,7 @@ static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
             }
         }
     }
-    return Status::WARN_NOT_FOUND;
+    return Status::INTERNAL_WARN_NOT_FOUND;
 }
 
 static Status check_not_found(
@@ -179,7 +179,7 @@ static Status check_not_found(
         // by inline optimization
 
         auto rc = check_not_found(ti, st, rec_ptr); // NOLINT
-        if (rc != Status::WARN_NOT_FOUND) {
+        if (rc != Status::INTERNAL_WARN_NOT_FOUND) {
             return rc;
         }
         if (!once_not_skip) { ++head_skip_rec_n; }

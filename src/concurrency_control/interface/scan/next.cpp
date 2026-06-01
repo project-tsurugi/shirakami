@@ -122,7 +122,7 @@ static Status next_body_iscan(Token const token, ScanHandle const handle) { // N
 }
 
 static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
-    {
+    { // indent is left unchanged to keep the diff small. TODO: cleanup later
         write_set_obj* inws{};
         if (ti->get_tx_type() !=
             transaction_options::transaction_type::READ_ONLY) {
