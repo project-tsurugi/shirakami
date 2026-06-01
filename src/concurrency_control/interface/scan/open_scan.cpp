@@ -329,9 +329,11 @@ if (get_scan_mode_iterator_based()) {
 
     if (rc == Status::OK) {
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb);
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext,
+                            reinterpret_cast<void*&>(rec_ptr), occ_cb); // NOLINT
         } else {
-            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, reinterpret_cast<void*&>(rec_ptr), nullptr);
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext,
+                            reinterpret_cast<void*&>(rec_ptr), nullptr); // NOLINT
         }
     }
     if (rc != Status::OK) {
@@ -359,9 +361,9 @@ if (get_scan_mode_iterator_based()) {
         }
         yakushima::status yrc{};
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb);
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb); // NOLINT
         } else {
-            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr));
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr)); // NOLINT
         }
         if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
             rc = Status::ERR_CC;
