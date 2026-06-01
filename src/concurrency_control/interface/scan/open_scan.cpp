@@ -76,10 +76,8 @@ static Status fin_process(session* const ti, Status const this_result) {
  * @return Status::OK
  * @return Status::WARN_NOT_FOUND
  */
-static Status check_not_found(session* ti, Storage st, void* value) {
+static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
     {
-        Record* rec_ptr{reinterpret_cast<Record*>(value)}; // NOLINT
-        // by inline optimization
         tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
         if (!tid.get_absent()) {
             // normal page.
@@ -177,7 +175,10 @@ static Status check_not_found(
     head_skip_rec_n = 0;
     bool once_not_skip{false};
     for (auto& elem : scan_res) {
-        auto rc = check_not_found(ti, st, std::get<1>(elem)); // NOLINT
+        Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
+        // by inline optimization
+
+        auto rc = check_not_found(ti, st, rec_ptr); // NOLINT
         if (rc != Status::WARN_NOT_FOUND) {
             return rc;
         }
@@ -318,7 +319,7 @@ static Status open_scan_body(
     // scan for index
 if (get_scan_mode_iterator_based()) {
     yakushima::iscan_context* ycontext{nullptr};
-    void* value{nullptr};
+    Record* rec_ptr{nullptr};
     auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
         auto rc = ti->get_node_set().emplace_back({nvb, nvp});
         return (rc == Status::ERR_CC);
@@ -328,9 +329,9 @@ if (get_scan_mode_iterator_based()) {
 
     if (rc == Status::OK) {
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, value, occ_cb);
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb);
         } else {
-            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, value, nullptr);
+            rc = iscan_open(storage, l_key, l_end, r_key, r_end, right_to_left, false, ycontext, reinterpret_cast<void*&>(rec_ptr), nullptr);
         }
     }
     if (rc != Status::OK) {
@@ -350,7 +351,7 @@ if (get_scan_mode_iterator_based()) {
     // found one entry
 
     std::size_t head_skip_rec_n{0U}; // TODO: deprecated
-    while ((rc = check_not_found(ti, storage, value)) != Status::OK) { // absent check
+    while ((rc = check_not_found(ti, storage, rec_ptr)) != Status::OK) { // absent check
         head_skip_rec_n++;
         if (max_size != 0 && head_skip_rec_n >= max_size) {
             rc = Status::WARN_NOT_FOUND;
@@ -358,9 +359,9 @@ if (get_scan_mode_iterator_based()) {
         }
         yakushima::status yrc{};
         if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
-            yrc = yakushima::iscan_next(ycontext, value, occ_cb);
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr), occ_cb);
         } else {
-            yrc = yakushima::iscan_next(ycontext, value);
+            yrc = yakushima::iscan_next(ycontext, reinterpret_cast<void*&>(rec_ptr));
         }
         if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
             rc = Status::ERR_CC;
@@ -409,7 +410,7 @@ if (get_scan_mode_iterator_based()) {
 
     sc->set_storage(storage);
     sc->set_max_size(max_size != 0 ? max_size : SIZE_MAX);
-    sc->get_rec_ptr_ref() = reinterpret_cast<Record*>(value); // NOLINT
+    sc->get_rec_ptr_ref() = rec_ptr; // NOLINT
     sc->get_ycontext_ref() = ycontext;
 
     // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
