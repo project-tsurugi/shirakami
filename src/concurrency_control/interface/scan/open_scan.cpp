@@ -68,56 +68,18 @@ static Status fin_process(session* const ti, Status const this_result) {
 }
 
 static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
-    { // indent is left unchanged to keep the diff small. TODO: cleanup later
-        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
-        if (!tid.get_absent()) {
-            // normal page.
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
+    tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+    if (!tid.get_absent()) {
+        // normal page.
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            return Status::OK;
+        }
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
+            ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (tid.get_epoch() < ti->get_valid_epoch()) {
+                // latest version check
                 return Status::OK;
             }
-            if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
-                        transaction_options::transaction_type::READ_ONLY) {
-                if (tid.get_epoch() < ti->get_valid_epoch()) {
-                    // latest version check
-                    return Status::OK;
-                }
-                version* ver = rec_ptr->get_latest();
-                for (;;) {
-                    ver = ver->get_next();
-                    if (ver == nullptr) { break; }
-                    if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
-                        if (ver->get_tid().get_absent()) { break; }
-                        return Status::OK;
-                    }
-                }
-            } else {
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << "unreachable path";
-                return Status::ERR_FATAL;
-            }
-        } else if (tid.get_latest()) {
-            // inserting page.
-            // short tx read inserting page.
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
-                return Status::OK;
-            }
-
-            // check read own write
-            write_set_obj* inws = ti->get_write_set().search(rec_ptr);
-            if (inws != nullptr) {
-                if (inws->get_op() == OP_TYPE::INSERT ||
-                    inws->get_op() == OP_TYPE::UPSERT) {
-                    return Status::OK;
-                }
-            }
-
-            /**
-             * first version must be inserting page or deleted page
-             */
             version* ver = rec_ptr->get_latest();
             for (;;) {
                 ver = ver->get_next();
@@ -128,29 +90,57 @@ static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
                 }
             }
         } else {
-            // absent && not latest == deleted
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
-                /**
-                 * short mode must read deleted record and verify, so add read set
-                 */
-                ti->push_to_read_set_for_stx({st, rec_ptr, tid});
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+            return Status::ERR_FATAL;
+        }
+    } else if (tid.get_latest()) {
+        // inserting page.
+        // short tx read inserting page.
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            return Status::OK;
+        }
+
+        // check read own write
+        write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+        if (inws != nullptr) {
+            if (inws->get_op() == OP_TYPE::INSERT ||
+                inws->get_op() == OP_TYPE::UPSERT) {
+                return Status::OK;
             }
-            if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
-                        transaction_options::transaction_type::READ_ONLY) {
-                if (tid.get_epoch() >= ti->get_valid_epoch()) {
-                    // there may be readable rec
-                    version* ver = rec_ptr->get_latest();
-                    for (;;) {
-                        ver = ver->get_next();
-                        if (ver == nullptr) { break; }
-                        if (ver->get_tid().get_epoch() <
-                            ti->get_valid_epoch()) {
-                            if (ver->get_tid().get_absent()) { break; }
-                            return Status::OK;
-                        }
+        }
+
+        /**
+         * first version must be inserting page or deleted page
+         */
+        version* ver = rec_ptr->get_latest();
+        for (;;) {
+            ver = ver->get_next();
+            if (ver == nullptr) { break; }
+            if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                if (ver->get_tid().get_absent()) { break; }
+                return Status::OK;
+            }
+        }
+    } else {
+        // absent && not latest == deleted
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            /**
+             * short mode must read deleted record and verify, so add read set
+             */
+            ti->push_to_read_set_for_stx({st, rec_ptr, tid});
+        }
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
+            ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                // there may be readable rec
+                version* ver = rec_ptr->get_latest();
+                for (;;) {
+                    ver = ver->get_next();
+                    if (ver == nullptr) { break; }
+                    if (ver->get_tid().get_epoch() <
+                        ti->get_valid_epoch()) {
+                        if (ver->get_tid().get_absent()) { break; }
+                        return Status::OK;
                     }
                 }
             }

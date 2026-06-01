@@ -130,35 +130,59 @@ static Status next_body_iscan(Token const token, ScanHandle const handle) { // N
 
 // XXX: consider merge with check_not_found() (called from open_scan())
 static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
-    { // indent is left unchanged to keep the diff small. TODO: cleanup later
-        write_set_obj* inws{};
-        if (ti->get_tx_type() !=
-            transaction_options::transaction_type::READ_ONLY) {
-            // check local write set
-            inws = ti->get_write_set().search(rec_ptr);
-            if (inws != nullptr) {
-                /**
-                 * If it exists and it is not delete operation, read from scan api
-                 * call should be able to read the record.
-                 */
-                if (inws->get_op() == OP_TYPE::DELETE) { return Status::INTERNAL_WARN_NOT_FOUND; }
-                return Status::OK;
-            }
+    write_set_obj* inws{};
+    if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
+        // check local write set
+        inws = ti->get_write_set().search(rec_ptr);
+        if (inws != nullptr) {
+            /**
+             * If it exists and it is not delete operation, read from scan api
+             * call should be able to read the record.
+             */
+            if (inws->get_op() == OP_TYPE::DELETE) { return Status::INTERNAL_WARN_NOT_FOUND; }
+            return Status::OK;
         }
-        // not in local write set
+    }
+    // not in local write set
 
-        tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
-        if (!tid.get_absent()) {
-            // normal page
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
+    tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
+    if (!tid.get_absent()) {
+        // normal page
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            return Status::OK;
+        }
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
+            ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (tid.get_epoch() < ti->get_valid_epoch()) { return Status::OK; }
+            version* ver = rec_ptr->get_latest();
+            for (;;) {
+                ver = ver->get_next();
+                if (ver == nullptr) { break; }
+                if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                    break;
+                }
+            }
+            if (ver != nullptr) {
+                // there is a readable rec
                 return Status::OK;
             }
-            if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
-                        transaction_options::transaction_type::READ_ONLY) {
-                if (tid.get_epoch() < ti->get_valid_epoch()) { return Status::OK; }
+        } else {
+            LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+            return Status::ERR_FATAL;
+        }
+    } else if (tid.get_latest()) {
+        // inserting page
+        // read own inserting check is already done
+
+        // short tx should read inserting page
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            return Status::OK;
+        }
+        // rtx, ltx may read middle of version list
+        if (tid.get_epoch() != 0) {
+            // this is converting page, there may be readable rec
+            if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                // last version cant be read but it can read middle
                 version* ver = rec_ptr->get_latest();
                 for (;;) {
                     ver = ver->get_next();
@@ -172,75 +196,38 @@ static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
                     return Status::OK;
                 }
             } else {
-                LOG_FIRST_N(ERROR, 1)
-                        << log_location_prefix << "unreachable path";
-                return Status::ERR_FATAL;
-            }
-        } else if (tid.get_latest()) {
-            // inserting page
-            // read own inserting check is already done
-
-            // short tx should read inserting page
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
+                // it can read latest version
                 return Status::OK;
             }
-            // rtx, ltx may read middle of version list
-            if (tid.get_epoch() != 0) {
-                // this is converting page, there may be readable rec
-                if (tid.get_epoch() >= ti->get_valid_epoch()) {
-                    // last version cant be read but it can read middle
-                    version* ver = rec_ptr->get_latest();
-                    for (;;) {
-                        ver = ver->get_next();
-                        if (ver == nullptr) { break; }
-                        if (ver->get_tid().get_epoch() <
-                            ti->get_valid_epoch()) {
-                            break;
-                        }
+        }
+    } else {
+        // absent && not latest == deleted
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            /**
+             * short mode must read deleted record and verify, so add read set
+             */
+            ti->push_to_read_set_for_stx({st, rec_ptr, tid});
+        }
+        if (ti->get_tx_type() == transaction_options::transaction_type::LONG ||
+            ti->get_tx_type() == transaction_options::transaction_type::READ_ONLY) {
+            if (tid.get_epoch() >= ti->get_valid_epoch()) {
+                // there may be readable rec
+                version* ver = rec_ptr->get_latest();
+                for (;;) {
+                    ver = ver->get_next();
+                    if (ver == nullptr) { break; }
+                    if (ver->get_tid().get_epoch() < ti->get_valid_epoch()) {
+                        break;
                     }
-                    if (ver != nullptr) {
-                        // there is a readable rec
-                        return Status::OK;
-                    }
-                } else {
-                    // it can read latest version
+                }
+                if (ver != nullptr) {
+                    // there is a readable rec
                     return Status::OK;
                 }
             }
-        } else {
-            // absent && not latest == deleted
-            if (ti->get_tx_type() ==
-                transaction_options::transaction_type::SHORT) {
-                /**
-                 * short mode must read deleted record and verify, so add read set
-                 */
-                ti->push_to_read_set_for_stx({st, rec_ptr, tid});
-            }
-            if (ti->get_tx_type() ==
-                        transaction_options::transaction_type::LONG ||
-                ti->get_tx_type() ==
-                        transaction_options::transaction_type::READ_ONLY) {
-                if (tid.get_epoch() >= ti->get_valid_epoch()) {
-                    // there may be readable rec
-                    version* ver = rec_ptr->get_latest();
-                    for (;;) {
-                        ver = ver->get_next();
-                        if (ver == nullptr) { break; }
-                        if (ver->get_tid().get_epoch() <
-                            ti->get_valid_epoch()) {
-                            break;
-                        }
-                    }
-                    if (ver != nullptr) {
-                        // there is a readable rec
-                        return Status::OK;
-                    }
-                }
-            }
         }
-        return Status::INTERNAL_WARN_NOT_FOUND;
     }
+    return Status::INTERNAL_WARN_NOT_FOUND;
 }
 
 /**
@@ -258,8 +245,7 @@ static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string
     {
         std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
 
-        auto& read_range =
-                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
         if (std::get<2>(read_range) < r_key) {
             std::get<2>(read_range) = r_key;
         }
