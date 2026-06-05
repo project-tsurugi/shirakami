@@ -142,7 +142,7 @@ private:
 
     // ==========
     // about scan mode
-    bool iterator_based_scan_{false};
+    bool iterator_based_scan_{true};
     // ==========
 };
 
