@@ -227,7 +227,7 @@ private:
 
 // mode flag
 
-inline bool scan_mode_iterator_based_{false};
+inline bool scan_mode_iterator_based_{true};
 
 static inline bool get_scan_mode_iterator_based() {
     return scan_mode_iterator_based_;
