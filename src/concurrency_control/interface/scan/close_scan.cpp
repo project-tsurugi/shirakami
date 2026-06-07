@@ -22,14 +22,7 @@ namespace shirakami {
 static Status close_scan_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-    return ti->get_scan_handle().delete_scan_cache(static_cast<scan_cache_obj*>(handle));
-}
-
-static Status close_scan_body_iscan(Token const token, ScanHandle const handle) { // NOLINT
-    auto* ti = static_cast<session*>(token);
-    if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
     auto* sc = static_cast<scan_context*>(handle);
-    if (sc->get_ycontext_ref()) { yakushima::iscan_close(sc->get_ycontext_ref()); }
     return ti->get_scan_handle().delete_scan_context(sc);
 }
 
@@ -41,12 +34,7 @@ Status close_scan(Token const token, ScanHandle const handle) { // NOLINT
     Status ret{};
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
-        if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
-        if (get_scan_mode_iterator_based()) {
-            ret = close_scan_body_iscan(token, handle);
-        } else {
-            ret = close_scan_body(token, handle);
-        }
+        ret = close_scan_body(token, handle);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "close_scan, Status: " << ret;

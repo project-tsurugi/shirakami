@@ -23,30 +23,17 @@ static Status scannable_total_index_size_body(Token const token, ScanHandle cons
                                               std::size_t& size) {
     auto* ti = static_cast<session*>(token);
     if (!ti->get_tx_began()) { return Status::WARN_NOT_BEGIN; }
-
-  if (get_scan_mode_iterator_based()) {
     auto* sc = static_cast<scan_context*>(handle);
-
     if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
-        /**
-         * the handle was invalid.
-         */
+        // the handle was invalid.
         return Status::WARN_INVALID_HANDLE;
     }
 
-    size = sc->get_max_size();
-  } else {
-    auto* sc = static_cast<scan_cache_obj*>(handle);
-
-    if (ti->get_scan_handle().check_valid_scan_handle(sc) != Status::OK) {
-        /**
-         * the handle was invalid.
-         */
-        return Status::WARN_INVALID_HANDLE;
+    if (sc->is_iscan()) {
+        size = sc->get_context_iscan_ref().get_max_size();
+    } else {
+        size = sc->get_context_vscan_ref().get_vec().size();
     }
-
-    size = sc->get_vec().size();
-  }
     return Status::OK;
 }
 
