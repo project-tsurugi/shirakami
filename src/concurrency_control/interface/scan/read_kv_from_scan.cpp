@@ -42,30 +42,23 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     Storage st{};
     Record* rec_ptr{};
     std::function<Status()> node_check{};
-    if (get_scan_mode_iterator_based()) {
-        auto* sc = static_cast<scan_context*>(handle);
-        auto& sh = ti->get_scan_handle();
+    auto* sc = static_cast<scan_context*>(handle);
+    auto& sh = ti->get_scan_handle();
 
-        // Check whether the handle is valid.
-        if (sh.check_valid_scan_handle(sc) != Status::OK) {
-            return Status::WARN_INVALID_HANDLE;
-        }
+    // Check whether the handle is valid.
+    if (sh.check_valid_scan_handle(sc) != Status::OK) {
+        return Status::WARN_INVALID_HANDLE;
+    }
 
+    if (sc->is_iscan()) {
+        auto& sci = sc->get_context_iscan_ref();
         auto scan_index = sc->get_scan_index();
-        if (sc->get_max_size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
-        rec_ptr = sc->get_rec_ptr_ref();
-        node_check = [sc] { return sc->get_error(); };
+        if (sci.get_max_size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+        rec_ptr = sci.get_rec_ptr_ref();
+        node_check = [&sci] { return sci.get_error(); };
         st = sc->get_storage();
     } else {
-        auto* sc = static_cast<scan_cache_obj*>(handle);
-        auto& sh = ti->get_scan_handle();
-
-        // Check whether the handle is valid.
-        if (sh.check_valid_scan_handle(sc) != Status::OK) {
-            return Status::WARN_INVALID_HANDLE;
-        }
-
-        auto& scan_buf = sc->get_vec();
+        auto& scan_buf = sc->get_context_vscan_ref().get_vec();
         auto scan_index = sc->get_scan_index();
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
         auto itr = scan_buf.begin() + scan_index; // NOLINT

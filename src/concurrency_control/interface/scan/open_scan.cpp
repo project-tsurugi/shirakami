@@ -395,14 +395,14 @@ static Status open_scan_body(
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().create_scan_cache();
+    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_vscan>);
     if (sc == nullptr) {
         return Status::WARN_MAX_OPEN_SCAN;
     }
     handle = sc;
 
     sc->set_storage(storage);
-    auto& vec = sc->get_vec();
+    auto& vec = sc->get_context_vscan_ref().get_vec();
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
         vec.emplace_back(reinterpret_cast<Record*>(std::get<index_rec_ptr>(scan_res.at(i))), // NOLINT
@@ -527,7 +527,7 @@ static Status open_scan_body_iscan(
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().create_scan_context();
+    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_iscan>);
     handle = sc;
 
     // increment for head skipped records
@@ -535,9 +535,10 @@ static Status open_scan_body_iscan(
     scan_index += head_skip_rec_n;
 
     sc->set_storage(storage);
-    sc->set_max_size(max_size != 0 ? max_size : SIZE_MAX);
-    sc->get_rec_ptr_ref() = rec_ptr; // NOLINT
-    sc->get_ycontext_ref() = ycontext;
+    auto& sci = sc->get_context_iscan_ref();
+    sci.set_max_size(max_size != 0 ? max_size : SIZE_MAX);
+    sci.get_rec_ptr_ref() = rec_ptr; // NOLINT
+    sci.get_ycontext_ref() = ycontext;
 
     // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
     sc->set_r_key(r_key);
