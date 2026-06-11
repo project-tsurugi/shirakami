@@ -36,7 +36,8 @@ private:
 };
 
 // TODO: move another location
-TEST_F(tsurugi_issue1453_test, DISABLED_insert_into_select) {
+TEST_F(tsurugi_issue1453_test, insert_into_select) {
+    if (!get_scan_mode_iterator_based()) { GTEST_SKIP() << "this test fails for vscan"; }
     // regression test: split by single insert
     // setup
     // storage: 00, 01, 02, 03, 04, 05, 06, 07 | 08, 09, 0A, 0B, 0C, 0D, 0E, 0F
