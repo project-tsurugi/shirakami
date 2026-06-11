@@ -121,7 +121,7 @@ public:
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
     }
 
-    std::string_view get_value_view() { return val_; }
+    [[nodiscard]] std::string_view get_value_view() const { return val_; }
 
     [[nodiscard]] bool get_inc_tombstone() const { return inc_tombstone_; }
 
@@ -231,6 +231,8 @@ public:
     }
 
     void sort_if_ol();
+
+    void copy_from(const local_write_set&, Storage st);
 
 private:
     std::atomic<bool> for_batch_{false};

@@ -83,7 +83,8 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
      * Check read-own-write
      */
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
-        const write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+        local_write_set& lws = sc->is_write_set_cached() ? sc->get_scan_local_write_set_ref() : ti->get_write_set();
+        const write_set_obj* inws = lws.search(rec_ptr);
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::DELETE) {
                 read_register_if_ltx(rec_ptr);

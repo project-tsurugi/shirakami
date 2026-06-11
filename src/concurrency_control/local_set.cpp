@@ -93,6 +93,30 @@ void local_write_set::sort_if_ol() {
     std::sort(cont_for_occ_.begin(), cont_for_occ_.end());
 }
 
+// make copy of local_write_set for scan-local cache
+void local_write_set::copy_from(const local_write_set& src, Storage st) {
+    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+    for_batch_.store(src.for_batch_.load());
+    if (for_batch_) {
+        for (auto&& elem : src.cont_for_bt_) {
+            if (elem.second.get_storage() == st) {
+                write_set_obj wso{elem.second.get_storage(), elem.second.get_op(), elem.second.get_rec_ptr(), elem.second.get_value_view(), false, {}};
+                cont_for_bt_.insert_or_assign(elem.first, std::move(wso));
+            }
+        }
+    } else {
+        for (auto&& elem : src.cont_for_occ_) {
+            if (elem.get_storage() == st) {
+                write_set_obj wso{elem.get_storage(), elem.get_op(), elem.get_rec_ptr(), elem.get_value_view(), false, {}};
+                cont_for_occ_.emplace_back(std::move(wso)); // NOLINT
+            }
+        }
+    }
+    if (auto itr = src.storage_map_.find(st); itr != src.storage_map_.end()) {
+        storage_map_.emplace(st, itr->second);
+    }
+}
+
 Status local_sequence_set::push(SequenceId const id,
                                 SequenceVersion const version,
                                 SequenceValue const value) {

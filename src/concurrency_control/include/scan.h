@@ -78,12 +78,19 @@ public:
     [[nodiscard]] bool is_iscan() const { return std::holds_alternative<scan_context_iscan>(var_); }
     scan_context_vscan& get_context_vscan_ref() { return std::get<scan_context_vscan>(var_); }
     scan_context_iscan& get_context_iscan_ref() { return std::get<scan_context_iscan>(var_); }
+    [[nodiscard]] bool is_write_set_cached() const { return write_set_cached_; }
+    local_write_set& get_scan_local_write_set_ref() { return scan_local_write_set_; };
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
     void set_r_key(std::string_view r_key) { r_key_ = r_key; }
     void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
     void set_parent(scan_handler* parent) { parent_ = parent; }
+
+    void save_write_set(local_write_set& lws) {
+        scan_local_write_set_.copy_from(lws, storage_);
+        write_set_cached_ = true;
+    }
 
 private:
     Storage storage_{};
@@ -102,6 +109,9 @@ private:
      * @brief scan_handler that allocated this
      */
     scan_handler* parent_{};
+
+    bool write_set_cached_{false};
+    local_write_set scan_local_write_set_{};
 
     std::variant<scan_context_vscan, scan_context_iscan> var_;
 };
