@@ -98,10 +98,10 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
      */
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::OK, open_scan(s, st, k, scan_endpoint::INCLUSIVE, k4,
                                     scan_endpoint::INCLUSIVE, handle));
     // range : k, k2, k3
-    ASSERT_EQ(Status::OK, delete_record(s, st, k));
     ASSERT_EQ(Status::WARN_NOT_FOUND, read_key_from_scan(s, handle, sb));
     ASSERT_EQ(Status::OK, abort(s));
 
