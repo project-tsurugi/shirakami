@@ -67,7 +67,7 @@ static Status fin_process(session* const ti, Status const this_result) {
     return this_result;
 }
 
-static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
+static Status check_not_found(session* ti, Storage st, Record* rec_ptr, local_write_set& lws) {
     tid_word tid{loadAcquire(rec_ptr->get_tidw().get_obj())};
     if (!tid.get_absent()) {
         // normal page.
@@ -101,7 +101,7 @@ static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
         }
 
         // check read own write
-        write_set_obj* inws = ti->get_write_set().search(rec_ptr);
+        write_set_obj* inws = lws.search(rec_ptr);
         if (inws != nullptr) {
             if (inws->get_op() == OP_TYPE::INSERT ||
                 inws->get_op() == OP_TYPE::UPSERT) {
@@ -154,13 +154,14 @@ static Status check_not_found(session* ti, Storage st, Record* rec_ptr) {
  *
  * @param ti
  * @param st
+ * @param lws
  * @param scan_res
  * @param head_skip_rec_n
  * @return Status::OK
  * @return Status::WARN_NOT_FOUND
  */
 static Status check_not_found(
-        session* ti, Storage st,
+        session* ti, Storage st, local_write_set& lws,
         std::vector<std::tuple<std::string, Record**, std::size_t>>& scan_res,
         std::size_t& head_skip_rec_n) {
     head_skip_rec_n = 0;
@@ -168,7 +169,7 @@ static Status check_not_found(
     for (auto& elem : scan_res) {
         Record* rec_ptr{reinterpret_cast<Record*>(std::get<1>(elem))}; // NOLINT
         // by inline optimization
-        if (auto rc = check_not_found(ti, st, rec_ptr); rc != Status::INTERNAL_WARN_NOT_FOUND) {
+        if (auto rc = check_not_found(ti, st, rec_ptr, lws); rc != Status::INTERNAL_WARN_NOT_FOUND) {
             return rc;
         }
         if (!once_not_skip) { ++head_skip_rec_n; }
@@ -322,13 +323,23 @@ static Status open_scan_body(
         update_local_read_range_if_ltx();
         return rc;
     }
+    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_vscan>);
+    sc->set_storage(storage);
+    if (sc == nullptr) {
+        return Status::WARN_MAX_OPEN_SCAN;
+    }
     // not empty of targeting records
+    bool do_write_set_cache = false;
+    if (do_write_set_cache) {
+        sc->save_write_set(ti->get_write_set());
+    }
+    local_write_set& lws = do_write_set_cache ? sc->get_scan_local_write_set_ref() : ti->get_write_set();
 
     std::size_t head_skip_rec_n{};
     /**
      * skip leading unreadable records.
      */
-    rc = check_not_found(ti, storage, scan_res, head_skip_rec_n);
+    rc = check_not_found(ti, storage, lws, scan_res, head_skip_rec_n);
     if (rc != Status::OK) {
         /**
          * The fact must be guaranteed by isolation. So it can get node version
@@ -395,13 +406,8 @@ static Status open_scan_body(
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_vscan>);
-    if (sc == nullptr) {
-        return Status::WARN_MAX_OPEN_SCAN;
-    }
     handle = sc;
 
-    sc->set_storage(storage);
     auto& vec = sc->get_context_vscan_ref().get_vec();
     vec.reserve(scan_res.size());
     for (std::size_t i = 0; i < scan_res.size(); ++i) {
@@ -476,8 +482,15 @@ static Status open_scan_body_iscan(
     }
     // found one entry
 
+    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_iscan>);
+    sc->set_storage(storage);
+    bool do_write_set_cache = false;
+    if (do_write_set_cache) {
+        sc->save_write_set(ti->get_write_set());
+    }
+    local_write_set& lws = do_write_set_cache ? sc->get_scan_local_write_set_ref() : ti->get_write_set();
     std::size_t head_skip_rec_n{0U};
-    while ((rc = check_not_found(ti, storage, rec_ptr)) != Status::OK) { // absent check
+    while ((rc = check_not_found(ti, storage, rec_ptr, lws)) != Status::OK) { // absent check
         head_skip_rec_n++;
         if (max_size != 0 && head_skip_rec_n >= max_size) {
             rc = Status::WARN_NOT_FOUND;
@@ -527,14 +540,12 @@ static Status open_scan_body_iscan(
     }
 
     // Cache a pointer to record.
-    auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_iscan>);
     handle = sc;
 
     // increment for head skipped records
     auto& scan_index = sc->get_scan_index_ref();
     scan_index += head_skip_rec_n;
 
-    sc->set_storage(storage);
     auto& sci = sc->get_context_iscan_ref();
     sci.set_max_size(max_size != 0 ? max_size : SIZE_MAX);
     sci.get_rec_ptr_ref() = rec_ptr; // NOLINT
