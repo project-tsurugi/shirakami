@@ -329,7 +329,7 @@ static Status open_scan_body(
         return Status::WARN_MAX_OPEN_SCAN;
     }
     // not empty of targeting records
-    bool do_write_set_cache = false;
+    bool do_write_set_cache = true;
     if (do_write_set_cache) {
         sc->save_write_set(ti->get_write_set());
     }
@@ -484,7 +484,7 @@ static Status open_scan_body_iscan(
 
     auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_iscan>);
     sc->set_storage(storage);
-    bool do_write_set_cache = false;
+    bool do_write_set_cache = true;
     if (do_write_set_cache) {
         sc->save_write_set(ti->get_write_set());
     }
