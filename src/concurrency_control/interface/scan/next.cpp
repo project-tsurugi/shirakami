@@ -19,7 +19,7 @@
 
 namespace shirakami {
 
-static Status next_check_not_found(session*, Storage, Record*);
+static Status next_check_not_found(session*, Storage, Record*, local_write_set&);
 static void check_ltx_scan_range_rp_and_log(session*, Storage, std::string_view, scan_endpoint);
 
 static Status next_vscan(session* ti, scan_context* sc) {
@@ -44,7 +44,8 @@ static Status next_vscan(session* ti, scan_context* sc) {
         auto itr = scan_buf.begin() + scan_index; // NOLINT
         Record* rec_ptr = const_cast<Record*>(std::get<0>(*itr)); // NOLINT
 
-        auto rc = next_check_not_found(ti, st, rec_ptr);
+        local_write_set& lws = sc->is_write_set_cached() ? sc->get_scan_local_write_set_ref() : ti->get_write_set();
+        auto rc = next_check_not_found(ti, st, rec_ptr, lws);
         if (rc == Status::OK) { break; }
         if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
         return rc;
@@ -95,7 +96,8 @@ static Status next_iscan(session* ti, scan_context* sc) {
         Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
         sci.get_rec_ptr_ref() = rec_ptr;
 
-        auto rc = next_check_not_found(ti, st, rec_ptr);
+        local_write_set& lws = sc->is_write_set_cached() ? sc->get_scan_local_write_set_ref() : ti->get_write_set();
+        auto rc = next_check_not_found(ti, st, rec_ptr, lws);
         if (rc == Status::OK) { break; }
         if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
         return rc;
@@ -107,11 +109,11 @@ static Status next_iscan(session* ti, scan_context* sc) {
 }
 
 // XXX: consider merge with check_not_found() (called from open_scan())
-static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
+static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr, local_write_set& lws) {
     write_set_obj* inws{};
     if (ti->get_tx_type() != transaction_options::transaction_type::READ_ONLY) {
         // check local write set
-        inws = ti->get_write_set().search(rec_ptr);
+        inws = lws.search(rec_ptr);
         if (inws != nullptr) {
             /**
              * If it exists and it is not delete operation, read from scan api
