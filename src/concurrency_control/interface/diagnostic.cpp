@@ -19,6 +19,8 @@ void print_diagnostics(std::ostream& out) {
 
     out << log_location_prefix << "print diagnostics end" << std::endl; // NOLINT(*-avoid-endl)
     shirakami_log_exit << "print_diagnostics";
+
+    yakushima::mem_usage_display_all();
 }
 
 } // namespace shirakami
