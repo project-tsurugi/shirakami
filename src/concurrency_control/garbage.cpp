@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <sstream>
-#include <xmmintrin.h>
 
 #include "clock.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -340,7 +340,7 @@ static inline void unhooking_keys_and_pruning_versions_at_the_storage(
 
     // full scan
     yakushima::Token ytk{};
-    while (yakushima::enter(ytk) != yakushima::status::OK) { _mm_pause(); }
+    while (yakushima::enter(ytk) != yakushima::status::OK) { spin_wait_hint(); }
     std::vector<std::tuple<std::string, Record**, std::size_t>> scan_res;
     yakushima::scan(st_view, "", yakushima::scan_endpoint::INF, "",
                     yakushima::scan_endpoint::INF, scan_res);

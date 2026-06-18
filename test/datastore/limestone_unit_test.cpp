@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -11,6 +10,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "spin_wait_hint.h"
 #include "tsc.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -149,7 +149,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     // wait for durable
     for (;;) {
         if (get_limestone_durable_epoch() >= 1) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 
     // check existence of log file about (*1)
@@ -172,7 +172,7 @@ TEST_F(limestone_unit_test, logging_and_recover) { // NOLINT
     // wait for durable
     for (;;) {
         if (get_limestone_durable_epoch() >= 2) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 
     // log file size after flushing log (*2)
@@ -264,7 +264,7 @@ TEST_F(limestone_unit_test, persistent_callback) { // NOLINT
 
     for (;;) {
         if (get_limestone_durable_epoch() > 20) { break; } // NOLINT
-        _mm_pause();
+        spin_wait_hint();
     }
 
     epoch_thread.join();

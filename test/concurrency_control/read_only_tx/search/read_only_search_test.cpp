@@ -90,7 +90,7 @@ TEST_F(read_only_search_test, ltx_write_rtx_read) { // NOLINT
     auto ce = epoch::get_global_epoch();
     for (;;) {
         if (ce >= epoch::get_cc_safe_ss_epoch()) {
-            _mm_pause();
+            spin_wait_hint();
             continue;
         }
         break;

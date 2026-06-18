@@ -2,7 +2,6 @@
  * @file sequence_test.cpp
  */
 
-#include <emmintrin.h>
 #include <chrono>
 #include <memory>
 #include <mutex>
@@ -19,6 +18,7 @@
 #include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -98,7 +98,7 @@ TEST_F(sequence_multiple_update_test, basic) { // NOLINT
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
             if (epoch::get_datastore_durable_epoch() > ce) { break; }
-            _mm_pause();
+            spin_wait_hint();
         }
 #endif
         // verfiy

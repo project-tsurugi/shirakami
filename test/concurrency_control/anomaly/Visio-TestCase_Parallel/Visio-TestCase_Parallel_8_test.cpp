@@ -152,7 +152,7 @@ TEST_F(Visio_TestCase_Parallel, test) { // NOLINT
     // verify
     ASSERT_OK(cb_rc1);
     // wait t1 commit
-    while (!t2_was_committed) { _mm_pause(); }
+    while (!t2_was_committed) { spin_wait_hint(); }
     ASSERT_EQ(Status::ERR_CC, cb_rc2);
     ASSERT_EQ(rc2, reason_code::CC_LTX_WRITE_COMMITTED_READ_PROTECTION);
 

@@ -63,7 +63,7 @@ TEST_F(garbage_collection_test, key_gc_delete_by_long) { // NOLINT
         auto rc{get<Record>(st, "", rec_ptr)};
         if (rc == Status::WARN_NOT_FOUND) { break; }
         if (rc == Status::OK) {
-            _mm_pause();
+            spin_wait_hint();
         } else {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error";
         }

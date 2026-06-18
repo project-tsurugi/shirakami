@@ -1,13 +1,13 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <emmintrin.h>
 #include <mutex>
 #include <string>
 #include <string_view>
 #include <tuple>
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "gtest/gtest.h"
 #include "shirakami/api_diagnostic.h"
@@ -67,7 +67,7 @@ void wait_start_tx(Token tx) {
         TxState state;
         ASSERT_OK(check_tx_state(sth, state));
         if (state.state_kind() == TxState::StateKind::STARTED) break;
-        _mm_pause();
+        spin_wait_hint();
     }
 }
 

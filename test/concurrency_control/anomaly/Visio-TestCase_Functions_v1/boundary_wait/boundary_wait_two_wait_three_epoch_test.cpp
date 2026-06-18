@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -9,6 +8,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -97,7 +97,7 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     // note: o is occ, l is ltx
     // 4l
     epoch::set_perm_to_proc(1);
-    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    while (epoch::get_perm_to_proc() != 0) { spin_wait_hint(); }
     // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,
@@ -242,7 +242,7 @@ TEST_F(boundary_wait_two_wait_three_epoch_test, // NOLINT
     // note: o is occ, l is ltx
     // 4l
     epoch::set_perm_to_proc(1);
-    while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+    while (epoch::get_perm_to_proc() != 0) { spin_wait_hint(); }
     // epoch locked
     ASSERT_EQ(Status::OK, tx_begin({s.at(1),
                                     transaction_options::transaction_type::LONG,

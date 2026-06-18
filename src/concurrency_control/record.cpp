@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <cstdint>
 #include <atomic>
 #include <string_view>
@@ -8,6 +7,7 @@
 #include "concurrency_control/include/version.h"
 #include "atomic_wrapper.h"
 #include "concurrency_control/include/tid.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami {
 
@@ -39,7 +39,7 @@ Record::Record(std::string_view const key, std::string_view const val)
     for (;;) {
         tid_word check{loadAcquire(tidw_.get_obj())};
         if (check.get_lock()) {
-            _mm_pause();
+            spin_wait_hint();
         } else {
             return check;
         }

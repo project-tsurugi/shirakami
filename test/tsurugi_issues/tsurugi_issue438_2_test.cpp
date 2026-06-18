@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <atomic>
 #include <mutex>
 #include <ostream>
@@ -7,6 +6,7 @@
 #include <string_view>
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -188,7 +188,7 @@ TEST_P(tsurugi_issue438_2_test, case_2) {
         ASSERT_OK(leave(t1));
 
         LOG(INFO) << "TX2 ... resume Commit (fail)";
-        while (!t2c_done) { _mm_pause(); }
+        while (!t2c_done) { spin_wait_hint(); }
         ASSERT_EQ(t2c_rc.load(), Status::ERR_CC);
         ASSERT_OK(leave(t2));
     }
@@ -288,7 +288,7 @@ TEST_P(tsurugi_issue438_2_test, case_3) {
         ASSERT_OK(leave(t1));
 
         LOG(INFO) << "TX2 ... resume Commit (fail)";
-        while (!t2c_done) { _mm_pause(); }
+        while (!t2c_done) { spin_wait_hint(); }
         ASSERT_EQ(t2c_rc.load(), Status::ERR_CC);
         ASSERT_OK(leave(t2));
     }

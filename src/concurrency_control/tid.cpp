@@ -3,13 +3,13 @@
  * @details implement about tid.
  */
 
-#include <emmintrin.h>
 #include <cstdint>
 #include <bitset>
 #include <iostream>
 
 #include "include/tid.h"
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami {
 
@@ -19,7 +19,7 @@ void tid_word::lock(bool by_gc) { // NOLINT
     expected.get_obj() = loadAcquire(get_obj());
     for (;;) {
         if (expected.get_lock()) {
-            _mm_pause();
+            spin_wait_hint();
             expected.get_obj() = loadAcquire(get_obj());
         } else {
             desired = expected;

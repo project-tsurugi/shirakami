@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <mutex>
 #include <string>
 
@@ -12,6 +11,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -40,7 +40,7 @@ void wait_change_epoch() {
     auto ce{epoch::get_global_epoch()};
     for (;;) {
         if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 }
 

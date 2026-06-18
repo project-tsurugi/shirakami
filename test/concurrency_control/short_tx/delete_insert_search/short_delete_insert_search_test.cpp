@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <bitset>
 #include <mutex>
@@ -14,6 +13,7 @@
 #include "gtest/gtest.h"
 
 #include "glog/logging.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 

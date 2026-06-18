@@ -65,7 +65,7 @@ TEST_F(tsurugi_issue176_3, comment_by_ban_20230228_1730) { // NOLINT
     // wait the record is target of gc
     while (!(deleted_epoch < garbage::get_min_begin_epoch() &&
              deleted_epoch < garbage::get_min_batch_epoch())) {
-        _mm_pause();
+        spin_wait_hint();
     }
 
     // start full scan tx
@@ -113,14 +113,14 @@ TEST_F(tsurugi_issue176_3, comment_by_tanabe_20230301_1643) { // NOLINT
     auto commit_1 = [s1, &prepare_num]() {
         ++prepare_num;
         while (prepare_num.load(std::memory_order_acquire) != 2) {
-            _mm_pause();
+            spin_wait_hint();
         }
         ASSERT_EQ(Status::OK, commit(s1));
     };
     auto abort_2 = [s2, &prepare_num]() {
         ++prepare_num;
         while (prepare_num.load(std::memory_order_acquire) != 2) {
-            _mm_pause();
+            spin_wait_hint();
         }
         sleep(1);
         ASSERT_EQ(Status::OK, abort(s2));

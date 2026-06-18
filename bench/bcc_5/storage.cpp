@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <emmintrin.h>
 #include <cstdint>
 #include <thread>
 #include <cstddef>
@@ -26,6 +25,7 @@
 // shirakami/bench
 #include "../include/gen_key.h"
 #include "param.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 // shirakami-impl interface library
 #include "random.h"
@@ -42,7 +42,7 @@ void brock_insert(Storage const st, size_t const start, size_t const end) {
     Xoroshiro128Plus rnd;
     Token token{};
     while (Status::OK != enter(token)) {
-        _mm_pause(); // full session now.
+        spin_wait_hint(); // full session now.
     }
 
     auto rc{tx_begin({token})};                                        // NOLINT

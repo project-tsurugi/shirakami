@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <algorithm>
 #include <array>
@@ -10,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -164,7 +164,7 @@ TEST_F(search_upsert, old_short_search_long_upsert_conflict) { // NOLINT
                             {st_x}}));
         epoch::set_perm_to_proc(1);
         epoch::get_ep_mtx().unlock();
-        while (epoch::get_perm_to_proc() != 0) { _mm_pause(); }
+        while (epoch::get_perm_to_proc() != 0) { spin_wait_hint(); }
         auto* ltx1s = static_cast<session*>(ltx1);
         LOG(INFO) << "ltx1's epoch: " << ltx1s->get_valid_epoch();
         Token stx{};

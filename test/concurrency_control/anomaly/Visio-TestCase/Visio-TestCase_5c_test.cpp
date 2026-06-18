@@ -234,7 +234,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t4
     if (!t4_was_finished) {
         if (t4_type == transaction_type::LONG) {
-            while (!was_called_4) { _mm_pause(); } // wait for commit
+            while (!was_called_4) { spin_wait_hint(); } // wait for commit
         }
         if (t4_can_commit) {
             ASSERT_EQ(cb_rc4, Status::OK);

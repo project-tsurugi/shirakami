@@ -1,10 +1,10 @@
 
-#include <emmintrin.h>
 #include <glog/logging.h>
 #include <cstddef>
 
 #include "database/include/thread_pool.h"
 #include "concurrent_queue.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami {
 class thread_task;
@@ -24,7 +24,7 @@ void thread_pool::worker([[maybe_unused]] std::size_t const worker_id) {
             do_task(out_task);
         } else {
             // else sleep
-            _mm_pause();
+            spin_wait_hint();
         }
 
         // check flags and queue

@@ -171,7 +171,7 @@ TEST_F(short_delete_short_search,             // NOLINT
     // wait for gc
     Record* rec_ptr{};
     while (get<Record>(st, "b", rec_ptr) != Status::WARN_NOT_FOUND) {
-        _mm_pause();
+        spin_wait_hint();
     }
     // unhooked
 

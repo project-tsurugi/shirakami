@@ -107,7 +107,7 @@ TEST_P(tsurugi_issue652_test, // NOLINT
         };
         ASSERT_FALSE(commit(t2, cb)); // boundary wait can't bypass root
         ASSERT_OK(commit(t1));
-        while (!was_committed) { _mm_pause(); }
+        while (!was_committed) { spin_wait_hint(); }
         ASSERT_OK(cb_rc);
     }
 

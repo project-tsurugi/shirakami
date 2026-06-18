@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <mutex>
 #include <thread>
@@ -9,6 +8,7 @@
 
 #include "shirakami/interface.h"
 
+#include "spin_wait_hint.h"
 #include "yakushima/include/kvs.h"
 
 #include "gtest/gtest.h"

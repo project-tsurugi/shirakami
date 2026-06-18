@@ -16,6 +16,7 @@
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami {
 
@@ -169,7 +170,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             tid_word s_check{loadAcquire(&rec_ptr->get_tidw_ref().get_obj())};
             for (;;) {
                 if (s_check.get_lock()) {
-                    _mm_pause();
+                    spin_wait_hint();
                     s_check = loadAcquire(&rec_ptr->get_tidw_ref().get_obj());
                     continue;
                 }

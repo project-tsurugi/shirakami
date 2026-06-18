@@ -50,7 +50,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 TEST_F(tsurugi_issue242_insert_test, // NOLINT
@@ -92,7 +92,7 @@ TEST_F(tsurugi_issue242_insert_test, // NOLINT
         storeRelease(readys.at(th_id), 1);
 
         // ready
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
 
         // insert
         char c = 'a';

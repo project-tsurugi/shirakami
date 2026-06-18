@@ -107,7 +107,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
         while (f_check.get_lock()) {
             if (f_check.get_lock_by_gc()) {
                 // gc don't lock for long time, so it waits.
-                _mm_pause();
+                spin_wait_hint();
                 f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
                 continue;
             }
@@ -147,7 +147,7 @@ Status read_record(Record* const rec_ptr, tid_word& tid, std::string& val,
                 }
                 return Status::WARN_CONCURRENT_UPDATE;
             }
-            _mm_pause();
+            spin_wait_hint();
             f_check.set_obj(loadAcquire(rec_ptr->get_tidw_ref().get_obj()));
             ++repeat_num;
 #endif

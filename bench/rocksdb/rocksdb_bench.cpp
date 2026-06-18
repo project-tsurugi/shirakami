@@ -15,13 +15,13 @@
  */
 
 #include <string_view>
-#include <xmmintrin.h>
 
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "compiler.h"
 #include "cpu.h"
 #include "random.h"
+#include "spin_wait_hint.h"
 #include "tsc.h"
 
 #include "gflags/gflags.h"
@@ -188,7 +188,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void bench_insert_process(std::uint64_t insert_end,
@@ -343,7 +343,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
 
     // ready
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) spin_wait_hint();
 
     while (likely(!loadAcquire(quit))) {
         switch (FLAGS_bench_type) { // NOLINT

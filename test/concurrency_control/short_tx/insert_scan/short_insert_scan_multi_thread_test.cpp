@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <algorithm>
 #include <array>
@@ -20,6 +19,7 @@
 
 // test tool
 
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 // google

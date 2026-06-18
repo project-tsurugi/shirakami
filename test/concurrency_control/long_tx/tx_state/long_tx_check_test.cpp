@@ -90,7 +90,7 @@ TEST_F(long_tx_check_test, long_tx_road_to_commit) { // NOLINT
     auto ce = epoch::get_global_epoch();
     for (;;) {
         if (epoch::get_datastore_durable_epoch() >= ce) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 #endif
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
@@ -168,7 +168,7 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
 #ifdef PWAL
     for (;;) {
         if (check_commit(s2) == Status::OK) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     /**
@@ -178,14 +178,14 @@ TEST_F(long_tx_check_test, long_tx_wait_high_priori_tx) { // NOLINT
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::WAITING_DURABLE);
     resume_epoch();
     for (;;) {
-        _mm_pause();
+        spin_wait_hint();
         ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
         if (buf.state_kind() == TxState::StateKind::DURABLE) { break; }
     }
 #else
     for (;;) {
         if (check_commit(s2) == Status::OK) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
 #endif

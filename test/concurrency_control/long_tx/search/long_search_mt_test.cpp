@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -9,6 +8,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -55,7 +55,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
@@ -95,7 +95,7 @@ TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
         storeRelease(readys.at(th_num), 1);
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
         for (std::size_t i = 0; i < trial_n; ++i) {
             [[maybe_unused]] TX_BEGIN
                 : // NOLINT
@@ -116,7 +116,7 @@ TEST_F(long_search_mt_test, batch_rmw) { // NOLINT
             if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                 do {
                     rc = check_commit(s);
-                    _mm_pause();
+                    spin_wait_hint();
                 } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
             }
             if (rc == Status::OK) { continue; }

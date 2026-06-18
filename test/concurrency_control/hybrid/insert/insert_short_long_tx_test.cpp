@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -18,6 +17,7 @@
 
 #include "shirakami/interface.h"
 
+#include "spin_wait_hint.h"
 #include "yakushima/include/kvs.h"
 
 #include "test_tool.h"

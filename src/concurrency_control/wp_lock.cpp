@@ -1,9 +1,9 @@
 
 #include <atomic>
 #include <cstdint>
-#include <emmintrin.h>
 
 #include "concurrency_control/include/wp_lock.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::wp {
 
@@ -12,7 +12,7 @@ void wp_lock::lock() {
     for (;;) {
         if (is_locked(expected)) {
             // locked by others
-            _mm_pause();
+            spin_wait_hint();
             expected = obj.load(std::memory_order_acquire);
             continue;
         }

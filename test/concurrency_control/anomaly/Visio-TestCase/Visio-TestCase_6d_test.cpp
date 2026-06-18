@@ -220,7 +220,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t1
     if (t1_can_commit) {
         if (t1_type == transaction_type::LONG) {
-            while (!was_called_1) { _mm_pause(); }
+            while (!was_called_1) { spin_wait_hint(); }
         }
         ASSERT_EQ(cb_rc1, Status::OK);
     } else {
@@ -230,7 +230,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t2
     if (!t2_was_finished) {
         if (t2_type == transaction_type::LONG) {
-            while (!was_called_2) { _mm_pause(); }
+            while (!was_called_2) { spin_wait_hint(); }
         }
         if (t2_can_commit) {
             ASSERT_EQ(cb_rc2, Status::OK);
@@ -245,7 +245,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t3
     if (t3_can_commit) {
         if (t3_type == transaction_type::LONG) {
-            while (!was_called_3) { _mm_pause(); }
+            while (!was_called_3) { spin_wait_hint(); }
         }
         ASSERT_EQ(cb_rc3, Status::OK);
     } else {
@@ -255,7 +255,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t4
     if (!t4_was_finished) {
         if (t4_type == transaction_type::LONG) {
-            while (!was_called_4) { _mm_pause(); }
+            while (!was_called_4) { spin_wait_hint(); }
         }
         if (t4_can_commit) {
             ASSERT_EQ(cb_rc4, Status::OK);

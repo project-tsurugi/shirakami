@@ -82,7 +82,7 @@ static void fin_body([[maybe_unused]] bool force_shut_down_logging) try {
         // wait durable above flushing
         for (;;) {
             if (epoch::get_datastore_durable_epoch() >= ce) { break; }
-            _mm_pause();
+            spin_wait_hint();
         }
     }
     VLOG(log_debug_timing_event) << log_location_prefix_timing_event << "shutdown:end_send_txlog_wait_durable";

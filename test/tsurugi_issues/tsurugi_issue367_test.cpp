@@ -73,13 +73,13 @@ TEST_F(tsurugi_issue367_test, simple) { // NOLINT
         ASSERT_OK(tx_begin({t, transaction_type::LONG, {st}}));
         --preparing;
         while (preparing != 0) {
-            _mm_pause();
+            spin_wait_hint();
             if (end) { break; }
         }
         ++preparing;
         while (epoch::get_global_epoch() <
                static_cast<session*>(t)->get_valid_epoch()) {
-            _mm_pause();
+            spin_wait_hint();
         }
         for (std::uint64_t i = 0; i < num_records; i++) {
             put(k, t);
@@ -87,7 +87,7 @@ TEST_F(tsurugi_issue367_test, simple) { // NOLINT
         }
         Status commit_rc = commit(t);
         while (commit_rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-            _mm_pause();
+            spin_wait_hint();
             commit_rc = check_commit(t);
         }
         ASSERT_OK(commit_rc);

@@ -1,10 +1,10 @@
 
-#include <emmintrin.h>
 #include <atomic>
 #include <mutex>
 #include <string>
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -81,7 +81,7 @@ TEST_F(tsurugi_issue378_1_3, case_3) { // NOLINT
     ASSERT_FALSE(commit(s2, cb));      // NOLINT
     ASSERT_EQ(Status::OK, commit(s1)); // NOLINT
 
-    while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
+    while (!was_called.load(std::memory_order_acquire)) { spin_wait_hint(); }
 
     ASSERT_EQ(Status::OK, cb_rc.load(std::memory_order_acquire));
 
@@ -131,7 +131,7 @@ TEST_F(tsurugi_issue378_1_3, case_4) { // NOLINT
     ASSERT_EQ(Status::OK, commit(s1));     // NOLINT
     ASSERT_EQ(Status::ERR_CC, commit(s2)); // NOLINT
 
-    //    while (!was_called.load(std::memory_order_acquire)) { _mm_pause(); }
+    //    while (!was_called.load(std::memory_order_acquire)) { spin_wait_hint(); }
     //
     //    ASSERT_EQ(Status::OK, cb_rc.load(std::memory_order_acquire));
 

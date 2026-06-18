@@ -191,7 +191,7 @@ TEST_F(long_scan_test,                                          // NOLINT
     for (;;) {
         auto ret = check_commit(s2);
         if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
-            _mm_pause();
+            spin_wait_hint();
             continue;
         }
         if (ret == Status::OK) { break; } // other status

@@ -39,7 +39,7 @@ void wait_change_epoch() {
     auto ce{epoch::get_global_epoch()};
     for (;;) {
         if (ce != epoch::get_global_epoch()) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 }
 

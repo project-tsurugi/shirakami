@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <emmintrin.h>
 #include <cstdint>
 #include <cstdio>
 #include <unistd.h>
@@ -44,6 +43,7 @@
 #include "shirakami/logging.h"
 #include "shirakami/scheme.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 #include "zipf.h"
 
 using namespace shirakami;
@@ -201,7 +201,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
@@ -219,7 +219,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     enter(token);
 
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) spin_wait_hint();
 
     while (likely(!loadAcquire(quit))) {
         opr_set.reserve(FLAGS_ops);

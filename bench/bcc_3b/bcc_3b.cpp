@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <emmintrin.h>
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
@@ -27,6 +26,7 @@
 
 // shirakami/bench/bcc_3b/include
 #include "simple_result.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 #include "utility.h"
 // shirakami/bench/include
@@ -92,7 +92,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void worker(const std::size_t thid, const bool is_ol, char& ready,     // NOLINT
@@ -109,13 +109,13 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,     // NOLINT
     Storage storage{is_ol ? get_ol_storages()[thid] : get_bt_storages()[thid]};
     std::vector<shirakami::opr_obj> opr_set;
     opr_set.reserve(is_ol ? FLAGS_ol_ops : FLAGS_bt_ops);
-    while (Status::OK != enter(token)) { _mm_pause(); }
+    while (Status::OK != enter(token)) { spin_wait_hint(); }
 
     std::size_t ct_abort{0};
     std::size_t ct_commit{0};
 
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) spin_wait_hint();
 
     while (likely(!loadAcquire(quit))) {
         gen_tx_rw(opr_set, FLAGS_key_len, FLAGS_rec,
@@ -156,7 +156,7 @@ void worker(const std::size_t thid, const bool is_ol, char& ready,     // NOLINT
                                 FLAGS_bt_thread == 1) {
                                 break;
                             }
-                            _mm_pause();
+                            spin_wait_hint();
                         }
                     }
                 }

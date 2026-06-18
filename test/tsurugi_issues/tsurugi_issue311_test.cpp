@@ -70,7 +70,7 @@ TEST_F(tsurugi_issue311, simple) { // NOLINT
                 if (state.state_kind() == TxState::StateKind::STARTED) {
                     break;
                 }
-                _mm_pause();
+                spin_wait_hint();
             }
             // tx process, rmw st
             std::string buf{};

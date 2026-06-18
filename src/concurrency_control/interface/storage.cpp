@@ -28,7 +28,7 @@ namespace shirakami {
 static void write_storage_metadata(std::string_view key, Storage st,
                                    storage_option const& options) {
     Token s{};
-    while (enter(s) != Status::OK) { _mm_pause(); }
+    while (enter(s) != Status::OK) { spin_wait_hint(); }
     std::string value{};
     // value = Storage + id + payload
     value.append(reinterpret_cast<char*>(&st), sizeof(st)); // NOLINT
@@ -65,7 +65,7 @@ static void write_storage_metadata(std::string_view key, Storage st,
 
 static void remove_storage_metadata(std::string_view key, [[maybe_unused]] Storage st) {
     Token s{};
-    while (enter(s) != Status::OK) { _mm_pause(); }
+    while (enter(s) != Status::OK) { spin_wait_hint(); }
     auto ret = tx_begin({s, transaction_options::transaction_type::SHORT});
     if (ret != Status::OK) {
         LOG_FIRST_N(ERROR, 1)
@@ -195,7 +195,7 @@ static Status storage_get_options_body(Storage storage, storage_option& options)
         return ret;
     } // storage found
     Token s{};
-    while (enter(s) != Status::OK) { _mm_pause(); }
+    while (enter(s) != Status::OK) { spin_wait_hint(); }
     std::string value{};
     std::size_t try_num{0};
     for (;;) {
@@ -214,7 +214,7 @@ static Status storage_get_options_body(Storage storage, storage_option& options)
         }
         if (commit(s) == Status::OK) { break; } // NOLINT
         // Someone may executed storage_set_options and it occurs occ error.
-        _mm_pause();
+        spin_wait_hint();
         ++try_num;
         if (try_num > 100) { // NOLINT
             LOG(INFO) << "strange statement";
@@ -257,7 +257,7 @@ static Status storage_set_options_body(Storage storage,
     } // storage found
     Token s{};
     // get tx handle
-    while (enter(s) != Status::OK) { _mm_pause(); }
+    while (enter(s) != Status::OK) { spin_wait_hint(); }
     std::string value{};
     // value = Storage + id + payload
     value.append(reinterpret_cast<char*>(&storage), sizeof(storage)); // NOLINT
@@ -310,7 +310,7 @@ Status storage::register_storage(Storage storage, storage_option options) {
     if (wp::get_initialized()) {
         yakushima::Token ytoken{};
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
-            _mm_pause();
+            spin_wait_hint();
         }
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         wp::page_set_meta* page_set_meta_ptr{
@@ -440,7 +440,7 @@ Status storage::delete_storage(Storage storage) {
         Storage page_set_meta_storage = wp::get_page_set_meta_storage();
         yakushima::Token ytoken{};
         while (yakushima::enter(ytoken) != yakushima::status::OK) {
-            _mm_pause();
+            spin_wait_hint();
         }
         std::pair<wp::page_set_meta**, std::size_t> out{};
         auto rc{yakushima::get<wp::page_set_meta*>(

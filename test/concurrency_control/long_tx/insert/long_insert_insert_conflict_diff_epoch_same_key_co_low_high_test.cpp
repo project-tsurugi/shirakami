@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -9,6 +8,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -81,7 +81,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
     Status rc{};
     do {
         rc = check_commit(s2);
-        _mm_pause();
+        spin_wait_hint();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
     ASSERT_EQ(Status::ERR_CC, rc);
     //auto* ti = static_cast<session*>(s2);
@@ -125,7 +125,7 @@ TEST_F(long_insert_insert_conflict_diff_epoch_same_key_co_low_high_test, // NOLI
     Status rc{};
     do {
         rc = check_commit(s2);
-        _mm_pause();
+        spin_wait_hint();
     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
     ASSERT_EQ(Status::ERR_CC, rc);
     ASSERT_EQ(Status::OK, leave(s1));

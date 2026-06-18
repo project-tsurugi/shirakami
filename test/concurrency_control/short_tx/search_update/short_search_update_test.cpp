@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -15,6 +14,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 using namespace shirakami;
 
@@ -92,7 +92,7 @@ TEST_F(search_update, // NOLINT
 
         ++ready;
         // wait for other
-        while (ready.load() != 2) { _mm_pause(); }
+        while (ready.load() != 2) { spin_wait_hint(); }
 
         LOG(INFO) << "start work";
         std::size_t loop1_cnt{0};

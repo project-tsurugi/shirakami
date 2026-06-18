@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <string.h>
 #include <mutex>
 #include <ostream>
@@ -14,6 +13,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -65,7 +65,7 @@ TEST_F(insert_after_delete, independent_tx) { // NOLINT
         //    LOG(INFO) << "fail insert";
         //}
         //++ctr;
-        _mm_pause();
+        spin_wait_hint();
     }
     epoch::epoch_t after_insert{epoch::get_global_epoch()};
     LOG(INFO) << "before_insert " << before_insert;

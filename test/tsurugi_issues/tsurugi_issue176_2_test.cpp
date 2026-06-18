@@ -54,7 +54,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
         ++prepare_scan_thread_num;
         while (prepare_scan_thread_num.load(std::memory_order_acquire) !=
                scan_thread_num + 1) {
-            _mm_pause();
+            spin_wait_hint();
         }
         // ready all thread
 
@@ -87,7 +87,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                     do {
                         rc = check_commit(s);
-                        _mm_pause();
+                        spin_wait_hint();
                     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
                 }
             } while (rc != Status::OK);
@@ -104,7 +104,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
         ++prepare_scan_thread_num;
         while (prepare_scan_thread_num.load(std::memory_order_acquire) !=
                scan_thread_num + 1) {
-            _mm_pause();
+            spin_wait_hint();
         }
         // ready all thread
 
@@ -128,7 +128,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                     do {
                         rc = check_commit(s);
-                        _mm_pause();
+                        spin_wait_hint();
                     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
                 }
             } while (rc != Status::OK);
@@ -147,7 +147,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                     do {
                         rc = check_commit(s);
-                        _mm_pause();
+                        spin_wait_hint();
                     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
                 }
             } while (rc != Status::OK);
@@ -167,7 +167,7 @@ TEST_F(tsurugi_issue176_2, comment_by_ban_20230226_0506) { // NOLINT
                 if (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
                     do {
                         rc = check_commit(s);
-                        _mm_pause();
+                        spin_wait_hint();
                     } while (rc == Status::WARN_WAITING_FOR_OTHER_TX);
                 }
             } while (rc != Status::OK);

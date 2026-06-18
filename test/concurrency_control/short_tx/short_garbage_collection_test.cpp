@@ -11,6 +11,7 @@
 
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include "spin_wait_hint.h"
 
 using namespace shirakami;
 
@@ -60,7 +61,7 @@ TEST_F(c_garbage_collection_test, key_gc_delete_by_short) { // NOLINT
         auto rc{get<Record>(st, "", rec_ptr)};
         if (rc == Status::WARN_NOT_FOUND) { break; }
         if (rc == Status::OK) {
-            _mm_pause();
+            spin_wait_hint();
         } else {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "programming error";
         }

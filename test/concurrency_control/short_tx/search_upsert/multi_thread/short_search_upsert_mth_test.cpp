@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <algorithm>
 #include <atomic>
 #include <climits>
@@ -19,6 +18,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -49,7 +49,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 TEST_F(search_upsert_mth, rmw) { // NOLINT
@@ -89,7 +89,7 @@ TEST_F(search_upsert_mth, rmw) { // NOLINT
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
         storeRelease(readys.at(th_num), 1);
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
         for (auto&& elem : keys) {
             for (;;) {
                 ASSERT_EQ(Status::OK,
@@ -97,7 +97,7 @@ TEST_F(search_upsert_mth, rmw) { // NOLINT
                                                SHORT}));
                 std::string vb{};
                 while (search_key(s, storage, elem, vb) != Status::OK) {
-                    _mm_pause();
+                    spin_wait_hint();
                 }
                 std::size_t v{};
                 memcpy(&v, vb.data(), sizeof(v));

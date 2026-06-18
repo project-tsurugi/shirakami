@@ -28,7 +28,7 @@ static Status enter_body(Token& token) { // NOLINT
 
     yakushima::Token kvs_token{};
     while (yakushima::enter(kvs_token) != yakushima::status::OK) {
-        _mm_pause();
+        spin_wait_hint();
     }
     static_cast<session*>(token)->set_yakushima_token(kvs_token);
 
@@ -71,7 +71,7 @@ static Status leave_body(Token const token) { // NOLINT
                         }
                         // the ltx commit was submitted, wait result.
                         while (check_commit(&itr) == Status::WARN_WAITING_FOR_OTHER_TX) {
-                            _mm_pause();
+                            spin_wait_hint();
                         }
                     }
                 }

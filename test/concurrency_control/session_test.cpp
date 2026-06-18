@@ -55,7 +55,7 @@ TEST_F(session_test, member_short_expose_ongoing_target_epoch_after_each_api) { 
                 LOG(INFO) << ce << " " << ne;
                 break;
             }
-            _mm_pause();
+            spin_wait_hint();
         }
     };
     ASSERT_EQ(Status::OK, tx_begin({s}));

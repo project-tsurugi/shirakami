@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "sequence.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -276,7 +277,7 @@ Status sequence::create_sequence(SequenceId* id) {
 
     // generate transaction handle
     Token token{};
-    while (Status::OK != enter(token)) { _mm_pause(); }
+    while (Status::OK != enter(token)) { spin_wait_hint(); }
 
     // logging sequence operation
     // gen key
@@ -387,7 +388,7 @@ Status sequence::delete_sequence(SequenceId const id) {
 
     // generate transaction handle
     Token token{};
-    while (Status::OK != enter(token)) { _mm_pause(); }
+    while (Status::OK != enter(token)) { spin_wait_hint(); }
 
     // logging sequence operation
     // gen key

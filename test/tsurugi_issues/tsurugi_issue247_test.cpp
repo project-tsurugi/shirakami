@@ -68,7 +68,7 @@ TEST_F(tsurugi_issue247, 20230406_for_comment_kurosawa) { // NOLINT
         TxState buf{};
         ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
         if (buf.state_kind() == TxState::StateKind::WAITING_START) {
-            _mm_pause();
+            spin_wait_hint();
             continue;
         }
         LOG(INFO) << buf.state_kind();
@@ -122,7 +122,7 @@ TEST_F(tsurugi_issue247, 20230427_for_comment_ban) { // NOLINT
     TxState buf{};
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     while (buf.state_kind() == TxState::StateKind::WAITING_START) {
-        _mm_pause();
+        spin_wait_hint();
         ASSERT_EQ(Status::OK, check_tx_state(hd, buf));
     }
     ASSERT_EQ(buf.state_kind(), TxState::StateKind::STARTED);

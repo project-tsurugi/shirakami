@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <xmmintrin.h>
 
 #include <atomic>
 #include <bitset>
@@ -24,6 +23,7 @@
 #include "shirakami/storage_options.h"
 
 #include "glog/logging.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami {
 

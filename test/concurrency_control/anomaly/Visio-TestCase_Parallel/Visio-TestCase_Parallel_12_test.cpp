@@ -256,7 +256,7 @@ TEST_F(Visio_TestCase_Parallel, test) { // NOLINT
     while (!t1_was_committed || !t2_was_committed || !t3_was_committed ||
            !t4_was_committed || !t5_was_committed || !t6_was_committed ||
            !t7_was_committed || !t8_was_committed) {
-        _mm_pause();
+        spin_wait_hint();
     }
 
     // verify

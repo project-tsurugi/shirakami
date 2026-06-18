@@ -43,7 +43,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 
@@ -87,7 +87,7 @@ TEST_P(tsurugi_issue528_test,           // NOLINT
         // ready to ready
         storeRelease(readys.at(th_id), 1);
         // ready
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
         // go, tx loop
         // tx
         ASSERT_OK(tx_begin({s,
@@ -96,7 +96,7 @@ TEST_P(tsurugi_issue528_test,           // NOLINT
                             {{}, {st}}}));
         auto* ti = static_cast<session*>(s);
         while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
-            _mm_pause();
+            spin_wait_hint();
         }
 
         // ops phase
@@ -123,7 +123,7 @@ TEST_P(tsurugi_issue528_test,           // NOLINT
                 };
         commit(s, cb);
         // wait commit
-        while (!was_committed) { _mm_pause(); }
+        while (!was_committed) { spin_wait_hint(); }
         ASSERT_OK(cb_rc);
         ASSERT_OK(leave(s));
     };
@@ -206,7 +206,7 @@ TEST_P(tsurugi_issue528_test,   // NOLINT
         // ready to ready
         storeRelease(readys.at(th_id), 1);
         // ready
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
         // go, tx loop
         // tx
         ASSERT_OK(tx_begin({s,
@@ -215,7 +215,7 @@ TEST_P(tsurugi_issue528_test,   // NOLINT
                             {{}, {st}}}));
         auto* ti = static_cast<session*>(s);
         while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
-            _mm_pause();
+            spin_wait_hint();
         }
 
         // ops phase
@@ -241,7 +241,7 @@ TEST_P(tsurugi_issue528_test,   // NOLINT
                 };
         commit(s, cb);
         // wait commit
-        while (!was_committed) { _mm_pause(); }
+        while (!was_committed) { spin_wait_hint(); }
         ASSERT_OK(cb_rc);
         ASSERT_OK(leave(s));
     };
@@ -325,7 +325,7 @@ TEST_F(tsurugi_issue528_test,               // NOLINT
         // ready to ready
         storeRelease(readys.at(th_id), 1);
         // ready
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
         // go, tx loop
         // tx
         ASSERT_OK(tx_begin({s,
@@ -334,7 +334,7 @@ TEST_F(tsurugi_issue528_test,               // NOLINT
                             {{st_read}, {st_write}}}));
         auto* ti = static_cast<session*>(s);
         while (ti->get_valid_epoch() > epoch::get_global_epoch()) {
-            _mm_pause();
+            spin_wait_hint();
         }
 
         // ops phase
@@ -361,7 +361,7 @@ TEST_F(tsurugi_issue528_test,               // NOLINT
         commit(s, cb);
 
         // wait commit
-        while (!was_committed) { _mm_pause(); }
+        while (!was_committed) { spin_wait_hint(); }
 
         ASSERT_OK(cb_rc);
 

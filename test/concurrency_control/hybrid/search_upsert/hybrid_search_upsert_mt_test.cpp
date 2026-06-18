@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <algorithm>
 #include <atomic>
 #include <mutex>
@@ -19,6 +18,7 @@
 #include "shirakami/scheme.h"
 #include "shirakami/storage_options.h"
 #include "shirakami/transaction_options.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -49,7 +49,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 TEST_F(search_upsert_mt, rmw) { // NOLINT
@@ -89,7 +89,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
         Token s{};
         ASSERT_EQ(enter(s), Status::OK);
         storeRelease(readys.at(th_num), 1);
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
 
         for (;;) {
             if (bt) {
@@ -113,7 +113,7 @@ TEST_F(search_upsert_mt, rmw) { // NOLINT
                         if (rc == Status::OK) { break; }
                         if (rc == Status::WARN_PREMATURE ||
                             rc == Status::WARN_CONCURRENT_UPDATE) {
-                            _mm_pause();
+                            spin_wait_hint();
                         } else if (rc == Status::ERR_CC) {
                             ASSERT_EQ(bt, false); // fail only short
                             goto SHORT_TX_RETRY;  // NOLINT

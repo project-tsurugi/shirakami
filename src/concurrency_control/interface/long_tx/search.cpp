@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <string_view>
 
@@ -20,6 +19,7 @@
 #include "shirakami/interface.h"
 
 #include "glog/logging.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::long_tx {
 

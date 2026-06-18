@@ -1,12 +1,12 @@
 
 #include <atomic>
 #include <functional>
-#include <xmmintrin.h>
 
 #include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
 
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "glog/logging.h"
@@ -118,7 +118,7 @@ TEST_F(tsurugi_issue429, case_1) {
     wait_epoch_update();
 
     VLOG(10) << "TX2: commit-wait returns ok";
-    while (!t2c_done) { _mm_pause(); }
+    while (!t2c_done) { spin_wait_hint(); }
     ASSERT_EQ(t2c_rc.load(), Status::OK);
     ASSERT_OK(leave(t2));
 

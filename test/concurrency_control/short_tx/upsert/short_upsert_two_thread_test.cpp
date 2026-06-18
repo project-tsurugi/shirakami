@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -9,6 +8,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -83,7 +83,7 @@ TEST_F(short_upsert_two_thread_test,           // NOLINT
                 if (rc_upsert != Status::OK) { break; }
             }
             (*meet)++;
-            while (meet->load(std::memory_order_acquire) != 2) { _mm_pause(); }
+            while (meet->load(std::memory_order_acquire) != 2) { spin_wait_hint(); }
             // go same timing
             LOG(INFO) << th_id;
             ASSERT_EQ(commit(s), Status::OK);

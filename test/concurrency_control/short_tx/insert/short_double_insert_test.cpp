@@ -88,7 +88,7 @@ TEST_F(double_insert, insert_after_user_abort_not_convert) { // NOLINT
     // wait unhook by background thread
     Record* rec_ptr{};
     while (get<Record>(st, k, rec_ptr) != Status::WARN_NOT_FOUND) {
-        _mm_pause();
+        spin_wait_hint();
     }
     ASSERT_EQ(Status::OK,
               tx_begin({s, transaction_options::transaction_type::SHORT}));

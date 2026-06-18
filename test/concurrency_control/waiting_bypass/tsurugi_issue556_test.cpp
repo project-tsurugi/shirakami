@@ -116,7 +116,7 @@ TEST_F(tsurugi_issue556_test, test) { // NOLINT
     ASSERT_OK(commit(s2));
 
     // now, s3 bypass 2 and same at s1. read wait can release. wait for commit
-    while (!was_called) { _mm_pause(); }
+    while (!was_called) { spin_wait_hint(); }
 
     if (ongoing_tx::get_optflag_disable_waiting_bypass()) {
         LOG(INFO) << "disabled wb";

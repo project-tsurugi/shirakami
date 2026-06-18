@@ -1,10 +1,10 @@
 
-#include <emmintrin.h>
 #include <atomic>
 #include <mutex>
 #include <string>
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -135,7 +135,7 @@ TEST_P(tsurugi_issue438_test, case_1) {
                     t1c_rc = rc;
                 }));
         ASSERT_EQ(t1c_rc, Status::OK);
-        while (!t2_done) { _mm_pause(); }
+        while (!t2_done) { spin_wait_hint(); }
         ASSERT_EQ(t2c_rc, Status::ERR_CC);
     }
 

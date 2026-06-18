@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <emmintrin.h>
 #include <map>
 #include <mutex>
 #include <ostream>
@@ -20,6 +19,7 @@
 #include "shirakami/scheme.h"
 
 #include "glog/logging.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::wp {
 
@@ -49,7 +49,7 @@ wp_meta::wped_type wp_meta::get_wped() {
     for (;;) {
         auto ts_f{wp_lock_.load_obj()};
         if (wp_lock::is_locked(ts_f)) {
-            _mm_pause();
+            spin_wait_hint();
             continue;
         }
         r_obj = wped_;

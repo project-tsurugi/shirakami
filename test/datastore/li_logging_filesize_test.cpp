@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -11,6 +10,7 @@
 
 #include "atomic_wrapper.h"
 #include "clock.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "tsc.h"
 

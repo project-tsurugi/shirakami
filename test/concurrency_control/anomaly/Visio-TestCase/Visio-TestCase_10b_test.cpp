@@ -222,7 +222,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t3
     if (!t3_was_finished) {
         if (t3_type == transaction_type::LONG) {
-            while (!was_called_3) { _mm_pause(); }
+            while (!was_called_3) { spin_wait_hint(); }
         }
         if (t3_can_commit) {
             ASSERT_EQ(cb_rc3, Status::OK);

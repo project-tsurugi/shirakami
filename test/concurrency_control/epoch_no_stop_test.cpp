@@ -38,7 +38,7 @@ TEST_F(epoch_no_stop_test, sleep_to_watch_change_epoch) { // NOLINT
     epoch::epoch_t first = epoch::get_global_epoch();
     epoch::epoch_t second = epoch::get_global_epoch();
     while (first == second) {
-        _mm_pause();
+        spin_wait_hint();
         second = epoch::get_global_epoch();
     }
     LOG(INFO) << "first epoch " << first << ", second epoch " << second;
@@ -51,7 +51,7 @@ TEST_F(epoch_no_stop_test, check_progress_of_short_expose_ongoing_target_epoch_b
     auto first_epoch{ti->get_short_expose_ongoing_status().get_target_epoch()};
     auto second_epoch{ti->get_short_expose_ongoing_status().get_target_epoch()};
     while (first_epoch == second_epoch) {
-        _mm_pause();
+        spin_wait_hint();
         second_epoch = ti->get_short_expose_ongoing_status().get_target_epoch();
     }
     LOG(INFO) << first_epoch << " " << second_epoch;

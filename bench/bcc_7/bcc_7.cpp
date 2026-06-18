@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <emmintrin.h>
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
@@ -28,6 +27,7 @@
 // shirakami/bench/bcc_7/include
 #include "param.h"
 #include "simple_result.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 #include "utility.h"
 // shirakami/bench/include
@@ -62,7 +62,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
@@ -77,12 +77,12 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     Token token{};
     std::vector<opr_obj> opr_set;
     opr_set.reserve(tx_size);
-    while (Status::OK != enter(token)) { _mm_pause(); }
+    while (Status::OK != enter(token)) { spin_wait_hint(); }
 
     std::size_t ct_commit{0};
 
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) spin_wait_hint();
 
     while (likely(!loadAcquire(quit))) {
         gen_tx_rw(opr_set, key_len, FLAGS_rec, tx_size, 100, rnd, // NOLINT

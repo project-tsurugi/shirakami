@@ -82,7 +82,7 @@ TEST_F(short_check_tx_state_test, short_tx_road_to_commit) { // NOLINT
     auto ce = epoch::get_global_epoch();
     for (;;) {
         if (epoch::get_datastore_durable_epoch() >= ce) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 #endif
     ASSERT_EQ(Status::OK, check_tx_state(hd, buf));

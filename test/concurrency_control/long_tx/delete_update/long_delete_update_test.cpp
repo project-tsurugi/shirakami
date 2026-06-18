@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -10,6 +9,7 @@
 
 #include "atomic_wrapper.h"
 
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -186,7 +186,7 @@ TEST_F(long_delete_update_test, concurrent_delete_tx_update_tx) { // NOLINT
         Record* rec_ptr{};
         auto rc = get<Record>(st, "", rec_ptr);
         if (rc == Status::WARN_NOT_FOUND) { break; }
-        _mm_pause();
+        spin_wait_hint();
     }
 
     ASSERT_EQ(Status::OK, leave(s1));

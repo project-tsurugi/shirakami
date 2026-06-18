@@ -62,7 +62,7 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
         wait_epoch_update();
         ++*prepare_num;
         while (prepare_num->load(std::memory_order_acquire) != th_num) {
-            _mm_pause();
+            spin_wait_hint();
         }
 
         for (std::size_t i = 0; i < trial_num; ++i) {
@@ -76,7 +76,7 @@ TEST_F(tsurugi_issue176, comment_by_ban_20230213_1824) { // NOLINT
             ASSERT_EQ(Status::OK, upsert(s, st, key, val));
             auto rc = commit(s); // NOLINT
             while (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-                _mm_pause();
+                spin_wait_hint();
                 rc = check_commit(s);
             }
             ASSERT_EQ(rc, Status::OK);

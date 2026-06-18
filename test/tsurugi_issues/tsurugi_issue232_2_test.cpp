@@ -1,11 +1,11 @@
 
 #include <atomic>
 #include <functional>
-#include <xmmintrin.h>
 
 #include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "glog/logging.h"
@@ -46,7 +46,7 @@ void wait_start_tx(Token tx) {
         TxState state;
         ASSERT_OK(check_tx_state(sth, state));
         if (state.state_kind() == TxState::StateKind::STARTED) break;
-        _mm_pause();
+        spin_wait_hint();
     }
 }
 
@@ -100,7 +100,7 @@ TEST_F(tsurugi_issue232_2, case_11) {
     ASSERT_OK(commit(t1));
     auto rc = check_commit(t3);
     while (rc == Status::WARN_WAITING_FOR_OTHER_TX) {
-        _mm_pause();
+        spin_wait_hint();
         rc = check_commit(t3);
     }
     // TX1 does not read storageB

@@ -84,7 +84,7 @@ TEST_P(tsurugi_issue284_2_test,                      // NOLINT
 
     // wait ss
     auto ce = epoch::get_global_epoch();
-    while (ce > epoch::get_cc_safe_ss_epoch()) { _mm_pause(); }
+    while (ce > epoch::get_cc_safe_ss_epoch()) { spin_wait_hint(); }
 
     // setup done
 
@@ -106,7 +106,7 @@ TEST_P(tsurugi_issue284_2_test,                      // NOLINT
         TxState state;
         ASSERT_OK(check_tx_state(sth, state));
         if (state.state_kind() == TxState::StateKind::STARTED) break;
-        _mm_pause();
+        spin_wait_hint();
     }
 
     //LOG(INFO) << tx_type << " started";

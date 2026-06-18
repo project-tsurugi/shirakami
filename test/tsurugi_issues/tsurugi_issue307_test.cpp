@@ -113,7 +113,7 @@ TEST_F(tsurugi_issue307_test, simple) { // NOLINT
                 TxState state;
                 ASSERT_OK(check_tx_state(sth, state));
                 if (state.state_kind() == TxState::StateKind::STARTED) break;
-                _mm_pause();
+                spin_wait_hint();
             }
             ScanHandle scanh{};
             if (auto rc = open_scan(s, st, "", scan_endpoint::INF, "",

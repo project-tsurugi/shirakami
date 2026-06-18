@@ -156,7 +156,7 @@ TEST_F(c_helper_tx_begin, short_get_tx_began_) { // NOLINT
     // test insert
     while (Status::OK != insert(s, storage, k, v)) {
         // silo impl delay physical unhook 40ms
-        _mm_pause();
+        spin_wait_hint();
     }
     ASSERT_EQ(ti->get_tx_began(), true);
     ASSERT_EQ(Status::OK, abort(s));

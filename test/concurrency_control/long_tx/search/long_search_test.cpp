@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <algorithm>
 #include <array>
@@ -10,6 +9,7 @@
 #include <vector>
 
 #include "atomic_wrapper.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/epoch.h"
@@ -245,7 +245,7 @@ TEST_F(long_search_test,                                          // NOLINT
     for (;;) {
         auto ret = check_commit(s2);
         if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
-            _mm_pause();
+            spin_wait_hint();
             continue;
         }
         if (ret == Status::OK) { break; }

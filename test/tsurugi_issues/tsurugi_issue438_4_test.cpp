@@ -1,12 +1,12 @@
 
 #include <atomic>
 #include <functional>
-#include <xmmintrin.h>
 
 #include "concurrency_control/include/epoch.h"
 #include "concurrency_control/include/session.h"
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "glog/logging.h"
@@ -125,7 +125,7 @@ TEST_F(tsurugi_issue438_4_test, simple) {
     ASSERT_OK(insert(t, receipts, "2", "200"));
     ASSERT_OK(commit(t)); // this needs to release waiting of t3
     // note: this fits tsurugi issue 5 ex 3 but not fit for trace log
-    while (!was_called) { _mm_pause(); }
+    while (!was_called) { spin_wait_hint(); }
     ASSERT_EQ(Status::ERR_CC, cb_rc); // expect error due to rub violation
     ASSERT_EQ(reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION, rc);
 

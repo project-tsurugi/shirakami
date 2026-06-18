@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <xmmintrin.h>
 
 #include <cstring>
 
@@ -24,6 +23,7 @@
 // shirakami/bench
 #include "build_db.h"
 #include "gen_key.h"
+#include "spin_wait_hint.h"
 #include "ycsb/include/gen_tx.h"
 
 // shirakami/src/include
@@ -241,7 +241,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
@@ -261,7 +261,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
     auto* ti = static_cast<session*>(token);
 
     storeRelease(ready, 1);
-    while (!start.load(std::memory_order_acquire)) { _mm_pause(); }
+    while (!start.load(std::memory_order_acquire)) { spin_wait_hint(); }
 
     while (likely(!quit.load(std::memory_order_acquire))) {
         // gen query contents
@@ -287,14 +287,14 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
                 }
                 // wait start epoch
                 while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-                    _mm_pause();
+                    spin_wait_hint();
                 }
             } else if (FLAGS_transaction_type == "read_only") {
                 tt = transaction_options::transaction_type::READ_ONLY;
                 ret = tx_begin({token, tt});
                 // wait start epoch
                 while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-                    _mm_pause();
+                    spin_wait_hint();
                 }
             } else {
                 LOG(FATAL) << log_location_prefix << "invalid transaction type";
@@ -312,7 +312,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             // wait thread except leader is here
             while (waiting_start_th.load(std::memory_order_acquire) !=
                    FLAGS_thread - 1) {
-                _mm_pause();
+                spin_wait_hint();
                 if (quit.load(std::memory_order_acquire)) { return; }
             }
             ++waiting_start_th;
@@ -320,7 +320,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             ++waiting_start_th;
             while (waiting_start_th.load(std::memory_order_acquire) !=
                    FLAGS_thread) {
-                _mm_pause();
+                spin_wait_hint();
                 if (quit.load(std::memory_order_acquire)) { return; }
             }
         }
@@ -381,7 +381,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
         if (thid == 0) {
             while (fin_strand_th.load(std::memory_order_acquire) !=
                    FLAGS_thread - 1) {
-                _mm_pause();
+                spin_wait_hint();
                 if (quit.load(std::memory_order_acquire)) { return; }
             }
             // initialize mutex
@@ -392,7 +392,7 @@ void worker(const std::size_t thid, char& ready, std::atomic<bool>& start,
             fin_strand_th++;
             while (fin_strand_th.load(std::memory_order_acquire) !=
                    FLAGS_thread) {
-                _mm_pause();
+                spin_wait_hint();
                 if (quit.load(std::memory_order_acquire)) { return; }
             }
         }

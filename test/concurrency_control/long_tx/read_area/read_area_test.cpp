@@ -1,9 +1,9 @@
 
-#include <xmmintrin.h>
 
 #include <mutex>
 #include <thread>
 
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 
 #include "concurrency_control/include/read_plan.h"

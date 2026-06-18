@@ -52,7 +52,7 @@ static bool is_ready(const std::vector<char>& readys) {
 }
 
 static void wait_for_ready(const std::vector<char>& readys) {
-    while (!is_ready(readys)) { _mm_pause(); }
+    while (!is_ready(readys)) { spin_wait_hint(); }
 }
 
 INSTANTIATE_TEST_SUITE_P(tx_mode, tsurugi_issue242_search_key_test,
@@ -95,7 +95,7 @@ TEST_P(tsurugi_issue242_search_key_test, // NOLINT
         storeRelease(readys.at(th_id), 1);
 
         // ready
-        while (!go.load(std::memory_order_acquire)) { _mm_pause(); }
+        while (!go.load(std::memory_order_acquire)) { spin_wait_hint(); }
 
         // go
         for (std::size_t i = initial_rec_num / th_num * th_id;

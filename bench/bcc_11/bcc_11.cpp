@@ -17,12 +17,12 @@
 #include <cstdint>
 #include <iostream>
 
-#include <xmmintrin.h>
 
 #include <cstring>
 
 // shirakami/bench/bcc_10/include
 #include "declare_gflags.h"
+#include "spin_wait_hint.h"
 #include "utility.h"
 
 // shirakami/bench/include
@@ -61,7 +61,7 @@ void worker(std::atomic<bool>& quit) {
 
     // prepare token
     Token token{};
-    while (Status::OK != enter(token)) { _mm_pause(); }
+    while (Status::OK != enter(token)) { spin_wait_hint(); }
 
     // prepare result
     std::size_t ct_commit{0};

@@ -3,6 +3,7 @@
 #include "boost/filesystem/path.hpp"
 
 #include "sequence.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 
 #include "concurrency_control/include/record.h"
@@ -60,7 +61,7 @@ static auto recovery_from_cursor(std::unique_ptr<limestone::api::cursor> cursor)
 
     Token token{};
     // acquire tx handle
-    while (enter(token) != Status::OK) { _mm_pause(); }
+    while (enter(token) != Status::OK) { spin_wait_hint(); }
 
     while (cursor->next()) { // the next body is none.
         Storage st{cursor->storage()};

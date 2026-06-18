@@ -139,15 +139,15 @@ TEST_F(Visio_TestCase_Parallel, test_1_without_read_area) { // NOLINT
     commit(t1, cb1);
 
     // verify t1
-    while (!t1_was_committed) { _mm_pause(); }
+    while (!t1_was_committed) { spin_wait_hint(); }
     ASSERT_EQ(cb_rc1, Status::OK);
 
     // verify t2
-    while (!t2_was_committed) { _mm_pause(); }
+    while (!t2_was_committed) { spin_wait_hint(); }
     ASSERT_EQ(cb_rc2, Status::OK);
 
     // verify t3
-    while (!t3_was_committed) { _mm_pause(); }
+    while (!t3_was_committed) { spin_wait_hint(); }
     ASSERT_EQ(cb_rc3, Status::ERR_CC);
     ASSERT_EQ(rc3, reason_code::CC_LTX_READ_UPPER_BOUND_VIOLATION);
 

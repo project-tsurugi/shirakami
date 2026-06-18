@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <unistd.h>
 #include <atomic>
 #include <cstddef>
@@ -9,6 +8,7 @@
 #include <string>
 
 #include "shirakami/interface.h"
+#include "spin_wait_hint.h"
 #include "test_tool.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -84,7 +84,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_OK(upsert(s, st, "", ""));
     ++wait_callback;
     ASSERT_TRUE(commit(s, cb));
-    while (wait_callback != 0) { _mm_pause(); }
+    while (wait_callback != 0) { spin_wait_hint(); }
     EXPECT_EQ(p.use_count(), 2);
 
     // ltx
@@ -102,7 +102,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ++wait_callback;
     ASSERT_FALSE(commit(s2, cb));
     ASSERT_TRUE(commit(s, cb));
-    while (wait_callback != 0) { _mm_pause(); }
+    while (wait_callback != 0) { spin_wait_hint(); }
     sleep(1);
     EXPECT_EQ(p.use_count(), 2);
 
@@ -113,7 +113,7 @@ TEST_F(tsurugi_issue325, check_commit_callback) { // NOLINT
     ASSERT_OK(search_key(s, st, "", buf));
     ++wait_callback;
     ASSERT_TRUE(commit(s, cb));
-    while (wait_callback != 0) { _mm_pause(); }
+    while (wait_callback != 0) { spin_wait_hint(); }
     EXPECT_EQ(p.use_count(), 2);
 
     // cleanup

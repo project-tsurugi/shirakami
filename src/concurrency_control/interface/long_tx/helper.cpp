@@ -216,7 +216,7 @@ Status version_function_with_optimistic_check(Record* rec, epoch::epoch_t ep,
              * not inserting records and the owner may be escape the value
              * which is the target for this tx.
              */
-            _mm_pause();
+            spin_wait_hint();
             f_check = loadAcquire(&rec->get_tidw_ref().get_obj());
             continue;
         }

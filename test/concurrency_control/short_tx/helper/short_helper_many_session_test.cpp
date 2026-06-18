@@ -1,5 +1,4 @@
 
-#include <emmintrin.h>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -11,6 +10,7 @@
 #include "glog/logging.h"
 #include "shirakami/api_diagnostic.h"
 #include "shirakami/scheme.h"
+#include "spin_wait_hint.h"
 
 namespace shirakami::testing {
 
@@ -40,7 +40,7 @@ TEST_F(c_helper_many_session, heavy_enter_leave) { // NOLINT
         Token s{};
         constexpr std::size_t repeat_num{100};
         for (std::size_t i = 0; i < repeat_num; ++i) {
-            while (Status::OK != enter(s)) { _mm_pause(); }
+            while (Status::OK != enter(s)) { spin_wait_hint(); }
             ASSERT_EQ(Status::OK, leave(s));
         }
     };

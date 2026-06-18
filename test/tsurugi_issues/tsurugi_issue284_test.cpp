@@ -106,7 +106,7 @@ TEST_F(tsurugi_issue284, 20230525_comment_ban) { // NOLINT
                 if (state.state_kind() == TxState::StateKind::STARTED) {
                     break;
                 }
-                _mm_pause();
+                spin_wait_hint();
             }
             ScanHandle scanh{};
             ASSERT_OK(open_scan(s, st, "", scan_endpoint::INF, "",

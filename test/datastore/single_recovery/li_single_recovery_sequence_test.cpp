@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -11,6 +10,7 @@
 #include "atomic_wrapper.h"
 #include "clock.h"
 #include "sequence.h"
+#include "spin_wait_hint.h"
 #include "storage.h"
 #include "test_tool.h"
 #include "tsc.h"
@@ -111,7 +111,7 @@ TEST_F(li_single_recovery_sequence_test, // NOLINT
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
             if (epoch::get_datastore_durable_epoch() > ce) { break; }
-            _mm_pause();
+            spin_wait_hint();
         }
     };
 
@@ -180,7 +180,7 @@ TEST_F(li_single_recovery_sequence_test,                 // NOLINT
         auto ce = epoch::get_global_epoch(); // current epoch
         for (;;) {
             if (epoch::get_datastore_durable_epoch() > ce) { break; }
-            _mm_pause();
+            spin_wait_hint();
         }
     };
 

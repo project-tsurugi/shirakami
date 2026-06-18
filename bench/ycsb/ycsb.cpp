@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <xmmintrin.h>
 
 #include <cstring>
 
@@ -24,6 +23,7 @@
 // shirakami/bench
 #include "build_db.h"
 #include "gen_key.h"
+#include "spin_wait_hint.h"
 #include "ycsb/include/gen_tx.h"
 
 // shirakami/src/include
@@ -245,7 +245,7 @@ bool isReady(const std::vector<char>& readys) { // NOLINT
 }
 
 void waitForReady(const std::vector<char>& readys) {
-    while (!isReady(readys)) { _mm_pause(); }
+    while (!isReady(readys)) { spin_wait_hint(); }
 }
 
 void worker(const std::size_t thid, char& ready, const bool& start,
@@ -272,7 +272,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
     auto* ti = static_cast<session*>(token);
 
     storeRelease(ready, 1);
-    while (!loadAcquire(start)) _mm_pause();
+    while (!loadAcquire(start)) spin_wait_hint();
 
     while (likely(!loadAcquire(quit))) {
         // gen query contents
@@ -297,7 +297,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
             // wait start epoch
             auto* ti = static_cast<session*>(token);
             while (epoch::get_global_epoch() < ti->get_valid_epoch()) {
-                _mm_pause();
+                spin_wait_hint();
             }
         } else if (FLAGS_transaction_type == "read_only") {
             tt = transaction_options::transaction_type::READ_ONLY;
@@ -367,7 +367,7 @@ void worker(const std::size_t thid, char& ready, const bool& start,
         if (ret == Status::WARN_WAITING_FOR_OTHER_TX) {
             // ltx
             do {
-                _mm_pause();
+                spin_wait_hint();
                 ret = check_commit(token);
                 if (loadAcquire(quit)) {
                     // for fast exit if it is over exp time.

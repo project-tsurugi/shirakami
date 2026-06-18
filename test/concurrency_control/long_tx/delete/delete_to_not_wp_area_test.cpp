@@ -1,5 +1,4 @@
 
-#include <xmmintrin.h>
 
 #include <array>
 #include <atomic>
@@ -16,6 +15,7 @@
 
 #include "shirakami/interface.h"
 
+#include "spin_wait_hint.h"
 #include "yakushima/include/kvs.h"
 
 #include "gtest/gtest.h"
@@ -68,7 +68,7 @@ TEST_F(delete_to_not_wp_area_test, simple) { // NOLINT
         auto ce{epoch::get_global_epoch()};
         for (;;) {
             if (ce != epoch::get_global_epoch()) { break; }
-            _mm_pause();
+            spin_wait_hint();
         }
     };
     wait_change_epoch();

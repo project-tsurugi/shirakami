@@ -201,7 +201,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
 
     // verify t2
     // wait commit
-    while (!was_called2) { _mm_pause(); }
+    while (!was_called2) { spin_wait_hint(); }
     if (t2_can_commit) {
         ASSERT_EQ(cb_rc2, Status::OK);
     } else {
@@ -211,7 +211,7 @@ TEST_P(Visio_TestCase, test_1) { // NOLINT
     // verify t3
     if (!t3_was_finished) {
         // wait commit
-        while (!was_called3) { _mm_pause(); }
+        while (!was_called3) { spin_wait_hint(); }
         if (t3_can_commit) {
             ASSERT_EQ(cb_rc3, Status::OK);
         } else {
