@@ -21,9 +21,38 @@
 
 namespace shirakami::garbage {
 
-using stats_info_type =
-        std::vector<std::tuple<Storage, std::size_t, std::size_t, std::size_t,
-                               std::size_t>>;
+struct stats_info_entry {
+    struct string_stat {
+// NOLINTBEGIN(*non-private*)
+        std::size_t num{};
+        std::size_t sum_size{};
+        // about strings that exceed SSO limit
+        std::size_t ext_num{};
+        std::size_t sum_ext_size{};
+// NOLINTEND(*non-private*)
+#if defined(_LIBCPP_VERSION)
+        static constexpr std::size_t sso_limit = 22;
+#else
+        static constexpr std::size_t sso_limit = 16;
+#endif
+        void accumulate(const std::string& str) {
+            num++;
+            sum_size += str.size();
+            if (auto capa = str.capacity(); capa < sso_limit) {
+                // maybe SSO
+            } else {
+                ext_num++;
+                sum_ext_size += capa;
+            }
+        }
+    };
+    Storage storage{};
+    struct string_stat key;
+    struct string_stat value;
+};
+
+using stats_info_type = std::vector<stats_info_entry>;
+
 // background thread
 //================================================================================
 /**
