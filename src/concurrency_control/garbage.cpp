@@ -143,25 +143,32 @@ void work_manager() {
 
 static version* find_latest_invisible_version_from_batch(
         Record* rec_ptr, version*& pre_ver,
-        std::size_t& average_version_list_size, bool& old_version_still_exists) {
+        stats_info_entry& stats_entry, bool& old_version_still_exists) {
     version* ver{rec_ptr->get_latest()};
     if (ver == nullptr) {
         // assert. unreachable path
         LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
+        return nullptr;
     }
     // gathering stats info
-    ++average_version_list_size;
+    std::string val{};
+    ver->get_value(val);
+    stats_entry.value.accumulate(val);
     for (;;) {
         ver = ver->get_next();
         if (ver == nullptr) { return nullptr; }
         if (ver->get_tid().get_epoch() < garbage::get_min_batch_epoch()) {
+            // gathering stats info
+            ver->get_value(val);
+            stats_entry.value.accumulate(val);
             // hit. ver may be accessed yet.
             pre_ver = ver;
             return ver->get_next();
         }
         old_version_still_exists = true;
         // gathering stats info
-        ++average_version_list_size;
+        ver->get_value(val);
+        stats_entry.value.accumulate(val);
     }
 }
 
@@ -284,7 +291,7 @@ static inline Status unhooking_key(yakushima::Token ytk, Storage st, Record* rec
 
 static void unhooking_keys_and_pruning_versions(
         yakushima::Token ytk, Storage st, Record* rec_ptr,
-        std::size_t& average_version_list_size, bool& not_collected_record) {
+        stats_info_entry& stats_entry, bool& not_collected_record) {
     // unhooking keys
     auto rc{unhooking_key(ytk, st, rec_ptr, not_collected_record)};
     if (rc == Status::OK) {
@@ -300,14 +307,18 @@ static void unhooking_keys_and_pruning_versions(
 
     version* pre_ver{};
     version* ver{find_latest_invisible_version_from_batch(
-            rec_ptr, pre_ver, average_version_list_size, not_collected_record)};
+            rec_ptr, pre_ver, stats_entry, not_collected_record)};
     if (ver == nullptr) {
         // no version from long tx view.
         return;
     }
     // Some occ maybe reads the payload of version.
     for (;;) {
+        std::string val{};
         if ((ver->get_tid().get_epoch() <= get_min_begin_epoch())) {
+            // gathering stats info
+            ver->get_value(val);
+            stats_entry.value.accumulate(val);
             // ver can be watched yet
             pre_ver = ver;
             ver = ver->get_next();
@@ -317,7 +328,8 @@ static void unhooking_keys_and_pruning_versions(
         ver = ver->get_next();
         if (ver == nullptr) { return; }
         // gathering stats info
-        ++average_version_list_size;
+        ver->get_value(val);
+        stats_entry.value.accumulate(val);
     }
     if (ver != nullptr) {
         // pruning versions
@@ -327,17 +339,9 @@ static void unhooking_keys_and_pruning_versions(
 }
 
 static inline void unhooking_keys_and_pruning_versions_at_the_storage(
-        Storage st, std::size_t& record_num,
-        std::size_t& average_version_list_size, std::size_t& average_key_size,
-        std::size_t& average_value_size) {
+        Storage st, stats_info_entry& stats_entry) {
     std::string_view st_view = {reinterpret_cast<char*>(&st), // NOLINT
                                 sizeof(st)};
-    // init about stats
-    record_num = 0;
-    average_version_list_size = 0;
-    average_key_size = 0;
-    average_value_size = 0;
-
     // full scan
     yakushima::Token ytk{};
     while (yakushima::enter(ytk) != yakushima::status::OK) { _mm_pause(); }
@@ -350,33 +354,15 @@ static inline void unhooking_keys_and_pruning_versions_at_the_storage(
     } // empty by current action
     // not empty
 
-    // gathering stats info
-    record_num = scan_res.size();
-
-    auto process_before_fin = [record_num, &average_version_list_size,
-                               &average_key_size, &average_value_size]() {
-        // maybe 0 due to current delete action or 0 length key or value
-        if (average_version_list_size != 0) {
-            average_version_list_size /= record_num;
-        }
-        if (average_key_size != 0) { average_key_size /= record_num; }
-        if (average_value_size != 0) { average_value_size /= record_num; }
-    };
-
     bool uncollected_record_exists{false};
     for (auto&& sr : scan_res) {
         Record* rec_ptr = reinterpret_cast<Record*>(std::get<1>(sr)); // NOLINT
 
         // gathering stats info
-        average_key_size += rec_ptr->get_key_view().size();
-        std::string buf;
-        rec_ptr->get_value(buf);
-        average_value_size += buf.size();
-
+        stats_entry.key.accumulate(*rec_ptr->get_key_ptr());
         unhooking_keys_and_pruning_versions(
-                ytk, st, rec_ptr, average_version_list_size, uncollected_record_exists); // NOLINT
+                ytk, st, rec_ptr, stats_entry, uncollected_record_exists); // NOLINT
         if (get_flag_cleaner_end()) {
-            process_before_fin();
             break;
         }
     }
@@ -386,8 +372,6 @@ static inline void unhooking_keys_and_pruning_versions_at_the_storage(
 
     // cleanup
     yakushima::leave(ytk);
-
-    process_before_fin();
 }
 
 static inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_info) {
@@ -412,18 +396,12 @@ static inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_in
             }
             ssp->worth_to_gc.store(false, std::memory_order_release);
         }
-        std::size_t entry_num{};
-        std::size_t average_version_list_size{};
-        std::size_t average_key_size{};
-        std::size_t average_value_size{};
+        stats_info_entry stats_entry{};
+        stats_entry.storage = st;
         if (wp::get_page_set_meta_storage() != st) {
-            unhooking_keys_and_pruning_versions_at_the_storage(
-                    st, entry_num, average_version_list_size, average_key_size,
-                    average_value_size);
+            unhooking_keys_and_pruning_versions_at_the_storage(st, stats_entry);
         }
-        stats_info.emplace_back(
-                std::make_tuple(st, entry_num, average_version_list_size,
-                                average_key_size, average_value_size));
+        stats_info.emplace_back(stats_entry);
         if (get_flag_cleaner_end()) { break; }
     }
 }
@@ -480,18 +458,38 @@ static void output_gc_stats(stats_info_type const& stats_info) {
     VLOG(log_info_gc_stats) << log_location_prefix_detail_info
                             << "# storages: " << stats_info.size();
 
+    auto json_strstat = [](const stats_info_entry::string_stat& sst) {
+        nlohmann::json js;
+        constexpr std::size_t memuse_roundup = 7UL;
+        js["num"] = sst.num;
+        js["sum_size"] = sst.sum_size;
+        js["ext_num"] = sst.ext_num;
+        js["sum_ext_size"] = (sst.sum_ext_size + memuse_roundup) & ~memuse_roundup;
+        return js;
+    };
     for (const auto& elem : stats_info) {
         std::string str_st_key{};
         /**
          * It may be fail if it executes after delete_storage against it.
          */
-        storage::key_handle_map_get_key(std::get<0>(elem), str_st_key);
+        storage::key_handle_map_get_key(elem.storage, str_st_key);
+        std::string str_yst_key{reinterpret_cast<const char*>(&elem.storage), sizeof(Storage)}; // NOLINT
         nlohmann::json j;
         j["storage_key"] = str_st_key;
-        j["num_entries"] = std::get<1>(elem);
-        j["av_len_ver_list_per_entry"] = std::get<2>(elem);
-        j["av_key_size_per_entry"] = std::get<3>(elem);
-        j["av_val_size_per_entry"] = std::get<4>(elem);
+        j["yakushima_storage_key"] = str_yst_key;
+        j["num_entries"] = elem.key.num;
+        if (elem.key.num != 0) {
+            j["av_len_ver_list_per_entry"] = static_cast<double>(elem.value.num) / static_cast<double>(elem.key.num);
+            j["av_key_size_per_entry"] = static_cast<double>(elem.key.sum_size) / static_cast<double>(elem.key.num);
+            if (elem.value.num != 0) {
+                j["av_val_size_per_entry"]
+                        = static_cast<double>(elem.value.sum_size) / static_cast<double>(elem.value.num);
+            }
+            j["record_allocated"] = sizeof(Record) * elem.key.num;
+            j["version_allocated"] = sizeof(version) * elem.value.num;
+            j["keys"] = json_strstat(elem.key);
+            j["values"] = json_strstat(elem.value);
+        }
         VLOG(log_info_gc_stats) << log_location_prefix_detail_info << j;
     }
 }
