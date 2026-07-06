@@ -74,8 +74,7 @@ Status search_key(session* ti, Storage const storage,
             return Status::WARN_NOT_FOUND;
         }
         if (read_value) {
-            std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
-            in_ws->get_value(value);
+            in_ws->get_value(value); // TODO: need mutex for write strand
         }
         return Status::OK;
     }
