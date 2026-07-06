@@ -7,8 +7,6 @@
 
 #include <atomic>
 #include <cstddef>
-#include <mutex>
-#include <shared_mutex>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -61,10 +59,7 @@ public:
 
     [[nodiscard]] tid_word const& get_tidw_ref() const { return tidw_; }
 
-    std::shared_mutex& get_mtx_value() { return mtx_value_; }
-
     void get_value(std::string& out) {
-        std::shared_lock<std::shared_mutex> lock{get_mtx_value()};
         get_latest()->get_value(out);
     }
 
@@ -88,7 +83,6 @@ public:
     }
 
     void set_value(std::string_view const v) {
-        std::lock_guard<std::shared_mutex> lock{get_mtx_value()};
         get_latest()->set_value(v);
     }
 
@@ -107,8 +101,6 @@ private:
     std::atomic<version*> latest_{nullptr};
 
     std::string key_{};
-
-    std::shared_mutex mtx_value_{};
 
     point_read_by_short read_by_{};
 
