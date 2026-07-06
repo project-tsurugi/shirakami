@@ -102,8 +102,6 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             if (key_read) {
                 inws->get_key(buf);
             } else {
-                std::shared_lock<std::shared_mutex> lk{
-                        rec_ptr->get_mtx_value()};
                 inws->get_value(buf);
             }
             read_register_if_ltx(rec_ptr);
