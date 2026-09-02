@@ -399,15 +399,15 @@ public:
     Status update_node_set(const yakushima::inserted_node_info& ii) {
         yakushima::node_version64_body modified_nvb{};
         Status check_node_set_res = update_node_set(ii.modified_nvp, modified_nvb);
-        // split care: iff left node is already tracked, add right node
+        // new-node care: iff main put target node is already tracked, add created nodes to track targets
         if (check_node_set_res == Status::OK) {
-            if (yakushima::node_version64* split_nvp = ii.created_nvp; split_nvp != nullptr) {
-                yakushima::node_version64_body split_nvb = split_nvp->get_stable_version();
+            for (const auto& [nvb, nvp] : ii.created_nvps) {
+                yakushima::node_version64_body new_nvb = nvp->get_stable_version();
                 // the two border nodes just after splitting has the same version
-                if (split_nvb.get_vinsert_delete() != modified_nvb.get_vinsert_delete()) {
+                if (nvb.get_vinsert_delete() != new_nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
-                auto rc = emplace_back({split_nvb, split_nvp});
+                auto rc = emplace_back({nvb, nvp});
                 if (rc == Status::ERR_CC) {
                     // newly created border node is already in the node-set of this session
                     // and modified by another session.
