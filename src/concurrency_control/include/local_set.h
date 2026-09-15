@@ -401,7 +401,7 @@ public:
         Status check_node_set_res = update_node_set(ii.modified_nvp, modified_nvb);
         // new-node care: iff main put target node is already tracked, add created nodes to track targets
         if (check_node_set_res == Status::OK) {
-            for (auto& [nvb, nvp] : ii.created_nvps) {
+            for (const auto& [nvb, nvp] : ii.created_nvps) {
                 yakushima::node_version64_body new_nvb = nvp->get_stable_version();
                 // the two border nodes just after splitting has the same version
                 if (nvb.get_vinsert_delete() != nvb.get_vinsert_delete()) {
