@@ -407,7 +407,7 @@ public:
                 if (nvb.get_vinsert_delete() != nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
-                auto rc = emplace_back({split_nvb, split_nvp});
+                auto rc = emplace_back({nvb, nvp});
                 if (rc == Status::ERR_CC) {
                     // newly created border node is already in the node-set of this session
                     // and modified by another session.
