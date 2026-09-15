@@ -404,7 +404,7 @@ public:
             for (const auto& [nvb, nvp] : ii.created_nvps) {
                 yakushima::node_version64_body new_nvb = nvp->get_stable_version();
                 // the two border nodes just after splitting has the same version
-                if (nvb.get_vinsert_delete() != nvb.get_vinsert_delete()) {
+                if (nvb.get_vinsert_delete() != new_nvb.get_vinsert_delete()) {
                     return Status::ERR_CC;
                 }
                 auto rc = emplace_back({nvb, nvp});
