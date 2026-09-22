@@ -166,12 +166,12 @@ void scan_find_phantom_by_insert_deep_sub(std::string_view s2_key) {
 }
 
 // issue 1543
-TEST_F(insert_scan_phantom_test, DISABLED_scan_find_phantom_by_insert_deep_l1) {
+TEST_F(insert_scan_phantom_test, scan_find_phantom_by_insert_deep_l1) {
     scan_find_phantom_by_insert_deep_sub("11111111AAA");
 }
 
 // issue 1543
-TEST_F(insert_scan_phantom_test, DISABLED_scan_find_phantom_by_insert_deep_l2) {
+TEST_F(insert_scan_phantom_test, scan_find_phantom_by_insert_deep_l2) {
     scan_find_phantom_by_insert_deep_sub("1111111122222222AAA");
 }
 
