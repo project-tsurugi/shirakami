@@ -32,17 +32,22 @@ struct stats_info_entry {
 // NOLINTEND(*non-private*)
 #if defined(_LIBCPP_VERSION)
         static constexpr std::size_t sso_limit = 22;
+#elif defined(__GLIBCXX__)
+        static constexpr std::size_t sso_limit = 15;
 #else
-        static constexpr std::size_t sso_limit = 16;
+        // unknown implementation (unsupported)
+        static constexpr std::size_t sso_limit = 15;
 #endif
         void accumulate(const std::string& str) {
             num++;
             sum_size += str.size();
-            if (auto capa = str.capacity(); capa < sso_limit) {
+            if (auto capa = str.capacity(); capa <= sso_limit) {
                 // maybe SSO
             } else {
+                // heuristic, not accurate calculation.
+                constexpr std::size_t memuse_roundup = 7UL;
                 ext_num++;
-                sum_ext_size += capa;
+                sum_ext_size += (capa + memuse_roundup) & ~memuse_roundup;
             }
         }
     };

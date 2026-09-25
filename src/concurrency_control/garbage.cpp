@@ -460,11 +460,10 @@ static void output_gc_stats(stats_info_type const& stats_info) {
 
     auto json_strstat = [](const stats_info_entry::string_stat& sst) {
         nlohmann::json js;
-        constexpr std::size_t memuse_roundup = 7UL;
         js["num"] = sst.num;
         js["sum_size"] = sst.sum_size;
         js["ext_num"] = sst.ext_num;
-        js["sum_ext_size"] = (sst.sum_ext_size + memuse_roundup) & ~memuse_roundup;
+        js["sum_ext_size"] = sst.sum_ext_size;
         return js;
     };
     for (const auto& elem : stats_info) {
