@@ -108,6 +108,7 @@ else ()
           "concurrency_control/short_tx/termination/*.cpp"
           "concurrency_control/short_tx/tx_state/*.cpp"
           "database_options/*.cpp"
+          "gc/*.cpp"
           "misc_ut/*.cpp"
           "result/*.cpp"
           "start/*.cpp"
