@@ -107,6 +107,20 @@ TEST_F(simple_scan, read_from_scan) { // NOLINT
 
     /**
      * test
+     * read_from_scan (after open_scan) doesn't detect the record deleted
+     */
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, open_scan(s, st, k, scan_endpoint::INCLUSIVE, k4,
+                                    scan_endpoint::INCLUSIVE, handle));
+    // range : k, k2, k3
+    ASSERT_EQ(Status::OK, delete_record(s, st, k));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));
+    EXPECT_EQ(sb, k);
+    ASSERT_EQ(Status::OK, abort(s));
+
+    /**
+     * test
      * if read_from_scan detects the record deleted by others between open_scan
      * and read_from_scan, it function returns Status::WARN_CONCURRENT_DELETE which
      * means reading deleted record.
