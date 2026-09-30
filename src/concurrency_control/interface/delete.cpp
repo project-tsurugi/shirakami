@@ -24,27 +24,13 @@ static void register_read_if_ltx(session* const ti, Record* const rec_ptr) {
 }
 
 static inline Status process_after_write(write_set_obj* wso) {
-    if (wso->get_op() == OP_TYPE::INSERT) {
-        wso->set_op(OP_TYPE::TOMBSTONE);
+    if (wso->get_op().is_wso_to_alive()) {
+        wso->set_op(wso->get_op().of_wso_to_absent());
         wso->set_val({});
-        // insert operation already registered read non-existence for ltx
         return Status::OK;
     }
-    if (wso->get_op() == OP_TYPE::UPDATE) {
-        wso->set_op(OP_TYPE::DELETE);
-        wso->set_val({});
-        // update operation already registered read for ltx
-        return Status::OK;
-    }
-    if (wso->get_op() == OP_TYPE::DELETE) {
-        // delete operation already registered read for ltx
+    if (wso->get_op().is_wso_to_absent()) {
         return Status::WARN_NOT_FOUND;
-    }
-    if (wso->get_op() == OP_TYPE::UPSERT) {
-        wso->set_op(OP_TYPE::DELSERT);
-        wso->set_val({});
-        // delete operation reads upsert'ed record in wso, so no need to register read
-        return Status::OK;
     }
     LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unknown code path";
     return Status::ERR_FATAL;
