@@ -8,6 +8,7 @@
 #include <glog/logging.h>
 
 #include "gen_key.h"
+#include "op_type.h"
 #include "random.h"
 #include "zipf.h"
 

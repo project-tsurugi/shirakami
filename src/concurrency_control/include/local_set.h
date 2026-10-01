@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "cpu.h"
+#include "op_type.h"
 #include "record.h"
 #include "sequence.h"
 

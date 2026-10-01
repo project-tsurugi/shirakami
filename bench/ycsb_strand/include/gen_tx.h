@@ -1,5 +1,5 @@
 /**
- * @file bench/include/gen_tx.h
+ * @file
  * @brief generate operations of transaction.
  */
 
@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "gen_key.h"
+#include "op_type.h"
 #include "random.h"
 #include "zipf.h"
 
