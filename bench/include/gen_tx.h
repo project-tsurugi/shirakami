@@ -10,6 +10,7 @@
 #include "gen_key.h"
 #include "random.h"
 #include "zipf.h"
+#include "op_type.h"
 
 #include "shirakami/logging.h"
 #include "shirakami/scheme.h"
