@@ -77,8 +77,8 @@ static Status update_body(
             if (in_ws->get_op() == OP_TYPE::DELETE) {
                 return Status::WARN_NOT_FOUND;
             }
-            in_ws->set_val(val);
-            in_ws->set_lobs(std::move(lobs));
+            in_ws->set_val(val); // TODO: need mutex for write strand
+            in_ws->set_lobs(std::move(lobs)); // likewise
             return Status::OK;
         }
 
