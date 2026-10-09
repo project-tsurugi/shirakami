@@ -121,7 +121,7 @@ static Status check_before_execution(session* const ti, Storage const storage) {
     return Status::OK;
 }
 
-static Status hit_local_write_set(write_set_obj* const in_ws, Record* rec_ptr,
+static Status hit_local_write_set(write_set_obj* const in_ws, Record* /*rec_ptr*/,
                                   std::string& value, bool const read_value) {
     if (in_ws->get_op() == OP_TYPE::DELETE) { return Status::WARN_NOT_FOUND; }
     if (read_value) {
